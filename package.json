@@ -1,0 +1,26 @@
+{
+  "name": "ecopet",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ECOPET — Ecossistema pet inteligente: marketplace, rede social, healthtech e IA",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n web,api -c green,blue \"npm run dev -w @ecopet/web\" \"npm run dev -w @ecopet/api\"",
+    "dev:web": "npm run dev -w @ecopet/web",
+    "dev:api": "npm run dev -w @ecopet/api",
+    "build": "npm run build -w @ecopet/database && npm run build -w @ecopet/api && npm run build -w @ecopet/web",
+    "db:generate": "npm run generate -w @ecopet/database",
+    "db:push": "npm run push -w @ecopet/database",
+    "db:seed": "npm run seed -w @ecopet/database",
+    "lint": "npm run lint -w @ecopet/web"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

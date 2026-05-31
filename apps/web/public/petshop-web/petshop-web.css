@@ -1,0 +1,250 @@
+/* ECOPET Petshop Web — CSS customizado (Bootstrap 5 como base) */
+
+:root {
+  --ecopet-primary: #2e7d4f;
+  --ecopet-dark: #1a3a2a;
+  --ecopet-yellow: #f5c800;
+  --ecopet-light: #f2efe3;
+}
+
+.petshop-web {
+  font-family: var(--font-inter), "Segoe UI", sans-serif;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.petshop-web main {
+  flex: 1;
+}
+
+/* Header */
+.petshop-navbar {
+  background: linear-gradient(135deg, var(--ecopet-dark) 0%, var(--ecopet-primary) 100%);
+  box-shadow: 0 4px 20px rgba(26, 58, 42, 0.25);
+}
+
+.petshop-navbar .navbar-brand {
+  font-family: var(--font-montserrat), sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.petshop-navbar .nav-link {
+  font-weight: 500;
+  transition: color 0.2s, transform 0.2s;
+}
+
+.petshop-navbar .nav-link:hover,
+.petshop-navbar .nav-link.active {
+  color: var(--ecopet-yellow) !important;
+}
+
+.petshop-clock {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.85);
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+  padding-left: 1rem;
+}
+
+/* Carousel */
+.petshop-carousel .carousel-item {
+  height: 420px;
+}
+
+.petshop-carousel .carousel-item img {
+  object-fit: cover;
+  height: 420px;
+  filter: brightness(0.75);
+}
+
+.petshop-carousel .carousel-caption {
+  bottom: 30%;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+}
+
+.petshop-carousel .carousel-caption h2 {
+  font-family: var(--font-montserrat), sans-serif;
+  font-weight: 800;
+  font-size: 2.25rem;
+}
+
+/* Cards & sections */
+.petshop-section-title {
+  font-family: var(--font-montserrat), sans-serif;
+  font-weight: 700;
+  color: var(--ecopet-dark);
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+.petshop-section-title::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 3px;
+  background: var(--ecopet-yellow);
+  border-radius: 2px;
+}
+
+.petshop-card {
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.petshop-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(46, 125, 79, 0.15);
+}
+
+.petshop-card .card-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: rgba(46, 125, 79, 0.12);
+  color: var(--ecopet-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+/* Forms */
+.petshop-form {
+  background: #fff;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+}
+
+.petshop-form .form-label {
+  font-weight: 600;
+  color: var(--ecopet-dark);
+  font-size: 0.875rem;
+}
+
+.petshop-form .form-label .required {
+  color: #dc3545;
+}
+
+.petshop-form .form-control:focus,
+.petshop-form .form-select:focus {
+  border-color: var(--ecopet-primary);
+  box-shadow: 0 0 0 0.2rem rgba(46, 125, 79, 0.2);
+}
+
+.petshop-form .btn-primary {
+  background-color: var(--ecopet-primary);
+  border-color: var(--ecopet-primary);
+  font-weight: 600;
+  padding: 0.625rem 2rem;
+}
+
+.petshop-form .btn-primary:hover {
+  background-color: var(--ecopet-dark);
+  border-color: var(--ecopet-dark);
+}
+
+.petshop-form-feedback {
+  display: none;
+  padding: 1rem;
+  border-radius: 12px;
+  margin-top: 1rem;
+}
+
+.petshop-form-feedback.show {
+  display: block;
+  animation: fadeInUp 0.4s ease;
+}
+
+.petshop-form-feedback.success {
+  background: rgba(46, 125, 79, 0.12);
+  color: var(--ecopet-dark);
+  border: 1px solid rgba(46, 125, 79, 0.3);
+}
+
+.petshop-form-feedback.error {
+  background: rgba(220, 53, 69, 0.1);
+  color: #842029;
+  border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+/* Footer */
+.petshop-footer {
+  background: var(--ecopet-dark);
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: auto;
+}
+
+.petshop-footer a {
+  color: rgba(255, 255, 255, 0.75);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.petshop-footer a:hover {
+  color: var(--ecopet-yellow);
+}
+
+.petshop-footer .footer-brand {
+  font-family: var(--font-montserrat), sans-serif;
+  font-weight: 800;
+  color: #fff;
+}
+
+.petshop-footer .footer-divider {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Promo banner animado */
+.petshop-promo-bar {
+  background: var(--ecopet-yellow);
+  color: var(--ecopet-dark);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: center;
+  padding: 0.4rem;
+  overflow: hidden;
+}
+
+.petshop-promo-bar span {
+  display: inline-block;
+  animation: marquee 18s linear infinite;
+}
+
+/* Integrações */
+.petshop-integration-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes marquee {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+@media (max-width: 768px) {
+  .petshop-carousel .carousel-item,
+  .petshop-carousel .carousel-item img {
+    height: 280px;
+  }
+  .petshop-carousel .carousel-caption h2 {
+    font-size: 1.35rem;
+  }
+}

@@ -1,0 +1,102 @@
+import type { MessageTree } from "../types";
+
+const messages: MessageTree = {
+  common: {
+    loading: "Cargando...",
+    error: "Ocurrió un error",
+    search: "Buscar mascotas, productos, vets...",
+    save: "Guardar",
+    cancel: "Cancelar",
+  },
+  nav: {
+    home: "Inicio",
+    feed: "Feed",
+    explore: "Explorar",
+    marketplace: "Tienda",
+    ia: "IA Pet",
+    pets: "Mis Mascotas",
+    adoption: "Adopción",
+    chat: "Chat",
+    notifications: "Notificaciones",
+    premium: "Premium",
+    settings: "Configuración",
+  },
+  auth: {
+    login: {
+      title: "Bienvenido de nuevo",
+      subtitle: "Inicia sesión en tu cuenta ECOPET",
+      email: "Correo electrónico",
+      password: "Contraseña",
+      submit: "Entrar",
+      forgot: "¿Olvidaste tu contraseña?",
+      noAccount: "¿No tienes cuenta?",
+    },
+    register: {
+      title: "Crear cuenta ECOPET",
+      submit: "Crear cuenta",
+      hasAccount: "¿Ya tienes cuenta?",
+    },
+  },
+  a11y: {
+    title: "Accesibilidad ECOPET",
+    open: "Abrir barra de accesibilidad",
+    close: "Cerrar barra de accesibilidad",
+    reset: "Restaurar predeterminado",
+    skipLink: "Ir al contenido principal",
+    activated: "activado",
+    deactivated: "desactivado",
+    preferencesSaved: "Preferencias guardadas",
+    sections: {
+      visual: "Visual",
+      auditory: "Auditiva",
+      cognitive: "Cognitiva",
+      motor: "Motora",
+      neuro: "Neurodiversidad",
+      libras: "Libras",
+      braille: "Braille / Lector de pantalla",
+      languages: "Idiomas",
+      preferences: "Preferencias",
+    },
+    labels: {
+      increaseFont: "Aumentar fuente",
+      decreaseFont: "Disminuir fuente",
+      resetFont: "Restaurar fuente",
+      letterSpacing: "Espaciado entre letras",
+      lineHeight: "Espaciado entre líneas",
+      highContrast: "Alto contraste",
+      invertedContrast: "Contraste invertido",
+      grayscale: "Escala de grises",
+      colorBlind: "Modo daltonismo",
+      highlightLinks: "Resaltar enlaces",
+      strongFocus: "Foco visual reforzado",
+      largeCursor: "Cursor ampliado",
+      readingMask: "Máscara de lectura",
+      readingGuide: "Guía de lectura",
+      pauseAnimations: "Pausar animaciones",
+      screenReader: "Modo lector / Braille",
+      dyslexia: "Modo dislexia",
+      calm: "Modo calmado",
+      simplified: "Interfaz simplificada",
+      reduceNotifications: "Reducir alertas visuales",
+      motor: "Modo movilidad reducida",
+      cognitive: "Modo lenguaje simple",
+      visualAlerts: "Alertas visuales (sordera)",
+      libras: "Activar Libras (VLibras)",
+    },
+    librasNote:
+      "Integración VLibras (gob.br). Requiere conexión externa. Compatible con lectores de pantalla y Braille.",
+    language: {
+      title: "Idioma de la interfaz",
+      autoTranslate: "Traducción automática vía API",
+      autoTranslateNote:
+        "Idiomas sin bundle local usan traducción automática. Cache local aplicado.",
+    },
+  },
+  lang: {
+    selector: {
+      label: "Seleccionar idioma",
+    },
+  },
+};
+
+export default messages;

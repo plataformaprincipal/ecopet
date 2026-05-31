@@ -1,0 +1,499 @@
+import crypto from "crypto";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { prisma } from "@ecopet/database";
+import { createAuditLog } from "./audit-service.js";
+import {
+  handleBootstrapLoginAttempt,
+  completeBootstrapLogin,
+  isBootstrapIdentifier,
+  getSystemBootstrap,
+} from "./bootstrap-service.js";
+import {
+  createVerificationCode,
+  verifyCode,
+  sendPasswordChangeCodeEmail,
+  sendInternalUserInviteEmail,
+} from "./email-service.js";
+
+const JWT_SECRET = process.env.JWT_SECRET || "ecopet-dev-secret";
+const MAX_ATTEMPTS = 5;
+const LOCK_MINUTES = 30;
+const BOOTSTRAP_PASSWORD = "AASSSVVV@1972";
+
+export function validatePasswordStrength(password: string) {
+  const errors: string[] = [];
+  if (password.length < 12) errors.push("Mínimo 12 caracteres");
+  if (!/[A-Z]/.test(password)) errors.push("Letra maiúscula");
+  if (!/[a-z]/.test(password)) errors.push("Letra minúscula");
+  if (!/[0-9]/.test(password)) errors.push("Número");
+  if (!/[^A-Za-z0-9]/.test(password)) errors.push("Caractere especial");
+  if (password === BOOTSTRAP_PASSWORD) errors.push("Senha temporária de bootstrap não permitida");
+  return { valid: errors.length === 0, errors };
+}
+
+export function requiresEmailCodeForPasswordChange(user: {
+  isMasterAdmin?: boolean;
+  isOrgAdmin?: boolean;
+  role?: string;
+  firstLoginRequired?: boolean;
+}) {
+  if (user.firstLoginRequired) return false;
+  if (user.isMasterAdmin || user.isOrgAdmin) return true;
+  return user.role === "GESTOR" || user.role === "ADMIN";
+}
+
+function hashToken(token: string) {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
+
+export async function loginUser(params: {
+  identifier: string;
+  password: string;
+  ip?: string;
+  userAgent?: string;
+}) {
+  const identifier = params.identifier.toLowerCase().trim();
+
+  await handleBootstrapLoginAttempt(identifier, params.ip, params.userAgent);
+
+  const user = await prisma.user.findFirst({
+    where: { OR: [{ email: identifier }, { username: identifier }] },
+  });
+
+  if (!user) {
+    await prisma.loginLog.create({
+      data: { email: identifier, success: false, ip: params.ip, userAgent: params.userAgent, reason: "user_not_found" },
+    });
+    throw Object.assign(new Error("Credenciais inválidas"), { status: 401 });
+  }
+
+  if (user.isBootstrapUser && user.accountStatus === "SUSPENDED") {
+    await handleBootstrapLoginAttempt(identifier, params.ip, params.userAgent);
+  }
+
+  if (user.accountStatus === "SUSPENDED" || user.accountStatus === "REJECTED") {
+    throw Object.assign(new Error("Conta desativada"), { status: 403 });
+  }
+
+  if (user.lockedUntil && user.lockedUntil > new Date()) {
+    throw Object.assign(new Error("Conta temporariamente bloqueada. Tente novamente mais tarde."), { status: 423 });
+  }
+
+  const valid = await bcrypt.compare(params.password, user.passwordHash);
+  if (!valid) {
+    const attempts = user.failedLoginAttempts + 1;
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        failedLoginAttempts: attempts,
+        lockedUntil: attempts >= MAX_ATTEMPTS ? new Date(Date.now() + LOCK_MINUTES * 60 * 1000) : null,
+      },
+    });
+    await prisma.loginLog.create({
+      data: { userId: user.id, success: false, ip: params.ip, userAgent: params.userAgent, reason: "invalid_password" },
+    });
+    throw Object.assign(new Error("Credenciais inválidas"), { status: 401 });
+  }
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { failedLoginAttempts: 0, lockedUntil: null },
+  });
+
+  const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: "7d" });
+  await prisma.userSession.create({
+    data: {
+      userId: user.id,
+      tokenHash: hashToken(token),
+      ip: params.ip,
+      userAgent: params.userAgent,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    },
+  });
+
+  await prisma.loginLog.create({
+    data: { userId: user.id, email: user.email, username: user.username, success: true, ip: params.ip, userAgent: params.userAgent },
+  });
+
+  const config = await getSystemBootstrap();
+  const isBootstrapSession =
+    user.isBootstrapUser && !config.masterAdminCreated && isBootstrapIdentifier(identifier);
+
+  if (isBootstrapSession) {
+    await completeBootstrapLogin(user.id, params.ip, params.userAgent);
+    return {
+      token,
+      bootstrapMode: true,
+      redirectTo: "/gestor/ativacao",
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        name: user.name,
+        role: user.role,
+        accountStatus: user.accountStatus,
+        isBootstrapUser: true,
+        mustChangePassword: false,
+      },
+    };
+  }
+
+  await createAuditLog({
+    userId: user.id,
+    action: "LOGIN",
+    module: "auth",
+    resource: "session",
+    ip: params.ip,
+    userAgent: params.userAgent,
+  });
+
+  let redirectTo = "/dashboard";
+  if (user.role === "GESTOR" || user.role === "ADMIN") {
+    redirectTo = user.firstLoginRequired || user.mustChangePassword ? "/gestor/alterar-senha" : "/gestor";
+  }
+
+  return {
+    token,
+    redirectTo,
+    user: {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      name: user.name,
+      role: user.role,
+      accountStatus: user.accountStatus,
+      avatar: user.avatar,
+      isVerified: user.isVerified,
+      isPremium: user.isPremium,
+      isMasterAdmin: user.isMasterAdmin,
+      mustChangePassword: user.mustChangePassword,
+      firstLoginRequired: user.firstLoginRequired,
+    },
+  };
+}
+
+export async function requestPasswordChangeCode(userId: string, currentPassword: string, ip?: string) {
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
+  const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+  if (!valid) throw Object.assign(new Error("Senha atual incorreta"), { status: 400 });
+
+  if (!requiresEmailCodeForPasswordChange(user)) {
+    throw Object.assign(new Error("Confirmação por e-mail não necessária para este perfil"), { status: 400 });
+  }
+
+  const record = await createVerificationCode(userId, "PASSWORD_CHANGE");
+  await sendPasswordChangeCodeEmail(user.email, user.name, record.code);
+
+  await createAuditLog({
+    userId,
+    action: "CREATE",
+    module: "auth",
+    resource: "verification_code",
+    ip,
+    observation: "Código enviado para alteração de senha",
+  });
+
+  return {
+    sent: true,
+    devCode: process.env.NODE_ENV === "development" ? record.code : undefined,
+  };
+}
+
+export async function changePassword(params: {
+  userId: string;
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword?: string;
+  emailCode?: string;
+  ip?: string;
+}) {
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: params.userId } });
+
+  if (params.confirmPassword && params.newPassword !== params.confirmPassword) {
+    throw Object.assign(new Error("As senhas não conferem"), { status: 400 });
+  }
+
+  const valid = await bcrypt.compare(params.currentPassword, user.passwordHash);
+  if (!valid) throw Object.assign(new Error("Senha atual incorreta"), { status: 400 });
+
+  const needsEmailCode = requiresEmailCodeForPasswordChange(user);
+  if (needsEmailCode) {
+    if (!params.emailCode) {
+      throw Object.assign(new Error("Código de confirmação por e-mail obrigatório"), { status: 400 });
+    }
+    const ok = await verifyCode(params.userId, "PASSWORD_CHANGE", params.emailCode);
+    if (!ok) throw Object.assign(new Error("Código inválido ou expirado"), { status: 400 });
+  }
+
+  const strength = validatePasswordStrength(params.newPassword);
+  if (!strength.valid) {
+    throw Object.assign(new Error(`Senha fraca: ${strength.errors.join(", ")}`), { status: 400 });
+  }
+
+  const passwordHash = await bcrypt.hash(params.newPassword, 12);
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      passwordHash,
+      mustChangePassword: false,
+      firstLoginRequired: false,
+      passwordChangedAt: new Date(),
+      failedLoginAttempts: 0,
+      lockedUntil: null,
+    },
+  });
+
+  await prisma.securityEvent.create({
+    data: { userId: user.id, eventType: "PASSWORD_CHANGED", severity: "info", ip: params.ip },
+  });
+
+  await createAuditLog({
+    userId: user.id,
+    action: "UPDATE",
+    module: "auth",
+    resource: "password",
+    ip: params.ip,
+    observation: needsEmailCode ? "Senha alterada com confirmação por e-mail" : "Senha alterada",
+  });
+
+  return { success: true };
+}
+
+export async function updateProfile(params: {
+  userId: string;
+  currentPassword: string;
+  data: { name?: string; phone?: string; bio?: string; avatar?: string };
+  ip?: string;
+}) {
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: params.userId } });
+  const valid = await bcrypt.compare(params.currentPassword, user.passwordHash);
+  if (!valid) throw Object.assign(new Error("Senha atual incorreta"), { status: 400 });
+
+  const before = { name: user.name, phone: user.phone, bio: user.bio, avatar: user.avatar };
+  const updated = await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      ...(params.data.name ? { name: params.data.name } : {}),
+      ...(params.data.phone !== undefined ? { phone: params.data.phone } : {}),
+      ...(params.data.bio !== undefined ? { bio: params.data.bio } : {}),
+      ...(params.data.avatar !== undefined ? { avatar: params.data.avatar } : {}),
+    },
+  });
+
+  await createAuditLog({
+    userId: user.id,
+    action: "UPDATE",
+    module: "auth",
+    resource: "profile",
+    ip: params.ip,
+    entityBefore: before,
+    entityAfter: { name: updated.name, phone: updated.phone, bio: updated.bio, avatar: updated.avatar },
+    observation: "Dados cadastrais alterados",
+  });
+
+  return { success: true, user: { id: updated.id, name: updated.name, phone: updated.phone, bio: updated.bio, avatar: updated.avatar } };
+}
+
+export async function requestPasswordReset(email: string) {
+  const { blockBootstrapPasswordReset } = await import("./bootstrap-service.js");
+  const blocked = await blockBootstrapPasswordReset(email);
+  if (blocked.blocked) {
+    throw Object.assign(new Error(blocked.message!), { status: 403 });
+  }
+
+  const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+  if (!user || user.isBootstrapUser) return { sent: true };
+
+  const token = crypto.randomBytes(32).toString("hex");
+  const record = await createVerificationCode(user.id, "PASSWORD_RESET");
+
+  await prisma.passwordReset.create({
+    data: { userId: user.id, token, expiresAt: new Date(Date.now() + 60 * 60 * 1000) },
+  });
+
+  const { sendEmail } = await import("./email-service.js");
+  await sendEmail({
+    to: user.email,
+    subject: "Recuperação de senha ECOPET",
+    body: `Olá ${user.name},\n\nCódigo de recuperação: ${record.code}\n\nUse o código junto com o link de redefinição recebido. Expira em 1 hora.\n\nNunca compartilhe este código.`,
+    metadata: { type: "password_reset" },
+  });
+
+  await prisma.securityEvent.create({
+    data: { userId: user.id, eventType: "PASSWORD_RESET_REQUEST", severity: "info" },
+  });
+
+  return {
+    sent: true,
+    resetToken: process.env.NODE_ENV === "development" ? token : undefined,
+    devCode: process.env.NODE_ENV === "development" ? record.code : undefined,
+  };
+}
+
+export async function resetPassword(token: string, newPassword: string, code?: string) {
+  const reset = await prisma.passwordReset.findUnique({ where: { token } });
+  if (!reset || reset.used || reset.expiresAt < new Date()) {
+    throw Object.assign(new Error("Token ou código inválido ou expirado"), { status: 400 });
+  }
+  if (!code) {
+    throw Object.assign(new Error("Código de confirmação obrigatório"), { status: 400 });
+  }
+  const ok = await verifyCode(reset.userId, "PASSWORD_RESET", code);
+  if (!ok) {
+    await prisma.securityEvent.create({
+      data: { userId: reset.userId, eventType: "PASSWORD_RESET_FAILED", severity: "warn" },
+    });
+    throw Object.assign(new Error("Código inválido ou expirado"), { status: 400 });
+  }
+  const activeReset = reset;
+
+  const strength = validatePasswordStrength(newPassword);
+  if (!strength.valid) {
+    throw Object.assign(new Error(`Senha fraca: ${strength.errors.join(", ")}`), { status: 400 });
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, 12);
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: activeReset.userId },
+      data: { passwordHash, mustChangePassword: false, firstLoginRequired: false, passwordChangedAt: new Date() },
+    }),
+    prisma.passwordReset.update({ where: { id: activeReset.id }, data: { used: true } }),
+  ]);
+
+  await createAuditLog({
+    userId: activeReset.userId,
+    action: "UPDATE",
+    module: "auth",
+    resource: "password",
+    observation: "Senha redefinida via recuperação",
+  });
+
+  return { success: true };
+}
+
+export async function listActiveSessions(userId: string) {
+  return prisma.userSession.findMany({
+    where: { userId, active: true, expiresAt: { gt: new Date() } },
+    orderBy: { lastSeenAt: "desc" },
+  });
+}
+
+export async function revokeSession(sessionId: string, userId: string) {
+  return prisma.userSession.updateMany({
+    where: { id: sessionId, userId },
+    data: { active: false },
+  });
+}
+
+export async function createGestorInvite(params: {
+  email: string;
+  name: string;
+  roleCode: string;
+  departmentId?: string;
+  invitedById: string;
+}) {
+  const email = params.email.toLowerCase();
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) {
+    throw Object.assign(new Error("E-mail já cadastrado"), { status: 409 });
+  }
+
+  const tempPassword = crypto.randomBytes(4).toString("hex") + "A1!";
+  const token = crypto.randomBytes(32).toString("hex");
+  const username = email.split("@")[0].replace(/[^a-z0-9]/g, "") + crypto.randomInt(100, 999);
+  const passwordHash = await bcrypt.hash(tempPassword, 12);
+
+  const role = await prisma.rbacRole.findUnique({ where: { code: params.roleCode } });
+
+  const { invite, user } = await prisma.$transaction(async (tx) => {
+    const createdUser = await tx.user.create({
+      data: {
+        email,
+        username,
+        passwordHash,
+        name: params.name,
+        role: "GESTOR",
+        accountStatus: "ACTIVE",
+        isVerified: true,
+        firstLoginRequired: true,
+        mustChangePassword: true,
+        departmentId: params.departmentId,
+        gestorProfile: {
+          create: {
+            jobTitle: role?.name ?? params.roleCode,
+            corporateEmail: email,
+            hierarchyLevel: role?.hierarchyLevel ?? 10,
+            employeeCode: `INV-${crypto.randomInt(1000, 9999)}`,
+          },
+        },
+        gamification: { create: {} },
+      },
+    });
+
+    if (role) {
+      await tx.userRbacAssignment.create({
+        data: { userId: createdUser.id, roleId: role.id, grantedBy: params.invitedById },
+      });
+    }
+
+    const createdInvite = await tx.gestorInvite.create({
+      data: {
+        email,
+        name: params.name,
+        roleCode: params.roleCode,
+        departmentId: params.departmentId,
+        tempPassword,
+        token,
+        status: "SENT",
+        invitedById: params.invitedById,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      },
+    });
+
+    return { invite: createdInvite, user: createdUser };
+  });
+
+  await sendInternalUserInviteEmail({ email, name: params.name, username, tempPassword });
+
+  await createAuditLog({
+    userId: params.invitedById,
+    action: "CREATE",
+    module: "gestor",
+    resource: "internal_user",
+    resourceId: user.id,
+    metadata: { email, roleCode: params.roleCode, inviteId: invite.id },
+    observation: "Usuário interno criado com senha temporária",
+  });
+
+  return {
+    invite,
+    user: { id: user.id, email: user.email, username: user.username, name: user.name },
+    tempPassword: process.env.NODE_ENV === "development" ? tempPassword : undefined,
+    username,
+  };
+}
+
+export function checkPasswordStrengthRealtime(password: string) {
+  return {
+    length: password.length >= 12,
+    uppercase: /[A-Z]/.test(password),
+    lowercase: /[a-z]/.test(password),
+    number: /[0-9]/.test(password),
+    special: /[^A-Za-z0-9]/.test(password),
+    notTemp: password !== BOOTSTRAP_PASSWORD,
+    score: [password.length >= 12, /[A-Z]/.test(password), /[a-z]/.test(password), /[0-9]/.test(password), /[^A-Za-z0-9]/.test(password)].filter(Boolean).length,
+  };
+}
+
+export async function getPasswordChangePolicy(userId: string) {
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
+  return {
+    requiresEmailCode: requiresEmailCodeForPasswordChange(user),
+    firstLoginRequired: user.firstLoginRequired,
+    role: user.role,
+    isMasterAdmin: user.isMasterAdmin,
+    isOrgAdmin: user.isOrgAdmin,
+  };
+}

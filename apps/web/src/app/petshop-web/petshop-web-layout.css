@@ -1,0 +1,10 @@
+/* Wrapper do sistema web petshop — coexiste com Bootstrap CDN */
+.petshop-web {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.petshop-web main {
+  flex: 1;
+}

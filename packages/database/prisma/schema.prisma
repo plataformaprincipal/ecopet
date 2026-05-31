@@ -1,0 +1,2176 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  TUTOR
+  VETERINARIAN
+  CLINIC
+  PETSHOP
+  SELLER
+  SERVICE_PROVIDER
+  ONG
+  ADMIN
+  GESTOR
+  DELIVERY
+  INFLUENCER
+  PARTNER
+}
+
+enum AccountStatus {
+  PENDING
+  ACTIVE
+  REJECTED
+  SUSPENDED
+}
+
+enum PetSpecies {
+  DOG
+  CAT
+  BIRD
+  RODENT
+  REPTILE
+  FISH
+  OTHER
+}
+
+enum PetSize {
+  MINI
+  SMALL
+  MEDIUM
+  LARGE
+  GIANT
+}
+
+enum PostType {
+  PHOTO
+  VIDEO
+  REEL
+  STORY
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  PROCESSING
+  READY_PICKUP
+  SHIPPED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  PICKED_UP
+  CANCELLED
+  REFUNDED
+}
+
+enum SubscriptionPlan {
+  FREE
+  PREMIUM
+  PRO
+  CLINIC
+  BUSINESS
+}
+
+enum BadgeType {
+  VERIFIED
+  PREMIUM
+  VETERINARIAN
+}
+
+enum AdoptionStatus {
+  AVAILABLE
+  PENDING
+  ADOPTED
+}
+
+enum ServiceType {
+  READY_SERVICE
+  CUSTOM_SERVICE
+}
+
+enum ReadyServiceCategory {
+  BATH_GROOMING
+  VET_CONSULTATION
+  VACCINATION
+  DOG_WALKER
+  PET_SITTER
+  TRAINING
+  BOARDING
+  PET_TRANSPORT
+}
+
+enum CustomRequestUrgency {
+  LOW
+  MEDIUM
+  HIGH
+  EMERGENCY
+}
+
+enum CustomRequestStatus {
+  OPEN
+  IN_REVIEW
+  QUOTED
+  CLOSED
+}
+
+enum ApprovalType {
+  CLIENT
+  PARTNER
+  ONG
+  PRODUCT
+  SERVICE
+  CAMPAIGN
+  ADVERTISEMENT
+  INTEGRATION
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REVISION
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum ConversationType {
+  CLIENT_CLIENT
+  CLIENT_PARTNER
+  CLIENT_NGO
+  CLIENT_ECOPET
+  PARTNER_CLIENT
+  PARTNER_PARTNER
+  PARTNER_NGO
+  PARTNER_ECOPET
+  NGO_CLIENT
+  NGO_PARTNER
+  NGO_ECOPET
+  INTERNAL
+}
+
+enum ConversationStatus {
+  OPEN
+  PENDING
+  RESOLVED
+  CLOSED
+  PRIORITY
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+  QUOTE
+  SYSTEM
+  AI
+}
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  VIEWED
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  NEGOTIATING
+  CONVERTED
+  COMPLETED
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  VIEW
+  EXPORT
+  APPROVE
+  REJECT
+  LOGIN
+  LOGOUT
+  MODERATE
+  ASSIGN
+  SYNC
+}
+
+enum ContentApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWING
+  RESOLVED
+  DISMISSED
+}
+
+enum IntegrationStatus {
+  CONNECTED
+  DISCONNECTED
+  ERROR
+  SYNCING
+}
+
+enum RobotDomain {
+  HEALTH
+  FINANCE
+  AGENDA
+  LEISURE
+  SHOPPING
+  PETS
+  INTEGRATIONS
+  COMMERCIAL
+  STOCK
+  PRODUCTION
+  MARKETING
+  QUALITY
+  LOGISTICS
+  LEGAL
+  HR
+  AGROPET
+  AI
+  CAMPAIGNS
+  DONATIONS
+  RESCUE
+  PROJECTS
+  VOLUNTEERS
+  EVENTS
+  MONITORING
+  AUDIT
+  MODERATION
+  SECURITY
+  GROWTH
+}
+
+enum DeliveryMethod {
+  PICKUP_LOCAL
+  DELIVERY_LOCAL
+  DELIVERY_REGIONAL
+  DELIVERY_NATIONAL
+  DELIVERY_OWN
+  DELIVERY_PARTNER_LOGISTICS
+  DELIVERY_SCHEDULED
+  PICKUP_SCHEDULED
+}
+
+enum PaymentMethod {
+  CARD
+  PIX
+  CASH
+  TRANSFER
+  WALLET
+  BOLETO
+}
+
+enum WalletTransactionType {
+  CREDIT
+  DEBIT
+  REFUND
+  CASHBACK
+  BONUS
+  CAMPAIGN
+  DONATION
+  TRANSFER_IN
+  TRANSFER_OUT
+}
+
+enum RefundStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum RefundDestination {
+  CARD
+  WALLET
+}
+
+enum ServiceFulfillmentMode {
+  IN_PERSON
+  HOME
+  ONLINE
+}
+
+enum AdvisoryPlanType {
+  PARTNER_BUSINESS
+  NGO_SOCIAL
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  username      String?   @unique
+  passwordHash  String
+  name          String
+  cpf           String?   @unique
+  birthDate     DateTime?
+  phone         String?
+  avatar        String?
+  gender        String?
+  role          UserRole  @default(TUTOR)
+  accountStatus AccountStatus @default(ACTIVE)
+  bio           String?
+  isVerified    Boolean   @default(false)
+  isPremium     Boolean   @default(false)
+  isOrgAdmin    Boolean   @default(false)
+  isBootstrapUser Boolean @default(false)
+  isMasterAdmin Boolean   @default(false)
+  firstLoginRequired Boolean @default(false)
+  mustChangePassword Boolean @default(false)
+  failedLoginAttempts Int @default(0)
+  lockedUntil   DateTime?
+  passwordChangedAt DateTime?
+  badges        Json?
+  socialLinks   Json?
+  preferences   Json?
+  documents     Json?
+  termsAcceptedAt DateTime?
+  lgpdAcceptedAt  DateTime?
+  latitude      Float?
+  longitude     Float?
+  darkMode      Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  address       Address?
+  pets          Pet[]
+  posts         Post[]
+  comments      Comment[]
+  likes         Like[]
+  savedPosts    SavedPost[]
+  followers     Follow[]  @relation("Following")
+  following     Follow[]  @relation("Follower")
+  notifications Notification[]
+  sentMessages  Message[] @relation("Sender")
+  conversations ConversationParticipant[]
+  orders        Order[]
+  wallet        Wallet?
+  refunds       Refund[]
+  advisorySubscription AdvisorySubscription?
+  partnerLogistics PartnerLogisticsConfig? @relation("PartnerLogistics")
+  cart          Cart?
+  favorites     Favorite[]
+  subscriptions Subscription[]
+  veterinarianProfile VeterinarianProfile?
+  clinicProfile       ClinicProfile?
+  petshopProfile      PetshopProfile?
+  ongProfile          OngProfile?
+  tutorProfile        TutorProfile?
+  sellerProfile       SellerProfile?
+  serviceProviderProfile ServiceProviderProfile?
+  adminProfile        AdminProfile?
+  gestorProfile       GestorProfile?
+  products            Product[] @relation("SellerProducts")
+  services            Service[] @relation("ProviderServices")
+  customServiceRequests CustomServiceRequest[] @relation("TutorRequests")
+  reviews             Review[]
+  adoptionListings    AdoptionListing[]
+  medicalRecords      MedicalRecord[] @relation("RecordAuthor")
+  aiSessions          AiSession[]
+  gamification        GamificationProfile?
+  rbacAssignments     UserRbacAssignment[]
+  auditLogs           AuditLog[] @relation("AuditActor")
+  approvalRequests    ApprovalRequest[] @relation("ApprovalRequester")
+  approvalReviews     ApprovalRequest[] @relation("ApprovalReviewer")
+  supportTickets      SupportTicket[] @relation("TicketRequester")
+  assignedTickets     SupportTicket[] @relation("TicketAssignee")
+  contentReports      ContentReport[] @relation("ReportAuthor")
+  reviewedReports     ContentReport[] @relation("ReportReviewer")
+  integrations        Integration[]
+  operationalRobots   OperationalRobot[]
+  customQuotesSent    CustomQuote[] @relation("QuoteRequester")
+  customQuotesReceived CustomQuote[] @relation("QuoteProvider")
+  department          Department? @relation(fields: [departmentId], references: [id])
+  departmentId        String?
+  sessions            UserSession[]
+  loginLogs           LoginLog[]
+  passwordResets      PasswordReset[]
+  securityEvents      SecurityEvent[]
+  gestorInvitesSent   GestorInvite[] @relation("InviteSender")
+  platformDocuments   PlatformDocument[]
+  verificationCodes   VerificationCode[]
+  organizationId      String?
+  organization        Organization? @relation(fields: [organizationId], references: [id])
+  organizationUnits   OrganizationMember[]
+  consentRecords      ConsentRecord[]
+  lgpdRequests        LgpdRequest[]
+  platformEvents      PlatformEvent[] @relation("EventActor")
+  workflowInstances   WorkflowInstance[] @relation("WorkflowOwner")
+  costEntries         CostEntry[]
+  entityVersions      EntityVersion[] @relation("VersionAuthor")
+  governanceInsights  GovernanceInsight[]
+
+  @@index([email])
+  @@index([username])
+  @@index([role])
+  @@index([organizationId])
+}
+
+model Address {
+  id         String  @id @default(cuid())
+  userId     String  @unique
+  street     String
+  number     String
+  complement String?
+  district   String
+  city       String
+  state      String
+  zipCode    String
+  country    String  @default("BR")
+  latitude   Float?
+  longitude  Float?
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Pet {
+  id           String     @id @default(cuid())
+  ownerId      String
+  name         String
+  photo        String?
+  species      PetSpecies
+  breed        String?
+  size         PetSize?
+  sex          String?
+  birthDate    DateTime?
+  weight       Float?
+  color        String?
+  neutered     Boolean    @default(false)
+  microchip    String?
+  behavior     String?
+  diet         String?
+  activityLevel String?
+  notes        String?
+  documents    Json?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  owner        User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  vaccinations Vaccination[]
+  medications  Medication[]
+  allergies    Allergy[]
+  exams        Exam[]
+  consultations Consultation[]
+  medicalRecords MedicalRecord[]
+  posts        Post[]
+
+  @@index([ownerId])
+}
+
+model Vaccination {
+  id          String   @id @default(cuid())
+  petId       String
+  name        String
+  date        DateTime
+  nextDue     DateTime?
+  veterinarian String?
+  notes       String?
+  pet         Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+}
+
+model Medication {
+  id        String   @id @default(cuid())
+  petId     String
+  name      String
+  dosage    String?
+  frequency String?
+  startDate DateTime?
+  endDate   DateTime?
+  pet       Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+}
+
+model Allergy {
+  id       String @id @default(cuid())
+  petId    String
+  allergen String
+  severity String?
+  pet      Pet    @relation(fields: [petId], references: [id], onDelete: Cascade)
+}
+
+model Exam {
+  id        String   @id @default(cuid())
+  petId     String
+  type      String
+  date      DateTime
+  result    String?
+  fileUrl   String?
+  pet       Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+}
+
+model Consultation {
+  id            String   @id @default(cuid())
+  petId         String
+  veterinarianId String?
+  date          DateTime
+  type          String
+  notes         String?
+  prescription  String?
+  pet           Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+}
+
+model MedicalRecord {
+  id        String   @id @default(cuid())
+  petId     String
+  authorId  String
+  type      String
+  title     String
+  content   String?
+  fileUrl   String?
+  createdAt DateTime @default(now())
+  pet       Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+  author    User     @relation("RecordAuthor", fields: [authorId], references: [id])
+}
+
+model TutorProfile {
+  id                String @id @default(cuid())
+  userId            String @unique
+  petCount          Int?
+  primaryInterests  Json?
+  user              User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VeterinarianProfile {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  crmv                  String   @unique
+  crmvState             String?
+  specialties           Json?
+  description           String?
+  certificates          Json?
+  experience            Int?
+  averageConsultationPrice Float?
+  onlineAvailable       Boolean  @default(true)
+  inPersonAvailable     Boolean  @default(true)
+  professionalAddress   String?
+  documents             Json?
+  schedule              Json?
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ClinicProfile {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  tradeName            String
+  cnpj                 String   @unique
+  technicalResponsible String?
+  responsibleCrmv      String?
+  photos               Json?
+  services             Json?
+  emergency            Boolean  @default(false)
+  team                 Json?
+  hours                Json?
+  documents            Json?
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PetshopProfile {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  tradeName      String
+  cnpj           String   @unique
+  responsible    String?
+  banner         String?
+  photos         Json?
+  sellsProducts  Boolean  @default(true)
+  offersServices Boolean  @default(false)
+  categories     Json?
+  delivery       Boolean  @default(true)
+  pickup         Boolean  @default(true)
+  hours          Json?
+  documents      Json?
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SellerProfile {
+  id                String @id @default(cuid())
+  userId            String @unique
+  tradeName         String
+  cnpj              String @unique
+  responsible       String
+  productCategories Json?
+  deliveryPolicy    String?
+  exchangePolicy    String?
+  bankData          Json?
+  documents         Json?
+  user              User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ServiceProviderProfile {
+  id             String  @id @default(cuid())
+  userId         String  @unique
+  documentType   String
+  documentNumber String  @unique
+  serviceTypes   Json
+  serviceArea    String?
+  homeService    Boolean @default(false)
+  startingPrice  Float?
+  availability   String?
+  documents      Json?
+  user           User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model OngProfile {
+  id               String  @id @default(cuid())
+  userId           String  @unique
+  name             String
+  documentType     String?
+  cnpj             String  @unique
+  responsible      String
+  photos           Json?
+  requirements     String?
+  actionTypes      Json?
+  animalCapacity   Int?
+  acceptsDonations Boolean @default(true)
+  documents        Json?
+  user             User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AdminProfile {
+  id             String @id @default(cuid())
+  userId         String @unique
+  corporateEmail String?
+  jobTitle       String
+  accessLevel    String
+  user           User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model GestorProfile {
+  id             String  @id @default(cuid())
+  userId         String  @unique
+  corporateEmail String?
+  jobTitle       String
+  hierarchyLevel Int     @default(1)
+  departmentId   String?
+  employeeCode   String?
+  user           User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department     Department? @relation(fields: [departmentId], references: [id])
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  authorId  String
+  petId     String?
+  type      PostType @default(PHOTO)
+  content   String?
+  mediaUrls Json?
+  isPrivate Boolean  @default(false)
+  isHidden  Boolean  @default(false)
+  isModerated Boolean @default(false)
+  moderationNotes String?
+  views     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  expiresAt DateTime?
+  shares    Int      @default(0)
+
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  pet       Pet?     @relation(fields: [petId], references: [id])
+  comments  Comment[]
+  likes     Like[]
+  savedBy   SavedPost[]
+  hashtags  PostHashtag[]
+
+  @@index([authorId])
+  @@index([createdAt])
+}
+
+model Hashtag {
+  id     String @id @default(cuid())
+  tag    String @unique
+  count  Int    @default(0)
+  posts  PostHashtag[]
+}
+
+model PostHashtag {
+  postId    String
+  hashtagId String
+  post      Post    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  hashtag   Hashtag @relation(fields: [hashtagId], references: [id], onDelete: Cascade)
+  @@id([postId, hashtagId])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  postId    String
+  authorId  String
+  content   String
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([postId, userId])
+}
+
+model SavedPost {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([postId, userId])
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+  follower    User     @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+  @@unique([followerId, followingId])
+}
+
+model ProductCategory {
+  id       String    @id @default(cuid())
+  name     String
+  slug     String    @unique
+  icon     String?
+  products Product[]
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  sellerId    String
+  categoryId  String?
+  name        String
+  description String
+  price       Float
+  comparePrice Float?
+  images      Json?
+  stock       Int      @default(0)
+  sku         String?
+  isSponsored Boolean  @default(false)
+  rating      Float    @default(0)
+  reviewCount Int      @default(0)
+  approvalStatus ContentApprovalStatus @default(PENDING)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  seller      User     @relation("SellerProducts", fields: [sellerId], references: [id])
+  category    ProductCategory? @relation(fields: [categoryId], references: [id])
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+  favorites   Favorite[]
+  reviews     Review[]
+
+  @@index([sellerId])
+  @@index([categoryId])
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+  updatedAt DateTime   @updatedAt
+}
+
+model CartItem {
+  id        String  @id @default(cuid())
+  cartId    String
+  productId String
+  quantity  Int     @default(1)
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
+  @@unique([cartId, productId])
+}
+
+model Order {
+  id                String         @id @default(cuid())
+  orderNumber       Int            @unique
+  userId            String
+  partnerId         String?
+  status            OrderStatus    @default(PENDING)
+  fulfillmentStatus OrderStatus    @default(PENDING)
+  total             Float
+  shippingCost      Float            @default(0)
+  discount          Float            @default(0)
+  shippingAddress   Json
+  alternateAddress  Json?
+  deliveryMethod    DeliveryMethod @default(DELIVERY_LOCAL)
+  paymentMethod     PaymentMethod  @default(PIX)
+  scheduledAt       DateTime?
+  deliveryNotes     String?
+  pickupInstructions String?
+  pickupQrCode      String?
+  thirdPartyPickup  Json?
+  serviceMode       ServiceFulfillmentMode?
+  onlineLink        String?
+  carrierName       String?
+  stripePaymentId   String?
+  walletTransactionId String?
+  trackingCode      String?
+  estimatedDelivery DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  user              User           @relation(fields: [userId], references: [id])
+  items             OrderItem[]
+  fulfillments      OrderFulfillment[]
+  statusHistory     OrderStatusHistory[]
+  refunds           Refund[]
+
+  @@index([userId])
+  @@index([partnerId])
+  @@index([status])
+}
+
+model OrderFulfillment {
+  id              String         @id @default(cuid())
+  orderId         String
+  partnerId       String
+  status          OrderStatus    @default(PENDING)
+  deliveryMethod  DeliveryMethod
+  trackingCode    String?
+  carrierName     String?
+  estimatedAt     DateTime?
+  deliveredAt     DateTime?
+  notes           String?
+  order           Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([partnerId])
+}
+
+model OrderStatusHistory {
+  id        String      @id @default(cuid())
+  orderId   String
+  status    OrderStatus
+  note      String?
+  createdAt DateTime    @default(now())
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, createdAt])
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  productId String?
+  serviceId String?
+  quoteId   String?
+  itemType  String  @default("product")
+  name      String
+  quantity  Int
+  price     Float
+  partnerId String?
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product? @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  productId String
+  userId    String
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+  @@unique([productId, userId])
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String?
+  postId    String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product? @relation(fields: [productId], references: [id])
+}
+
+model Subscription {
+  id               String           @id @default(cuid())
+  userId           String
+  plan             SubscriptionPlan @default(FREE)
+  stripeCustomerId String?
+  stripeSubId      String?
+  active           Boolean          @default(true)
+  expiresAt        DateTime?
+  createdAt        DateTime         @default(now())
+  user             User             @relation(fields: [userId], references: [id])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  body      String
+  type      String
+  read      Boolean  @default(false)
+  data      Json?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+}
+
+model Conversation {
+  id           String                    @id @default(cuid())
+  type         ConversationType          @default(CLIENT_ECOPET)
+  status       ConversationStatus        @default(OPEN)
+  title        String?
+  metadata     Json?
+  ticketId     String?                   @unique
+  createdAt    DateTime                  @default(now())
+  updatedAt    DateTime                  @updatedAt
+  participants ConversationParticipant[]
+  messages     Message[]
+  ticket       SupportTicket?            @relation(fields: [ticketId], references: [id])
+  quotes       CustomQuote[]
+
+  @@index([type])
+  @@index([status])
+}
+
+model ConversationParticipant {
+  id             String       @id @default(cuid())
+  conversationId String
+  userId         String
+  role           String?
+  lastReadAt     DateTime?
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([conversationId, userId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  senderId       String
+  content        String
+  type           MessageType  @default(TEXT)
+  metadata       Json?
+  read           Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation("Sender", fields: [senderId], references: [id])
+  attachments    MessageAttachment[]
+
+  @@index([conversationId, createdAt])
+}
+
+model MessageAttachment {
+  id        String  @id @default(cuid())
+  messageId String
+  url       String
+  fileName  String
+  mimeType  String?
+  size      Int?
+  message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+}
+
+model AdoptionListing {
+  id          String         @id @default(cuid())
+  ongId       String
+  name        String
+  species     PetSpecies
+  breed       String?
+  age         String?
+  photos      Json?
+  description String
+  requirements String?
+  status      AdoptionStatus @default(AVAILABLE)
+  createdAt   DateTime       @default(now())
+  ong         User           @relation(fields: [ongId], references: [id])
+}
+
+model AiSession {
+  id        String   @id @default(cuid())
+  userId    String
+  petId     String?
+  messages  Json
+  type      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model GamificationProfile {
+  id        String @id @default(cuid())
+  userId    String @unique
+  points    Int    @default(0)
+  level     Int    @default(1)
+  badges    Json?
+  rank      Int?
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Service {
+  id          String               @id @default(cuid())
+  providerId  String
+  type        ServiceType          @default(READY_SERVICE)
+  category    ReadyServiceCategory
+  name        String
+  description String
+  price       Float
+  durationMin Int?
+  image       String?
+  rating      Float                @default(0)
+  isActive    Boolean              @default(true)
+  approvalStatus ContentApprovalStatus @default(PENDING)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  provider    User                 @relation("ProviderServices", fields: [providerId], references: [id])
+
+  @@index([type])
+  @@index([category])
+}
+
+model CustomServiceRequest {
+  id            String               @id @default(cuid())
+  tutorId       String
+  description   String
+  species       PetSpecies?
+  size          PetSize?
+  location      String?
+  urgency       CustomRequestUrgency @default(MEDIUM)
+  budget        Float?
+  attachmentUrl String?
+  status        CustomRequestStatus  @default(OPEN)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  tutor         User                 @relation("TutorRequests", fields: [tutorId], references: [id], onDelete: Cascade)
+
+  @@index([tutorId])
+  @@index([status])
+}
+
+// ─── GESTOR ECOPET: RBAC, Auditoria, Operações ───
+
+model Department {
+  id          String   @id @default(cuid())
+  name        String
+  code        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  members     User[]
+  gestors     GestorProfile[]
+  rbacRoles   RbacRole[]
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  module      String
+  resource    String
+  action      String
+  code        String   @unique
+  description String?
+  roles       RolePermission[]
+}
+
+model RbacRole {
+  id             String   @id @default(cuid())
+  name           String
+  code           String   @unique
+  hierarchyLevel Int      @default(1)
+  departmentId   String?
+  department     Department? @relation(fields: [departmentId], references: [id])
+  permissions    RolePermission[]
+  assignments    UserRbacAssignment[]
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         RbacRole   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  @@id([roleId, permissionId])
+}
+
+model UserRbacAssignment {
+  id        String   @id @default(cuid())
+  userId    String
+  roleId    String
+  grantedBy String?
+  grantedAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      RbacRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  @@unique([userId, roleId])
+}
+
+model AuditLog {
+  id         String      @id @default(cuid())
+  userId     String?
+  action     AuditAction
+  module     String
+  resource   String
+  resourceId String?
+  profile    String?
+  entityBefore Json?
+  entityAfter  Json?
+  riskLevel  String?
+  status     String?
+  observation String?
+  location   String?
+  metadata   Json?
+  ip         String?
+  userAgent  String?
+  createdAt  DateTime    @default(now())
+  actor      User?       @relation("AuditActor", fields: [userId], references: [id], onDelete: SetNull)
+  riskFlags  AuditRiskFlag[]
+
+  @@index([userId])
+  @@index([module, createdAt])
+  @@index([resource, resourceId])
+  @@index([riskLevel])
+}
+
+model ApprovalRequest {
+  id           String         @id @default(cuid())
+  type         ApprovalType
+  entityType   String
+  entityId     String
+  requesterId  String
+  reviewerId   String?
+  status       ApprovalStatus @default(PENDING)
+  notes        String?
+  aiRiskScore  Float?
+  aiNotes      String?
+  metadata     Json?
+  createdAt    DateTime       @default(now())
+  reviewedAt   DateTime?
+  requester    User           @relation("ApprovalRequester", fields: [requesterId], references: [id])
+  reviewer     User?          @relation("ApprovalReviewer", fields: [reviewerId], references: [id])
+
+  @@index([status, type])
+  @@index([entityType, entityId])
+}
+
+model SupportTicket {
+  id           String         @id @default(cuid())
+  number       Int            @unique
+  subject      String
+  description  String
+  category     String
+  priority     TicketPriority @default(MEDIUM)
+  status       TicketStatus   @default(OPEN)
+  requesterId  String
+  assigneeId   String?
+  aiSuggested  String?
+  metadata     Json?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  resolvedAt   DateTime?
+  requester    User           @relation("TicketRequester", fields: [requesterId], references: [id])
+  assignee     User?          @relation("TicketAssignee", fields: [assigneeId], references: [id])
+  conversation Conversation?
+
+  @@index([status, priority])
+  @@index([requesterId])
+}
+
+model ContentReport {
+  id           String       @id @default(cuid())
+  reporterId   String
+  targetType   String
+  targetId     String
+  reason       String
+  description  String?
+  status       ReportStatus @default(PENDING)
+  action       String?
+  aiFlags      Json?
+  reviewerId   String?
+  createdAt    DateTime     @default(now())
+  resolvedAt   DateTime?
+  reporter     User         @relation("ReportAuthor", fields: [reporterId], references: [id])
+  reviewer     User?        @relation("ReportReviewer", fields: [reviewerId], references: [id])
+
+  @@index([status])
+  @@index([targetType, targetId])
+}
+
+model CustomQuote {
+  id             String      @id @default(cuid())
+  conversationId String?
+  requesterId    String
+  providerId     String
+  name           String
+  description    String
+  value          Float
+  validUntil     DateTime
+  executionDays  Int?
+  status         QuoteStatus @default(DRAFT)
+  includedItems  Json?
+  excludedItems  Json?
+  conditions     String?
+  version        Int         @default(1)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  conversation   Conversation? @relation(fields: [conversationId], references: [id])
+  requester      User        @relation("QuoteRequester", fields: [requesterId], references: [id])
+  provider       User        @relation("QuoteProvider", fields: [providerId], references: [id])
+
+  @@index([status])
+  @@index([requesterId, providerId])
+}
+
+model Integration {
+  id          String            @id @default(cuid())
+  ownerId     String
+  provider    String
+  name        String
+  status      IntegrationStatus @default(DISCONNECTED)
+  config      Json?
+  permissions Json?
+  lastSyncAt  DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  owner       User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  logs        IntegrationLog[]
+
+  @@index([ownerId, provider])
+}
+
+model IntegrationLog {
+  id            String      @id @default(cuid())
+  integrationId String
+  action        String
+  status        String
+  message       String?
+  metadata      Json?
+  createdAt     DateTime    @default(now())
+  integration   Integration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+
+  @@index([integrationId, createdAt])
+}
+
+model OperationalRobot {
+  id          String      @id @default(cuid())
+  ownerId     String
+  profileType String
+  domain      RobotDomain
+  name        String
+  description String?
+  config      Json?
+  isActive    Boolean     @default(true)
+  lastRunAt   DateTime?
+  createdAt   DateTime    @default(now())
+  owner       User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  tasks       RobotTask[]
+  logs        RobotLog[]
+  alerts      RobotAlert[]
+
+  @@index([ownerId, profileType])
+}
+
+model SystemMetric {
+  id        String   @id @default(cuid())
+  date      DateTime @default(now())
+  metricKey String
+  value     Float
+  metadata  Json?
+
+  @@index([metricKey, date])
+}
+
+model FinancialTransaction {
+  id          String   @id @default(cuid())
+  type        String
+  category    String
+  amount      Float
+  description String?
+  referenceId String?
+  createdAt   DateTime @default(now())
+
+  @@index([type, category])
+}
+
+// ─── Saldo ECOPET (Carteira Digital) ───
+
+model Wallet {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  balance   Float    @default(0)
+  currency  String   @default("BRL")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions WalletTransaction[]
+  logs      WalletLog[]
+}
+
+model WalletTransaction {
+  id          String                @id @default(cuid())
+  walletId    String
+  type        WalletTransactionType
+  amount      Float
+  balanceAfter Float
+  description String?
+  orderId     String?
+  refundId    String?
+  metadata    Json?
+  createdAt   DateTime              @default(now())
+  wallet      Wallet                @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([walletId, createdAt])
+}
+
+model WalletLog {
+  id        String   @id @default(cuid())
+  walletId  String
+  action    String
+  metadata  Json?
+  createdAt DateTime @default(now())
+  wallet    Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+}
+
+model Refund {
+  id              String            @id @default(cuid())
+  userId          String
+  orderId         String?
+  originalMethod  PaymentMethod
+  destination     RefundDestination
+  amount          Float
+  status          RefundStatus      @default(PENDING)
+  reason          String?
+  processedAt     DateTime?
+  createdAt       DateTime          @default(now())
+  user            User              @relation(fields: [userId], references: [id])
+  order           Order?            @relation(fields: [orderId], references: [id])
+
+  @@index([userId])
+  @@index([orderId])
+}
+
+model Cashback {
+  id          String   @id @default(cuid())
+  userId      String
+  orderId     String?
+  amount      Float
+  percentage  Float?
+  description String?
+  expiresAt   DateTime?
+  applied     Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ─── Logística de Parceiros ───
+
+model PartnerLogisticsConfig {
+  id                    String   @id @default(cuid())
+  partnerId             String   @unique
+  pickupEnabled         Boolean  @default(true)
+  deliveryLocal         Boolean  @default(true)
+  deliveryRegional      Boolean  @default(false)
+  deliveryNational      Boolean  @default(false)
+  deliveryOwn           Boolean  @default(true)
+  deliveryPartnerLogistics Boolean @default(false)
+  scheduledPickup       Boolean  @default(true)
+  scheduledDelivery     Boolean  @default(true)
+  pickupAddress         Json?
+  pickupHours           String?
+  pickupInstructions    String?
+  pickupResponsible     String?
+  localDeliveryDays     Int      @default(3)
+  regionalDeliveryDays  Int      @default(7)
+  nationalDeliveryDays  Int      @default(15)
+  localDeliveryFee      Float    @default(0)
+  regionalDeliveryFee   Float    @default(15)
+  nationalDeliveryFee   Float    @default(35)
+  carrierPartners       Json?
+  mapLat                Float?
+  mapLng                Float?
+  partner               User     @relation("PartnerLogistics", fields: [partnerId], references: [id], onDelete: Cascade)
+}
+
+// ─── Assessoria Inteligente ECOPET (Parceiros & ONGs) ───
+
+model AdvisorySubscription {
+  id          String           @id @default(cuid())
+  userId      String           @unique
+  planType    AdvisoryPlanType
+  active      Boolean          @default(true)
+  expiresAt   DateTime?
+  features    Json?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  insights    AdvisoryInsight[]
+  metrics     AdvisoryMetric[]
+}
+
+model AdvisoryInsight {
+  id             String   @id @default(cuid())
+  subscriptionId String
+  category       String
+  title          String
+  description    String
+  priority       String   @default("medium")
+  actionPlan     Json?
+  aiGenerated    Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  subscription   AdvisorySubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@index([subscriptionId])
+}
+
+model AdvisoryMetric {
+  id             String   @id @default(cuid())
+  subscriptionId String
+  metricKey      String
+  value          Float
+  label          String
+  trend          String?
+  recordedAt     DateTime @default(now())
+  subscription   AdvisorySubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@index([subscriptionId, metricKey])
+}
+
+// ─── Autenticação & Segurança ───
+
+model UserSession {
+  id         String   @id @default(cuid())
+  userId     String
+  tokenHash  String
+  device     String?
+  ip         String?
+  userAgent  String?
+  active     Boolean  @default(true)
+  lastSeenAt DateTime @default(now())
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, active])
+}
+
+model PasswordReset {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  used      Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+}
+
+model LoginLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  email     String?
+  username  String?
+  success   Boolean
+  ip        String?
+  userAgent String?
+  reason    String?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+}
+
+model SecurityEvent {
+  id        String   @id @default(cuid())
+  userId    String?
+  eventType String
+  severity  String   @default("info")
+  metadata  Json?
+  ip        String?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([eventType, createdAt])
+}
+
+model VerificationCode {
+  id        String   @id @default(cuid())
+  userId    String
+  code      String
+  purpose   String
+  used      Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purpose, used])
+}
+
+model SystemBootstrap {
+  id                  String    @id @default("singleton")
+  bootstrapUsername   String    @default("gestorveras")
+  bootstrapUserId     String?
+  bootstrapUsed       Boolean   @default(false)
+  bootstrapUsedAt     DateTime?
+  bootstrapDisabled   Boolean   @default(false)
+  masterAdminCreated  Boolean   @default(false)
+  masterAdminUserId   String?
+  initializedAt       DateTime?
+  updatedAt           DateTime  @updatedAt
+}
+
+model GestorInvite {
+  id           String   @id @default(cuid())
+  email        String
+  name         String
+  roleCode     String
+  departmentId String?
+  tempPassword String?
+  token        String   @unique
+  status       String   @default("PENDING")
+  invitedById  String
+  expiresAt    DateTime
+  acceptedAt   DateTime?
+  createdAt    DateTime @default(now())
+  invitedBy    User     @relation("InviteSender", fields: [invitedById], references: [id])
+
+  @@index([email, status])
+}
+
+model AuditRiskFlag {
+  id         String   @id @default(cuid())
+  auditLogId String
+  flagType   String
+  severity   String
+  resolved   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  auditLog   AuditLog @relation(fields: [auditLogId], references: [id], onDelete: Cascade)
+}
+
+// ─── Gestor: Notificações Globais ───
+
+model NotificationTemplate {
+  id        String   @id @default(cuid())
+  name      String
+  channel   String
+  subject   String?
+  body      String
+  variables Json?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  dispatches NotificationDispatch[]
+}
+
+model NotificationDispatch {
+  id           String   @id @default(cuid())
+  templateId   String?
+  title        String
+  body         String
+  channel      String
+  segment      String?
+  status       String   @default("PENDING")
+  scheduledAt  DateTime?
+  sentAt       DateTime?
+  recipientCount Int    @default(0)
+  readCount    Int      @default(0)
+  createdById  String?
+  createdAt    DateTime @default(now())
+  template     NotificationTemplate? @relation(fields: [templateId], references: [id])
+  logs         NotificationDispatchLog[]
+}
+
+model NotificationDispatchLog {
+  id          String   @id @default(cuid())
+  dispatchId  String
+  userId      String?
+  status      String
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  dispatch    NotificationDispatch @relation(fields: [dispatchId], references: [id], onDelete: Cascade)
+}
+
+// ─── Gestor: Documentos ───
+
+model PlatformDocument {
+  id           String   @id @default(cuid())
+  ownerId      String
+  ownerType    String
+  docType      String
+  title        String
+  fileUrl      String?
+  status       String   @default("PENDING")
+  validUntil   DateTime?
+  reviewedById String?
+  reviewNotes  String?
+  metadata     Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  owner        User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  reviews      DocumentReview[]
+}
+
+model DocumentReview {
+  id         String   @id @default(cuid())
+  documentId String
+  reviewerId String
+  action     String
+  notes      String?
+  createdAt  DateTime @default(now())
+  document   PlatformDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+}
+
+// ─── Gestor: Financeiro Interno ───
+
+model FinancialAccount {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  name      String
+  type      String
+  balance   Float    @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model Receivable {
+  id          String   @id @default(cuid())
+  description String
+  amount      Float
+  dueDate     DateTime
+  status      String   @default("OPEN")
+  payerRef    String?
+  createdAt   DateTime @default(now())
+}
+
+model Payable {
+  id          String   @id @default(cuid())
+  description String
+  amount      Float
+  dueDate     DateTime
+  status      String   @default("OPEN")
+  vendorRef   String?
+  createdAt   DateTime @default(now())
+}
+
+// ─── Gestor: IoT ───
+
+model IotDevice {
+  id           String   @id @default(cuid())
+  name         String
+  deviceType   String
+  ownerType    String
+  ownerId      String
+  status       String   @default("offline")
+  location     String?
+  battery      Float?
+  lastReading  DateTime?
+  metadata     Json?
+  createdAt    DateTime @default(now())
+  readings     IotReading[]
+  alerts       IotAlert[]
+}
+
+model IotReading {
+  id        String   @id @default(cuid())
+  deviceId  String
+  metricKey String
+  value     Float
+  unit      String?
+  recordedAt DateTime @default(now())
+  device    IotDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+}
+
+model IotAlert {
+  id        String   @id @default(cuid())
+  deviceId  String
+  severity  String
+  message   String
+  resolved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  device    IotDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+}
+
+// ─── Gestor: Robôs (extensão) ───
+
+model RobotTask {
+  id        String   @id @default(cuid())
+  robotId   String
+  taskType  String
+  status    String   @default("PENDING")
+  result    Json?
+  scheduledAt DateTime?
+  executedAt  DateTime?
+  robot     OperationalRobot @relation(fields: [robotId], references: [id], onDelete: Cascade)
+}
+
+model RobotLog {
+  id        String   @id @default(cuid())
+  robotId   String
+  action    String
+  metadata  Json?
+  createdAt DateTime @default(now())
+  robot     OperationalRobot @relation(fields: [robotId], references: [id], onDelete: Cascade)
+}
+
+model RobotAlert {
+  id        String   @id @default(cuid())
+  robotId   String
+  severity  String
+  message   String
+  resolved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  robot     OperationalRobot @relation(fields: [robotId], references: [id], onDelete: Cascade)
+}
+
+// ─── Gestor: BI & Sistema ───
+
+model GestorDashboard {
+  id        String   @id @default(cuid())
+  name      String
+  sector    String
+  config    Json?
+  createdAt DateTime @default(now())
+  widgets   DashboardWidget[]
+}
+
+model DashboardWidget {
+  id          String   @id @default(cuid())
+  dashboardId String
+  widgetType  String
+  title       String
+  config      Json?
+  order       Int      @default(0)
+  dashboard   GestorDashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
+}
+
+model SystemHealthCheck {
+  id        String   @id @default(cuid())
+  service   String
+  status    String
+  latencyMs Int?
+  metadata  Json?
+  checkedAt DateTime @default(now())
+}
+
+model SystemBackup {
+  id        String   @id @default(cuid())
+  type      String
+  status    String
+  sizeBytes Int?
+  path      String?
+  createdAt DateTime @default(now())
+}
+
+model SystemError {
+  id        String   @id @default(cuid())
+  service   String
+  message   String
+  stack     String?
+  resolved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+// ─── Plataforma: Governança, Workflows, SLA, Eventos ───
+
+enum PersonaScope {
+  CLIENT
+  PARTNER
+  NGO
+  GESTOR
+  GLOBAL
+}
+
+enum LgpdRequestType {
+  EXPORT
+  DELETE
+  ANONYMIZE
+  ACCESS
+}
+
+enum LgpdRequestStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  REJECTED
+}
+
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  type        String   // CLIENT, PARTNER, NGO, ECOPET
+  parentId    String?
+  parent      Organization? @relation("OrgHierarchy", fields: [parentId], references: [id])
+  children    Organization[] @relation("OrgHierarchy")
+  isActive    Boolean  @default(true)
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  members     OrganizationMember[]
+  units       OrganizationUnit[]
+  users       User[]
+  featureOverrides FeatureFlagOverride[]
+  workflows   WorkflowDefinition[]
+  slaPolicies SlaPolicy[]
+  businessRules BusinessRule[]
+  costEntries CostEntry[]
+  events      PlatformEvent[]
+  lgpdRequests LgpdRequest[]
+  retentionPolicies DataRetentionPolicy[]
+
+  @@index([type])
+  @@index([parentId])
+}
+
+model OrganizationUnit {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  code           String
+  type           String   // filial, departamento, nucleo, centro_custo
+  parentId       String?
+  parent         OrganizationUnit? @relation("UnitHierarchy", fields: [parentId], references: [id])
+  children       OrganizationUnit[] @relation("UnitHierarchy")
+  isActive       Boolean  @default(true)
+  metadata       Json?
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  members        OrganizationMember[]
+
+  @@unique([organizationId, code])
+}
+
+model OrganizationMember {
+  id             String   @id @default(cuid())
+  organizationId String
+  unitId         String?
+  userId         String
+  role           String   @default("member")
+  isAdmin        Boolean  @default(false)
+  joinedAt       DateTime @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  unit           OrganizationUnit? @relation(fields: [unitId], references: [id])
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+}
+
+model FeatureFlag {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String?
+  enabled     Boolean  @default(false)
+  rolloutPct  Int      @default(100)
+  personaScope PersonaScope @default(GLOBAL)
+  moduleKey   String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  overrides   FeatureFlagOverride[]
+}
+
+model FeatureFlagOverride {
+  id             String   @id @default(cuid())
+  flagId         String
+  organizationId String?
+  enabled        Boolean
+  flag           FeatureFlag @relation(fields: [flagId], references: [id], onDelete: Cascade)
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([flagId, organizationId])
+}
+
+model WorkflowDefinition {
+  id             String   @id @default(cuid())
+  name           String
+  description    String?
+  personaScope   PersonaScope @default(GLOBAL)
+  organizationId String?
+  triggerType    String   // event, schedule, manual
+  triggerConfig  Json
+  actions        Json     // array of { type, config }
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  instances      WorkflowInstance[]
+
+  @@index([personaScope, isActive])
+}
+
+model WorkflowInstance {
+  id           String   @id @default(cuid())
+  definitionId String
+  ownerId      String?
+  status       String   @default("RUNNING") // RUNNING, COMPLETED, FAILED, PAUSED
+  triggerData  Json?
+  result       Json?
+  startedAt    DateTime @default(now())
+  completedAt  DateTime?
+  definition   WorkflowDefinition @relation(fields: [definitionId], references: [id], onDelete: Cascade)
+  owner        User?    @relation("WorkflowOwner", fields: [ownerId], references: [id])
+  logs         WorkflowExecutionLog[]
+
+  @@index([status, startedAt])
+}
+
+model WorkflowExecutionLog {
+  id         String   @id @default(cuid())
+  instanceId String
+  step       String
+  status     String
+  message    String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  instance   WorkflowInstance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+}
+
+model SlaPolicy {
+  id             String   @id @default(cuid())
+  name           String
+  personaScope   PersonaScope @default(GLOBAL)
+  organizationId String?
+  entityType     String   // support_ticket, report, adoption, campaign, chat
+  responseMins   Int
+  resolutionMins Int
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  records        SlaRecord[]
+
+  @@index([entityType, personaScope])
+}
+
+model SlaRecord {
+  id           String   @id @default(cuid())
+  policyId     String
+  entityType   String
+  entityId     String
+  status       String   @default("ACTIVE") // ACTIVE, MET, BREACHED, CANCELLED
+  dueAt        DateTime
+  respondedAt  DateTime?
+  resolvedAt   DateTime?
+  breachedAt   DateTime?
+  metadata     Json?
+  createdAt    DateTime @default(now())
+  policy       SlaPolicy @relation(fields: [policyId], references: [id], onDelete: Cascade)
+
+  @@index([entityType, entityId])
+  @@index([status, dueAt])
+}
+
+model EntityVersion {
+  id         String   @id @default(cuid())
+  entityType String
+  entityId   String
+  version    Int
+  snapshot   Json
+  changeNote String?
+  authorId   String?
+  createdAt  DateTime @default(now())
+  author     User?    @relation("VersionAuthor", fields: [authorId], references: [id])
+
+  @@unique([entityType, entityId, version])
+  @@index([entityType, entityId])
+}
+
+model CostEntry {
+  id             String   @id @default(cuid())
+  category       String   // ia, api, email, whatsapp, storage, db, server, robot, integration
+  moduleKey      String?
+  personaScope   PersonaScope @default(GLOBAL)
+  organizationId String?
+  userId         String?
+  amount         Float
+  currency       String   @default("BRL")
+  quantity       Float?
+  unit           String?
+  periodStart    DateTime
+  periodEnd      DateTime
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  user           User?    @relation(fields: [userId], references: [id])
+
+  @@index([category, periodStart])
+  @@index([organizationId])
+}
+
+model DataPipeline {
+  id          String   @id @default(cuid())
+  name        String
+  layer       String   // lake, warehouse, mart, etl
+  source      String
+  destination String?
+  schedule    String?
+  status      String   @default("IDLE")
+  lastRunAt   DateTime?
+  config      Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model BusinessRule {
+  id             String   @id @default(cuid())
+  name           String
+  description    String?
+  personaScope   PersonaScope @default(GLOBAL)
+  organizationId String?
+  condition      Json     // { field, operator, value }
+  action         Json     // { type, params }
+  priority       Int      @default(100)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  executions     RuleExecutionLog[]
+
+  @@index([personaScope, isActive])
+}
+
+model RuleExecutionLog {
+  id        String   @id @default(cuid())
+  ruleId    String
+  entityType String?
+  entityId  String?
+  result    String   // APPLIED, SKIPPED, ERROR
+  metadata  Json?
+  createdAt DateTime @default(now())
+  rule      BusinessRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+}
+
+model PlatformEvent {
+  id             String   @id @default(cuid())
+  eventType      String
+  personaScope   PersonaScope @default(GLOBAL)
+  organizationId String?
+  actorId        String?
+  entityType     String?
+  entityId       String?
+  payload        Json?
+  severity       String   @default("info")
+  createdAt      DateTime @default(now())
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  actor          User?    @relation("EventActor", fields: [actorId], references: [id])
+
+  @@index([eventType, createdAt])
+  @@index([personaScope, createdAt])
+}
+
+model EventSubscription {
+  id          String   @id @default(cuid())
+  name        String
+  eventTypes  Json     // string[]
+  channel     String   // webhook, email, robot, workflow
+  config      Json
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+model ConsentRecord {
+  id          String   @id @default(cuid())
+  userId      String
+  consentType String
+  granted     Boolean
+  version     String?
+  ip          String?
+  metadata    Json?
+  grantedAt   DateTime @default(now())
+  revokedAt   DateTime?
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, consentType])
+}
+
+model LgpdRequest {
+  id             String   @id @default(cuid())
+  userId         String
+  organizationId String?
+  type           LgpdRequestType
+  status         LgpdRequestStatus @default(PENDING)
+  notes          String?
+  resultUrl      String?
+  processedById  String?
+  processedAt    DateTime?
+  createdAt      DateTime @default(now())
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([userId, status])
+}
+
+model DataRetentionPolicy {
+  id             String   @id @default(cuid())
+  name           String
+  dataCategory   String   // logs, messages, audit, documents
+  retentionDays  Int
+  archiveDays    Int?
+  autoDelete     Boolean  @default(false)
+  personaScope   PersonaScope @default(GLOBAL)
+  organizationId String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+}
+
+model ObservabilitySnapshot {
+  id          String   @id @default(cuid())
+  service     String
+  metricKey   String
+  value       Float
+  unit        String?
+  status      String   @default("ok")
+  metadata    Json?
+  recordedAt  DateTime @default(now())
+
+  @@index([service, metricKey, recordedAt])
+}
+
+model GovernanceInsight {
+  id          String   @id @default(cuid())
+  userId      String?
+  category    String   // lgpd, compliance, risk, security, retention
+  title       String
+  description String
+  severity    String   @default("info")
+  suggestion  String?
+  metadata    Json?
+  resolved    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  user        User?    @relation(fields: [userId], references: [id])
+
+  @@index([category, resolved])
+}
+
+model BackupJob {
+  id          String   @id @default(cuid())
+  type        String   // auto, manual, snapshot
+  scope       String   @default("full")
+  status      String   @default("PENDING")
+  sizeBytes   Int?
+  path        String?
+  initiatedBy String?
+  restoredAt  DateTime?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  completedAt DateTime?
+
+  @@index([status, createdAt])
+}

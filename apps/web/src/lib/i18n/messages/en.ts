@@ -1,0 +1,102 @@
+import type { MessageTree } from "../types";
+
+const messages: MessageTree = {
+  common: {
+    loading: "Loading...",
+    error: "An error occurred",
+    search: "Search pets, products, vets...",
+    save: "Save",
+    cancel: "Cancel",
+  },
+  nav: {
+    home: "Home",
+    feed: "Feed",
+    explore: "Explore",
+    marketplace: "Shop",
+    ia: "Pet AI",
+    pets: "My Pets",
+    adoption: "Adoption",
+    chat: "Chat",
+    notifications: "Notifications",
+    premium: "Premium",
+    settings: "Settings",
+  },
+  auth: {
+    login: {
+      title: "Welcome back",
+      subtitle: "Sign in to your ECOPET account",
+      email: "Email",
+      password: "Password",
+      submit: "Sign in",
+      forgot: "Forgot password?",
+      noAccount: "Don't have an account?",
+    },
+    register: {
+      title: "Create ECOPET account",
+      submit: "Create account",
+      hasAccount: "Already have an account?",
+    },
+  },
+  a11y: {
+    title: "ECOPET Accessibility",
+    open: "Open accessibility toolbar",
+    close: "Close accessibility toolbar",
+    reset: "Reset to default",
+    skipLink: "Skip to main content",
+    activated: "enabled",
+    deactivated: "disabled",
+    preferencesSaved: "Preferences saved",
+    sections: {
+      visual: "Visual",
+      auditory: "Auditory",
+      cognitive: "Cognitive",
+      motor: "Motor",
+      neuro: "Neurodiversity",
+      libras: "Sign Language (Libras)",
+      braille: "Braille / Screen Reader",
+      languages: "Languages",
+      preferences: "Preferences",
+    },
+    labels: {
+      increaseFont: "Increase font",
+      decreaseFont: "Decrease font",
+      resetFont: "Reset font",
+      letterSpacing: "Letter spacing",
+      lineHeight: "Line spacing",
+      highContrast: "High contrast",
+      invertedContrast: "Inverted contrast",
+      grayscale: "Grayscale",
+      colorBlind: "Color blind mode",
+      highlightLinks: "Highlight links",
+      strongFocus: "Strong focus",
+      largeCursor: "Large cursor",
+      readingMask: "Reading mask",
+      readingGuide: "Reading guide",
+      pauseAnimations: "Pause animations",
+      screenReader: "Screen reader / Braille mode",
+      dyslexia: "Dyslexia mode",
+      calm: "Calm mode",
+      simplified: "Simplified interface",
+      reduceNotifications: "Reduce visual alerts",
+      motor: "Reduced mobility mode",
+      cognitive: "Simple language mode",
+      visualAlerts: "Visual alerts (deafness)",
+      libras: "Enable Libras (VLibras)",
+    },
+    librasNote:
+      "VLibras integration (Brazil gov). External connection required. Compatible with screen readers and Braille displays.",
+    language: {
+      title: "Interface language",
+      autoTranslate: "Automatic translation via API",
+      autoTranslateNote:
+        "Locales without a local bundle use auto-translation (OpenAI/DeepL/Google). Local cache applied.",
+    },
+  },
+  lang: {
+    selector: {
+      label: "Select language",
+    },
+  },
+};
+
+export default messages;

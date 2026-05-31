@@ -1,0 +1,242 @@
+/* ─── ECOPET Accessibility Module ─── */
+
+/* Visual filters */
+html.a11y-grayscale body {
+  filter: grayscale(100%);
+}
+
+html.a11y-inverted-contrast body {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+html.a11y-inverted-contrast body img,
+html.a11y-inverted-contrast body video,
+html.a11y-inverted-contrast body picture {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+html.a11y-colorblind body {
+  filter: contrast(1.15) saturate(0.4);
+}
+
+/* High contrast */
+html.a11y-high-contrast body {
+  background-color: #000 !important;
+  color: #fff !important;
+}
+
+html.a11y-high-contrast body :where(h1, h2, h3, h4, h5, h6, p, span, label, li, td, th) {
+  color: inherit;
+}
+
+html.a11y-high-contrast body :where(a, button) {
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+html.a11y-high-contrast body :where(.bg-white, .bg-gray-50, [class*="bg-white"]) {
+  background-color: #111 !important;
+  color: #fff !important;
+}
+
+html.a11y-high-contrast body :where(input, textarea, select) {
+  background-color: #000 !important;
+  color: #fff !important;
+  border: 2px solid #fff !important;
+}
+
+html.a11y-high-contrast body :where(.text-ecopet-green, .text-ecopet-dark) {
+  color: #f5c800 !important;
+}
+
+html.a11y-high-contrast body :where(.bg-ecopet-green, .bg-ecopet-dark) {
+  background-color: #f5c800 !important;
+  color: #000 !important;
+}
+
+/* Links */
+html.a11y-highlight-links body a {
+  background-color: #ffeb3b !important;
+  color: #000 !important;
+  text-decoration: underline !important;
+  font-weight: 700 !important;
+  padding: 0 2px;
+}
+
+/* Focus */
+html.a11y-strong-focus body :focus-visible {
+  outline: 4px solid #f5c800 !important;
+  outline-offset: 4px !important;
+  box-shadow: 0 0 0 6px #1a3a2a !important;
+}
+
+/* Cursor */
+html.a11y-large-cursor,
+html.a11y-large-cursor * {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' stroke='%23fff' stroke-width='1' d='M5 3l14 9-6 1 4 8-3 1-4-8-5 1z'/%3E%3C/svg%3E") 0 0, auto !important;
+}
+
+/* Dyslexia */
+html.a11y-dyslexia body {
+  font-family: Verdana, Geneva, Tahoma, "Segoe UI", sans-serif !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.85 !important;
+  word-spacing: 0.12em;
+}
+
+html.a11y-dyslexia body p,
+html.a11y-dyslexia body li {
+  max-width: 70ch;
+}
+
+html.a11y-dyslexia body {
+  background-color: #faf8f0 !important;
+}
+
+/* Calm / neuro */
+html.a11y-calm body {
+  --color-ecopet-yellow: #d4c88a;
+  --color-ecopet-green: #3d6b52;
+}
+
+html.a11y-calm *,
+html.a11y-pause-animations * {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+html.a11y-calm body [class*="animate-"],
+html.a11y-calm body [class*="motion-"] {
+  transform: none !important;
+}
+
+/* Simplified UI */
+html.a11y-simplified body {
+  --shadow-sm: none;
+  --shadow-md: none;
+}
+
+html.a11y-simplified body [class*="shadow"],
+html.a11y-simplified body [class*="backdrop-blur"] {
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+html.a11y-simplified body .glass {
+  background: #fff !important;
+  border: 2px solid #ccc !important;
+}
+
+html.a11y-reduce-notifications body [role="status"],
+html.a11y-reduce-notifications body [data-notification-badge] {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+/* Motor */
+html.a11y-motor body button,
+html.a11y-motor body a,
+html.a11y-motor body [role="button"],
+html.a11y-motor body input,
+html.a11y-motor body select {
+  min-height: 48px !important;
+  min-width: 48px;
+  padding: 12px 16px !important;
+}
+
+html.a11y-motor body a:not([class*="btn"]) {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Cognitive */
+html.a11y-cognitive body {
+  font-size: calc(1rem * var(--a11y-font-scale, 1.05));
+}
+
+html.a11y-cognitive body h1,
+html.a11y-cognitive body h2,
+html.a11y-cognitive body h3 {
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+/* Screen reader friendly — visible skip, stronger semantics hint */
+html.a11y-screen-reader body .a11y-skip-link:focus {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 99999;
+  padding: 12px 20px;
+  background: #000;
+  color: #fff;
+  font-weight: 700;
+  border: 3px solid #f5c800;
+}
+
+/* Visual alerts for deaf users */
+html.a11y-visual-alerts body [data-a11y-alert] {
+  border-left: 6px solid #f5c800 !important;
+  animation: a11y-pulse-border 1.5s ease-in-out 3;
+}
+
+@keyframes a11y-pulse-border {
+  0%, 100% { border-color: #f5c800; }
+  50% { border-color: #ff5722; }
+}
+
+/* Reading mask overlay */
+.a11y-reading-mask-overlay {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: rgba(0, 0, 0, 0.72);
+  clip-path: var(--a11y-mask-clip, inset(0 0 0 0));
+}
+
+/* Reading guide line */
+.a11y-reading-guide-line {
+  pointer-events: none;
+  position: fixed;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #f5c800;
+  box-shadow: 0 0 12px rgba(245, 200, 0, 0.8);
+  z-index: 9997;
+  transform: translateY(var(--a11y-guide-y, -100px));
+}
+
+/* Status — never color-only when colorblind */
+html.a11y-colorblind body [data-status]::after {
+  content: " (" attr(data-status) ")";
+  font-size: 0.75em;
+  font-weight: 700;
+}
+
+/* Toolbar container — avoid layout shift */
+.a11y-toolbar-root {
+  position: fixed;
+  z-index: 9990;
+}
+
+/* VLibras slot */
+html[dir="rtl"] body {
+  direction: rtl;
+  text-align: right;
+}
+
+html[dir="rtl"] .a11y-toolbar-root {
+  left: auto;
+  right: 1rem;
+}
+
+.a11y-vlibras-slot:not(:empty) {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 9980;
+}

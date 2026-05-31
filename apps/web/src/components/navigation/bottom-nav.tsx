@@ -1,0 +1,43 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { MAIN_NAV, isNavActive } from "@/lib/navigation/main-nav";
+
+export function BottomNav() {
+  const pathname = usePathname();
+
+  return (
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-ecopet-gray/10 bg-white/95 backdrop-blur-xl dark:border-white/10 dark:bg-[#0f1419]/95 lg:hidden"
+      aria-label="Navegação principal"
+    >
+      <div className="flex items-stretch justify-around px-1 pb-[env(safe-area-inset-bottom)] pt-1">
+        {MAIN_NAV.map(({ href, label, icon: Icon, ...item }) => {
+          const active = isNavActive(pathname, { href, label, icon: Icon, ...item });
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={cn(
+                "relative flex min-w-0 flex-1 flex-col items-center gap-0.5 px-1 py-2 transition-all duration-200",
+                active ? "text-ecopet-green" : "text-ecopet-gray dark:text-white/50"
+              )}
+            >
+              {active && (
+                <span className="absolute top-0 h-0.5 w-8 rounded-full bg-ecopet-green transition-all" />
+              )}
+              <Icon className={cn("h-5 w-5 transition-transform duration-200", active && "scale-110")} />
+              <span className={cn("text-[10px] font-semibold leading-tight", active && "text-ecopet-green")}>
+                {label}
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
+
+export { MAIN_NAV };

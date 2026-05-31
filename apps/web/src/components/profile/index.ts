@@ -1,0 +1,13 @@
+export { SmartProfileHub } from "./smart-profile-hub";
+export { SmartProfileHub as ProfileHub } from "./smart-profile-hub";
+export { ProfileHeader } from "./profile-header";
+export { PetCentral } from "./client/client-modules";
+export { PersonaDashboard, FinancialDashboard, LegalDashboard, MarketingDashboard, StockDashboard, RHPanel, InnovationPanel } from "./partner/partner-modules";
+export { IntegrationsCenter } from "./partner/integrations-center";
+export { NGOOperationsPanel } from "./ngo/ngo-modules";
+export { AnalyticsCards } from "./shared/analytics-cards";
+export { AnalyticsChartMock } from "./shared/analytics-chart-mock";
+export { SmartWidgets, ProfileSection, ProfileList } from "./shared/smart-widgets";
+export { AIInsightsPanel } from "./shared/ai-insights-panel";
+export { RealtimeIndicators, ProfileLoadingSkeleton, EmptyState } from "./shared/realtime-indicators";
+export { PersonaTabs } from "./shared/persona-tabs";

@@ -1,0 +1,102 @@
+import type { MessageTree } from "../types";
+
+const messages: MessageTree = {
+  common: {
+    loading: "Carregando...",
+    error: "Ocorreu um erro",
+    search: "Buscar pets, produtos, vets...",
+    save: "Salvar",
+    cancel: "Cancelar",
+  },
+  nav: {
+    home: "Início",
+    feed: "Feed",
+    explore: "Explorar",
+    marketplace: "Loja",
+    ia: "IA Pet",
+    pets: "Meus Pets",
+    adoption: "Adoção",
+    chat: "Chat",
+    notifications: "Notificações",
+    premium: "Premium",
+    settings: "Configurações",
+  },
+  auth: {
+    login: {
+      title: "Bem-vindo de volta",
+      subtitle: "Entre na sua conta ECOPET",
+      email: "E-mail",
+      password: "Senha",
+      submit: "Entrar",
+      forgot: "Esqueceu a senha?",
+      noAccount: "Não tem conta?",
+    },
+    register: {
+      title: "Criar conta ECOPET",
+      submit: "Criar conta",
+      hasAccount: "Já tem conta?",
+    },
+  },
+  a11y: {
+    title: "Acessibilidade ECOPET",
+    open: "Abrir barra de acessibilidade",
+    close: "Fechar barra de acessibilidade",
+    reset: "Restaurar padrão",
+    skipLink: "Ir para o conteúdo principal",
+    activated: "ativado",
+    deactivated: "desativado",
+    preferencesSaved: "Preferências salvas",
+    sections: {
+      visual: "Visual",
+      auditory: "Auditiva",
+      cognitive: "Cognitiva",
+      motor: "Motora",
+      neuro: "Neurodivergência",
+      libras: "Libras",
+      braille: "Braille / Leitor de Tela",
+      languages: "Idiomas",
+      preferences: "Preferências",
+    },
+    labels: {
+      increaseFont: "Aumentar fonte",
+      decreaseFont: "Diminuir fonte",
+      resetFont: "Restaurar fonte",
+      letterSpacing: "Espaçamento entre letras",
+      lineHeight: "Espaçamento entre linhas",
+      highContrast: "Alto contraste",
+      invertedContrast: "Contraste invertido",
+      grayscale: "Escala de cinza",
+      colorBlind: "Modo daltonismo",
+      highlightLinks: "Destacar links",
+      strongFocus: "Foco visual reforçado",
+      largeCursor: "Cursor ampliado",
+      readingMask: "Máscara de leitura",
+      readingGuide: "Guia de leitura",
+      pauseAnimations: "Pausar animações",
+      screenReader: "Modo leitor de tela / Braille",
+      dyslexia: "Modo dislexia",
+      calm: "Modo calmo",
+      simplified: "Interface simplificada",
+      reduceNotifications: "Reduzir alertas visuais",
+      motor: "Modo motricidade reduzida",
+      cognitive: "Modo linguagem simples",
+      visualAlerts: "Alertas visuais (surdez)",
+      libras: "Ativar Libras (VLibras)",
+    },
+    librasNote:
+      "Integração VLibras (gov.br). Requer conexão externa. Compatível com leitores de tela e displays Braille.",
+    language: {
+      title: "Idioma da interface",
+      autoTranslate: "Tradução automática via API",
+      autoTranslateNote:
+        "Idiomas sem bundle local usam tradução automática (OpenAI/DeepL/Google). Cache local aplicado.",
+    },
+  },
+  lang: {
+    selector: {
+      label: "Selecionar idioma",
+    },
+  },
+};
+
+export default messages;

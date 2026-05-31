@@ -1,0 +1,133 @@
+@import "tailwindcss";
+
+@theme {
+  /* Manual da Marca ECOPET */
+  --color-ecopet-dark: #1a3a2a;
+  --color-ecopet-green: #2e7d4f;
+  --color-ecopet-yellow: #f5c800;
+  --color-ecopet-gray: #4a4a5a;
+  --color-ecopet-cream: #f2efe3;
+  --color-ecopet-surface: #ffffff;
+  --color-ecopet-dark-bg: #1a1f1a;
+  --color-ecopet-dark-card: #252b25;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-display: var(--font-montserrat), system-ui, sans-serif;
+  --radius-ecopet: 16px;
+}
+
+@layer base {
+  html {
+    font-size: calc(100% * var(--a11y-font-scale, 1));
+    letter-spacing: calc(var(--a11y-letter-spacing, 0) * 0.05em);
+    line-height: calc(1.5 + var(--a11y-line-height, 0) * 0.15);
+    scroll-behavior: smooth;
+  }
+  * {
+    @apply border-ecopet-gray/20;
+  }
+  body {
+    @apply bg-white text-ecopet-gray antialiased dark:bg-ecopet-dark-bg dark:text-white;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-ecopet-green);
+    outline-offset: 2px;
+  }
+  h1, .heading-1 {
+    @apply font-display text-3xl font-extrabold tracking-tight text-ecopet-dark dark:text-white lg:text-4xl;
+  }
+  h2, .heading-2 {
+    @apply font-display text-2xl font-extrabold tracking-tight text-ecopet-dark dark:text-white;
+  }
+  h3, .heading-3 {
+    @apply font-display text-xl font-semibold text-ecopet-dark dark:text-white;
+  }
+  .section-title {
+    @apply font-display text-lg font-semibold text-ecopet-dark dark:text-white;
+  }
+  .body-text {
+    @apply text-sm leading-relaxed text-ecopet-gray dark:text-white/80;
+  }
+  .caption-text {
+    @apply text-xs text-ecopet-gray/80 dark:text-white/60;
+  }
+  .secondary-text {
+    @apply text-sm text-ecopet-gray dark:text-white/70;
+  }
+}
+
+@layer utilities {
+  .text-gradient-ecopet {
+    @apply bg-gradient-to-r from-ecopet-green to-ecopet-yellow bg-clip-text text-transparent;
+  }
+  .glass {
+    @apply border border-white/20 bg-white/80 backdrop-blur-md dark:border-white/10 dark:bg-ecopet-dark-card/80;
+  }
+  .glass-dark {
+    @apply border border-white/10 bg-ecopet-dark/90 backdrop-blur-xl;
+  }
+  .card-premium {
+    @apply rounded-[16px] border border-ecopet-gray/10 bg-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg dark:border-white/10 dark:bg-ecopet-dark-card;
+  }
+  .gradient-ecopet {
+    @apply bg-gradient-to-br from-ecopet-dark via-ecopet-green to-ecopet-dark;
+  }
+  .gradient-ecopet-accent {
+    @apply bg-gradient-to-br from-ecopet-dark to-ecopet-green;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .animate-ecopet-pulse {
+    animation: ecopet-pulse 2.5s ease-in-out infinite;
+  }
+  .animate-ecopet-glow {
+    animation: ecopet-glow 3s ease-in-out infinite;
+  }
+  .watermark-ecopet {
+    @apply pointer-events-none select-none opacity-[0.04] dark:opacity-[0.06];
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+}
+
+@keyframes ecopet-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.04); opacity: 0.92; }
+}
+
+@keyframes ecopet-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 200, 0, 0); }
+  50% { box-shadow: 0 0 24px 4px rgba(245, 200, 0, 0.25); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg, rgba(0,0,0,0.04) 25%, rgba(0,0,0,0.08) 50%, rgba(0,0,0,0.04) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.dark .skeleton-shimmer {
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 200% 100%;
+}
+
+@import "./accessibility.css";
