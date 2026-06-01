@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import type { AuthRequest } from "../middleware/auth.js";
+import { paramString } from "../lib/request-utils.js";
 import { requireGestor, requirePermission } from "../middleware/rbac.js";
 import { authMiddleware } from "../middleware/auth.js";
 import { prisma } from "@ecopet/database";
@@ -70,7 +71,7 @@ router.get("/features", async (req, res, next) => {
 router.get("/features/:key/enabled", async (req: AuthRequest, res, next) => {
   try {
     const user = await prisma.user.findUnique({ where: { id: req.userId! }, select: { organizationId: true } });
-    res.json({ enabled: await isFeatureEnabled(req.params.key, user?.organizationId ?? undefined) });
+    res.json({ enabled: await isFeatureEnabled(paramString(req.params.key), user?.organizationId ?? undefined) });
   } catch (e) {
     next(e);
   }
@@ -138,7 +139,7 @@ router.post("/workflows", requirePermission("gestor.workflow.admin"), async (req
 
 router.get("/workflows/:id", requirePermission("gestor.workflow.view"), async (req, res, next) => {
   try {
-    res.json(await getWorkflowById(req.params.id));
+    res.json(await getWorkflowById(paramString(req.params.id)));
   } catch (e) {
     next(e);
   }
@@ -146,7 +147,7 @@ router.get("/workflows/:id", requirePermission("gestor.workflow.view"), async (r
 
 router.put("/workflows/:id", requirePermission("gestor.workflow.admin"), async (req: AuthRequest, res, next) => {
   try {
-    res.json(await updateWorkflow(req.params.id, req.body, req.userId!));
+    res.json(await updateWorkflow(paramString(req.params.id), req.body, req.userId!));
   } catch (e) {
     next(e);
   }
@@ -154,7 +155,7 @@ router.put("/workflows/:id", requirePermission("gestor.workflow.admin"), async (
 
 router.post("/workflows/:id/run", requirePermission("gestor.workflow.admin"), async (req: AuthRequest, res, next) => {
   try {
-    res.json(await runWorkflowManually(req.params.id, req.userId!, req.body));
+    res.json(await runWorkflowManually(paramString(req.params.id), req.userId!, req.body));
   } catch (e) {
     next(e);
   }
@@ -185,7 +186,7 @@ router.post("/sla/policies", requirePermission("gestor.sla.admin"), async (req: 
 
 router.get("/versions/:entityType/:entityId", async (req, res, next) => {
   try {
-    res.json(await listVersions(req.params.entityType, req.params.entityId));
+    res.json(await listVersions(paramString(req.params.entityType), paramString(req.params.entityId)));
   } catch (e) {
     next(e);
   }

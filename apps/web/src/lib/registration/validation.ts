@@ -42,8 +42,8 @@ export function validateRegistration(role: RegistrationRole, values: FormValues)
   if (values.password !== values.confirmPassword) {
     errors.confirmPassword = "As senhas não coincidem";
   }
-  if (!values.acceptTerms) errors.acceptTerms = "Aceite os termos de uso";
-  if (!values.acceptLgpd) errors.acceptLgpd = "Aceite a política LGPD";
+  if (!values.acceptTerms) errors.acceptTerms = "Aceite os Termos de Uso para continuar";
+  if (!values.acceptLgpd) errors.acceptLgpd = "Aceite a Política de Privacidade para continuar";
 
   switch (role) {
     case "TUTOR": {

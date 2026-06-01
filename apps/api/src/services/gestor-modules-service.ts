@@ -431,13 +431,16 @@ export async function seedGestorInfrastructure(gestorUserId: string) {
   await runSystemHealthCheck();
   await seedPlatformInfrastructure();
 
-  await prisma.costEntry.createMany({
-    data: [
-      { category: "ia", amount: 1250, moduleKey: "intelligence", personaScope: "GLOBAL", periodStart: new Date(), periodEnd: new Date() },
-      { category: "api", amount: 890, moduleKey: "integrations", personaScope: "GLOBAL", periodStart: new Date(), periodEnd: new Date() },
-      { category: "email", amount: 320, moduleKey: "notifications", personaScope: "GLOBAL", periodStart: new Date(), periodEnd: new Date() },
-      { category: "storage", amount: 540, moduleKey: "data-layer", personaScope: "GLOBAL", periodStart: new Date(), periodEnd: new Date() },
-    ],
-    skipDuplicates: true,
-  }).catch(() => {});
+  const costEntries = [
+    { category: "ia", amount: 1250, moduleKey: "intelligence", personaScope: "GLOBAL" as const, periodStart: new Date(), periodEnd: new Date() },
+    { category: "api", amount: 890, moduleKey: "integrations", personaScope: "GLOBAL" as const, periodStart: new Date(), periodEnd: new Date() },
+    { category: "email", amount: 320, moduleKey: "notifications", personaScope: "GLOBAL" as const, periodStart: new Date(), periodEnd: new Date() },
+    { category: "storage", amount: 540, moduleKey: "data-layer", personaScope: "GLOBAL" as const, periodStart: new Date(), periodEnd: new Date() },
+  ];
+  for (const entry of costEntries) {
+    const exists = await prisma.costEntry.findFirst({
+      where: { category: entry.category, moduleKey: entry.moduleKey },
+    });
+    if (!exists) await prisma.costEntry.create({ data: entry }).catch(() => {});
+  }
 }

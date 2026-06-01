@@ -1,5 +1,6 @@
 import { prisma } from "@ecopet/database";
 import type { AuditAction } from "@prisma/client";
+import { asOptionalInputJson } from "../lib/prisma-json.js";
 
 export interface AuditEntry {
   userId?: string;
@@ -8,11 +9,22 @@ export interface AuditEntry {
   resource: string;
   resourceId?: string;
   metadata?: Record<string, unknown>;
+  observation?: string;
+  entityBefore?: unknown;
+  entityAfter?: unknown;
+  riskLevel?: string;
   ip?: string;
   userAgent?: string;
 }
 
 export async function createAuditLog(entry: AuditEntry) {
+  const metadata = {
+    ...(entry.metadata ?? {}),
+    ...(entry.observation ? { observation: entry.observation } : {}),
+    ...(entry.entityBefore !== undefined ? { entityBefore: entry.entityBefore } : {}),
+    ...(entry.riskLevel ? { riskLevel: entry.riskLevel } : {}),
+  };
+
   const log = await prisma.auditLog.create({
     data: {
       userId: entry.userId,
@@ -20,7 +32,7 @@ export async function createAuditLog(entry: AuditEntry) {
       module: entry.module,
       resource: entry.resource,
       resourceId: entry.resourceId,
-      metadata: entry.metadata ?? undefined,
+      metadata: asOptionalInputJson(Object.keys(metadata).length ? metadata : undefined),
       ip: entry.ip,
       userAgent: entry.userAgent,
     },

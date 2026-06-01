@@ -1,6 +1,7 @@
 import { Router } from "express";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
+import { paramString } from "../lib/request-utils.js";
 import { publicRegisterSchema } from "../schemas/register-schemas.js";
 import { registerUser } from "../services/register-service.js";
 import {
@@ -8,6 +9,7 @@ import {
   changePassword,
   requestPasswordReset,
   resetPassword,
+  validateResetToken,
   listActiveSessions,
   revokeSession,
   checkPasswordStrengthRealtime,
@@ -225,8 +227,19 @@ router.post("/forgot-password", async (req, res, next) => {
     const result = await requestPasswordReset(email);
     res.json(result);
   } catch (e) {
-    const err = e as Error & { status?: number };
-    if (err.status) return res.status(err.status).json({ error: err.message });
+    if (e instanceof AppError) {
+      return res.status(e.status).json({ error: e.userMessage, code: e.code });
+    }
+    next(e);
+  }
+});
+
+router.get("/reset-password/validate", async (req, res, next) => {
+  try {
+    const token = String(req.query.token ?? "");
+    const result = await validateResetToken(token);
+    res.json(result);
+  } catch (e) {
     next(e);
   }
 });
@@ -236,13 +249,14 @@ router.post("/reset-password", async (req, res, next) => {
     const { token, newPassword, code } = z.object({
       token: z.string(),
       newPassword: z.string(),
-      code: z.string(),
+      code: z.string().optional(),
     }).parse(req.body);
     const result = await resetPassword(token, newPassword, code);
     res.json(result);
   } catch (e) {
-    const err = e as Error & { status?: number };
-    if (err.status) return res.status(err.status).json({ error: err.message });
+    if (e instanceof AppError) {
+      return res.status(e.status).json({ error: e.userMessage, code: e.code });
+    }
     next(e);
   }
 });
@@ -262,7 +276,7 @@ router.get("/sessions", authMiddleware, async (req: AuthRequest, res, next) => {
 
 router.delete("/sessions/:id", authMiddleware, async (req: AuthRequest, res, next) => {
   try {
-    await revokeSession(req.params.id, req.userId!);
+    await revokeSession(paramString(req.params.id), req.userId!);
     res.json({ success: true });
   } catch (e) {
     next(e);

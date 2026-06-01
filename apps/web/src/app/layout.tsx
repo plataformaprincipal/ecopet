@@ -10,6 +10,7 @@ import { AccessibilityToolbarLazy } from "@/components/accessibility/accessibili
 import { I18nProvider } from "@/providers/i18n-provider";
 import { PreferencesSync } from "@/hooks/use-preferences-sync";
 import { AriaLiveProvider } from "@/components/accessibility/aria-live-region";
+import { EcopetFooter } from "@/components/layout/ecopet-footer";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat", weight: ["500", "600", "700", "800"] });
@@ -54,8 +55,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <AuthTokenSync />
                   <PreferencesSync />
                   <SkipLink />
-                  <div id="main-content" role="main" tabIndex={-1} className="outline-none">
-                    {children}
+                  <div className="flex min-h-screen flex-col">
+                    <div id="main-content" role="main" tabIndex={-1} className="flex-1 outline-none">
+                      {children}
+                    </div>
+                    <EcopetFooter />
                   </div>
                   <AccessibilityToolbarLazy />
                 </AuthSessionProvider>

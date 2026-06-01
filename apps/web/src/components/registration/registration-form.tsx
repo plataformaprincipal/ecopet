@@ -225,6 +225,17 @@ export function RegistrationForm() {
     });
   }, []);
 
+  const setAddress = useCallback((addr: FormValues) => {
+    setValues((prev) => ({ ...prev, address: addr }));
+    setErrors((prev) => {
+      const next = { ...prev };
+      for (const k of Object.keys(next)) {
+        if (k === "address" || k.startsWith("address.")) delete next[k];
+      }
+      return next;
+    });
+  }, []);
+
   const validateField = useCallback(
     (key: string) => {
       const fieldErrors = validateRegistration(role, values);
@@ -400,7 +411,7 @@ export function RegistrationForm() {
                     <Input id="petCount" type="number" min={0} className="mt-1" value={String(values.petCount ?? 0)} onChange={(e) => set("petCount", e.target.value)} />
                   </div>
                 </div>
-                <RegistrationAddressField address={address} onChange={(a) => set("address", a)} errors={errors} />
+                <RegistrationAddressField address={address} onChange={setAddress} errors={errors} />
                 <div>
                   <Label required>Interesse principal</Label>
                   <MultiCheckbox
@@ -455,7 +466,7 @@ export function RegistrationForm() {
                 </div>
                 <RegistrationAddressField
                   address={address}
-                  onChange={(a) => set("address", a)}
+                  onChange={setAddress}
                   errors={errors}
                   title="Endereço profissional"
                   idPrefix="vet-addr"
@@ -498,7 +509,7 @@ export function RegistrationForm() {
                     <FieldError message={errors.hours} />
                   </div>
                 </div>
-                <RegistrationAddressField address={address} onChange={(a) => set("address", a)} errors={errors} />
+                <RegistrationAddressField address={address} onChange={setAddress} errors={errors} />
                 <div>
                   <Label required>Serviços oferecidos</Label>
                   <MultiCheckbox
@@ -538,7 +549,7 @@ export function RegistrationForm() {
                     <FieldError message={errors.hours} />
                   </div>
                 </div>
-                <RegistrationAddressField address={address} onChange={(a) => set("address", a)} errors={errors} />
+                <RegistrationAddressField address={address} onChange={setAddress} errors={errors} />
                 <YesNoToggle label="Vende produtos" value={Boolean(values.sellsProducts)} onChange={(v) => set("sellsProducts", v)} />
                 <YesNoToggle label="Oferece serviços" value={Boolean(values.offersServices)} onChange={(v) => set("offersServices", v)} />
                 <div>
@@ -572,7 +583,7 @@ export function RegistrationForm() {
                     <FieldError message={errors.responsible} />
                   </div>
                 </div>
-                <RegistrationAddressField address={address} onChange={(a) => set("address", a)} errors={errors} />
+                <RegistrationAddressField address={address} onChange={setAddress} errors={errors} />
                 <div>
                   <Label required>Categorias de produtos</Label>
                   <MultiCheckbox
@@ -696,7 +707,7 @@ export function RegistrationForm() {
                   />
                 </div>
                 <YesNoToggle label="Atendimento em domicílio" value={Boolean(values.homeService)} onChange={(v) => set("homeService", v)} />
-                <RegistrationAddressField address={address} onChange={(a) => set("address", a)} errors={errors} title="Endereço base" idPrefix="sp-addr" />
+                <RegistrationAddressField address={address} onChange={setAddress} errors={errors} title="Endereço base" idPrefix="sp-addr" />
                 <DocumentUpload documents={(values.documents as { name: string }[]) ?? []} onChange={(d) => set("documents", d)} />
               </>
             )}
@@ -766,7 +777,7 @@ export function RegistrationForm() {
                     <Input id="animalCapacity" type="number" min={0} className="mt-1" value={String(values.animalCapacity ?? 0)} onChange={(e) => set("animalCapacity", e.target.value)} />
                   </div>
                 </div>
-                <RegistrationAddressField address={address} onChange={(a) => set("address", a)} errors={errors} />
+                <RegistrationAddressField address={address} onChange={setAddress} errors={errors} />
                 <div>
                   <Label required>Tipo de atuação</Label>
                   <MultiCheckbox
@@ -793,8 +804,8 @@ export function RegistrationForm() {
               />
               <span>
                 Li e aceito os{" "}
-                <Link href="/termos" className="font-medium text-ecopet-green hover:underline">
-                  termos de uso
+                <Link href="/termos-de-uso" target="_blank" rel="noopener noreferrer" className="font-medium text-ecopet-green hover:underline">
+                  Termos de Uso
                 </Link>
               </span>
             </label>
@@ -807,9 +818,9 @@ export function RegistrationForm() {
                 className="mt-0.5 h-4 w-4 rounded"
               />
               <span>
-                Autorizo o tratamento dos meus dados conforme a{" "}
-                <Link href="/privacidade" className="font-medium text-ecopet-green hover:underline">
-                  política LGPD
+                Li e aceito a{" "}
+                <Link href="/politica-de-privacidade" target="_blank" rel="noopener noreferrer" className="font-medium text-ecopet-green hover:underline">
+                  Política de Privacidade
                 </Link>
               </span>
             </label>

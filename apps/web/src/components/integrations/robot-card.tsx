@@ -8,6 +8,7 @@ import { RiskBadge } from "./shared/risk-badge";
 import { RobotConfigPanel } from "./robot-config-panel";
 import type { Robot24h } from "@/lib/integrations/types";
 import { AUTONOMY_LABELS } from "@/lib/integrations/config";
+import { AI_STRUCTURAL_NOTICE, FEATURE_UNAVAILABLE_DEFAULT } from "@/components/ui/feature-unavailable";
 
 interface RobotCardProps {
   robot: Robot24h;
@@ -15,6 +16,19 @@ interface RobotCardProps {
 
 export function RobotCard({ robot }: RobotCardProps) {
   const [showConfig, setShowConfig] = useState(false);
+  const [statusMsg, setStatusMsg] = useState("");
+
+  const handleToggle = () => {
+    setStatusMsg(
+      robot.status === "active"
+        ? "Pausa registrada localmente. Controle central disponível no painel Gestor."
+        : "Ativação registrada localmente. Controle central disponível no painel Gestor."
+    );
+  };
+
+  const handleHistory = () => {
+    setStatusMsg(FEATURE_UNAVAILABLE_DEFAULT);
+  };
 
   return (
     <>
@@ -72,14 +86,28 @@ export function RobotCard({ robot }: RobotCardProps) {
           </div>
         )}
 
+        <p className="mt-2 text-[10px] text-ecopet-gray dark:text-white/50">{AI_STRUCTURAL_NOTICE}</p>
+
+        {statusMsg && (
+          <p className="mt-2 text-xs text-amber-700 dark:text-amber-200" role="status">{statusMsg}</p>
+        )}
+
         <div className="mt-4 flex flex-wrap gap-2 border-t border-ecopet-gray/10 pt-3 dark:border-white/10">
           {robot.status === "active" ? (
-            <Button variant="outline" size="sm"><Pause className="h-3 w-3" /> Pausar</Button>
+            <Button variant="outline" size="sm" type="button" onClick={handleToggle} aria-label={`Pausar ${robot.name}`}>
+              <Pause className="h-3 w-3" /> Pausar
+            </Button>
           ) : (
-            <Button size="sm"><Play className="h-3 w-3" /> Ativar</Button>
+            <Button size="sm" type="button" onClick={handleToggle} aria-label={`Ativar ${robot.name}`}>
+              <Play className="h-3 w-3" /> Ativar
+            </Button>
           )}
-          <Button variant="ghost" size="sm" onClick={() => setShowConfig(true)}><Settings className="h-3 w-3" /> Configurar</Button>
-          <Button variant="ghost" size="sm"><History className="h-3 w-3" /> Histórico</Button>
+          <Button variant="ghost" size="sm" type="button" onClick={() => setShowConfig(true)} aria-label={`Configurar ${robot.name}`}>
+            <Settings className="h-3 w-3" /> Configurar
+          </Button>
+          <Button variant="ghost" size="sm" type="button" onClick={handleHistory} aria-label={`Histórico de ${robot.name}`}>
+            <History className="h-3 w-3" /> Histórico
+          </Button>
         </div>
       </div>
 

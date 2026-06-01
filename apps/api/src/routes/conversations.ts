@@ -1,5 +1,6 @@
 import { Router } from "express";
 import type { AuthRequest } from "../middleware/auth.js";
+import { paramString } from "../lib/request-utils.js";
 import {
   getUserConversations,
   getConversationMessages,
@@ -51,7 +52,8 @@ router.post("/support/ecopet", async (req: AuthRequest, res, next) => {
 
 router.get("/:id/messages", async (req: AuthRequest, res, next) => {
   try {
-    const messages = await getConversationMessages(req.params.id, req.userId!);
+    const conversationId = paramString(req.params.id);
+    const messages = await getConversationMessages(conversationId, req.userId!);
     res.json(messages);
   } catch (e) {
     if ((e as Error).message === "FORBIDDEN") {
@@ -68,8 +70,9 @@ router.post("/:id/messages", async (req: AuthRequest, res, next) => {
       type?: "TEXT" | "IMAGE" | "FILE" | "QUOTE" | "SYSTEM" | "AI";
       metadata?: Record<string, unknown>;
     };
+    const conversationId = paramString(req.params.id);
     const message = await sendMessage({
-      conversationId: req.params.id,
+      conversationId,
       senderId: req.userId!,
       content,
       type,
@@ -81,7 +84,7 @@ router.post("/:id/messages", async (req: AuthRequest, res, next) => {
       module: "chat",
       resource: "message",
       resourceId: message.id,
-      metadata: { conversationId: req.params.id },
+      metadata: { conversationId },
     });
     res.status(201).json(message);
   } catch (e) {

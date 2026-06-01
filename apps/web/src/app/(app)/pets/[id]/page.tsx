@@ -1,49 +1,51 @@
 "use client";
 
+import { Suspense, useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { AppHeader } from "@/components/layout/app-header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PetDetailView } from "@/components/my-pet/pet-detail-view";
+import { petsApi } from "@/lib/pets/api";
+import type { PetDetail } from "@/lib/pets/types";
+import { useCurrentUser } from "@/hooks/use-current-user";
+
+function PetProfileContent() {
+  const params = useParams();
+  const router = useRouter();
+  const id = String(params.id);
+  const { token, loading: userLoading } = useCurrentUser();
+  const [pet, setPet] = useState<PetDetail | null>(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!token || !id) return;
+    petsApi(token)
+      .get(id)
+      .then(setPet)
+      .catch(() => setError("Pet não encontrado ou sem permissão."));
+  }, [token, id]);
+
+  if (userLoading) return <main className="p-8 text-center text-sm">Carregando...</main>;
+  if (!token) {
+    router.push("/login");
+    return null;
+  }
+  if (error) return <main className="p-8 text-center text-red-500">{error}</main>;
+  if (!pet) return <main className="p-8 text-center text-sm">Carregando pet...</main>;
+
+  return (
+    <>
+      <AppHeader title={pet.name} />
+      <main className="mx-auto max-w-4xl flex-1 p-4 lg:p-6">
+        <PetDetailView pet={pet} token={token} onRefresh={() => petsApi(token).get(id).then(setPet)} />
+      </main>
+    </>
+  );
+}
 
 export default function PetProfilePage() {
   return (
-    <>
-      <AppHeader title="Perfil do Pet" />
-      <main className="flex-1 p-4 lg:p-8">
-        <div className="mb-6 flex items-center gap-6">
-          <div className="h-24 w-24 rounded-2xl bg-ecopet-green/20" />
-          <div>
-            <h1 className="font-display text-3xl font-bold">Luna</h1>
-            <p className="text-ecopet-gray">Golden Retriever · 3 anos · 28.5kg</p>
-          </div>
-        </div>
-        <Tabs defaultValue="saude" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7">
-            <TabsTrigger value="timeline">Timeline</TabsTrigger>
-            <TabsTrigger value="saude">Saúde</TabsTrigger>
-            <TabsTrigger value="vacinas">Vacinas</TabsTrigger>
-            <TabsTrigger value="exames">Exames</TabsTrigger>
-            <TabsTrigger value="consultas">Consultas</TabsTrigger>
-            <TabsTrigger value="ia">IA</TabsTrigger>
-            <TabsTrigger value="social">Social</TabsTrigger>
-          </TabsList>
-          <TabsContent value="saude">
-            <Card>
-              <CardHeader>
-                <CardTitle>Prontuário Digital</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="rounded-xl bg-gray-50 p-4 dark:bg-white/5">
-                  <p className="font-semibold">Vacina V10</p>
-                  <p className="text-sm text-ecopet-gray">Aplicada em 15/06/2025 · Próxima: 15/06/2026</p>
-                </div>
-                <div className="rounded-xl bg-gray-50 p-4 dark:bg-white/5">
-                  <p className="font-semibold">Sem alergias registradas</p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </main>
-    </>
+    <Suspense fallback={<div className="p-8 text-center text-sm">Carregando...</div>}>
+      <PetProfileContent />
+    </Suspense>
   );
 }

@@ -1,5 +1,6 @@
 import { prisma } from "@ecopet/database";
 import type { PaymentMethod, RefundDestination, WalletTransactionType } from "@prisma/client";
+import { asOptionalInputJson } from "../lib/prisma-json.js";
 import { createAuditLog } from "./audit-service.js";
 
 export async function getOrCreateWallet(userId: string) {
@@ -45,7 +46,7 @@ export async function creditWallet(params: {
         description: params.description,
         orderId: params.orderId,
         refundId: params.refundId,
-        metadata: params.metadata ?? undefined,
+        metadata: asOptionalInputJson(params.metadata ?? undefined),
       },
     }),
     prisma.walletLog.create({

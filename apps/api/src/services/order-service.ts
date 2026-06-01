@@ -1,5 +1,6 @@
 import { prisma } from "@ecopet/database";
 import type { DeliveryMethod, OrderStatus, PaymentMethod, ServiceFulfillmentMode } from "@prisma/client";
+import { asInputJson, asOptionalInputJson } from "../lib/prisma-json.js";
 import { createAuditLog } from "./audit-service.js";
 import { calculateShipping, generatePickupQrCode, resolvePartnerId } from "./logistics-service.js";
 import { debitWallet, debitWalletTx, processRefund } from "./wallet-service.js";
@@ -62,8 +63,8 @@ export async function createOrder(payload: CheckoutPayload) {
         total,
         shippingCost: shipping.fee,
         discount,
-        shippingAddress: payload.shippingAddress,
-        alternateAddress: payload.alternateAddress ?? undefined,
+        shippingAddress: asInputJson(payload.shippingAddress),
+        alternateAddress: asOptionalInputJson(payload.alternateAddress ?? undefined),
         deliveryMethod: payload.deliveryMethod,
         paymentMethod: payload.paymentMethod,
         scheduledAt: payload.scheduledAt ? new Date(payload.scheduledAt) : undefined,

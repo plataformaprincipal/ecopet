@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { prisma } from "@ecopet/database";
 import { AuthRequest } from "../middleware/auth.js";
+import { paramString } from "../lib/request-utils.js";
 
 const router = Router();
 
@@ -20,7 +21,7 @@ router.get("/", async (req: AuthRequest, res, next) => {
 router.patch("/:id/read", async (req: AuthRequest, res, next) => {
   try {
     await prisma.notification.updateMany({
-      where: { id: req.params.id, userId: req.userId },
+      where: { id: paramString(req.params.id), userId: req.userId },
       data: { read: true },
     });
     res.json({ ok: true });

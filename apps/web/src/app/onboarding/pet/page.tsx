@@ -25,7 +25,7 @@ export default function OnboardingPetPage() {
         </CardHeader>
         <CardContent className="space-y-3">
           <Button className="w-full" asChild>
-            <Link href="/pets?new=1">Cadastrar pet agora</Link>
+            <Link href="/meu-pet?new=1">Cadastrar pet agora</Link>
           </Button>
           <Button variant="outline" className="w-full" onClick={() => router.push("/dashboard")}>
             Fazer isso depois

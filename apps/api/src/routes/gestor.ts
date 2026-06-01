@@ -1,5 +1,6 @@
 import { Router } from "express";
 import type { AuthRequest } from "../middleware/auth.js";
+import { paramString } from "../lib/request-utils.js";
 import { requireGestor, requirePermission } from "../middleware/rbac.js";
 import {
   getGestorDashboardMetrics,
@@ -28,7 +29,7 @@ router.get("/dashboard", requirePermission("gestor.dashboard.view"), async (_req
 
 router.get("/modules/:moduleId", requireGestor(), async (req, res, next) => {
   try {
-    res.json(await getModuleData(req.params.moduleId));
+    res.json(await getModuleData(paramString(req.params.moduleId)));
   } catch (e) {
     next(e);
   }
@@ -47,13 +48,13 @@ router.get("/approvals", requirePermission("gestor.approvals.view"), async (req,
 router.patch("/approvals/:id", requirePermission("gestor.approvals.approve"), async (req: AuthRequest, res, next) => {
   try {
     const { status, notes } = req.body as { status: "APPROVED" | "REJECTED" | "REVISION"; notes?: string };
-    const result = await reviewApproval(req.params.id, req.userId!, status, notes);
+    const result = await reviewApproval(paramString(req.params.id), req.userId!, status, notes);
     await createAuditLog({
       userId: req.userId,
       action: status === "APPROVED" ? "APPROVE" : "REJECT",
       module: "gestor",
       resource: "approval",
-      resourceId: req.params.id,
+      resourceId: paramString(req.params.id),
       metadata: { status, notes },
     });
     res.json(result);
@@ -123,13 +124,13 @@ router.get("/moderation/reports", requirePermission("gestor.moderation.view"), a
 router.patch("/moderation/reports/:id", requirePermission("gestor.moderation.edit"), async (req: AuthRequest, res, next) => {
   try {
     const { action, status } = req.body as { action: string; status: "RESOLVED" | "DISMISSED" };
-    const result = await resolveReport(req.params.id, req.userId!, action, status);
+    const result = await resolveReport(paramString(req.params.id), req.userId!, action, status);
     await createAuditLog({
       userId: req.userId,
       action: "MODERATE",
       module: "gestor",
       resource: "report",
-      resourceId: req.params.id,
+      resourceId: paramString(req.params.id),
       metadata: { action, status },
       riskLevel: action.includes("suspend") ? "high" : "medium",
     });
@@ -188,13 +189,13 @@ router.get("/tickets", requirePermission("gestor.support.view"), async (_req, re
 
 router.patch("/tickets/:id", requirePermission("gestor.support.edit"), async (req: AuthRequest, res, next) => {
   try {
-    const result = await updateTicket(req.params.id, req.body);
+    const result = await updateTicket(paramString(req.params.id), req.body);
     await createAuditLog({
       userId: req.userId,
       action: "UPDATE",
       module: "gestor",
       resource: "ticket",
-      resourceId: req.params.id,
+      resourceId: paramString(req.params.id),
       metadata: req.body,
     });
     res.json(result);
@@ -257,7 +258,7 @@ router.patch("/documents/:id/review", requirePermission("gestor.approvals.approv
   try {
     const { action, notes } = req.body as { action: string; notes?: string };
     const doc = await prisma.platformDocument.update({
-      where: { id: req.params.id },
+      where: { id: paramString(req.params.id) },
       data: { status: action === "approve" ? "APPROVED" : "REJECTED", reviewedById: req.userId, reviewNotes: notes },
     });
     await prisma.documentReview.create({
@@ -290,6 +291,26 @@ router.post("/platform/seed", requirePermission("gestor.ti.admin"), async (_req,
   try {
     const { seedPlatformInfrastructure } = await import("../services/platform-governance-service.js");
     res.json(await seedPlatformInfrastructure());
+  } catch (e) {
+    next(e);
+  }
+});
+
+router.get("/internal-bots", requireGestor, async (_req, res, next) => {
+  try {
+    const { listInternalBots } = await import("../services/internal-bots-service.js");
+    res.json(await listInternalBots());
+  } catch (e) {
+    next(e);
+  }
+});
+
+router.patch("/internal-bots/:key", requirePermission("gestor.ti.admin"), async (req: AuthRequest, res, next) => {
+  try {
+    const { paramString } = await import("../lib/request-utils.js");
+    const { setInternalBotEnabled } = await import("../services/internal-bots-service.js");
+    const { enabled } = req.body as { enabled: boolean };
+    res.json(await setInternalBotEnabled(paramString(req.params.key), Boolean(enabled), req.userId));
   } catch (e) {
     next(e);
   }

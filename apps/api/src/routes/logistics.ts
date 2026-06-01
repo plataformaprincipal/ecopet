@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
+import { paramString } from "../lib/request-utils.js";
 import type { AuthRequest } from "../middleware/auth.js";
 import {
   getOrCreatePartnerLogistics,
@@ -12,7 +13,7 @@ const router = Router();
 
 router.get("/partner/:partnerId", async (req, res, next) => {
   try {
-    const config = await getOrCreatePartnerLogistics(req.params.partnerId);
+    const config = await getOrCreatePartnerLogistics(paramString(req.params.partnerId));
     const methods = getAvailableDeliveryMethods(config);
     res.json({ config, methods });
   } catch (e) {
@@ -38,10 +39,11 @@ router.post("/calculate", async (req, res, next) => {
 
 router.put("/partner/:partnerId", async (req: AuthRequest, res, next) => {
   try {
-    if (req.userId !== req.params.partnerId && req.userRole !== "ADMIN" && req.userRole !== "GESTOR") {
+    const partnerId = paramString(req.params.partnerId);
+    if (req.userId !== partnerId && req.userRole !== "ADMIN" && req.userRole !== "GESTOR") {
       return res.status(403).json({ error: "Apenas o parceiro pode configurar logística" });
     }
-    const config = await updatePartnerLogistics(req.params.partnerId, req.body);
+    const config = await updatePartnerLogistics(partnerId, req.body);
     res.json(config);
   } catch (e) {
     next(e);

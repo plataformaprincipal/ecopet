@@ -1,5 +1,6 @@
 import { prisma } from "@ecopet/database";
 import type { ConversationType, MessageType } from "@prisma/client";
+import { asOptionalInputJson } from "../lib/prisma-json.js";
 
 export async function getUserConversations(userId: string) {
   return prisma.conversation.findMany({
@@ -81,7 +82,7 @@ export async function sendMessage(params: {
       senderId: params.senderId,
       content: params.content,
       type: params.type ?? "TEXT",
-      metadata: params.metadata,
+      metadata: asOptionalInputJson(params.metadata),
     },
     include: {
       sender: { select: { id: true, name: true, avatar: true, role: true } },

@@ -130,7 +130,7 @@ export function MessagesPageContent() {
                   <Input placeholder="Mensagem..." value={draft} onChange={(e) => setDraft(e.target.value)} className="flex-1" />
                   <button type="button" className="rounded-xl bg-ecopet-green p-2.5 text-white"><Send className="h-5 w-5" /></button>
                 </div>
-                <p className="mt-2 text-center text-[10px] text-ecopet-gray">Tradução automática disponível · IA integrada em breve</p>
+                <p className="mt-2 text-center text-[10px] text-ecopet-gray">Mensagens em tempo real · tradução automática em preparação</p>
               </div>
             </>
           )}

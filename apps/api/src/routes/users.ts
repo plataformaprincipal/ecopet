@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { prisma } from "@ecopet/database";
 import { AuthRequest } from "../middleware/auth.js";
+import { asInputJson } from "../lib/prisma-json.js";
 
 const router = Router();
 
@@ -86,7 +87,7 @@ router.patch("/me/preferences", async (req: AuthRequest, res, next) => {
 
     await prisma.user.update({
       where: { id: payload.userId },
-      data: { preferences: updated },
+      data: { preferences: asInputJson(updated) },
     });
 
     res.json({ ok: true, preferences: updated });

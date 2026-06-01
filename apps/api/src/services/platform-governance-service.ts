@@ -1,5 +1,6 @@
 import { prisma } from "@ecopet/database";
 import type { PersonaScope } from "@prisma/client";
+import { asInputJson, asOptionalInputJson } from "../lib/prisma-json.js";
 import { createAuditLog } from "./audit-service.js";
 
 export async function emitPlatformEvent(params: {
@@ -20,7 +21,7 @@ export async function emitPlatformEvent(params: {
       actorId: params.actorId,
       entityType: params.entityType,
       entityId: params.entityId,
-      payload: params.payload ?? {},
+      payload: asInputJson(params.payload ?? {}),
       severity: params.severity ?? "info",
     },
   });
@@ -319,7 +320,7 @@ async function executeWorkflowActions(
         step: action.type,
         status: "COMPLETED",
         message: action.label ?? action.type,
-        metadata: { ...(action.config ?? {}), ctx },
+        metadata: asInputJson({ ...(action.config ?? {}), ctx }),
       },
     });
   }
@@ -698,7 +699,15 @@ export async function seedPlatformInfrastructure() {
   ];
   for (const w of workflows) {
     const exists = await prisma.workflowDefinition.findFirst({ where: { name: w.name } });
-    if (!exists) await prisma.workflowDefinition.create({ data: w });
+    if (!exists) {
+      await prisma.workflowDefinition.create({
+        data: {
+          ...w,
+          triggerConfig: asInputJson(w.triggerConfig),
+          actions: asInputJson(w.actions),
+        },
+      });
+    }
   }
 
   const rules = [
@@ -721,24 +730,26 @@ export async function seedPlatformInfrastructure() {
     if (!exists) await prisma.slaPolicy.create({ data: s });
   }
 
-  await prisma.dataPipeline.createMany({
-    data: [
-      { name: "Marketplace → Lake", layer: "lake", source: "orders,products", status: "ACTIVE" },
-      { name: "Social → Warehouse", layer: "warehouse", source: "posts,engagement", status: "ACTIVE" },
-      { name: "Financeiro Mart", layer: "mart", source: "wallet,transactions", status: "ACTIVE" },
-      { name: "ETL Diário", layer: "etl", source: "all", schedule: "0 2 * * *", status: "IDLE" },
-    ],
-    skipDuplicates: true,
-  }).catch(() => {});
+  const pipelines = [
+    { name: "Marketplace → Lake", layer: "lake", source: "orders,products", status: "ACTIVE" as const },
+    { name: "Social → Warehouse", layer: "warehouse", source: "posts,engagement", status: "ACTIVE" as const },
+    { name: "Financeiro Mart", layer: "mart", source: "wallet,transactions", status: "ACTIVE" as const },
+    { name: "ETL Diário", layer: "etl", source: "all", schedule: "0 2 * * *", status: "IDLE" as const },
+  ];
+  for (const p of pipelines) {
+    const exists = await prisma.dataPipeline.findFirst({ where: { name: p.name } });
+    if (!exists) await prisma.dataPipeline.create({ data: p }).catch(() => {});
+  }
 
-  await prisma.dataRetentionPolicy.createMany({
-    data: [
-      { name: "Logs sistema", dataCategory: "logs", retentionDays: 365, personaScope: "GLOBAL" },
-      { name: "Mensagens chat", dataCategory: "messages", retentionDays: 730, personaScope: "GLOBAL" },
-      { name: "Auditoria", dataCategory: "audit", retentionDays: 1825, personaScope: "GLOBAL" },
-    ],
-    skipDuplicates: true,
-  }).catch(() => {});
+  const retentionPolicies = [
+    { name: "Logs sistema", dataCategory: "logs", retentionDays: 365, personaScope: "GLOBAL" as PersonaScope },
+    { name: "Mensagens chat", dataCategory: "messages", retentionDays: 730, personaScope: "GLOBAL" as PersonaScope },
+    { name: "Auditoria", dataCategory: "audit", retentionDays: 1825, personaScope: "GLOBAL" as PersonaScope },
+  ];
+  for (const r of retentionPolicies) {
+    const exists = await prisma.dataRetentionPolicy.findFirst({ where: { name: r.name } });
+    if (!exists) await prisma.dataRetentionPolicy.create({ data: r }).catch(() => {});
+  }
 
   const org = await prisma.organization.upsert({
     where: { slug: "ecopet" },

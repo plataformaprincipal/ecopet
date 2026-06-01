@@ -427,78 +427,125 @@ export async function requestPasswordReset(email: string) {
   const { blockBootstrapPasswordReset } = await import("./bootstrap-service.js");
   const blocked = await blockBootstrapPasswordReset(email);
   if (blocked.blocked) {
-    throw Object.assign(new Error(blocked.message!), { status: 403 });
+    throw new AppError(blocked.message ?? "Recuperação não disponível para esta conta.", 403, "RESET_BLOCKED");
   }
 
   const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
-  if (!user || user.isBootstrapUser) return { sent: true };
+  if (!user || user.isBootstrapUser) {
+    throw new AppError(
+      "E-mail não encontrado. Verifique os dados informados ou crie uma conta.",
+      404,
+      "EMAIL_NOT_FOUND"
+    );
+  }
+
+  await prisma.passwordReset.updateMany({
+    where: { userId: user.id, used: false },
+    data: { used: true },
+  });
 
   const token = crypto.randomBytes(32).toString("hex");
-  const record = await createVerificationCode(user.id, "PASSWORD_RESET");
-
   await prisma.passwordReset.create({
     data: { userId: user.id, token, expiresAt: new Date(Date.now() + 60 * 60 * 1000) },
   });
+
+  const webUrl = process.env.NEXT_PUBLIC_WEB_URL || process.env.WEB_URL || "http://localhost:3000";
+  const resetLink = `${webUrl}/redefinir-senha?token=${token}`;
 
   const { sendEmail } = await import("./email-service.js");
   await sendEmail({
     to: user.email,
     subject: "Recuperação de senha ECOPET",
-    body: `Olá ${user.name},\n\nCódigo de recuperação: ${record.code}\n\nUse o código junto com o link de redefinição recebido. Expira em 1 hora.\n\nNunca compartilhe este código.`,
-    metadata: { type: "password_reset" },
+    body: `Olá ${user.name},
+
+Recebemos uma solicitação para redefinir sua senha na ECOPET.
+
+Acesse o link abaixo para criar uma nova senha (válido por 1 hora):
+${resetLink}
+
+Se você não solicitou esta recuperação, ignore este e-mail. Sua senha permanecerá inalterada.
+
+Equipe ECOPET`,
+    metadata: { type: "password_reset", token: process.env.NODE_ENV === "development" ? token : undefined },
   });
 
   await prisma.securityEvent.create({
     data: { userId: user.id, eventType: "PASSWORD_RESET_REQUEST", severity: "info" },
   });
 
+  await createAuditLog({
+    userId: user.id,
+    action: "CREATE",
+    module: "auth",
+    resource: "password_reset_request",
+    metadata: { email: user.email },
+  });
+
   return {
     sent: true,
     resetToken: process.env.NODE_ENV === "development" ? token : undefined,
-    devCode: process.env.NODE_ENV === "development" ? record.code : undefined,
   };
+}
+
+export async function validateResetToken(token: string) {
+  if (!token) return { valid: false as const, reason: "invalid" as const };
+  const reset = await prisma.passwordReset.findUnique({ where: { token } });
+  if (!reset) return { valid: false as const, reason: "invalid" as const };
+  if (reset.used) return { valid: false as const, reason: "used" as const };
+  if (reset.expiresAt < new Date()) return { valid: false as const, reason: "expired" as const };
+  return { valid: true as const };
 }
 
 export async function resetPassword(token: string, newPassword: string, code?: string) {
   const reset = await prisma.passwordReset.findUnique({ where: { token } });
-  if (!reset || reset.used || reset.expiresAt < new Date()) {
-    throw Object.assign(new Error("Token ou código inválido ou expirado"), { status: 400 });
+  if (!reset) {
+    throw new AppError("Link inválido. Solicite uma nova recuperação de senha.", 400, "INVALID_TOKEN");
   }
-  if (!code) {
-    throw Object.assign(new Error("Código de confirmação obrigatório"), { status: 400 });
+  if (reset.used) {
+    throw new AppError("Este link já foi utilizado. Solicite uma nova recuperação de senha.", 400, "TOKEN_USED");
   }
-  const ok = await verifyCode(reset.userId, "PASSWORD_RESET", code);
-  if (!ok) {
-    await prisma.securityEvent.create({
-      data: { userId: reset.userId, eventType: "PASSWORD_RESET_FAILED", severity: "warn" },
-    });
-    throw Object.assign(new Error("Código inválido ou expirado"), { status: 400 });
+  if (reset.expiresAt < new Date()) {
+    throw new AppError("Link expirado. Solicite uma nova recuperação de senha.", 400, "TOKEN_EXPIRED");
   }
-  const activeReset = reset;
+
+  if (code) {
+    const ok = await verifyCode(reset.userId, "PASSWORD_RESET", code);
+    if (!ok) {
+      throw new AppError("Código inválido ou expirado.", 400, "INVALID_CODE");
+    }
+  }
 
   const strength = validatePasswordStrength(newPassword);
   if (!strength.valid) {
-    throw Object.assign(new Error(`Senha fraca: ${strength.errors.join(", ")}`), { status: 400 });
+    throw new AppError(`Senha fraca: ${strength.errors.join(", ")}`, 400, "WEAK_PASSWORD");
   }
 
   const passwordHash = await bcrypt.hash(newPassword, 12);
   await prisma.$transaction([
     prisma.user.update({
-      where: { id: activeReset.userId },
-      data: { passwordHash, mustChangePassword: false, firstLoginRequired: false, passwordChangedAt: new Date() },
+      where: { id: reset.userId },
+      data: { passwordHash, mustChangePassword: false, firstLoginRequired: false, passwordChangedAt: new Date(), failedLoginAttempts: 0, lockedUntil: null },
     }),
-    prisma.passwordReset.update({ where: { id: activeReset.id }, data: { used: true } }),
+    prisma.passwordReset.update({ where: { id: reset.id }, data: { used: true } }),
+    prisma.passwordReset.updateMany({
+      where: { userId: reset.userId, used: false, id: { not: reset.id } },
+      data: { used: true },
+    }),
   ]);
 
   await createAuditLog({
-    userId: activeReset.userId,
+    userId: reset.userId,
     action: "UPDATE",
     module: "auth",
     resource: "password",
-    observation: "Senha redefinida via recuperação",
+    metadata: { method: "password_reset_link" },
   });
 
-  return { success: true };
+  await prisma.securityEvent.create({
+    data: { userId: reset.userId, eventType: "PASSWORD_RESET_SUCCESS", severity: "info" },
+  });
+
+  return { success: true, message: "Senha redefinida com sucesso." };
 }
 
 export async function listActiveSessions(userId: string) {

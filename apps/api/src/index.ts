@@ -10,6 +10,7 @@ import { prisma } from "@ecopet/database";
 import authRoutes from "./routes/auth.js";
 import userRoutes from "./routes/users.js";
 import petRoutes from "./routes/pets.js";
+import publicPetRoutes from "./routes/public-pets.js";
 import postRoutes from "./routes/posts.js";
 import productRoutes from "./routes/products.js";
 import serviceRoutes from "./routes/services.js";
@@ -57,6 +58,7 @@ app.get("/health", (_req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/pets", authMiddleware, petRoutes);
+app.use("/api/public/pets", publicPetRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/services", serviceRoutes);
@@ -112,8 +114,14 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {});
 });
 
-httpServer.listen(PORT, () => {
+httpServer.listen(PORT, async () => {
   console.log(`🐾 ECOPET API running on http://localhost:${PORT}`);
+  try {
+    const { ensureInternalBotsSeeded } = await import("./services/internal-bots-service.js");
+    await ensureInternalBotsSeeded();
+  } catch (e) {
+    console.warn("[ECOPET] Falha ao inicializar robôs internos:", (e as Error).message);
+  }
 });
 
 export { io };

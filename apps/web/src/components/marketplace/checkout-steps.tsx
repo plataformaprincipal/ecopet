@@ -298,6 +298,9 @@ export function CheckoutSteps() {
                     </label>
                   ))}
                 </div>
+                <p className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-amber-900 dark:text-amber-100">
+                  Pagamento real será ativado na fase de homologação financeira. Nesta fase, pedidos com PIX/cartão/boleto são registrados para testes operacionais.
+                </p>
                 {paymentMethod === "WALLET" && walletBalance < grandTotal && (
                   <p className="text-sm text-red-500">Saldo insuficiente. Disponível: {formatMpPrice(walletBalance)}</p>
                 )}

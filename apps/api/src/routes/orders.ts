@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import type { AuthRequest } from "../middleware/auth.js";
+import { paramString } from "../lib/request-utils.js";
 import {
   createOrder,
   listUserOrders,
@@ -61,7 +62,7 @@ router.get("/", async (req: AuthRequest, res, next) => {
 
 router.get("/:id", async (req: AuthRequest, res, next) => {
   try {
-    const order = await getOrderById(req.params.id, req.userId!);
+    const order = await getOrderById(paramString(req.params.id), req.userId!);
     res.json(order);
   } catch (e) {
     next(e);
@@ -71,7 +72,7 @@ router.get("/:id", async (req: AuthRequest, res, next) => {
 router.post("/:id/pickup/confirm", async (req: AuthRequest, res, next) => {
   try {
     const { qrCode } = z.object({ qrCode: z.string().optional() }).parse(req.body);
-    const order = await confirmPickup(req.params.id, req.userId!, qrCode);
+    const order = await confirmPickup(paramString(req.params.id), req.userId!, qrCode);
     res.json(order);
   } catch (e) {
     next(e);
@@ -81,7 +82,7 @@ router.post("/:id/pickup/confirm", async (req: AuthRequest, res, next) => {
 router.post("/:id/refund", async (req: AuthRequest, res, next) => {
   try {
     const { reason } = z.object({ reason: z.string().optional() }).parse(req.body);
-    const refund = await requestOrderRefund(req.params.id, req.userId!, reason);
+    const refund = await requestOrderRefund(paramString(req.params.id), req.userId!, reason);
     res.json(refund);
   } catch (e) {
     next(e);
@@ -98,7 +99,7 @@ router.patch("/:id/status", async (req: AuthRequest, res, next) => {
       status: z.enum(["PENDING", "PAID", "PROCESSING", "READY_PICKUP", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED", "PICKED_UP", "CANCELLED", "REFUNDED"]),
       note: z.string().optional(),
     }).parse(req.body);
-    const order = await updateOrderStatus(req.params.id, status, note, req.userId!);
+    const order = await updateOrderStatus(paramString(req.params.id), status, note, req.userId!);
     res.json(order);
   } catch (e) {
     next(e);

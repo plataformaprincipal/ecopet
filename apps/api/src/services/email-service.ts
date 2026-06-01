@@ -1,5 +1,7 @@
 import crypto from "crypto";
 import { prisma } from "@ecopet/database";
+import { asInputJson } from "../lib/prisma-json.js";
+import { dispatchEmail } from "./email-providers.js";
 import { createAuditLog } from "./audit-service.js";
 
 function generateCode() {
@@ -12,27 +14,30 @@ export async function sendEmail(params: {
   body: string;
   metadata?: Record<string, unknown>;
 }) {
-  const log = {
-    to: params.to,
-    subject: params.subject,
-    sentAt: new Date().toISOString(),
-    ...params.metadata,
-  };
-
-  if (process.env.NODE_ENV === "development") {
-    console.log("[ECOPET Email]", JSON.stringify(log, null, 2));
-    console.log("[ECOPET Email Body]", params.body);
-  }
+  const result = await dispatchEmail(
+    { to: params.to, subject: params.subject, body: params.body },
+    params.metadata
+  );
 
   await prisma.securityEvent.create({
     data: {
       eventType: "EMAIL_SENT",
       severity: "info",
-      metadata: { to: params.to, subject: params.subject, ...params.metadata },
+      metadata: asInputJson({
+        to: params.to,
+        subject: params.subject,
+        provider: result.provider,
+        sent: result.sent,
+        ...params.metadata,
+      }),
     },
   });
 
-  return { sent: true, devPreview: process.env.NODE_ENV === "development" ? params.body : undefined };
+  return {
+    sent: result.sent,
+    provider: result.provider,
+    devPreview: process.env.NODE_ENV === "development" ? params.body : undefined,
+  };
 }
 
 export async function createVerificationCode(userId: string, purpose: string) {

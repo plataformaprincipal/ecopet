@@ -355,6 +355,9 @@ model User {
 
   address       Address?
   pets          Pet[]
+  ongPets       Pet[]     @relation("PetOng")
+  protectorPets Pet[]     @relation("PetProtector")
+  petEventsAuthored PetEvent[] @relation("PetEventAuthor")
   posts         Post[]
   comments      Comment[]
   likes         Like[]
@@ -444,48 +447,120 @@ model Address {
 }
 
 model Pet {
-  id           String     @id @default(cuid())
-  ownerId      String
-  name         String
-  photo        String?
-  species      PetSpecies
-  breed        String?
-  size         PetSize?
-  sex          String?
-  birthDate    DateTime?
-  weight       Float?
-  color        String?
-  neutered     Boolean    @default(false)
-  microchip    String?
-  behavior     String?
-  diet         String?
-  activityLevel String?
-  notes        String?
-  documents    Json?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  id                String     @id @default(cuid())
+  ownerId           String
+  ongId             String?
+  protectorId       String?
+  name              String
+  photo             String?
+  photos            Json?
+  species           PetSpecies
+  breed             String?
+  size              PetSize?
+  sex               String?
+  birthDate         DateTime?
+  weight            Float?
+  color             String?
+  neutered          Boolean    @default(false)
+  hasMicrochip      Boolean    @default(false)
+  microchip         String?
+  behavior          String?
+  temperament       String?
+  rescueHistory     String?
+  specialNeeds      String?
+  dietaryRestriction String?
+  allergiesText     String?
+  diet              String?
+  activityLevel     String?
+  notes             String?
+  documents         Json?
+  qrCodeSlug        String?    @unique
+  publicProfile     Boolean    @default(false)
+  locationAddress   String?
+  locationCity      String?
+  locationState     String?
+  isLost            Boolean    @default(false)
+  lostAt            DateTime?
+  lostCity          String?
+  lostContact       String?
+  availableForAdoption Boolean @default(false)
+  adoptionReason    String?
+  adoptionRequirements String?
+  adoptionCity      String?
+  adoptionFee       Float?
+  aiProfile         Json?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
 
-  owner        User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  vaccinations Vaccination[]
-  medications  Medication[]
-  allergies    Allergy[]
-  exams        Exam[]
-  consultations Consultation[]
-  medicalRecords MedicalRecord[]
-  posts        Post[]
+  owner             User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ong               User?      @relation("PetOng", fields: [ongId], references: [id], onDelete: SetNull)
+  protector         User?      @relation("PetProtector", fields: [protectorId], references: [id], onDelete: SetNull)
+  vaccinations      Vaccination[]
+  medications       Medication[]
+  allergies         Allergy[]
+  exams             Exam[]
+  consultations     Consultation[]
+  medicalRecords    MedicalRecord[]
+  weightRecords     PetWeightRecord[]
+  media             PetMedia[]
+  events            PetEvent[]
+  posts             Post[]
 
   @@index([ownerId])
+  @@index([ongId])
+  @@index([isLost])
+  @@index([availableForAdoption])
+}
+
+model PetWeightRecord {
+  id         String   @id @default(cuid())
+  petId      String
+  weight     Float
+  recordedAt DateTime @default(now())
+  notes      String?
+  pet        Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@index([petId, recordedAt])
+}
+
+model PetMedia {
+  id         String   @id @default(cuid())
+  petId      String
+  type       String
+  url        String
+  caption    String?
+  recordedAt DateTime @default(now())
+  pet        Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@index([petId])
+}
+
+model PetEvent {
+  id          String   @id @default(cuid())
+  petId       String
+  eventType   String
+  title       String
+  description String?
+  metadata    Json?
+  createdById String?
+  createdAt   DateTime @default(now())
+  pet         Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+  createdBy   User?    @relation("PetEventAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([petId, createdAt])
 }
 
 model Vaccination {
-  id          String   @id @default(cuid())
-  petId       String
-  name        String
-  date        DateTime
-  nextDue     DateTime?
+  id           String   @id @default(cuid())
+  petId        String
+  name         String
+  manufacturer String?
+  batch        String?
+  date         DateTime
+  nextDue      DateTime?
   veterinarian String?
-  notes       String?
-  pet         Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+  notes        String?
+  pet          Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
 }
 
 model Medication {
@@ -496,6 +571,7 @@ model Medication {
   frequency String?
   startDate DateTime?
   endDate   DateTime?
+  notes     String?
   pet       Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
 }
 
@@ -529,16 +605,20 @@ model Consultation {
 }
 
 model MedicalRecord {
-  id        String   @id @default(cuid())
-  petId     String
-  authorId  String
-  type      String
-  title     String
-  content   String?
-  fileUrl   String?
-  createdAt DateTime @default(now())
-  pet       Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
-  author    User     @relation("RecordAuthor", fields: [authorId], references: [id])
+  id               String   @id @default(cuid())
+  petId            String
+  authorId         String
+  type             String
+  title            String
+  content          String?
+  recordDate       DateTime @default(now())
+  veterinarianName String?
+  clinicName       String?
+  fileUrl          String?
+  attachments      Json?
+  createdAt        DateTime @default(now())
+  pet              Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+  author           User     @relation("RecordAuthor", fields: [authorId], references: [id])
 }
 
 model TutorProfile {

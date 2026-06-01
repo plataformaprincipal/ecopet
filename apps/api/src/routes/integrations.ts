@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { prisma } from "@ecopet/database";
 import type { AuthRequest } from "../middleware/auth.js";
+import { asOptionalInputJson } from "../lib/prisma-json.js";
+import { paramString } from "../lib/request-utils.js";
 import { createAuditLog } from "../services/audit-service.js";
 
 const router = Router();
@@ -30,7 +32,7 @@ router.post("/", async (req: AuthRequest, res, next) => {
         ownerId: req.userId!,
         provider,
         name,
-        config,
+        config: asOptionalInputJson(config),
         status: "DISCONNECTED",
       },
     });
@@ -50,12 +52,12 @@ router.post("/", async (req: AuthRequest, res, next) => {
 router.patch("/:id", async (req: AuthRequest, res, next) => {
   try {
     const existing = await prisma.integration.findFirst({
-      where: { id: req.params.id, ownerId: req.userId! },
+      where: { id: paramString(req.params.id), ownerId: req.userId! },
     });
     if (!existing) return res.status(404).json({ error: "Integração não encontrada" });
 
     const integration = await prisma.integration.update({
-      where: { id: req.params.id },
+      where: { id: paramString(req.params.id) },
       data: req.body,
     });
 
@@ -87,7 +89,7 @@ router.patch("/:id", async (req: AuthRequest, res, next) => {
 router.post("/:id/sync", async (req: AuthRequest, res, next) => {
   try {
     const integration = await prisma.integration.update({
-      where: { id: req.params.id },
+      where: { id: paramString(req.params.id) },
       data: { status: "SYNCING", lastSyncAt: new Date() },
     });
     await prisma.integrationLog.create({
@@ -99,7 +101,7 @@ router.post("/:id/sync", async (req: AuthRequest, res, next) => {
       },
     });
     const updated = await prisma.integration.update({
-      where: { id: req.params.id },
+      where: { id: paramString(req.params.id) },
       data: { status: "CONNECTED" },
     });
     res.json(updated);

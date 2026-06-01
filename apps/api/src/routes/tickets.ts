@@ -1,5 +1,6 @@
 import { Router } from "express";
 import type { AuthRequest } from "../middleware/auth.js";
+import { paramString } from "../lib/request-utils.js";
 import { createTicket, listTickets, updateTicket } from "../services/ticket-service.js";
 import { createAuditLog } from "../services/audit-service.js";
 import { isGestorRole } from "../services/rbac-service.js";
@@ -49,13 +50,14 @@ router.post("/", async (req: AuthRequest, res, next) => {
 
 router.patch("/:id", async (req: AuthRequest, res, next) => {
   try {
-    const ticket = await updateTicket(req.params.id, req.body, req.userId);
+    const ticketId = paramString(req.params.id);
+    const ticket = await updateTicket(ticketId, req.body, req.userId);
     await createAuditLog({
       userId: req.userId,
       action: "UPDATE",
       module: "support",
       resource: "ticket",
-      resourceId: req.params.id,
+      resourceId: ticketId,
       metadata: req.body,
     });
     res.json(ticket);
