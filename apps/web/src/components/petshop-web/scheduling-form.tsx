@@ -1,6 +1,4 @@
-function Required() {
-  return <span className="required"> *</span>;
-}
+import { PetshopDeliveryAddressFields, Required } from "./petshop-address-fields";
 
 export function SchedulingForm() {
   return (
@@ -67,21 +65,7 @@ export function SchedulingForm() {
 
         <div className="col-12" id="enderecoEntregaBlock" style={{ display: "none" }}>
           <hr />
-          <h6 className="fw-bold mb-3" style={{ color: "#1a3a2a" }}>Endereço para entrega/busca</h6>
-          <div className="row g-3">
-            <div className="col-12">
-              <label htmlFor="enderecoEntrega" className="form-label">Endereço completo<Required /></label>
-              <input type="text" className="form-control" id="enderecoEntrega" name="enderecoEntrega" placeholder="Rua, número, bairro, complemento" data-entrega-required />
-            </div>
-            <div className="col-md-6">
-              <label htmlFor="cidadeEntrega" className="form-label">Cidade<Required /></label>
-              <input type="text" className="form-control" id="cidadeEntrega" name="cidadeEntrega" placeholder="João Pessoa" data-entrega-required />
-            </div>
-            <div className="col-md-6">
-              <label htmlFor="cepEntrega" className="form-label">CEP<Required /></label>
-              <input type="text" className="form-control" id="cepEntrega" name="cepEntrega" placeholder="58000-000" data-entrega-required />
-            </div>
-          </div>
+          <PetshopDeliveryAddressFields />
         </div>
 
         <div className="col-12">

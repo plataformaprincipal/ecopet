@@ -40,7 +40,7 @@ function ServiceManageCard({ service }: { service: MarketplaceService }) {
     service.inPerson && "Presencial",
     service.homeService && "Domiciliar",
     service.telehealth && "Online",
-  ].filter(Boolean);
+  ].filter((m): m is string => Boolean(m));
 
   return (
     <article className="card-premium rounded-[16px] border border-ecopet-gray/10 p-4">

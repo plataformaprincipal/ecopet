@@ -107,7 +107,7 @@ export function PersonaWorkflowPanel({ scope }: { scope: "CLIENT" | "PARTNER" | 
 
 export function PersonaExecutivePanel({ persona }: { persona: "CLIENT" | "PARTNER" | "NGO" }) {
   const [data, setData] = useState<Record<string, unknown> | null>(null);
-  useEffect(() => { fetchIntelligence(persona).then(setData).catch(() => {}); }, [persona]);
+  useEffect(() => { fetchIntelligence(persona).then((d) => setData(d as Record<string, unknown>)).catch(() => {}); }, [persona]);
   if (!data) return null;
   return (
     <>

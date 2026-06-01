@@ -15,8 +15,31 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat", weight: ["500", "600", "700", "800"] });
 
 export const metadata: Metadata = {
-  title: "ECOPET — Ecossistema Pet Inteligente",
-  description: "Marketplace, rede social, healthtech e IA para o universo pet.",
+  title: {
+    default: "ECOPET",
+    template: "%s | ECOPET",
+  },
+  description: "Ecossistema inteligente para pets, parceiros, ONGs e AgroPet.",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [{ url: "/brand/ecopet-logo.png", type: "image/png" }],
+    apple: [{ url: "/brand/ecopet-logo.png", type: "image/png" }],
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "ECOPET",
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
+};
+
+export const viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#003B16" },
+    { media: "(prefers-color-scheme: dark)", color: "#003B16" },
+  ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

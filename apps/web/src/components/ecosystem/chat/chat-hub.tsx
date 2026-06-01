@@ -77,8 +77,8 @@ export function ChatHub({ role = "client", initialConversationId }: ChatHubProps
                 <div>
                   <p className="font-semibold">{active.participantName}</p>
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-[10px]">{TYPE_LABELS[active.type] ?? active.type}</Badge>
-                    {active.tags?.map((t) => <Badge key={t} variant="secondary" className="text-[10px]">{t}</Badge>)}
+                    <Badge variant="default" className="text-[10px]">{TYPE_LABELS[active.type] ?? active.type}</Badge>
+                    {active.tags?.map((t) => <Badge key={t} variant="default" className="text-[10px]">{t}</Badge>)}
                   </div>
                 </div>
               </div>

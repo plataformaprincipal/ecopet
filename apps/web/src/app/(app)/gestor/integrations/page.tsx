@@ -41,7 +41,7 @@ export default function GestorIntegrationsPage() {
           <article key={i.id} className="card-premium rounded-[16px] border p-4">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold">{i.name}</h3>
-              <Badge variant={i.status === "CONNECTED" ? "verified" : "secondary"}>{i.status}</Badge>
+              <Badge variant={i.status === "CONNECTED" ? "verified" : "default"}>{i.status}</Badge>
             </div>
             <p className="text-sm text-ecopet-gray">{i.provider}</p>
             {i.lastSyncAt && <p className="mt-2 text-xs text-ecopet-gray">Sync: {new Date(i.lastSyncAt).toLocaleString("pt-BR")}</p>}

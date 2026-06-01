@@ -1,5 +1,6 @@
 "use client";
 
+import { useParams } from "next/navigation";
 import { GESTOR_MODULES } from "@/lib/gestor/config";
 import { GestorPageHeader } from "@/components/gestor/gestor-shell";
 import { GestorModuleView } from "@/components/gestor/gestor-module-view";
@@ -31,16 +32,18 @@ const DESCRIPTIONS: Record<string, string> = {
   sistema: "Health check, backups, status de API e erros críticos.",
 };
 
-export default function GestorModulePage({ params }: { params: { slug: string } }) {
-  const mod = GESTOR_MODULES.find((m) => m.id === params.slug);
+export default function GestorModulePage() {
+  const params = useParams();
+  const slug = String(params.slug ?? "");
+  const mod = GESTOR_MODULES.find((m) => m.id === slug);
   if (!mod) {
     return <GestorPageHeader title="Módulo não encontrado" />;
   }
 
   return (
     <>
-      <GestorPageHeader title={mod.label} description={DESCRIPTIONS[params.slug]} />
-      <GestorModuleView moduleId={params.slug} title={mod.label} description={DESCRIPTIONS[params.slug]} />
+      <GestorPageHeader title={mod.label} description={DESCRIPTIONS[slug]} />
+      <GestorModuleView moduleId={slug} title={mod.label} description={DESCRIPTIONS[slug]} />
     </>
   );
 }

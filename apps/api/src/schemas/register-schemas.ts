@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { UserRole } from "@prisma/client";
+import { validateCpfChecksum, validateCnpjChecksum } from "../lib/documents.js";
+import { USER_MESSAGES } from "../lib/app-errors.js";
 
 const cpfRegex = /^\d{11}$/;
 const cnpjRegex = /^\d{14}$/;
@@ -8,12 +10,25 @@ const phoneRegex = /^[\d\s()+-]{10,20}$/;
 export const cpfSchema = z
   .string()
   .transform((v) => v.replace(/\D/g, ""))
-  .refine((v) => cpfRegex.test(v), "CPF inválido");
+  .refine((v) => cpfRegex.test(v), USER_MESSAGES.CPF_INVALID)
+  .refine((v) => validateCpfChecksum(v), USER_MESSAGES.CPF_INVALID);
 
 export const cnpjSchema = z
   .string()
   .transform((v) => v.replace(/\D/g, ""))
-  .refine((v) => cnpjRegex.test(v), "CNPJ inválido");
+  .refine((v) => cnpjRegex.test(v), USER_MESSAGES.CNPJ_INVALID)
+  .refine((v) => validateCnpjChecksum(v), USER_MESSAGES.CNPJ_INVALID);
+
+export const birthDateSchema = z
+  .string()
+  .min(1, "Data de nascimento obrigatória")
+  .refine((v) => !Number.isNaN(new Date(v).getTime()), "Data de nascimento inválida")
+  .refine((v) => {
+    const d = new Date(v);
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    return d <= today;
+  }, USER_MESSAGES.BIRTH_DATE_FUTURE);
 
 export const phoneSchema = z
   .string()
@@ -23,10 +38,14 @@ export const phoneSchema = z
 export const addressSchema = z.object({
   street: z.string().min(3, "Endereço obrigatório"),
   number: z.string().optional(),
+  complement: z.string().optional(),
   district: z.string().optional(),
+  reference: z.string().optional(),
   city: z.string().min(2, "Cidade obrigatória"),
   state: z.string().length(2, "UF inválida"),
   zipCode: z.string().optional(),
+  latitude: z.number().nullable().optional(),
+  longitude: z.number().nullable().optional(),
 });
 
 export const documentsSchema = z
@@ -69,7 +88,7 @@ export const tutorRegisterSchema = baseRegisterObject.extend({
   role: z.literal(UserRole.TUTOR),
   name: z.string().min(2, "Nome completo obrigatório"),
   cpf: cpfSchema,
-  birthDate: z.string().min(1, "Data de nascimento obrigatória"),
+  birthDate: birthDateSchema,
   address: addressSchema,
   petCount: z.coerce.number().int().min(0).optional(),
   primaryInterests: z.array(z.string()).min(1, "Selecione ao menos um interesse"),
@@ -83,6 +102,7 @@ export const veterinarianRegisterSchema = baseRegisterObject.extend({
   crmvState: z.string().length(2, "UF do CRMV obrigatória"),
   specialty: z.string().min(2, "Especialidade obrigatória"),
   professionalAddress: z.string().min(3, "Endereço profissional obrigatório"),
+  address: addressSchema.optional(),
   inPersonAvailable: z.boolean(),
   onlineAvailable: z.boolean(),
   averageConsultationPrice: z.coerce.number().positive("Valor da consulta inválido").optional(),
@@ -143,15 +163,20 @@ export const serviceProviderRegisterSchema = baseRegisterObject
     homeService: z.boolean(),
     startingPrice: z.coerce.number().positive().optional(),
     availability: z.string().min(2, "Disponibilidade obrigatória"),
+    address: addressSchema.optional(),
   })
   .superRefine((data, ctx) => {
     passwordConfirmRefine(data, ctx);
     const doc = data.documentNumber.replace(/\D/g, "");
-    if (data.documentType === "CPF" && !cpfRegex.test(doc)) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "CPF inválido", path: ["documentNumber"] });
+    if (data.documentType === "CPF") {
+      if (!cpfRegex.test(doc) || !validateCpfChecksum(doc)) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: USER_MESSAGES.CPF_INVALID, path: ["documentNumber"] });
+      }
     }
-    if (data.documentType === "CNPJ" && !cnpjRegex.test(doc)) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "CNPJ inválido", path: ["documentNumber"] });
+    if (data.documentType === "CNPJ") {
+      if (!cnpjRegex.test(doc) || !validateCnpjChecksum(doc)) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: USER_MESSAGES.CNPJ_INVALID, path: ["documentNumber"] });
+      }
     }
   });
 
@@ -159,7 +184,8 @@ export const ongRegisterSchema = baseRegisterObject
   .extend({
     role: z.literal(UserRole.ONG),
     username: z.string().min(3).max(30).regex(/^[a-z0-9._-]+$/i),
-    name: z.string().min(2, "Nome da ONG ou protetor obrigatório"),
+    name: z.string().min(2, "Nome completo do protetor ou razão social obrigatório"),
+    tradeName: z.string().optional(),
     documentType: z.enum(["CPF", "CNPJ"]),
     documentNumber: z.string().min(11, "CPF ou CNPJ inválido"),
     responsible: z.string().min(2, "Responsável obrigatório"),
@@ -171,11 +197,22 @@ export const ongRegisterSchema = baseRegisterObject
   .superRefine((data, ctx) => {
     passwordConfirmRefine(data, ctx);
     const doc = data.documentNumber.replace(/\D/g, "");
-    if (data.documentType === "CPF" && !cpfRegex.test(doc)) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "CPF inválido", path: ["documentNumber"] });
+    if (data.documentType === "CPF") {
+      if (!cpfRegex.test(doc) || !validateCpfChecksum(doc)) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: USER_MESSAGES.CPF_INVALID, path: ["documentNumber"] });
+      }
     }
-    if (data.documentType === "CNPJ" && !cnpjRegex.test(doc)) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "CNPJ inválido", path: ["documentNumber"] });
+    if (data.documentType === "CNPJ") {
+      if (!cnpjRegex.test(doc) || !validateCnpjChecksum(doc)) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: USER_MESSAGES.CNPJ_INVALID, path: ["documentNumber"] });
+      }
+      if (!data.tradeName || data.tradeName.trim().length < 2) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Nome fantasia ou nome público da ONG é obrigatório",
+          path: ["tradeName"],
+        });
+      }
     }
   });
 
@@ -188,7 +225,8 @@ export const adminRegisterSchema = baseRegisterObject.extend({
   accessLevel: z.enum(["suporte", "financeiro", "comercial", "moderacao", "administrador_geral"]),
 }).superRefine(passwordConfirmRefine);
 
-export const registerSchema = z.union([
+/** Cadastro público — sem perfis internos ECOPET */
+export const publicRegisterSchema = z.union([
   tutorRegisterSchema,
   veterinarianRegisterSchema,
   clinicRegisterSchema,
@@ -196,12 +234,17 @@ export const registerSchema = z.union([
   sellerRegisterSchema,
   serviceProviderRegisterSchema,
   ongRegisterSchema,
-  adminRegisterSchema,
 ]);
 
-export type RegisterInput = z.infer<typeof registerSchema>;
+export const registerSchema = publicRegisterSchema;
 
-export const REGISTRATION_ROLES = [
+/** Uso exclusivo pelo painel Gestor ECOPET */
+export const internalRegisterSchema = z.union([publicRegisterSchema, adminRegisterSchema]);
+
+export type RegisterInput = z.infer<typeof internalRegisterSchema>;
+export type PublicRegisterInput = z.infer<typeof publicRegisterSchema>;
+
+export const PUBLIC_REGISTRATION_ROLES = [
   UserRole.TUTOR,
   UserRole.VETERINARIAN,
   UserRole.CLINIC,
@@ -209,8 +252,9 @@ export const REGISTRATION_ROLES = [
   UserRole.SELLER,
   UserRole.SERVICE_PROVIDER,
   UserRole.ONG,
-  UserRole.ADMIN,
 ] as const;
+
+export const REGISTRATION_ROLES = [...PUBLIC_REGISTRATION_ROLES, UserRole.ADMIN] as const;
 
 export const ROLE_REDIRECTS: Record<(typeof REGISTRATION_ROLES)[number], string> = {
   [UserRole.TUTOR]: "/onboarding/pet",

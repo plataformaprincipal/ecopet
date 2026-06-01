@@ -1,6 +1,4 @@
-function Required() {
-  return <span className="required"> *</span>;
-}
+import { PetshopClientAddressFields, Required } from "./petshop-address-fields";
 
 export function ClientRegistrationForm() {
   return (
@@ -32,30 +30,9 @@ export function ClientRegistrationForm() {
           <label htmlFor="numPets" className="form-label">Número de pets<Required /></label>
           <input type="number" className="form-control" id="numPets" name="numPets" placeholder="1" min="1" max="20" required />
         </div>
-        <div className="col-md-4">
-          <label htmlFor="cep" className="form-label">CEP<Required /></label>
-          <input type="text" className="form-control" id="cep" name="cep" placeholder="58000-000" required />
-        </div>
 
         <div className="col-12">
-          <label htmlFor="endereco" className="form-label">Endereço completo<Required /></label>
-          <input type="text" className="form-control" id="endereco" name="endereco" placeholder="Rua, número, bairro" required />
-        </div>
-
-        <div className="col-md-8">
-          <label htmlFor="cidade" className="form-label">Cidade<Required /></label>
-          <input type="text" className="form-control" id="cidade" name="cidade" placeholder="João Pessoa" required />
-        </div>
-        <div className="col-md-4">
-          <label htmlFor="estado" className="form-label">Estado<Required /></label>
-          <select className="form-select" id="estado" name="estado" required defaultValue="">
-            <option value="" disabled>Selecione</option>
-            <option value="PB">Paraíba</option>
-            <option value="PE">Pernambuco</option>
-            <option value="RN">Rio Grande do Norte</option>
-            <option value="CE">Ceará</option>
-            <option value="SP">São Paulo</option>
-          </select>
+          <PetshopClientAddressFields />
         </div>
 
         <div className="col-12">

@@ -12,6 +12,8 @@ import { checkoutOrder, type DeliveryMethod, type PaymentMethod, type Order } fr
 import { fetchPartnerLogistics, calculateShipping, type LogisticsMethod } from "@/lib/logistics/api";
 import { fetchWalletBalance } from "@/lib/wallet/api";
 import { useAppStore } from "@/store/app-store";
+import { AddressByCepField, type AddressByCepValue } from "@/components/address/address-by-cep-field";
+import { EMPTY_ADDRESS } from "@/lib/address/types";
 
 const STEPS = [
   { id: 1, label: "Identificação" },
@@ -41,9 +43,11 @@ export function CheckoutSteps() {
   const [couponMsg, setCouponMsg] = useState("");
 
   const [identification, setIdentification] = useState({ name: "", email: "", phone: "" });
-  const [address, setAddress] = useState({ zipCode: "", street: "", number: "", complement: "", city: "", state: "" });
+  const [address, setAddress] = useState<AddressByCepValue>({ ...EMPTY_ADDRESS });
   const [useAlternateAddress, setUseAlternateAddress] = useState(false);
-  const [alternateAddress, setAlternateAddress] = useState({ zipCode: "", street: "", number: "", city: "", state: "" });
+  const [alternateAddress, setAlternateAddress] = useState<AddressByCepValue>({ ...EMPTY_ADDRESS });
+  const [useBillingAddress, setUseBillingAddress] = useState(false);
+  const [billingAddress, setBillingAddress] = useState<AddressByCepValue>({ ...EMPTY_ADDRESS });
 
   const [deliveryMethods, setDeliveryMethods] = useState<LogisticsMethod[]>([]);
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>("DELIVERY_LOCAL");
@@ -103,6 +107,7 @@ export function CheckoutSteps() {
     try {
       const shippingAddress = {
         ...address,
+        district: address.district,
         recipient: identification.name,
         phone: identification.phone,
       };
@@ -118,7 +123,8 @@ export function CheckoutSteps() {
           partnerId: item.partnerId,
         })),
         shippingAddress,
-        alternateAddress: useAlternateAddress ? alternateAddress : undefined,
+        alternateAddress: useAlternateAddress ? (alternateAddress as unknown as Record<string, unknown>) : undefined,
+        billingAddress: (useBillingAddress ? billingAddress : address) as unknown as Record<string, unknown>,
         deliveryMethod,
         paymentMethod,
         scheduledAt: scheduledAt || undefined,
@@ -194,29 +200,25 @@ export function CheckoutSteps() {
 
             {step === 2 && (
               <>
-                <Input placeholder="CEP" value={address.zipCode} onChange={(e) => setAddress({ ...address, zipCode: e.target.value })} />
-                <div className="grid grid-cols-3 gap-2">
-                  <Input className="col-span-2" placeholder="Endereço" value={address.street} onChange={(e) => setAddress({ ...address, street: e.target.value })} />
-                  <Input placeholder="Nº" value={address.number} onChange={(e) => setAddress({ ...address, number: e.target.value })} />
-                </div>
-                <Input placeholder="Complemento" value={address.complement} onChange={(e) => setAddress({ ...address, complement: e.target.value })} />
-                <div className="grid grid-cols-2 gap-4">
-                  <Input placeholder="Cidade" value={address.city} onChange={(e) => setAddress({ ...address, city: e.target.value })} />
-                  <Input placeholder="Estado" value={address.state} onChange={(e) => setAddress({ ...address, state: e.target.value })} />
-                </div>
+                <AddressByCepField
+                  value={address}
+                  onChange={setAddress}
+                  title="Endereço de entrega"
+                  idPrefix="checkout-delivery"
+                  variant="compact"
+                />
                 <label className="flex items-center gap-2 text-sm">
                   <input type="checkbox" checked={useAlternateAddress} onChange={(e) => setUseAlternateAddress(e.target.checked)} className="accent-ecopet-green" />
                   Receber em endereço alternativo
                 </label>
                 {useAlternateAddress && (
-                  <div className="space-y-2 rounded-xl border p-4">
-                    <Input placeholder="CEP alternativo" value={alternateAddress.zipCode} onChange={(e) => setAlternateAddress({ ...alternateAddress, zipCode: e.target.value })} />
-                    <Input placeholder="Endereço alternativo" value={alternateAddress.street} onChange={(e) => setAlternateAddress({ ...alternateAddress, street: e.target.value })} />
-                    <div className="grid grid-cols-2 gap-2">
-                      <Input placeholder="Cidade" value={alternateAddress.city} onChange={(e) => setAlternateAddress({ ...alternateAddress, city: e.target.value })} />
-                      <Input placeholder="Estado" value={alternateAddress.state} onChange={(e) => setAlternateAddress({ ...alternateAddress, state: e.target.value })} />
-                    </div>
-                  </div>
+                  <AddressByCepField
+                    value={alternateAddress}
+                    onChange={setAlternateAddress}
+                    title="Endereço alternativo"
+                    idPrefix="checkout-alt"
+                    variant="compact"
+                  />
                 )}
               </>
             )}
@@ -298,6 +300,23 @@ export function CheckoutSteps() {
                 </div>
                 {paymentMethod === "WALLET" && walletBalance < grandTotal && (
                   <p className="text-sm text-red-500">Saldo insuficiente. Disponível: {formatMpPrice(walletBalance)}</p>
+                )}
+                {paymentMethod === "CARD" && (
+                  <>
+                    <label className="flex items-center gap-2 text-sm">
+                      <input type="checkbox" checked={useBillingAddress} onChange={(e) => setUseBillingAddress(e.target.checked)} className="accent-ecopet-green" />
+                      Endereço de cobrança diferente do de entrega
+                    </label>
+                    {useBillingAddress && (
+                      <AddressByCepField
+                        value={billingAddress}
+                        onChange={setBillingAddress}
+                        title="Endereço de cobrança"
+                        idPrefix="checkout-billing"
+                        variant="compact"
+                      />
+                    )}
+                  </>
                 )}
                 <div className="flex gap-2">
                   <Input placeholder="Cupom de desconto" value={couponInput} onChange={(e) => setCouponInput(e.target.value)} />

@@ -5,18 +5,16 @@ export type RegistrationRole =
   | "PETSHOP"
   | "SELLER"
   | "SERVICE_PROVIDER"
-  | "ONG"
-  | "ADMIN";
+  | "ONG";
 
 export const REGISTRATION_ROLES: { value: RegistrationRole; label: string; description: string }[] = [
-  { value: "TUTOR", label: "Tutor", description: "Dono de pet — produtos, saúde e comunidade" },
+  { value: "TUTOR", label: "Cliente / Tutor", description: "Dono de pet — produtos, saúde e comunidade" },
   { value: "VETERINARIAN", label: "Veterinário", description: "Profissional com CRMV" },
   { value: "CLINIC", label: "Clínica Veterinária", description: "Estabelecimento com equipe e serviços" },
   { value: "PETSHOP", label: "Pet Shop", description: "Loja física com produtos e/ou serviços" },
-  { value: "SELLER", label: "Seller / Loja Parceira", description: "Vendedor no marketplace ECOPET" },
+  { value: "SELLER", label: "Parceiro / Loja", description: "Vendedor no marketplace ECOPET" },
   { value: "SERVICE_PROVIDER", label: "Prestador de Serviço", description: "Banho, passeio, adestramento e mais" },
-  { value: "ONG", label: "ONG / Protetor Animal", description: "Adoção, resgate e campanhas" },
-  { value: "ADMIN", label: "Administrador interno", description: "Equipe ECOPET" },
+  { value: "ONG", label: "ONG / Protetor", description: "Adoção, resgate e campanhas" },
 ];
 
 export const ROLE_REDIRECTS: Record<RegistrationRole, string> = {
@@ -27,7 +25,6 @@ export const ROLE_REDIRECTS: Record<RegistrationRole, string> = {
   SELLER: "/dashboard/seller",
   SERVICE_PROVIDER: "/dashboard/prestador",
   ONG: "/dashboard/ong",
-  ADMIN: "/admin",
 };
 
 export const PENDING_APPROVAL_ROLES: RegistrationRole[] = [
@@ -99,7 +96,18 @@ export function getDefaultFormValues(role: RegistrationRole): FormValues {
     acceptTerms: false,
     acceptLgpd: false,
     documents: [] as { name: string; size?: number; type?: string }[],
-    address: { street: "", number: "", district: "", city: "", state: "SP", zipCode: "" },
+    address: {
+      street: "",
+      number: "",
+      district: "",
+      city: "",
+      state: "SP",
+      zipCode: "",
+      complement: "",
+      reference: "",
+      latitude: null,
+      longitude: null,
+    },
     bankData: { pixKey: "", bankName: "", accountHolder: "" },
   };
 
@@ -169,18 +177,11 @@ export function getDefaultFormValues(role: RegistrationRole): FormValues {
         ...base,
         documentType: "CNPJ",
         documentNumber: "",
+        tradeName: "",
         responsible: "",
         actionTypes: [] as string[],
         animalCapacity: 0,
         acceptsDonations: true,
-      };
-    case "ADMIN":
-      return {
-        ...base,
-        cpf: "",
-        corporateEmail: "",
-        jobTitle: "",
-        accessLevel: "suporte",
       };
     default:
       return base;

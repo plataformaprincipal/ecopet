@@ -1,5 +1,5 @@
 import type { MarketplacePartner, MarketplaceProduct, MarketplaceService } from "@/lib/marketplace/types";
-import type { PartnerSearchGroup } from "../types";
+import type { PartnerSearchGroup } from "./types";
 
 export function groupSearchByPartner(
   partners: MarketplacePartner[],

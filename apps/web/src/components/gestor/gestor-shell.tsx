@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { GESTOR_MODULES } from "@/lib/gestor/config";
 import { fetchMyPermissions } from "@/lib/gestor/api";
-import { EcoPetSymbol } from "@/components/brand/ecopet-symbol";
+import { EcoPetLogo } from "@/components/brand/ecopet-logo";
 
 export function GestorSidebar() {
   const pathname = usePathname();
@@ -30,7 +30,7 @@ export function GestorSidebar() {
     <aside className="hidden w-64 shrink-0 border-r border-ecopet-gray/10 bg-white dark:bg-ecopet-dark-card lg:block">
       <div className="sticky top-16 max-h-[calc(100vh-4rem)] overflow-y-auto p-4">
         <div className="mb-6 flex items-center gap-2">
-          <EcoPetSymbol className="h-8 w-8" />
+          <EcoPetLogo variant="icon" size={32} />
           <div>
             <p className="font-display text-sm font-extrabold text-ecopet-dark dark:text-white">Gestor ECOPET</p>
             <p className="text-[10px] text-ecopet-gray">Sistema Interno da Empresa</p>

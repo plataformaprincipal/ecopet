@@ -39,7 +39,7 @@ export function MainNavigation() {
   return (
     <aside className="hidden w-64 shrink-0 flex-col border-r border-ecopet-dark/20 bg-ecopet-dark dark:border-white/10 lg:flex">
       <div className="p-6">
-        <Logo href="/inicio" />
+        <Logo href="/inicio" responsive />
       </div>
 
       <nav className="flex-1 space-y-1 px-3" aria-label="Navegação principal">

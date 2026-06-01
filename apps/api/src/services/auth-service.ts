@@ -15,6 +15,7 @@ import {
   sendPasswordChangeCodeEmail,
   sendInternalUserInviteEmail,
 } from "./email-service.js";
+import { AppError, USER_MESSAGES, accountUnavailableMessage } from "../lib/app-errors.js";
 
 const JWT_SECRET = process.env.JWT_SECRET || "ecopet-dev-secret";
 const MAX_ATTEMPTS = 5;
@@ -65,19 +66,70 @@ export async function loginUser(params: {
     await prisma.loginLog.create({
       data: { email: identifier, success: false, ip: params.ip, userAgent: params.userAgent, reason: "user_not_found" },
     });
-    throw Object.assign(new Error("Credenciais inválidas"), { status: 401 });
+    await prisma.securityEvent.create({
+      data: {
+        eventType: "login_user_not_found",
+        severity: "warning",
+        metadata: { identifier },
+        ip: params.ip,
+      },
+    });
+    await createAuditLog({
+      action: "CREATE",
+      module: "auth",
+      resource: "login_failed",
+      metadata: { reason: "user_not_found", identifier },
+      ip: params.ip,
+      userAgent: params.userAgent,
+    });
+    throw new AppError(USER_MESSAGES.USER_NOT_FOUND, 401, "USER_NOT_FOUND");
   }
 
   if (user.isBootstrapUser && user.accountStatus === "SUSPENDED") {
     await handleBootstrapLoginAttempt(identifier, params.ip, params.userAgent);
   }
 
-  if (user.accountStatus === "SUSPENDED" || user.accountStatus === "REJECTED") {
-    throw Object.assign(new Error("Conta desativada"), { status: 403 });
+  if (user.lockedUntil && user.lockedUntil > new Date()) {
+    await prisma.securityEvent.create({
+      data: {
+        userId: user.id,
+        eventType: "login_blocked",
+        severity: "warning",
+        metadata: { reason: "account_locked" },
+        ip: params.ip,
+      },
+    });
+    throw new AppError(
+      accountUnavailableMessage("account_locked"),
+      423,
+      "ACCOUNT_LOCKED"
+    );
   }
 
-  if (user.lockedUntil && user.lockedUntil > new Date()) {
-    throw Object.assign(new Error("Conta temporariamente bloqueada. Tente novamente mais tarde."), { status: 423 });
+  const inactiveStatuses = ["SUSPENDED", "REJECTED", "PENDING"] as const;
+  if (inactiveStatuses.includes(user.accountStatus as (typeof inactiveStatuses)[number])) {
+    await prisma.securityEvent.create({
+      data: {
+        userId: user.id,
+        eventType: "login_blocked",
+        severity: "warning",
+        metadata: { accountStatus: user.accountStatus, reason: user.accountStatusReason },
+        ip: params.ip,
+      },
+    });
+    throw new AppError(
+      accountUnavailableMessage(user.accountStatusReason, user.accountStatus),
+      403,
+      "ACCOUNT_UNAVAILABLE"
+    );
+  }
+
+  if (!user.isVerified && ["ADMIN", "GESTOR"].includes(user.role)) {
+    throw new AppError(
+      accountUnavailableMessage("email_not_verified"),
+      403,
+      "EMAIL_NOT_VERIFIED"
+    );
   }
 
   const valid = await bcrypt.compare(params.password, user.passwordHash);
@@ -88,12 +140,30 @@ export async function loginUser(params: {
       data: {
         failedLoginAttempts: attempts,
         lockedUntil: attempts >= MAX_ATTEMPTS ? new Date(Date.now() + LOCK_MINUTES * 60 * 1000) : null,
+        accountStatusReason: attempts >= MAX_ATTEMPTS ? "account_locked" : user.accountStatusReason,
       },
     });
     await prisma.loginLog.create({
       data: { userId: user.id, success: false, ip: params.ip, userAgent: params.userAgent, reason: "invalid_password" },
     });
-    throw Object.assign(new Error("Credenciais inválidas"), { status: 401 });
+    await prisma.securityEvent.create({
+      data: {
+        userId: user.id,
+        eventType: "login_invalid_password",
+        severity: "warning",
+        ip: params.ip,
+      },
+    });
+    await createAuditLog({
+      userId: user.id,
+      action: "CREATE",
+      module: "auth",
+      resource: "login_failed",
+      metadata: { reason: "invalid_password" },
+      ip: params.ip,
+      userAgent: params.userAgent,
+    });
+    throw new AppError(USER_MESSAGES.USER_OR_PASSWORD_INCORRECT, 401, "USER_OR_PASSWORD_INCORRECT");
   }
 
   await prisma.user.update({
@@ -263,7 +333,24 @@ export async function changePassword(params: {
 export async function updateProfile(params: {
   userId: string;
   currentPassword: string;
-  data: { name?: string; phone?: string; bio?: string; avatar?: string };
+  data: {
+    name?: string;
+    phone?: string;
+    bio?: string;
+    avatar?: string;
+    address?: {
+      street: string;
+      number?: string;
+      complement?: string;
+      district?: string;
+      city: string;
+      state: string;
+      zipCode?: string;
+      reference?: string;
+      latitude?: number | null;
+      longitude?: number | null;
+    };
+  };
   ip?: string;
 }) {
   const user = await prisma.user.findUniqueOrThrow({ where: { id: params.userId } });
@@ -278,7 +365,38 @@ export async function updateProfile(params: {
       ...(params.data.phone !== undefined ? { phone: params.data.phone } : {}),
       ...(params.data.bio !== undefined ? { bio: params.data.bio } : {}),
       ...(params.data.avatar !== undefined ? { avatar: params.data.avatar } : {}),
+      ...(params.data.address
+        ? {
+            address: {
+              upsert: {
+                create: {
+                  street: params.data.address.street,
+                  number: params.data.address.number || "S/N",
+                  complement: params.data.address.complement,
+                  district: params.data.address.district || "Centro",
+                  city: params.data.address.city,
+                  state: params.data.address.state.toUpperCase(),
+                  zipCode: params.data.address.zipCode || "00000-000",
+                  latitude: params.data.address.latitude ?? undefined,
+                  longitude: params.data.address.longitude ?? undefined,
+                },
+                update: {
+                  street: params.data.address.street,
+                  number: params.data.address.number || "S/N",
+                  complement: params.data.address.complement,
+                  district: params.data.address.district || "Centro",
+                  city: params.data.address.city,
+                  state: params.data.address.state.toUpperCase(),
+                  zipCode: params.data.address.zipCode || "00000-000",
+                  latitude: params.data.address.latitude ?? undefined,
+                  longitude: params.data.address.longitude ?? undefined,
+                },
+              },
+            },
+          }
+        : {}),
     },
+    include: { address: true },
   });
 
   await createAuditLog({
@@ -292,7 +410,17 @@ export async function updateProfile(params: {
     observation: "Dados cadastrais alterados",
   });
 
-  return { success: true, user: { id: updated.id, name: updated.name, phone: updated.phone, bio: updated.bio, avatar: updated.avatar } };
+  return {
+    success: true,
+    user: {
+      id: updated.id,
+      name: updated.name,
+      phone: updated.phone,
+      bio: updated.bio,
+      avatar: updated.avatar,
+      address: updated.address,
+    },
+  };
 }
 
 export async function requestPasswordReset(email: string) {

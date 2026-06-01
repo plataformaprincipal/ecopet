@@ -22,6 +22,17 @@ export interface CurrentUser {
   isVerified: boolean;
   pets: { id: string; name: string; photo: string | null; species: string }[];
   gamification?: { points: number; level: number } | null;
+  address?: {
+    street: string;
+    number: string;
+    complement?: string | null;
+    district: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    latitude?: number | null;
+    longitude?: number | null;
+  } | null;
 }
 
 export function useCurrentUser() {

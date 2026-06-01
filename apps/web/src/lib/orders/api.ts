@@ -24,6 +24,7 @@ export interface CheckoutPayload {
   }[];
   shippingAddress: Record<string, unknown>;
   alternateAddress?: Record<string, unknown>;
+  billingAddress?: Record<string, unknown>;
   deliveryMethod: DeliveryMethod;
   paymentMethod: PaymentMethod;
   scheduledAt?: string;

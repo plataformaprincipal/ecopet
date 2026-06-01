@@ -1,9 +1,13 @@
 @import "tailwindcss";
 
 @theme {
-  /* Manual da Marca ECOPET */
-  --color-ecopet-dark: #1a3a2a;
-  --color-ecopet-green: #2e7d4f;
+  /* Manual da Marca ECOPET — cores oficiais */
+  --color-ecopet-brand: #003b16;
+  --color-ecopet-brand-secondary: #0f5a2a;
+  --color-ecopet-brand-cream: #f7f4dc;
+  --color-ecopet-brand-text: #102015;
+  --color-ecopet-dark: #003b16;
+  --color-ecopet-green: #0f5a2a;
   --color-ecopet-yellow: #f5c800;
   --color-ecopet-gray: #4a4a5a;
   --color-ecopet-cream: #f2efe3;

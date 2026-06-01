@@ -34,7 +34,7 @@ export function PermissionMatrix() {
                 <td className="p-2 font-medium">{perm.label}</td>
                 {["view", "create", "edit", "delete", "approve", "export", "configure", "admin"].map((action) => (
                   <td key={action} className="p-2 text-center">
-                    {perm.actions.includes(action as typeof perm.actions[number]) ? (
+                    {(perm.actions as readonly string[]).includes(action) ? (
                       <input type="checkbox" defaultChecked={action === "view"} className="accent-ecopet-green" />
                     ) : <span className="text-ecopet-gray/30">—</span>}
                   </td>

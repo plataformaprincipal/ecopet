@@ -329,6 +329,7 @@ model User {
   gender        String?
   role          UserRole  @default(TUTOR)
   accountStatus AccountStatus @default(ACTIVE)
+  accountStatusReason String?
   bio           String?
   isVerified    Boolean   @default(false)
   isPremium     Boolean   @default(false)
@@ -632,6 +633,7 @@ model OngProfile {
   id               String  @id @default(cuid())
   userId           String  @unique
   name             String
+  tradeName        String?
   documentType     String?
   cnpj             String  @unique
   responsible      String

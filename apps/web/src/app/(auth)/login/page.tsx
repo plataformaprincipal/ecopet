@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Eye, EyeOff } from "lucide-react";
-import { Logo } from "@/components/brand/logo";
+import { EcoPetLogo } from "@/components/brand/ecopet-logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -63,7 +63,7 @@ export default function LoginPage() {
   return (
     <Card className="w-full max-w-md border-0 shadow-xl">
       <CardHeader className="text-center lg:hidden">
-        <Logo className="justify-center" />
+        <EcoPetLogo className="justify-center" variant="light" size="lg" showText />
       </CardHeader>
       <CardHeader>
         <CardTitle>{t("auth.login.title")}</CardTitle>

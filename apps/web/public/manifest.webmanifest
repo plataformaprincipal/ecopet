@@ -1,0 +1,25 @@
+{
+  "name": "ECOPET",
+  "short_name": "ECOPET",
+  "description": "Ecossistema inteligente para pets, parceiros, ONGs e AgroPet.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#003B16",
+  "theme_color": "#003B16",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "/brand/ecopet-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/brand/ecopet-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

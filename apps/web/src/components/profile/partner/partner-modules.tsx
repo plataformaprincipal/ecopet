@@ -28,7 +28,6 @@ import { CustomQuoteCard } from "@/components/ecosystem/quotes/custom-quote-card
 import { MOCK_QUOTES } from "@/lib/ecosystem/mock-data";
 import { AdvisoryHub } from "@/components/advisory/advisory-hub";
 import { PrivacyLgpdPanel, PersonaWorkflowPanel, PersonaExecutivePanel } from "@/components/platform/persona-panels";
-import { PrivacyLgpdPanel, PersonaWorkflowPanel, PersonaExecutivePanel } from "@/components/platform/persona-panels";
 
 export function PersonaDashboard() {
   const topMetrics = PARTNER_EXECUTIVE_METRICS.slice(0, 8).map((m, i) => ({

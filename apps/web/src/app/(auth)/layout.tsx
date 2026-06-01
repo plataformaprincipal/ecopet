@@ -1,10 +1,10 @@
-import { Logo } from "@/components/brand/logo";
+import { EcoPetLogo } from "@/components/brand/ecopet-logo";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen">
-      <div className="hidden w-1/2 bg-ecopet-dark lg:flex lg:flex-col lg:justify-between lg:p-12">
-        <Logo href="/" className="[&_span]:text-white [&_span_span]:text-ecopet-yellow" />
+      <div className="hidden w-1/2 lg:flex lg:flex-col lg:justify-between lg:p-12" style={{ backgroundColor: "#003B16" }}>
+        <EcoPetLogo href="/" variant="dark" showText size="lg" />
         <div>
           <h2 className="font-display text-3xl font-bold text-white">
             Cuidado, comunidade e inteligência em um só lugar.

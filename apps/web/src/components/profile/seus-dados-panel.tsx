@@ -13,7 +13,8 @@ import {
   updateProfile,
   checkPasswordStrength,
 } from "@/lib/auth/api";
-import { cn } from "@/lib/utils";
+import { AddressByCepField, toAddressValue } from "@/components/address/address-by-cep-field";
+import { EMPTY_ADDRESS, type AddressByCepValue } from "@/lib/address/types";
 
 export function SeusDadosPanel() {
   const { user, token } = useCurrentUser();
@@ -31,12 +32,16 @@ export function SeusDadosPanel() {
   const [msg, setMsg] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [address, setAddress] = useState<AddressByCepValue>({ ...EMPTY_ADDRESS });
 
   useEffect(() => {
     if (user) {
       setName(user.name);
       setEmail(user.email);
       setPhone(user.phone ?? "");
+      if (user.address) {
+        setAddress(toAddressValue(user.address as Record<string, unknown>));
+      }
     }
   }, [user]);
 
@@ -51,7 +56,7 @@ export function SeusDadosPanel() {
     setError("");
     setMsg("");
     try {
-      await updateProfile({ currentPassword, name, phone });
+      await updateProfile({ currentPassword, name, phone, address });
       setMsg("Dados atualizados com sucesso");
       setCurrentPassword("");
     } catch (e) {
@@ -107,6 +112,13 @@ export function SeusDadosPanel() {
           <Input placeholder="Nome" value={name} onChange={(e) => setName(e.target.value)} />
           <Input placeholder="E-mail" value={email} disabled className="bg-ecopet-gray/5" />
           <Input placeholder="Telefone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <AddressByCepField
+            value={address}
+            onChange={setAddress}
+            title="Endereço"
+            idPrefix="profile"
+            variant="compact"
+          />
           <Input placeholder="Senha atual (obrigatória para salvar)" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
           <Button onClick={handleSaveProfile} disabled={loading || !currentPassword}>Salvar dados</Button>
         </CardContent>

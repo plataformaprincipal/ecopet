@@ -13,7 +13,7 @@ import {
   ArrowRight,
   Check,
 } from "lucide-react";
-import { Logo } from "@/components/brand/logo";
+import { EcoPetLogo } from "@/components/brand/ecopet-logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AI_DISCLAIMER } from "@/lib/constants";
@@ -32,7 +32,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-white dark:bg-[#0f1419]">
       <header className="fixed inset-x-0 top-0 z-50 glass">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 lg:px-8">
-          <Logo />
+          <EcoPetLogo href="/" responsive priority />
           <nav className="hidden items-center gap-8 md:flex">
             <a href="#features" className="text-sm font-medium text-ecopet-gray hover:text-ecopet-green">
               Recursos
@@ -178,7 +178,7 @@ export default function LandingPage() {
 
       <footer className="border-t border-ecopet-gray/10 py-12 dark:border-white/10">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 md:flex-row lg:px-8">
-          <Logo />
+          <EcoPetLogo href="/" responsive priority />
           <p className="text-sm text-ecopet-gray">© 2026 ECOPET. Ecossistema pet inteligente.</p>
         </div>
       </footer>

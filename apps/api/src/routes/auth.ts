@@ -1,8 +1,7 @@
 import { Router } from "express";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
-import { Prisma } from "@prisma/client";
-import { registerSchema } from "../schemas/register-schemas.js";
+import { publicRegisterSchema } from "../schemas/register-schemas.js";
 import { registerUser } from "../services/register-service.js";
 import {
   loginUser,
@@ -23,6 +22,7 @@ import {
 import { sendMasterAdminConfirmationEmail } from "../services/email-service.js";
 import { validatePasswordStrength } from "../services/auth-service.js";
 import { authMiddleware, type AuthRequest } from "../middleware/auth.js";
+import { AppError, USER_MESSAGES } from "../lib/app-errors.js";
 
 const router = Router();
 
@@ -43,19 +43,24 @@ router.get("/bootstrap/status", async (_req, res, next) => {
 
 router.post("/register", async (req, res, next) => {
   try {
-    const parsed = registerSchema.safeParse(req.body);
+    const parsed = publicRegisterSchema.safeParse(req.body);
     if (!parsed.success) {
       const first = parsed.error.errors[0];
-      return res.status(400).json({ error: first?.message || "Dados inválidos", details: parsed.error.flatten() });
+      return res.status(400).json({
+        error: first?.message || USER_MESSAGES.VALIDATION,
+        code: "VALIDATION",
+        details: parsed.error.flatten(),
+      });
     }
-    const { user, redirectTo } = await registerUser(parsed.data);
+    const { user, redirectTo } = await registerUser(parsed.data, {
+      ip: req.ip,
+      userAgent: req.headers["user-agent"],
+    });
     const token = jwt.sign({ userId: user.id, role: user.role }, process.env.JWT_SECRET || "ecopet-dev-secret", { expiresIn: "7d" });
     res.status(201).json({ user, token, redirectTo });
   } catch (e) {
-    const err = e as Error & { status?: number };
-    if (err.status) return res.status(err.status).json({ error: err.message });
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
-      return res.status(409).json({ error: `Já existe cadastro com este ${(e.meta?.target as string[])?.[0] ?? "campo"}` });
+    if (e instanceof AppError) {
+      return res.status(e.status).json({ error: e.userMessage, code: e.code });
     }
     next(e);
   }
@@ -73,8 +78,9 @@ router.post("/login", async (req, res, next) => {
     });
     res.json(result);
   } catch (e) {
-    const err = e as Error & { status?: number };
-    if (err.status) return res.status(err.status).json({ error: err.message });
+    if (e instanceof AppError) {
+      return res.status(e.status).json({ error: e.userMessage, code: e.code });
+    }
     next(e);
   }
 });
@@ -180,17 +186,29 @@ router.post("/change-password", authMiddleware, async (req: AuthRequest, res, ne
 
 router.patch("/profile", authMiddleware, async (req: AuthRequest, res, next) => {
   try {
-    const { currentPassword, name, phone, bio, avatar } = z.object({
+    const { currentPassword, name, phone, bio, avatar, address } = z.object({
       currentPassword: z.string(),
       name: z.string().optional(),
       phone: z.string().optional(),
       bio: z.string().optional(),
       avatar: z.string().optional(),
+      address: z.object({
+        street: z.string().min(3),
+        number: z.string().optional(),
+        complement: z.string().optional(),
+        district: z.string().optional(),
+        city: z.string().min(2),
+        state: z.string().length(2),
+        zipCode: z.string().optional(),
+        reference: z.string().optional(),
+        latitude: z.number().nullable().optional(),
+        longitude: z.number().nullable().optional(),
+      }).optional(),
     }).parse(req.body);
     const result = await updateProfile({
       userId: req.userId!,
       currentPassword,
-      data: { name, phone, bio, avatar },
+      data: { name, phone, bio, avatar, address },
       ip: req.ip,
     });
     res.json(result);

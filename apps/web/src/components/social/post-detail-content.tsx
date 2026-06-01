@@ -19,7 +19,7 @@ export function PostDetailContent({ postId }: PostDetailContentProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchPost(postId).then(setPost).finally(() => setLoading(false));
+    fetchPost(postId).then((p) => setPost(p ?? null)).finally(() => setLoading(false));
   }, [postId]);
 
   return (

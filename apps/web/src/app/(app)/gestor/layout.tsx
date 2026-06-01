@@ -1,6 +1,7 @@
 "use client";
 
 import { AppHeader } from "@/components/layout/app-header";
+import { EcoPetLogo } from "@/components/brand/ecopet-logo";
 import { GestorSidebar, GestorGuard, GestorPasswordGate } from "@/components/gestor/gestor-shell";
 import { GestorBootstrapGate } from "@/components/gestor/gestor-bootstrap-gate";
 import { useCurrentUser } from "@/hooks/use-current-user";
@@ -31,8 +32,9 @@ export default function GestorLayout({ children }: { children: React.ReactNode }
     <>
       <AppHeader title="Gestor ECOPET" />
       {loading ? (
-        <div className="flex min-h-[50vh] items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-ecopet-green border-t-transparent" />
+        <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4">
+          <EcoPetLogo variant="icon" size="md" animated="pulse" />
+          <p className="text-sm text-ecopet-gray">Carregando Gestor ECOPET...</p>
         </div>
       ) : (
         <GestorGuard role={user?.role}>

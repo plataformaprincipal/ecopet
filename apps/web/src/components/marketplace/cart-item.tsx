@@ -13,11 +13,11 @@ interface CartItemProps {
 }
 
 export function CartItem({ item }: CartItemProps) {
+  const { updateQuantity, removeFromCart } = useMarketplaceStore();
+
   if (item.type === "quote") {
     return <CartQuoteItem item={item} />;
   }
-
-  const { updateQuantity, removeFromCart } = useMarketplaceStore();
 
   return (
     <div className="flex gap-3 rounded-xl border border-ecopet-gray/10 p-3">

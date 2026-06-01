@@ -11,7 +11,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { api } from "@/lib/api";
 import { useAppStore } from "@/store/app-store";
 import {
-  ADMIN_ACCESS_LEVELS,
   BRAZILIAN_STATES,
   getDefaultFormValues,
   ONG_ACTION_TYPES,
@@ -23,7 +22,11 @@ import {
   type FormValues,
   type RegistrationRole,
 } from "@/lib/registration/personas";
-import { buildRegisterPayload, validateRegistration } from "@/lib/registration/validation";
+import { buildRegisterPayload, validateRegistration, USER_MESSAGES } from "@/lib/registration/validation";
+import { maskCpf, maskCnpj, maskPhone, maskDocument } from "@/lib/validation/documents-shared";
+import { todayIsoDate } from "@/lib/validation/documents";
+import { AddressByCepField, toAddressValue } from "@/components/address/address-by-cep-field";
+import { EcoPetLogo } from "@/components/brand/ecopet-logo";
 import { AlertCircle, ChevronDown } from "lucide-react";
 
 const CLINIC_SERVICES = [
@@ -149,62 +152,27 @@ function YesNoToggle({
   );
 }
 
-function AddressBlock({
+function RegistrationAddressField({
   address,
   onChange,
   errors,
+  title = "Endereço",
+  idPrefix,
 }: {
   address: FormValues;
   onChange: (a: FormValues) => void;
   errors: Record<string, string>;
+  title?: string;
+  idPrefix?: string;
 }) {
-  const set = (key: string, val: string) => onChange({ ...address, [key]: val });
   return (
-    <div className="space-y-3 rounded-xl border border-ecopet-gray/10 bg-ecopet-gray/5 p-4">
-      <p className="text-sm font-semibold text-ecopet-dark">Endereço</p>
-      <div>
-        <Label htmlFor="street" required>
-          Logradouro
-        </Label>
-        <Input id="street" className="mt-1" value={String(address.street ?? "")} onChange={(e) => set("street", e.target.value)} />
-        <FieldError message={errors["address.street"]} />
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <Label htmlFor="number">Número</Label>
-          <Input id="number" className="mt-1" value={String(address.number ?? "")} onChange={(e) => set("number", e.target.value)} />
-        </div>
-        <div>
-          <Label htmlFor="district">Bairro</Label>
-          <Input id="district" className="mt-1" value={String(address.district ?? "")} onChange={(e) => set("district", e.target.value)} />
-        </div>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <Label htmlFor="city" required>
-            Cidade
-          </Label>
-          <Input id="city" className="mt-1" value={String(address.city ?? "")} onChange={(e) => set("city", e.target.value)} />
-          <FieldError message={errors["address.city"]} />
-        </div>
-        <div>
-          <Label htmlFor="state" required>
-            UF
-          </Label>
-          <SelectField
-            id="state"
-            value={String(address.state ?? "SP")}
-            onChange={(v) => set("state", v)}
-            options={BRAZILIAN_STATES.map((s) => ({ value: s, label: s }))}
-            error={errors["address.state"]}
-          />
-        </div>
-      </div>
-      <div>
-        <Label htmlFor="zipCode">CEP</Label>
-        <Input id="zipCode" className="mt-1" value={String(address.zipCode ?? "")} onChange={(e) => set("zipCode", e.target.value)} />
-      </div>
-    </div>
+    <AddressByCepField
+      value={toAddressValue(address as Record<string, unknown>)}
+      onChange={(v) => onChange(v as unknown as FormValues)}
+      errors={errors}
+      title={title}
+      idPrefix={idPrefix}
+    />
   );
 }
 
@@ -257,6 +225,16 @@ export function RegistrationForm() {
     });
   }, []);
 
+  const validateField = useCallback(
+    (key: string) => {
+      const fieldErrors = validateRegistration(role, values);
+      if (fieldErrors[key]) {
+        setErrors((prev) => ({ ...prev, [key]: fieldErrors[key] }));
+      }
+    },
+    [role, values]
+  );
+
   const handleRoleChange = (newRole: RegistrationRole) => {
     setRole(newRole);
     setValues(getDefaultFormValues(newRole));
@@ -265,14 +243,21 @@ export function RegistrationForm() {
   };
 
   const isBusiness = ["CLINIC", "PETSHOP", "SELLER"].includes(role);
-  const nameLabel = isBusiness ? "Razão social" : role === "ONG" ? "Nome da ONG ou protetor" : "Nome completo";
+  const ongIsCnpj = role === "ONG" && values.documentType === "CNPJ";
+  const nameLabel =
+    isBusiness || ongIsCnpj
+      ? "Razão social"
+      : role === "ONG"
+        ? "Nome completo do protetor"
+        : "Nome completo";
+  const submitBlocked = Object.keys(errors).length > 0;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const validationErrors = validateRegistration(role, values);
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-      setFormError("Corrija os campos destacados antes de continuar.");
+      setFormError(USER_MESSAGES.VALIDATION);
       return;
     }
 
@@ -304,7 +289,10 @@ export function RegistrationForm() {
 
   return (
     <Card className="w-full max-w-2xl border-0 shadow-xl">
-      <CardHeader>
+      <CardHeader className="text-center">
+        <div className="mb-4 flex justify-center">
+          <EcoPetLogo variant="light" size="md" showText />
+        </div>
         <CardTitle>Criar conta ECOPET</CardTitle>
         <CardDescription>Selecione seu tipo de conta — o formulário se adapta automaticamente</CardDescription>
       </CardHeader>
@@ -371,7 +359,7 @@ export function RegistrationForm() {
               <Label htmlFor="phone" required>
                 Telefone / WhatsApp
               </Label>
-              <Input id="phone" type="tel" className="mt-1" value={String(values.phone ?? "")} onChange={(e) => set("phone", e.target.value)} placeholder="(11) 99999-0000" />
+              <Input id="phone" type="tel" className="mt-1" value={String(values.phone ?? "")} onChange={(e) => set("phone", maskPhone(e.target.value))} onBlur={() => validateField("phone")} placeholder="(11) 99999-0000" />
               <FieldError message={errors.phone} />
             </div>
 
@@ -397,14 +385,14 @@ export function RegistrationForm() {
                     <Label htmlFor="cpf" required>
                       CPF
                     </Label>
-                    <Input id="cpf" className="mt-1" value={String(values.cpf ?? "")} onChange={(e) => set("cpf", e.target.value)} placeholder="000.000.000-00" />
+                    <Input id="cpf" className="mt-1" value={String(values.cpf ?? "")} onChange={(e) => set("cpf", maskCpf(e.target.value))} onBlur={() => validateField("cpf")} placeholder="000.000.000-00" />
                     <FieldError message={errors.cpf} />
                   </div>
                   <div>
                     <Label htmlFor="birthDate" required>
                       Data de nascimento
                     </Label>
-                    <Input id="birthDate" type="date" className="mt-1" value={String(values.birthDate ?? "")} onChange={(e) => set("birthDate", e.target.value)} />
+                    <Input id="birthDate" type="date" max={todayIsoDate()} className="mt-1" value={String(values.birthDate ?? "")} onChange={(e) => set("birthDate", e.target.value)} onBlur={() => validateField("birthDate")} />
                     <FieldError message={errors.birthDate} />
                   </div>
                   <div>
@@ -412,7 +400,7 @@ export function RegistrationForm() {
                     <Input id="petCount" type="number" min={0} className="mt-1" value={String(values.petCount ?? 0)} onChange={(e) => set("petCount", e.target.value)} />
                   </div>
                 </div>
-                <AddressBlock address={address} onChange={(a) => set("address", a)} errors={errors} />
+                <RegistrationAddressField address={address} onChange={(a) => set("address", a)} errors={errors} />
                 <div>
                   <Label required>Interesse principal</Label>
                   <MultiCheckbox
@@ -432,7 +420,7 @@ export function RegistrationForm() {
                     <Label htmlFor="cpf" required>
                       CPF
                     </Label>
-                    <Input id="cpf" className="mt-1" value={String(values.cpf ?? "")} onChange={(e) => set("cpf", e.target.value)} />
+                    <Input id="cpf" className="mt-1" value={String(values.cpf ?? "")} onChange={(e) => set("cpf", maskCpf(e.target.value))} onBlur={() => validateField("cpf")} />
                     <FieldError message={errors.cpf} />
                   </div>
                   <div>
@@ -465,13 +453,13 @@ export function RegistrationForm() {
                     <Input id="averageConsultationPrice" type="number" min={0} step="0.01" className="mt-1" value={String(values.averageConsultationPrice ?? "")} onChange={(e) => set("averageConsultationPrice", e.target.value)} />
                   </div>
                 </div>
-                <div>
-                  <Label htmlFor="professionalAddress" required>
-                    Endereço profissional
-                  </Label>
-                  <Input id="professionalAddress" className="mt-1" value={String(values.professionalAddress ?? "")} onChange={(e) => set("professionalAddress", e.target.value)} />
-                  <FieldError message={errors.professionalAddress} />
-                </div>
+                <RegistrationAddressField
+                  address={address}
+                  onChange={(a) => set("address", a)}
+                  errors={errors}
+                  title="Endereço profissional"
+                  idPrefix="vet-addr"
+                />
                 <YesNoToggle label="Atendimento presencial" value={Boolean(values.inPersonAvailable)} onChange={(v) => set("inPersonAvailable", v)} />
                 <YesNoToggle label="Teleatendimento" value={Boolean(values.onlineAvailable)} onChange={(v) => set("onlineAvailable", v)} />
                 <DocumentUpload documents={(values.documents as { name: string }[]) ?? []} onChange={(d) => set("documents", d)} />
@@ -485,7 +473,7 @@ export function RegistrationForm() {
                     <Label htmlFor="cnpj" required>
                       CNPJ
                     </Label>
-                    <Input id="cnpj" className="mt-1" value={String(values.cnpj ?? "")} onChange={(e) => set("cnpj", e.target.value)} />
+                    <Input id="cnpj" className="mt-1" value={String(values.cnpj ?? "")} onChange={(e) => set("cnpj", maskCnpj(e.target.value))} onBlur={() => validateField("cnpj")} />
                     <FieldError message={errors.cnpj} />
                   </div>
                   <div>
@@ -510,7 +498,7 @@ export function RegistrationForm() {
                     <FieldError message={errors.hours} />
                   </div>
                 </div>
-                <AddressBlock address={address} onChange={(a) => set("address", a)} errors={errors} />
+                <RegistrationAddressField address={address} onChange={(a) => set("address", a)} errors={errors} />
                 <div>
                   <Label required>Serviços oferecidos</Label>
                   <MultiCheckbox
@@ -532,7 +520,7 @@ export function RegistrationForm() {
                     <Label htmlFor="cnpj" required>
                       CNPJ
                     </Label>
-                    <Input id="cnpj" className="mt-1" value={String(values.cnpj ?? "")} onChange={(e) => set("cnpj", e.target.value)} />
+                    <Input id="cnpj" className="mt-1" value={String(values.cnpj ?? "")} onChange={(e) => set("cnpj", maskCnpj(e.target.value))} onBlur={() => validateField("cnpj")} />
                     <FieldError message={errors.cnpj} />
                   </div>
                   <div>
@@ -550,7 +538,7 @@ export function RegistrationForm() {
                     <FieldError message={errors.hours} />
                   </div>
                 </div>
-                <AddressBlock address={address} onChange={(a) => set("address", a)} errors={errors} />
+                <RegistrationAddressField address={address} onChange={(a) => set("address", a)} errors={errors} />
                 <YesNoToggle label="Vende produtos" value={Boolean(values.sellsProducts)} onChange={(v) => set("sellsProducts", v)} />
                 <YesNoToggle label="Oferece serviços" value={Boolean(values.offersServices)} onChange={(v) => set("offersServices", v)} />
                 <div>
@@ -573,7 +561,7 @@ export function RegistrationForm() {
                     <Label htmlFor="cnpj" required>
                       CNPJ
                     </Label>
-                    <Input id="cnpj" className="mt-1" value={String(values.cnpj ?? "")} onChange={(e) => set("cnpj", e.target.value)} />
+                    <Input id="cnpj" className="mt-1" value={String(values.cnpj ?? "")} onChange={(e) => set("cnpj", maskCnpj(e.target.value))} onBlur={() => validateField("cnpj")} />
                     <FieldError message={errors.cnpj} />
                   </div>
                   <div>
@@ -584,7 +572,7 @@ export function RegistrationForm() {
                     <FieldError message={errors.responsible} />
                   </div>
                 </div>
-                <AddressBlock address={address} onChange={(a) => set("address", a)} errors={errors} />
+                <RegistrationAddressField address={address} onChange={(a) => set("address", a)} errors={errors} />
                 <div>
                   <Label required>Categorias de produtos</Label>
                   <MultiCheckbox
@@ -665,7 +653,18 @@ export function RegistrationForm() {
                     <Label htmlFor="documentNumber" required>
                       {values.documentType === "CNPJ" ? "CNPJ" : "CPF"}
                     </Label>
-                    <Input id="documentNumber" className="mt-1" value={String(values.documentNumber ?? "")} onChange={(e) => set("documentNumber", e.target.value)} />
+                    <Input
+                      id="documentNumber"
+                      className="mt-1"
+                      value={String(values.documentNumber ?? "")}
+                      onChange={(e) =>
+                        set(
+                          "documentNumber",
+                          maskDocument(e.target.value, (values.documentType as "CPF" | "CNPJ") ?? "CPF")
+                        )
+                      }
+                      onBlur={() => validateField("documentNumber")}
+                    />
                     <FieldError message={errors.documentNumber} />
                   </div>
                   <div>
@@ -697,6 +696,7 @@ export function RegistrationForm() {
                   />
                 </div>
                 <YesNoToggle label="Atendimento em domicílio" value={Boolean(values.homeService)} onChange={(v) => set("homeService", v)} />
+                <RegistrationAddressField address={address} onChange={(a) => set("address", a)} errors={errors} title="Endereço base" idPrefix="sp-addr" />
                 <DocumentUpload documents={(values.documents as { name: string }[]) ?? []} onChange={(d) => set("documents", d)} />
               </>
             )}
@@ -722,9 +722,38 @@ export function RegistrationForm() {
                     <Label htmlFor="documentNumber" required>
                       {values.documentType === "CNPJ" ? "CNPJ" : "CPF"}
                     </Label>
-                    <Input id="documentNumber" className="mt-1" value={String(values.documentNumber ?? "")} onChange={(e) => set("documentNumber", e.target.value)} />
+                    <Input
+                      id="documentNumber"
+                      className="mt-1"
+                      value={String(values.documentNumber ?? "")}
+                      onChange={(e) =>
+                        set(
+                          "documentNumber",
+                          maskDocument(
+                            e.target.value,
+                            values.documentType === "CNPJ" ? "CNPJ" : "CPF"
+                          )
+                        )
+                      }
+                      onBlur={() => validateField("documentNumber")}
+                    />
                     <FieldError message={errors.documentNumber} />
                   </div>
+                  {values.documentType === "CNPJ" && (
+                    <div className="sm:col-span-2">
+                      <Label htmlFor="ongTradeName" required>
+                        Nome fantasia / nome público da ONG
+                      </Label>
+                      <Input
+                        id="ongTradeName"
+                        className="mt-1"
+                        value={String(values.tradeName ?? "")}
+                        onChange={(e) => set("tradeName", e.target.value)}
+                        onBlur={() => validateField("tradeName")}
+                      />
+                      <FieldError message={errors.tradeName} />
+                    </div>
+                  )}
                   <div>
                     <Label htmlFor="responsible" required>
                       Responsável
@@ -737,7 +766,7 @@ export function RegistrationForm() {
                     <Input id="animalCapacity" type="number" min={0} className="mt-1" value={String(values.animalCapacity ?? 0)} onChange={(e) => set("animalCapacity", e.target.value)} />
                   </div>
                 </div>
-                <AddressBlock address={address} onChange={(a) => set("address", a)} errors={errors} />
+                <RegistrationAddressField address={address} onChange={(a) => set("address", a)} errors={errors} />
                 <div>
                   <Label required>Tipo de atuação</Label>
                   <MultiCheckbox
@@ -749,49 +778,6 @@ export function RegistrationForm() {
                 </div>
                 <YesNoToggle label="Aceita doações" value={Boolean(values.acceptsDonations)} onChange={(v) => set("acceptsDonations", v)} />
                 <DocumentUpload documents={(values.documents as { name: string }[]) ?? []} onChange={(d) => set("documents", d)} />
-              </>
-            )}
-
-            {role === "ADMIN" && (
-              <>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <Label htmlFor="cpf" required>
-                      CPF
-                    </Label>
-                    <Input id="cpf" className="mt-1" value={String(values.cpf ?? "")} onChange={(e) => set("cpf", e.target.value)} />
-                    <FieldError message={errors.cpf} />
-                  </div>
-                  <div>
-                    <Label htmlFor="corporateEmail" required>
-                      E-mail corporativo
-                    </Label>
-                    <Input id="corporateEmail" type="email" className="mt-1" value={String(values.corporateEmail ?? "")} onChange={(e) => set("corporateEmail", e.target.value)} placeholder="voce@ecopet.com.br" />
-                    <FieldError message={errors.corporateEmail} />
-                  </div>
-                  <div>
-                    <Label htmlFor="jobTitle" required>
-                      Cargo
-                    </Label>
-                    <Input id="jobTitle" className="mt-1" value={String(values.jobTitle ?? "")} onChange={(e) => set("jobTitle", e.target.value)} />
-                    <FieldError message={errors.jobTitle} />
-                  </div>
-                  <div>
-                    <Label htmlFor="accessLevel" required>
-                      Nível de acesso
-                    </Label>
-                    <SelectField
-                      id="accessLevel"
-                      value={String(values.accessLevel ?? "suporte")}
-                      onChange={(v) => set("accessLevel", v)}
-                      options={ADMIN_ACCESS_LEVELS}
-                    />
-                    <FieldError message={errors.accessLevel} />
-                  </div>
-                </div>
-                <p className="rounded-lg bg-blue-50 px-3 py-2 text-xs text-blue-800">
-                  Contas administrativas requerem aprovação interna antes de acesso completo.
-                </p>
               </>
             )}
           </div>
@@ -834,8 +820,8 @@ export function RegistrationForm() {
             <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{formError}</p>
           )}
 
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Criando conta..." : "Criar conta"}
+          <Button type="submit" className="w-full" disabled={loading || submitBlocked}>
+            {loading ? "Enviando cadastro..." : "Criar conta"}
           </Button>
         </form>
 

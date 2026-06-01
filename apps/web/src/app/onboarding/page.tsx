@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Logo } from "@/components/brand/logo";
+import { EcoPetLogo } from "@/components/brand/ecopet-logo";
 import { Button } from "@/components/ui/button";
 import { PawPrint, Sparkles, ShoppingBag } from "lucide-react";
 
@@ -19,7 +19,7 @@ export default function OnboardingPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-ecopet-dark to-ecopet-green p-6">
-      <Logo className="mb-12 [&_span]:text-white" />
+      <EcoPetLogo className="mb-12" variant="dark" size="lg" showText />
       <AnimatePresence mode="wait">
         <motion.div
           key={step}

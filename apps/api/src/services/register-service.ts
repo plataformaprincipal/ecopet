@@ -17,6 +17,16 @@ import {
   adminRegisterSchema,
 } from "../schemas/register-schemas.js";
 import type { z } from "zod";
+import { normalizePhone } from "../lib/documents.js";
+import { AppError, USER_MESSAGES } from "../lib/app-errors.js";
+import {
+  assertCnpjAvailable,
+  assertCpfAvailable,
+  assertDocumentAvailable,
+  assertEmailAvailable,
+  assertPhoneAvailable,
+} from "./registration-validation-service.js";
+import { createAuditLog } from "./audit-service.js";
 
 type TutorInput = z.infer<typeof tutorRegisterSchema>;
 type VeterinarianInput = z.infer<typeof veterinarianRegisterSchema>;
@@ -35,10 +45,13 @@ function buildAddress(address: NonNullable<RegisterInput["address"]>): Prisma.Ad
   return {
     street: address.street,
     number: address.number || "S/N",
+    complement: address.complement || undefined,
     district: address.district || "Centro",
     city: address.city,
     state: address.state.toUpperCase(),
     zipCode: address.zipCode || "00000-000",
+    latitude: address.latitude ?? undefined,
+    longitude: address.longitude ?? undefined,
   };
 }
 
@@ -48,12 +61,25 @@ function accountStatusForRole(role: UserRole): AccountStatus {
   return AccountStatus.ACTIVE;
 }
 
-export async function registerUser(input: RegisterInput) {
+function accountStatusReasonForRole(role: UserRole): string | undefined {
+  if (PENDING_APPROVAL_ROLES.includes(role) || role === UserRole.ADMIN) return "pending_approval";
+  return undefined;
+}
+
+export async function registerUser(
+  input: RegisterInput,
+  ctx?: { ip?: string; userAgent?: string; allowInternal?: boolean }
+) {
   const role = input.role as UserRole;
-  const exists = await prisma.user.findUnique({ where: { email: input.email.toLowerCase() } });
-  if (exists) {
-    throw Object.assign(new Error("E-mail já cadastrado"), { status: 409 });
+
+  if (role === UserRole.ADMIN && !ctx?.allowInternal) {
+    throw new AppError(USER_MESSAGES.ADMIN_REGISTER_FORBIDDEN, 403, "ADMIN_REGISTER_FORBIDDEN");
   }
+
+  const auditCtx = { ip: ctx?.ip, userAgent: ctx?.userAgent };
+
+  await assertEmailAvailable(input.email, auditCtx);
+  await assertPhoneAvailable(input.phone, auditCtx);
 
   const username = "username" in input && input.username
     ? String(input.username).toLowerCase()
@@ -61,23 +87,57 @@ export async function registerUser(input: RegisterInput) {
   if (username) {
     const usernameTaken = await prisma.user.findUnique({ where: { username } });
     if (usernameTaken) {
-      throw Object.assign(new Error("Nome de usuário já em uso"), { status: 409 });
+      throw new AppError("Este nome de usuário já está em uso. Escolha outro.", 409, "USERNAME_DUPLICATE");
     }
+  }
+
+  switch (role) {
+    case UserRole.TUTOR:
+      await assertCpfAvailable((input as TutorInput).cpf, auditCtx);
+      break;
+    case UserRole.VETERINARIAN:
+      await assertCpfAvailable((input as VeterinarianInput).cpf, auditCtx);
+      break;
+    case UserRole.CLINIC:
+      await assertCnpjAvailable((input as ClinicInput).cnpj, auditCtx);
+      break;
+    case UserRole.PETSHOP:
+      await assertCnpjAvailable((input as PetshopInput).cnpj, auditCtx);
+      break;
+    case UserRole.SELLER:
+      await assertCnpjAvailable((input as SellerInput).cnpj, auditCtx);
+      break;
+    case UserRole.SERVICE_PROVIDER: {
+      const data = input as ServiceProviderInput;
+      await assertDocumentAvailable(data.documentType, data.documentNumber, auditCtx);
+      break;
+    }
+    case UserRole.ONG: {
+      const data = input as OngInput;
+      await assertDocumentAvailable(data.documentType, data.documentNumber, auditCtx);
+      break;
+    }
+    case UserRole.ADMIN:
+      await assertCpfAvailable((input as AdminInput).cpf, auditCtx);
+      break;
   }
 
   const passwordHash = await bcrypt.hash(input.password, 12);
   const now = new Date();
   const accountStatus = accountStatusForRole(role);
+  const accountStatusReason = accountStatusReasonForRole(role);
   const documents = input.documents ?? [];
   const isOrgAdmin = ["PETSHOP", "SELLER", "SERVICE_PROVIDER", "VETERINARIAN", "CLINIC", "PARTNER", "ONG"].includes(role);
+  const normalizedPhone = normalizePhone(input.phone);
 
   const baseUser = {
     email: input.email.toLowerCase(),
     username,
     passwordHash,
-    phone: input.phone,
+    phone: normalizedPhone,
     role: input.role as UserRole,
     accountStatus,
+    accountStatusReason,
     documents,
     isOrgAdmin,
     termsAcceptedAt: now,
@@ -93,7 +153,7 @@ export async function registerUser(input: RegisterInput) {
       const cpf = cpfSchema.parse(data.cpf);
       userData = {
         ...baseUser,
-        name: data.name,
+        name: data.name.trim(),
         cpf,
         birthDate: new Date(data.birthDate),
         address: { create: buildAddress(data.address) },
@@ -111,8 +171,9 @@ export async function registerUser(input: RegisterInput) {
       const cpf = cpfSchema.parse(data.cpf);
       userData = {
         ...baseUser,
-        name: data.name,
+        name: data.name.trim(),
         cpf,
+        ...(data.address ? { address: { create: buildAddress(data.address) } } : {}),
         veterinarianProfile: {
           create: {
             crmv: data.crmv,
@@ -133,11 +194,11 @@ export async function registerUser(input: RegisterInput) {
       const cnpj = cnpjSchema.parse(data.cnpj);
       userData = {
         ...baseUser,
-        name: data.name,
+        name: data.name.trim(),
         address: { create: buildAddress(data.address) },
         clinicProfile: {
           create: {
-            tradeName: data.tradeName,
+            tradeName: data.tradeName.trim(),
             cnpj,
             technicalResponsible: data.technicalResponsible,
             responsibleCrmv: data.responsibleCrmv,
@@ -155,11 +216,11 @@ export async function registerUser(input: RegisterInput) {
       const cnpj = cnpjSchema.parse(data.cnpj);
       userData = {
         ...baseUser,
-        name: data.name,
+        name: data.name.trim(),
         address: { create: buildAddress(data.address) },
         petshopProfile: {
           create: {
-            tradeName: data.tradeName,
+            tradeName: data.tradeName.trim(),
             cnpj,
             responsible: data.responsible,
             sellsProducts: data.sellsProducts,
@@ -177,11 +238,11 @@ export async function registerUser(input: RegisterInput) {
       const cnpj = cnpjSchema.parse(data.cnpj);
       userData = {
         ...baseUser,
-        name: data.name,
+        name: data.name.trim(),
         address: { create: buildAddress(data.address) },
         sellerProfile: {
           create: {
-            tradeName: data.tradeName,
+            tradeName: data.tradeName.trim(),
             cnpj,
             responsible: data.responsible,
             productCategories: data.productCategories,
@@ -199,8 +260,9 @@ export async function registerUser(input: RegisterInput) {
       const doc = normalizeDoc(data.documentNumber);
       userData = {
         ...baseUser,
-        name: data.name,
+        name: data.name.trim(),
         cpf: data.documentType === "CPF" ? doc : undefined,
+        ...(data.address ? { address: { create: buildAddress(data.address) } } : {}),
         serviceProviderProfile: {
           create: {
             documentType: data.documentType,
@@ -221,11 +283,13 @@ export async function registerUser(input: RegisterInput) {
       const doc = normalizeDoc(data.documentNumber);
       userData = {
         ...baseUser,
-        name: data.name,
+        name: data.name.trim(),
+        cpf: data.documentType === "CPF" ? doc : undefined,
         address: { create: buildAddress(data.address) },
         ongProfile: {
           create: {
-            name: data.name,
+            name: data.name.trim(),
+            tradeName: data.documentType === "CNPJ" ? data.tradeName?.trim() : data.name.trim(),
             documentType: data.documentType,
             cnpj: doc,
             responsible: data.responsible,
@@ -243,7 +307,7 @@ export async function registerUser(input: RegisterInput) {
       const cpf = cpfSchema.parse(data.cpf);
       userData = {
         ...baseUser,
-        name: data.name,
+        name: data.name.trim(),
         cpf,
         adminProfile: {
           create: {
@@ -256,7 +320,7 @@ export async function registerUser(input: RegisterInput) {
       break;
     }
     default:
-      throw Object.assign(new Error("Tipo de conta inválido"), { status: 400 });
+      throw new AppError("Tipo de conta inválido", 400, "INVALID_ROLE");
   }
 
   const user = await prisma.user.create({
@@ -268,6 +332,17 @@ export async function registerUser(input: RegisterInput) {
       role: true,
       accountStatus: true,
     },
+  });
+
+  await createAuditLog({
+    userId: user.id,
+    action: "CREATE",
+    module: "auth",
+    resource: "user_registration",
+    resourceId: user.id,
+    metadata: { role, accountStatus },
+    ip: ctx?.ip,
+    userAgent: ctx?.userAgent,
   });
 
   if (accountStatus === AccountStatus.PENDING) {
@@ -282,13 +357,12 @@ export async function registerUser(input: RegisterInput) {
         requesterId: user.id,
         status: "PENDING",
         aiRiskScore: Math.random() * 0.3,
-        aiNotes: "Análise automática IA — aguardando revisão do Gestor ECOPET",
       },
     });
   }
 
   return {
     user,
-    redirectTo: ROLE_REDIRECTS[role as keyof typeof ROLE_REDIRECTS],
+    redirectTo: ROLE_REDIRECTS[role as keyof typeof ROLE_REDIRECTS] ?? "/dashboard",
   };
 }

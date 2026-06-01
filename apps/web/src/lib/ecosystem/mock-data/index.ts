@@ -68,7 +68,7 @@ export const MOCK_QUOTES: CustomQuote[] = [
 export const MOCK_CONVERSATIONS: ChatConversation[] = [
   { id: "c1", type: "custom_quote", title: "Orçamento banho & tosa personalizado", participantName: "Pet Shop Amigo", participantAvatar: "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=200&q=80", participantRole: "partner", lastMessage: "Enviei o orçamento revisado. Confira!", lastMessageAt: "14:32", unread: 2, status: "open", quoteId: "qt1", tags: ["orçamento"] },
   { id: "c2", type: "product_inquiry", title: "Dúvida Ração Premium Golden", participantName: "ECOPET Store", participantAvatar: "https://images.unsplash.com/photo-1589924691995-400dc9ecc392?w=200&q=80", participantRole: "partner", lastMessage: "Sim, ideal para Golden adulto!", lastMessageAt: "Ontem", unread: 0, status: "resolved" },
-  { id: "c3", type: "system_support", title: "Suporte ECOPET", participantName: "Sistema ECOPET", participantAvatar: "/brand/ecopet-symbol-source.png", participantRole: "system", lastMessage: "Como posso ajudar com seu pedido?", lastMessageAt: "10:15", unread: 1, status: "open" },
+  { id: "c3", type: "system_support", title: "Suporte ECOPET", participantName: "Sistema ECOPET", participantAvatar: "/brand/ecopet-logo.png", participantRole: "system", lastMessage: "Como posso ajudar com seu pedido?", lastMessageAt: "10:15", unread: 1, status: "open" },
   { id: "c4", type: "adoption", title: "Interesse adoção Mel", participantName: "Amigos de 4 Patas", participantAvatar: "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=200&q=80", participantRole: "ngo", lastMessage: "Podemos agendar visita sábado?", lastMessageAt: "09:00", unread: 0, status: "pending" },
 ];
 

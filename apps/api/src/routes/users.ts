@@ -39,6 +39,19 @@ router.get("/me", async (req: AuthRequest, res, next) => {
         preferences: true,
         pets: { select: { id: true, name: true, photo: true, species: true } },
         gamification: true,
+        address: {
+          select: {
+            street: true,
+            number: true,
+            complement: true,
+            district: true,
+            city: true,
+            state: true,
+            zipCode: true,
+            latitude: true,
+            longitude: true,
+          },
+        },
       },
     });
     if (!user) return res.status(404).json({ error: "Usuário não encontrado" });

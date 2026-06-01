@@ -25,7 +25,7 @@ export function WorkflowCenterPanel({ scope }: { scope?: string }) {
               <div>
                 <p className="font-semibold">{String(w.name)}</p>
                 <p className="text-xs text-ecopet-gray">{String(w.triggerType)} · {String(w.personaScope)}</p>
-                {w.description && <p className="text-xs text-ecopet-gray">{String(w.description)}</p>}
+                {w.description ? <p className="text-xs text-ecopet-gray">{String(w.description)}</p> : null}
               </div>
               <div className="flex gap-2">
                 <Badge variant={w.isActive ? "default" : "outline"}>{w.isActive ? "Ativo" : "Inativo"}</Badge>
@@ -89,7 +89,7 @@ export function RulesEnginePanel({ scope }: { scope?: string }) {
           <div>
             <p className="font-semibold">{String(r.name)}</p>
             <p className="text-xs text-ecopet-gray">{String(r.personaScope)} · prioridade {String(r.priority)}</p>
-            {r.description && <p className="text-xs">{String(r.description)}</p>}
+            {r.description ? <p className="text-xs">{String(r.description)}</p> : null}
           </div>
         )} />
       )}

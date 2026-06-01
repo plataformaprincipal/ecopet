@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PawPrint } from "lucide-react";
-import { Logo } from "@/components/brand/logo";
+import { EcoPetLogo } from "@/components/brand/ecopet-logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -12,7 +12,7 @@ export default function OnboardingPetPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-ecopet-dark to-ecopet-green p-6">
-      <Logo className="mb-8 [&_span]:text-white" />
+      <EcoPetLogo className="mb-8" variant="dark" size="lg" showText />
       <Card className="w-full max-w-md border-0 shadow-xl">
         <CardHeader className="text-center">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-ecopet-green/10">

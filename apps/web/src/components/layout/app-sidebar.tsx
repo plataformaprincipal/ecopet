@@ -56,7 +56,7 @@ export function AppSidebar() {
   return (
     <aside className="hidden w-64 flex-col border-r border-ecopet-gray/10 bg-white dark:border-white/10 dark:bg-[#0f1419] lg:flex">
       <div className="p-6">
-        <Logo />
+        <Logo responsive />
       </div>
       <nav className="flex-1 space-y-1 px-3">
         {NAV_ITEMS.map((item) => {

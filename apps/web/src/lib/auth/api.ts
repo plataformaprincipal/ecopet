@@ -76,6 +76,18 @@ export async function updateProfile(data: {
   phone?: string;
   bio?: string;
   avatar?: string;
+  address?: {
+    street: string;
+    number?: string;
+    complement?: string;
+    district?: string;
+    city: string;
+    state: string;
+    zipCode?: string;
+    reference?: string;
+    latitude?: number | null;
+    longitude?: number | null;
+  };
 }) {
   return api("/api/auth/profile", {
     method: "PATCH",

@@ -13,6 +13,7 @@ const buttonVariants = cva(
         outline: "border-2 border-ecopet-green text-ecopet-green hover:bg-ecopet-green/5",
         ghost: "hover:bg-ecopet-green/10 text-ecopet-dark dark:text-white",
         dark: "bg-ecopet-dark text-white hover:bg-ecopet-green",
+        destructive: "bg-red-600 text-white hover:bg-red-700",
       },
       size: {
         default: "h-11 px-6",
