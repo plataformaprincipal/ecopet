@@ -29,6 +29,7 @@ router.get("/me", async (req: AuthRequest, res, next) => {
         bio: true,
         username: true,
         phone: true,
+        cpf: true,
         mustChangePassword: true,
         firstLoginRequired: true,
         isBootstrapUser: true,

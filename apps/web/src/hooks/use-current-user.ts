@@ -11,6 +11,7 @@ export interface CurrentUser {
   email: string;
   role: string;
   phone?: string;
+  cpf?: string;
   username?: string;
   accountStatus?: string;
   isBootstrapUser?: boolean;

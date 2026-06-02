@@ -47,6 +47,31 @@ enum PetSize {
   GIANT
 }
 
+enum AppointmentServiceType {
+  BANHO
+  TOSA
+  BANHO_TOSA
+  CONSULTA_VET
+  VACINACAO
+  HOSPEDAGEM
+  PASSEIO
+  TELEBUSCA
+  ENTREGA_PET
+  OUTROS
+}
+
+enum AppointmentAttendanceMode {
+  IN_PERSON
+  TELEBUSCA
+  TUTOR_DELIVERY
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
 enum PostType {
   PHOTO
   VIDEO
@@ -423,6 +448,7 @@ model User {
   costEntries         CostEntry[]
   entityVersions      EntityVersion[] @relation("VersionAuthor")
   governanceInsights  GovernanceInsight[]
+  appointments        Appointment[]
 
   @@index([email])
   @@index([username])
@@ -505,6 +531,7 @@ model Pet {
   media             PetMedia[]
   events            PetEvent[]
   posts             Post[]
+  appointments      Appointment[]
 
   @@index([ownerId])
   @@index([ongId])
@@ -602,6 +629,34 @@ model Consultation {
   notes         String?
   prescription  String?
   pet           Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+}
+
+model Appointment {
+  id               String                   @id @default(cuid())
+  userId           String
+  petId            String
+  serviceType      AppointmentServiceType
+  attendanceMode   AppointmentAttendanceMode
+  scheduledDate    DateTime
+  scheduledTime    String
+  scheduledAt      DateTime
+  observations     String?
+  status           AppointmentStatus        @default(SCHEDULED)
+  cancelledAt      DateTime?
+  cancelReason     String?
+  completedAt      DateTime?
+  rescheduledFromId String?
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+
+  user             User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pet              Pet                      @relation(fields: [petId], references: [id], onDelete: Cascade)
+  rescheduledFrom  Appointment?             @relation("AppointmentReschedule", fields: [rescheduledFromId], references: [id], onDelete: SetNull)
+  rescheduledTo    Appointment[]            @relation("AppointmentReschedule")
+
+  @@index([userId, status])
+  @@index([petId])
+  @@index([scheduledAt])
 }
 
 model MedicalRecord {

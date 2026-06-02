@@ -11,6 +11,8 @@ import { I18nProvider } from "@/providers/i18n-provider";
 import { PreferencesSync } from "@/hooks/use-preferences-sync";
 import { AriaLiveProvider } from "@/components/accessibility/aria-live-region";
 import { EcopetFooter } from "@/components/layout/ecopet-footer";
+import { SupportChatProvider } from "@/providers/support-chat-provider";
+import { SupportChatPanel } from "@/components/support/support-chat-panel";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat", weight: ["500", "600", "700", "800"] });
@@ -54,14 +56,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <AuthSessionProvider>
                   <AuthTokenSync />
                   <PreferencesSync />
-                  <SkipLink />
-                  <div className="flex min-h-screen flex-col">
-                    <div id="main-content" role="main" tabIndex={-1} className="flex-1 outline-none">
-                      {children}
+                  <SupportChatProvider>
+                    <SkipLink />
+                    <div className="flex min-h-screen flex-col">
+                      <div id="main-content" role="main" tabIndex={-1} className="flex-1 outline-none">
+                        {children}
+                      </div>
+                      <EcopetFooter />
                     </div>
-                    <EcopetFooter />
-                  </div>
-                  <AccessibilityToolbarLazy />
+                    <SupportChatPanel />
+                    <AccessibilityToolbarLazy />
+                  </SupportChatProvider>
                 </AuthSessionProvider>
               </AriaLiveProvider>
             </I18nProvider>

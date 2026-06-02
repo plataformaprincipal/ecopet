@@ -28,6 +28,7 @@ import logisticsRoutes from "./routes/logistics.js";
 import advisoryRoutes from "./routes/advisory.js";
 import platformRoutes from "./routes/platform.js";
 import moderationRoutes from "./routes/moderation.js";
+import appointmentRoutes from "./routes/appointments.js";
 import { authMiddleware } from "./middleware/auth.js";
 import { errorHandler } from "./middleware/error.js";
 
@@ -76,6 +77,7 @@ app.use("/api/logistics", logisticsRoutes);
 app.use("/api/advisory", authMiddleware, advisoryRoutes);
 app.use("/api/platform", platformRoutes);
 app.use("/api/moderation", authMiddleware, moderationRoutes);
+app.use("/api/appointments", authMiddleware, appointmentRoutes);
 
 app.use(errorHandler);
 
