@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { MessageCircle, Send, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,13 +11,12 @@ import {
   fetchConversationMessages,
   openSupportConversation,
   sendConversationMessage,
+  markConversationRead,
+  initGuestChatSession,
+  sendGuestMessage,
   type ApiChatMessage,
+  type GuestMessage,
 } from "@/lib/support/chat-api";
-import {
-  getMockSupportMessages,
-  sendMockSupportMessage,
-  type SupportChatMessage,
-} from "@/lib/support/mock-chat-store";
 import { cn } from "@/lib/utils";
 
 function formatTime(iso: string) {
@@ -45,11 +45,11 @@ function mapApiMessages(rows: ApiChatMessage[], userId: string): DisplayMessage[
   }));
 }
 
-function mapMockMessages(rows: SupportChatMessage[]): DisplayMessage[] {
+function mapGuestMessages(rows: GuestMessage[]): DisplayMessage[] {
   return rows.map((m) => ({
     id: m.id,
     content: m.content,
-    isUser: m.sender === "user",
+    isUser: m.role === "user",
     createdAt: m.createdAt,
   }));
 }
@@ -62,32 +62,43 @@ export function SupportChatPanel() {
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const [useMock, setUseMock] = useState(false);
+  const [isGuest, setIsGuest] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const scrollBottom = useCallback(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
+  const reloadAuthMessages = useCallback(
+    async (convId: string, userId: string, authToken: string) => {
+      const rows = await fetchConversationMessages(authToken, convId);
+      setMessages(mapApiMessages(rows, userId));
+      await markConversationRead(authToken, convId);
+    },
+    []
+  );
+
   useEffect(() => {
     if (!isOpen) return;
 
     async function init() {
       setLoading(true);
+      setError(null);
       try {
         if (token && user) {
           const conv = await openSupportConversation(token);
           setConversationId(conv.id);
-          const rows = await fetchConversationMessages(token, conv.id);
-          setMessages(mapApiMessages(rows, user.id));
-          setUseMock(false);
+          setIsGuest(false);
+          await reloadAuthMessages(conv.id, user.id, token);
         } else {
-          setMessages(mapMockMessages(getMockSupportMessages()));
-          setUseMock(true);
+          const session = await initGuestChatSession();
+          setIsGuest(true);
+          setConversationId(null);
+          setMessages(mapGuestMessages(session.messages));
         }
       } catch {
-        setMessages(mapMockMessages(getMockSupportMessages()));
-        setUseMock(true);
+        setError("Não foi possível carregar o chat. Tente novamente em instantes.");
       } finally {
         setLoading(false);
         setTimeout(scrollBottom, 100);
@@ -95,7 +106,7 @@ export function SupportChatPanel() {
     }
 
     init();
-  }, [isOpen, token, user, scrollBottom]);
+  }, [isOpen, token, user, scrollBottom, reloadAuthMessages]);
 
   useEffect(() => {
     scrollBottom();
@@ -108,23 +119,31 @@ export function SupportChatPanel() {
 
     setSending(true);
     setDraft("");
+    setError(null);
 
     try {
-      if (useMock || !token || !conversationId || !user) {
-        const updated = sendMockSupportMessage(text);
-        setMessages(mapMockMessages(updated));
-        if (!isOpen) notifyNew();
-      } else {
-        const msg = await sendConversationMessage(token, conversationId, text);
+      if (isGuest || !token || !user) {
         setMessages((prev) => [
           ...prev,
-          { id: msg.id, content: msg.content, isUser: true, createdAt: msg.createdAt },
+          { id: `local-${Date.now()}`, content: text, isUser: true, createdAt: new Date().toISOString() },
         ]);
+        const { assistantMessage } = await sendGuestMessage(text);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: assistantMessage.id,
+            content: assistantMessage.content,
+            isUser: false,
+            createdAt: assistantMessage.createdAt,
+          },
+        ]);
+        if (!isOpen) notifyNew();
+      } else if (conversationId) {
+        await sendConversationMessage(token, conversationId, text, true);
+        await reloadAuthMessages(conversationId, user.id, token);
       }
     } catch {
-      const updated = sendMockSupportMessage(text);
-      setMessages(mapMockMessages(updated));
-      setUseMock(true);
+      setError("Falha ao enviar mensagem. Verifique sua conexão e tente novamente.");
     } finally {
       setSending(false);
     }
@@ -143,7 +162,9 @@ export function SupportChatPanel() {
           <MessageCircle className="h-5 w-5 text-ecopet-yellow" />
           <div>
             <p className="font-semibold text-sm">Suporte ECOPET</p>
-            <p className="text-[10px] text-white/70">Online · resposta em breve</p>
+            <p className="text-[10px] text-white/70">
+              {isGuest ? "Visitante · IA e suporte básico" : "Online · resposta em breve"}
+            </p>
           </div>
         </div>
         <Button type="button" size="icon" variant="ghost" className="text-white hover:bg-white/10" onClick={closeChat} aria-label="Fechar chat">
@@ -177,9 +198,23 @@ export function SupportChatPanel() {
           <div ref={bottomRef} />
         </div>
 
-        {useMock && (
-          <p className="border-t px-3 py-1 text-center text-[10px] text-ecopet-gray">
-            Modo demonstração — histórico salvo localmente até login completo.
+        {isGuest && (
+          <p className="border-t px-3 py-2 text-center text-[10px] text-ecopet-gray leading-snug">
+            Você pode tirar dúvidas antes de criar conta. Para salvar seu histórico e acessar recursos completos,{" "}
+            <Link href="/login" className="text-ecopet-green underline">
+              entre
+            </Link>{" "}
+            ou{" "}
+            <Link href="/cadastro" className="text-ecopet-green underline">
+              cadastre-se
+            </Link>
+            .
+          </p>
+        )}
+
+        {error && (
+          <p className="border-t px-3 py-2 text-center text-[11px] text-red-600" role="alert">
+            {error}
           </p>
         )}
 
@@ -190,8 +225,9 @@ export function SupportChatPanel() {
             placeholder="Digite sua mensagem..."
             className="flex-1"
             aria-label="Mensagem de suporte"
+            disabled={loading}
           />
-          <Button type="submit" size="icon" disabled={sending || !draft.trim()} aria-label="Enviar mensagem">
+          <Button type="submit" size="icon" disabled={sending || loading || !draft.trim()} aria-label="Enviar mensagem">
             {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
         </form>

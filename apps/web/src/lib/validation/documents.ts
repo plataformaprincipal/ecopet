@@ -8,9 +8,17 @@ export {
 } from "./documents-shared";
 
 import { validateCpfChecksum, validateCnpjChecksum } from "./documents-shared";
+import {
+  BIRTH_DATE_FUTURE_MESSAGE,
+  todayIsoDate,
+  validateBirthDate,
+  validateOptionalBirthDate,
+} from "./dates";
+
+export { BIRTH_DATE_FUTURE_MESSAGE, todayIsoDate, validateBirthDate, validateOptionalBirthDate };
 
 export const USER_MESSAGES = {
-  BIRTH_DATE_FUTURE: "A data de nascimento não pode ser futura. Informe uma data válida.",
+  BIRTH_DATE_FUTURE: BIRTH_DATE_FUTURE_MESSAGE,
   CPF_INVALID: "CPF inválido. Verifique os números informados.",
   CNPJ_INVALID: "CNPJ inválido. Verifique os números informados.",
   CONNECTION: "Não foi possível conectar ao servidor. Verifique sua internet e tente novamente.",
@@ -20,16 +28,6 @@ export const USER_MESSAGES = {
   SESSION: "Sua sessão expirou. Faça login novamente.",
   UNEXPECTED: "Ocorreu um erro inesperado. Tente novamente. Se persistir, entre em contato com o suporte.",
 } as const;
-
-export function validateBirthDate(value: string): string | undefined {
-  if (!value) return "Data de nascimento é obrigatória";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Data de nascimento inválida";
-  const today = new Date();
-  today.setHours(23, 59, 59, 999);
-  if (date > today) return USER_MESSAGES.BIRTH_DATE_FUTURE;
-  return undefined;
-}
 
 export function validateCpfField(value: unknown): string | undefined {
   const d = String(value ?? "").replace(/\D/g, "");
@@ -43,8 +41,4 @@ export function validateCnpjField(value: unknown): string | undefined {
   if (d.length !== 14) return USER_MESSAGES.CNPJ_INVALID;
   if (!validateCnpjChecksum(d)) return USER_MESSAGES.CNPJ_INVALID;
   return undefined;
-}
-
-export function todayIsoDate(): string {
-  return new Date().toISOString().slice(0, 10);
 }

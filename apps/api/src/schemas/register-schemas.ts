@@ -2,6 +2,7 @@ import { z } from "zod";
 import { UserRole } from "@prisma/client";
 import { validateCpfChecksum, validateCnpjChecksum } from "../lib/documents.js";
 import { USER_MESSAGES } from "../lib/app-errors.js";
+import { birthDateSchema } from "./date-schemas.js";
 
 const cpfRegex = /^\d{11}$/;
 const cnpjRegex = /^\d{14}$/;
@@ -19,16 +20,7 @@ export const cnpjSchema = z
   .refine((v) => cnpjRegex.test(v), USER_MESSAGES.CNPJ_INVALID)
   .refine((v) => validateCnpjChecksum(v), USER_MESSAGES.CNPJ_INVALID);
 
-export const birthDateSchema = z
-  .string()
-  .min(1, "Data de nascimento obrigatória")
-  .refine((v) => !Number.isNaN(new Date(v).getTime()), "Data de nascimento inválida")
-  .refine((v) => {
-    const d = new Date(v);
-    const today = new Date();
-    today.setHours(23, 59, 59, 999);
-    return d <= today;
-  }, USER_MESSAGES.BIRTH_DATE_FUTURE);
+export { birthDateSchema } from "./date-schemas.js";
 
 export const phoneSchema = z
   .string()

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { PetSize, PetSpecies } from "@prisma/client";
 import type { AuthRequest } from "../middleware/auth.js";
 import { AppError } from "../lib/app-errors.js";
+import { optionalBirthDateSchema } from "../schemas/date-schemas.js";
 import {
   listPetsForUser,
   getPetDetail,
@@ -37,7 +38,7 @@ const createPetSchema = z.object({
   species: z.nativeEnum(PetSpecies),
   breed: z.string().min(1, "Raça obrigatória"),
   sex: z.string().min(1, "Sexo obrigatório"),
-  birthDate: z.string().optional(),
+  birthDate: optionalBirthDateSchema,
   color: z.string().min(1, "Cor obrigatória"),
   weight: z.number().positive().optional(),
   size: z.nativeEnum(PetSize).optional(),
@@ -116,11 +117,12 @@ router.post("/", async (req: AuthRequest, res, next) => {
 
 router.patch("/:id", async (req: AuthRequest, res, next) => {
   try {
+    const data = createPetSchema.partial().parse(req.body);
     const pet = await updatePet({
       petId: String(req.params.id),
       userId: req.userId!,
       role: req.userRole as never,
-      data: req.body,
+      data,
       ip: req.ip,
     });
     res.json({ ...pet, age: computePetAge(pet?.birthDate) });

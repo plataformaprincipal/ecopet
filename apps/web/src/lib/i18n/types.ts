@@ -65,7 +65,12 @@ export type TranslationKey =
   | "a11y.labels.cognitive"
   | "a11y.labels.visualAlerts"
   | "a11y.labels.libras"
+  | "a11y.labels.braille"
   | "a11y.librasNote"
+  | "a11y.brailleNote"
+  | "a11y.vlibrasLoading"
+  | "a11y.vlibrasError"
+  | "a11y.vlibrasReady"
   | "a11y.language.title"
   | "a11y.language.autoTranslate"
   | "a11y.language.autoTranslateNote"
@@ -92,8 +97,8 @@ export const ALL_TRANSLATION_KEYS: TranslationKey[] = [
   "a11y.labels.readingMask", "a11y.labels.readingGuide", "a11y.labels.pauseAnimations",
   "a11y.labels.screenReader", "a11y.labels.dyslexia", "a11y.labels.calm",
   "a11y.labels.simplified", "a11y.labels.reduceNotifications", "a11y.labels.motor",
-  "a11y.labels.cognitive", "a11y.labels.visualAlerts", "a11y.labels.libras",
-  "a11y.librasNote", "a11y.language.title", "a11y.language.autoTranslate",
+  "a11y.labels.cognitive",   "a11y.labels.visualAlerts", "a11y.labels.libras", "a11y.labels.braille",
+  "a11y.librasNote", "a11y.brailleNote", "a11y.vlibrasLoading", "a11y.vlibrasError", "a11y.vlibrasReady", "a11y.language.title", "a11y.language.autoTranslate",
   "a11y.language.autoTranslateNote", "a11y.activated", "a11y.deactivated",
   "a11y.preferencesSaved", "lang.selector.label",
 ];

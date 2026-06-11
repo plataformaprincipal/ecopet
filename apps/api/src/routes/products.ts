@@ -9,6 +9,8 @@ router.get("/", async (req, res, next) => {
     const { q, category, minPrice, maxPrice } = req.query;
     const products = await prisma.product.findMany({
       where: {
+        approvalStatus: "APPROVED",
+        stock: { gt: 0 },
         ...(q ? { OR: [{ name: { contains: String(q) } }, { description: { contains: String(q) } }] } : {}),
         ...(category ? { category: { slug: String(category) } } : {}),
         ...(minPrice || maxPrice

@@ -1,69 +1,86 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAccessibilityStore } from "@/store/accessibility-store";
-import { VLIBRAS_SCRIPT_URL, VLIBRAS_WIDGET_URL } from "@/lib/accessibility/constants";
+import { ensureVLibras } from "@/lib/accessibility/vlibras-loader";
 
-declare global {
-  interface Window {
-    VLibras?: { Widget: new (url: string) => void };
-  }
+function mountOfficialStructure(container: HTMLElement) {
+  if (container.querySelector("[vw]")) return;
+
+  const root = document.createElement("div");
+  root.setAttribute("vw", "");
+  root.className = "enabled";
+
+  const accessBtn = document.createElement("div");
+  accessBtn.setAttribute("vw-access-button", "");
+  accessBtn.className = "active";
+
+  const pluginWrapper = document.createElement("div");
+  pluginWrapper.setAttribute("vw-plugin-wrapper", "");
+
+  const topWrapper = document.createElement("div");
+  topWrapper.className = "vw-plugin-top-wrapper";
+  pluginWrapper.appendChild(topWrapper);
+
+  root.appendChild(accessBtn);
+  root.appendChild(pluginWrapper);
+  container.appendChild(root);
 }
 
+/**
+ * Widget VLibras (gov.br) — controlado exclusivamente por `librasEnabled`
+ * no painel de acessibilidade ECOPET. O avatar flutuante é o botão oficial do VLibras.
+ */
 export function VLibrasWidget() {
   const enabled = useAccessibilityStore((s) => s.librasEnabled);
   const setStatus = useAccessibilityStore((s) => s.setVlibrasStatus);
-  const scriptRef = useRef<HTMLScriptElement | null>(null);
-  const initialized = useRef(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => setHydrated(true), []);
 
   useEffect(() => {
+    if (!hydrated || !containerRef.current) return;
+    mountOfficialStructure(containerRef.current);
+  }, [hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+
     if (!enabled) {
       setStatus("idle");
       return;
     }
 
-    const container = document.getElementById("vlibras-root");
-    if (!container || initialized.current) return;
-
+    let cancelled = false;
     setStatus("loading");
-    container.innerHTML = `
-      <div vw class="enabled">
-        <div vw-access-button class="active"></div>
-        <div vw-plugin-wrapper><div class="vw-plugin-top-wrapper"></div></div>
-      </div>
-    `;
 
-    const script = document.createElement("script");
-    script.src = VLIBRAS_SCRIPT_URL;
-    script.async = true;
-    script.onload = () => {
-      if (window.VLibras) {
-        new window.VLibras.Widget(VLIBRAS_WIDGET_URL);
-        initialized.current = true;
-        setStatus("ready");
-      } else {
-        setStatus("error");
-      }
-    };
-    script.onerror = () => setStatus("error");
-    document.body.appendChild(script);
-    scriptRef.current = script;
+    ensureVLibras()
+      .then(() => {
+        if (!cancelled) setStatus("ready");
+      })
+      .catch((err: unknown) => {
+        console.error("[ECOPET VLibras]", err);
+        if (!cancelled) setStatus("error");
+      });
 
     return () => {
-      scriptRef.current?.remove();
-      scriptRef.current = null;
-      initialized.current = false;
+      cancelled = true;
     };
-  }, [enabled, setStatus]);
+  }, [enabled, hydrated, setStatus]);
+
+  if (!hydrated) return null;
 
   return (
     <div
+      ref={containerRef}
       id="vlibras-root"
-      className={cn("a11y-vlibras-slot", !enabled && "sr-only")}
+      className={cn("a11y-vlibras-slot", !enabled && "a11y-vlibras-hidden")}
       role="complementary"
-      aria-label="Tradutor de Libras VLibras"
+      aria-label="Tradutor VLibras"
       aria-hidden={!enabled}
+      suppressHydrationWarning
     />
   );
 }

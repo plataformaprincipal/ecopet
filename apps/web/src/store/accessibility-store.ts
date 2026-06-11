@@ -21,9 +21,7 @@ type BooleanKey = {
 export type VLibrasStatus = "idle" | "loading" | "ready" | "error";
 
 interface AccessibilityState extends AccessibilityPreferences {
-  braillePanelOpen: boolean;
   vlibrasStatus: VLibrasStatus;
-  setBraillePanelOpen: (open: boolean) => void;
   setVlibrasStatus: (status: VLibrasStatus) => void;
   increaseFont: () => void;
   decreaseFont: () => void;
@@ -33,6 +31,7 @@ interface AccessibilityState extends AccessibilityPreferences {
   increaseLineHeight: () => void;
   decreaseLineHeight: () => void;
   toggle: (key: BooleanKey) => void;
+  toggleBraille: () => void;
   setLocale: (locale: Locale) => void;
   reset: () => void;
   hasActiveSettings: () => boolean;
@@ -42,9 +41,7 @@ export const useAccessibilityStore = create<AccessibilityState>()(
   persist(
     (set, get) => ({
       ...DEFAULT_PREFERENCES,
-      braillePanelOpen: false,
       vlibrasStatus: "idle" as VLibrasStatus,
-      setBraillePanelOpen: (open) => set({ braillePanelOpen: open }),
       setVlibrasStatus: (status) => set({ vlibrasStatus: status }),
       increaseFont: () =>
         set({ fontScale: Math.min(FONT_SCALE_MAX, get().fontScale + FONT_SCALE_STEP) }),
@@ -60,6 +57,14 @@ export const useAccessibilityStore = create<AccessibilityState>()(
       decreaseLineHeight: () =>
         set({ lineHeight: Math.max(SPACING_MIN, get().lineHeight - SPACING_STEP) }),
       toggle: (key) => set({ [key]: !get()[key] } as Partial<AccessibilityPreferences>),
+      toggleBraille: () => {
+        const next = !get().brailleEnabled;
+        if (next) {
+          set({ brailleEnabled: true, strongFocus: true, screenReaderMode: true });
+        } else {
+          set({ brailleEnabled: false });
+        }
+      },
       setLocale: (locale) => set({ locale }),
       reset: () => set({ ...DEFAULT_PREFERENCES }),
       hasActiveSettings: () => {
@@ -86,6 +91,7 @@ export const useAccessibilityStore = create<AccessibilityState>()(
         readingGuide: state.readingGuide,
         pauseAnimations: state.pauseAnimations,
         screenReaderMode: state.screenReaderMode,
+        brailleEnabled: state.brailleEnabled,
         dyslexiaMode: state.dyslexiaMode,
         calmMode: state.calmMode,
         simplifiedUI: state.simplifiedUI,

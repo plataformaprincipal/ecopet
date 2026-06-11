@@ -28,6 +28,8 @@ import {
 } from "@/lib/agro/api";
 import type { RealtimeTelemetry, IoTSensor, AgroRobot, AgroDrone, MLModel, AutomationRule, WeatherForecast, SoilReading, LivestockAnimal, AgroMachine, AgroAlert, StockItem, PlantingRecord, HarvestRecord, AgroMarketplaceItem, AiAgroRecommendation } from "@/lib/agro/types";
 import { formatAgroCurrency } from "@/lib/agro/config";
+import { useCurrentUser } from "@/hooks/use-current-user";
+import { createAgroUnit, fetchAgroUnits, fetchIotDashboard } from "@/lib/iot/api";
 import { Thermometer, Droplets, Wind, Sun, Bug, Gauge, Sparkles, Package } from "lucide-react";
 
 export function AgroMonitoringContent() {
@@ -57,15 +59,100 @@ export function AgroMonitoringContent() {
 }
 
 export function AgroIotContent() {
-  const [sensors, setSensors] = useState<IoTSensor[]>([]);
-  useEffect(() => { fetchSensors().then(setSensors); }, []);
+  const { token } = useCurrentUser();
+  const [units, setUnits] = useState<{ id: string; name: string; devices: unknown[]; sensors: unknown[] }[]>([]);
+  const [alerts, setAlerts] = useState<{ id: string; message: string; device?: { name: string } }[]>([]);
+  const [demoMode, setDemoMode] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [form, setForm] = useState({ name: "", location: "" });
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!token) {
+      fetchSensors().then((s) => { setUnits([]); setLoading(false); });
+      return;
+    }
+    Promise.all([fetchAgroUnits(token), fetchIotDashboard(token, {})])
+      .then(([u, dash]) => {
+        setUnits(u);
+        setAlerts(dash.alerts);
+        setDemoMode(dash.demoMode);
+      })
+      .catch(() => fetchSensors().then(() => {}))
+      .finally(() => setLoading(false));
+  }, [token]);
+
+  async function handleCreateUnit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!token || !form.name.trim()) return;
+    setBusy(true);
+    try {
+      await createAgroUnit(token, { name: form.name.trim(), location: form.location || undefined });
+      setUnits(await fetchAgroUnits(token));
+      setForm({ name: "", location: "" });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const deviceCount = units.reduce((n, u) => n + (u.devices?.length ?? 0) + (u.sensors?.length ?? 0), 0);
+
   return (
-    <div>
-      <h1 className="mb-2 font-display text-xl font-bold">Painel IoT Agro</h1>
-      <p className="mb-4 text-sm text-ecopet-gray">{sensors.length} dispositivos · {sensors.filter(s => s.status === "online").length} online</p>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{sensors.map(s => <SensorCard key={s.id} sensor={s} />)}</div>
+    <div className="space-y-4">
+      <h1 className="mb-2 font-display text-xl font-bold">Painel IoT AgroPet</h1>
+      {demoMode && (
+        <p className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-sm">
+          Modo demonstração — estrutura pronta para sensores reais via POST /api/iot/readings
+        </p>
+      )}
+      <p className="mb-4 text-sm text-ecopet-gray">{deviceCount} dispositivos · {units.length} unidade(s) rural(is)</p>
+
+      {token && (
+        <form onSubmit={handleCreateUnit} className="flex flex-wrap gap-2">
+          <input className="rounded-md border px-3 py-2 text-sm" placeholder="Nome da fazenda/unidade" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+          <input className="rounded-md border px-3 py-2 text-sm" placeholder="Localização" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
+          <Button type="submit" size="sm" disabled={busy}>Cadastrar unidade</Button>
+        </form>
+      )}
+
+      {alerts.length > 0 && (
+        <div className="rounded-xl border border-amber-500/30 p-3 text-sm space-y-1">
+          {alerts.map((a) => <p key={a.id}><strong>{a.device?.name}</strong> — {a.message}</p>)}
+        </div>
+      )}
+
+      {loading ? (
+        <p className="text-sm text-ecopet-gray">Carregando...</p>
+      ) : units.length === 0 ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {(token ? [] : []).length === 0 && (
+            <p className="text-sm text-ecopet-gray col-span-full">Cadastre uma unidade AgroPet ou use sensores demonstrativos abaixo.</p>
+          )}
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {units.map((u) => (
+            <div key={u.id} className="rounded-xl border p-4">
+              <h3 className="font-semibold">{u.name}</h3>
+              <p className="text-xs text-ecopet-gray">{(u.devices as unknown[])?.length ?? 0} IoT · {(u.sensors as unknown[])?.length ?? 0} sensores</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!token && (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <LegacyAgroSensors />
+        </div>
+      )}
     </div>
   );
+}
+
+function LegacyAgroSensors() {
+  const [sensors, setSensors] = useState<IoTSensor[]>([]);
+  useEffect(() => { fetchSensors().then(setSensors); }, []);
+  return <>{sensors.map((s) => <SensorCard key={s.id} sensor={s} />)}</>;
 }
 
 export function AgroRobotsContent() {

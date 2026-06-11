@@ -81,7 +81,7 @@ export function dashboardPathForRole(role: string): string {
 export const EMPTY_MESSAGES = {
   posts: "Você ainda não possui publicações.",
   pets: "Você ainda não cadastrou pets.",
-  messages: "Você ainda não possui mensagens.",
+  messages: "Você ainda não possui conversas.",
   notifications: "Você ainda não possui notificações.",
   appointments: "Você ainda não realizou agendamentos.",
   orders: "Você ainda não possui pedidos.",

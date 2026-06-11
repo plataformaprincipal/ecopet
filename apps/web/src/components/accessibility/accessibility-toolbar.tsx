@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useCallback, useEffect, useState, memo } from "react";
 import {
   Accessibility,
   Type,
@@ -39,183 +38,210 @@ import {
   FONT_SCALE_MIN,
   FONT_SCALE_MAX,
 } from "@/store/accessibility-store";
+import type { AccessibilityPreferences } from "@/lib/accessibility/types";
 import { useTranslation } from "@/providers/i18n-provider";
 import { useAriaAnnounce } from "./aria-live-region";
 import { LanguageSelector } from "@/components/i18n/language-selector";
-import { useFocusTrap } from "@/hooks/use-focus-trap";
+
+type BooleanKey = {
+  [K in keyof AccessibilityPreferences]: AccessibilityPreferences[K] extends boolean ? K : never;
+}[keyof AccessibilityPreferences];
 
 export function AccessibilityToolbar() {
   const [open, setOpen] = useState(false);
   const [minimized, setMinimized] = useState(false);
   const announce = useAriaAnnounce();
   const { t } = useTranslation();
-
-  const store = useAccessibilityStore();
-  const {
-    fontScale,
-    increaseFont,
-    decreaseFont,
-    resetFont,
-    increaseLetterSpacing,
-    increaseLineHeight,
-    toggle,
-    reset,
-    hasActiveSettings,
-    setBraillePanelOpen,
-    vlibrasStatus,
-  } = store;
-
   const { theme, setTheme } = useTheme();
-  const panelTrapRef = useFocusTrap(open && !minimized, () => setOpen(false));
+
+  const fontScale = useAccessibilityStore((s) => s.fontScale);
+  const vlibrasStatus = useAccessibilityStore((s) => s.vlibrasStatus);
+  const brailleEnabled = useAccessibilityStore((s) => s.brailleEnabled);
+  const librasEnabled = useAccessibilityStore((s) => s.librasEnabled);
+  const highContrast = useAccessibilityStore((s) => s.highContrast);
+  const invertedContrast = useAccessibilityStore((s) => s.invertedContrast);
+  const grayscale = useAccessibilityStore((s) => s.grayscale);
+  const colorBlindMode = useAccessibilityStore((s) => s.colorBlindMode);
+  const highlightLinks = useAccessibilityStore((s) => s.highlightLinks);
+  const strongFocus = useAccessibilityStore((s) => s.strongFocus);
+  const largeCursor = useAccessibilityStore((s) => s.largeCursor);
+  const visualAlerts = useAccessibilityStore((s) => s.visualAlerts);
+  const reduceVisualNotifications = useAccessibilityStore((s) => s.reduceVisualNotifications);
+  const cognitiveMode = useAccessibilityStore((s) => s.cognitiveMode);
+  const simplifiedUI = useAccessibilityStore((s) => s.simplifiedUI);
+  const motorMode = useAccessibilityStore((s) => s.motorMode);
+  const calmMode = useAccessibilityStore((s) => s.calmMode);
+  const dyslexiaMode = useAccessibilityStore((s) => s.dyslexiaMode);
+  const pauseAnimations = useAccessibilityStore((s) => s.pauseAnimations);
+  const screenReaderMode = useAccessibilityStore((s) => s.screenReaderMode);
+  const readingMask = useAccessibilityStore((s) => s.readingMask);
+  const readingGuide = useAccessibilityStore((s) => s.readingGuide);
+
+  const increaseFont = useAccessibilityStore((s) => s.increaseFont);
+  const decreaseFont = useAccessibilityStore((s) => s.decreaseFont);
+  const resetFont = useAccessibilityStore((s) => s.resetFont);
+  const increaseLetterSpacing = useAccessibilityStore((s) => s.increaseLetterSpacing);
+  const increaseLineHeight = useAccessibilityStore((s) => s.increaseLineHeight);
+  const toggle = useAccessibilityStore((s) => s.toggle);
+  const toggleBraille = useAccessibilityStore((s) => s.toggleBraille);
+  const reset = useAccessibilityStore((s) => s.reset);
+  const hasActiveSettings = useAccessibilityStore((s) => s.hasActiveSettings);
 
   const atMin = fontScale <= FONT_SCALE_MIN;
   const atMax = fontScale >= FONT_SCALE_MAX;
 
   const handleToggle = useCallback(
-    (key: Parameters<typeof toggle>[0], label: string) => {
+    (key: BooleanKey, label: string) => {
+      const wasActive = useAccessibilityStore.getState()[key];
       toggle(key);
-      const active = !store[key];
-      announce(`${label} ${active ? t("a11y.activated") : t("a11y.deactivated")}`, "polite");
+      announce(`${label} ${!wasActive ? t("a11y.activated") : t("a11y.deactivated")}`, "polite");
     },
-    [toggle, store, announce, t]
+    [toggle, announce, t]
   );
+
+  const handleBrailleToggle = useCallback(() => {
+    toggleBraille();
+    const active = useAccessibilityStore.getState().brailleEnabled;
+    announce(
+      active
+        ? "Modo Braille ativado: interface otimizada para leitores de tela e linhas Braille."
+        : "Modo Braille desativado.",
+      "polite"
+    );
+  }, [toggleBraille, announce]);
+
+  const closePanel = useCallback(() => setOpen(false), []);
 
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") closePanel();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
+  }, [open, closePanel]);
+
+  const handleFabClick = useCallback(() => {
+    if (minimized) {
+      setMinimized(false);
+      setOpen(true);
+    } else {
+      setOpen((v) => !v);
+    }
+  }, [minimized]);
 
   return (
     <div className="a11y-toolbar-root bottom-24 left-4 lg:bottom-6" role="region" aria-label={t("a11y.title")}>
-      <AnimatePresence>
-        {open && !minimized && (
-          <motion.div
-            ref={panelTrapRef}
-            id="ecopet-a11y-toolbar"
-            initial={{ opacity: 0, y: 16, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 16, scale: 0.97 }}
-            transition={{ duration: 0.2 }}
-            className="mb-3 flex max-h-[min(75vh,620px)] w-[min(calc(100vw-2rem),360px)] flex-col overflow-hidden rounded-2xl border border-ecopet-green/25 bg-white shadow-2xl dark:border-white/10 dark:bg-[#0f1419]"
-          >
-            <div className="flex shrink-0 items-center justify-between bg-ecopet-dark px-4 py-3 text-white">
-              <div className="flex items-center gap-2">
-                <Accessibility className="h-5 w-5 text-ecopet-yellow" aria-hidden />
-                <span className="font-display text-sm font-bold">{t("a11y.title")}</span>
-              </div>
-              <div className="flex gap-1">
-                <IconBtn icon={Minimize2} label="Minimizar" onClick={() => setMinimized(true)} />
-                <IconBtn icon={X} label={t("a11y.close")} onClick={() => setOpen(false)} />
-              </div>
+      {open && !minimized && (
+        <div
+          id="ecopet-a11y-toolbar"
+          className="mb-3 flex max-h-[min(75vh,620px)] w-[min(calc(100vw-2rem),360px)] flex-col overflow-hidden rounded-2xl border border-ecopet-green/25 bg-white shadow-2xl animate-fade-in dark:border-white/10 dark:bg-[#0f1419]"
+        >
+          <div className="flex shrink-0 items-center justify-between bg-ecopet-dark px-4 py-3 text-white">
+            <div className="flex items-center gap-2">
+              <Accessibility className="h-5 w-5 text-ecopet-yellow" aria-hidden />
+              <span className="font-display text-sm font-bold">{t("a11y.title")}</span>
             </div>
-
-            <div className="flex-1 overflow-y-auto p-2">
-              <Section title={t("a11y.sections.visual")} icon={Eye} defaultOpen>
-                <ToolBtn icon={Plus} label={t("a11y.labels.increaseFont")} onClick={increaseFont} disabled={atMax} />
-                <ToolBtn icon={Minus} label={t("a11y.labels.decreaseFont")} onClick={decreaseFont} disabled={atMin} />
-                <ToolBtn icon={RotateCcw} label={t("a11y.labels.resetFont")} onClick={resetFont} />
-                <ToolBtn icon={Type} label={t("a11y.labels.letterSpacing")} onClick={increaseLetterSpacing} />
-                <ToolBtn icon={Type} label={t("a11y.labels.lineHeight")} onClick={increaseLineHeight} />
-                <ToggleBtn icon={Contrast} label={t("a11y.labels.highContrast")} active={store.highContrast} onClick={() => handleToggle("highContrast", t("a11y.labels.highContrast"))} />
-                <ToggleBtn icon={Contrast} label={t("a11y.labels.invertedContrast")} active={store.invertedContrast} onClick={() => handleToggle("invertedContrast", t("a11y.labels.invertedContrast"))} />
-                <ToggleBtn icon={Palette} label={t("a11y.labels.grayscale")} active={store.grayscale} onClick={() => handleToggle("grayscale", t("a11y.labels.grayscale"))} />
-                <ToggleBtn icon={Eye} label={t("a11y.labels.colorBlind")} active={store.colorBlindMode} onClick={() => handleToggle("colorBlindMode", t("a11y.labels.colorBlind"))} />
-                <ToggleBtn icon={Link2} label={t("a11y.labels.highlightLinks")} active={store.highlightLinks} onClick={() => handleToggle("highlightLinks", t("a11y.labels.highlightLinks"))} />
-                <ToggleBtn icon={Focus} label={t("a11y.labels.strongFocus")} active={store.strongFocus} onClick={() => handleToggle("strongFocus", t("a11y.labels.strongFocus"))} />
-                <ToggleBtn icon={MousePointer2} label={t("a11y.labels.largeCursor")} active={store.largeCursor} onClick={() => handleToggle("largeCursor", t("a11y.labels.largeCursor"))} />
-              </Section>
-
-              <Section title={t("a11y.sections.auditory")} icon={Volume2}>
-                <ToggleBtn icon={VolumeX} label={t("a11y.labels.visualAlerts")} active={store.visualAlerts} onClick={() => handleToggle("visualAlerts", t("a11y.labels.visualAlerts"))} />
-                <ToggleBtn icon={VolumeX} label={t("a11y.labels.reduceNotifications")} active={store.reduceVisualNotifications} onClick={() => handleToggle("reduceVisualNotifications", t("a11y.labels.reduceNotifications"))} />
-              </Section>
-
-              <Section title={t("a11y.sections.cognitive")} icon={Brain}>
-                <ToggleBtn icon={Brain} label={t("a11y.labels.cognitive")} active={store.cognitiveMode} onClick={() => handleToggle("cognitiveMode", t("a11y.labels.cognitive"))} />
-                <ToggleBtn icon={Minimize2} label={t("a11y.labels.simplified")} active={store.simplifiedUI} onClick={() => handleToggle("simplifiedUI", t("a11y.labels.simplified"))} />
-              </Section>
-
-              <Section title={t("a11y.sections.motor")} icon={Hand}>
-                <ToggleBtn icon={Hand} label={t("a11y.labels.motor")} active={store.motorMode} onClick={() => handleToggle("motorMode", t("a11y.labels.motor"))} />
-              </Section>
-
-              <Section title={t("a11y.sections.neuro")} icon={Sparkles}>
-                <ToggleBtn icon={Sparkles} label={t("a11y.labels.calm")} active={store.calmMode} onClick={() => handleToggle("calmMode", t("a11y.labels.calm"))} />
-                <ToggleBtn icon={BookOpen} label={t("a11y.labels.dyslexia")} active={store.dyslexiaMode} onClick={() => handleToggle("dyslexiaMode", t("a11y.labels.dyslexia"))} />
-                <ToggleBtn icon={PauseCircle} label={t("a11y.labels.pauseAnimations")} active={store.pauseAnimations} onClick={() => handleToggle("pauseAnimations", t("a11y.labels.pauseAnimations"))} />
-              </Section>
-
-              <Section title={t("a11y.sections.libras")} icon={HandMetal}>
-                <ToggleBtn icon={HandMetal} label={t("a11y.labels.libras")} active={store.librasEnabled} onClick={() => handleToggle("librasEnabled", t("a11y.labels.libras"))} />
-                {store.librasEnabled && vlibrasStatus === "loading" && (
-                  <p className="px-3 text-[11px] text-ecopet-gray" role="status">Carregando VLibras...</p>
-                )}
-                {store.librasEnabled && vlibrasStatus === "error" && (
-                  <p className="px-3 text-[11px] text-amber-700" role="alert">VLibras indisponível. Verifique sua conexão ou tente novamente.</p>
-                )}
-                {store.librasEnabled && vlibrasStatus === "ready" && (
-                  <p className="px-3 text-[11px] text-ecopet-green" role="status">VLibras ativo — use o botão flutuante do tradutor.</p>
-                )}
-                <p className="px-3 pb-2 text-[11px] leading-relaxed text-ecopet-gray">{t("a11y.librasNote")}</p>
-              </Section>
-
-              <Section title={t("a11y.sections.braille")} icon={BookOpen}>
-                <ToolBtn icon={BookOpen} label="Abrir painel Braille e leitura assistida" onClick={() => { setBraillePanelOpen(true); announce("Painel Braille aberto.", "polite"); }} />
-                <ToggleBtn icon={Accessibility} label={t("a11y.labels.screenReader")} active={store.screenReaderMode} onClick={() => handleToggle("screenReaderMode", t("a11y.labels.screenReader"))} />
-                <ToggleBtn icon={ScanEye} label={t("a11y.labels.readingMask")} active={store.readingMask} onClick={() => handleToggle("readingMask", t("a11y.labels.readingMask"))} />
-                <ToggleBtn icon={Ruler} label={t("a11y.labels.readingGuide")} active={store.readingGuide} onClick={() => handleToggle("readingGuide", t("a11y.labels.readingGuide"))} />
-              </Section>
-
-              <Section title={t("a11y.sections.languages")} icon={Languages} defaultOpen>
-                <div className="px-2 pb-2">
-                  <LanguageSelector />
-                </div>
-              </Section>
-
-              <Section title={t("a11y.sections.preferences")} icon={Settings2}>
-                <ToolBtn
-                  icon={theme === "dark" ? Sun : Moon}
-                  label={theme === "dark" ? "Ativar tema claro" : "Ativar tema escuro"}
-                  onClick={() => {
-                    setTheme(theme === "dark" ? "light" : "dark");
-                    announce(`Tema ${theme === "dark" ? "claro" : "escuro"} ativado.`, "polite");
-                  }}
-                />
-                <ToolBtn
-                  icon={RotateCcw}
-                  label={t("a11y.reset")}
-                  onClick={() => {
-                    reset();
-                    announce(t("a11y.preferencesSaved"), "polite");
-                  }}
-                  disabled={!hasActiveSettings()}
-                  variant="reset"
-                />
-                <p className="px-3 py-1 text-[10px] text-ecopet-gray">
-                  Fonte {Math.round(fontScale * 100)}%
-                </p>
-              </Section>
+            <div className="flex gap-1">
+              <IconBtn icon={Minimize2} label="Minimizar" onClick={() => setMinimized(true)} />
+              <IconBtn icon={X} label={t("a11y.close")} onClick={closePanel} />
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+
+          <div className="flex-1 overflow-y-auto overscroll-contain p-2">
+            <Section title={t("a11y.sections.visual")} icon={Eye} defaultOpen>
+              <ToolBtn icon={Plus} label={t("a11y.labels.increaseFont")} onClick={increaseFont} disabled={atMax} />
+              <ToolBtn icon={Minus} label={t("a11y.labels.decreaseFont")} onClick={decreaseFont} disabled={atMin} />
+              <ToolBtn icon={RotateCcw} label={t("a11y.labels.resetFont")} onClick={resetFont} />
+              <ToolBtn icon={Type} label={t("a11y.labels.letterSpacing")} onClick={increaseLetterSpacing} />
+              <ToolBtn icon={Type} label={t("a11y.labels.lineHeight")} onClick={increaseLineHeight} />
+              <ToggleBtn icon={Contrast} label={t("a11y.labels.highContrast")} active={highContrast} onClick={() => handleToggle("highContrast", t("a11y.labels.highContrast"))} />
+              <ToggleBtn icon={Contrast} label={t("a11y.labels.invertedContrast")} active={invertedContrast} onClick={() => handleToggle("invertedContrast", t("a11y.labels.invertedContrast"))} />
+              <ToggleBtn icon={Palette} label={t("a11y.labels.grayscale")} active={grayscale} onClick={() => handleToggle("grayscale", t("a11y.labels.grayscale"))} />
+              <ToggleBtn icon={Eye} label={t("a11y.labels.colorBlind")} active={colorBlindMode} onClick={() => handleToggle("colorBlindMode", t("a11y.labels.colorBlind"))} />
+              <ToggleBtn icon={Link2} label={t("a11y.labels.highlightLinks")} active={highlightLinks} onClick={() => handleToggle("highlightLinks", t("a11y.labels.highlightLinks"))} />
+              <ToggleBtn icon={Focus} label={t("a11y.labels.strongFocus")} active={strongFocus} onClick={() => handleToggle("strongFocus", t("a11y.labels.strongFocus"))} />
+              <ToggleBtn icon={MousePointer2} label={t("a11y.labels.largeCursor")} active={largeCursor} onClick={() => handleToggle("largeCursor", t("a11y.labels.largeCursor"))} />
+            </Section>
+
+            <Section title={t("a11y.sections.auditory")} icon={Volume2}>
+              <ToggleBtn icon={VolumeX} label={t("a11y.labels.visualAlerts")} active={visualAlerts} onClick={() => handleToggle("visualAlerts", t("a11y.labels.visualAlerts"))} />
+              <ToggleBtn icon={VolumeX} label={t("a11y.labels.reduceNotifications")} active={reduceVisualNotifications} onClick={() => handleToggle("reduceVisualNotifications", t("a11y.labels.reduceNotifications"))} />
+            </Section>
+
+            <Section title={t("a11y.sections.cognitive")} icon={Brain}>
+              <ToggleBtn icon={Brain} label={t("a11y.labels.cognitive")} active={cognitiveMode} onClick={() => handleToggle("cognitiveMode", t("a11y.labels.cognitive"))} />
+              <ToggleBtn icon={Minimize2} label={t("a11y.labels.simplified")} active={simplifiedUI} onClick={() => handleToggle("simplifiedUI", t("a11y.labels.simplified"))} />
+            </Section>
+
+            <Section title={t("a11y.sections.motor")} icon={Hand}>
+              <ToggleBtn icon={Hand} label={t("a11y.labels.motor")} active={motorMode} onClick={() => handleToggle("motorMode", t("a11y.labels.motor"))} />
+            </Section>
+
+            <Section title={t("a11y.sections.neuro")} icon={Sparkles}>
+              <ToggleBtn icon={Sparkles} label={t("a11y.labels.calm")} active={calmMode} onClick={() => handleToggle("calmMode", t("a11y.labels.calm"))} />
+              <ToggleBtn icon={BookOpen} label={t("a11y.labels.dyslexia")} active={dyslexiaMode} onClick={() => handleToggle("dyslexiaMode", t("a11y.labels.dyslexia"))} />
+              <ToggleBtn icon={PauseCircle} label={t("a11y.labels.pauseAnimations")} active={pauseAnimations} onClick={() => handleToggle("pauseAnimations", t("a11y.labels.pauseAnimations"))} />
+            </Section>
+
+            <Section title={t("a11y.sections.libras")} icon={HandMetal}>
+              <ToggleBtn icon={HandMetal} label={t("a11y.labels.libras")} active={librasEnabled} onClick={() => handleToggle("librasEnabled", t("a11y.labels.libras"))} />
+              {librasEnabled && vlibrasStatus === "loading" && (
+                <p className="px-3 text-[11px] text-ecopet-gray" role="status">{t("a11y.vlibrasLoading")}</p>
+              )}
+              {librasEnabled && vlibrasStatus === "error" && (
+                <p className="px-3 text-[11px] text-amber-700 dark:text-amber-400" role="alert">{t("a11y.vlibrasError")}</p>
+              )}
+              {librasEnabled && vlibrasStatus === "ready" && (
+                <p className="px-3 text-[11px] text-ecopet-green" role="status">{t("a11y.vlibrasReady")}</p>
+              )}
+              <p className="px-3 pb-2 text-[11px] leading-relaxed text-ecopet-gray">{t("a11y.librasNote")}</p>
+            </Section>
+
+            <Section title={t("a11y.sections.braille")} icon={BookOpen}>
+              <ToggleBtn icon={BookOpen} label={t("a11y.labels.braille")} active={brailleEnabled} onClick={handleBrailleToggle} />
+              <ToggleBtn icon={Accessibility} label={t("a11y.labels.screenReader")} active={screenReaderMode} onClick={() => handleToggle("screenReaderMode", t("a11y.labels.screenReader"))} />
+              <ToggleBtn icon={ScanEye} label={t("a11y.labels.readingMask")} active={readingMask} onClick={() => handleToggle("readingMask", t("a11y.labels.readingMask"))} />
+              <ToggleBtn icon={Ruler} label={t("a11y.labels.readingGuide")} active={readingGuide} onClick={() => handleToggle("readingGuide", t("a11y.labels.readingGuide"))} />
+              <p className="px-3 pb-2 text-[11px] leading-relaxed text-ecopet-gray">{t("a11y.brailleNote")}</p>
+            </Section>
+
+            <Section title={t("a11y.sections.languages")} icon={Languages} defaultOpen>
+              <div className="px-2 pb-2">
+                <LanguageSelector />
+              </div>
+            </Section>
+
+            <Section title={t("a11y.sections.preferences")} icon={Settings2}>
+              <ToolBtn
+                icon={theme === "dark" ? Sun : Moon}
+                label={theme === "dark" ? "Ativar tema claro" : "Ativar tema escuro"}
+                onClick={() => {
+                  setTheme(theme === "dark" ? "light" : "dark");
+                  announce(`Tema ${theme === "dark" ? "claro" : "escuro"} ativado.`, "polite");
+                }}
+              />
+              <ToolBtn
+                icon={RotateCcw}
+                label={t("a11y.reset")}
+                onClick={() => {
+                  reset();
+                  announce(t("a11y.preferencesSaved"), "polite");
+                }}
+                disabled={!hasActiveSettings()}
+                variant="reset"
+              />
+              <p className="px-3 py-1 text-[10px] text-ecopet-gray">Fonte {Math.round(fontScale * 100)}%</p>
+            </Section>
+          </div>
+        </div>
+      )}
 
       <button
         type="button"
-        onClick={() => {
-          if (minimized) {
-            setMinimized(false);
-            setOpen(true);
-          } else {
-            setOpen((v) => !v);
-          }
-        }}
+        onClick={handleFabClick}
         className={cn(
-          "flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-all hover:scale-105",
+          "flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-transform duration-150 hover:scale-105 active:scale-95",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ecopet-yellow focus-visible:ring-offset-2",
           open ? "bg-ecopet-yellow text-ecopet-dark" : "bg-ecopet-green text-white hover:bg-ecopet-dark"
         )}
@@ -232,7 +258,7 @@ export function AccessibilityToolbar() {
 
 export const AccessibilityBar = AccessibilityToolbar;
 
-function Section({
+const Section = memo(function Section({
   title,
   icon: Icon,
   children,
@@ -261,9 +287,9 @@ function Section({
       {expanded && <div className="space-y-0.5 pb-2">{children}</div>}
     </div>
   );
-}
+});
 
-function ToolBtn({
+const ToolBtn = memo(function ToolBtn({
   icon: Icon,
   label,
   onClick,
@@ -294,9 +320,9 @@ function ToolBtn({
       <span>{label}</span>
     </button>
   );
-}
+});
 
-function ToggleBtn({
+const ToggleBtn = memo(function ToggleBtn({
   icon: Icon,
   label,
   active,
@@ -330,7 +356,7 @@ function ToggleBtn({
       </span>
     </button>
   );
-}
+});
 
 function IconBtn({ icon: Icon, label, onClick }: { icon: React.ElementType; label: string; onClick: () => void }) {
   return (

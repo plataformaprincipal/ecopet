@@ -6,7 +6,7 @@ import { DEFAULT_PREFERENCES } from "@/lib/accessibility/types";
 import type { AccessibilityPreferences } from "@/lib/accessibility/types";
 import { ReadingAssist } from "@/components/accessibility/reading-assist";
 import { VLibrasWidget } from "@/components/accessibility/vlibras-widget";
-import { BraillePanel } from "@/components/accessibility/braille-panel";
+import { BrailleMode } from "@/components/accessibility/braille-mode";
 
 const CLASS_MAP: Record<string, keyof AccessibilityPreferences> = {
   "a11y-high-contrast": "highContrast",
@@ -29,6 +29,7 @@ const CLASS_MAP: Record<string, keyof AccessibilityPreferences> = {
 
 function applyPreferences(prefs: AccessibilityPreferences) {
   const root = document.documentElement;
+  const body = document.body;
 
   root.style.setProperty("--a11y-font-scale", String(prefs.fontScale));
   root.style.setProperty("--a11y-letter-spacing", String(prefs.letterSpacing));
@@ -39,6 +40,8 @@ function applyPreferences(prefs: AccessibilityPreferences) {
     root.classList.toggle(className, Boolean(prefs[key]));
   });
 
+  body.classList.toggle("ecopet-braille-mode", prefs.brailleEnabled);
+
   const pauseAnim = prefs.pauseAnimations || prefs.dyslexiaMode || prefs.calmMode;
   root.classList.toggle("a11y-pause-animations", pauseAnim);
 }
@@ -46,7 +49,11 @@ function applyPreferences(prefs: AccessibilityPreferences) {
 export function AccessibilityProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     applyPreferences(useAccessibilityStore.getState());
-    return useAccessibilityStore.subscribe((state) => applyPreferences(state));
+    return useAccessibilityStore.subscribe((state, prev) => {
+      const keys = Object.keys(DEFAULT_PREFERENCES) as (keyof AccessibilityPreferences)[];
+      const changed = keys.some((k) => state[k] !== prev[k]);
+      if (changed) applyPreferences(state);
+    });
   }, []);
 
   return (
@@ -54,7 +61,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
       {children}
       <ReadingAssist />
       <VLibrasWidget />
-      <BraillePanel />
+      <BrailleMode />
     </>
   );
 }

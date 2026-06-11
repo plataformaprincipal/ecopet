@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { CreatePetPayload, PetSpecies, PetSize } from "@/lib/pets/types";
 import { SPECIES_LABELS, SIZE_LABELS } from "@/lib/pets/labels";
+import { todayIsoDate, validateOptionalBirthDate } from "@/lib/validation/dates";
 
 interface PetFormProps {
   initial?: Partial<CreatePetPayload>;
@@ -39,6 +40,8 @@ export function PetForm({ initial, onSubmit, onCancel, loading }: PetFormProps) 
     locationAddress: initial?.locationAddress ?? "",
   });
 
+  const [birthDateError, setBirthDateError] = useState<string | undefined>();
+
   const set = (key: keyof CreatePetPayload, val: unknown) =>
     setForm((prev) => ({ ...prev, [key]: val }));
 
@@ -52,6 +55,12 @@ export function PetForm({ initial, onSubmit, onCancel, loading }: PetFormProps) 
           className="grid gap-4 sm:grid-cols-2"
           onSubmit={async (e) => {
             e.preventDefault();
+            const err = validateOptionalBirthDate(form.birthDate ?? "");
+            if (err) {
+              setBirthDateError(err);
+              return;
+            }
+            setBirthDateError(undefined);
             await onSubmit(form);
           }}
         >
@@ -89,8 +98,23 @@ export function PetForm({ initial, onSubmit, onCancel, loading }: PetFormProps) 
             </select>
           </div>
           <div>
-            <label className="text-sm font-medium">Data de nascimento</label>
-            <Input type="date" className="mt-1" value={form.birthDate ?? ""} onChange={(e) => set("birthDate", e.target.value)} max={new Date().toISOString().slice(0, 10)} />
+            <label htmlFor="pet-birthDate" className="text-sm font-medium">Data de nascimento</label>
+            <Input
+              id="pet-birthDate"
+              type="date"
+              className="mt-1"
+              value={form.birthDate ?? ""}
+              max={todayIsoDate()}
+              onChange={(e) => {
+                set("birthDate", e.target.value);
+                setBirthDateError(validateOptionalBirthDate(e.target.value));
+              }}
+              aria-invalid={birthDateError ? true : undefined}
+              aria-describedby={birthDateError ? "pet-birthDate-error" : undefined}
+            />
+            {birthDateError && (
+              <p id="pet-birthDate-error" className="mt-1 text-xs text-red-600" role="alert">{birthDateError}</p>
+            )}
           </div>
           <div>
             <label className="text-sm font-medium">Cor predominante *</label>

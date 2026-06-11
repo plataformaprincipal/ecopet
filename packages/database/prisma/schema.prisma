@@ -449,6 +449,10 @@ model User {
   entityVersions      EntityVersion[] @relation("VersionAuthor")
   governanceInsights  GovernanceInsight[]
   appointments        Appointment[]
+  aiChatLogs          AIChatLog[]
+  convertedGuestChats GuestChatSession[] @relation("GuestConvertedUser")
+  iotDevices          IotDevice[]
+  agroUnits           AgroUnit[]
 
   @@index([email])
   @@index([username])
@@ -532,6 +536,7 @@ model Pet {
   events            PetEvent[]
   posts             Post[]
   appointments      Appointment[]
+  iotDevices        IotDevice[]
 
   @@index([ownerId])
   @@index([ongId])
@@ -1086,6 +1091,7 @@ model Conversation {
   messages     Message[]
   ticket       SupportTicket?            @relation(fields: [ticketId], references: [id])
   quotes       CustomQuote[]
+  guestSession GuestChatSession?
 
   @@index([type])
   @@index([status])
@@ -1814,34 +1820,123 @@ model IotDevice {
   deviceType   String
   ownerType    String
   ownerId      String
+  userId       String?
+  petId        String?
+  agroUnitId   String?
   status       String   @default("offline")
   location     String?
+  latitude     Float?
+  longitude    Float?
   battery      Float?
+  isDemo       Boolean  @default(true)
   lastReading  DateTime?
+  lastSyncAt   DateTime?
+  virtualFence Json?
   metadata     Json?
   createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  pet          Pet?     @relation(fields: [petId], references: [id], onDelete: SetNull)
+  agroUnit     AgroUnit? @relation(fields: [agroUnitId], references: [id], onDelete: SetNull)
   readings     IotReading[]
   alerts       IotAlert[]
+  logs         IotDeviceLog[]
+  automations  IotAutomation[]
+
+  @@index([userId])
+  @@index([petId])
+  @@index([agroUnitId])
+  @@index([ownerId])
+  @@index([ownerType])
 }
 
 model IotReading {
-  id        String   @id @default(cuid())
-  deviceId  String
-  metricKey String
-  value     Float
-  unit      String?
-  recordedAt DateTime @default(now())
-  device    IotDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  id         String    @id @default(cuid())
+  deviceId   String
+  metricKey  String
+  type       String?
+  value      Float
+  unit       String?
+  userId     String?
+  petId      String?
+  agroUnitId String?
+  latitude   Float?
+  longitude  Float?
+  battery    Float?
+  metadata   Json?
+  recordedAt DateTime  @default(now())
+  device     IotDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId, recordedAt])
 }
 
 model IotAlert {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   deviceId  String
   severity  String
   message   String
-  resolved  Boolean  @default(false)
-  createdAt DateTime @default(now())
+  resolved  Boolean   @default(false)
+  createdAt DateTime  @default(now())
   device    IotDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId, resolved])
+}
+
+model IotDeviceLog {
+  id        String    @id @default(cuid())
+  deviceId  String
+  action    String
+  metadata  Json?
+  createdAt DateTime  @default(now())
+  device    IotDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId, createdAt])
+}
+
+model IotAutomation {
+  id        String    @id @default(cuid())
+  deviceId  String?
+  userId    String
+  name      String
+  trigger   String
+  action    String
+  isActive  Boolean   @default(true)
+  metadata  Json?
+  createdAt DateTime  @default(now())
+  device    IotDevice? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+}
+
+model AgroUnit {
+  id        String       @id @default(cuid())
+  ownerId   String
+  name      String
+  location  String?
+  areaHa    Float?
+  metadata  Json?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  owner     User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  devices   IotDevice[]
+  sensors   AgroSensor[]
+
+  @@index([ownerId])
+}
+
+model AgroSensor {
+  id         String   @id @default(cuid())
+  agroUnitId String
+  name       String
+  sensorType String
+  status     String   @default("offline")
+  battery    Float?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  agroUnit   AgroUnit @relation(fields: [agroUnitId], references: [id], onDelete: Cascade)
+
+  @@index([agroUnitId])
 }
 
 // ─── Gestor: Robôs (extensão) ───
@@ -2310,4 +2405,60 @@ model BackupJob {
   completedAt DateTime?
 
   @@index([status, createdAt])
+}
+
+enum GuestChatStatus {
+  GUEST
+  AUTHENTICATED
+  CONVERTED
+  EXPIRED
+}
+
+model GuestChatSession {
+  id              String          @id @default(cuid())
+  guestId         String          @unique
+  sessionId       String
+  browserId       String?
+  conversationId  String?         @unique
+  convertedUserId String?
+  status          GuestChatStatus @default(GUEST)
+  messageCount    Int             @default(0)
+  expiresAt       DateTime
+  convertedAt     DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  messages        GuestMessage[]
+  conversation    Conversation?   @relation(fields: [conversationId], references: [id])
+  convertedUser   User?           @relation("GuestConvertedUser", fields: [convertedUserId], references: [id])
+
+  @@index([status, expiresAt])
+}
+
+model GuestMessage {
+  id        String           @id @default(cuid())
+  sessionId String
+  role      String
+  content   String
+  type      String           @default("TEXT")
+  metadata  Json?
+  createdAt DateTime         @default(now())
+  session   GuestChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, createdAt])
+}
+
+model AIChatLog {
+  id             String   @id @default(cuid())
+  userId         String?
+  guestSessionId String?
+  conversationId String?
+  prompt         String
+  response       String
+  model          String?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  user           User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+  @@index([conversationId])
 }

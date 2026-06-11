@@ -1,6 +1,8 @@
 import { PetshopClientAddressFields, Required } from "./petshop-address-fields";
+import { todayIsoDate } from "@/lib/validation/dates";
 
 export function ClientRegistrationForm() {
+  const maxBirthDate = todayIsoDate();
   return (
     <form id="formCadastroCliente" className="petshop-form" noValidate>
       <div className="row g-3">
@@ -24,7 +26,7 @@ export function ClientRegistrationForm() {
 
         <div className="col-md-4">
           <label htmlFor="dataNascimento" className="form-label">Data de nascimento<Required /></label>
-          <input type="date" className="form-control" id="dataNascimento" name="dataNascimento" required />
+          <input type="date" className="form-control" id="dataNascimento" name="dataNascimento" max={maxBirthDate} required />
         </div>
         <div className="col-md-4">
           <label htmlFor="numPets" className="form-label">Número de pets<Required /></label>

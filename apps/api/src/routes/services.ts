@@ -23,6 +23,7 @@ router.get("/", async (req, res, next) => {
       where: {
         type: "READY_SERVICE",
         isActive: true,
+        approvalStatus: "APPROVED",
         ...(category ? { category: category as ReadyServiceCategory } : {}),
       },
       include: {

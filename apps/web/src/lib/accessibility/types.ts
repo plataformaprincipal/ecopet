@@ -15,6 +15,7 @@ export interface AccessibilityPreferences {
   readingGuide: boolean;
   pauseAnimations: boolean;
   screenReaderMode: boolean;
+  brailleEnabled: boolean;
   dyslexiaMode: boolean;
   calmMode: boolean;
   simplifiedUI: boolean;
@@ -50,6 +51,7 @@ export const DEFAULT_PREFERENCES: AccessibilityPreferences = {
   readingGuide: false,
   pauseAnimations: false,
   screenReaderMode: false,
+  brailleEnabled: false,
   dyslexiaMode: false,
   calmMode: false,
   simplifiedUI: false,

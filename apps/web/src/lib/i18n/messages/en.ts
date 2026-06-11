@@ -82,9 +82,13 @@ const messages: MessageTree = {
       cognitive: "Simple language mode",
       visualAlerts: "Visual alerts (deafness)",
       libras: "Enable Libras (VLibras)",
+      braille: "Braille mode",
     },
-    librasNote:
-      "VLibras integration (Brazil gov). External connection required. Compatible with screen readers and Braille displays.",
+    librasNote: "VLibras: automatic translation from Portuguese to Libras.",
+    brailleNote: "Braille: reading mode optimized for screen readers and Braille displays.",
+    vlibrasLoading: "Loading VLibras...",
+    vlibrasError: "Could not load VLibras at this time.",
+    vlibrasReady: "VLibras active. Use the avatar to translate page content.",
     language: {
       title: "Interface language",
       autoTranslate: "Automatic translation via API",

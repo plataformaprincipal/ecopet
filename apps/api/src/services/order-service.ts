@@ -180,6 +180,19 @@ export async function listUserOrders(userId: string) {
   });
 }
 
+export async function listPartnerOrders(partnerId: string) {
+  return prisma.order.findMany({
+    where: { partnerId },
+    include: {
+      items: true,
+      statusHistory: { orderBy: { createdAt: "asc" } },
+      fulfillments: true,
+      user: { select: { id: true, name: true, email: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
 export async function getOrderById(orderId: string, userId?: string) {
   const order = await prisma.order.findFirst({
     where: { id: orderId, ...(userId ? { userId } : {}) },

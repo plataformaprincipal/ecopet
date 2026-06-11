@@ -176,6 +176,51 @@ html.a11y-screen-reader body .a11y-skip-link:focus {
   border: 3px solid #f5c800;
 }
 
+/* Modo Braille — leitores de tela e linhas Braille */
+html.ecopet-braille-mode body,
+body.ecopet-braille-mode {
+  scroll-behavior: auto;
+}
+
+html.ecopet-braille-mode body :focus-visible,
+body.ecopet-braille-mode :focus-visible {
+  outline: 3px solid #f5c800 !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 4px rgba(0, 59, 22, 0.35) !important;
+}
+
+html.ecopet-braille-mode body img[alt=""],
+body.ecopet-braille-mode img[alt=""] {
+  /* decorativas — leitor de tela ignora */
+}
+
+html.ecopet-braille-mode body [role="button"],
+html.ecopet-braille-mode body button,
+html.ecopet-braille-mode body a {
+  min-height: 44px;
+}
+
+html.ecopet-braille-mode body h1,
+html.ecopet-braille-mode body h2,
+html.ecopet-braille-mode body h3 {
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.ecopet-braille-notice {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9995;
+  background: #003b16;
+  color: #f7f4dc;
+  text-align: center;
+  font-size: 0.75rem;
+  padding: 0.5rem 1rem;
+  border-bottom: 2px solid #f5c800;
+}
+
 /* Visual alerts for deaf users */
 html.a11y-visual-alerts body [data-a11y-alert] {
   border-left: 6px solid #f5c800 !important;
@@ -234,9 +279,31 @@ html[dir="rtl"] .a11y-toolbar-root {
   right: 1rem;
 }
 
-.a11y-vlibras-slot:not(:empty) {
+/* VLibras — avatar oficial gov.br; oculto até Libras ser ativada no painel ECOPET */
+.a11y-vlibras-slot {
   position: fixed;
-  bottom: 1rem;
+  z-index: 55;
+  pointer-events: none;
+}
+
+.a11y-vlibras-slot:not(.a11y-vlibras-hidden) {
+  bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
   right: 1rem;
-  z-index: 9980;
+  pointer-events: auto;
+}
+
+@media (min-width: 1024px) {
+  .a11y-vlibras-slot:not(.a11y-vlibras-hidden) {
+    bottom: 5.5rem;
+    right: 1.25rem;
+  }
+}
+
+.a11y-vlibras-hidden {
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
 }

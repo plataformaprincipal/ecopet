@@ -18,7 +18,7 @@ export const USER_MESSAGES = {
   SESSION: "Sua sessão expirou. Faça login novamente.",
   UNEXPECTED: "Ocorreu um erro inesperado. Tente novamente. Se persistir, entre em contato com o suporte.",
   ADMIN_REGISTER_FORBIDDEN: "Cadastro de equipe interna não está disponível nesta página. Solicite acesso ao Gestor ECOPET.",
-  BIRTH_DATE_FUTURE: "A data de nascimento não pode ser futura. Informe uma data válida.",
+  BIRTH_DATE_FUTURE: "A data de nascimento não pode ser futura. Informe uma data igual ou anterior à data de hoje.",
   CPF_INVALID: "CPF inválido. Verifique os números informados.",
   CNPJ_INVALID: "CNPJ inválido. Verifique os números informados.",
 } as const;
