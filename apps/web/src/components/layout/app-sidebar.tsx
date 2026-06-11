@@ -54,11 +54,11 @@ export function AppSidebar() {
   const { t } = useTranslation();
 
   return (
-    <aside className="hidden w-64 flex-col border-r border-ecopet-gray/10 bg-white dark:border-white/10 dark:bg-[#0f1419] lg:flex">
-      <div className="p-6">
+    <aside className="hidden w-[17rem] flex-col border-r border-ecopet-gray/10 bg-white dark:border-white/10 dark:bg-[#0a0d10] lg:flex" aria-label="Menu principal">
+      <div className="border-b border-ecopet-gray/10 p-5 dark:border-white/10">
         <Logo responsive />
       </div>
-      <nav className="flex-1 space-y-1 px-3">
+      <nav className="flex-1 space-y-1 px-3 py-4">
         {NAV_ITEMS.map((item) => {
           const Icon = icons[item.icon] || Home;
           const active = pathname.startsWith(item.href);
@@ -66,14 +66,15 @@ export function AppSidebar() {
             <Link
               key={item.href}
               href={item.href}
+              aria-current={active ? "page" : undefined}
               className={cn(
-                "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all",
+                "flex items-center gap-3 rounded-[12px] px-4 py-2.5 text-sm font-medium transition-all duration-200",
                 active
-                  ? "bg-ecopet-green text-white shadow-md"
-                  : "text-ecopet-gray hover:bg-ecopet-green/5 hover:text-ecopet-dark dark:hover:bg-white/5 dark:hover:text-white"
+                  ? "bg-ecopet-brand text-white shadow-[var(--shadow-premium)]"
+                  : "text-ecopet-gray hover:bg-ecopet-green/8 hover:text-ecopet-dark dark:hover:bg-white/5 dark:hover:text-white"
               )}
             >
-              <Icon className="h-5 w-5" />
+              <Icon className="h-5 w-5 shrink-0" aria-hidden />
               {navLabelKeys[item.href] ? t(navLabelKeys[item.href]) : item.label}
             </Link>
           );

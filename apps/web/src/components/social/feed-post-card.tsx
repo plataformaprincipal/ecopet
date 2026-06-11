@@ -57,12 +57,12 @@ export function FeedPostCard({ post, showCommentsDefault = false }: FeedPostCard
   const votedOption = pollVotes[post.id];
 
   return (
-    <Card className="mb-4 overflow-hidden border-ecopet-gray/10 shadow-sm transition hover:shadow-md">
+    <Card className="mb-4 overflow-hidden rounded-[20px] border-ecopet-gray/10 shadow-[var(--shadow-premium)] transition hover:shadow-[var(--shadow-premium-lg)]">
       <CardContent className="p-0">
         {/* Header */}
         <div className="flex items-center gap-3 p-4">
           <Link href={`/social/perfil/${post.author.id}`} className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full ring-2 ring-ecopet-green/20">
-            <Image src={post.author.avatar} alt="" fill className="object-cover" />
+            <Image src={post.author.avatar} alt={`Foto de ${post.author.name}`} fill className="object-cover" />
           </Link>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-1.5">

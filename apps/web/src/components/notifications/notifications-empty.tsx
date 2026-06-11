@@ -13,12 +13,12 @@ export function NotificationsEmpty({ hasSearch }: NotificationsEmptyProps) {
           <BellOff className="h-8 w-8 text-ecopet-green" />
         </div>
         <h3 className="font-display text-lg font-bold text-ecopet-dark dark:text-white">
-          {hasSearch ? "Nenhum resultado" : "Tudo em dia!"}
+          {hasSearch ? "Nenhum resultado" : "Sem notificações"}
         </h3>
         <p className="mt-2 max-w-xs text-sm text-ecopet-gray">
           {hasSearch
-            ? "Tente outro termo ou limpe os filtros para ver mais notificações."
-            : "Você não tem notificações nesta categoria no momento."}
+            ? "Tente outro termo ou limpe os filtros."
+            : "Você ainda não possui notificações."}
         </p>
       </CardContent>
     </Card>

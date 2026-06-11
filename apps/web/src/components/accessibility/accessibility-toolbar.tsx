@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Accessibility,
@@ -29,7 +29,10 @@ import {
   Sparkles,
   Minimize2,
   Settings2,
+  Moon,
+  Sun,
 } from "lucide-react";
+import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import {
   useAccessibilityStore,
@@ -39,11 +42,11 @@ import {
 import { useTranslation } from "@/providers/i18n-provider";
 import { useAriaAnnounce } from "./aria-live-region";
 import { LanguageSelector } from "@/components/i18n/language-selector";
+import { useFocusTrap } from "@/hooks/use-focus-trap";
 
 export function AccessibilityToolbar() {
   const [open, setOpen] = useState(false);
   const [minimized, setMinimized] = useState(false);
-  const panelRef = useRef<HTMLDivElement>(null);
   const announce = useAriaAnnounce();
   const { t } = useTranslation();
 
@@ -58,7 +61,12 @@ export function AccessibilityToolbar() {
     toggle,
     reset,
     hasActiveSettings,
+    setBraillePanelOpen,
+    vlibrasStatus,
   } = store;
+
+  const { theme, setTheme } = useTheme();
+  const panelTrapRef = useFocusTrap(open && !minimized, () => setOpen(false));
 
   const atMin = fontScale <= FONT_SCALE_MIN;
   const atMax = fontScale >= FONT_SCALE_MAX;
@@ -86,7 +94,7 @@ export function AccessibilityToolbar() {
       <AnimatePresence>
         {open && !minimized && (
           <motion.div
-            ref={panelRef}
+            ref={panelTrapRef}
             id="ecopet-a11y-toolbar"
             initial={{ opacity: 0, y: 16, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -143,10 +151,20 @@ export function AccessibilityToolbar() {
 
               <Section title={t("a11y.sections.libras")} icon={HandMetal}>
                 <ToggleBtn icon={HandMetal} label={t("a11y.labels.libras")} active={store.librasEnabled} onClick={() => handleToggle("librasEnabled", t("a11y.labels.libras"))} />
+                {store.librasEnabled && vlibrasStatus === "loading" && (
+                  <p className="px-3 text-[11px] text-ecopet-gray" role="status">Carregando VLibras...</p>
+                )}
+                {store.librasEnabled && vlibrasStatus === "error" && (
+                  <p className="px-3 text-[11px] text-amber-700" role="alert">VLibras indisponível. Verifique sua conexão ou tente novamente.</p>
+                )}
+                {store.librasEnabled && vlibrasStatus === "ready" && (
+                  <p className="px-3 text-[11px] text-ecopet-green" role="status">VLibras ativo — use o botão flutuante do tradutor.</p>
+                )}
                 <p className="px-3 pb-2 text-[11px] leading-relaxed text-ecopet-gray">{t("a11y.librasNote")}</p>
               </Section>
 
               <Section title={t("a11y.sections.braille")} icon={BookOpen}>
+                <ToolBtn icon={BookOpen} label="Abrir painel Braille e leitura assistida" onClick={() => { setBraillePanelOpen(true); announce("Painel Braille aberto.", "polite"); }} />
                 <ToggleBtn icon={Accessibility} label={t("a11y.labels.screenReader")} active={store.screenReaderMode} onClick={() => handleToggle("screenReaderMode", t("a11y.labels.screenReader"))} />
                 <ToggleBtn icon={ScanEye} label={t("a11y.labels.readingMask")} active={store.readingMask} onClick={() => handleToggle("readingMask", t("a11y.labels.readingMask"))} />
                 <ToggleBtn icon={Ruler} label={t("a11y.labels.readingGuide")} active={store.readingGuide} onClick={() => handleToggle("readingGuide", t("a11y.labels.readingGuide"))} />
@@ -159,6 +177,14 @@ export function AccessibilityToolbar() {
               </Section>
 
               <Section title={t("a11y.sections.preferences")} icon={Settings2}>
+                <ToolBtn
+                  icon={theme === "dark" ? Sun : Moon}
+                  label={theme === "dark" ? "Ativar tema claro" : "Ativar tema escuro"}
+                  onClick={() => {
+                    setTheme(theme === "dark" ? "light" : "dark");
+                    announce(`Tema ${theme === "dark" ? "claro" : "escuro"} ativado.`, "polite");
+                  }}
+                />
                 <ToolBtn
                   icon={RotateCcw}
                   label={t("a11y.reset")}

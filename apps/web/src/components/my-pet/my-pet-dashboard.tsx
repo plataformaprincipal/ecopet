@@ -96,8 +96,8 @@ export function MyPetDashboard() {
               <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-ecopet-green/10">
                 <PawPrint className="h-12 w-12 text-ecopet-green" />
               </div>
-              <h1 className="mt-6 font-display text-2xl font-bold">Cadastre seu primeiro pet</h1>
-              <p className="mt-2 text-ecopet-gray">Prontuário, vacinas, peso, fotos e muito mais em um só lugar.</p>
+              <h1 className="mt-6 font-display text-2xl font-bold">Meus Pets</h1>
+              <p className="mt-2 text-ecopet-gray">Você ainda não cadastrou pets.</p>
               <Button className="mt-6" size="lg" onClick={() => setShowForm(true)}>
                 <Plus className="h-5 w-5" /> Cadastrar pet
               </Button>

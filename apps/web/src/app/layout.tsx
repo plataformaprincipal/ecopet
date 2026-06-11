@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Montserrat } from "next/font/google";
+import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { AuthSessionProvider } from "@/providers/session-provider";
@@ -15,7 +15,7 @@ import { SupportChatProvider } from "@/providers/support-chat-provider";
 import { SupportChatPanel } from "@/components/support/support-chat-panel";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat", weight: ["500", "600", "700", "800"] });
+const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-jakarta", weight: ["500", "600", "700", "800"] });
 
 export const metadata: Metadata = {
   title: {
@@ -48,7 +48,7 @@ export const viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <body className={`${inter.variable} ${montserrat.variable} font-sans`}>
+      <body className={`${inter.variable} ${jakarta.variable} font-sans antialiased`}>
         <ThemeProvider>
           <AccessibilityProvider>
             <I18nProvider>

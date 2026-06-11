@@ -7,8 +7,10 @@ interface NotificationsState {
   aiSummary: AiSummary | null;
   loading: boolean;
   loaded: boolean;
+  isDemo: boolean;
   filter: NotificationFilter;
   searchQuery: string;
+  resetForUser: () => void;
   load: (token?: string) => Promise<void>;
   setFilter: (filter: NotificationFilter) => void;
   setSearchQuery: (query: string) => void;
@@ -23,18 +25,21 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
   aiSummary: null,
   loading: false,
   loaded: false,
+  isDemo: false,
   filter: "all",
   searchQuery: "",
+
+  resetForUser: () => set({ notifications: [], aiSummary: null, loaded: false, isDemo: false }),
 
   load: async (token) => {
     if (get().loading) return;
     set({ loading: true });
     try {
-      const [notifications, aiSummary] = await Promise.all([
+      const [{ items, isDemo }, aiSummary] = await Promise.all([
         fetchNotifications(token),
         fetchAiSummary(token),
       ]);
-      set({ notifications, aiSummary, loaded: true });
+      set({ notifications: items, aiSummary, loaded: true, isDemo });
     } finally {
       set({ loading: false });
     }

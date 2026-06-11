@@ -18,7 +18,13 @@ type BooleanKey = {
   [K in keyof AccessibilityPreferences]: AccessibilityPreferences[K] extends boolean ? K : never;
 }[keyof AccessibilityPreferences];
 
+export type VLibrasStatus = "idle" | "loading" | "ready" | "error";
+
 interface AccessibilityState extends AccessibilityPreferences {
+  braillePanelOpen: boolean;
+  vlibrasStatus: VLibrasStatus;
+  setBraillePanelOpen: (open: boolean) => void;
+  setVlibrasStatus: (status: VLibrasStatus) => void;
   increaseFont: () => void;
   decreaseFont: () => void;
   resetFont: () => void;
@@ -36,6 +42,10 @@ export const useAccessibilityStore = create<AccessibilityState>()(
   persist(
     (set, get) => ({
       ...DEFAULT_PREFERENCES,
+      braillePanelOpen: false,
+      vlibrasStatus: "idle" as VLibrasStatus,
+      setBraillePanelOpen: (open) => set({ braillePanelOpen: open }),
+      setVlibrasStatus: (status) => set({ vlibrasStatus: status }),
       increaseFont: () =>
         set({ fontScale: Math.min(FONT_SCALE_MAX, get().fontScale + FONT_SCALE_STEP) }),
       decreaseFont: () =>
@@ -59,7 +69,34 @@ export const useAccessibilityStore = create<AccessibilityState>()(
         );
       },
     }),
-    { name: A11Y_STORAGE_KEY }
+    {
+      name: A11Y_STORAGE_KEY,
+      partialize: (state): AccessibilityPreferences => ({
+        fontScale: state.fontScale,
+        letterSpacing: state.letterSpacing,
+        lineHeight: state.lineHeight,
+        highContrast: state.highContrast,
+        invertedContrast: state.invertedContrast,
+        grayscale: state.grayscale,
+        colorBlindMode: state.colorBlindMode,
+        highlightLinks: state.highlightLinks,
+        strongFocus: state.strongFocus,
+        largeCursor: state.largeCursor,
+        readingMask: state.readingMask,
+        readingGuide: state.readingGuide,
+        pauseAnimations: state.pauseAnimations,
+        screenReaderMode: state.screenReaderMode,
+        dyslexiaMode: state.dyslexiaMode,
+        calmMode: state.calmMode,
+        simplifiedUI: state.simplifiedUI,
+        reduceVisualNotifications: state.reduceVisualNotifications,
+        motorMode: state.motorMode,
+        cognitiveMode: state.cognitiveMode,
+        visualAlerts: state.visualAlerts,
+        librasEnabled: state.librasEnabled,
+        locale: state.locale,
+      }),
+    }
   )
 );
 

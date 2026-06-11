@@ -31,7 +31,7 @@ export async function assertEmailAvailable(email: string, ctx?: { ip?: string; u
   const exists = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
   if (exists) {
     await logDuplicateAttempt({ field: "email", ip: ctx?.ip, userAgent: ctx?.userAgent });
-    throw new AppError(USER_MESSAGES.EMAIL_DUPLICATE, 409, "EMAIL_DUPLICATE");
+    throw new AppError(USER_MESSAGES.USER_ALREADY_REGISTERED, 409, "EMAIL_DUPLICATE");
   }
 }
 
@@ -58,7 +58,7 @@ export async function assertCpfAvailable(cpf: string, ctx?: { ip?: string; userA
   ]);
   if (user || ong || sp) {
     await logDuplicateAttempt({ field: "cpf", ip: ctx?.ip, userAgent: ctx?.userAgent });
-    throw new AppError(ctx?.message ?? USER_MESSAGES.CPF_DUPLICATE, 409, "CPF_DUPLICATE");
+    throw new AppError(USER_MESSAGES.USER_ALREADY_REGISTERED, 409, "CPF_DUPLICATE");
   }
 }
 
@@ -73,7 +73,7 @@ export async function assertCnpjAvailable(cnpj: string, ctx?: { ip?: string; use
   ]);
   if (clinic || petshop || seller || ong || sp) {
     await logDuplicateAttempt({ field: "cnpj", ip: ctx?.ip, userAgent: ctx?.userAgent });
-    throw new AppError(ctx?.message ?? USER_MESSAGES.CNPJ_DUPLICATE, 409, "CNPJ_DUPLICATE");
+    throw new AppError(USER_MESSAGES.USER_ALREADY_REGISTERED, 409, "CNPJ_DUPLICATE");
   }
 }
 

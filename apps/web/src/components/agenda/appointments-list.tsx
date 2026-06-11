@@ -142,7 +142,7 @@ export function AppointmentsList() {
       ) : items.length === 0 ? (
         <Card className="card-premium">
           <CardContent className="p-8 text-center text-sm text-ecopet-gray">
-            Nenhum agendamento {STATUS_LABELS[tab].toLowerCase()} encontrado.
+            Você ainda não realizou agendamentos.
           </CardContent>
         </Card>
       ) : (

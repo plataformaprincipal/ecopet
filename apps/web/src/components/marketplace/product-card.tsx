@@ -24,7 +24,7 @@ export function ProductCard({ product, compact }: ProductCardProps) {
   const comparing = isInCompare("product", product.id);
 
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-ecopet-gray/10 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg dark:bg-white/5">
+    <article className="group relative flex flex-col overflow-hidden rounded-[20px] border border-ecopet-gray/10 bg-white shadow-[var(--shadow-premium)] transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-premium-lg)] dark:bg-white/5">
       <Link href={`/marketplace/produto/${product.id}`} className="relative block aspect-square overflow-hidden bg-gray-100">
         <Image src={product.images[0]} alt={product.name} fill className="object-cover transition-transform group-hover:scale-105" sizes="(max-width:768px) 50vw, 25vw" />
         <div className="absolute left-2 top-2 flex flex-wrap gap-1">

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Eye, EyeOff } from "lucide-react";
 import { EcoPetLogo } from "@/components/brand/ecopet-logo";
@@ -11,10 +11,13 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "@/lib/api";
 import { useAppStore } from "@/store/app-store";
+import { dashboardPathForRole } from "@/lib/auth/routes";
 import { useTranslation } from "@/providers/i18n-provider";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl");
   const setApiToken = useAppStore((s) => s.setApiToken);
   const { t } = useTranslation();
   const [identifier, setIdentifier] = useState("");
@@ -46,12 +49,14 @@ export default function LoginPage() {
 
       if (res.bootstrapMode || res.redirectTo === "/gestor/ativacao") {
         router.push("/gestor/ativacao");
+      } else if (callbackUrl && callbackUrl.startsWith("/")) {
+        router.push(callbackUrl);
       } else if (res.redirectTo) {
         router.push(res.redirectTo);
       } else if (res.user.role === "GESTOR" || res.user.role === "ADMIN") {
         router.push(res.user.mustChangePassword || res.user.firstLoginRequired ? "/gestor/alterar-senha" : "/gestor");
       } else {
-        router.push("/dashboard");
+        router.push(dashboardPathForRole(res.user.role));
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao entrar");

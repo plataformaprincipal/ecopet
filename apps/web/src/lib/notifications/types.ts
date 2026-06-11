@@ -35,4 +35,5 @@ export interface AiSummary {
   headline: string;
   insights: AiSummaryInsight[];
   generatedAt: string;
+  demo?: boolean;
 }

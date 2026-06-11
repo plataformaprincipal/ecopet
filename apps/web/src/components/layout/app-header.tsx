@@ -13,7 +13,7 @@ export function AppHeader({ title }: { title?: string }) {
   const { t } = useTranslation();
 
   return (
-    <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-ecopet-gray/10 bg-white/80 px-4 backdrop-blur-md dark:border-white/10 dark:bg-[#0f1419]/80 lg:px-8">
+    <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-ecopet-gray/10 bg-white/90 px-4 backdrop-blur-xl dark:border-white/10 dark:bg-[#0a0d10]/90 lg:px-8">
       {title && (
         <h1 className="font-display text-lg font-bold text-ecopet-dark dark:text-white lg:text-xl">
           {title}

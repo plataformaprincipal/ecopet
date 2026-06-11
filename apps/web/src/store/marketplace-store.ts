@@ -57,12 +57,12 @@ export const useMarketplaceStore = create<MarketplaceState>()(
   persist(
     (set, get) => ({
       cart: [],
-      favoriteProducts: new Set(["prod1", "prod3"]),
-      favoriteServices: new Set(["srv1"]),
-      favoritePartners: new Set(["mp1"]),
+      favoriteProducts: new Set<string>(),
+      favoriteServices: new Set<string>(),
+      favoritePartners: new Set<string>(),
       compareItems: [],
       filters: { ...DEFAULT_FILTERS },
-      searchHistory: ["ração golden", "banho e tosa", "veterinário"],
+      searchHistory: [],
       cartOpen: false,
       searchPanelOpen: false,
       aiModalOpen: false,
@@ -203,7 +203,7 @@ export const useMarketplaceStore = create<MarketplaceState>()(
       },
     }),
     {
-      name: "ecopet-marketplace",
+      name: "ecopet-marketplace-anonymous",
       partialize: (s) => ({
         cart: s.cart,
         favoriteProducts: [...s.favoriteProducts],

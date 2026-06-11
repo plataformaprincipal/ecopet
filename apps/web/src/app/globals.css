@@ -14,9 +14,13 @@
   --color-ecopet-surface: #ffffff;
   --color-ecopet-dark-bg: #1a1f1a;
   --color-ecopet-dark-card: #252b25;
-  --font-sans: var(--font-inter), system-ui, sans-serif;
-  --font-display: var(--font-montserrat), system-ui, sans-serif;
+  --font-sans: var(--font-inter), "SF Pro Display", system-ui, sans-serif;
+  --font-display: var(--font-jakarta), var(--font-inter), "SF Pro Display", system-ui, sans-serif;
   --radius-ecopet: 16px;
+  --radius-input: 12px;
+  --radius-button: 12px;
+  --shadow-premium: 0 1px 3px rgba(0, 59, 22, 0.06), 0 8px 24px rgba(0, 59, 22, 0.08);
+  --shadow-premium-lg: 0 4px 6px rgba(0, 59, 22, 0.05), 0 20px 48px rgba(0, 59, 22, 0.12);
 }
 
 @layer base {
@@ -71,8 +75,11 @@
     @apply border border-white/10 bg-ecopet-dark/90 backdrop-blur-xl;
   }
   .card-premium {
-    @apply rounded-[16px] border border-ecopet-gray/10 bg-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg dark:border-white/10 dark:bg-ecopet-dark-card;
+    @apply rounded-[20px] border border-ecopet-gray/10 bg-white shadow-[var(--shadow-premium)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[var(--shadow-premium-lg)] dark:border-white/10 dark:bg-ecopet-dark-card;
   }
+  .shadow-premium { box-shadow: var(--shadow-premium); }
+  .shadow-premium-lg { box-shadow: var(--shadow-premium-lg); }
+  .animate-fade-in { animation: fade-in 0.4s ease-out both; }
   .gradient-ecopet {
     @apply bg-gradient-to-br from-ecopet-dark via-ecopet-green to-ecopet-dark;
   }
@@ -106,6 +113,11 @@
     white-space: nowrap;
     border-width: 0;
   }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes ecopet-pulse {

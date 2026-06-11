@@ -8,6 +8,7 @@ export const USER_MESSAGES = {
   PHONE_DUPLICATE: "Este telefone já está vinculado a uma conta.",
   USER_NOT_FOUND: "Usuário não cadastrado. Verifique os dados informados ou crie uma conta.",
   USER_OR_PASSWORD_INCORRECT: "Usuário ou senha incorretos.",
+  USER_ALREADY_REGISTERED: "Este usuário já está cadastrado. Faça login ou recupere sua senha.",
   ACCOUNT_UNAVAILABLE: (reason: string) =>
     `Sua conta existe, mas o acesso está temporariamente indisponível. Motivo: ${reason}. Entre em contato com o suporte da ECOPET.`,
   VALIDATION: "Alguns campos precisam ser corrigidos antes de continuar.",

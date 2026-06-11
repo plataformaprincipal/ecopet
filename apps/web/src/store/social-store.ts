@@ -19,17 +19,20 @@ interface SocialState {
   activeConversationId: string | null;
   loading: boolean;
   loaded: boolean;
+  feedIsDemo: boolean;
+  conversationsIsDemo: boolean;
   likedIds: Set<string>;
   savedIds: Set<string>;
   followingIds: Set<string>;
   expandedCommentsPostId: string | null;
   pollVotes: Record<string, string>;
 
-  loadFeed: () => Promise<void>;
+  resetForUser: () => void;
+  loadFeed: (token?: string) => Promise<void>;
   loadStories: () => Promise<void>;
   loadReels: () => Promise<void>;
-  loadConversations: () => Promise<void>;
-  loadMessages: (conversationId: string) => Promise<void>;
+  loadConversations: (token?: string, userId?: string) => Promise<void>;
+  loadMessages: (conversationId: string, token?: string, userId?: string) => Promise<void>;
   setActiveConversation: (id: string | null) => void;
   toggleLike: (postId: string) => void;
   toggleSave: (postId: string) => void;
@@ -51,22 +54,34 @@ export const useSocialStore = create<SocialState>((set, get) => ({
   activeConversationId: null,
   loading: false,
   loaded: false,
+  feedIsDemo: false,
+  conversationsIsDemo: false,
   likedIds: new Set(),
-  savedIds: new Set(["post1", "post4", "post6"]),
-  followingIds: new Set(["p3", "p6"]),
+  savedIds: new Set(),
+  followingIds: new Set(),
   expandedCommentsPostId: null,
   pollVotes: {},
 
-  loadFeed: async () => {
+  resetForUser: () =>
+    set({
+      posts: [],
+      conversations: [],
+      messages: [],
+      loaded: false,
+      likedIds: new Set(),
+      savedIds: new Set(),
+      followingIds: new Set(),
+      feedIsDemo: false,
+      conversationsIsDemo: false,
+    }),
+
+  loadFeed: async (token) => {
     if (get().loading) return;
     set({ loading: true });
     try {
-      const [posts] = await Promise.all([
-        fetchSocialFeed(),
-        fetchAiSuggestions(),
-        fetchAiCommunity(),
-      ]);
-      set({ posts, loaded: true });
+      const { posts, isDemo } = await fetchSocialFeed(token);
+      await Promise.all([fetchAiSuggestions(), fetchAiCommunity()]);
+      set({ posts, loaded: true, feedIsDemo: isDemo });
     } finally {
       set({ loading: false });
     }
@@ -82,14 +97,14 @@ export const useSocialStore = create<SocialState>((set, get) => ({
     set({ reels });
   },
 
-  loadConversations: async () => {
-    const conversations = await fetchConversations();
-    set({ conversations });
+  loadConversations: async (token, userId) => {
+    const { items, isDemo } = await fetchConversations(token, userId);
+    set({ conversations: items, conversationsIsDemo: isDemo });
   },
 
-  loadMessages: async (conversationId) => {
-    const messages = await fetchMessages(conversationId);
-    set({ messages, activeConversationId: conversationId });
+  loadMessages: async (conversationId, token, userId) => {
+    const { items } = await fetchMessages(conversationId, token, userId);
+    set({ messages: items, activeConversationId: conversationId });
   },
 
   setActiveConversation: (id) => set({ activeConversationId: id }),

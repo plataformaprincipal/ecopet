@@ -6,6 +6,7 @@ import { DEFAULT_PREFERENCES } from "@/lib/accessibility/types";
 import type { AccessibilityPreferences } from "@/lib/accessibility/types";
 import { ReadingAssist } from "@/components/accessibility/reading-assist";
 import { VLibrasWidget } from "@/components/accessibility/vlibras-widget";
+import { BraillePanel } from "@/components/accessibility/braille-panel";
 
 const CLASS_MAP: Record<string, keyof AccessibilityPreferences> = {
   "a11y-high-contrast": "highContrast",
@@ -53,6 +54,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
       {children}
       <ReadingAssist />
       <VLibrasWidget />
+      <BraillePanel />
     </>
   );
 }
