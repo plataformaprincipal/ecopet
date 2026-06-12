@@ -14,8 +14,19 @@ import {
   verifyCode,
   sendPasswordChangeCodeEmail,
   sendInternalUserInviteEmail,
+  sendPasswordResetEmail,
 } from "./email-service.js";
 import { AppError, USER_MESSAGES, accountUnavailableMessage } from "../lib/app-errors.js";
+import {
+  FORGOT_PASSWORD_MESSAGE,
+  RESET_TOKEN_EXPIRY_MS,
+  RESET_RATE_LIMITS,
+  hashResetToken,
+  generateResetToken,
+  validateResetPasswordFields,
+  resolveAppUrl,
+} from "../lib/password-reset-utils.js";
+import { resolveEmailProvider } from "./email-providers.js";
 
 const JWT_SECRET = process.env.JWT_SECRET || "ecopet-dev-secret";
 const MAX_ATTEMPTS = 5;
@@ -423,54 +434,96 @@ export async function updateProfile(params: {
   };
 }
 
-export async function requestPasswordReset(email: string) {
+export async function requestPasswordReset(
+  email: string,
+  ctx: { ip?: string; userAgent?: string } = {}
+) {
+  const normalizedEmail = email.toLowerCase().trim();
+  const genericResponse = { message: FORGOT_PASSWORD_MESSAGE, sent: true as const };
+
+  const hourAgo = new Date(Date.now() - 60 * 60 * 1000);
+
+  if (ctx.ip) {
+    const ipAttempts = await prisma.passwordResetToken.count({
+      where: { ipAddress: ctx.ip, createdAt: { gt: hourAgo } },
+    });
+    if (ipAttempts >= RESET_RATE_LIMITS.maxPerIpPerHour) {
+      await prisma.securityEvent.create({
+        data: {
+          eventType: "PASSWORD_RESET_RATE_LIMIT_IP",
+          severity: "warning",
+          ip: ctx.ip,
+          metadata: { email: normalizedEmail },
+        },
+      });
+      return genericResponse;
+    }
+  }
+
   const { blockBootstrapPasswordReset } = await import("./bootstrap-service.js");
-  const blocked = await blockBootstrapPasswordReset(email);
+  const blocked = await blockBootstrapPasswordReset(normalizedEmail);
   if (blocked.blocked) {
-    throw new AppError(blocked.message ?? "Recuperação não disponível para esta conta.", 403, "RESET_BLOCKED");
+    return genericResponse;
   }
 
-  const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+  const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
   if (!user || user.isBootstrapUser) {
-    throw new AppError(
-      "E-mail não encontrado. Verifique os dados informados ou crie uma conta.",
-      404,
-      "EMAIL_NOT_FOUND"
-    );
+    return genericResponse;
   }
 
-  await prisma.passwordReset.updateMany({
-    where: { userId: user.id, used: false },
-    data: { used: true },
+  const emailAttempts = await prisma.passwordResetToken.count({
+    where: { userId: user.id, createdAt: { gt: hourAgo } },
+  });
+  if (emailAttempts >= RESET_RATE_LIMITS.maxPerEmailPerHour) {
+    await prisma.securityEvent.create({
+      data: {
+        userId: user.id,
+        eventType: "PASSWORD_RESET_RATE_LIMIT_EMAIL",
+        severity: "warning",
+        ip: ctx.ip,
+        metadata: { email: normalizedEmail },
+      },
+    });
+    return genericResponse;
+  }
+
+  await prisma.passwordResetToken.updateMany({
+    where: { userId: user.id, usedAt: null },
+    data: { usedAt: new Date() },
   });
 
-  const token = crypto.randomBytes(32).toString("hex");
-  await prisma.passwordReset.create({
-    data: { userId: user.id, token, expiresAt: new Date(Date.now() + 60 * 60 * 1000) },
+  const token = generateResetToken();
+  const tokenHash = hashResetToken(token);
+
+  await prisma.passwordResetToken.create({
+    data: {
+      userId: user.id,
+      tokenHash,
+      expiresAt: new Date(Date.now() + RESET_TOKEN_EXPIRY_MS),
+      ipAddress: ctx.ip,
+      userAgent: ctx.userAgent,
+    },
   });
 
-  const webUrl = process.env.NEXT_PUBLIC_WEB_URL || process.env.WEB_URL || "http://localhost:3000";
-  const resetLink = `${webUrl}/redefinir-senha?token=${token}`;
+  const resetLink = `${resolveAppUrl()}/redefinir-senha?token=${token}`;
 
-  const { sendEmail } = await import("./email-service.js");
-  await sendEmail({
-    to: user.email,
-    subject: "Recuperação de senha ECOPET",
-    body: `Olá ${user.name},
-
-Recebemos uma solicitação para redefinir sua senha na ECOPET.
-
-Acesse o link abaixo para criar uma nova senha (válido por 1 hora):
-${resetLink}
-
-Se você não solicitou esta recuperação, ignore este e-mail. Sua senha permanecerá inalterada.
-
-Equipe ECOPET`,
-    metadata: { type: "password_reset", token: process.env.NODE_ENV === "development" ? token : undefined },
-  });
+  try {
+    await sendPasswordResetEmail({ email: user.email, resetLink });
+  } catch (err) {
+    await prisma.securityEvent.create({
+      data: {
+        userId: user.id,
+        eventType: "PASSWORD_RESET_EMAIL_FAILED",
+        severity: "error",
+        ip: ctx.ip,
+        metadata: { error: err instanceof Error ? err.message : "unknown" },
+      },
+    });
+    return genericResponse;
+  }
 
   await prisma.securityEvent.create({
-    data: { userId: user.id, eventType: "PASSWORD_RESET_REQUEST", severity: "info" },
+    data: { userId: user.id, eventType: "PASSWORD_RESET_REQUEST", severity: "info", ip: ctx.ip },
   });
 
   await createAuditLog({
@@ -478,58 +531,91 @@ Equipe ECOPET`,
     action: "CREATE",
     module: "auth",
     resource: "password_reset_request",
+    ip: ctx.ip,
     metadata: { email: user.email },
   });
 
-  return {
-    sent: true,
-    resetToken: process.env.NODE_ENV === "development" ? token : undefined,
-  };
+  const devToken =
+    process.env.NODE_ENV !== "production" && resolveEmailProvider() === "console" ? token : undefined;
+
+  return { ...genericResponse, resetToken: devToken };
 }
 
 export async function validateResetToken(token: string) {
   if (!token) return { valid: false as const, reason: "invalid" as const };
-  const reset = await prisma.passwordReset.findUnique({ where: { token } });
+  const tokenHash = hashResetToken(token);
+  const reset = await prisma.passwordResetToken.findUnique({ where: { tokenHash } });
   if (!reset) return { valid: false as const, reason: "invalid" as const };
-  if (reset.used) return { valid: false as const, reason: "used" as const };
+  if (reset.usedAt) return { valid: false as const, reason: "used" as const };
   if (reset.expiresAt < new Date()) return { valid: false as const, reason: "expired" as const };
   return { valid: true as const };
 }
 
-export async function resetPassword(token: string, newPassword: string, code?: string) {
-  const reset = await prisma.passwordReset.findUnique({ where: { token } });
+export async function resetPassword(
+  token: string,
+  novaSenha: string,
+  confirmarNovaSenha: string,
+  ctx: { ip?: string } = {}
+) {
+  if (ctx.ip) {
+    const hourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const ipAttempts = await prisma.securityEvent.count({
+      where: {
+        eventType: "PASSWORD_RESET_ATTEMPT",
+        ip: ctx.ip,
+        createdAt: { gt: hourAgo },
+      },
+    });
+    if (ipAttempts >= RESET_RATE_LIMITS.maxResetAttemptsPerIpPerHour) {
+      throw new AppError("Muitas tentativas. Aguarde e tente novamente mais tarde.", 429, "RATE_LIMIT");
+    }
+  }
+
+  await prisma.securityEvent.create({
+    data: {
+      eventType: "PASSWORD_RESET_ATTEMPT",
+      severity: "info",
+      ip: ctx.ip,
+    },
+  });
+
+  const passwordCheck = validateResetPasswordFields(novaSenha, confirmarNovaSenha);
+  if (!passwordCheck.valid) {
+    throw new AppError(passwordCheck.error, 400, passwordCheck.code);
+  }
+
+  const tokenHash = hashResetToken(token);
+  const reset = await prisma.passwordResetToken.findUnique({ where: { tokenHash } });
   if (!reset) {
     throw new AppError("Link inválido. Solicite uma nova recuperação de senha.", 400, "INVALID_TOKEN");
   }
-  if (reset.used) {
+  if (reset.usedAt) {
     throw new AppError("Este link já foi utilizado. Solicite uma nova recuperação de senha.", 400, "TOKEN_USED");
   }
   if (reset.expiresAt < new Date()) {
     throw new AppError("Link expirado. Solicite uma nova recuperação de senha.", 400, "TOKEN_EXPIRED");
   }
 
-  if (code) {
-    const ok = await verifyCode(reset.userId, "PASSWORD_RESET", code);
-    if (!ok) {
-      throw new AppError("Código inválido ou expirado.", 400, "INVALID_CODE");
-    }
-  }
-
-  const strength = validatePasswordStrength(newPassword);
-  if (!strength.valid) {
-    throw new AppError(`Senha fraca: ${strength.errors.join(", ")}`, 400, "WEAK_PASSWORD");
-  }
-
-  const passwordHash = await bcrypt.hash(newPassword, 12);
+  const passwordHash = await bcrypt.hash(novaSenha, 12);
   await prisma.$transaction([
     prisma.user.update({
       where: { id: reset.userId },
-      data: { passwordHash, mustChangePassword: false, firstLoginRequired: false, passwordChangedAt: new Date(), failedLoginAttempts: 0, lockedUntil: null },
+      data: {
+        passwordHash,
+        mustChangePassword: false,
+        firstLoginRequired: false,
+        passwordChangedAt: new Date(),
+        failedLoginAttempts: 0,
+        lockedUntil: null,
+      },
     }),
-    prisma.passwordReset.update({ where: { id: reset.id }, data: { used: true } }),
-    prisma.passwordReset.updateMany({
-      where: { userId: reset.userId, used: false, id: { not: reset.id } },
-      data: { used: true },
+    prisma.passwordResetToken.update({
+      where: { id: reset.id },
+      data: { usedAt: new Date() },
+    }),
+    prisma.passwordResetToken.updateMany({
+      where: { userId: reset.userId, usedAt: null, id: { not: reset.id } },
+      data: { usedAt: new Date() },
     }),
   ]);
 
@@ -538,11 +624,12 @@ export async function resetPassword(token: string, newPassword: string, code?: s
     action: "UPDATE",
     module: "auth",
     resource: "password",
+    ip: ctx.ip,
     metadata: { method: "password_reset_link" },
   });
 
   await prisma.securityEvent.create({
-    data: { userId: reset.userId, eventType: "PASSWORD_RESET_SUCCESS", severity: "info" },
+    data: { userId: reset.userId, eventType: "PASSWORD_RESET_SUCCESS", severity: "info", ip: ctx.ip },
   });
 
   return { success: true, message: "Senha redefinida com sucesso." };

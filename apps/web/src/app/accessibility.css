@@ -268,7 +268,6 @@ html.a11y-colorblind body [data-status]::after {
   z-index: 9990;
 }
 
-/* VLibras slot */
 html[dir="rtl"] body {
   direction: rtl;
   text-align: right;
@@ -279,31 +278,38 @@ html[dir="rtl"] .a11y-toolbar-root {
   right: 1rem;
 }
 
-/* VLibras — avatar oficial gov.br; oculto até Libras ser ativada no painel ECOPET */
-.a11y-vlibras-slot {
-  position: fixed;
-  z-index: 55;
-  pointer-events: none;
+/* VLibras — visibilidade e empilhamento apenas; layout oficial fica com o gov.br */
+[vw],
+#ecopet-vlibras-root {
+  direction: ltr !important;
+  unicode-bidi: isolate;
 }
 
-.a11y-vlibras-slot:not(.a11y-vlibras-hidden) {
-  bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
-  right: 1rem;
-  pointer-events: auto;
-}
-
-@media (min-width: 1024px) {
-  .a11y-vlibras-slot:not(.a11y-vlibras-hidden) {
-    bottom: 5.5rem;
-    right: 1.25rem;
-  }
-}
-
-.a11y-vlibras-hidden {
+[vw]:not(.ecopet-vlibras-active),
+#ecopet-vlibras-root:not(.ecopet-vlibras-active) {
+  display: none !important;
   visibility: hidden !important;
   opacity: 0 !important;
   pointer-events: none !important;
-  width: 0 !important;
-  height: 0 !important;
-  overflow: hidden !important;
+}
+
+[vw].ecopet-vlibras-active,
+#ecopet-vlibras-root.ecopet-vlibras-active {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  overflow: visible !important;
+  /* Espaço acima da FAB/barra de acessibilidade EcoPet — sem alterar filhos */
+  margin-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+/* Garante que layout EcoPet não crie clipping em overlays fixos (VLibras, toolbar, chat) */
+html,
+body {
+  overflow-x: visible;
+  overflow-y: auto;
+}
+
+#main-content {
+  overflow: visible;
 }

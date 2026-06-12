@@ -12,10 +12,11 @@ export async function sendEmail(params: {
   to: string;
   subject: string;
   body: string;
+  html?: string;
   metadata?: Record<string, unknown>;
 }) {
   const result = await dispatchEmail(
-    { to: params.to, subject: params.subject, body: params.body },
+    { to: params.to, subject: params.subject, body: params.body, html: params.html },
     params.metadata
   );
 
@@ -147,5 +148,22 @@ Equipe ECOPET`;
     subject: "Convite — Equipe Gestor ECOPET",
     body,
     metadata: { type: "internal_user_invite", username: params.username },
+  });
+}
+
+export async function sendPasswordResetEmail(params: { email: string; resetLink: string }) {
+  const { buildPasswordResetEmailBody, buildPasswordResetEmailHtml } = await import(
+    "../lib/password-reset-utils.js"
+  );
+
+  const body = buildPasswordResetEmailBody(params.resetLink);
+  const html = buildPasswordResetEmailHtml(params.resetLink);
+
+  return sendEmail({
+    to: params.email,
+    subject: "Redefinição de senha — EcoPet",
+    body,
+    html,
+    metadata: { type: "password_reset" },
   });
 }

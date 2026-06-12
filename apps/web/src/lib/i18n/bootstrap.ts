@@ -1,11 +1,15 @@
-import type { LocaleCode } from "./config";
-import { DEFAULT_LOCALE } from "./config";
+import type { LocaleCode } from "@/i18n/locales/registry";
+import { DEFAULT_LOCALE } from "@/i18n/locales/registry";
+import { applyDocumentDirection } from "@/i18n/rtl";
+import { needsAutoTranslate } from "@/i18n/fallback";
 import type { TranslationKey } from "./types";
-import { resolveStaticMessage, getCachedDynamic, needsAutoTranslate } from "./resolver";
-import { PRIORITY_TRANSLATION_KEYS, MAX_PREFETCH_PER_SESSION } from "./constants";
-import { prefetchLocaleBundle } from "./translation-client";
+import { resolveStaticMessage, getCachedDynamic } from "./resolver";
+import { PRIORITY_TRANSLATION_KEYS } from "./constants";
+import { prefetchLocaleBundle, prefetchFullLocaleBundle } from "@/i18n/autoTranslate/client";
+import { SOURCE_KEYS } from "@/i18n/translations/static";
 
 let prefetchCount = 0;
+const MAX_PREFETCH_SESSIONS = 3;
 
 function scheduleIdle(task: () => void) {
   if (typeof window === "undefined") return;
@@ -16,41 +20,42 @@ function scheduleIdle(task: () => void) {
   }
 }
 
-/** Aplica locale no DOM — síncrono, zero rede */
+/** Aplica locale e direção no DOM — síncrono, zero rede */
 export function applyDocumentLocale(locale: LocaleCode) {
   if (typeof document === "undefined") return;
   document.documentElement.lang = locale;
-  document.documentElement.dir = locale === "ar" ? "rtl" : "ltr";
+  applyDocumentDirection(locale);
 }
 
 /**
- * Bootstrap leve: NUNCA dispara batch completo automaticamente.
- * Prefetch idle opcional só das chaves prioritárias, com limite por sessão.
+ * Bootstrap: prefetch idle das chaves prioritárias e, em seguida, bundle completo
+ * para idiomas sem tradução local (auto-tradução + cache).
  */
 export function bootstrapLocale(locale: LocaleCode): void {
   applyDocumentLocale(locale);
 
   if (!needsAutoTranslate(locale)) return;
-  if (prefetchCount >= MAX_PREFETCH_PER_SESSION) return;
-
-  const allCached = PRIORITY_TRANSLATION_KEYS.every((k) => getCachedDynamic(locale, k));
-  if (allCached) return;
+  if (prefetchCount >= MAX_PREFETCH_SESSIONS) return;
 
   scheduleIdle(() => {
-    if (prefetchCount >= MAX_PREFETCH_PER_SESSION) return;
+    if (prefetchCount >= MAX_PREFETCH_SESSIONS) return;
 
-    const batch: Record<string, string> = {};
+    const priorityBatch: Record<string, string> = {};
     for (const key of PRIORITY_TRANSLATION_KEYS) {
       if (getCachedDynamic(locale, key)) continue;
-      const source = resolveStaticMessage(DEFAULT_LOCALE, key as TranslationKey);
-      if (source) batch[key] = source;
+      const source = resolveStaticMessage(DEFAULT_LOCALE, key);
+      if (source) priorityBatch[key] = source;
     }
 
-    if (Object.keys(batch).length === 0) return;
-
-    prefetchCount += 1;
-    prefetchLocaleBundle(locale, batch).catch(() => {
-      /* fallback: cadeia estática pt → en permanece ativa */
-    });
+    if (Object.keys(priorityBatch).length > 0) {
+      prefetchCount += 1;
+      prefetchLocaleBundle(locale, priorityBatch).then(() => {
+        scheduleIdle(() => {
+          prefetchFullLocaleBundle(locale, SOURCE_KEYS).catch(() => undefined);
+        });
+      }).catch(() => undefined);
+    } else {
+      prefetchFullLocaleBundle(locale, SOURCE_KEYS).catch(() => undefined);
+    }
   });
 }

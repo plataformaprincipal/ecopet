@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useAccessibilityStore } from "@/store/accessibility-store";
+import { A11Y_STORAGE_KEY } from "@/lib/accessibility/types";
 import {
   applyDocumentLocale,
   bootstrapLocale,
@@ -11,8 +12,6 @@ import {
 import type { LocaleCode } from "@/lib/i18n/config";
 import type { TranslationKey } from "@/lib/i18n/types";
 
-const LOCALE_INIT_KEY = "ecopet-locale-detected";
-
 interface I18nContextValue {
   t: (key: TranslationKey, params?: Record<string, string>) => string;
   locale: LocaleCode;
@@ -20,7 +19,21 @@ interface I18nContextValue {
   setLocale: (locale: LocaleCode) => void;
 }
 
+const LOCALE_INIT_KEY = "ecopet-locale-detected";
+
 const I18nContext = createContext<I18nContextValue | null>(null);
+
+function getPersistedLocale(): LocaleCode | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(A11Y_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { state?: { locale?: LocaleCode } };
+    return parsed.state?.locale ?? null;
+  } catch {
+    return null;
+  }
+}
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
   const locale = useAccessibilityStore((s) => s.locale);
@@ -30,17 +43,33 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (!localStorage.getItem(LOCALE_INIT_KEY)) {
-      localStorage.setItem(LOCALE_INIT_KEY, "1");
-      setLocaleStore(detectBrowserLocale());
+
+    const initLocale = () => {
+      const saved = getPersistedLocale();
+      const isFirstEverVisit = !localStorage.getItem(LOCALE_INIT_KEY);
+
+      if (isFirstEverVisit) {
+        localStorage.setItem(LOCALE_INIT_KEY, "1");
+        setLocaleStore(detectBrowserLocale());
+      } else if (saved) {
+        setLocaleStore(saved);
+      }
+      setReady(true);
+    };
+
+    if (useAccessibilityStore.persist.hasHydrated()) {
+      initLocale();
+      return;
     }
-    setReady(true);
+
+    return useAccessibilityStore.persist.onFinishHydration(initLocale);
   }, [setLocaleStore]);
 
   useEffect(() => {
+    if (!ready) return;
     applyDocumentLocale(locale);
     bootstrapLocale(locale);
-  }, [locale]);
+  }, [locale, ready]);
 
   useEffect(() => {
     const onUpdate = () => bump((n) => n + 1);

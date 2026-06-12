@@ -4,25 +4,28 @@ import Link from "next/link";
 import { Phone, MessageCircle } from "lucide-react";
 import { EcoPetLogo } from "@/components/brand/ecopet-logo";
 import { useSupportChat } from "@/providers/support-chat-provider";
+import { useTranslation } from "@/providers/i18n-provider";
+import type { TranslationKey } from "@/lib/i18n/types";
 
 const PHONE = "(83) 99617-5215";
 const PHONE_TEL = "+5583996175215";
 const WHATSAPP_URL = `https://wa.me/5583996175215`;
 
-const NAV_LINKS = [
-  { href: "/inicio", label: "Início" },
-  { href: "/marketplace", label: "Marketplace" },
-  { href: "/social/explorar", label: "Rede Social" },
-  { href: "/marketplace/servicos", label: "Serviços" },
-  { href: "/agenda", label: "Agendamento" },
-  { href: "/meu-pet", label: "Cadastro de Pet" },
-  { href: "/perfil", label: "Perfil" },
-  { href: "/termos-de-uso", label: "Termos de Uso" },
-  { href: "/politica-de-privacidade", label: "Política de Privacidade" },
+const NAV_LINKS: { href: string; labelKey: TranslationKey }[] = [
+  { href: "/inicio", labelKey: "nav.home" },
+  { href: "/marketplace", labelKey: "nav.marketplace" },
+  { href: "/social/explorar", labelKey: "nav.socialNetwork" },
+  { href: "/marketplace/servicos", labelKey: "nav.services" },
+  { href: "/agenda", labelKey: "nav.scheduling" },
+  { href: "/meu-pet", labelKey: "nav.petRegistration" },
+  { href: "/perfil", labelKey: "nav.profile" },
+  { href: "/termos-de-uso", labelKey: "nav.termsOfUse" },
+  { href: "/politica-de-privacidade", labelKey: "nav.privacyPolicy" },
 ];
 
 export function EcopetFooter() {
   const { openChat, hasUnread } = useSupportChat();
+  const { t } = useTranslation();
 
   return (
     <footer className="border-t border-ecopet-gray/15 bg-[#003B16] text-white">
@@ -31,19 +34,19 @@ export function EcopetFooter() {
           <div className="lg:col-span-1">
             <EcoPetLogo href="/inicio" variant="dark" size="md" showText />
             <p className="mt-4 text-sm leading-relaxed text-white/75">
-              Ecossistema Inteligente para Pets, ONGs, Protetores, Parceiros e AgroPet.
+              {t("footer.tagline")}
             </p>
           </div>
 
           <div>
             <h3 className="font-display text-sm font-semibold uppercase tracking-wide text-ecopet-yellow">
-              Navegação
+              {t("common.navigation")}
             </h3>
             <ul className="mt-4 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-1">
               {NAV_LINKS.map((link) => (
                 <li key={link.href}>
                   <Link href={link.href} className="text-white/75 transition hover:text-white hover:underline">
-                    {link.label}
+                    {t(link.labelKey)}
                   </Link>
                 </li>
               ))}
@@ -52,11 +55,11 @@ export function EcopetFooter() {
 
           <div>
             <h3 className="font-display text-sm font-semibold uppercase tracking-wide text-ecopet-yellow">
-              Contato
+              {t("common.contact")}
             </h3>
             <ul className="mt-4 space-y-3 text-sm text-white/75">
               <li>
-                <span className="block text-xs uppercase tracking-wide text-white/50">Telefone</span>
+                <span className="block text-xs uppercase tracking-wide text-white/50">{t("common.phone")}</span>
                 <a href={`tel:${PHONE_TEL}`} className="inline-flex items-center gap-2 hover:text-white hover:underline">
                   <Phone className="h-4 w-4 text-ecopet-yellow" />
                   {PHONE}
@@ -81,12 +84,12 @@ export function EcopetFooter() {
                   className="inline-flex items-center gap-2 rounded-xl bg-ecopet-yellow px-4 py-2.5 text-sm font-semibold text-ecopet-dark transition hover:bg-ecopet-yellow/90"
                 >
                   <MessageCircle className="h-4 w-4" />
-                  Suporte
+                  {t("common.support")}
                   {hasUnread && (
-                    <span className="ml-1 h-2 w-2 rounded-full bg-red-500" aria-label="Nova mensagem" />
+                    <span className="ml-1 h-2 w-2 rounded-full bg-red-500" aria-label={t("footer.newMessage")} />
                   )}
                 </button>
-                <p className="mt-2 text-xs text-white/50">Chat interno com histórico e resposta da equipe.</p>
+                <p className="mt-2 text-xs text-white/50">{t("footer.chatHint")}</p>
               </li>
             </ul>
           </div>
@@ -96,13 +99,13 @@ export function EcopetFooter() {
               ECOPET
             </h3>
             <p className="mt-4 text-sm text-white/70">
-              Plataforma completa para tutores, parceiros, ONGs e AgroPet — marketplace, saúde animal, rede social e inteligência integrada.
+              {t("footer.about")}
             </p>
           </div>
         </div>
 
         <div className="mt-10 border-t border-white/10 pt-6 text-center text-xs text-white/50">
-          © {new Date().getFullYear()} ECOPET — Todos os direitos reservados.
+          {t("footer.copyright", { year: String(new Date().getFullYear()) })}
         </div>
       </div>
     </footer>

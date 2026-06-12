@@ -8,6 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { api } from "@/lib/api";
 import { ApiRequestError } from "@/lib/api-errors";
 
+const SUCCESS_MESSAGE =
+  "Se o e-mail estiver cadastrado, enviaremos instruções para redefinição da senha.";
+
 export default function RecuperarSenhaPage() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
@@ -20,14 +23,18 @@ export default function RecuperarSenhaPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await api<{ sent: boolean; resetToken?: string }>("/api/auth/forgot-password", {
+      const res = await api<{ message?: string; resetToken?: string }>("/api/auth/forgot-password", {
         method: "POST",
         body: JSON.stringify({ email }),
       });
       setSent(true);
       if (res.resetToken) setDevToken(res.resetToken);
     } catch (err) {
-      setError(err instanceof ApiRequestError ? err.message : "Não foi possível enviar o e-mail. Tente novamente.");
+      if (err instanceof ApiRequestError && (err.status ?? 0) >= 500) {
+        setError("Não foi possível processar sua solicitação. Tente novamente.");
+      } else {
+        setSent(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -37,14 +44,15 @@ export default function RecuperarSenhaPage() {
     <Card className="w-full max-w-md border-0 shadow-xl">
       <CardHeader>
         <CardTitle>Esqueci minha senha</CardTitle>
-        <CardDescription>Informe seu e-mail cadastrado para receber o link de redefinição</CardDescription>
+        <CardDescription>Informe seu e-mail para receber o link de redefinição</CardDescription>
       </CardHeader>
       <CardContent>
         {sent ? (
           <div className="space-y-3 text-sm">
-            <p className="font-semibold text-ecopet-green">
-              Enviamos um link de recuperação para o e-mail informado. Verifique sua caixa de entrada e spam.
+            <p className="font-semibold text-ecopet-green" role="status">
+              {SUCCESS_MESSAGE}
             </p>
+            <p className="text-ecopet-gray">Verifique sua caixa de entrada e a pasta de spam.</p>
             {devToken && (
               <p className="rounded-lg bg-ecopet-yellow/10 p-3 text-xs break-all">
                 Dev: acesse{" "}
@@ -76,7 +84,7 @@ export default function RecuperarSenhaPage() {
               </p>
             )}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Enviando..." : "Enviar link de recuperação"}
+              {loading ? "Enviando..." : "Enviar instruções"}
             </Button>
           </form>
         )}

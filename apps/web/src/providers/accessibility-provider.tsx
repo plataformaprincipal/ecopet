@@ -7,6 +7,8 @@ import type { AccessibilityPreferences } from "@/lib/accessibility/types";
 import { ReadingAssist } from "@/components/accessibility/reading-assist";
 import { VLibrasWidget } from "@/components/accessibility/vlibras-widget";
 import { BrailleMode } from "@/components/accessibility/braille-mode";
+import { applyDocumentDirection } from "@/i18n/rtl";
+import type { LocaleCode } from "@/i18n/locales/registry";
 
 const CLASS_MAP: Record<string, keyof AccessibilityPreferences> = {
   "a11y-high-contrast": "highContrast",
@@ -35,6 +37,7 @@ function applyPreferences(prefs: AccessibilityPreferences) {
   root.style.setProperty("--a11y-letter-spacing", String(prefs.letterSpacing));
   root.style.setProperty("--a11y-line-height", String(prefs.lineHeight));
   root.lang = prefs.locale;
+  applyDocumentDirection(prefs.locale as LocaleCode);
 
   Object.entries(CLASS_MAP).forEach(([className, key]) => {
     root.classList.toggle(className, Boolean(prefs[key]));

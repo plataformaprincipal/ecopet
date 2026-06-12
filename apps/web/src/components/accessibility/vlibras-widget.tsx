@@ -1,86 +1,211 @@
 "use client";
 
+
+
 import { useEffect, useRef, useState } from "react";
+
+import { createPortal } from "react-dom";
+
 import { cn } from "@/lib/utils";
+
 import { useAccessibilityStore } from "@/store/accessibility-store";
-import { ensureVLibras } from "@/lib/accessibility/vlibras-loader";
 
-function mountOfficialStructure(container: HTMLElement) {
-  if (container.querySelector("[vw]")) return;
+import {
 
-  const root = document.createElement("div");
+  ensureVLibras,
+
+  hideVLibras,
+
+  resetVLibrasWidget,
+
+  VW_ACTIVE_CLASS,
+
+  VW_ROOT_ID,
+
+} from "@/lib/accessibility/vlibras-loader";
+
+
+
+/** Monta a estrutura HTML oficial uma única vez (imperativo) para o plugin gov.br não perder referências. */
+
+function ensureOfficialDom(root: HTMLElement): void {
+
+  if (root.dataset.vlibrasBuilt === "1") return;
+
+
+
+  root.id = VW_ROOT_ID;
+
   root.setAttribute("vw", "");
-  root.className = "enabled";
+
+  root.classList.add("enabled");
+
+
+
+  root.replaceChildren();
+
+
 
   const accessBtn = document.createElement("div");
+
   accessBtn.setAttribute("vw-access-button", "");
-  accessBtn.className = "active";
+
+  accessBtn.classList.add("active");
+
+
 
   const pluginWrapper = document.createElement("div");
+
   pluginWrapper.setAttribute("vw-plugin-wrapper", "");
 
+
+
   const topWrapper = document.createElement("div");
-  topWrapper.className = "vw-plugin-top-wrapper";
+
+  topWrapper.classList.add("vw-plugin-top-wrapper");
+
   pluginWrapper.appendChild(topWrapper);
 
-  root.appendChild(accessBtn);
-  root.appendChild(pluginWrapper);
-  container.appendChild(root);
+
+
+  root.append(accessBtn, pluginWrapper);
+
+  root.dataset.vlibrasBuilt = "1";
+
 }
+
+
 
 /**
- * Widget VLibras (gov.br) — controlado exclusivamente por `librasEnabled`
- * no painel de acessibilidade ECOPET. O avatar flutuante é o botão oficial do VLibras.
+
+ * Estrutura HTML oficial VLibras (gov.br) — montada no body via portal.
+
+ * Script: https://vlibras.gov.br/app/vlibras-plugin.js
+
+ * Widget: new window.VLibras.Widget("https://vlibras.gov.br/app")
+
  */
+
 export function VLibrasWidget() {
+
   const enabled = useAccessibilityStore((s) => s.librasEnabled);
+
   const setStatus = useAccessibilityStore((s) => s.setVlibrasStatus);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [hydrated, setHydrated] = useState(false);
 
-  useEffect(() => setHydrated(true), []);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  const [mounted, setMounted] = useState(false);
+
+
+
+  useEffect(() => setMounted(true), []);
+
+
 
   useEffect(() => {
-    if (!hydrated || !containerRef.current) return;
-    mountOfficialStructure(containerRef.current);
-  }, [hydrated]);
+
+    if (!mounted || !rootRef.current) return;
+
+    ensureOfficialDom(rootRef.current);
+
+  }, [mounted]);
+
+
 
   useEffect(() => {
-    if (!hydrated) return;
+
+    if (!mounted || typeof window === "undefined") return;
+
+
 
     if (!enabled) {
+
+      hideVLibras();
+
       setStatus("idle");
+
       return;
+
     }
 
+
+
+    if (rootRef.current) {
+
+      ensureOfficialDom(rootRef.current);
+
+    }
+
+
+
     let cancelled = false;
+
     setStatus("loading");
 
+
+
     ensureVLibras()
+
       .then(() => {
+
         if (!cancelled) setStatus("ready");
+
       })
+
       .catch((err: unknown) => {
+
         console.error("[ECOPET VLibras]", err);
+
         if (!cancelled) setStatus("error");
+
       });
 
+
+
     return () => {
+
       cancelled = true;
+
     };
-  }, [enabled, hydrated, setStatus]);
 
-  if (!hydrated) return null;
+  }, [enabled, mounted, setStatus]);
 
-  return (
+
+
+  useEffect(() => {
+
+    return () => {
+
+      resetVLibrasWidget();
+
+    };
+
+  }, []);
+
+
+
+  if (!mounted) return null;
+
+
+
+  return createPortal(
+
     <div
-      ref={containerRef}
-      id="vlibras-root"
-      className={cn("a11y-vlibras-slot", !enabled && "a11y-vlibras-hidden")}
-      role="complementary"
-      aria-label="Tradutor VLibras"
+
+      ref={rootRef}
+
+      className={cn("enabled", enabled && VW_ACTIVE_CLASS)}
+
       aria-hidden={!enabled}
+
       suppressHydrationWarning
-    />
+
+    />,
+
+    document.body
+
   );
+
 }
+
+

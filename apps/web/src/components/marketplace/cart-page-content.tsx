@@ -11,8 +11,10 @@ import { EmptyState } from "./empty-state";
 import { useMarketplaceStore } from "@/store/marketplace-store";
 import { formatMpPrice } from "@/lib/marketplace/config";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/providers/i18n-provider";
 
 export function CartPageContent() {
+  const { t } = useTranslation();
   const { cart, cartSubtotal, discount, total, applyCoupon, coupon, clearCart } = useMarketplaceStore();
   const [couponInput, setCouponInput] = useState("");
   const [msg, setMsg] = useState("");
@@ -32,9 +34,9 @@ export function CartPageContent() {
     return (
       <EmptyState
         icon={ShoppingBag}
-        title="Seu carrinho está vazio"
-        description="Explore produtos e serviços para adicionar itens."
-        actionLabel="Continuar comprando"
+        title={t("common.emptyCart")}
+        description={t("marketplace.emptyCartDescription")}
+        actionLabel={t("common.continueShopping")}
         onAction={() => { window.location.href = "/marketplace"; }}
       />
     );

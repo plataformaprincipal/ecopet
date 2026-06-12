@@ -1,6 +1,13 @@
 /** Rotas e regras de acesso público/privado — ECOPET Web */
 
-export const AUTH_ROUTES = ["/login", "/cadastro", "/recuperar-senha", "/redefinir-senha"] as const;
+export const AUTH_ROUTES = [
+  "/login",
+  "/cadastro",
+  "/recuperar-senha",
+  "/redefinir-senha",
+  "/forgot-password",
+  "/reset-password",
+] as const;
 
 export const PUBLIC_EXACT = new Set([
   "/",
@@ -8,6 +15,8 @@ export const PUBLIC_EXACT = new Set([
   "/cadastro",
   "/recuperar-senha",
   "/redefinir-senha",
+  "/forgot-password",
+  "/reset-password",
   "/termos",
   "/termos-de-uso",
   "/privacidade",

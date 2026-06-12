@@ -28,6 +28,7 @@ import { todayIsoDate } from "@/lib/validation/documents";
 import { AddressByCepField, toAddressValue } from "@/components/address/address-by-cep-field";
 import { EcoPetLogo } from "@/components/brand/ecopet-logo";
 import { AlertCircle, ChevronDown } from "lucide-react";
+import { useTranslation } from "@/providers/i18n-provider";
 
 const CLINIC_SERVICES = [
   "Consultas", "Cirurgias", "Exames", "Internação", "Vacinas", "Emergência 24h", "Odontologia", "Dermatologia",
@@ -210,6 +211,7 @@ function DocumentUpload({
 export function RegistrationForm() {
   const router = useRouter();
   const setApiToken = useAppStore((s) => s.setApiToken);
+  const { t } = useTranslation();
   const [role, setRole] = useState<RegistrationRole>("TUTOR");
   const [values, setValues] = useState<FormValues>(() => getDefaultFormValues("TUTOR"));
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -304,15 +306,15 @@ export function RegistrationForm() {
         <div className="mb-4 flex justify-center">
           <EcoPetLogo variant="light" size="md" showText />
         </div>
-        <CardTitle>Criar conta ECOPET</CardTitle>
-        <CardDescription>Selecione seu tipo de conta — o formulário se adapta automaticamente</CardDescription>
+        <CardTitle>{t("auth.register.title")}</CardTitle>
+        <CardDescription>{t("auth.register.description")}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-5" noValidate>
           {/* Tipo de conta */}
           <div>
             <Label htmlFor="role" required>
-              Tipo de conta
+              {t("auth.register.accountType")}
             </Label>
             <div className="relative mt-1">
               <select
@@ -832,14 +834,14 @@ export function RegistrationForm() {
           )}
 
           <Button type="submit" className="w-full" disabled={loading || submitBlocked}>
-            {loading ? "Enviando cadastro..." : "Criar conta"}
+            {loading ? t("auth.register.submitting") : t("auth.register.submit")}
           </Button>
         </form>
 
         <p className="mt-6 text-center text-sm text-ecopet-gray">
-          Já tem conta?{" "}
+          {t("auth.register.hasAccount")}{" "}
           <Link href="/login" className="font-semibold text-ecopet-green hover:underline">
-            Entrar
+            {t("auth.login.submit")}
           </Link>
         </p>
       </CardContent>

@@ -433,7 +433,7 @@ model User {
   departmentId        String?
   sessions            UserSession[]
   loginLogs           LoginLog[]
-  passwordResets      PasswordReset[]
+  passwordResetTokens PasswordResetToken[]
   securityEvents      SecurityEvent[]
   gestorInvitesSent   GestorInvite[] @relation("InviteSender")
   platformDocuments   PlatformDocument[]
@@ -1614,16 +1614,20 @@ model UserSession {
   @@index([userId, active])
 }
 
-model PasswordReset {
-  id        String   @id @default(cuid())
-  userId    String
-  token     String   @unique
-  used      Boolean  @default(false)
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  ipAddress String?   @map("ip_address")
+  userAgent String?   @map("user_agent")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([token])
+  @@index([userId])
+  @@index([tokenHash])
+  @@map("password_reset_tokens")
 }
 
 model LoginLog {

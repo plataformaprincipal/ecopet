@@ -59,7 +59,7 @@ export default function LoginPage() {
         router.push(dashboardPathForRole(res.user.role));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao entrar");
+      setError(err instanceof Error ? err.message : t("common.loginError"));
     } finally {
       setLoading(false);
     }
@@ -77,7 +77,7 @@ export default function LoginPage() {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="login-identifier" className="text-sm font-medium">E-mail ou usuário</label>
+            <label htmlFor="login-identifier" className="text-sm font-medium">{t("auth.login.identifier")}</label>
             <Input
               id="login-identifier"
               type="text"
@@ -85,14 +85,14 @@ export default function LoginPage() {
               onChange={(e) => setIdentifier(e.target.value)}
               required
               autoComplete="username"
-              placeholder="email@exemplo.com ou gestorveras"
+              placeholder={t("auth.login.identifierPlaceholder")}
             />
           </div>
           <div>
             <label htmlFor="login-password" className="text-sm font-semibold">{t("auth.login.password")}</label>
             <div className="relative mt-1">
               <Input id="login-password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" className="pr-11" />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-ecopet-gray" aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}>
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-ecopet-gray" aria-label={showPassword ? t("common.hidePassword") : t("common.showPassword")}>
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
@@ -107,7 +107,7 @@ export default function LoginPage() {
         </div>
         <p className="mt-6 text-center text-sm text-ecopet-gray">
           {t("auth.login.noAccount")}{" "}
-          <Link href="/cadastro" className="font-semibold text-ecopet-green hover:underline">Cadastre-se</Link>
+          <Link href="/cadastro" className="font-semibold text-ecopet-green hover:underline">{t("auth.register.submit")}</Link>
         </p>
       </CardContent>
     </Card>

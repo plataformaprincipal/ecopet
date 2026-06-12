@@ -23,6 +23,11 @@ import {
 } from "../services/bootstrap-service.js";
 import { sendMasterAdminConfirmationEmail } from "../services/email-service.js";
 import { validatePasswordStrength } from "../services/auth-service.js";
+import {
+  forgotPasswordIpLimiter,
+  resetPasswordIpLimiter,
+} from "../middleware/password-reset-rate-limit.js";
+import { FORGOT_PASSWORD_MESSAGE } from "../lib/password-reset-utils.js";
 import { authMiddleware, type AuthRequest } from "../middleware/auth.js";
 import { AppError, USER_MESSAGES } from "../lib/app-errors.js";
 
@@ -221,20 +226,23 @@ router.patch("/profile", authMiddleware, async (req: AuthRequest, res, next) => 
   }
 });
 
-router.post("/forgot-password", async (req, res, next) => {
+router.post("/forgot-password", forgotPasswordIpLimiter, async (req, res, next) => {
   try {
     const { email } = z.object({ email: z.string().email() }).parse(req.body);
-    const result = await requestPasswordReset(email);
+    const result = await requestPasswordReset(email, {
+      ip: req.ip,
+      userAgent: req.get("user-agent") ?? undefined,
+    });
     res.json(result);
   } catch (e) {
     if (e instanceof AppError) {
-      return res.status(e.status).json({ error: e.userMessage, code: e.code });
+      return res.status(e.status).json({ message: FORGOT_PASSWORD_MESSAGE });
     }
     next(e);
   }
 });
 
-router.get("/reset-password/validate", async (req, res, next) => {
+router.get("/reset-password/validate", resetPasswordIpLimiter, async (req, res, next) => {
   try {
     const token = String(req.query.token ?? "");
     const result = await validateResetToken(token);
@@ -244,14 +252,23 @@ router.get("/reset-password/validate", async (req, res, next) => {
   }
 });
 
-router.post("/reset-password", async (req, res, next) => {
+router.post("/reset-password", resetPasswordIpLimiter, async (req, res, next) => {
   try {
-    const { token, newPassword, code } = z.object({
-      token: z.string(),
-      newPassword: z.string(),
-      code: z.string().optional(),
-    }).parse(req.body);
-    const result = await resetPassword(token, newPassword, code);
+    const body = z
+      .object({
+        token: z.string().min(1),
+        novaSenha: z.string().optional(),
+        confirmarNovaSenha: z.string().optional(),
+        newPassword: z.string().optional(),
+        confirmPassword: z.string().optional(),
+        code: z.string().optional(),
+      })
+      .parse(req.body);
+
+    const novaSenha = body.novaSenha ?? body.newPassword ?? "";
+    const confirmarNovaSenha = body.confirmarNovaSenha ?? body.confirmPassword ?? "";
+
+    const result = await resetPassword(body.token, novaSenha, confirmarNovaSenha, { ip: req.ip });
     res.json(result);
   } catch (e) {
     if (e instanceof AppError) {

@@ -1,38 +1,27 @@
-import type { LocaleCode } from "./config";
-import type { MessageTree, TranslationKey } from "./types";
-import ptBR from "./messages/pt-BR";
-import en from "./messages/en";
-import es from "./messages/es";
-import { LOCALE_FALLBACK, STATIC_LOCALES } from "./config";
+import type { LocaleCode } from "@/i18n/locales/registry";
+import { DEFAULT_LOCALE } from "@/i18n/locales/registry";
+import type { TranslationKey } from "./types";
+import { getLocaleFallbackChain, needsAutoTranslate } from "@/i18n/fallback";
+import {
+  getStaticBundle,
+  getFromTree,
+  flattenStaticKeys,
+} from "@/i18n/translations/static";
+import ptBR from "@/i18n/locales/pt-BR.json";
+import type { MessageTree } from "./types";
 
-const staticBundles: Partial<Record<LocaleCode, MessageTree>> = {
-  "pt-BR": ptBR,
-  en,
-  es,
-};
-
-/** Cache dinâmico (API) — locale → key → texto */
+/** Cache dinâmico (API / auto-tradução) — locale:key → texto */
 const dynamicCache = new Map<string, string>();
 
-export function getFromTree(tree: MessageTree, key: string): string | undefined {
-  const parts = key.split(".");
-  let node: string | MessageTree = tree;
-  for (const part of parts) {
-    if (typeof node !== "object" || node === null || !(part in node)) return undefined;
-    node = node[part];
-  }
-  return typeof node === "string" ? node : undefined;
-}
-
 export function resolveStaticMessage(locale: LocaleCode, key: TranslationKey): string | undefined {
-  const chain = [locale, ...(LOCALE_FALLBACK[locale] ?? [])];
+  const chain = [locale, ...getLocaleFallbackChain(locale)];
   for (const loc of chain) {
-    const bundle = staticBundles[loc];
+    const bundle = getStaticBundle(loc);
     if (!bundle) continue;
     const msg = getFromTree(bundle, key);
     if (msg) return msg;
   }
-  return getFromTree(ptBR, key);
+  return getFromTree(ptBR as MessageTree, key);
 }
 
 export function cacheDynamicTranslation(locale: LocaleCode, key: TranslationKey, text: string) {
@@ -43,18 +32,10 @@ export function getCachedDynamic(locale: LocaleCode, key: TranslationKey): strin
   return dynamicCache.get(`${locale}:${key}`);
 }
 
-export function needsAutoTranslate(locale: LocaleCode): boolean {
-  return !STATIC_LOCALES.includes(locale);
-}
+export { needsAutoTranslate, getFromTree, flattenStaticKeys };
 
-export function flattenStaticKeys(tree: MessageTree, prefix = ""): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const [k, v] of Object.entries(tree)) {
-    const path = prefix ? `${prefix}.${k}` : k;
-    if (typeof v === "string") out[path] = v;
-    else Object.assign(out, flattenStaticKeys(v, path));
-  }
-  return out;
+export function getAllStaticBundles() {
+  return {
+    "pt-BR": ptBR,
+  };
 }
-
-export { staticBundles };

@@ -40,6 +40,7 @@ import {
 } from "@/store/accessibility-store";
 import type { AccessibilityPreferences } from "@/lib/accessibility/types";
 import { useTranslation } from "@/providers/i18n-provider";
+import { hideVLibras } from "@/lib/accessibility/vlibras-loader";
 import { useAriaAnnounce } from "./aria-live-region";
 import { LanguageSelector } from "@/components/i18n/language-selector";
 
@@ -95,6 +96,11 @@ export function AccessibilityToolbar() {
       const wasActive = useAccessibilityStore.getState()[key];
       toggle(key);
       announce(`${label} ${!wasActive ? t("a11y.activated") : t("a11y.deactivated")}`, "polite");
+
+      if (key === "librasEnabled" && wasActive) {
+        hideVLibras();
+        useAccessibilityStore.getState().setVlibrasStatus("idle");
+      }
     },
     [toggle, announce, t]
   );
@@ -103,12 +109,10 @@ export function AccessibilityToolbar() {
     toggleBraille();
     const active = useAccessibilityStore.getState().brailleEnabled;
     announce(
-      active
-        ? "Modo Braille ativado: interface otimizada para leitores de tela e linhas Braille."
-        : "Modo Braille desativado.",
+      active ? t("a11y.brailleActivated") : t("a11y.brailleDeactivated"),
       "polite"
     );
-  }, [toggleBraille, announce]);
+  }, [toggleBraille, announce, t]);
 
   const closePanel = useCallback(() => setOpen(false), []);
 
@@ -143,7 +147,7 @@ export function AccessibilityToolbar() {
               <span className="font-display text-sm font-bold">{t("a11y.title")}</span>
             </div>
             <div className="flex gap-1">
-              <IconBtn icon={Minimize2} label="Minimizar" onClick={() => setMinimized(true)} />
+              <IconBtn icon={Minimize2} label={t("common.minimize")} onClick={() => setMinimized(true)} />
               <IconBtn icon={X} label={t("a11y.close")} onClick={closePanel} />
             </div>
           </div>
@@ -215,10 +219,10 @@ export function AccessibilityToolbar() {
             <Section title={t("a11y.sections.preferences")} icon={Settings2}>
               <ToolBtn
                 icon={theme === "dark" ? Sun : Moon}
-                label={theme === "dark" ? "Ativar tema claro" : "Ativar tema escuro"}
+                label={theme === "dark" ? t("a11y.themeLight") : t("a11y.themeDark")}
                 onClick={() => {
                   setTheme(theme === "dark" ? "light" : "dark");
-                  announce(`Tema ${theme === "dark" ? "claro" : "escuro"} ativado.`, "polite");
+                  announce(theme === "dark" ? t("a11y.themeLightActivated") : t("a11y.themeDarkActivated"), "polite");
                 }}
               />
               <ToolBtn
@@ -231,7 +235,7 @@ export function AccessibilityToolbar() {
                 disabled={!hasActiveSettings()}
                 variant="reset"
               />
-              <p className="px-3 py-1 text-[10px] text-ecopet-gray">Fonte {Math.round(fontScale * 100)}%</p>
+              <p className="px-3 py-1 text-[10px] text-ecopet-gray">{t("common.fontScale", { percent: String(Math.round(fontScale * 100)) })}</p>
             </Section>
           </div>
         </div>

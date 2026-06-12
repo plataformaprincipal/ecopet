@@ -1,6 +1,6 @@
 import type { TranslationKey } from "./types";
 
-/** Chaves críticas para UX inicial — prefetch idle apenas destas (~20), nunca lote completo */
+/** Chaves críticas para UX inicial — prefetch idle apenas destas, nunca lote completo */
 export const PRIORITY_TRANSLATION_KEYS: TranslationKey[] = [
   "a11y.title",
   "a11y.open",
@@ -14,6 +14,9 @@ export const PRIORITY_TRANSLATION_KEYS: TranslationKey[] = [
   "nav.settings",
   "common.search",
   "common.loading",
+  "common.signIn",
+  "common.createAccount",
+  "common.viewMarketplace",
   "auth.login.title",
   "auth.login.submit",
   "lang.selector.label",

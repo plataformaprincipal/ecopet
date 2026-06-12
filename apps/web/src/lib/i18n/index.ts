@@ -1,5 +1,5 @@
-import type { LocaleCode } from "./config";
-import { DEFAULT_LOCALE, detectBrowserLocale, isRtlLocale } from "./config";
+import type { LocaleCode } from "@/i18n/locales/registry";
+import { DEFAULT_LOCALE, detectBrowserLocale, isRtlLocale } from "@/i18n";
 import type { TranslationKey } from "./types";
 import { resolveStaticMessage, getCachedDynamic } from "./resolver";
 import { applyDocumentLocale, bootstrapLocale } from "./bootstrap";
@@ -24,3 +24,4 @@ export function createTranslator(locale: LocaleCode): TranslateFn {
 }
 
 export { applyDocumentLocale, bootstrapLocale, detectBrowserLocale, DEFAULT_LOCALE, isRtlLocale };
+export type { LocaleCode };
