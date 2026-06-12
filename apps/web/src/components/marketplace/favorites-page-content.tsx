@@ -8,56 +8,67 @@ import { PartnerCard } from "./partner-card";
 import { EmptyState } from "./empty-state";
 import { useMarketplaceStore } from "@/store/marketplace-store";
 import { MOCK_PRODUCTS, MOCK_SERVICES, MOCK_PARTNERS } from "@/lib/marketplace/mock-data";
+import { useTranslation } from "@/providers/i18n-provider";
 
 export function FavoritesPageContent() {
-  const { favoriteProducts, favoriteServices, favoritePartners, searchHistory } = useMarketplaceStore();
+  const { t } = useTranslation();
+  const { favoriteProducts, favoriteServices, favoritePartners, searchHistory, productCache, serviceCache, partnerCache } =
+    useMarketplaceStore();
 
-  const products = MOCK_PRODUCTS.filter((p) => favoriteProducts.has(p.id));
-  const services = MOCK_SERVICES.filter((s) => favoriteServices.has(s.id));
-  const partners = MOCK_PARTNERS.filter((p) => favoritePartners.has(p.id));
+  const resolveProducts = [...favoriteProducts].map(
+    (id) => productCache[id] ?? MOCK_PRODUCTS.find((p) => p.id === id)
+  ).filter(Boolean);
+
+  const resolveServices = [...favoriteServices].map(
+    (id) => serviceCache[id] ?? MOCK_SERVICES.find((s) => s.id === id)
+  ).filter(Boolean);
+
+  const resolvePartners = [...favoritePartners].map(
+    (id) => partnerCache[id] ?? MOCK_PARTNERS.find((p) => p.id === id)
+  ).filter(Boolean);
 
   return (
     <Tabs defaultValue="products">
       <TabsList className="mb-6 flex w-full flex-wrap">
-        <TabsTrigger value="products">Produtos ({products.length})</TabsTrigger>
-        <TabsTrigger value="services">Serviços ({services.length})</TabsTrigger>
-        <TabsTrigger value="partners">Parceiros ({partners.length})</TabsTrigger>
-        <TabsTrigger value="searches">Buscas salvas</TabsTrigger>
+        <TabsTrigger value="products">{t("marketplace.favorites.products")} ({resolveProducts.length})</TabsTrigger>
+        <TabsTrigger value="services">{t("marketplace.favorites.services")} ({resolveServices.length})</TabsTrigger>
+        <TabsTrigger value="partners">{t("marketplace.favorites.partners")} ({resolvePartners.length})</TabsTrigger>
+        <TabsTrigger value="searches">{t("marketplace.favorites.savedSearches")}</TabsTrigger>
       </TabsList>
 
       <TabsContent value="products">
-        {products.length === 0 ? (
-          <EmptyState icon={Heart} title="Nenhum produto favorito" description="Toque no coração nos cards para salvar." />
+        {resolveProducts.length === 0 ? (
+          <EmptyState icon={Heart} title={t("marketplace.favorites.noProductsTitle")} description={t("marketplace.favorites.noProductsDesc")} />
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {products.map((p) => <ProductCard key={p.id} product={p} />)}
+            {resolveProducts.map((p) => p && <ProductCard key={p.id} product={p} />)}
           </div>
         )}
       </TabsContent>
 
       <TabsContent value="services">
-        {services.length === 0 ? (
-          <EmptyState icon={Wrench} title="Nenhum serviço favorito" description="Favorite serviços para acessar rapidamente." />
+        {resolveServices.length === 0 ? (
+          <EmptyState icon={Wrench} title={t("marketplace.favorites.noServicesTitle")} description={t("marketplace.favorites.noServicesDesc")} />
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {services.map((s) => <ServiceCard key={s.id} service={s} />)}
+            {resolveServices.map((s) => s && <ServiceCard key={s.id} service={s} />)}
           </div>
         )}
       </TabsContent>
 
       <TabsContent value="partners">
-        {partners.length === 0 ? (
-          <EmptyState icon={Store} title="Nenhum parceiro favorito" description="Siga parceiros de confiança." />
+        {resolvePartners.length === 0 ? (
+          <EmptyState icon={Store} title={t("marketplace.favorites.noPartnersTitle")} description={t("marketplace.favorites.noPartnersDesc")} />
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {partners.map((p) => <PartnerCard key={p.id} partner={p} />)}
+            {resolvePartners.map((p) => p && <PartnerCard key={p.id} partner={p} />)}
           </div>
         )}
       </TabsContent>
 
       <TabsContent value="searches">
         {searchHistory.length === 0 ? (
-          <EmptyState icon={Search} title="Nenhuma busca salva" description="Suas buscas recentes aparecerão aqui." />
+          <EmptyState icon={Search} title={t("marketplace.favorites.noSearchesTitle")} description={t("marketplace.favorites.noSearchesDesc")} />
         ) : (
           <div className="flex flex-wrap gap-2">
             {searchHistory.map((h) => (

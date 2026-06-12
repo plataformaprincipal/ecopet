@@ -27,7 +27,7 @@ import { maskCpf, maskCnpj, maskPhone, maskDocument } from "@/lib/validation/doc
 import { todayIsoDate } from "@/lib/validation/documents";
 import { AddressByCepField, toAddressValue } from "@/components/address/address-by-cep-field";
 import { EcoPetLogo } from "@/components/brand/ecopet-logo";
-import { AlertCircle, ChevronDown } from "lucide-react";
+import { AlertCircle, ChevronDown, Loader2 } from "lucide-react";
 import { useTranslation } from "@/providers/i18n-provider";
 
 const CLINIC_SERVICES = [
@@ -129,13 +129,14 @@ function YesNoToggle({
   value: boolean;
   onChange: (v: boolean) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center justify-between rounded-xl border border-ecopet-gray/15 px-4 py-3">
       <span className="text-sm font-medium">{label}</span>
       <div className="flex gap-2">
         {[
-          { v: true, l: "Sim" },
-          { v: false, l: "Não" },
+          { v: true, l: t("auth.register.fields.yes") },
+          { v: false, l: t("auth.register.fields.no") },
         ].map(({ v, l }) => (
           <button
             key={l}
@@ -217,6 +218,7 @@ export function RegistrationForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState("");
+  const [success, setSuccess] = useState<{ message: string; redirectTo: string } | null>(null);
 
   const set = useCallback((key: string, val: unknown) => {
     setValues((prev) => ({ ...prev, [key]: val }));
@@ -259,38 +261,54 @@ export function RegistrationForm() {
   const ongIsCnpj = role === "ONG" && values.documentType === "CNPJ";
   const nameLabel =
     isBusiness || ongIsCnpj
-      ? "Razão social"
+      ? t("auth.register.nameLabels.legalName")
       : role === "ONG"
-        ? "Nome completo do protetor"
-        : "Nome completo";
-  const submitBlocked = Object.keys(errors).length > 0;
+        ? t("auth.register.nameLabels.protectorName")
+        : t("auth.register.nameLabels.fullName");
+
+  const roleLabel = (r: RegistrationRole) =>
+    t(`auth.register.roles.${r}.label` as Parameters<typeof t>[0]);
+  const roleDescription = (r: RegistrationRole) =>
+    t(`auth.register.roles.${r}.description` as Parameters<typeof t>[0]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const validationErrors = validateRegistration(role, values);
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-      setFormError(USER_MESSAGES.VALIDATION);
+      setFormError(t("auth.register.validationSummary"));
       return;
     }
 
     setLoading(true);
     setFormError("");
+    setErrors({});
     try {
       const payload = buildRegisterPayload(role, values);
-      const res = await api<{ token: string; redirectTo: string; user: { accountStatus?: string } }>(
-        "/api/auth/register",
-        { method: "POST", body: JSON.stringify(payload) }
-      );
+      const res = await api<{
+        token: string;
+        redirectTo: string;
+        pendingApproval?: boolean;
+        message?: string;
+        user: { accountStatus?: string };
+      }>("/api/auth/register", { method: "POST", body: JSON.stringify(payload) });
       setApiToken(res.token);
-      await signIn("credentials", {
+      const signInResult = await signIn("credentials", {
         email: String(values.email),
         password: String(values.password),
         redirect: false,
       });
-      router.push(res.redirectTo);
+      if (signInResult?.error) {
+        setFormError(t("auth.register.loginAfterRegisterError"));
+        return;
+      }
+      const message =
+        res.message ??
+        (res.pendingApproval ? t("auth.register.successPending") : t("auth.register.successActive"));
+      setSuccess({ message, redirectTo: res.redirectTo });
+      setTimeout(() => router.push(res.redirectTo), 2000);
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : "Erro no cadastro");
+      setFormError(err instanceof Error ? err.message : t("auth.register.errorGeneric"));
     } finally {
       setLoading(false);
     }
@@ -299,6 +317,20 @@ export function RegistrationForm() {
   const address = (values.address ?? {}) as FormValues;
   const bankData = (values.bankData ?? {}) as FormValues;
   const showPendingNote = PENDING_APPROVAL_ROLES.includes(role);
+
+  if (success) {
+    return (
+      <Card className="w-full max-w-2xl border-0 shadow-xl">
+        <CardContent className="p-8 text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-ecopet-green/10">
+            <span className="text-2xl text-ecopet-green" aria-hidden>✓</span>
+          </div>
+          <p className="text-lg font-semibold text-ecopet-green">{success.message}</p>
+          <p className="mt-2 text-sm text-ecopet-gray">{t("auth.register.successRedirecting")}</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="w-full max-w-2xl border-0 shadow-xl">
@@ -325,18 +357,18 @@ export function RegistrationForm() {
               >
                 {REGISTRATION_ROLES.map((r) => (
                   <option key={r.value} value={r.value}>
-                    {r.label}
+                    {roleLabel(r.value)}
                   </option>
                 ))}
               </select>
               <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ecopet-gray" />
             </div>
             <p className="mt-1 text-xs text-ecopet-gray">
-              {REGISTRATION_ROLES.find((r) => r.value === role)?.description}
+              {roleDescription(role)}
             </p>
             {showPendingNote && (
               <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                Contas profissionais ficam com status <strong>pendente de aprovação</strong> até validação da equipe ECOPET.
+                {t("auth.register.pendingApprovalNote")}
               </p>
             )}
           </div>
@@ -354,7 +386,7 @@ export function RegistrationForm() {
             {(isBusiness || role === "SELLER") && (
               <div className="sm:col-span-2">
                 <Label htmlFor="tradeName" required>
-                  Nome fantasia
+                  {t("auth.register.fields.tradeName")}
                 </Label>
                 <Input id="tradeName" className="mt-1" value={String(values.tradeName ?? "")} onChange={(e) => set("tradeName", e.target.value)} />
               </div>
@@ -362,7 +394,7 @@ export function RegistrationForm() {
 
             <div>
               <Label htmlFor="email" required>
-                E-mail
+                {t("auth.register.fields.email")}
               </Label>
               <Input id="email" type="email" className="mt-1" value={String(values.email ?? "")} onChange={(e) => set("email", e.target.value)} />
               <FieldError message={errors.email} />
@@ -370,9 +402,9 @@ export function RegistrationForm() {
 
             <div>
               <Label htmlFor="phone" required>
-                Telefone / WhatsApp
+                {t("auth.register.fields.phone")}
               </Label>
-              <Input id="phone" type="tel" className="mt-1" value={String(values.phone ?? "")} onChange={(e) => set("phone", maskPhone(e.target.value))} onBlur={() => validateField("phone")} placeholder="(11) 99999-0000" />
+              <Input id="phone" type="tel" className="mt-1" value={String(values.phone ?? "")} onChange={(e) => set("phone", maskPhone(e.target.value))} onBlur={() => validateField("phone")} placeholder={t("auth.register.fields.phonePlaceholder")} />
               <FieldError message={errors.phone} />
             </div>
 
@@ -389,7 +421,9 @@ export function RegistrationForm() {
 
           {/* Campos por persona */}
           <div className="space-y-4 border-t border-ecopet-gray/10 pt-4">
-            <p className="text-sm font-semibold text-ecopet-green">Dados da persona: {REGISTRATION_ROLES.find((r) => r.value === role)?.label}</p>
+            <p className="text-sm font-semibold text-ecopet-green">
+              {t("auth.register.personaSection", { role: roleLabel(role) })}
+            </p>
 
             {role === "TUTOR" && (
               <>
@@ -805,9 +839,9 @@ export function RegistrationForm() {
                 className="mt-0.5 h-4 w-4 rounded"
               />
               <span>
-                Li e aceito os{" "}
+                {t("auth.register.terms.acceptTerms")}{" "}
                 <Link href="/termos-de-uso" target="_blank" rel="noopener noreferrer" className="font-medium text-ecopet-green hover:underline">
-                  Termos de Uso
+                  {t("auth.register.terms.termsOfUse")}
                 </Link>
               </span>
             </label>
@@ -820,9 +854,9 @@ export function RegistrationForm() {
                 className="mt-0.5 h-4 w-4 rounded"
               />
               <span>
-                Li e aceito a{" "}
+                {t("auth.register.terms.acceptPrivacy")}{" "}
                 <Link href="/politica-de-privacidade" target="_blank" rel="noopener noreferrer" className="font-medium text-ecopet-green hover:underline">
-                  Política de Privacidade
+                  {t("auth.register.terms.privacyPolicy")}
                 </Link>
               </span>
             </label>
@@ -833,8 +867,15 @@ export function RegistrationForm() {
             <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{formError}</p>
           )}
 
-          <Button type="submit" className="w-full" disabled={loading || submitBlocked}>
-            {loading ? t("auth.register.submitting") : t("auth.register.submit")}
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
+                {t("auth.register.submitting")}
+              </>
+            ) : (
+              t("auth.register.submit")
+            )}
           </Button>
         </form>
 

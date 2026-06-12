@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { EcoPetLogo } from "@/components/brand/ecopet-logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -99,7 +99,14 @@ export default function LoginPage() {
           </div>
           {error && <p className="text-sm text-red-500" role="alert">{error}</p>}
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? t("common.loading") : t("auth.login.submit")}
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
+                {t("common.loading")}
+              </>
+            ) : (
+              t("auth.login.submit")
+            )}
           </Button>
         </form>
         <div className="mt-4 text-center text-sm">

@@ -79,7 +79,7 @@ export function PartnerCard({ partner, horizontal }: PartnerCardProps) {
             size="icon"
             variant="ghost"
             className={cn("h-8 w-8 shrink-0", fav && "text-red-500")}
-            onClick={() => toggleFavoritePartner(partner.id)}
+            onClick={() => toggleFavoritePartner(partner.id, partner)}
           >
             <Heart className={cn("h-4 w-4", fav && "fill-red-500")} />
           </Button>

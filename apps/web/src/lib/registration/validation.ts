@@ -172,6 +172,7 @@ export function buildRegisterPayload(role: RegistrationRole, values: FormValues)
     role,
     email: values.email,
     password: values.password,
+    passwordConfirm: values.confirmPassword,
     phone: onlyDigits(String(values.phone ?? "")),
     acceptTerms: true,
     acceptLgpd: true,

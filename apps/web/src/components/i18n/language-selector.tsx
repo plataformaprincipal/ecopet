@@ -47,7 +47,7 @@ export function LanguageSelector({ className, compact }: LanguageSelectorProps) 
               {locales.map((loc) => (
                 <option key={loc.code} value={loc.code}>
                   {loc.nativeLabel}
-                  {!loc.hasStaticBundle ? " ✦" : ""}
+                  {!loc.hasStaticBundle ? ` (${t("common.comingSoon")})` : ""}
                 </option>
               ))}
             </optgroup>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Search, SlidersHorizontal, Sparkles, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,8 +21,13 @@ import {
   fetchAiRecommendations,
 } from "@/lib/marketplace/api";
 import type { MarketplaceProduct, MarketplaceService, MarketplacePartner, AiRecommendation } from "@/lib/marketplace/types";
+import { useTranslation } from "@/providers/i18n-provider";
+
+const FILTER_TAG_KEYS = ["freeShipping", "verified", "promos", "nearMe"] as const;
 
 export function MarketplaceHub() {
+  const router = useRouter();
+  const { t } = useTranslation();
   const { setSearchPanelOpen, setAiModalOpen, setCartOpen, cartCount, setFilters, addSearchHistory } = useMarketplaceStore();
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState("produtos");
@@ -41,7 +47,7 @@ export function MarketplaceHub() {
     if (query.trim()) {
       addSearchHistory(query.trim());
       setFilters({ query: query.trim() });
-      window.location.href = `/marketplace/busca?q=${encodeURIComponent(query.trim())}`;
+      router.push(`/marketplace/busca?q=${encodeURIComponent(query.trim())}`);
     }
   }
 
@@ -52,13 +58,13 @@ export function MarketplaceHub() {
           <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-ecopet-gray" />
           <Input
             className="h-11 pl-10"
-            placeholder="Buscar ração, banho, veterinário..."
+            placeholder={t("marketplace.searchPlaceholder")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
           />
         </div>
-        <Button onClick={handleSearch}>Buscar</Button>
+        <Button onClick={handleSearch}>{t("marketplace.searchButton")}</Button>
         <Button variant="outline" onClick={() => setSearchPanelOpen(true)}><SlidersHorizontal className="h-5 w-5" /></Button>
         <Button variant="outline" className="relative" onClick={() => setCartOpen(true)}>
           <ShoppingCart className="h-5 w-5" />
@@ -71,9 +77,9 @@ export function MarketplaceHub() {
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {["Frete grátis", "Verificados", "Promoções", "Perto de mim"].map((tag) => (
-          <button key={tag} type="button" className="rounded-full bg-ecopet-gray/10 px-3 py-1 text-xs font-medium hover:bg-ecopet-green/10">
-            {tag}
+        {FILTER_TAG_KEYS.map((key) => (
+          <button key={key} type="button" className="rounded-full bg-ecopet-gray/10 px-3 py-1 text-xs font-medium hover:bg-ecopet-green/10">
+            {t(`marketplace.filterTags.${key}`)}
           </button>
         ))}
         <Button size="sm" variant="ghost" onClick={() => setAiModalOpen(true)}><Sparkles className="h-4 w-4" /> IA</Button>
@@ -83,10 +89,10 @@ export function MarketplaceHub() {
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="produtos">Produtos</TabsTrigger>
-          <TabsTrigger value="servicos">Serviços</TabsTrigger>
-          <TabsTrigger value="personalizados">Personalizados</TabsTrigger>
-          <TabsTrigger value="parceiros">Parceiros</TabsTrigger>
+          <TabsTrigger value="produtos">{t("marketplace.tabs.products")}</TabsTrigger>
+          <TabsTrigger value="servicos">{t("marketplace.tabs.services")}</TabsTrigger>
+          <TabsTrigger value="personalizados">{t("marketplace.tabs.custom")}</TabsTrigger>
+          <TabsTrigger value="parceiros">{t("marketplace.tabs.partners")}</TabsTrigger>
         </TabsList>
 
         {loading ? (
@@ -98,7 +104,7 @@ export function MarketplaceHub() {
                 {products.map((p) => <ProductCard key={p.id} product={p} />)}
               </div>
               <Link href="/marketplace/produtos" className="mt-4 block">
-                <Button variant="outline" className="w-full">Ver todos os produtos</Button>
+                <Button variant="outline" className="w-full">{t("marketplace.viewAllProducts")}</Button>
               </Link>
             </TabsContent>
             <TabsContent value="servicos" className="mt-4">
@@ -106,7 +112,7 @@ export function MarketplaceHub() {
                 {services.map((s) => <ServiceCard key={s.id} service={s} />)}
               </div>
               <Link href="/marketplace/servicos" className="mt-4 block">
-                <Button variant="outline" className="w-full">Ver todos os serviços</Button>
+                <Button variant="outline" className="w-full">{t("marketplace.viewAllServices")}</Button>
               </Link>
             </TabsContent>
             <TabsContent value="personalizados" className="mt-4">

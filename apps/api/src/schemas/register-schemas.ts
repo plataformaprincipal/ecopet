@@ -115,14 +115,13 @@ export const clinicRegisterSchema = baseRegisterObject.extend({
 
 export const petshopRegisterSchema = baseRegisterObject.extend({
   role: z.literal(UserRole.PETSHOP),
-  username: z.string().min(3).max(30).regex(/^[a-z0-9._-]+$/i),
   name: z.string().min(2, "Razão social obrigatória"),
   tradeName: z.string().min(2, "Nome fantasia obrigatório"),
   cnpj: cnpjSchema,
   responsible: z.string().min(2, "Responsável obrigatório"),
   address: addressSchema,
-  sellsProducts: z.boolean(),
-  offersServices: z.boolean(),
+  sellsProducts: z.boolean().default(false),
+  offersServices: z.boolean().default(false),
   categories: z.array(z.string()).min(1, "Selecione ao menos uma categoria"),
   hours: z.string().min(2, "Horário de funcionamento obrigatório"),
 }).superRefine(passwordConfirmRefine);
@@ -175,7 +174,6 @@ export const serviceProviderRegisterSchema = baseRegisterObject
 export const ongRegisterSchema = baseRegisterObject
   .extend({
     role: z.literal(UserRole.ONG),
-    username: z.string().min(3).max(30).regex(/^[a-z0-9._-]+$/i),
     name: z.string().min(2, "Nome completo do protetor ou razão social obrigatório"),
     tradeName: z.string().optional(),
     documentType: z.enum(["CPF", "CNPJ"]),
@@ -184,7 +182,7 @@ export const ongRegisterSchema = baseRegisterObject
     address: addressSchema,
     actionTypes: z.array(z.string()).min(1, "Selecione ao menos um tipo de atuação"),
     animalCapacity: z.coerce.number().int().min(0).optional(),
-    acceptsDonations: z.boolean(),
+    acceptsDonations: z.boolean().default(false),
   })
   .superRefine((data, ctx) => {
     passwordConfirmRefine(data, ctx);

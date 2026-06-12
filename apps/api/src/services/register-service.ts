@@ -27,6 +27,7 @@ import {
   assertPhoneAvailable,
 } from "./registration-validation-service.js";
 import { createAuditLog } from "./audit-service.js";
+import { ensureUniqueUsername } from "../lib/username-utils.js";
 
 type TutorInput = z.infer<typeof tutorRegisterSchema>;
 type VeterinarianInput = z.infer<typeof veterinarianRegisterSchema>;
@@ -81,9 +82,19 @@ export async function registerUser(
   await assertEmailAvailable(input.email, auditCtx);
   await assertPhoneAvailable(input.phone, auditCtx);
 
-  const username = "username" in input && input.username
-    ? String(input.username).toLowerCase()
-    : undefined;
+  let username =
+    "username" in input && input.username ? String(input.username).toLowerCase() : undefined;
+
+  if (!username && (role === UserRole.PETSHOP || role === UserRole.ONG)) {
+    const hint =
+      "tradeName" in input && input.tradeName
+        ? String(input.tradeName)
+        : "name" in input
+          ? String(input.name)
+          : undefined;
+    username = await ensureUniqueUsername(input.email, hint);
+  }
+
   if (username) {
     const usernameTaken = await prisma.user.findUnique({ where: { username } });
     if (usernameTaken) {

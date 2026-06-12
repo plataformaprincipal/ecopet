@@ -5,20 +5,15 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PasswordInput } from "@/components/auth/password-input";
 import { api } from "@/lib/api";
 import { ApiRequestError } from "@/lib/api-errors";
-
-const TOKEN_MESSAGES: Record<string, string> = {
-  invalid: "Link inválido. Solicite uma nova recuperação de senha.",
-  expired: "Link expirado. Solicite uma nova recuperação de senha.",
-  used: "Este link já foi utilizado. Solicite uma nova recuperação de senha.",
-};
+import { useTranslation } from "@/providers/i18n-provider";
 
 function RedefinirSenhaForm() {
   const router = useRouter();
+  const { t } = useTranslation();
   const searchParams = useSearchParams();
   const tokenFromUrl = searchParams.get("token") ?? "";
 
@@ -35,7 +30,7 @@ function RedefinirSenhaForm() {
   useEffect(() => {
     if (!tokenFromUrl) {
       setValidating(false);
-      setTokenError(TOKEN_MESSAGES.invalid);
+      setTokenError(t("auth.resetPassword.tokenInvalid"));
       return;
     }
     api<{ valid: boolean; reason?: string }>(
@@ -45,23 +40,29 @@ function RedefinirSenhaForm() {
         if (res.valid) {
           setTokenValid(true);
         } else {
-          setTokenError(TOKEN_MESSAGES[res.reason ?? "invalid"] ?? TOKEN_MESSAGES.invalid);
+          const key =
+            res.reason === "expired"
+              ? "auth.resetPassword.tokenExpired"
+              : res.reason === "used"
+                ? "auth.resetPassword.tokenUsed"
+                : "auth.resetPassword.tokenInvalid";
+          setTokenError(t(key));
         }
       })
-      .catch(() => setTokenError("Não foi possível validar o link. Tente novamente."))
+      .catch(() => setTokenError(t("common.error")))
       .finally(() => setValidating(false));
-  }, [tokenFromUrl]);
+  }, [tokenFromUrl, t]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
 
     if (novaSenha.length < 8) {
-      setError("A senha deve ter no mínimo 8 caracteres.");
+      setError(t("auth.resetPassword.passwordMin"));
       return;
     }
     if (novaSenha !== confirmarNovaSenha) {
-      setError("As senhas não conferem.");
+      setError(t("auth.resetPassword.passwordMismatch"));
       return;
     }
 
@@ -74,7 +75,7 @@ function RedefinirSenhaForm() {
       setDone(true);
       setTimeout(() => router.push("/login"), 2500);
     } catch (err) {
-      setError(err instanceof ApiRequestError ? err.message : "Erro ao redefinir senha");
+      setError(err instanceof ApiRequestError ? err.message : t("common.error"));
     } finally {
       setLoading(false);
     }
@@ -83,7 +84,7 @@ function RedefinirSenhaForm() {
   if (validating) {
     return (
       <Card className="w-full max-w-md border-0 shadow-xl">
-        <CardContent className="p-8 text-center text-sm text-ecopet-gray">Validando link...</CardContent>
+        <CardContent className="p-8 text-center text-sm text-ecopet-gray">{t("auth.resetPassword.validating")}</CardContent>
       </Card>
     );
   }
@@ -93,8 +94,8 @@ function RedefinirSenhaForm() {
       <Card className="w-full max-w-md border-0 shadow-xl">
         <CardContent className="p-8 text-center">
           <CheckCircle2 className="mx-auto h-10 w-10 text-ecopet-green" />
-          <p className="mt-3 font-semibold text-ecopet-green">Senha redefinida com sucesso!</p>
-          <p className="mt-2 text-sm text-ecopet-gray">Redirecionando para o login...</p>
+          <p className="mt-3 font-semibold text-ecopet-green">{t("auth.resetPassword.success")}</p>
+          <p className="mt-2 text-sm text-ecopet-gray">{t("auth.resetPassword.redirecting")}</p>
         </CardContent>
       </Card>
     );
@@ -109,7 +110,7 @@ function RedefinirSenhaForm() {
             {tokenError}
           </p>
           <Link href="/recuperar-senha" className="inline-block text-sm text-ecopet-green hover:underline">
-            Solicitar novo link
+            {t("auth.resetPassword.requestNewLink")}
           </Link>
         </CardContent>
       </Card>
@@ -119,14 +120,14 @@ function RedefinirSenhaForm() {
   return (
     <Card className="w-full max-w-md border-0 shadow-xl">
       <CardHeader>
-        <CardTitle>Redefinir senha</CardTitle>
-        <CardDescription>Crie uma nova senha para sua conta EcoPet (mínimo 8 caracteres)</CardDescription>
+        <CardTitle>{t("auth.resetPassword.title")}</CardTitle>
+        <CardDescription>{t("auth.resetPassword.description")}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="new-password" className="text-sm font-medium">
-              Nova senha
+              {t("auth.resetPassword.newPassword")}
             </label>
             <PasswordInput
               id="new-password"
@@ -139,7 +140,7 @@ function RedefinirSenhaForm() {
           </div>
           <div>
             <label htmlFor="confirm-password" className="text-sm font-medium">
-              Confirmar nova senha
+              {t("auth.resetPassword.confirmPassword")}
             </label>
             <PasswordInput
               id="confirm-password"
@@ -156,12 +157,12 @@ function RedefinirSenhaForm() {
             </p>
           )}
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Salvando..." : "Redefinir senha"}
+            {loading ? t("auth.resetPassword.submitting") : t("auth.resetPassword.submit")}
           </Button>
         </form>
         <p className="mt-6 text-center text-sm">
           <Link href="/login" className="text-ecopet-green hover:underline">
-            Voltar ao login
+            {t("auth.resetPassword.backToLogin")}
           </Link>
         </p>
       </CardContent>
@@ -170,8 +171,9 @@ function RedefinirSenhaForm() {
 }
 
 export default function RedefinirSenhaPage() {
+  const { t } = useTranslation();
   return (
-    <Suspense fallback={<div className="text-sm text-ecopet-gray">Carregando...</div>}>
+    <Suspense fallback={<div className="text-sm text-ecopet-gray">{t("common.loading")}</div>}>
       <RedefinirSenhaForm />
     </Suspense>
   );

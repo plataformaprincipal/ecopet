@@ -82,7 +82,81 @@
       "hasAccount": "Já tem conta?",
       "submitting": "Enviando cadastro...",
       "description": "Selecione seu tipo de conta — o formulário se adapta automaticamente",
-      "accountType": "Tipo de conta"
+      "accountType": "Tipo de conta",
+      "validationSummary": "Corrija os campos destacados antes de continuar.",
+      "errorGeneric": "Erro no cadastro. Tente novamente.",
+      "loginAfterRegisterError": "Conta criada, mas não foi possível iniciar a sessão. Faça login manualmente.",
+      "pendingNote": "Após o envio, sua conta ficará em análise pela equipe EcoPet.",
+      "successActive": "Conta criada com sucesso!",
+      "successPending": "Cadastro recebido! Redirecionando...",
+      "successRedirecting": "Redirecionando para sua área...",
+      "pendingApprovalNote": "Contas profissionais ficam com status pendente de aprovação até validação da equipe ECOPET.",
+      "personaSection": "Dados da persona: {role}",
+      "fields": {
+        "email": "E-mail",
+        "phone": "Telefone / WhatsApp",
+        "phonePlaceholder": "(11) 99999-0000",
+        "tradeName": "Nome fantasia",
+        "cpf": "CPF",
+        "cpfPlaceholder": "000.000.000-00",
+        "birthDate": "Data de nascimento",
+        "petCount": "Quantidade de pets",
+        "cnpj": "CNPJ",
+        "yes": "Sim",
+        "no": "Não"
+      },
+      "roles": {
+        "TUTOR": { "label": "Cliente / Tutor", "description": "Dono de pet — produtos, saúde e comunidade" },
+        "VETERINARIAN": { "label": "Veterinário", "description": "Profissional com CRMV" },
+        "CLINIC": { "label": "Clínica Veterinária", "description": "Estabelecimento com equipe e serviços" },
+        "PETSHOP": { "label": "Pet Shop", "description": "Loja física com produtos e/ou serviços" },
+        "SELLER": { "label": "Parceiro / Loja", "description": "Vendedor no marketplace ECOPET" },
+        "SERVICE_PROVIDER": { "label": "Prestador de Serviço", "description": "Banho, passeio, adestramento e mais" },
+        "ONG": { "label": "ONG / Protetor", "description": "Adoção, resgate e campanhas" }
+      },
+      "nameLabels": {
+        "fullName": "Nome completo",
+        "legalName": "Razão social",
+        "protectorName": "Nome completo do protetor"
+      },
+      "terms": {
+        "acceptTerms": "Li e aceito os",
+        "termsOfUse": "Termos de Uso",
+        "acceptPrivacy": "Li e aceito a",
+        "privacyPolicy": "Política de Privacidade"
+      }
+    },
+    "layout": {
+      "headline": "Cuidado, comunidade e inteligência em um só lugar.",
+      "subtitle": "Junte-se a milhares de tutores, veterinários e pet shops na maior plataforma pet do Brasil.",
+      "copyright": "© 2026 ECOPET"
+    },
+    "forgotPassword": {
+      "title": "Esqueci minha senha",
+      "description": "Informe seu e-mail para receber o link de redefinição",
+      "submit": "Enviar instruções",
+      "submitting": "Enviando...",
+      "success": "Se o e-mail estiver cadastrado, enviaremos instruções para redefinição da senha.",
+      "checkInbox": "Verifique sua caixa de entrada e a pasta de spam.",
+      "backToLogin": "Voltar ao login"
+    },
+    "resetPassword": {
+      "title": "Redefinir senha",
+      "description": "Crie uma nova senha para sua conta EcoPet (mínimo 8 caracteres)",
+      "newPassword": "Nova senha",
+      "confirmPassword": "Confirmar nova senha",
+      "submit": "Redefinir senha",
+      "submitting": "Salvando...",
+      "validating": "Validando link...",
+      "success": "Senha redefinida com sucesso!",
+      "redirecting": "Redirecionando para o login...",
+      "requestNewLink": "Solicitar novo link",
+      "backToLogin": "Voltar ao login",
+      "tokenInvalid": "Link inválido. Solicite uma nova recuperação de senha.",
+      "tokenExpired": "Link expirado. Solicite uma nova recuperação de senha.",
+      "tokenUsed": "Este link já foi utilizado. Solicite uma nova recuperação de senha.",
+      "passwordMin": "A senha deve ter no mínimo 8 caracteres.",
+      "passwordMismatch": "As senhas não conferem."
     }
   },
   "landing": {
@@ -154,7 +228,59 @@
       "partners": "Parceiros",
       "custom": "Personalizado"
     },
-    "emptyCartDescription": "Explore produtos e serviços para adicionar itens."
+    "emptyCartDescription": "Explore produtos e serviços para adicionar itens.",
+    "searchPlaceholder": "Buscar ração, banho, veterinário...",
+    "searchButton": "Buscar",
+    "sponsored": "Patrocinado",
+    "outOfStock": "Esgotado",
+    "freeShipping": "Frete grátis",
+    "deliveryDays": "Entrega ~{days}d",
+    "favorite": "Favoritar",
+    "compare": "Comparar",
+    "addedToCart": "{name} adicionado ao carrinho",
+    "addedToFavorites": "Adicionado aos favoritos",
+    "removedFromFavorites": "Removido dos favoritos",
+    "addedToCompare": "Adicionado ao comparativo",
+    "removedFromCompare": "Removido do comparativo",
+    "serviceBadge": "Serviço",
+    "emergency": "Emergência",
+    "fromPrice": "A partir de",
+    "homeService": "Domicílio",
+    "schedule": "Agendar",
+    "quote": "Orçamento",
+    "viewAllProducts": "Ver todos os produtos",
+    "viewAllServices": "Ver todos os serviços",
+    "filterTags": {
+      "freeShipping": "Frete grátis",
+      "verified": "Verificados",
+      "promos": "Promoções",
+      "nearMe": "Perto de mim"
+    },
+    "tabs": {
+      "products": "Produtos",
+      "services": "Serviços",
+      "custom": "Personalizados",
+      "partners": "Parceiros"
+    },
+    "compareBar": {
+      "title": "Comparar ({count}/3)",
+      "clear": "Limpar",
+      "view": "Ver comparativo"
+    },
+    "favorites": {
+      "products": "Produtos",
+      "services": "Serviços",
+      "partners": "Parceiros",
+      "savedSearches": "Buscas salvas",
+      "noProductsTitle": "Nenhum produto favorito",
+      "noProductsDesc": "Toque no coração nos cards para salvar.",
+      "noServicesTitle": "Nenhum serviço favorito",
+      "noServicesDesc": "Favorite serviços para acessar rapidamente.",
+      "noPartnersTitle": "Nenhum parceiro favorito",
+      "noPartnersDesc": "Siga parceiros de confiança.",
+      "noSearchesTitle": "Nenhuma busca salva",
+      "noSearchesDesc": "Suas buscas recentes aparecerão aqui."
+    }
   },
   "a11y": {
     "title": "Acessibilidade ECOPET",

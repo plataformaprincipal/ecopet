@@ -2,6 +2,7 @@ import { Router } from "express";
 import { prisma } from "@ecopet/database";
 import { AuthRequest } from "../middleware/auth.js";
 import { asInputJson } from "../lib/prisma-json.js";
+import { getCurrentUserById } from "../services/current-user-service.js";
 
 const router = Router();
 
@@ -17,45 +18,7 @@ router.get("/me", async (req: AuthRequest, res, next) => {
       process.env.JWT_SECRET || "ecopet-dev-secret"
     ) as { userId: string };
 
-    const user = await prisma.user.findUnique({
-      where: { id: payload.userId },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        accountStatus: true,
-        avatar: true,
-        bio: true,
-        username: true,
-        phone: true,
-        cpf: true,
-        mustChangePassword: true,
-        firstLoginRequired: true,
-        isBootstrapUser: true,
-        isMasterAdmin: true,
-        isOrgAdmin: true,
-        isVerified: true,
-        isPremium: true,
-        badges: true,
-        preferences: true,
-        pets: { select: { id: true, name: true, photo: true, species: true } },
-        gamification: true,
-        address: {
-          select: {
-            street: true,
-            number: true,
-            complement: true,
-            district: true,
-            city: true,
-            state: true,
-            zipCode: true,
-            latitude: true,
-            longitude: true,
-          },
-        },
-      },
-    });
+    const user = await getCurrentUserById(payload.userId);
     if (!user) return res.status(404).json({ error: "Usuário não encontrado" });
     res.json(user);
   } catch (e) {

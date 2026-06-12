@@ -1,19 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { X, Scale } from "lucide-react";
+import { Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMarketplaceStore } from "@/store/marketplace-store";
 import { getProductById, getServiceById } from "@/lib/marketplace/mock-data";
 import { formatMpPrice } from "@/lib/marketplace/config";
-import { cn } from "@/lib/utils";
+import { useTranslation } from "@/providers/i18n-provider";
 
 export function CompareBar() {
-  const { compareItems, clearCompare } = useMarketplaceStore();
+  const { t } = useTranslation();
+  const { compareItems, compareSnapshots, clearCompare } = useMarketplaceStore();
 
   if (compareItems.length === 0) return null;
 
   const items = compareItems.map((c) => {
+    const key = `${c.type}:${c.id}`;
+    const snap = compareSnapshots[key];
+    if (snap) return { ...c, ...snap };
     if (c.type === "product") {
       const p = getProductById(c.id);
       return p ? { ...c, name: p.name, price: p.price, rating: p.rating, location: p.partner.location } : null;
@@ -27,10 +31,10 @@ export function CompareBar() {
       <div className="mb-2 flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm font-semibold">
           <Scale className="h-4 w-4 text-ecopet-green" />
-          Comparar ({items.length}/3)
+          {t("marketplace.compareBar.title", { count: String(items.length) })}
         </div>
         <button type="button" onClick={clearCompare} className="text-xs text-ecopet-gray hover:text-red-500">
-          Limpar
+          {t("marketplace.compareBar.clear")}
         </button>
       </div>
       <div className="space-y-2">
@@ -43,7 +47,7 @@ export function CompareBar() {
       </div>
       {items.length >= 2 && (
         <Link href="/marketplace/busca?compare=1">
-          <Button size="sm" className="mt-3 w-full">Ver comparativo</Button>
+          <Button size="sm" className="mt-3 w-full">{t("marketplace.compareBar.view")}</Button>
         </Link>
       )}
     </div>

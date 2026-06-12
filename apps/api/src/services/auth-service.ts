@@ -17,6 +17,7 @@ import {
   sendPasswordResetEmail,
 } from "./email-service.js";
 import { AppError, USER_MESSAGES, accountUnavailableMessage } from "../lib/app-errors.js";
+import { resolvePostAuthRedirect } from "./current-user-service.js";
 import {
   FORGOT_PASSWORD_MESSAGE,
   RESET_TOKEN_EXPIRY_MS,
@@ -117,8 +118,8 @@ export async function loginUser(params: {
     );
   }
 
-  const inactiveStatuses = ["SUSPENDED", "REJECTED", "PENDING"] as const;
-  if (inactiveStatuses.includes(user.accountStatus as (typeof inactiveStatuses)[number])) {
+  const blockedStatuses = ["SUSPENDED", "REJECTED"] as const;
+  if (blockedStatuses.includes(user.accountStatus as (typeof blockedStatuses)[number])) {
     await prisma.securityEvent.create({
       data: {
         userId: user.id,
@@ -229,14 +230,13 @@ export async function loginUser(params: {
     userAgent: params.userAgent,
   });
 
-  let redirectTo = "/dashboard";
-  if (user.role === "GESTOR" || user.role === "ADMIN") {
-    redirectTo = user.firstLoginRequired || user.mustChangePassword ? "/gestor/alterar-senha" : "/gestor";
-  }
+  let redirectTo = resolvePostAuthRedirect(user);
+  const pendingApproval = user.accountStatus === "PENDING";
 
   return {
     token,
     redirectTo,
+    pendingApproval,
     user: {
       id: user.id,
       email: user.email,
@@ -647,6 +647,20 @@ export async function revokeSession(sessionId: string, userId: string) {
     where: { id: sessionId, userId },
     data: { active: false },
   });
+}
+
+export async function logoutCurrentSession(bearerToken: string, userId: string) {
+  await prisma.userSession.updateMany({
+    where: { userId, tokenHash: hashToken(bearerToken), active: true },
+    data: { active: false },
+  });
+  await createAuditLog({
+    userId,
+    action: "LOGOUT",
+    module: "auth",
+    resource: "session",
+  });
+  return { success: true };
 }
 
 export async function createGestorInvite(params: {

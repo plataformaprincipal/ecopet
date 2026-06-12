@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { CartItem, MarketplaceFilters, CustomServiceRequest } from "@/lib/marketplace/types";
+import type { CartItem, MarketplaceFilters, CustomServiceRequest, MarketplaceProduct, MarketplaceService, MarketplacePartner } from "@/lib/marketplace/types";
 import { DEFAULT_FILTERS } from "@/lib/marketplace/types";
 import { getQuoteById } from "@/lib/ecosystem/mock-data";
 
@@ -17,6 +17,11 @@ interface MarketplaceState {
   aiModalOpen: boolean;
   coupon: string;
   customRequests: CustomServiceRequest[];
+  /** Snapshots para favoritos/comparar quando itens vêm da API (não só mock) */
+  productCache: Record<string, MarketplaceProduct>;
+  serviceCache: Record<string, MarketplaceService>;
+  partnerCache: Record<string, MarketplacePartner>;
+  compareSnapshots: Record<string, { type: "product" | "service"; name: string; price: number; rating: number; location?: string }>;
 
   addToCart: (item: Omit<CartItem, "id">) => void;
   removeFromCart: (id: string) => void;
@@ -28,14 +33,14 @@ interface MarketplaceState {
   discount: () => number;
   total: () => number;
 
-  toggleFavoriteProduct: (id: string) => void;
-  toggleFavoriteService: (id: string) => void;
-  toggleFavoritePartner: (id: string) => void;
+  toggleFavoriteProduct: (id: string, product?: MarketplaceProduct) => void;
+  toggleFavoriteService: (id: string, service?: MarketplaceService) => void;
+  toggleFavoritePartner: (id: string, partner?: MarketplacePartner) => void;
   isFavoriteProduct: (id: string) => boolean;
   isFavoriteService: (id: string) => boolean;
   isFavoritePartner: (id: string) => boolean;
 
-  toggleCompare: (type: "product" | "service", id: string) => void;
+  toggleCompare: (type: "product" | "service", id: string, item?: MarketplaceProduct | MarketplaceService) => void;
   isInCompare: (type: "product" | "service", id: string) => boolean;
   clearCompare: () => void;
 
@@ -68,6 +73,10 @@ export const useMarketplaceStore = create<MarketplaceState>()(
       aiModalOpen: false,
       coupon: "",
       customRequests: [],
+      productCache: {},
+      serviceCache: {},
+      partnerCache: {},
+      compareSnapshots: {},
 
       addToCart: (item) =>
         set((s) => {
@@ -110,41 +119,73 @@ export const useMarketplaceStore = create<MarketplaceState>()(
       },
       total: () => get().cartSubtotal() - get().discount(),
 
-      toggleFavoriteProduct: (id) =>
+      toggleFavoriteProduct: (id, product) =>
         set((s) => {
           const next = new Set(s.favoriteProducts);
-          if (next.has(id)) next.delete(id);
-          else next.add(id);
-          return { favoriteProducts: next };
+          const productCache = { ...s.productCache };
+          if (next.has(id)) {
+            next.delete(id);
+            delete productCache[id];
+          } else {
+            next.add(id);
+            if (product) productCache[id] = product;
+          }
+          return { favoriteProducts: next, productCache };
         }),
-      toggleFavoriteService: (id) =>
+      toggleFavoriteService: (id, service) =>
         set((s) => {
           const next = new Set(s.favoriteServices);
-          if (next.has(id)) next.delete(id);
-          else next.add(id);
-          return { favoriteServices: next };
+          const serviceCache = { ...s.serviceCache };
+          if (next.has(id)) {
+            next.delete(id);
+            delete serviceCache[id];
+          } else {
+            next.add(id);
+            if (service) serviceCache[id] = service;
+          }
+          return { favoriteServices: next, serviceCache };
         }),
-      toggleFavoritePartner: (id) =>
+      toggleFavoritePartner: (id, partner) =>
         set((s) => {
           const next = new Set(s.favoritePartners);
-          if (next.has(id)) next.delete(id);
-          else next.add(id);
-          return { favoritePartners: next };
+          const partnerCache = { ...s.partnerCache };
+          if (next.has(id)) {
+            next.delete(id);
+            delete partnerCache[id];
+          } else {
+            next.add(id);
+            if (partner) partnerCache[id] = partner;
+          }
+          return { favoritePartners: next, partnerCache };
         }),
 
       isFavoriteProduct: (id) => get().favoriteProducts.has(id),
       isFavoriteService: (id) => get().favoriteServices.has(id),
       isFavoritePartner: (id) => get().favoritePartners.has(id),
 
-      toggleCompare: (type, id) =>
+      toggleCompare: (type, id, item) =>
         set((s) => {
+          const key = `${type}:${id}`;
           const exists = s.compareItems.find((c) => c.type === type && c.id === id);
-          if (exists) return { compareItems: s.compareItems.filter((c) => !(c.type === type && c.id === id)) };
+          const compareSnapshots = { ...s.compareSnapshots };
+          if (exists) {
+            delete compareSnapshots[key];
+            return { compareItems: s.compareItems.filter((c) => !(c.type === type && c.id === id)), compareSnapshots };
+          }
           if (s.compareItems.length >= 3) return s;
-          return { compareItems: [...s.compareItems, { type, id }] };
+          if (item) {
+            compareSnapshots[key] = {
+              type,
+              name: item.name,
+              price: item.price,
+              rating: item.rating,
+              location: "partner" in item ? item.partner.location : undefined,
+            };
+          }
+          return { compareItems: [...s.compareItems, { type, id }], compareSnapshots };
         }),
       isInCompare: (type, id) => get().compareItems.some((c) => c.type === type && c.id === id),
-      clearCompare: () => set({ compareItems: [] }),
+      clearCompare: () => set({ compareItems: [], compareSnapshots: {} }),
 
       setFilters: (f) => set((s) => ({ filters: { ...s.filters, ...f } })),
       resetFilters: () => set({ filters: { ...DEFAULT_FILTERS } }),
@@ -209,6 +250,11 @@ export const useMarketplaceStore = create<MarketplaceState>()(
         favoriteProducts: [...s.favoriteProducts],
         favoriteServices: [...s.favoriteServices],
         favoritePartners: [...s.favoritePartners],
+        compareItems: s.compareItems,
+        compareSnapshots: s.compareSnapshots,
+        productCache: s.productCache,
+        serviceCache: s.serviceCache,
+        partnerCache: s.partnerCache,
         searchHistory: s.searchHistory,
         customRequests: s.customRequests,
       }),
@@ -220,6 +266,11 @@ export const useMarketplaceStore = create<MarketplaceState>()(
           favoriteProducts: new Set((p.favoriteProducts as string[]) ?? []),
           favoriteServices: new Set((p.favoriteServices as string[]) ?? []),
           favoritePartners: new Set((p.favoritePartners as string[]) ?? []),
+          compareItems: (p.compareItems as MarketplaceState["compareItems"]) ?? current.compareItems,
+          compareSnapshots: (p.compareSnapshots as MarketplaceState["compareSnapshots"]) ?? {},
+          productCache: (p.productCache as MarketplaceState["productCache"]) ?? {},
+          serviceCache: (p.serviceCache as MarketplaceState["serviceCache"]) ?? {},
+          partnerCache: (p.partnerCache as MarketplaceState["partnerCache"]) ?? {},
         };
       },
     }

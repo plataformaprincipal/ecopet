@@ -16,18 +16,30 @@ import { useTranslation } from "@/providers/i18n-provider";
 
 function FaqItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
+  const panelId = `faq-panel-${q.slice(0, 20).replace(/\s+/g, "-").toLowerCase()}`;
   return (
     <div className="rounded-[16px] border border-ecopet-gray/10 bg-white dark:border-white/10 dark:bg-ecopet-dark-card">
       <button
         type="button"
+        id={`${panelId}-button`}
         className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left font-semibold text-ecopet-dark dark:text-white"
         aria-expanded={open}
+        aria-controls={panelId}
         onClick={() => setOpen((v) => !v)}
       >
         {q}
         <ChevronDown className={cn("h-5 w-5 shrink-0 transition-transform", open && "rotate-180")} aria-hidden />
       </button>
-      {open && <p className="border-t border-ecopet-gray/10 px-5 py-4 text-sm leading-relaxed text-ecopet-gray dark:border-white/10">{a}</p>}
+      {open && (
+        <p
+          id={panelId}
+          role="region"
+          aria-labelledby={`${panelId}-button`}
+          className="border-t border-ecopet-gray/10 px-5 py-4 text-sm leading-relaxed text-ecopet-gray dark:border-white/10"
+        >
+          {a}
+        </p>
+      )}
     </div>
   );
 }

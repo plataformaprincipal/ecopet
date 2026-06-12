@@ -82,7 +82,81 @@
       "hasAccount": "Already have an account?",
       "submitting": "Submitting registration...",
       "description": "Select your account type — the form adapts automatically",
-      "accountType": "Account type"
+      "accountType": "Account type",
+      "validationSummary": "Fix the highlighted fields before continuing.",
+      "errorGeneric": "Registration failed. Please try again.",
+      "loginAfterRegisterError": "Account created, but sign-in failed. Please log in manually.",
+      "pendingNote": "After submission, your account will be reviewed by the EcoPet team.",
+      "successActive": "Account created successfully!",
+      "successPending": "Registration received! Redirecting...",
+      "successRedirecting": "Redirecting to your dashboard...",
+      "pendingApprovalNote": "Professional accounts remain pending approval until validated by the ECOPET team.",
+      "personaSection": "Profile details: {role}",
+      "fields": {
+        "email": "Email",
+        "phone": "Phone / WhatsApp",
+        "phonePlaceholder": "(11) 99999-0000",
+        "tradeName": "Trade name",
+        "cpf": "CPF",
+        "cpfPlaceholder": "000.000.000-00",
+        "birthDate": "Date of birth",
+        "petCount": "Number of pets",
+        "cnpj": "CNPJ",
+        "yes": "Yes",
+        "no": "No"
+      },
+      "roles": {
+        "TUTOR": { "label": "Customer / Pet owner", "description": "Pet owner — products, health and community" },
+        "VETERINARIAN": { "label": "Veterinarian", "description": "Licensed professional with CRMV" },
+        "CLINIC": { "label": "Veterinary clinic", "description": "Clinic with team and services" },
+        "PETSHOP": { "label": "Pet shop", "description": "Physical store with products and/or services" },
+        "SELLER": { "label": "Partner / Store", "description": "Seller on the ECOPET marketplace" },
+        "SERVICE_PROVIDER": { "label": "Service provider", "description": "Grooming, walking, training and more" },
+        "ONG": { "label": "NGO / Rescuer", "description": "Adoption, rescue and campaigns" }
+      },
+      "nameLabels": {
+        "fullName": "Full name",
+        "legalName": "Legal name",
+        "protectorName": "Rescuer full name"
+      },
+      "terms": {
+        "acceptTerms": "I have read and accept the",
+        "termsOfUse": "Terms of Use",
+        "acceptPrivacy": "I have read and accept the",
+        "privacyPolicy": "Privacy Policy"
+      }
+    },
+    "layout": {
+      "headline": "Care, community and intelligence in one place.",
+      "subtitle": "Join thousands of pet owners, vets and pet shops on Brazil's leading pet platform.",
+      "copyright": "© 2026 ECOPET"
+    },
+    "forgotPassword": {
+      "title": "Forgot password",
+      "description": "Enter your email to receive a reset link",
+      "submit": "Send instructions",
+      "submitting": "Sending...",
+      "success": "If the email is registered, we will send password reset instructions.",
+      "checkInbox": "Check your inbox and spam folder.",
+      "backToLogin": "Back to login"
+    },
+    "resetPassword": {
+      "title": "Reset password",
+      "description": "Create a new password for your EcoPet account (minimum 8 characters)",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm new password",
+      "submit": "Reset password",
+      "submitting": "Saving...",
+      "validating": "Validating link...",
+      "success": "Password reset successfully!",
+      "redirecting": "Redirecting to login...",
+      "requestNewLink": "Request new link",
+      "backToLogin": "Back to login",
+      "tokenInvalid": "Invalid link. Request a new password reset.",
+      "tokenExpired": "Link expired. Request a new password reset.",
+      "tokenUsed": "This link was already used. Request a new password reset.",
+      "passwordMin": "Password must be at least 8 characters.",
+      "passwordMismatch": "Passwords do not match."
     }
   },
   "landing": {
@@ -154,7 +228,59 @@
       "partners": "Partners",
       "custom": "Custom"
     },
-    "emptyCartDescription": "Browse products and services to add items."
+    "emptyCartDescription": "Browse products and services to add items.",
+    "searchPlaceholder": "Search food, grooming, vet...",
+    "searchButton": "Search",
+    "sponsored": "Sponsored",
+    "outOfStock": "Out of stock",
+    "freeShipping": "Free shipping",
+    "deliveryDays": "Delivery ~{days}d",
+    "favorite": "Favorite",
+    "compare": "Compare",
+    "addedToCart": "{name} added to cart",
+    "addedToFavorites": "Added to favorites",
+    "removedFromFavorites": "Removed from favorites",
+    "addedToCompare": "Added to compare",
+    "removedFromCompare": "Removed from compare",
+    "serviceBadge": "Service",
+    "emergency": "Emergency",
+    "fromPrice": "From",
+    "homeService": "At home",
+    "schedule": "Schedule",
+    "quote": "Quote",
+    "viewAllProducts": "View all products",
+    "viewAllServices": "View all services",
+    "filterTags": {
+      "freeShipping": "Free shipping",
+      "verified": "Verified",
+      "promos": "Promotions",
+      "nearMe": "Near me"
+    },
+    "tabs": {
+      "products": "Products",
+      "services": "Services",
+      "custom": "Custom",
+      "partners": "Partners"
+    },
+    "compareBar": {
+      "title": "Compare ({count}/3)",
+      "clear": "Clear",
+      "view": "View comparison"
+    },
+    "favorites": {
+      "products": "Products",
+      "services": "Services",
+      "partners": "Partners",
+      "savedSearches": "Saved searches",
+      "noProductsTitle": "No favorite products",
+      "noProductsDesc": "Tap the heart on cards to save.",
+      "noServicesTitle": "No favorite services",
+      "noServicesDesc": "Favorite services for quick access.",
+      "noPartnersTitle": "No favorite partners",
+      "noPartnersDesc": "Follow trusted partners.",
+      "noSearchesTitle": "No saved searches",
+      "noSearchesDesc": "Your recent searches will appear here."
+    }
   },
   "a11y": {
     "title": "ECOPET Accessibility",

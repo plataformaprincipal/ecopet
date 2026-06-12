@@ -1,5 +1,7 @@
 import { Router } from "express";
+import crypto from "crypto";
 import jwt from "jsonwebtoken";
+import { prisma } from "@ecopet/database";
 import { z } from "zod";
 import { paramString } from "../lib/request-utils.js";
 import { publicRegisterSchema } from "../schemas/register-schemas.js";
@@ -16,7 +18,9 @@ import {
   requestPasswordChangeCode,
   updateProfile,
   getPasswordChangePolicy,
+  logoutCurrentSession,
 } from "../services/auth-service.js";
+import { getCurrentUserById } from "../services/current-user-service.js";
 import {
   createMasterAdmin,
   getBootstrapStatus,
@@ -64,11 +68,51 @@ router.post("/register", async (req, res, next) => {
       userAgent: req.headers["user-agent"],
     });
     const token = jwt.sign({ userId: user.id, role: user.role }, process.env.JWT_SECRET || "ecopet-dev-secret", { expiresIn: "7d" });
-    res.status(201).json({ user, token, redirectTo });
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+    await prisma.userSession.create({
+      data: {
+        userId: user.id,
+        tokenHash,
+        ip: req.ip,
+        userAgent: req.headers["user-agent"],
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      },
+    });
+    res.status(201).json({
+      user,
+      token,
+      redirectTo,
+      pendingApproval: user.accountStatus === "PENDING",
+      message: user.accountStatus === "PENDING"
+        ? "Cadastro recebido! Sua conta será analisada pela equipe EcoPet."
+        : "Conta criada com sucesso!",
+    });
   } catch (e) {
     if (e instanceof AppError) {
       return res.status(e.status).json({ error: e.userMessage, code: e.code });
     }
+    next(e);
+  }
+});
+
+router.get("/me", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    const user = await getCurrentUserById(req.userId!);
+    if (!user) return res.status(404).json({ error: "Usuário não encontrado" });
+    res.json(user);
+  } catch (e) {
+    next(e);
+  }
+});
+
+router.post("/logout", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    const header = req.headers.authorization;
+    const token = header?.startsWith("Bearer ") ? header.slice(7) : "";
+    if (!token) return res.status(400).json({ error: "Token não fornecido" });
+    const result = await logoutCurrentSession(token, req.userId!);
+    res.json(result);
+  } catch (e) {
     next(e);
   }
 });

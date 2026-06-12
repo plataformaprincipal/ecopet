@@ -7,11 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "@/lib/api";
 import { ApiRequestError } from "@/lib/api-errors";
-
-const SUCCESS_MESSAGE =
-  "Se o e-mail estiver cadastrado, enviaremos instruções para redefinição da senha.";
+import { useTranslation } from "@/providers/i18n-provider";
 
 export default function RecuperarSenhaPage() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [devToken, setDevToken] = useState<string>();
@@ -31,7 +30,7 @@ export default function RecuperarSenhaPage() {
       if (res.resetToken) setDevToken(res.resetToken);
     } catch (err) {
       if (err instanceof ApiRequestError && (err.status ?? 0) >= 500) {
-        setError("Não foi possível processar sua solicitação. Tente novamente.");
+        setError(t("common.error"));
       } else {
         setSent(true);
       }
@@ -43,22 +42,19 @@ export default function RecuperarSenhaPage() {
   return (
     <Card className="w-full max-w-md border-0 shadow-xl">
       <CardHeader>
-        <CardTitle>Esqueci minha senha</CardTitle>
-        <CardDescription>Informe seu e-mail para receber o link de redefinição</CardDescription>
+        <CardTitle>{t("auth.forgotPassword.title")}</CardTitle>
+        <CardDescription>{t("auth.forgotPassword.description")}</CardDescription>
       </CardHeader>
       <CardContent>
         {sent ? (
           <div className="space-y-3 text-sm">
             <p className="font-semibold text-ecopet-green" role="status">
-              {SUCCESS_MESSAGE}
+              {t("auth.forgotPassword.success")}
             </p>
-            <p className="text-ecopet-gray">Verifique sua caixa de entrada e a pasta de spam.</p>
+            <p className="text-ecopet-gray">{t("auth.forgotPassword.checkInbox")}</p>
             {devToken && (
               <p className="rounded-lg bg-ecopet-yellow/10 p-3 text-xs break-all">
-                Dev: acesse{" "}
-                <Link href={`/redefinir-senha?token=${devToken}`} className="underline">
-                  /redefinir-senha
-                </Link>
+                Dev: /redefinir-senha?token={devToken}
               </p>
             )}
           </div>
@@ -66,7 +62,7 @@ export default function RecuperarSenhaPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="recovery-email" className="text-sm font-medium">
-                E-mail
+                {t("auth.login.email")}
               </label>
               <Input
                 id="recovery-email"
@@ -84,13 +80,13 @@ export default function RecuperarSenhaPage() {
               </p>
             )}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Enviando..." : "Enviar instruções"}
+              {loading ? t("auth.forgotPassword.submitting") : t("auth.forgotPassword.submit")}
             </Button>
           </form>
         )}
         <p className="mt-6 text-center text-sm">
           <Link href="/login" className="text-ecopet-green hover:underline">
-            Voltar ao login
+            {t("auth.forgotPassword.backToLogin")}
           </Link>
         </p>
       </CardContent>

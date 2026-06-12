@@ -70,11 +70,16 @@ export function dashboardPathForRole(role: string): string {
     case "GESTOR":
     case "ADMIN":
       return "/gestor";
-    case "PARTNER":
-    case "PETSHOP":
+    case "TUTOR":
+      return "/dashboard";
     case "VETERINARIAN":
+      return "/dashboard/veterinario";
     case "CLINIC":
+      return "/dashboard/clinica";
+    case "PETSHOP":
+      return "/dashboard/petshop";
     case "SELLER":
+      return "/dashboard/seller";
     case "SERVICE_PROVIDER":
       return "/dashboard/prestador";
     case "ONG":
@@ -82,6 +87,8 @@ export function dashboardPathForRole(role: string): string {
       return "/dashboard/ong";
     case "AGROPET":
       return "/agro";
+    case "PARTNER":
+      return "/dashboard/prestador";
     default:
       return "/dashboard";
   }

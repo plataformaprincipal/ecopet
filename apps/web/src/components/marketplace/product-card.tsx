@@ -10,6 +10,8 @@ import { formatMpPrice, discountPct, AI_TAG_LABELS } from "@/lib/marketplace/con
 import { useMarketplaceStore } from "@/store/marketplace-store";
 import type { MarketplaceProduct } from "@/lib/marketplace/types";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/providers/i18n-provider";
+import { useAriaAnnounce } from "@/components/accessibility/aria-live-region";
 
 interface ProductCardProps {
   product: MarketplaceProduct;
@@ -17,11 +19,37 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, compact }: ProductCardProps) {
+  const { t } = useTranslation();
+  const announce = useAriaAnnounce();
   const { addToCart, toggleFavoriteProduct, toggleCompare, isFavoriteProduct, isInCompare } =
     useMarketplaceStore();
   const discount = discountPct(product.price, product.comparePrice);
   const fav = isFavoriteProduct(product.id);
   const comparing = isInCompare("product", product.id);
+
+  function handleAddToCart() {
+    addToCart({
+      type: "product",
+      itemId: product.id,
+      name: product.name,
+      image: product.images[0],
+      price: product.price,
+      quantity: 1,
+      partnerId: product.partnerId,
+      partnerName: product.partner.name,
+    });
+    announce(t("marketplace.addedToCart", { name: product.name }));
+  }
+
+  function handleFavorite() {
+    toggleFavoriteProduct(product.id, product);
+    announce(fav ? t("marketplace.removedFromFavorites") : t("marketplace.addedToFavorites"));
+  }
+
+  function handleCompare() {
+    toggleCompare("product", product.id, product);
+    announce(comparing ? t("marketplace.removedFromCompare") : t("marketplace.addedToCompare"));
+  }
 
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-[20px] border border-ecopet-gray/10 bg-white shadow-[var(--shadow-premium)] transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-premium-lg)] dark:bg-white/5">
@@ -31,7 +59,7 @@ export function ProductCard({ product, compact }: ProductCardProps) {
           {product.isPromo && discount > 0 && (
             <Badge className="bg-red-500 text-white">-{discount}%</Badge>
           )}
-          {product.isSponsored && <Badge variant="premium">Patrocinado</Badge>}
+          {product.isSponsored && <Badge variant="premium">{t("marketplace.sponsored")}</Badge>}
           {product.aiTag && (
             <Badge variant="premium" className="gap-0.5">
               <Sparkles className="h-3 w-3" />
@@ -41,7 +69,7 @@ export function ProductCard({ product, compact }: ProductCardProps) {
         </div>
         {!product.inStock && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-            <span className="rounded-full bg-white px-3 py-1 text-xs font-bold">Esgotado</span>
+            <span className="rounded-full bg-white px-3 py-1 text-xs font-bold">{t("marketplace.outOfStock")}</span>
           </div>
         )}
       </Link>
@@ -69,11 +97,11 @@ export function ProductCard({ product, compact }: ProductCardProps) {
           <span>({product.reviewCount})</span>
           {product.freeShipping && (
             <span className="flex items-center gap-0.5 text-ecopet-green">
-              <Truck className="h-3 w-3" /> Frete grátis
+              <Truck className="h-3 w-3" /> {t("marketplace.freeShipping")}
             </span>
           )}
           {product.inStock && (
-            <span>Entrega ~{product.deliveryDays}d</span>
+            <span>{t("marketplace.deliveryDays", { days: String(product.deliveryDays) })}</span>
           )}
         </div>
 
@@ -83,28 +111,17 @@ export function ProductCard({ product, compact }: ProductCardProps) {
               size="sm"
               className="flex-1"
               disabled={!product.inStock}
-              onClick={() =>
-                addToCart({
-                  type: "product",
-                  itemId: product.id,
-                  name: product.name,
-                  image: product.images[0],
-                  price: product.price,
-                  quantity: 1,
-                  partnerId: product.partnerId,
-                  partnerName: product.partner.name,
-                })
-              }
+              onClick={handleAddToCart}
             >
               <ShoppingCart className="h-4 w-4" />
-              Carrinho
+              {t("nav.cart")}
             </Button>
             <Button
               size="sm"
               variant="outline"
               className={cn("px-2.5", fav && "border-red-300 text-red-500")}
-              onClick={() => toggleFavoriteProduct(product.id)}
-              aria-label="Favoritar"
+              onClick={handleFavorite}
+              aria-label={t("marketplace.favorite")}
             >
               <Heart className={cn("h-4 w-4", fav && "fill-red-500")} />
             </Button>
@@ -112,8 +129,8 @@ export function ProductCard({ product, compact }: ProductCardProps) {
               size="sm"
               variant="ghost"
               className={cn("px-2.5", comparing && "text-ecopet-green")}
-              onClick={() => toggleCompare("product", product.id)}
-              aria-label="Comparar"
+              onClick={handleCompare}
+              aria-label={t("marketplace.compare")}
             >
               <Scale className="h-4 w-4" />
             </Button>
