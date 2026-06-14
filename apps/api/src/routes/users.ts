@@ -1,24 +1,17 @@
 import { Router } from "express";
+import { z } from "zod";
 import { prisma } from "@ecopet/database";
-import { AuthRequest } from "../middleware/auth.js";
+import { authMiddleware, type AuthRequest } from "../middleware/auth.js";
 import { asInputJson } from "../lib/prisma-json.js";
 import { getCurrentUserById } from "../services/current-user-service.js";
+import { updateProfile } from "../services/auth-service.js";
 
 const router = Router();
 
-router.get("/me", async (req: AuthRequest, res, next) => {
+/** Perfil completo do usuário autenticado */
+router.get("/profile", authMiddleware, async (req: AuthRequest, res, next) => {
   try {
-    const header = req.headers.authorization;
-    if (!header?.startsWith("Bearer ")) {
-      return res.status(401).json({ error: "Não autenticado" });
-    }
-    const jwt = await import("jsonwebtoken");
-    const payload = jwt.default.verify(
-      header.slice(7),
-      process.env.JWT_SECRET || "ecopet-dev-secret"
-    ) as { userId: string };
-
-    const user = await getCurrentUserById(payload.userId);
+    const user = await getCurrentUserById(req.userId!);
     if (!user) return res.status(404).json({ error: "Usuário não encontrado" });
     res.json(user);
   } catch (e) {
@@ -26,20 +19,54 @@ router.get("/me", async (req: AuthRequest, res, next) => {
   }
 });
 
-router.patch("/me/preferences", async (req: AuthRequest, res, next) => {
+router.patch("/profile", authMiddleware, async (req: AuthRequest, res, next) => {
   try {
-    const header = req.headers.authorization;
-    if (!header?.startsWith("Bearer ")) {
-      return res.status(401).json({ error: "Não autenticado" });
-    }
-    const jwt = await import("jsonwebtoken");
-    const payload = jwt.default.verify(
-      header.slice(7),
-      process.env.JWT_SECRET || "ecopet-dev-secret"
-    ) as { userId: string };
+    const { currentPassword, name, phone, bio, avatar, address } = z.object({
+      currentPassword: z.string(),
+      name: z.string().optional(),
+      phone: z.string().optional(),
+      bio: z.string().optional(),
+      avatar: z.string().optional(),
+      address: z.object({
+        street: z.string().min(3),
+        number: z.string().optional(),
+        complement: z.string().optional(),
+        district: z.string().optional(),
+        city: z.string().min(2),
+        state: z.string().length(2),
+        zipCode: z.string().optional(),
+        latitude: z.number().nullable().optional(),
+        longitude: z.number().nullable().optional(),
+      }).optional(),
+    }).parse(req.body);
+    const result = await updateProfile({
+      userId: req.userId!,
+      currentPassword,
+      data: { name, phone, bio, avatar, address },
+      ip: req.ip,
+    });
+    res.json(result);
+  } catch (e) {
+    const err = e as Error & { status?: number };
+    if (err.status) return res.status(err.status).json({ error: err.message });
+    next(e);
+  }
+});
 
+router.get("/me", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    const user = await getCurrentUserById(req.userId!);
+    if (!user) return res.status(404).json({ error: "Usuário não encontrado" });
+    res.json(user);
+  } catch (e) {
+    next(e);
+  }
+});
+
+router.patch("/me/preferences", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
     const { a11y, locale } = req.body as { a11y?: Record<string, unknown>; locale?: string };
-    const user = await prisma.user.findUnique({ where: { id: payload.userId } });
+    const user = await prisma.user.findUnique({ where: { id: req.userId! } });
     if (!user) return res.status(404).json({ error: "Usuário não encontrado" });
 
     const current = (user.preferences as Record<string, unknown>) ?? {};
@@ -50,7 +77,7 @@ router.patch("/me/preferences", async (req: AuthRequest, res, next) => {
     };
 
     await prisma.user.update({
-      where: { id: payload.userId },
+      where: { id: req.userId! },
       data: { preferences: asInputJson(updated) },
     });
 

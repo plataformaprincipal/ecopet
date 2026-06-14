@@ -1,19 +1,23 @@
 "use client";
 
-import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { MainNavigation } from "@/components/navigation/main-navigation";
 import { BottomNav } from "@/components/navigation/bottom-nav";
 import { EcopetAIAssistant } from "@/components/ai/ecopet-ai-assistant";
 import { PublicAppBar } from "@/components/layout/public-app-bar";
 import { isPublicMarketplacePath } from "@/lib/auth/routes";
+import { useFoundationSession } from "@/hooks/use-foundation-session";
+import { getNavigationMode } from "@/lib/navigation/secure-nav";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { status } = useSession();
   const pathname = usePathname();
-  const isGuestMarketplace = status === "unauthenticated" && isPublicMarketplacePath(pathname);
+  const { role, loading } = useFoundationSession();
+  const mode = getNavigationMode(loading, role);
 
-  if (isGuestMarketplace) {
+  const usePublicShell =
+    isPublicMarketplacePath(pathname) && (mode === "loading" || mode === "unauthenticated");
+
+  if (usePublicShell) {
     return (
       <div className="flex min-h-screen flex-col bg-gray-50 dark:bg-ecopet-dark-bg">
         <PublicAppBar />
@@ -22,6 +26,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     );
   }
 
+  return <FoundationAppShell role={role}>{children}</FoundationAppShell>;
+}
+
+function FoundationAppShell({
+  children,
+  role,
+}: {
+  children: React.ReactNode;
+  role: ReturnType<typeof useFoundationSession>["role"];
+}) {
+  const showAi = role === "CLIENT";
+
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-ecopet-dark-bg">
       <MainNavigation />
@@ -29,7 +45,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {children}
       </div>
       <BottomNav />
-      <EcopetAIAssistant />
+      {showAi && <EcopetAIAssistant />}
     </div>
   );
 }

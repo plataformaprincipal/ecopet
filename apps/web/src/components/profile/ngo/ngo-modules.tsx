@@ -1,8 +1,9 @@
 "use client";
 
+import { Heart } from "lucide-react";
 import { AIInsightsPanel } from "../shared/ai-insights-panel";
 import { ProfileSection, ProfileList, SmartWidgets } from "../shared/smart-widgets";
-import { RealtimeIndicators } from "../shared/realtime-indicators";
+import { EmptyState } from "@/components/ui/empty-state";
 import { IntegrationsHub } from "@/components/integrations/integrations-hub";
 import { NGORobotsPanel } from "@/components/integrations/robot-hub";
 import { NGOFunctionalDashboard } from "@/components/ecosystem/dashboards/ngo-functional-dashboard";
@@ -14,68 +15,106 @@ import { PrivacyLgpdPanel, PersonaWorkflowPanel, PersonaExecutivePanel } from "@
 import {
   NGO_SOCIAL, NGO_RESCUE, NGO_DONATIONS, NGO_OPERATIONS,
   NGO_AI_INSIGHTS, NGO_WIDGETS, NGO_IMPACT,
-} from "@/lib/profile/mock-data/ngo.mock";
+} from "@/lib/profile/defaults/ngo";
+import { useTranslation } from "@/providers/i18n-provider";
 
 export function NGOOverviewModule() {
+  const { t } = useTranslation();
+  const hasData =
+    NGO_WIDGETS.length > 0 ||
+    NGO_IMPACT.reports.length > 0 ||
+    NGO_AI_INSIGHTS.length > 0 ||
+    NGO_IMPACT.adoptions2026 > 0;
+
+  if (!hasData) {
+    return (
+      <EmptyState
+        icon={Heart}
+        title={t("empty.campaigns.title")}
+        description={t("empty.campaigns.description")}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <RealtimeIndicators items={[
-        { label: "Resgates", value: "2 urgentes", status: "warning" },
-        { label: "Adoções", value: "3 pendentes", status: "online" },
-        { label: "Doações", value: "78% meta", status: "online" },
-      ]} />
-      <SmartWidgets widgets={NGO_WIDGETS} />
-      <ProfileSection title="Impacto social & transparência">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 mb-4">
-          <div className="rounded-[16px] bg-ecopet-green/10 p-3 text-center"><p className="font-display text-xl font-extrabold">{NGO_IMPACT.adoptions2026}</p><p className="caption-text">Adoções 2026</p></div>
-          <div className="rounded-[16px] bg-ecopet-green/10 p-3 text-center"><p className="font-display text-xl font-extrabold">{NGO_IMPACT.livesSaved}</p><p className="caption-text">Vidas resgatadas</p></div>
-          <div className="rounded-[16px] bg-ecopet-yellow/10 p-3 text-center"><p className="font-display text-xl font-extrabold">{NGO_IMPACT.donationsTotal}</p><p className="caption-text">Arrecadado</p></div>
-          <div className="rounded-[16px] bg-ecopet-green/10 p-3 text-center"><p className="font-display text-xl font-extrabold">{NGO_IMPACT.transparencyScore}</p><p className="caption-text">Transparência</p></div>
-        </div>
-        <ProfileList items={NGO_IMPACT.reports.map((r) => ({ label: r.title, value: r.status, badge: r.date }))} />
-      </ProfileSection>
-      <AIInsightsPanel insights={NGO_AI_INSIGHTS.slice(0, 2)} title="IA Social ONG" />
+      {NGO_WIDGETS.length > 0 && <SmartWidgets widgets={NGO_WIDGETS} />}
+      {NGO_IMPACT.reports.length > 0 && (
+        <ProfileSection title="Impacto social & transparência">
+          <ProfileList items={NGO_IMPACT.reports.map((r) => ({ label: r.title, value: r.status, badge: r.date }))} />
+        </ProfileSection>
+      )}
+      {NGO_AI_INSIGHTS.length > 0 && (
+        <AIInsightsPanel insights={NGO_AI_INSIGHTS.slice(0, 2)} title="IA Social ONG" />
+      )}
     </div>
   );
 }
 
 export function NGOSocialModule() {
+  const { t } = useTranslation();
   return (
     <ProfileSection title="Área Social" description="Feed, campanhas, adoções e eventos">
-      <ProfileList items={NGO_SOCIAL} />
+      {NGO_SOCIAL.length === 0 ? (
+        <EmptyState icon={Heart} title={t("empty.posts.title")} description={t("empty.posts.description")} />
+      ) : (
+        <ProfileList items={NGO_SOCIAL} />
+      )}
     </ProfileSection>
   );
 }
 
 export function NGOOperationsPanel() {
+  const { t } = useTranslation();
   return (
     <ProfileSection title="Área Operacional" description="Voluntários, agenda e processos">
-      <ProfileList items={NGO_OPERATIONS} />
+      {NGO_OPERATIONS.length === 0 ? (
+        <EmptyState icon={Heart} title={t("empty.admin.noData")} description={t("empty.admin.noData")} />
+      ) : (
+        <ProfileList items={NGO_OPERATIONS} />
+      )}
     </ProfileSection>
   );
 }
 
 export function NGORescueModule() {
+  const { t } = useTranslation();
   return (
     <div className="space-y-6">
       <ProfileSection title="Área de Resgate" description="Animais resgatados, triagem e adoção">
-        <ProfileList items={NGO_RESCUE} />
+        {NGO_RESCUE.length === 0 ? (
+          <EmptyState icon={Heart} title={t("empty.pets.title")} description={t("empty.pets.description")} />
+        ) : (
+          <ProfileList items={NGO_RESCUE} />
+        )}
       </ProfileSection>
-      <AIInsightsPanel insights={NGO_AI_INSIGHTS.filter(i => i.tag === "Resgate" || i.tag === "Adoção")} title="IA de Risco e Adoção" />
+      {NGO_AI_INSIGHTS.length > 0 && (
+        <AIInsightsPanel insights={NGO_AI_INSIGHTS.filter(i => i.tag === "Resgate" || i.tag === "Adoção")} title="IA de Risco e Adoção" />
+      )}
     </div>
   );
 }
 
 export function NGODonationsModule() {
+  const { t } = useTranslation();
   return (
     <ProfileSection title="Área de Doações" description="Arrecadação, metas e transparência">
-      <ProfileList items={NGO_DONATIONS} />
+      {NGO_DONATIONS.length === 0 ? (
+        <EmptyState icon={Heart} title={t("empty.admin.noData")} description={t("empty.admin.noData")} />
+      ) : (
+        <ProfileList items={NGO_DONATIONS} />
+      )}
     </ProfileSection>
   );
 }
 
 export function NGOAIModule() {
-  return <AIInsightsPanel insights={NGO_AI_INSIGHTS} title="IA Social / ONG" subtitle="Campanhas, adoção e engajamento" />;
+  const { t } = useTranslation();
+  return NGO_AI_INSIGHTS.length === 0 ? (
+    <EmptyState icon={Heart} title={t("empty.ai.noHistory")} description={t("empty.ai.noHistory")} />
+  ) : (
+    <AIInsightsPanel insights={NGO_AI_INSIGHTS} title="IA Social / ONG" subtitle="Campanhas, adoção e engajamento" />
+  );
 }
 
 export function NGODashboardModule() {

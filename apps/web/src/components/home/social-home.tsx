@@ -6,32 +6,31 @@ import { motion } from "framer-motion";
 import { Plus, FileText } from "lucide-react";
 import { AppHeader } from "@/components/layout/app-header";
 import { StoriesBar } from "@/components/social/stories-bar";
-import { AiSuggestionsBlock, AiCommunityBlock } from "@/components/social/ai-blocks";
 import { FeedPostCard } from "@/components/social/feed-post-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { useSocialStore } from "@/store/social-store";
-import { useCurrentUser } from "@/hooks/use-current-user";
-import { DemoContentBanner, EmptyState } from "@/components/ui/empty-state";
-import { EMPTY_MESSAGES } from "@/lib/auth/routes";
+import { useFoundationSession } from "@/hooks/use-foundation-session";
+import { EmptyState } from "@/components/ui/empty-state";
+import { useTranslation } from "@/providers/i18n-provider";
 
 export function SocialHome() {
-  const { user, token } = useCurrentUser();
+  const { t } = useTranslation();
+  const { user } = useFoundationSession();
   const posts = useSocialStore((s) => s.posts);
   const myPosts = posts.filter((p) => user && p.author.id === user.id);
   const stories = useSocialStore((s) => s.stories);
   const loading = useSocialStore((s) => s.loading);
   const loaded = useSocialStore((s) => s.loaded);
-  const feedIsDemo = useSocialStore((s) => s.feedIsDemo);
   const loadFeed = useSocialStore((s) => s.loadFeed);
   const loadStories = useSocialStore((s) => s.loadStories);
 
   useEffect(() => {
-    if (!loaded) loadFeed(token ?? undefined);
+    if (!loaded) loadFeed(undefined);
     loadStories();
-  }, [loaded, loadFeed, loadStories, token]);
+  }, [loaded, loadFeed, loadStories]);
 
-  const communityPosts = feedIsDemo ? posts : posts.filter((p) => !user || p.author.id !== user.id);
+  const communityPosts = posts.filter((p) => !user || p.author.id !== user.id);
 
   return (
     <>
@@ -47,23 +46,14 @@ export function SocialHome() {
           {user && myPosts.length === 0 && !loading && (
             <EmptyState
               icon={FileText}
-              title="Suas publicações"
-              description={EMPTY_MESSAGES.posts}
-              actionLabel="Explorar comunidade"
-              actionHref="/social/explorar"
+              title={t("empty.posts.myTitle")}
+              description={t("empty.posts.myDescription")}
+              actionLabel={t("empty.posts.exploreAction")}
+              actionHref="/explorar"
             />
           )}
 
-          {!loading && (
-            <>
-              <AiSuggestionsBlock />
-              <AiCommunityBlock />
-            </>
-          )}
-
-          {feedIsDemo && <DemoContentBanner />}
-
-          <h2 className="section-title">Comunidade</h2>
+          <h2 className="section-title">{t("empty.posts.communityTitle")}</h2>
 
           {loading ? (
             <div className="space-y-4">
@@ -80,9 +70,8 @@ export function SocialHome() {
           ) : communityPosts.length === 0 ? (
             <EmptyState
               icon={FileText}
-              title="Feed vazio"
-              description="Ainda não há publicações públicas na comunidade. Seja o primeiro a compartilhar!"
-              demo={feedIsDemo}
+              title={t("empty.posts.title")}
+              description={t("empty.posts.description")}
             />
           ) : (
             communityPosts.map((post, i) => (
@@ -96,7 +85,7 @@ export function SocialHome() {
         <Link
           href="/feed"
           className="fixed bottom-24 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-ecopet-green text-white shadow-lg transition-transform hover:scale-105 lg:bottom-8"
-          aria-label="Criar publicação"
+          aria-label={t("empty.posts.createLabel")}
         >
           <Plus className="h-6 w-6" />
         </Link>
@@ -104,4 +93,3 @@ export function SocialHome() {
     </>
   );
 }
-

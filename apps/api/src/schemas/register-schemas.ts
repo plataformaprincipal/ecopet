@@ -52,7 +52,7 @@ export const documentsSchema = z
 
 const baseRegisterObject = z.object({
   role: z.nativeEnum(UserRole),
-  email: z.string().email("E-mail inválido"),
+  email: z.string().email("E-mail inválido").transform((v) => v.trim().toLowerCase()),
   username: z
     .string()
     .min(3, "Usuário deve ter no mínimo 3 caracteres")

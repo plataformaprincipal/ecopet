@@ -4,15 +4,28 @@ import { useState } from "react";
 import { Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { IntegrationAIInsight } from "@/lib/integrations/types";
-import { AI_AUTOMATION_INSIGHTS } from "@/lib/integrations/mock-data/logs.mock";
+import { AI_AUTOMATION_INSIGHTS } from "@/lib/integrations/empty";
+import { useTranslation } from "@/providers/i18n-provider";
 
 interface AIIntegrationInsightsProps {
   insights?: IntegrationAIInsight[];
 }
 
 export function AIIntegrationInsights({ insights = AI_AUTOMATION_INSIGHTS }: AIIntegrationInsightsProps) {
+  const { t } = useTranslation();
   const [showModal, setShowModal] = useState(false);
+
+  if (insights.length === 0) {
+    return (
+      <EmptyState
+        icon={Sparkles}
+        title={t("empty.ai.noHistory")}
+        description={t("empty.admin.noData")}
+      />
+    );
+  }
 
   return (
     <>
@@ -46,33 +59,7 @@ export function AIIntegrationInsights({ insights = AI_AUTOMATION_INSIGHTS }: AII
               <h2 className="heading-3 flex items-center gap-2"><Sparkles className="h-5 w-5 text-ecopet-yellow" /> Análise IA</h2>
               <Button variant="ghost" size="icon" onClick={() => setShowModal(false)}><X className="h-5 w-5" /></Button>
             </div>
-            <div className="space-y-4">
-              <div className="rounded-xl bg-ecopet-green/5 p-4 text-sm">
-                <p className="font-semibold">Resumo inteligente</p>
-                <p className="mt-2 text-ecopet-gray dark:text-white/80">
-                  12 integrações ativas, 2 com erro. 9 robôs operando 24h. 3 alertas críticos requerem atenção.
-                  ERP Totvs offline impacta estoque. Recomenda-se reconexão imediata e campanha comercial para 23 clientes inativos.
-                </p>
-              </div>
-              <div>
-                <p className="font-semibold mb-2">Recomendações prioritárias</p>
-                <ul className="space-y-2">
-                  {insights.filter((i) => i.priority === "high").map((i) => (
-                    <li key={i.id} className="flex items-start gap-2 text-sm"><span className="text-ecopet-yellow">→</span>{i.title}: {i.description}</li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <p className="font-semibold mb-2">Próximos passos</p>
-                <ol className="list-decimal list-inside space-y-1 text-sm text-ecopet-gray dark:text-white/80">
-                  <li>Reconectar ERP Totvs</li>
-                  <li>Aprovar campanha de reativação comercial</li>
-                  <li>Revisar cobrança recorrente (inadimplência)</li>
-                  <li>Conectar Shopee para expansão marketplace</li>
-                </ol>
-              </div>
-              <Button className="w-full" onClick={() => setShowModal(false)}>Entendido</Button>
-            </div>
+            <EmptyState icon={Sparkles} title={t("empty.ai.noHistory")} description={t("empty.admin.noData")} />
           </div>
         </div>
       )}

@@ -1,4 +1,5 @@
 import { API_URL } from "@/lib/constants";
+import { buildApiUrl } from "@/lib/api-url.client";
 import type { LocaleCode } from "@/i18n/locales/registry";
 import type { TranslationKey } from "@/lib/i18n/types";
 import {
@@ -37,7 +38,7 @@ export async function translateKeysViaApi(
   targetLocale: LocaleCode,
   sourceLocale: LocaleCode = "pt-BR"
 ): Promise<Record<string, string>> {
-  const res = await fetch(`${API_URL}/api/translate/batch`, {
+  const res = await fetch(buildApiUrl(API_URL, "/api/translate/batch"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ texts: keys, targetLocale, sourceLocale }),
@@ -63,7 +64,7 @@ export async function fetchDynamicTranslation(
   }
 
   try {
-    const res = await fetch(`${API_URL}/api/translate/text`, {
+    const res = await fetch(buildApiUrl(API_URL, "/api/translate/text"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text: sourceText, targetLocale: locale, sourceLocale: "pt-BR" }),

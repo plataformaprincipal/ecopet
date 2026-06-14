@@ -2,50 +2,37 @@
 
 import { AppHeader } from "@/components/layout/app-header";
 import { EcoPetLogo } from "@/components/brand/ecopet-logo";
-import { GestorSidebar, GestorGuard, GestorPasswordGate } from "@/components/gestor/gestor-shell";
-import { GestorBootstrapGate } from "@/components/gestor/gestor-bootstrap-gate";
-import { useCurrentUser } from "@/hooks/use-current-user";
-import { api } from "@/lib/api";
+import { GestorSidebar, GestorGuard } from "@/components/gestor/gestor-shell";
+import { useFoundationSession } from "@/hooks/use-foundation-session";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useTranslation } from "@/providers/i18n-provider";
 
+/**
+ * Gestor usa exclusivamente ecopet-session (Prisma User.role === ADMIN).
+ * NextAuth legado permanece apenas em módulos sociais/marketplace antigos — não compartilha guard desta área.
+ */
 export default function GestorLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading, token } = useCurrentUser();
+  const { role, loading } = useFoundationSession();
   const pathname = usePathname();
-  const [mustChangePassword, setMustChangePassword] = useState(false);
-  const [isBootstrapFlow, setIsBootstrapFlow] = useState(false);
-
-  useEffect(() => {
-    if (!token) return;
-    api<{ mustChangePassword?: boolean; isBootstrapUser?: boolean }>("/api/users/me", { token })
-      .then((u) => {
-        setMustChangePassword(!!u.mustChangePassword);
-        setIsBootstrapFlow(!!u.isBootstrapUser);
-      })
-      .catch(() => {});
-  }, [token]);
+  const { t } = useTranslation();
 
   const isAtivacao = pathname.includes("/gestor/ativacao");
-  const showSidebar = !mustChangePassword && !isAtivacao && !isBootstrapFlow;
+  const showSidebar = !isAtivacao;
 
   return (
     <>
-      <AppHeader title="Gestor ECOPET" />
+      <AppHeader title={t("gestor.title")} />
       {loading ? (
         <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4">
           <EcoPetLogo variant="icon" size="md" animated="pulse" />
-          <p className="text-sm text-ecopet-gray">Carregando Gestor ECOPET...</p>
+          <p className="text-sm text-ecopet-gray">{t("gestor.loading")}</p>
         </div>
       ) : (
-        <GestorGuard role={user?.role}>
-          <GestorBootstrapGate>
-            <GestorPasswordGate mustChangePassword={mustChangePassword && !isAtivacao}>
-              <div className="mx-auto flex max-w-[1600px]">
-                {showSidebar && <GestorSidebar />}
-                <main className="min-w-0 flex-1 p-4 lg:p-6">{children}</main>
-              </div>
-            </GestorPasswordGate>
-          </GestorBootstrapGate>
+        <GestorGuard role={role ?? undefined}>
+          <div className="mx-auto flex max-w-[1600px]">
+            {showSidebar && <GestorSidebar />}
+            <main className="min-w-0 flex-1 p-4 lg:p-6">{children}</main>
+          </div>
         </GestorGuard>
       )}
     </>

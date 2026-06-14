@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 import { GESTOR_MODULES } from "@/lib/gestor/config";
 import { fetchMyPermissions } from "@/lib/gestor/api";
 import { EcoPetLogo } from "@/components/brand/ecopet-logo";
+import { useTranslation } from "@/providers/i18n-provider";
+import type { AppRole } from "@/lib/permissions";
 
 export function GestorSidebar() {
   const pathname = usePathname();
@@ -65,14 +67,18 @@ export function GestorSidebar() {
   );
 }
 
-export function GestorGuard({ children, role }: { children: React.ReactNode; role?: string }) {
-  const allowed = role === "GESTOR" || role === "ADMIN";
+export function GestorGuard({ children, role }: { children: React.ReactNode; role?: AppRole | string }) {
+  const { t } = useTranslation();
+  const allowed = role === "ADMIN";
+
   if (!allowed) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center p-8 text-center">
-        <p className="font-display text-xl font-bold">Acesso restrito</p>
-        <p className="mt-2 text-ecopet-gray">Esta área é exclusiva para a equipe Gestor ECOPET.</p>
-        <Link href="/inicio" className="mt-4 text-ecopet-green underline">Voltar ao início</Link>
+        <p className="font-display text-xl font-bold">{t("gestor.accessDenied.title")}</p>
+        <p className="mt-2 text-ecopet-gray">{t("gestor.accessDenied.description")}</p>
+        <Link href="/dashboard" className="mt-4 text-ecopet-green underline">
+          {t("gestor.accessDenied.back")}
+        </Link>
       </div>
     );
   }

@@ -36,7 +36,7 @@ export async function registerIotDevice(
   token: string,
   data: { name: string; deviceType: string; ownerType: "pet" | "agro"; petId?: string; agroUnitId?: string; location?: string }
 ) {
-  return api<IotDeviceDto>("/api/iot/devices", { method: "POST", token, body: JSON.stringify({ ...data, isDemo: true }) });
+  return api<IotDeviceDto>("/api/iot/devices", { method: "POST", token, body: JSON.stringify(data) });
 }
 
 export async function simulateIotReading(token: string, deviceId: string, metricKey?: string) {

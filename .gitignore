@@ -3,8 +3,13 @@ node_modules
 dist
 .env
 .env.local
+apps/web/.env.smtp.local
+.ecopet/
 *.log
 .DS_Store
 coverage
 *.db
 *.db-journal
+
+# Prisma
+apps/web/prisma/migrations/**/migration_lock.toml

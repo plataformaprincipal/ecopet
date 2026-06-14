@@ -1,7 +1,10 @@
+"use client";
+
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useTranslation } from "@/providers/i18n-provider";
 
 interface EmptyStateProps {
   icon: LucideIcon;
@@ -11,7 +14,6 @@ interface EmptyStateProps {
   actionHref?: string;
   onAction?: () => void;
   className?: string;
-  demo?: boolean;
 }
 
 export function EmptyState({
@@ -22,8 +24,9 @@ export function EmptyState({
   actionHref,
   onAction,
   className,
-  demo,
 }: EmptyStateProps) {
+  const { t } = useTranslation();
+
   return (
     <div
       className={cn(
@@ -36,11 +39,6 @@ export function EmptyState({
       </div>
       <h3 className="font-display text-lg font-bold text-ecopet-dark dark:text-white">{title}</h3>
       <p className="mt-2 max-w-sm text-sm text-ecopet-gray">{description}</p>
-      {demo && (
-        <p className="mt-3 rounded-lg bg-amber-500/10 px-3 py-1.5 text-xs text-amber-800 dark:text-amber-200">
-          Conteúdo demonstrativo — não vinculado à sua conta.
-        </p>
-      )}
       {actionLabel && actionHref && (
         <Button asChild className="mt-6" size="sm">
           <Link href={actionHref}>{actionLabel}</Link>
@@ -51,17 +49,6 @@ export function EmptyState({
           {actionLabel}
         </Button>
       )}
-    </div>
-  );
-}
-
-export function DemoContentBanner() {
-  return (
-    <div
-      className="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/5 px-4 py-2 text-center text-xs text-amber-900 dark:text-amber-100"
-      role="status"
-    >
-      Conteúdo demonstrativo da comunidade ECOPET — publicações reais aparecerão conforme usuários publicarem.
     </div>
   );
 }

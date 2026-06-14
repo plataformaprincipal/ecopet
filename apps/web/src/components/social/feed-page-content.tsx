@@ -8,7 +8,7 @@ import { StoriesBar } from "@/components/social/stories-bar";
 import { AiSuggestionsBlock, AiCommunityBlock } from "@/components/social/ai-blocks";
 import { FeedPostCard } from "@/components/social/feed-post-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DemoContentBanner, EmptyState } from "@/components/ui/empty-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { EMPTY_MESSAGES } from "@/lib/auth/routes";
 import { useSocialStore } from "@/store/social-store";
 import { useCurrentUser } from "@/hooks/use-current-user";
@@ -20,7 +20,6 @@ export function FeedPageContent() {
   const stories = useSocialStore((s) => s.stories);
   const loading = useSocialStore((s) => s.loading);
   const loaded = useSocialStore((s) => s.loaded);
-  const feedIsDemo = useSocialStore((s) => s.feedIsDemo);
   const loadFeed = useSocialStore((s) => s.loadFeed);
   const loadStories = useSocialStore((s) => s.loadStories);
 
@@ -34,12 +33,6 @@ export function FeedPageContent() {
       <AppHeader title="Feed" />
       <SocialSubNav />
       <main className="mx-auto max-w-2xl flex-1 p-4 lg:p-6">
-        {feedIsDemo && (
-          <div className="mb-4">
-            <DemoContentBanner />
-          </div>
-        )}
-
         {!loading && stories.length > 0 && <StoriesBar stories={stories} />}
 
         {!loading && (
@@ -64,7 +57,6 @@ export function FeedPageContent() {
             icon={FileText}
             title="Feed"
             description={EMPTY_MESSAGES.posts}
-            demo={feedIsDemo}
           />
         ) : (
           posts.map((post, i) => (

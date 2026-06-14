@@ -64,11 +64,16 @@ export function requiresAuth(pathname: string): boolean {
   return true;
 }
 
-/** Após login, redirecionar conforme papel. */
+/** Após login, redirecionar conforme papel (fundação Prisma). */
 export function dashboardPathForRole(role: string): string {
   switch (role) {
-    case "GESTOR":
     case "ADMIN":
+      return "/gestor";
+    case "PARTNER":
+    case "ONG":
+    case "CLIENT":
+      return "/dashboard";
+    case "GESTOR":
       return "/gestor";
     case "TUTOR":
       return "/dashboard";
@@ -82,13 +87,10 @@ export function dashboardPathForRole(role: string): string {
       return "/dashboard/seller";
     case "SERVICE_PROVIDER":
       return "/dashboard/prestador";
-    case "ONG":
     case "PROTECTOR":
       return "/dashboard/ong";
     case "AGROPET":
       return "/agro";
-    case "PARTNER":
-      return "/dashboard/prestador";
     default:
       return "/dashboard";
   }
@@ -102,4 +104,5 @@ export const EMPTY_MESSAGES = {
   appointments: "Você ainda não realizou agendamentos.",
   orders: "Você ainda não possui pedidos.",
   favorites: "Você ainda não favoritou itens.",
+  activities: "Você ainda não possui atividades.",
 } as const;

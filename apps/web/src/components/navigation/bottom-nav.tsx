@@ -3,12 +3,22 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { MAIN_NAV, isNavActive } from "@/lib/navigation/main-nav";
+import { isNavActive } from "@/lib/navigation/role-nav";
+import { getNavigationMode, resolveNavigation } from "@/lib/navigation/secure-nav";
+import { useFoundationSession } from "@/hooks/use-foundation-session";
 import { useTranslation } from "@/providers/i18n-provider";
 
 export function BottomNav() {
   const pathname = usePathname();
   const { t } = useTranslation();
+  const { role, loading } = useFoundationSession();
+
+  const mode = getNavigationMode(loading, role);
+  const { main } = resolveNavigation(mode, role);
+
+  if (mode === "loading" || main.length === 0) {
+    return null;
+  }
 
   return (
     <nav
@@ -16,7 +26,7 @@ export function BottomNav() {
       aria-label={t("landing.mainNav")}
     >
       <div className="flex items-stretch justify-around px-1 pb-[env(safe-area-inset-bottom)] pt-1">
-        {MAIN_NAV.map(({ href, labelKey, icon: Icon, ...item }) => {
+        {main.slice(0, 5).map(({ href, labelKey, icon: Icon, ...item }) => {
           const active = isNavActive(pathname, { href, labelKey, icon: Icon, ...item });
           return (
             <Link
@@ -41,5 +51,3 @@ export function BottomNav() {
     </nav>
   );
 }
-
-export { MAIN_NAV };

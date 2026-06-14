@@ -1,8 +1,8 @@
 import { api } from "@/lib/api";
 import type { Order } from "@/lib/orders/api";
 
-export async function fetchPartnerOrders(token: string) {
-  return api<(Order & { user?: { id: string; name: string; email: string } })[]>("/api/marketplace/partner/orders", { token });
+export async function fetchPartnerOrders(token?: string) {
+  return api<(Order & { user?: { id: string; name: string; email: string } })[]>("/api/marketplace/partner/orders", token ? { token } : undefined);
 }
 
 export async function updatePartnerOrderStatus(token: string, orderId: string, status: string, note?: string) {

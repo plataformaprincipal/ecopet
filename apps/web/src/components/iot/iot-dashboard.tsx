@@ -44,7 +44,6 @@ export function IoTDashboard() {
   const { token, user } = useCurrentUser();
   const [devices, setDevices] = useState<IotDeviceDto[]>([]);
   const [alerts, setAlerts] = useState<{ id: string; severity: string; message: string; device?: { name: string } }[]>([]);
-  const [demoMode, setDemoMode] = useState(true);
   const [disclaimer, setDisclaimer] = useState("");
   const [loading, setLoading] = useState(true);
   const [pets, setPets] = useState<{ id: string; name: string }[]>([]);
@@ -61,7 +60,6 @@ export function IoTDashboard() {
       const dash = await fetchIotDashboard(token);
       setDevices(dash.devices);
       setAlerts(dash.alerts);
-      setDemoMode(dash.demoMode);
       setDisclaimer(dash.disclaimer);
     } catch {
       setError("Não foi possível carregar dispositivos IoT.");
@@ -134,12 +132,6 @@ export function IoTDashboard() {
             <Plus className="h-4 w-4" /> Adicionar dispositivo
           </Button>
         </div>
-
-        {demoMode && (
-          <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-sm">
-            <strong>Modo demonstração</strong> — leituras simuladas até conectar hardware real.
-          </div>
-        )}
 
         <p className="text-xs text-ecopet-gray">{disclaimer || "Os dados de IoT são indicadores preventivos e não substituem avaliação veterinária."}</p>
 
@@ -221,7 +213,6 @@ export function IoTDashboard() {
                     <div className="mt-3 flex flex-wrap gap-2">
                       {device.battery != null && <Badge variant="default" className="gap-1"><Battery className="h-3 w-3" /> {Math.round(device.battery)}%</Badge>}
                       {device.location && <Badge variant="default" className="gap-1"><MapPin className="h-3 w-3" /> {device.location.slice(0, 24)}</Badge>}
-                      {device.isDemo && <Badge className="bg-amber-500/10 text-amber-700">Demo</Badge>}
                     </div>
                     <p className="mt-2 caption-text">
                       Sync: {device.lastSyncAt ? new Date(device.lastSyncAt).toLocaleString("pt-BR") : "—"}

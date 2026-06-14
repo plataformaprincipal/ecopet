@@ -83,7 +83,17 @@ export function UserDashboard() {
           ))}
         </div>
 
-        {(user.pets?.length ?? 0) === 0 && (
+        {(user.pets?.length ?? 0) === 0 && unread === 0 && cartCount === 0 && (
+          <EmptyState
+            icon={Sparkles}
+            title="Seu espaço está pronto"
+            description={EMPTY_MESSAGES.activities}
+            actionLabel="Cadastrar pet"
+            actionHref="/meu-pet?new=1"
+          />
+        )}
+
+        {(user.pets?.length ?? 0) === 0 && (unread > 0 || cartCount > 0) && (
           <EmptyState
             icon={PawPrint}
             title="Comece pelo seu pet"

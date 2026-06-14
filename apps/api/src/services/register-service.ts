@@ -25,6 +25,10 @@ import {
   assertDocumentAvailable,
   assertEmailAvailable,
   assertPhoneAvailable,
+  buildDuplicateConditions,
+  logRegisterCreatedUser,
+  logRegisterDuplicateConditions,
+  logRegisterPayload,
 } from "./registration-validation-service.js";
 import { createAuditLog } from "./audit-service.js";
 import { ensureUniqueUsername } from "../lib/username-utils.js";
@@ -77,7 +81,27 @@ export async function registerUser(
     throw new AppError(USER_MESSAGES.ADMIN_REGISTER_FORBIDDEN, 403, "ADMIN_REGISTER_FORBIDDEN");
   }
 
-  const auditCtx = { ip: ctx?.ip, userAgent: ctx?.userAgent };
+  const auditCtx = {
+    ip: ctx?.ip,
+    userAgent: ctx?.userAgent,
+    role: String(role),
+    email: input.email,
+  };
+
+  logRegisterPayload(input as Record<string, unknown>);
+
+  const duplicateInput: { email?: string; cpf?: string; cnpj?: string; phone?: string } = {
+    email: input.email,
+    phone: input.phone,
+  };
+  if ("cpf" in input && input.cpf) duplicateInput.cpf = String(input.cpf);
+  if ("cnpj" in input && input.cnpj) duplicateInput.cnpj = String(input.cnpj);
+  if ("documentNumber" in input && input.documentNumber) {
+    const doc = String(input.documentNumber);
+    if ("documentType" in input && input.documentType === "CPF") duplicateInput.cpf = doc;
+    if ("documentType" in input && input.documentType === "CNPJ") duplicateInput.cnpj = doc;
+  }
+  logRegisterDuplicateConditions(buildDuplicateConditions(duplicateInput));
 
   await assertEmailAvailable(input.email, auditCtx);
   await assertPhoneAvailable(input.phone, auditCtx);
@@ -344,6 +368,8 @@ export async function registerUser(
       accountStatus: true,
     },
   });
+
+  logRegisterCreatedUser({ id: user.id, email: user.email, role: user.role });
 
   await createAuditLog({
     userId: user.id,

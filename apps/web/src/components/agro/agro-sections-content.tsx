@@ -40,7 +40,7 @@ export function AgroMonitoringContent() {
   return (
     <div className="space-y-6">
       <h1 className="font-display text-xl font-bold">Monitoramento em tempo real</h1>
-      <RealtimeMapMock telemetry={telemetry ?? undefined} />
+      <RealtimeMapMock />
       {telemetry && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <AgroStatCard label="Temperatura" value={`${telemetry.temperature}°C`} icon={Thermometer} />
@@ -62,7 +62,6 @@ export function AgroIotContent() {
   const { token } = useCurrentUser();
   const [units, setUnits] = useState<{ id: string; name: string; devices: unknown[]; sensors: unknown[] }[]>([]);
   const [alerts, setAlerts] = useState<{ id: string; message: string; device?: { name: string } }[]>([]);
-  const [demoMode, setDemoMode] = useState(true);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ name: "", location: "" });
   const [busy, setBusy] = useState(false);
@@ -76,7 +75,6 @@ export function AgroIotContent() {
       .then(([u, dash]) => {
         setUnits(u);
         setAlerts(dash.alerts);
-        setDemoMode(dash.demoMode);
       })
       .catch(() => fetchSensors().then(() => {}))
       .finally(() => setLoading(false));
@@ -100,11 +98,6 @@ export function AgroIotContent() {
   return (
     <div className="space-y-4">
       <h1 className="mb-2 font-display text-xl font-bold">Painel IoT AgroPet</h1>
-      {demoMode && (
-        <p className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-sm">
-          Modo demonstração — estrutura pronta para sensores reais via POST /api/iot/readings
-        </p>
-      )}
       <p className="mb-4 text-sm text-ecopet-gray">{deviceCount} dispositivos · {units.length} unidade(s) rural(is)</p>
 
       {token && (
@@ -124,11 +117,7 @@ export function AgroIotContent() {
       {loading ? (
         <p className="text-sm text-ecopet-gray">Carregando...</p>
       ) : units.length === 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {(token ? [] : []).length === 0 && (
-            <p className="text-sm text-ecopet-gray col-span-full">Cadastre uma unidade AgroPet ou use sensores demonstrativos abaixo.</p>
-          )}
-        </div>
+        <p className="text-sm text-ecopet-gray">Cadastre uma unidade AgroPet para iniciar o monitoramento.</p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {units.map((u) => (

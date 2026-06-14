@@ -28,6 +28,7 @@ import {
   resolveAppUrl,
 } from "../lib/password-reset-utils.js";
 import { resolveEmailProvider } from "./email-providers.js";
+import { createUserSessionTokens, revokeRefreshToken, refreshAccessToken as rotateAccessToken } from "../lib/session-tokens.js";
 
 const JWT_SECRET = process.env.JWT_SECRET || "ecopet-dev-secret";
 const MAX_ATTEMPTS = 5;
@@ -60,6 +61,63 @@ function hashToken(token: string) {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
 
+function normalizeDoc(value: string) {
+  return value.replace(/\D/g, "");
+}
+
+/** Busca usuário por e-mail, username, CPF ou CNPJ (perfis parceiro/ONG). */
+async function findUserByLoginIdentifier(raw: string) {
+  const identifier = raw.toLowerCase().trim();
+  const docDigits = normalizeDoc(raw);
+
+  const byEmailOrUsername = await prisma.user.findFirst({
+    where: { OR: [{ email: identifier }, { username: identifier }] },
+  });
+  if (byEmailOrUsername) return byEmailOrUsername;
+
+  if (docDigits.length === 11) {
+    const byCpf = await prisma.user.findFirst({ where: { cpf: docDigits } });
+    if (byCpf) return byCpf;
+  }
+
+  if (docDigits.length === 14) {
+    const profileWithUser = async (userId: string) =>
+      prisma.user.findUnique({ where: { id: userId } });
+
+    const clinic = await prisma.clinicProfile.findUnique({
+      where: { cnpj: docDigits },
+      select: { userId: true },
+    });
+    if (clinic) return profileWithUser(clinic.userId);
+
+    const petshop = await prisma.petshopProfile.findUnique({
+      where: { cnpj: docDigits },
+      select: { userId: true },
+    });
+    if (petshop) return profileWithUser(petshop.userId);
+
+    const seller = await prisma.sellerProfile.findUnique({
+      where: { cnpj: docDigits },
+      select: { userId: true },
+    });
+    if (seller) return profileWithUser(seller.userId);
+
+    const ong = await prisma.ongProfile.findUnique({
+      where: { cnpj: docDigits },
+      select: { userId: true },
+    });
+    if (ong) return profileWithUser(ong.userId);
+
+    const provider = await prisma.serviceProviderProfile.findFirst({
+      where: { documentType: "CNPJ", documentNumber: docDigits },
+      select: { userId: true },
+    });
+    if (provider) return profileWithUser(provider.userId);
+  }
+
+  return null;
+}
+
 export async function loginUser(params: {
   identifier: string;
   password: string;
@@ -70,9 +128,7 @@ export async function loginUser(params: {
 
   await handleBootstrapLoginAttempt(identifier, params.ip, params.userAgent);
 
-  const user = await prisma.user.findFirst({
-    where: { OR: [{ email: identifier }, { username: identifier }] },
-  });
+  const user = await findUserByLoginIdentifier(params.identifier);
 
   if (!user) {
     await prisma.loginLog.create({
@@ -183,16 +239,13 @@ export async function loginUser(params: {
     data: { failedLoginAttempts: 0, lockedUntil: null },
   });
 
-  const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: "7d" });
-  await prisma.userSession.create({
-    data: {
-      userId: user.id,
-      tokenHash: hashToken(token),
-      ip: params.ip,
-      userAgent: params.userAgent,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    },
+  const { accessToken, refreshToken } = await createUserSessionTokens({
+    userId: user.id,
+    role: user.role,
+    ip: params.ip,
+    userAgent: params.userAgent,
   });
+  const token = accessToken;
 
   await prisma.loginLog.create({
     data: { userId: user.id, email: user.email, username: user.username, success: true, ip: params.ip, userAgent: params.userAgent },
@@ -206,6 +259,8 @@ export async function loginUser(params: {
     await completeBootstrapLogin(user.id, params.ip, params.userAgent);
     return {
       token,
+      accessToken,
+      refreshToken,
       bootstrapMode: true,
       redirectTo: "/gestor/ativacao",
       user: {
@@ -235,6 +290,8 @@ export async function loginUser(params: {
 
   return {
     token,
+    accessToken,
+    refreshToken,
     redirectTo,
     pendingApproval,
     user: {
@@ -649,11 +706,16 @@ export async function revokeSession(sessionId: string, userId: string) {
   });
 }
 
-export async function logoutCurrentSession(bearerToken: string, userId: string) {
-  await prisma.userSession.updateMany({
-    where: { userId, tokenHash: hashToken(bearerToken), active: true },
-    data: { active: false },
-  });
+export async function logoutCurrentSession(bearerToken: string, userId: string, refreshToken?: string) {
+  if (bearerToken) {
+    await prisma.userSession.updateMany({
+      where: { userId, tokenHash: hashToken(bearerToken), active: true },
+      data: { active: false },
+    });
+  }
+  if (refreshToken) {
+    await revokeRefreshToken(refreshToken);
+  }
   await createAuditLog({
     userId,
     action: "LOGOUT",
@@ -662,6 +724,8 @@ export async function logoutCurrentSession(bearerToken: string, userId: string) 
   });
   return { success: true };
 }
+
+export { rotateAccessToken as refreshAccessToken, revokeRefreshToken };
 
 export async function createGestorInvite(params: {
   email: string;

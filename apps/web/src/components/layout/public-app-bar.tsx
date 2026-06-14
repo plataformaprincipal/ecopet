@@ -4,10 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { EcoPetLogo } from "@/components/brand/ecopet-logo";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/providers/i18n-provider";
 
 /** Barra superior para visitantes no marketplace público. */
 export function PublicAppBar() {
   const pathname = usePathname();
+  const { t } = useTranslation();
 
   return (
     <header className="sticky top-0 z-40 border-b border-ecopet-gray/10 bg-white/95 backdrop-blur dark:border-white/10 dark:bg-[#0f1419]/95">
@@ -16,20 +18,24 @@ export function PublicAppBar() {
         <nav className="hidden items-center gap-4 text-sm md:flex">
           <Link
             href="/marketplace"
-            className={pathname.startsWith("/marketplace") ? "font-semibold text-ecopet-green" : "text-ecopet-gray hover:text-ecopet-green"}
+            className={
+              pathname.startsWith("/marketplace")
+                ? "font-semibold text-ecopet-green"
+                : "text-ecopet-gray hover:text-ecopet-green"
+            }
           >
-            Marketplace
+            {t("common.marketplace")}
           </Link>
           <Link href="/termos-de-uso" className="text-ecopet-gray hover:text-ecopet-green">
-            Termos
+            {t("common.terms")}
           </Link>
         </nav>
         <div className="flex items-center gap-2">
           <Button asChild variant="ghost" size="sm">
-            <Link href="/login">Entrar</Link>
+            <Link href="/login">{t("common.signIn")}</Link>
           </Button>
           <Button asChild size="sm">
-            <Link href="/cadastro">Criar Conta</Link>
+            <Link href="/cadastro">{t("common.createAccount")}</Link>
           </Button>
         </div>
       </div>

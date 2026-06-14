@@ -130,16 +130,13 @@ export function AgroDashboardContent() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <RealtimeMapMock telemetry={telemetry ?? undefined} />
+        <RealtimeMapMock />
         {weather && <div className="rounded-2xl border border-ecopet-gray/10 p-4"><h3 className="mb-4 font-semibold">Clima ao vivo</h3><WeatherPanel weather={weather} /></div>}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <ProductionChartMock title="Produtividade por mês (sc/ha)" />
-        <ProductionChartMock title="Custo por hectare (R$)" data={[
-          { label: "Jan", value: 4200 }, { label: "Fev", value: 4350 }, { label: "Mar", value: 4100 },
-          { label: "Abr", value: 4600 }, { label: "Mai", value: 4850 }, { label: "Jun", value: 4700 },
-        ].map(d => ({ ...d, color: "bg-ecopet-dark" }))} />
+        <ProductionChartMock title="Custo por hectare (R$)" />
       </div>
 
       <AIRecommendationPanel recommendations={recs} />

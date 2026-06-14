@@ -40,7 +40,7 @@ function slugify(name: string) {
 }
 
 function mapProduct(p: ApiProduct): MarketplaceProduct {
-  const images = p.images?.length ? p.images : ["https://images.unsplash.com/photo-1583337130817-17825daae963?w=400"];
+  const images = p.images?.length ? p.images : [];
   return {
     id: p.id,
     name: p.name,
@@ -56,9 +56,9 @@ function mapProduct(p: ApiProduct): MarketplaceProduct {
     partner: {
       id: p.seller.id,
       name: p.seller.name,
-      avatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200",
+      avatar: "",
       isVerified: p.seller.isVerified,
-      location: "Brasil",
+      location: "",
     },
     inStock: p.stock > 0,
     deliveryDays: 3,
@@ -76,17 +76,17 @@ function mapService(s: ApiService): MarketplaceService {
     description: s.description,
     category: s.category.toLowerCase(),
     price: s.price,
-    image: s.image ?? "https://images.unsplash.com/photo-1628009365241-1a4b7857f757?w=400",
+    image: s.image ?? "",
     rating: s.rating,
     reviewCount: 0,
     partnerId: s.providerId,
     partner: {
       id: s.provider.id,
       name: s.provider.name,
-      avatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200",
+      avatar: "",
       isVerified: s.provider.isVerified,
-      location: "Brasil",
-      distanceKm: 2.5,
+      location: "",
+      distanceKm: 0,
     },
     durationMin: s.durationMin ?? 60,
     homeService: true,
@@ -104,18 +104,18 @@ function partnerFromProducts(products: ApiProduct[]): MarketplacePartner[] {
       type: "petshop",
       name: p.seller.name,
       tradeName: p.seller.name,
-      avatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200",
-      cover: "https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=800",
-      description: `Parceiro ECOPET — ${p.seller.name}`,
-      location: "Brasil",
-      distanceKm: 2.5,
-      rating: 4.8,
-      reviewCount: 12,
-      salesCount: 50,
-      responseTime: "< 2h",
+      avatar: "",
+      cover: "",
+      description: "",
+      location: "",
+      distanceKm: 0,
+      rating: p.rating,
+      reviewCount: p.reviewCount,
+      salesCount: 0,
+      responseTime: "",
       isVerified: p.seller.isVerified,
       categories: [p.category?.name ?? "Produtos"],
-      hours: "Seg–Sáb 9h–18h",
+      hours: "",
       policies: {},
       portfolio: [],
     });
@@ -125,59 +125,53 @@ function partnerFromProducts(products: ApiProduct[]): MarketplacePartner[] {
 
 export async function fetchProducts(_filters?: Partial<MarketplaceFilters>, token?: string): Promise<MarketplaceProduct[]> {
   try {
-    const rows = await api<ApiProduct[]>("/api/products", { token });
+    const rows = await api<ApiProduct[]>("/api/products", token ? { token } : undefined);
     return rows.map(mapProduct);
   } catch {
-    const { MOCK_PRODUCTS } = await import("./mock-data");
-    return [...MOCK_PRODUCTS];
+    return [];
   }
 }
 
 export async function fetchServices(_filters?: Partial<MarketplaceFilters>, token?: string): Promise<MarketplaceService[]> {
   try {
-    const rows = await api<ApiService[]>("/api/services", { token });
+    const rows = await api<ApiService[]>("/api/services", token ? { token } : undefined);
     return rows.map(mapService);
   } catch {
-    const { MOCK_SERVICES } = await import("./mock-data");
-    return [...MOCK_SERVICES];
+    return [];
   }
 }
 
 export async function fetchPartners(token?: string): Promise<MarketplacePartner[]> {
   try {
-    const products = await api<ApiProduct[]>("/api/products", { token });
+    const products = await api<ApiProduct[]>("/api/products", token ? { token } : undefined);
     return partnerFromProducts(products);
   } catch {
-    const { MOCK_PARTNERS } = await import("./mock-data");
-    return [...MOCK_PARTNERS];
+    return [];
   }
 }
 
-export async function fetchProduct(id: string, token?: string) {
+export async function fetchProduct(id: string, token?: string): Promise<MarketplaceProduct | undefined> {
   try {
-    const p = await api<ApiProduct>(`/api/products/${id}`, { token });
+    const p = await api<ApiProduct>(`/api/products/${id}`, token ? { token } : undefined);
     return mapProduct(p);
   } catch {
-    const { getProductById } = await import("./mock-data");
-    return getProductById(id);
+    return undefined;
   }
 }
 
-export async function fetchService(id: string) {
+export async function fetchService(id: string, token?: string): Promise<MarketplaceService | undefined> {
   try {
-    const services = await api<ApiService[]>("/api/services");
+    const services = await api<ApiService[]>("/api/services", token ? { token } : undefined);
     const s = services.find((x) => x.id === id);
-    if (!s) throw new Error("not found");
-    return mapService(s);
+    return s ? mapService(s) : undefined;
   } catch {
-    const { getServiceById } = await import("./mock-data");
-    return getServiceById(id);
+    return undefined;
   }
 }
 
-export async function fetchPartner(id: string, token?: string) {
+export async function fetchPartner(id: string, token?: string): Promise<MarketplacePartner | undefined> {
   const partners = await fetchPartners(token);
-  return partners.find((p) => p.id === id) ?? partners[0];
+  return partners.find((p) => p.id === id);
 }
 
 export async function fetchPartnerProducts(partnerId: string, token?: string) {
@@ -185,8 +179,8 @@ export async function fetchPartnerProducts(partnerId: string, token?: string) {
   return products.filter((p) => p.partnerId === partnerId);
 }
 
-export async function fetchPartnerServices(partnerId: string) {
-  const services = await fetchServices();
+export async function fetchPartnerServices(partnerId: string, token?: string) {
+  const services = await fetchServices(undefined, token);
   return services.filter((s) => s.partnerId === partnerId);
 }
 
@@ -195,13 +189,11 @@ export async function fetchReviews(_targetId: string) {
 }
 
 export async function fetchAiRecommendations() {
-  const { MOCK_AI_RECOMMENDATIONS } = await import("./mock-data");
-  return [...MOCK_AI_RECOMMENDATIONS];
+  return [];
 }
 
 export async function fetchSubscriptions() {
-  const { MOCK_SUBSCRIPTIONS } = await import("./mock-data");
-  return [...MOCK_SUBSCRIPTIONS];
+  return [];
 }
 
 export async function fetchRelatedProducts(productId: string, token?: string) {
@@ -209,8 +201,8 @@ export async function fetchRelatedProducts(productId: string, token?: string) {
   return products.filter((p) => p.id !== productId).slice(0, 4);
 }
 
-export async function fetchRelatedServices(serviceId: string) {
-  const services = await fetchServices();
+export async function fetchRelatedServices(serviceId: string, token?: string) {
+  const services = await fetchServices(undefined, token);
   return services.filter((s) => s.id !== serviceId).slice(0, 4);
 }
 
@@ -228,5 +220,3 @@ export async function searchMarketplace(query: string, filters?: Partial<Marketp
     filters,
   };
 }
-
-export { MOCK_PRODUCTS, MOCK_SERVICES, MOCK_PARTNERS, MOCK_AI_RECOMMENDATIONS, MOCK_SUBSCRIPTIONS } from "./mock-data";

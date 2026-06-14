@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { MessageCircle, Send } from "lucide-react";
 import { AppHeader } from "@/components/layout/app-header";
 import { SocialSubNav } from "@/components/social/social-sub-nav";
@@ -11,19 +10,19 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useSocialStore } from "@/store/social-store";
-import { useCurrentUser } from "@/hooks/use-current-user";
+import { useFoundationSession } from "@/hooks/use-foundation-session";
 import { formatSocialTime } from "@/lib/social/config";
-import { DemoContentBanner, EmptyState } from "@/components/ui/empty-state";
-import { EMPTY_MESSAGES } from "@/lib/auth/routes";
+import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
+import { useTranslation } from "@/providers/i18n-provider";
 
 export function MessagesPageContent() {
-  const { user, token } = useCurrentUser();
+  const { t } = useTranslation();
+  const { user } = useFoundationSession();
   const conversations = useSocialStore((s) => s.conversations);
   const messages = useSocialStore((s) => s.messages);
   const activeId = useSocialStore((s) => s.activeConversationId);
-  const conversationsIsDemo = useSocialStore((s) => s.conversationsIsDemo);
   const loadConversations = useSocialStore((s) => s.loadConversations);
   const loadMessages = useSocialStore((s) => s.loadMessages);
   const setActiveConversation = useSocialStore((s) => s.setActiveConversation);
@@ -31,26 +30,25 @@ export function MessagesPageContent() {
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
-    if (token && user) loadConversations(token, user.id);
-  }, [loadConversations, token, user]);
+    if (user) loadConversations(undefined, user.id);
+  }, [loadConversations, user]);
 
   useEffect(() => {
-    if (activeId && token && user) loadMessages(activeId, token, user.id);
-  }, [activeId, loadMessages, token, user]);
+    if (activeId && user) loadMessages(activeId, undefined, user.id);
+  }, [activeId, loadMessages, user]);
 
   const activeConv = conversations.find((c) => c.id === activeId);
 
   async function handleSend() {
-    if (!draft.trim() || !token || !activeId || sending) return;
+    if (!draft.trim() || !activeId || sending || !user) return;
     setSending(true);
     try {
       await api(`/api/conversations/${activeId}/messages`, {
         method: "POST",
-        token,
         body: JSON.stringify({ content: draft.trim() }),
       });
       setDraft("");
-      if (user) await loadMessages(activeId, token, user.id);
+      await loadMessages(activeId, undefined, user.id);
     } finally {
       setSending(false);
     }
@@ -58,23 +56,17 @@ export function MessagesPageContent() {
 
   return (
     <>
-      <AppHeader title="Mensagens" />
+      <AppHeader title={t("nav.messages")} />
       <SocialSubNav />
       <main className="mx-auto flex max-w-4xl flex-1 flex-col lg:h-[calc(100vh-8rem)] lg:flex-row lg:overflow-hidden lg:p-4 lg:gap-4">
         <div className={cn("flex flex-col border-ecopet-gray/10 lg:w-80 lg:rounded-2xl lg:border lg:bg-white lg:dark:bg-[#0f1419]", activeId && "hidden lg:flex")}>
-          {conversationsIsDemo && (
-            <div className="p-3">
-              <DemoContentBanner />
-            </div>
-          )}
           <div className="flex-1 overflow-y-auto">
             {conversations.length === 0 ? (
               <div className="p-4">
                 <EmptyState
                   icon={MessageCircle}
-                  title="Mensagens"
-                  description={EMPTY_MESSAGES.messages}
-                  demo={conversationsIsDemo}
+                  title={t("empty.messages.title")}
+                  description={t("empty.messages.description")}
                 />
               </div>
             ) : (
@@ -121,8 +113,14 @@ export function MessagesPageContent() {
                 ))}
               </div>
               <div className="flex gap-2 border-t p-3">
-                <Input placeholder="Mensagem..." value={draft} onChange={(e) => setDraft(e.target.value)} className="flex-1" onKeyDown={(e) => e.key === "Enter" && handleSend()} />
-                <Button type="button" size="icon" disabled={sending || !draft.trim()} onClick={handleSend} aria-label="Enviar">
+                <Input
+                  placeholder={t("empty.messages.placeholder")}
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  className="flex-1"
+                  onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                />
+                <Button type="button" size="icon" disabled={sending || !draft.trim()} onClick={handleSend} aria-label={t("empty.messages.send")}>
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
@@ -130,7 +128,7 @@ export function MessagesPageContent() {
           ) : (
             <Card className="m-4 border-dashed">
               <CardContent className="p-8 text-center text-sm text-ecopet-gray">
-                Selecione uma conversa para visualizar o histórico.
+                {t("empty.messages.selectConversation")}
               </CardContent>
             </Card>
           )}

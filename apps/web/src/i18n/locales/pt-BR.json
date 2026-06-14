@@ -62,7 +62,35 @@
     "quotes": "Orçamentos",
     "favorites": "Favoritos",
     "search": "Busca",
-    "cart": "Carrinho"
+    "cart": "Carrinho",
+    "orders": "Pedidos",
+    "campaigns": "Campanhas",
+    "adminPanel": "Painel Admin",
+    "users": "Usuários",
+    "partners": "Parceiros",
+    "logs": "Logs"
+  },
+  "errors": {
+    "unauthorized": "Sessão expirada ou não autenticado.",
+    "forbidden": "Você não tem permissão para acessar este recurso.",
+    "notFound": "Recurso não encontrado.",
+    "validation": "Dados inválidos. Verifique os campos.",
+    "conflict": "Conflito ao salvar os dados.",
+    "internal": "Erro interno. Tente novamente."
+  },
+  "dashboard": {
+    "title": "Dashboard EcoPet",
+    "greeting": "Olá, {name}",
+    "email": "E-mail",
+    "role": "Perfil",
+    "editProfile": "Editar perfil",
+    "logout": "Sair",
+    "roles": {
+      "CLIENT": "Cliente / Tutor",
+      "PARTNER": "Parceiro",
+      "ONG": "ONG",
+      "ADMIN": "Administrador"
+    }
   },
   "auth": {
     "login": {
@@ -355,6 +383,118 @@
       "middleEast": "Oriente Médio e Ásia Central",
       "asia": "Ásia",
       "africa": "África"
+    }
+  },
+  "empty": {
+    "noResults": "Nenhum resultado",
+    "noResultsHint": "Tente outro termo ou limpe os filtros.",
+    "demoBanner": "Conteúdo demonstrativo — dados reais aparecerão conforme usuários interagirem.",
+    "notifications": {
+      "title": "Sem notificações",
+      "description": "Nenhuma notificação encontrada."
+    },
+    "messages": {
+      "title": "Mensagens",
+      "description": "Nenhuma mensagem encontrada.",
+      "placeholder": "Mensagem...",
+      "send": "Enviar",
+      "selectConversation": "Selecione uma conversa para visualizar o histórico.",
+      "noConversations": "Nenhuma conversa encontrada."
+    },
+    "orders": {
+      "pageTitle": "Meus Pedidos e Serviços",
+      "partnerTitle": "Pedidos recebidos",
+      "subtitle": "Acompanhamento filtrado pela sua conta",
+      "productsSection": "Produtos",
+      "servicesSection": "Serviços solicitados",
+      "description": "Nenhum pedido encontrado.",
+      "noServices": "Nenhum serviço solicitado."
+    },
+    "pets": {
+      "title": "Nenhum pet cadastrado",
+      "description": "Você ainda não cadastrou nenhum pet.",
+      "action": "Cadastrar pet"
+    },
+    "profiles": {
+      "title": "Nenhum perfil encontrado",
+      "description": "Não há perfis disponíveis no momento."
+    },
+    "posts": {
+      "title": "Nenhuma publicação encontrada",
+      "description": "Ainda não há publicações na comunidade.",
+      "myTitle": "Suas publicações",
+      "myDescription": "Você ainda não possui publicações.",
+      "communityTitle": "Comunidade",
+      "exploreAction": "Explorar",
+      "createLabel": "Criar publicação"
+    },
+    "comments": {
+      "description": "Nenhum comentário encontrado."
+    },
+    "campaigns": {
+      "title": "Nenhuma campanha encontrada",
+      "description": "Crie sua primeira campanha."
+    },
+    "marketplace": {
+      "noProducts": "Nenhum produto cadastrado",
+      "noProductsHint": "Cadastre seu primeiro produto ou serviço.",
+      "noServices": "Nenhum serviço cadastrado",
+      "noServicesHint": "Cadastre serviços para aparecer no marketplace.",
+      "productsTitle": "Gestão de Produtos",
+      "productsHint": "Produtos vinculados à sua conta parceira",
+      "servicesTitle": "Gestão de Serviços",
+      "servicesHint": "Serviços vinculados à sua conta parceira",
+      "addProduct": "Cadastrar produto",
+      "addService": "Cadastrar serviço",
+      "formPending": "Formulário disponível após integração com o catálogo real."
+    },
+    "quotes": {
+      "title": "Orçamentos Personalizados",
+      "subtitle": "Recebidos, aceitos, em negociação e convertidos em compra",
+      "noQuotes": "Nenhum orçamento encontrado",
+      "noQuotesHint": "Solicite orçamentos personalizados aos parceiros."
+    },
+    "health": {
+      "title": "Saúde Preventiva",
+      "subtitle": "Carteira vacinal · Monitoramento · Telemedicina veterinária"
+    },
+    "agro": {
+      "noFarms": "Nenhuma fazenda cadastrada",
+      "noFarmsHint": "Cadastre uma fazenda para iniciar o monitoramento.",
+      "noPlots": "Nenhum talhão cadastrado",
+      "noSensors": "Nenhum sensor cadastrado",
+      "noRobots": "Nenhum robô cadastrado",
+      "noMapData": "Sem dados de mapa",
+      "noMapDataHint": "Dados geoespaciais aparecerão quando houver sensores cadastrados."
+    },
+    "ai": {
+      "noHistory": "Nenhuma interação encontrada.",
+      "placeholder": "Pergunte sobre cuidados com pets...",
+      "unavailable": "IA indisponível no momento. Tente novamente mais tarde.",
+      "openLabel": "Abrir ECOPET IA",
+      "fullPage": "Abrir IA completa",
+      "marketplaceTitle": "Assistente Marketplace",
+      "noRecommendations": "Nenhuma recomendação disponível no momento.",
+      "quickProducts": "Produtos",
+      "quickVet": "Veterinários",
+      "quickExplore": "Explorar",
+      "quickPet": "Meu Pet",
+      "quickSchedule": "Agenda"
+    },
+    "admin": {
+      "noData": "Nenhum dado disponível."
+    },
+    "items": {
+      "description": "Nenhum item encontrado."
+    }
+  },
+  "gestor": {
+    "title": "Gestor ECOPET",
+    "loading": "Carregando Gestor ECOPET...",
+    "accessDenied": {
+      "title": "Acesso restrito",
+      "description": "Esta área é exclusiva para administradores ECOPET.",
+      "back": "Voltar ao dashboard"
     }
   }
 }

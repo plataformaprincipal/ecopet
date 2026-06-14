@@ -67,15 +67,6 @@ export const AI_QUICK_QUESTIONS = [
   "Como reduzir custo por hectare?",
 ];
 
-export const AI_MOCK_RESPONSES: Record<string, string> = {
-  "Qual área tem maior risco de praga?": "O Talhão B2 (Soja) apresenta risco alto de lagarta-do-cartucho. NDVI caiu 8% nos últimos 3 dias. Recomendo inspeção com drone DJI-Agro 02 e pulverização preventiva em 48h.",
-  "Quando devo irrigar?": "Com base na umidade do solo (32%) e previsão de seca, recomendo irrigação no Talhão A1 amanhã entre 5h-7h. Economia estimada de 12% vs. irrigação noturna.",
-  "Qual talhão está com baixa produtividade?": "Talhão C3 (Milho) está 18% abaixo da média histórica. Solo com baixo nitrogênio (N: 12 ppm). Sugestão: adubação nitrogenada + análise complementar.",
-  "Qual previsão de colheita?": "Safra 2026: Soja 42 sc/ha (±3), Milho 98 sc/ha (±5). Janela ideal de colheita: 15-28 de junho. Perdas estimadas: 2.1% se colher no período.",
-  "Quais máquinas estão paradas?": "2 máquinas paradas: Pulverizador PX-400 (manutenção programada) e Caminhão GR-120 (falha no sistema hidráulico — manutenção preditiva acionada).",
-  "Como reduzir custo por hectare?": "Oportunidades: (1) otimizar rotas do robô pulverizador (-R$45/ha), (2) compra coletiva de defensivos (-8%), (3) irrigação inteligente (-R$32/ha em água).",
-};
-
 export function formatAgroCurrency(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }

@@ -1,0 +1,24 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ecopet-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ecopet
+      POSTGRES_PASSWORD: ecopet_dev
+      POSTGRES_DB: ecopet
+    ports:
+      - "5432:5432"
+    volumes:
+      - ecopet_pg_data:/var/lib/postgresql/data
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: ecopet-mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+volumes:
+  ecopet_pg_data:

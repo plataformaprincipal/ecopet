@@ -10,7 +10,9 @@ export const BRAND = {
   },
 } as const;
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+import { getClientApiUrl } from "./api-url.client";
+
+export const API_URL = getClientApiUrl();
 
 export const AI_DISCLAIMER =
   "A IA ECOPET não substitui um veterinário. Em caso de emergência, procure atendimento profissional imediatamente.";

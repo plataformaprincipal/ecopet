@@ -30,14 +30,20 @@ ecopet/
 
 ## Início rápido
 
-### 1. PostgreSQL
+### 1. PostgreSQL (local ou Supabase)
 
-Crie o banco `ecopet` e copie o env:
+**Local com Docker:**
 
 ```bash
+npm run db:up
 cp .env.example .env
-# Edite DATABASE_URL
+npm install
+npm run db:generate
+npm run db:push
+npm run db:seed
 ```
+
+**Supabase:** crie um projeto em [supabase.com](https://supabase.com), copie `DATABASE_URL` (pooler, porta 6543) e `DIRECT_URL` (porta 5432) para `.env`.
 
 ### 2. Instalar dependências
 
@@ -49,7 +55,9 @@ npm install
 
 ```bash
 npm run db:generate
-npm run db:push
+npm run db:push    # dev rápido
+# ou
+npm run db:migrate # migrations versionadas
 npm run db:seed
 ```
 
@@ -61,6 +69,9 @@ npm run dev
 
 - **Web:** http://localhost:3000  
 - **API:** http://localhost:4000  
+- **Browser → API:** proxy same-origin `/api/ecopet` (cookies HttpOnly)
+
+Autenticação: **JWT access (15min) + refresh (7d)** em cookies HttpOnly. Senhas com **bcrypt** em `User.passwordHash`.
 
 ### Contas de demonstração (seed)
 
@@ -92,10 +103,43 @@ Tutor, Veterinário, Clínica, Pet Shop, ONG, Admin, Entregador, Influenciador, 
 
 | Comando | Descrição |
 |---------|-----------|
-| `npm run dev` | Web + API em paralelo |
+| `npm run dev` | Orquestrador: API (porta livre 4000+) + Web sincronizados |
+| `npm run dev:parallel` | Web + API em paralelo (legado; pode causar EADDRINUSE) |
 | `npm run dev:web` | Apenas frontend |
 | `npm run dev:api` | Apenas backend |
 | `npm run db:seed` | Dados de demonstração |
+
+## Deploy (Vercel + API)
+
+O frontend (`apps/web`) e a API (`apps/api`) são **serviços separados**. Na Vercel, só o Next.js roda por padrão — a API Express precisa de outro host (Railway, Render, Fly.io, etc.) ou o cadastro/login falhará com erro de conexão.
+
+### Variáveis na Vercel (frontend)
+
+| Variável | Obrigatória | Descrição |
+|----------|-------------|-----------|
+| `DATABASE_URL` | Sim | PostgreSQL remoto (SQLite não funciona na Vercel) |
+| `JWT_SECRET` | Sim | Mesmo valor configurado na API |
+| `NEXTAUTH_SECRET` | Sim | Segredo da sessão NextAuth |
+| `NEXTAUTH_URL` | Sim | URL pública do site (ex.: `https://ecopet.vercel.app`) |
+| `API_INTERNAL_URL` | Sim* | URL da API Express para proxy server-side |
+| `NEXT_PUBLIC_API_URL` | Opcional | URL pública da API (alternativa ao proxy) |
+
+\* Se `NEXT_PUBLIC_API_URL` **não** estiver definida, o frontend usa o proxy same-origin `/api/ecopet` (requer `API_INTERNAL_URL` no servidor).
+
+### Variáveis na API (Railway/Render)
+
+| Variável | Descrição |
+|----------|-----------|
+| `DATABASE_URL` | Mesmo Postgres da Vercel |
+| `JWT_SECRET` | Mesmo valor do frontend |
+| `WEB_URL` | URL do frontend (ex.: `https://ecopet.vercel.app`) |
+
+### Gestor Véras (bootstrap)
+
+Após `npm run db:seed`:
+
+- **Usuário:** `gestorveras`
+- **Senha:** `AASSSVVV@1972` (uso único — criar Master Admin em `/gestor/ativacao`)
 
 ## Próximos passos (produção)
 

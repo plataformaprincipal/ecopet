@@ -4,7 +4,7 @@ import { Plug, Bot, AlertTriangle, Zap, RefreshCw, Database, Shield } from "luci
 import { AnalyticsChartMock } from "@/components/profile/shared/analytics-chart-mock";
 import { cn } from "@/lib/utils";
 import type { IntegrationDashboardStats } from "@/lib/integrations/types";
-import { SYNC_CHART, FAILURES_CHART, ROBOT_ACTIONS_CHART } from "@/lib/integrations/mock-data/logs.mock";
+import { SYNC_CHART, FAILURES_CHART, ROBOT_ACTIONS_CHART } from "@/lib/integrations/empty";
 
 interface IntegrationDashboardProps {
   stats: IntegrationDashboardStats;

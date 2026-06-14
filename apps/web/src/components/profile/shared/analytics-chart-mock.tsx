@@ -1,6 +1,8 @@
 "use client";
 
+import { BarChart3 } from "lucide-react";
 import type { ChartDataPoint } from "@/lib/profile/types";
+import { useTranslation } from "@/providers/i18n-provider";
 
 interface AnalyticsChartMockProps {
   title: string;
@@ -10,6 +12,18 @@ interface AnalyticsChartMockProps {
 }
 
 export function AnalyticsChartMock({ title, data, valuePrefix = "", height = 160 }: AnalyticsChartMockProps) {
+  const { t } = useTranslation();
+
+  if (data.length === 0) {
+    return (
+      <div className="flex min-h-[160px] flex-col items-center justify-center rounded-2xl border border-dashed border-ecopet-green/25 bg-ecopet-green/[0.03] p-6 text-center">
+        <BarChart3 className="mb-2 h-8 w-8 text-ecopet-green/60" aria-hidden />
+        <p className="text-sm font-medium text-ecopet-dark dark:text-white">{title}</p>
+        <p className="mt-1 text-xs text-ecopet-gray">{t("empty.admin.noData")}</p>
+      </div>
+    );
+  }
+
   const max = Math.max(...data.map((d) => d.value), 1);
 
   return (

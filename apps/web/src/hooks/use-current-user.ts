@@ -62,14 +62,14 @@ export function useCurrentUser() {
   useEffect(() => {
     if (!hydrated || sessionStatus === "loading") return;
 
-    if (!token) {
+    if (sessionStatus === "unauthenticated") {
       setUser(null);
       setLoading(false);
       return;
     }
 
     setLoading(true);
-    api<CurrentUser>("/api/users/me", { token })
+    api<CurrentUser>("/api/users/me", token ? { token } : undefined)
       .then(setUser)
       .catch(() => setUser(null))
       .finally(() => setLoading(false));

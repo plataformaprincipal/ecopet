@@ -62,7 +62,35 @@
     "quotes": "Presupuestos",
     "favorites": "Favoritos",
     "search": "Búsqueda",
-    "cart": "Carrito"
+    "cart": "Carrito",
+    "orders": "Pedidos",
+    "campaigns": "Campañas",
+    "adminPanel": "Panel Admin",
+    "users": "Usuarios",
+    "partners": "Socios",
+    "logs": "Registros"
+  },
+  "errors": {
+    "unauthorized": "Sesión expirada o no autenticado.",
+    "forbidden": "No tienes permiso para acceder a este recurso.",
+    "notFound": "Recurso no encontrado.",
+    "validation": "Datos inválidos. Verifica los campos.",
+    "conflict": "Conflicto al guardar los datos.",
+    "internal": "Error interno. Inténtalo de nuevo."
+  },
+  "dashboard": {
+    "title": "Panel EcoPet",
+    "greeting": "Hola, {name}",
+    "email": "Correo",
+    "role": "Perfil",
+    "editProfile": "Editar perfil",
+    "logout": "Salir",
+    "roles": {
+      "CLIENT": "Cliente / Tutor",
+      "PARTNER": "Socio",
+      "ONG": "ONG",
+      "ADMIN": "Administrador"
+    }
   },
   "auth": {
     "login": {
@@ -355,6 +383,118 @@
       "middleEast": "Oriente Medio y Asia Central",
       "asia": "Asia",
       "africa": "África"
+    }
+  },
+  "empty": {
+    "noResults": "Sin resultados",
+    "noResultsHint": "Prueba otro término o limpia los filtros.",
+    "demoBanner": "Contenido demostrativo — los datos reales aparecerán cuando los usuarios interactúen.",
+    "notifications": {
+      "title": "Sin notificaciones",
+      "description": "No se encontraron notificaciones."
+    },
+    "messages": {
+      "title": "Mensajes",
+      "description": "No se encontraron mensajes.",
+      "placeholder": "Mensaje...",
+      "send": "Enviar",
+      "selectConversation": "Selecciona una conversación para ver el historial.",
+      "noConversations": "No se encontraron conversaciones."
+    },
+    "orders": {
+      "pageTitle": "Mis Pedidos y Servicios",
+      "partnerTitle": "Pedidos recibidos",
+      "subtitle": "Seguimiento filtrado por tu cuenta",
+      "productsSection": "Productos",
+      "servicesSection": "Servicios solicitados",
+      "description": "No se encontraron pedidos.",
+      "noServices": "Ningún servicio solicitado."
+    },
+    "pets": {
+      "title": "Ninguna mascota registrada",
+      "description": "Aún no has registrado ninguna mascota.",
+      "action": "Registrar mascota"
+    },
+    "profiles": {
+      "title": "Ningún perfil encontrado",
+      "description": "No hay perfiles disponibles en este momento."
+    },
+    "posts": {
+      "title": "Ninguna publicación encontrada",
+      "description": "Aún no hay publicaciones en la comunidad.",
+      "myTitle": "Tus publicaciones",
+      "myDescription": "Aún no tienes publicaciones.",
+      "communityTitle": "Comunidad",
+      "exploreAction": "Explorar",
+      "createLabel": "Crear publicación"
+    },
+    "comments": {
+      "description": "No se encontraron comentarios."
+    },
+    "campaigns": {
+      "title": "Ninguna campaña encontrada",
+      "description": "Crea tu primera campaña."
+    },
+    "marketplace": {
+      "noProducts": "Ningún producto registrado",
+      "noProductsHint": "Registra tu primer producto o servicio.",
+      "noServices": "Ningún servicio registrado",
+      "noServicesHint": "Registra servicios para aparecer en el marketplace.",
+      "productsTitle": "Gestión de Productos",
+      "productsHint": "Productos vinculados a tu cuenta de socio",
+      "servicesTitle": "Gestión de Servicios",
+      "servicesHint": "Servicios vinculados a tu cuenta de socio",
+      "addProduct": "Registrar producto",
+      "addService": "Registrar servicio",
+      "formPending": "Formulario disponible tras integración con catálogo real."
+    },
+    "quotes": {
+      "title": "Presupuestos Personalizados",
+      "subtitle": "Recibidos, aceptados, en negociación y convertidos en compra",
+      "noQuotes": "Ningún presupuesto encontrado",
+      "noQuotesHint": "Solicita presupuestos personalizados a los socios."
+    },
+    "health": {
+      "title": "Salud Preventiva",
+      "subtitle": "Cartilla de vacunas · Monitoreo · Telemedicina veterinaria"
+    },
+    "agro": {
+      "noFarms": "Ninguna granja registrada",
+      "noFarmsHint": "Registra una granja para iniciar el monitoreo.",
+      "noPlots": "Ninguna parcela registrada",
+      "noSensors": "Ningún sensor registrado",
+      "noRobots": "Ningún robot registrado",
+      "noMapData": "Sin datos de mapa",
+      "noMapDataHint": "Los datos geoespaciales aparecerán cuando haya sensores registrados."
+    },
+    "ai": {
+      "noHistory": "Ninguna interacción encontrada.",
+      "placeholder": "Pregunta sobre el cuidado de mascotas...",
+      "unavailable": "IA no disponible en este momento. Inténtalo más tarde.",
+      "openLabel": "Abrir ECOPET IA",
+      "fullPage": "Abrir IA completa",
+      "marketplaceTitle": "Asistente Marketplace",
+      "noRecommendations": "Ninguna recomendación disponible en este momento.",
+      "quickProducts": "Productos",
+      "quickVet": "Veterinarios",
+      "quickExplore": "Explorar",
+      "quickPet": "Mi Mascota",
+      "quickSchedule": "Agenda"
+    },
+    "admin": {
+      "noData": "No hay datos disponibles."
+    },
+    "items": {
+      "description": "No se encontraron elementos."
+    }
+  },
+  "gestor": {
+    "title": "Gestor ECOPET",
+    "loading": "Cargando Gestor ECOPET...",
+    "accessDenied": {
+      "title": "Acceso restringido",
+      "description": "Esta área es exclusiva para administradores ECOPET.",
+      "back": "Volver al dashboard"
     }
   }
 }

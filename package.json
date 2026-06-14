@@ -8,17 +8,42 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "concurrently -n web,api -c green,blue \"npm run dev -w @ecopet/web\" \"npm run dev -w @ecopet/api\"",
+    "dev": "npm run dev -w @ecopet/web",
+    "dev:full": "node scripts/dev-ecopet.mjs",
+    "dev:parallel": "concurrently -n web,api -c green,blue \"npm run dev -w @ecopet/web\" \"npm run dev -w @ecopet/api\"",
     "dev:web": "npm run dev -w @ecopet/web",
     "dev:api": "npm run dev -w @ecopet/api",
-    "build": "npm run build -w @ecopet/database && npm run build -w @ecopet/api && npm run build -w @ecopet/web",
-    "db:generate": "npm run generate -w @ecopet/database",
-    "db:push": "npm run push -w @ecopet/database",
+    "build": "npm run build -w @ecopet/web",
+    "db:generate": "npm run db:generate -w @ecopet/web",
+    "db:push": "npm run db:push -w @ecopet/web",
+    "db:setup": "node scripts/ensure-postgres.mjs && npm run db:push -w @ecopet/web",
+    "db:migrate": "npm run migrate -w @ecopet/database",
     "db:seed": "npm run seed -w @ecopet/database",
+    "db:users": "node scripts/db-users.mjs",
+    "db:reset:dev": "node scripts/db-reset-dev.mjs",
+    "db:up": "docker compose up -d postgres",
+    "mail:up": "node scripts/start-maildev.mjs",
+    "mail:up:docker": "docker compose up -d mailpit",
+    "test:mail": "node scripts/sync-web-env.mjs && node scripts/test-mail.mjs",
+    "setup:smtp": "node scripts/setup-smtp.mjs",
+    "setup:smtp:gmail": "node scripts/setup-smtp.mjs --help-gmail",
+    "validate:gmail": "node scripts/validate-gmail-smtp.mjs",
+    "setup:smtp:dev": "node scripts/setup-smtp.mjs --dev",
+    "sync:env": "node scripts/sync-web-env.mjs",
+    "test:auth": "node scripts/test-auth-flow.mjs",
+    "test:register": "node scripts/test-register-duplicates.mjs",
+    "test:foundation": "node scripts/run-foundation-tests.mjs",
+    "test:permissions": "node scripts/run-permissions-tests.mjs",
+    "test:permissions:unit": "node --import tsx scripts/test-permissions.mjs",
+    "test:empty-states": "node --import tsx scripts/test-empty-states.mjs",
+    "test:no-mocks": "node scripts/test-no-mocks.mjs",
+    "test": "node scripts/test.mjs",
+    "test:i18n": "node scripts/test-i18n.mjs",
     "lint": "npm run lint -w @ecopet/web"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "concurrently": "^9.1.2",
+    "maildev": "^2.2.1"
   },
   "engines": {
     "node": ">=20"

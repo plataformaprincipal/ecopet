@@ -20,8 +20,9 @@ import { QualityControlPanel } from "@/components/ecosystem/partner/quality-cont
 import { ChatHub } from "@/components/ecosystem/chat/chat-hub";
 import { useMarketplaceStore } from "@/store/marketplace-store";
 import { fetchPartner, fetchPartnerProducts, fetchPartnerServices, fetchReviews } from "@/lib/marketplace/api";
-import { MOCK_QUOTES } from "@/lib/ecosystem/mock-data";
+import { getQuotesForPartner } from "@/lib/ecosystem/quotes-api";
 import type { MarketplacePartner, MarketplaceProduct, MarketplaceService, MarketplaceReview } from "@/lib/marketplace/types";
+import type { CustomQuote } from "@/lib/ecosystem/types";
 import { cn } from "@/lib/utils";
 
 const TYPE_LABELS: Record<string, string> = {
@@ -65,7 +66,7 @@ export function PartnerProfileContent({ id, expanded, tabOnly }: PartnerProfileC
 
   const fav = isFavoritePartner(partner.id);
   const filteredReviews = reviewFilter > 0 ? reviews.filter((r) => r.rating >= reviewFilter) : reviews;
-  const partnerQuotes = MOCK_QUOTES.filter((q) => q.partnerId === id);
+  const partnerQuotes = getQuotesForPartner(id);
   const qualityIndex = partner.qualityIndex ?? Math.round(partner.rating * 20);
   const isOpen = partner.isOpen ?? true;
 
@@ -252,7 +253,7 @@ function renderTabContent(
     filteredReviews: MarketplaceReview[];
     reviewFilter: number;
     setReviewFilter: (n: number) => void;
-    partnerQuotes: typeof MOCK_QUOTES;
+    partnerQuotes: CustomQuote[];
     addQuoteToCart: (id: string) => void;
   }
 ) {

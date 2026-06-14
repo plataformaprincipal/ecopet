@@ -7,7 +7,6 @@ import { ServiceCard } from "./service-card";
 import { PartnerCard } from "./partner-card";
 import { EmptyState } from "./empty-state";
 import { useMarketplaceStore } from "@/store/marketplace-store";
-import { MOCK_PRODUCTS, MOCK_SERVICES, MOCK_PARTNERS } from "@/lib/marketplace/mock-data";
 import { useTranslation } from "@/providers/i18n-provider";
 
 export function FavoritesPageContent() {
@@ -15,17 +14,11 @@ export function FavoritesPageContent() {
   const { favoriteProducts, favoriteServices, favoritePartners, searchHistory, productCache, serviceCache, partnerCache } =
     useMarketplaceStore();
 
-  const resolveProducts = [...favoriteProducts].map(
-    (id) => productCache[id] ?? MOCK_PRODUCTS.find((p) => p.id === id)
-  ).filter(Boolean);
+  const resolveProducts = [...favoriteProducts].map((id) => productCache[id]).filter(Boolean);
 
-  const resolveServices = [...favoriteServices].map(
-    (id) => serviceCache[id] ?? MOCK_SERVICES.find((s) => s.id === id)
-  ).filter(Boolean);
+  const resolveServices = [...favoriteServices].map((id) => serviceCache[id]).filter(Boolean);
 
-  const resolvePartners = [...favoritePartners].map(
-    (id) => partnerCache[id] ?? MOCK_PARTNERS.find((p) => p.id === id)
-  ).filter(Boolean);
+  const resolvePartners = [...favoritePartners].map((id) => partnerCache[id]).filter(Boolean);
 
   return (
     <Tabs defaultValue="products">

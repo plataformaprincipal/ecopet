@@ -13,7 +13,7 @@ export const USER_MESSAGES = {
     `Sua conta existe, mas o acesso está temporariamente indisponível. Motivo: ${reason}. Entre em contato com o suporte da ECOPET.`,
   VALIDATION: "Alguns campos precisam ser corrigidos antes de continuar.",
   CONNECTION: "Não foi possível conectar ao servidor. Verifique sua internet e tente novamente.",
-  DATABASE: "Não foi possível salvar seus dados agora. Tente novamente em instantes.",
+  DATABASE: "Não foi possível concluir o cadastro no momento. Tente novamente em instantes.",
   PERMISSION: "Você não tem permissão para acessar esta área.",
   SESSION: "Sua sessão expirou. Faça login novamente.",
   UNEXPECTED: "Ocorreu um erro inesperado. Tente novamente. Se persistir, entre em contato com o suporte.",

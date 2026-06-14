@@ -1,124 +1,138 @@
-import type { AgroDashboardStats, AgroAlert, AiAgroMessage } from "./types";
-import {
-  MOCK_FARMS,
-  MOCK_SENSORS,
-  MOCK_ROBOTS,
-  MOCK_DRONES,
-  MOCK_MACHINES,
-  MOCK_LIVESTOCK,
-  MOCK_SOIL,
-  MOCK_WEATHER,
-  MOCK_ALERTS,
-  MOCK_ML_MODELS,
-  MOCK_AUTOMATIONS,
-  MOCK_STOCK,
-  MOCK_PLANTING,
-  MOCK_HARVEST,
-  MOCK_MARKETPLACE,
-  MOCK_DASHBOARD_STATS,
-  MOCK_TELEMETRY,
-  MOCK_AI_RECOMMENDATIONS,
-  MOCK_PLOTS,
-  getFarmById,
-  getPlotsByFarm,
-  getSensorsByFarm,
-  getRobotsByFarm,
-  getDronesByFarm,
-} from "./mock-data";
+import type {
+  AgroDashboardStats,
+  AgroAlert,
+  AiAgroMessage,
+  AgroFarm,
+  AgroPlot,
+  IoTSensor,
+  AgroRobot,
+  AgroDrone,
+  AgroMachine,
+  LivestockAnimal,
+  SoilReading,
+  WeatherForecast,
+  MLModel,
+  AutomationRule,
+  StockItem,
+  PlantingRecord,
+  HarvestRecord,
+  AgroMarketplaceItem,
+  RealtimeTelemetry,
+  AiAgroRecommendation,
+} from "./types";
 
-const DELAY = 400;
-
-async function delay<T>(data: T): Promise<T> {
-  await new Promise((r) => setTimeout(r, DELAY));
-  return data;
-}
-
-/** Futuro: GET /api/agro/dashboard */
-export async function fetchDashboardStats(): Promise<AgroDashboardStats> {
-  return delay({ ...MOCK_DASHBOARD_STATS });
-}
-
-export async function fetchFarms() {
-  return delay([...MOCK_FARMS]);
-}
-
-export async function fetchFarm(id: string) {
-  return delay(getFarmById(id));
-}
-
-export async function fetchPlots(farmId?: string) {
-  return delay(farmId ? getPlotsByFarm(farmId) : [...MOCK_PLOTS]);
-}
-
-export async function fetchSensors(farmId?: string) {
-  return delay(farmId ? getSensorsByFarm(farmId) : [...MOCK_SENSORS]);
-}
-
-export async function fetchRobots(farmId?: string) {
-  return delay(farmId ? getRobotsByFarm(farmId) : [...MOCK_ROBOTS]);
-}
-
-export async function fetchDrones(farmId?: string) {
-  return delay(farmId ? getDronesByFarm(farmId) : [...MOCK_DRONES]);
-}
-
-export async function fetchMachines() {
-  return delay([...MOCK_MACHINES]);
-}
-
-export async function fetchLivestock() {
-  return delay([...MOCK_LIVESTOCK]);
-}
-
-export async function fetchSoil() {
-  return delay([...MOCK_SOIL]);
-}
-
-export async function fetchWeather() {
-  return delay({ ...MOCK_WEATHER });
-}
-
-export async function fetchAlerts() {
-  return delay([...MOCK_ALERTS]);
-}
-
-export async function fetchMLModels() {
-  return delay([...MOCK_ML_MODELS]);
-}
-
-export async function fetchAutomations() {
-  return delay([...MOCK_AUTOMATIONS]);
-}
-
-export async function fetchStock() {
-  return delay([...MOCK_STOCK]);
-}
-
-export async function fetchPlanting() {
-  return delay([...MOCK_PLANTING]);
-}
-
-export async function fetchHarvest() {
-  return delay([...MOCK_HARVEST]);
-}
-
-export async function fetchAgroMarketplace() {
-  return delay([...MOCK_MARKETPLACE]);
-}
-
-export async function fetchTelemetry() {
-  return delay({ ...MOCK_TELEMETRY });
-}
-
-export async function fetchAiRecommendations() {
-  return delay([...MOCK_AI_RECOMMENDATIONS]);
-}
-
-export {
-  MOCK_FARMS,
-  MOCK_ALERTS,
-  MOCK_ROBOTS,
-  MOCK_DRONES,
-  MOCK_SENSORS,
-  MOCK_ML_MODELS,
+const EMPTY_STATS: AgroDashboardStats = {
+  farmsCount: 0,
+  monitoredAreaHa: 0,
+  estimatedProduction: 0,
+  sensorsOnline: 0,
+  robotsActive: 0,
+  dronesActive: 0,
+  criticalAlerts: 0,
+  operationalEfficiency: 0,
+  costPerHectare: 0,
+  harvestForecast: 0,
 };
+
+const EMPTY_WEATHER: WeatherForecast = {
+  farmId: "",
+  current: { temp: 0, humidity: 0, wind: 0, rain: 0 },
+  forecast: [],
+  alerts: [],
+};
+
+const EMPTY_TELEMETRY: RealtimeTelemetry = {
+  temperature: 0,
+  humidity: 0,
+  soilPh: 0,
+  soilMoisture: 0,
+  irrigationLevel: 0,
+  windSpeed: 0,
+  luminosity: 0,
+  pestPresence: false,
+  updatedAt: new Date().toISOString(),
+};
+
+export async function fetchDashboardStats(): Promise<AgroDashboardStats> {
+  return { ...EMPTY_STATS };
+}
+
+export async function fetchFarms(): Promise<AgroFarm[]> {
+  return [];
+}
+
+export async function fetchFarm(_id: string): Promise<AgroFarm | undefined> {
+  return undefined;
+}
+
+export async function fetchPlots(_farmId?: string): Promise<AgroPlot[]> {
+  return [];
+}
+
+export async function fetchSensors(_farmId?: string): Promise<IoTSensor[]> {
+  return [];
+}
+
+export async function fetchRobots(_farmId?: string): Promise<AgroRobot[]> {
+  return [];
+}
+
+export async function fetchDrones(_farmId?: string): Promise<AgroDrone[]> {
+  return [];
+}
+
+export async function fetchMachines(): Promise<AgroMachine[]> {
+  return [];
+}
+
+export async function fetchLivestock(): Promise<LivestockAnimal[]> {
+  return [];
+}
+
+export async function fetchSoil(): Promise<SoilReading[]> {
+  return [];
+}
+
+export async function fetchWeather(): Promise<WeatherForecast> {
+  return { ...EMPTY_WEATHER };
+}
+
+export async function fetchAlerts(): Promise<AgroAlert[]> {
+  return [];
+}
+
+export async function fetchMLModels(): Promise<MLModel[]> {
+  return [];
+}
+
+export async function fetchAutomations(): Promise<AutomationRule[]> {
+  return [];
+}
+
+export async function fetchStock(): Promise<StockItem[]> {
+  return [];
+}
+
+export async function fetchPlanting(): Promise<PlantingRecord[]> {
+  return [];
+}
+
+export async function fetchHarvest(): Promise<HarvestRecord[]> {
+  return [];
+}
+
+export async function fetchAgroMarketplace(): Promise<AgroMarketplaceItem[]> {
+  return [];
+}
+
+export async function fetchTelemetry(): Promise<RealtimeTelemetry> {
+  return { ...EMPTY_TELEMETRY };
+}
+
+export async function fetchAiRecommendations(): Promise<AiAgroRecommendation[]> {
+  return [];
+}
+
+export async function fetchAgroAiMessages(): Promise<AiAgroMessage[]> {
+  return [];
+}

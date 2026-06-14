@@ -1,5 +1,5 @@
 import type { ProfileCategory, PartnerSubtype, SmartProfileData } from "./types";
-import { getSmartProfile } from "./mock-data";
+import { getSmartProfile } from "./smart-profile";
 
 const PARTNER_ROLES: Record<string, PartnerSubtype> = {
   VETERINARIAN: "VETERINARIAN",

@@ -4,7 +4,8 @@ export function onlyDigits(value: string): string {
 
 export function normalizePhone(value: string): string {
   const d = onlyDigits(value);
-  return d.length >= 10 ? d : d;
+  if (d.length < 10 || d.length > 11) return "";
+  return d;
 }
 
 export function isValidCpfFormat(cpf: string): boolean {

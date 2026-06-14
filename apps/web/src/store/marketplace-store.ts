@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { CartItem, MarketplaceFilters, CustomServiceRequest, MarketplaceProduct, MarketplaceService, MarketplacePartner } from "@/lib/marketplace/types";
 import { DEFAULT_FILTERS } from "@/lib/marketplace/types";
-import { getQuoteById } from "@/lib/ecosystem/mock-data";
+import { getQuoteById } from "@/lib/ecosystem/quotes-api";
 
 interface MarketplaceState {
   cart: CartItem[];

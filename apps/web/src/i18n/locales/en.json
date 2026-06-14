@@ -62,7 +62,35 @@
     "quotes": "Quotes",
     "favorites": "Favorites",
     "search": "Search",
-    "cart": "Cart"
+    "cart": "Cart",
+    "orders": "Orders",
+    "campaigns": "Campaigns",
+    "adminPanel": "Admin Panel",
+    "users": "Users",
+    "partners": "Partners",
+    "logs": "Logs"
+  },
+  "errors": {
+    "unauthorized": "Session expired or not signed in.",
+    "forbidden": "You do not have permission to access this resource.",
+    "notFound": "Resource not found.",
+    "validation": "Invalid data. Please check the fields.",
+    "conflict": "Conflict while saving data.",
+    "internal": "Internal error. Please try again."
+  },
+  "dashboard": {
+    "title": "EcoPet Dashboard",
+    "greeting": "Hello, {name}",
+    "email": "Email",
+    "role": "Role",
+    "editProfile": "Edit profile",
+    "logout": "Sign out",
+    "roles": {
+      "CLIENT": "Client / Tutor",
+      "PARTNER": "Partner",
+      "ONG": "NGO",
+      "ADMIN": "Administrator"
+    }
   },
   "auth": {
     "login": {
@@ -355,6 +383,118 @@
       "middleEast": "Middle East & Central Asia",
       "asia": "Asia",
       "africa": "Africa"
+    }
+  },
+  "empty": {
+    "noResults": "No results",
+    "noResultsHint": "Try another term or clear filters.",
+    "demoBanner": "Demo content — real data will appear as users interact.",
+    "notifications": {
+      "title": "No notifications",
+      "description": "No notifications found."
+    },
+    "messages": {
+      "title": "Messages",
+      "description": "No messages found.",
+      "placeholder": "Message...",
+      "send": "Send",
+      "selectConversation": "Select a conversation to view history.",
+      "noConversations": "No conversations found."
+    },
+    "orders": {
+      "pageTitle": "My Orders & Services",
+      "partnerTitle": "Received orders",
+      "subtitle": "Tracking filtered by your account",
+      "productsSection": "Products",
+      "servicesSection": "Requested services",
+      "description": "No orders found.",
+      "noServices": "No services requested."
+    },
+    "pets": {
+      "title": "No pets registered",
+      "description": "You haven't registered any pets yet.",
+      "action": "Register pet"
+    },
+    "profiles": {
+      "title": "No profiles found",
+      "description": "No profiles available at the moment."
+    },
+    "posts": {
+      "title": "No posts found",
+      "description": "There are no community posts yet.",
+      "myTitle": "Your posts",
+      "myDescription": "You don't have any posts yet.",
+      "communityTitle": "Community",
+      "exploreAction": "Explore",
+      "createLabel": "Create post"
+    },
+    "comments": {
+      "description": "No comments found."
+    },
+    "campaigns": {
+      "title": "No campaigns found",
+      "description": "Create your first campaign."
+    },
+    "marketplace": {
+      "noProducts": "No products registered",
+      "noProductsHint": "Register your first product or service.",
+      "noServices": "No services registered",
+      "noServicesHint": "Register services to appear in the marketplace.",
+      "productsTitle": "Product Management",
+      "productsHint": "Products linked to your partner account",
+      "servicesTitle": "Service Management",
+      "servicesHint": "Services linked to your partner account",
+      "addProduct": "Register product",
+      "addService": "Register service",
+      "formPending": "Form available after real catalog integration."
+    },
+    "quotes": {
+      "title": "Custom Quotes",
+      "subtitle": "Received, accepted, in negotiation and converted to purchase",
+      "noQuotes": "No quotes found",
+      "noQuotesHint": "Request custom quotes from partners."
+    },
+    "health": {
+      "title": "Preventive Health",
+      "subtitle": "Vaccination card · Monitoring · Veterinary telemedicine"
+    },
+    "agro": {
+      "noFarms": "No farms registered",
+      "noFarmsHint": "Register a farm to start monitoring.",
+      "noPlots": "No plots registered",
+      "noSensors": "No sensors registered",
+      "noRobots": "No robots registered",
+      "noMapData": "No map data",
+      "noMapDataHint": "Geospatial data will appear when sensors are registered."
+    },
+    "ai": {
+      "noHistory": "No interactions found.",
+      "placeholder": "Ask about pet care...",
+      "unavailable": "AI unavailable at the moment. Please try again later.",
+      "openLabel": "Open ECOPET AI",
+      "fullPage": "Open full AI",
+      "marketplaceTitle": "Marketplace Assistant",
+      "noRecommendations": "No recommendations available at the moment.",
+      "quickProducts": "Products",
+      "quickVet": "Veterinarians",
+      "quickExplore": "Explore",
+      "quickPet": "My Pet",
+      "quickSchedule": "Schedule"
+    },
+    "admin": {
+      "noData": "No data available."
+    },
+    "items": {
+      "description": "No items found."
+    }
+  },
+  "gestor": {
+    "title": "ECOPET Manager",
+    "loading": "Loading ECOPET Manager...",
+    "accessDenied": {
+      "title": "Restricted access",
+      "description": "This area is exclusive to ECOPET administrators.",
+      "back": "Back to dashboard"
     }
   }
 }

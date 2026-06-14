@@ -8,7 +8,6 @@ import { MarketplaceGridSkeleton } from "./marketplace-skeleton";
 import { MarketplaceSearchResults } from "@/components/ecosystem/marketplace/marketplace-search-results";
 import { useMarketplaceStore } from "@/store/marketplace-store";
 import { searchMarketplace } from "@/lib/marketplace/api";
-import { getProductById, getServiceById } from "@/lib/marketplace/mock-data";
 import { groupSearchByPartner } from "@/lib/ecosystem/search-utils";
 import { formatMpPrice } from "@/lib/marketplace/config";
 import type { MarketplaceProduct, MarketplaceService, MarketplacePartner } from "@/lib/marketplace/types";
@@ -18,7 +17,7 @@ export function SearchPageContent() {
   const searchParams = useSearchParams();
   const q = searchParams.get("q") ?? "";
   const compareMode = searchParams.get("compare") === "1";
-  const { compareItems, filters, setFilters, addSearchHistory } = useMarketplaceStore();
+  const { compareItems, compareSnapshots, filters, setFilters, addSearchHistory } = useMarketplaceStore();
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<MarketplaceProduct[]>([]);
   const [services, setServices] = useState<MarketplaceService[]>([]);
@@ -41,12 +40,16 @@ export function SearchPageContent() {
 
   if (compareMode && compareItems.length >= 2) {
     const rows = compareItems.map((c) => {
-      if (c.type === "product") {
-        const p = getProductById(c.id);
-        return p ? { name: p.name, price: p.price, rating: p.rating, location: p.partner.location, type: "Produto", ai: p.aiTag ?? "—" } : null;
-      }
-      const s = getServiceById(c.id);
-      return s ? { name: s.name, price: s.price, rating: s.rating, location: s.partner.location, type: "Serviço", ai: s.aiTag ?? "—" } : null;
+      const snap = compareSnapshots[`${c.type}:${c.id}`];
+      if (!snap) return null;
+      return {
+        name: snap.name,
+        price: snap.price,
+        rating: snap.rating,
+        location: snap.location ?? "—",
+        type: c.type === "product" ? "Produto" : "Serviço",
+        ai: "—",
+      };
     }).filter(Boolean);
 
     return (

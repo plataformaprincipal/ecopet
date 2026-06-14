@@ -1,14 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { UserPlus, Shield, Clock, Trash2, Edit, AlertTriangle } from "lucide-react";
+import { UserPlus, Shield, Edit, Trash2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProfileSection } from "@/components/profile/shared/smart-widgets";
-import { MOCK_TEAM } from "@/lib/ecosystem/mock-data";
+import { EmptyState } from "@/components/ui/empty-state";
 import { PERMISSION_CATEGORIES } from "@/lib/ecosystem/config";
-import type { AccessRole } from "@/lib/ecosystem/types";
+import type { AccessRole, TeamMember } from "@/lib/ecosystem/types";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/providers/i18n-provider";
 
 const ROLE_LABELS: Record<AccessRole, string> = {
   owner: "Proprietário", admin: "Administrador", manager: "Gerente",
@@ -49,7 +50,9 @@ export function PermissionMatrix() {
 }
 
 export function AccessManagementPanel() {
+  const { t } = useTranslation();
   const [selectedMember, setSelectedMember] = useState<string | null>(null);
+  const teamMembers: TeamMember[] = [];
 
   return (
     <div className="space-y-6">
@@ -61,45 +64,45 @@ export function AccessManagementPanel() {
         <Button><UserPlus className="h-4 w-4" /> Convidar membro</Button>
       </div>
 
-      <div className="flex items-center gap-2 rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-700">
-        <AlertTriangle className="h-4 w-4" />
-        1 convite pendente expira em 48h
-      </div>
-
       <ProfileSection title="Membros da equipe">
-        <div className="space-y-2">
-          {MOCK_TEAM.map((m) => (
-            <div
-              key={m.id}
-              className={cn(
-                "flex flex-wrap items-center gap-3 rounded-xl border border-ecopet-gray/10 p-3 transition-colors",
-                selectedMember === m.id && "border-ecopet-green bg-ecopet-green/5"
-              )}
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-ecopet-green/10 font-semibold text-ecopet-green">
-                {m.name.charAt(0)}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="font-semibold">{m.name}</p>
-                <p className="text-xs text-ecopet-gray">{m.email}</p>
-                <div className="mt-1 flex flex-wrap gap-1">
-                  <Badge variant="outline">{ROLE_LABELS[m.role]}</Badge>
-                  <Badge variant="secondary">{m.sector}</Badge>
-                  <Badge variant={m.status === "active" ? "verified" : "secondary"}>{m.status}</Badge>
+        {teamMembers.length === 0 ? (
+          <EmptyState
+            icon={Users}
+            title={t("empty.profiles.title")}
+            description={t("empty.profiles.description")}
+          />
+        ) : (
+          <div className="space-y-2">
+            {teamMembers.map((m) => (
+              <div
+                key={m.id}
+                className={cn(
+                  "flex flex-wrap items-center gap-3 rounded-xl border border-ecopet-gray/10 p-3 transition-colors",
+                  selectedMember === m.id && "border-ecopet-green bg-ecopet-green/5"
+                )}
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-ecopet-green/10 font-semibold text-ecopet-green">
+                  {m.name.charAt(0)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold">{m.name}</p>
+                  <p className="text-xs text-ecopet-gray">{m.email}</p>
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    <Badge variant="outline">{ROLE_LABELS[m.role]}</Badge>
+                    <Badge variant="secondary">{m.sector}</Badge>
+                    <Badge variant={m.status === "active" ? "verified" : "secondary"}>{m.status}</Badge>
+                  </div>
+                </div>
+                <div className="flex gap-1">
+                  <Button size="icon" variant="ghost" onClick={() => setSelectedMember(m.id === selectedMember ? null : m.id)}>
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button size="icon" variant="ghost" className="text-red-500"><Trash2 className="h-4 w-4" /></Button>
                 </div>
               </div>
-              <div className="text-right text-xs text-ecopet-gray">
-                <Clock className="inline h-3 w-3" /> {m.lastAccess}
-              </div>
-              <div className="flex gap-1">
-                <Button size="icon" variant="ghost" onClick={() => setSelectedMember(m.id === selectedMember ? null : m.id)}>
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button size="icon" variant="ghost" className="text-red-500"><Trash2 className="h-4 w-4" /></Button>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </ProfileSection>
 
       {selectedMember && (
@@ -109,20 +112,11 @@ export function AccessManagementPanel() {
       )}
 
       <ProfileSection title="Logs de acesso recentes">
-        <div className="space-y-1 text-sm">
-          {[
-            { user: "Ana Gerente", action: "Editou produto #4521", time: "Há 12 min" },
-            { user: "João Operador", action: "Respondeu chat #c1", time: "Há 35 min" },
-            { user: "Carlos Admin", action: "Alterou permissões de Ana", time: "Ontem" },
-          ].map((log, i) => (
-            <div key={i} className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-ecopet-gray/5">
-              <Shield className="h-3.5 w-3.5 text-ecopet-green" />
-              <span className="font-medium">{log.user}</span>
-              <span className="text-ecopet-gray">{log.action}</span>
-              <span className="ml-auto text-xs text-ecopet-gray">{log.time}</span>
-            </div>
-          ))}
-        </div>
+        <EmptyState
+          icon={Shield}
+          title={t("empty.admin.noData")}
+          description={t("empty.admin.noData")}
+        />
       </ProfileSection>
     </div>
   );

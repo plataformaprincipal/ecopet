@@ -1,7 +1,4 @@
 import { Router } from "express";
-import crypto from "crypto";
-import jwt from "jsonwebtoken";
-import { prisma } from "@ecopet/database";
 import { z } from "zod";
 import { paramString } from "../lib/request-utils.js";
 import { publicRegisterSchema } from "../schemas/register-schemas.js";
@@ -19,7 +16,10 @@ import {
   updateProfile,
   getPasswordChangePolicy,
   logoutCurrentSession,
+  refreshAccessToken,
 } from "../services/auth-service.js";
+import { createUserSessionTokens } from "../lib/session-tokens.js";
+import { setAuthCookies, clearAuthCookies, readRefreshToken } from "../lib/auth-cookies.js";
 import { getCurrentUserById } from "../services/current-user-service.js";
 import {
   createMasterAdmin,
@@ -34,8 +34,41 @@ import {
 import { FORGOT_PASSWORD_MESSAGE } from "../lib/password-reset-utils.js";
 import { authMiddleware, type AuthRequest } from "../middleware/auth.js";
 import { AppError, USER_MESSAGES } from "../lib/app-errors.js";
+import { logStructured } from "../lib/logger.js";
+import { Prisma } from "@prisma/client";
 
 const router = Router();
+
+function logRegisterRequestBody(body: unknown) {
+  if (process.env.NODE_ENV === "production") return;
+  const data = body && typeof body === "object" ? (body as Record<string, unknown>) : {};
+  logStructured("auth", "register_payload", {
+    name: data.name,
+    email: data.email,
+    cpf: data.cpf,
+    cnpj: data.cnpj,
+    documentType: data.documentType,
+    documentNumber: data.documentNumber,
+    phone: data.phone,
+    birthDate: data.birthDate,
+    role: data.role,
+    primaryInterests: data.primaryInterests,
+    acceptTerms: data.acceptTerms,
+    acceptLgpd: data.acceptLgpd,
+  });
+}
+
+function logRegisterFailure(err: unknown) {
+  if (process.env.NODE_ENV === "production") return;
+  const e = err as Error & { code?: string; meta?: unknown };
+  console.error("[register:error]", {
+    name: e?.name,
+    message: e?.message,
+    code: e?.code,
+    meta: e instanceof Prisma.PrismaClientKnownRequestError ? e.meta : e?.meta,
+    stack: e?.stack,
+  });
+}
 
 const loginSchema = z.object({
   email: z.string().min(1).optional(),
@@ -53,6 +86,7 @@ router.get("/bootstrap/status", async (_req, res, next) => {
 });
 
 router.post("/register", async (req, res, next) => {
+  logRegisterRequestBody(req.body);
   try {
     const parsed = publicRegisterSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -67,20 +101,17 @@ router.post("/register", async (req, res, next) => {
       ip: req.ip,
       userAgent: req.headers["user-agent"],
     });
-    const token = jwt.sign({ userId: user.id, role: user.role }, process.env.JWT_SECRET || "ecopet-dev-secret", { expiresIn: "7d" });
-    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
-    await prisma.userSession.create({
-      data: {
-        userId: user.id,
-        tokenHash,
-        ip: req.ip,
-        userAgent: req.headers["user-agent"],
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      },
+    const { accessToken, refreshToken } = await createUserSessionTokens({
+      userId: user.id,
+      role: user.role,
+      ip: req.ip,
+      userAgent: req.headers["user-agent"],
     });
+    setAuthCookies(res, accessToken, refreshToken);
+    logStructured("auth", "register_success", { userId: user.id, email: user.email, role: user.role });
     res.status(201).json({
       user,
-      token,
+      token: accessToken,
       redirectTo,
       pendingApproval: user.accountStatus === "PENDING",
       message: user.accountStatus === "PENDING"
@@ -91,6 +122,7 @@ router.post("/register", async (req, res, next) => {
     if (e instanceof AppError) {
       return res.status(e.status).json({ error: e.userMessage, code: e.code });
     }
+    logRegisterFailure(e);
     next(e);
   }
 });
@@ -105,13 +137,31 @@ router.get("/me", authMiddleware, async (req: AuthRequest, res, next) => {
   }
 });
 
+router.post("/refresh", async (req, res, next) => {
+  try {
+    const refreshToken = readRefreshToken(req);
+    if (!refreshToken) {
+      return res.status(401).json({ error: USER_MESSAGES.SESSION, code: "SESSION" });
+    }
+    const rotated = await refreshAccessToken(refreshToken);
+    if (!rotated) {
+      clearAuthCookies(res);
+      return res.status(401).json({ error: USER_MESSAGES.SESSION, code: "SESSION" });
+    }
+    setAuthCookies(res, rotated.accessToken, refreshToken);
+    res.json({ token: rotated.accessToken, userId: rotated.userId, role: rotated.role });
+  } catch (e) {
+    next(e);
+  }
+});
+
 router.post("/logout", authMiddleware, async (req: AuthRequest, res, next) => {
   try {
-    const header = req.headers.authorization;
-    const token = header?.startsWith("Bearer ") ? header.slice(7) : "";
-    if (!token) return res.status(400).json({ error: "Token não fornecido" });
-    const result = await logoutCurrentSession(token, req.userId!);
-    res.json(result);
+    const refreshToken = readRefreshToken(req) ?? undefined;
+    await logoutCurrentSession("", req.userId!, refreshToken);
+    clearAuthCookies(res);
+    logStructured("auth", "logout", { userId: req.userId });
+    res.json({ success: true });
   } catch (e) {
     next(e);
   }
@@ -126,6 +176,14 @@ router.post("/login", async (req, res, next) => {
       password: data.password,
       ip: req.ip,
       userAgent: req.headers["user-agent"],
+    });
+    if (result.accessToken && result.refreshToken) {
+      setAuthCookies(res, result.accessToken, result.refreshToken);
+    }
+    logStructured("auth", "login_success", {
+      userId: result.user?.id,
+      email: result.user?.email,
+      role: result.user?.role,
     });
     res.json(result);
   } catch (e) {
@@ -172,15 +230,17 @@ router.post("/bootstrap/create-master", authMiddleware, async (req: AuthRequest,
       device: req.headers["user-agent"],
     });
 
-    const token = jwt.sign(
-      { userId: master.id, role: master.role },
-      process.env.JWT_SECRET || "ecopet-dev-secret",
-      { expiresIn: "7d" }
-    );
+    const { accessToken, refreshToken } = await createUserSessionTokens({
+      userId: master.id,
+      role: master.role,
+      ip: req.ip,
+      userAgent: req.headers["user-agent"],
+    });
+    setAuthCookies(res, accessToken, refreshToken);
 
     res.status(201).json({
       success: true,
-      token,
+      token: accessToken,
       redirectTo: "/gestor",
       user: { id: master.id, email: master.email, username: master.username, name: master.name, role: master.role, isMasterAdmin: true },
     });

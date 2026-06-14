@@ -2,15 +2,18 @@
 
 import Link from "next/link";
 import { ShoppingBag, FileText, MessageCircle, Heart, Calendar, Wallet, Sparkles, PawPrint } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
+import { useTranslation } from "@/providers/i18n-provider";
 import { ProfileSection } from "@/components/profile/shared/smart-widgets";
 import { CustomQuoteCard } from "../quotes/custom-quote-card";
 import { ChatHub } from "../chat/chat-hub";
-import { getQuotesForClient } from "@/lib/ecosystem/mock-data";
+import { getQuotesForClient } from "@/lib/ecosystem/quotes-api";
 import { useMarketplaceStore } from "@/store/marketplace-store";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ClientOverviewModule } from "@/components/profile/client/client-modules";
 
 export function ClientFunctionalDashboard() {
+  const { t } = useTranslation();
   const quotes = getQuotesForClient();
   const { addQuoteToCart } = useMarketplaceStore();
 
@@ -49,9 +52,19 @@ export function ClientFunctionalDashboard() {
           <TabsTrigger value="chats">Chats</TabsTrigger>
         </TabsList>
         <TabsContent value="quotes" className="space-y-4 mt-4">
-          {quotes.map((q) => (
-            <CustomQuoteCard key={q.id} quote={q} onAddToCart={addQuoteToCart} />
-          ))}
+          {quotes.length === 0 ? (
+            <EmptyState
+              icon={FileText}
+              title={t("empty.quotes.noQuotes")}
+              description={t("empty.quotes.noQuotesHint")}
+              actionLabel={t("common.viewMarketplace")}
+              actionHref="/marketplace"
+            />
+          ) : (
+            quotes.map((q) => (
+              <CustomQuoteCard key={q.id} quote={q} onAddToCart={addQuoteToCart} />
+            ))
+          )}
         </TabsContent>
         <TabsContent value="chats" className="mt-4">
           <ChatHub role="client" />

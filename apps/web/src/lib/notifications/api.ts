@@ -1,6 +1,5 @@
 import type { Notification, AiSummary } from "./types";
 import { api } from "@/lib/api";
-import { MOCK_NOTIFICATIONS, MOCK_AI_SUMMARY } from "./mock-data";
 
 const LOAD_DELAY_MS = 400;
 
@@ -41,8 +40,7 @@ export async function fetchNotifications(token?: string): Promise<{ items: Notif
 }
 
 export async function fetchAiSummary(_token?: string): Promise<AiSummary | null> {
-  await new Promise((r) => setTimeout(r, LOAD_DELAY_MS / 2));
-  return { ...MOCK_AI_SUMMARY, insights: [...MOCK_AI_SUMMARY.insights], demo: true };
+  return null;
 }
 
 export async function markNotificationReadApi(id: string, token?: string): Promise<void> {

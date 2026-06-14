@@ -12,7 +12,7 @@ import {
   getInternalForProfile,
   getDashboardStatsForProfile,
   AUTOMATION_LOGS,
-} from "@/lib/integrations/mock-data";
+} from "@/lib/integrations/empty";
 import type { ProfileCategory } from "@/lib/integrations/types";
 
 interface IntegrationsHubProps {

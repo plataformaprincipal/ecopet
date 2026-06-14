@@ -9,12 +9,5 @@ export const PERMISSION_CATEGORIES = [
   { id: "reports", label: "Relatórios", permissions: [{ id: "reports", label: "Relatórios", actions: ["view", "export"] as const }] },
 ];
 
-export const INSIGHTS_CHART_LINE = [
-  { label: "Sem 1", value: 8200 }, { label: "Sem 2", value: 9100 },
-  { label: "Sem 3", value: 8800 }, { label: "Sem 4", value: 10500 },
-];
-
-export const INSIGHTS_FUNNEL = [
-  { label: "Visitas", value: 45000 }, { label: "Cliques", value: 12000 },
-  { label: "Leads", value: 3400 }, { label: "Conversões", value: 890 },
-];
+export const INSIGHTS_CHART_LINE: { label: string; value: number }[] = [];
+export const INSIGHTS_FUNNEL: { label: string; value: number }[] = [];

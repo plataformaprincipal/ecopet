@@ -8,12 +8,11 @@ import { AnalyticsCards } from "../shared/analytics-cards";
 import { AnalyticsChartMock } from "../shared/analytics-chart-mock";
 import { AIInsightsPanel } from "../shared/ai-insights-panel";
 import { ProfileSection, ProfileList } from "../shared/smart-widgets";
-import { RealtimeIndicators } from "../shared/realtime-indicators";
 import {
   PARTNER_EXECUTIVE_METRICS, PARTNER_SALES_CHART, PARTNER_FINANCIAL,
   PARTNER_ACCOUNTING, PARTNER_LEGAL, PARTNER_MARKETING, PARTNER_STOCK,
   PARTNER_RH, PARTNER_AI_INSIGHTS, PARTNER_BI_CHARTS,
-} from "@/lib/profile/mock-data/partner.mock";
+} from "@/lib/profile/defaults/partner";
 import { IntegrationsHub } from "@/components/integrations/integrations-hub";
 import { PartnerRobotsPanel } from "@/components/integrations/robot-hub";
 import { PartnerProductManager } from "@/components/ecosystem/partner/partner-product-manager";
@@ -25,11 +24,25 @@ import { ChatHub } from "@/components/ecosystem/chat/chat-hub";
 import { EcoPetInsightsDashboard } from "@/components/ecosystem/insights/ecopet-insights-dashboard";
 import { QuoteBuilder } from "@/components/ecosystem/quotes/quote-builder";
 import { CustomQuoteCard } from "@/components/ecosystem/quotes/custom-quote-card";
-import { MOCK_QUOTES } from "@/lib/ecosystem/mock-data";
+import { getQuotesForPartner } from "@/lib/ecosystem/quotes-api";
+import { EmptyState } from "@/components/ui/empty-state";
+import { BarChart3, FileText } from "lucide-react";
+import { useTranslation } from "@/providers/i18n-provider";
 import { AdvisoryHub } from "@/components/advisory/advisory-hub";
 import { PrivacyLgpdPanel, PersonaWorkflowPanel, PersonaExecutivePanel } from "@/components/platform/persona-panels";
 
 export function PersonaDashboard() {
+  const { t } = useTranslation();
+  if (PARTNER_EXECUTIVE_METRICS.length === 0) {
+    return (
+      <EmptyState
+        icon={BarChart3}
+        title={t("empty.marketplace.noProducts")}
+        description={t("empty.marketplace.noProductsHint")}
+      />
+    );
+  }
+
   const topMetrics = PARTNER_EXECUTIVE_METRICS.slice(0, 8).map((m, i) => ({
     label: m.label,
     value: m.value,
@@ -40,18 +53,16 @@ export function PersonaDashboard() {
 
   return (
     <div className="space-y-6">
-      <RealtimeIndicators items={[
-        { label: "Pedidos", value: "12 ativos", status: "online" },
-        { label: "Agenda", value: "6 hoje", status: "online" },
-        { label: "Estoque", value: "8 alertas", status: "warning" },
-        { label: "Integrações", value: "6/8 sync", status: "online" },
-      ]} />
       <AnalyticsCards items={topMetrics} columns={4} />
       <div className="grid gap-4 lg:grid-cols-2">
         <AnalyticsChartMock title="Faturamento mensal (R$)" data={PARTNER_SALES_CHART} valuePrefix="R$ " />
-        <AIInsightsPanel insights={PARTNER_AI_INSIGHTS.slice(0, 2)} title="Central IA Empresarial" subtitle="Insights em tempo real" />
+        {PARTNER_AI_INSIGHTS.length > 0 && (
+          <AIInsightsPanel insights={PARTNER_AI_INSIGHTS.slice(0, 2)} title="Central IA Empresarial" subtitle="Insights em tempo real" />
+        )}
       </div>
-      <AnalyticsCards items={PARTNER_EXECUTIVE_METRICS.slice(8).map(m => ({ label: m.label, value: m.value, trend: m.trend }))} columns={4} />
+      {PARTNER_EXECUTIVE_METRICS.length > 8 && (
+        <AnalyticsCards items={PARTNER_EXECUTIVE_METRICS.slice(8).map(m => ({ label: m.label, value: m.value, trend: m.trend }))} columns={4} />
+      )}
     </div>
   );
 }
@@ -101,16 +112,10 @@ export function MarketingDashboard() {
 }
 
 export function AdminPanel() {
+  const { t } = useTranslation();
   return (
     <ProfileSection title="Painel Administrativo" description="Gestão operacional e produtividade">
-      <ProfileList items={[
-        { label: "Usuários internos", value: "12" },
-        { label: "Permissões", value: "4 níveis" },
-        { label: "Setores", value: "Vendas, Ops, TI" },
-        { label: "Tarefas abertas", value: "8", badge: "3 urgentes" },
-        { label: "Processos", value: "24 mapeados" },
-        { label: "Produtividade", value: "94%" },
-      ]} />
+      <EmptyState icon={BarChart3} title={t("empty.admin.noData")} description={t("empty.admin.noData")} />
     </ProfileSection>
   );
 }
@@ -127,15 +132,10 @@ export function StockDashboard() {
 }
 
 export function AgendaPanel() {
+  const { t } = useTranslation();
   return (
     <ProfileSection title="Painel de Agenda">
-      <ProfileList items={[
-        { label: "Consultas hoje", value: "6" },
-        { label: "Serviços agendados", value: "14 esta semana" },
-        { label: "Teleatendimento", value: "3 slots livres" },
-        { label: "Equipe escalada", value: "4 profissionais" },
-        { label: "Disponibilidade", value: "85%" },
-      ]} />
+      <EmptyState icon={BarChart3} title={t("empty.admin.noData")} description={t("empty.admin.noData")} />
     </ProfileSection>
   );
 }
@@ -145,30 +145,19 @@ export function RHPanel() {
 }
 
 export function TIPanel() {
+  const { t } = useTranslation();
   return (
     <ProfileSection title="Painel TI" description="Integrações, APIs e monitoramento">
-      <ProfileList items={[
-        { label: "APIs ativas", value: "8" },
-        { label: "Automações", value: "12 fluxos" },
-        { label: "Logs (24h)", value: "2.340 eventos" },
-        { label: "Segurança", value: "OK", badge: "Verificado" },
-        { label: "Uptime", value: "99.9%" },
-        { label: "Dispositivos IoT", value: "4 conectados" },
-      ]} />
+      <EmptyState icon={BarChart3} title={t("empty.admin.noData")} description={t("empty.admin.noData")} />
     </ProfileSection>
   );
 }
 
 export function InnovationPanel() {
+  const { t } = useTranslation();
   return (
     <ProfileSection title="Painel de Inovação" description="Ideias, roadmap e IA experimental">
-      <ProfileList items={[
-        { label: "Ideias em backlog", value: "8" },
-        { label: "Projetos ativos", value: "3" },
-        { label: "Roadmap Q2", value: "67% concluído" },
-        { label: "Automações beta", value: "2 em teste" },
-        { label: "IoT / Robôs", value: "Integração futura" },
-      ]} />
+      <EmptyState icon={BarChart3} title={t("empty.admin.noData")} description={t("empty.admin.noData")} />
     </ProfileSection>
   );
 }
@@ -186,12 +175,16 @@ export function PartnerServicesModule() {
 }
 
 export function PartnerQuotesModule() {
+  const { t } = useTranslation();
+  const quotes = getQuotesForPartner("mp1");
   return (
     <div className="space-y-6">
-      <QuoteBuilder partnerId="mp1" partnerName="Pet Shop Amigo" />
-      {MOCK_QUOTES.filter((q) => q.partnerId === "mp1").map((q) => (
-        <CustomQuoteCard key={q.id} quote={q} />
-      ))}
+      <QuoteBuilder partnerId="mp1" partnerName="" />
+      {quotes.length === 0 ? (
+        <EmptyState icon={FileText} title={t("empty.quotes.noQuotes")} description={t("empty.quotes.noQuotesHint")} />
+      ) : (
+        quotes.map((q) => <CustomQuoteCard key={q.id} quote={q} />)
+      )}
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { PawPrint, Plus, QrCode, Heart, Trophy, Clock, Star } from "lucide-react";
+import { PawPrint, Plus, QrCode, Heart, Trophy, Clock, Star, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AIInsightsPanel } from "../shared/ai-insights-panel";
@@ -12,7 +12,9 @@ import {
   CLIENT_SOCIAL_FEED, CLIENT_PETS, CLIENT_INTELLIGENT_WIDGETS, CLIENT_AI_INSIGHTS,
   CLIENT_FINANCIAL, CLIENT_SERVICES, CLIENT_SETTINGS, CLIENT_CHART_DATA, CLIENT_SOCIAL_STATS,
   CLIENT_DIGITAL_LIFE,
-} from "@/lib/profile/mock-data/client.mock";
+} from "@/lib/profile/defaults/client";
+import { EmptyState } from "@/components/ui/empty-state";
+import { useTranslation } from "@/providers/i18n-provider";
 import { cn } from "@/lib/utils";
 import { IntegrationsHub } from "@/components/integrations/integrations-hub";
 import { ClientRobotsPanel } from "@/components/integrations/robot-hub";
@@ -23,13 +25,35 @@ import { OrderTrackingPanel } from "@/components/orders/order-tracking-panel";
 import { CustomQuoteCard } from "@/components/ecosystem/quotes/custom-quote-card";
 import { EcoPetInsightsDashboard } from "@/components/ecosystem/insights/ecopet-insights-dashboard";
 import { PrivacyLgpdPanel, PersonaWorkflowPanel, PersonaExecutivePanel } from "@/components/platform/persona-panels";
-import { getQuotesForClient } from "@/lib/ecosystem/mock-data";
+import { getQuotesForClient } from "@/lib/ecosystem/quotes-api";
 import { useMarketplaceStore } from "@/store/marketplace-store";
 
 export function ClientOverviewModule() {
+  const { t } = useTranslation();
+  const hasDigitalLife =
+    CLIENT_DIGITAL_LIFE.activities.length > 0 ||
+    CLIENT_DIGITAL_LIFE.timeline.length > 0 ||
+    CLIENT_DIGITAL_LIFE.achievements.length > 0;
+  const hasSocialStats = CLIENT_SOCIAL_STATS.length > 0;
+  const hasInsights = CLIENT_AI_INSIGHTS.length > 0;
+  const hasWidgets = CLIENT_INTELLIGENT_WIDGETS.length > 0;
+
+  if (!hasDigitalLife && !hasSocialStats && !hasInsights && !hasWidgets) {
+    return (
+      <EmptyState
+        icon={PawPrint}
+        title={t("empty.pets.title")}
+        description={t("empty.pets.description")}
+        actionLabel={t("empty.pets.action")}
+        actionHref="/onboarding/pet"
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <AIInsightsPanel insights={CLIENT_AI_INSIGHTS.slice(0, 2)} title="Resumo inteligente" />
+      {hasInsights && <AIInsightsPanel insights={CLIENT_AI_INSIGHTS.slice(0, 2)} title="Resumo inteligente" />}
+      {hasDigitalLife && (
       <ProfileSection title="Vida digital do pet" description="Timeline, conquistas e recompensas">
         <div className="grid gap-4 sm:grid-cols-3 mb-4">
           <div className="rounded-[16px] border border-ecopet-yellow/30 bg-ecopet-yellow/5 p-4 text-center">
@@ -64,6 +88,8 @@ export function ClientOverviewModule() {
           ))}
         </div>
       </ProfileSection>
+      )}
+      {hasSocialStats && (
       <ProfileSection title="Atividade social" action={{ label: "Ver feed", href: "/inicio" }}>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {CLIENT_SOCIAL_STATS.map((s) => (
@@ -74,15 +100,21 @@ export function ClientOverviewModule() {
           ))}
         </div>
       </ProfileSection>
-      <SmartWidgets widgets={CLIENT_INTELLIGENT_WIDGETS.slice(0, 4)} />
+      )}
+      {hasWidgets && <SmartWidgets widgets={CLIENT_INTELLIGENT_WIDGETS.slice(0, 4)} />}
     </div>
   );
 }
 
 export function ClientSocialModule() {
+  const { t } = useTranslation();
   return (
     <ProfileSection title="Área Social" description="Feed, stories, comunidades e interações">
-      <ProfileList items={CLIENT_SOCIAL_FEED} />
+      {CLIENT_SOCIAL_FEED.length === 0 ? (
+        <EmptyState icon={FileText} title={t("empty.posts.title")} description={t("empty.posts.description")} />
+      ) : (
+        <ProfileList items={CLIENT_SOCIAL_FEED} />
+      )}
     </ProfileSection>
   );
 }
@@ -178,11 +210,16 @@ export function ClientDashboardModule() {
 
 export function ClientQuotesModule() {
   const { addQuoteToCart } = useMarketplaceStore();
+  const { t } = useTranslation();
   const quotes = getQuotesForClient();
   return (
     <ProfileSection title="Meus orçamentos" action={{ label: "Ver todos", href: "/marketplace/orcamentos" }}>
       <div className="space-y-4">
-        {quotes.map((q) => <CustomQuoteCard key={q.id} quote={q} onAddToCart={addQuoteToCart} compact />)}
+        {quotes.length === 0 ? (
+          <EmptyState icon={FileText} title={t("empty.quotes.noQuotes")} description={t("empty.quotes.noQuotesHint")} />
+        ) : (
+          quotes.map((q) => <CustomQuoteCard key={q.id} quote={q} onAddToCart={addQuoteToCart} compact />)
+        )}
       </div>
     </ProfileSection>
   );

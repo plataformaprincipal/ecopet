@@ -13,8 +13,11 @@ import { EcoPetInsightsDashboard } from "../insights/ecopet-insights-dashboard";
 import { CustomQuoteCard } from "../quotes/custom-quote-card";
 import { QuoteBuilder } from "../quotes/quote-builder";
 import { IntegrationsHub } from "@/components/integrations/integrations-hub";
-import { MOCK_QUOTES } from "@/lib/ecosystem/mock-data";
+import { getQuotesForPartner } from "@/lib/ecosystem/quotes-api";
 import { ProfileSection } from "@/components/profile/shared/smart-widgets";
+import { EmptyState } from "@/components/ui/empty-state";
+import { FileText } from "lucide-react";
+import { useTranslation } from "@/providers/i18n-provider";
 
 interface PartnerProfileHubProps {
   id: string;
@@ -22,6 +25,7 @@ interface PartnerProfileHubProps {
 }
 
 export function PartnerProfileHub({ id, mode = "public" }: PartnerProfileHubProps) {
+  const { t } = useTranslation();
   const searchParams = useSearchParams();
   const defaultTab = searchParams.get("tab") ?? "overview";
   const isManage = mode === "manage" || searchParams.get("manage") === "1";
@@ -55,9 +59,13 @@ export function PartnerProfileHub({ id, mode = "public" }: PartnerProfileHubProp
       <TabsContent value="custom" className="space-y-6">
         <QuoteBuilder partnerId={id} partnerName="Meu Parceiro" />
         <ProfileSection title="Orçamentos enviados">
-          {MOCK_QUOTES.filter((q) => q.partnerId === id || id === "mp1").map((q) => (
-            <CustomQuoteCard key={q.id} quote={q} />
-          ))}
+          {getQuotesForPartner(id).length === 0 ? (
+            <EmptyState icon={FileText} title={t("empty.quotes.noQuotes")} description={t("empty.quotes.noQuotesHint")} />
+          ) : (
+            getQuotesForPartner(id).map((q) => (
+              <CustomQuoteCard key={q.id} quote={q} />
+            ))
+          )}
         </ProfileSection>
       </TabsContent>
       <TabsContent value="portfolio"><PartnerProfileContent id={id} tabOnly="portfolio" /></TabsContent>

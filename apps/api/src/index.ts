@@ -2,10 +2,13 @@ import "./env.js";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
+import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { prisma } from "@ecopet/database";
+import { resolveAvailablePort } from "./lib/resolve-port.js";
+import { writeRuntimePort } from "./lib/runtime-port.js";
 
 import authRoutes from "./routes/auth.js";
 import userRoutes from "./routes/users.js";
@@ -37,17 +40,24 @@ import cartRoutes from "./routes/cart.js";
 import marketplacePartnerRoutes from "./routes/marketplace-partner.js";
 import { authMiddleware } from "./middleware/auth.js";
 import { errorHandler } from "./middleware/error.js";
+import { logStructured } from "./lib/logger.js";
 
 const app = express();
 const httpServer = createServer(app);
-const PORT = process.env.API_PORT || 4000;
+const preferredPort = Number(process.env.API_PORT || process.env.PORT || 4000);
+
+const webOrigins = (process.env.WEB_URL || "http://localhost:3000")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
 
 const io = new Server(httpServer, {
-  cors: { origin: process.env.WEB_URL || "http://localhost:3000", credentials: true },
+  cors: { origin: webOrigins, credentials: true },
 });
 
 app.use(helmet());
-app.use(cors({ origin: process.env.WEB_URL || "http://localhost:3000", credentials: true }));
+app.use(cors({ origin: webOrigins, credentials: true }));
+app.use(cookieParser());
 app.use(express.json({ limit: "10mb" }));
 app.use(
   rateLimit({
@@ -58,8 +68,46 @@ app.use(
   })
 );
 
-app.get("/health", (_req, res) => {
-  res.json({ status: "ok", service: "ecopet-api", version: "1.0.0" });
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on("finish", () => {
+    const isAuth = req.path.includes("/auth") || req.originalUrl.includes("/auth");
+    const isHealth = req.path.includes("health");
+    if (isAuth || isHealth) {
+      logStructured(isAuth ? "auth" : "api", "request", {
+        method: req.method,
+        path: req.originalUrl,
+        status: res.statusCode,
+        ms: Date.now() - start,
+      });
+    }
+  });
+  next();
+});
+
+async function healthPayload() {
+  let database = false;
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    database = true;
+  } catch (err) {
+    logStructured("database", "health_check_failed", { message: (err as Error).message });
+  }
+  return {
+    status: database ? "ok" : "degraded",
+    database,
+    service: "ecopet-api",
+    version: "1.0.0",
+    timestamp: new Date().toISOString(),
+  };
+}
+
+app.get("/health", async (_req, res) => {
+  res.json(await healthPayload());
+});
+
+app.get("/api/health", async (_req, res) => {
+  res.json(await healthPayload());
 });
 
 app.use("/api/auth", authRoutes);
@@ -128,14 +176,46 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {});
 });
 
-httpServer.listen(PORT, async () => {
-  console.log(`🐾 ECOPET API running on http://localhost:${PORT}`);
+async function startServer() {
+  let port: number;
   try {
-    const { ensureInternalBotsSeeded } = await import("./services/internal-bots-service.js");
-    await ensureInternalBotsSeeded();
-  } catch (e) {
-    console.warn("[ECOPET] Falha ao inicializar robôs internos:", (e as Error).message);
+    port = await resolveAvailablePort(preferredPort);
+  } catch (err) {
+    console.error("[ECOPET API] Falha ao resolver porta:", (err as Error).message);
+    process.exit(1);
   }
-});
+
+  if (port !== preferredPort) {
+    console.warn(
+      `[ECOPET API] Porta ${preferredPort} em uso — API iniciando em http://localhost:${port}`
+    );
+  }
+
+  httpServer.listen(port, async () => {
+    writeRuntimePort(port);
+    console.log(`🐾 ECOPET API running on http://localhost:${port}`);
+    console.log(`   Health: http://localhost:${port}/health`);
+    console.log(`   Register: POST http://localhost:${port}/api/auth/register`);
+    try {
+      const { ensureInternalBotsSeeded } = await import("./services/internal-bots-service.js");
+      await ensureInternalBotsSeeded();
+    } catch (e) {
+      console.warn("[ECOPET] Falha ao inicializar robôs internos:", (e as Error).message);
+    }
+  });
+
+  httpServer.on("error", (err: NodeJS.ErrnoException) => {
+    if (err.code === "EADDRINUSE") {
+      console.error(
+        `[ECOPET API] Porta ${port} ficou indisponível (EADDRINUSE). Use "npm run dev" na raiz ou defina API_PORT.`
+      );
+    } else {
+      console.error("[ECOPET API] Erro ao iniciar servidor:", err.message);
+    }
+    process.exit(1);
+  });
+}
+
+startServer();
 
 export { io };

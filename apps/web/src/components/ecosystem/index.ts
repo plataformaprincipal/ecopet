@@ -7,7 +7,7 @@ export { CustomQuoteCard } from "./quotes/custom-quote-card";
 export { QuoteBuilder } from "./quotes/quote-builder";
 export { CartQuoteItem } from "./quotes/cart-quote-item";
 
-export { ChatHub, PartnerClientChat, ClientSystemChat, PartnerSystemChat, NGOSystemChat, NGOExternalChat, CustomServiceChat } from "./chat/chat-hub";
+export { ChatHub } from "./chat/chat-hub";
 
 export { PartnerProfileHub } from "./partner/partner-profile-hub";
 export { PartnerProductManager } from "./partner/partner-product-manager";

@@ -1,11 +1,22 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth-session";
+import { isPublicPath, requiresAuth } from "@/lib/auth/routes";
 import {
-  isPrivateMarketplacePath,
-  isPublicPath,
-  requiresAuth,
-} from "@/lib/auth/routes";
+  canAccessRoute,
+  getDefaultDashboardPath,
+  type AppRole,
+} from "@/lib/permissions";
+
+function loginRedirect(request: NextRequest, pathname: string) {
+  const loginUrl = new URL("/login", request.url);
+  loginUrl.searchParams.set("callbackUrl", pathname);
+  return NextResponse.redirect(loginUrl);
+}
+
+function dashboardRedirect(request: NextRequest, role: AppRole) {
+  return NextResponse.redirect(new URL(getDefaultDashboardPath(role), request.url));
+}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -14,30 +25,27 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const token = await getToken({
-    req: request,
-    secret: process.env.NEXTAUTH_SECRET || "ecopet-dev-nextauth-secret",
-  });
-
-  const isAuthenticated = Boolean(token);
-
-  if (isPrivateMarketplacePath(pathname) && !isAuthenticated) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("callbackUrl", pathname);
-    return NextResponse.redirect(loginUrl);
+  const token = request.cookies.get(SESSION_COOKIE)?.value;
+  if (!token) {
+    return loginRedirect(request, pathname);
   }
 
-  if (!isAuthenticated && !isPublicPath(pathname)) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("callbackUrl", pathname);
-    return NextResponse.redirect(loginUrl);
-  }
+  try {
+    const { role } = await verifySessionToken(token);
+    const appRole = role as AppRole;
 
-  return NextResponse.next();
+    if (!canAccessRoute(appRole, pathname)) {
+      return dashboardRedirect(request, appRole);
+    }
+
+    return NextResponse.next();
+  } catch {
+    return loginRedirect(request, pathname);
+  }
 }
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|brand|icon.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };

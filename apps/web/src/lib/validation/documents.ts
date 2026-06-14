@@ -22,7 +22,7 @@ export const USER_MESSAGES = {
   CPF_INVALID: "CPF inválido. Verifique os números informados.",
   CNPJ_INVALID: "CNPJ inválido. Verifique os números informados.",
   CONNECTION: "Não foi possível conectar ao servidor. Verifique sua internet e tente novamente.",
-  DATABASE: "Não foi possível salvar seus dados agora. Tente novamente em instantes.",
+  DATABASE: "Não foi possível concluir o cadastro no momento. Tente novamente em instantes.",
   VALIDATION: "Alguns campos precisam ser corrigidos antes de continuar.",
   PERMISSION: "Você não tem permissão para acessar esta área.",
   SESSION: "Sua sessão expirou. Faça login novamente.",

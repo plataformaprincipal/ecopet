@@ -1,12 +1,9 @@
-"use client";
-
-import { Suspense } from "react";
-import { SmartProfileHub } from "@/components/profile/smart-profile-hub";
+import { FoundationProfileForm } from "@/components/foundation/profile-form";
 
 export default function PerfilPage() {
   return (
-    <Suspense fallback={<div className="animate-pulse h-96 m-4 rounded-2xl bg-ecopet-gray/10" />}>
-      <SmartProfileHub />
-    </Suspense>
+    <main className="min-h-screen bg-gray-50 px-4 py-10">
+      <FoundationProfileForm />
+    </main>
   );
 }

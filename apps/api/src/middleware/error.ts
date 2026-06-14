@@ -18,6 +18,15 @@ export function errorHandler(err: Error, req: Request, res: Response, _next: Nex
   }
 
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error("[ECOPET API] Prisma known error", {
+        name: err.name,
+        message: err.message,
+        code: err.code,
+        meta: err.meta,
+        stack: err.stack,
+      });
+    }
     if (err.code === "P2002") {
       const target = (err.meta?.target as string[] | undefined)?.[0] ?? "campo";
       const map: Record<string, string> = {
@@ -35,7 +44,20 @@ export function errorHandler(err: Error, req: Request, res: Response, _next: Nex
     return res.status(503).json({ error: USER_MESSAGES.DATABASE, code: "DATABASE" });
   }
 
-  console.error("[ECOPET API]", err.message, err.stack);
+  if (err instanceof Prisma.PrismaClientInitializationError) {
+    console.error("[ECOPET API] Prisma init error", {
+      name: err.name,
+      message: err.message,
+      stack: err.stack,
+    });
+    return res.status(503).json({ error: USER_MESSAGES.DATABASE, code: "DATABASE" });
+  }
+
+  console.error("[ECOPET API]", {
+    name: err.name,
+    message: err.message,
+    stack: err.stack,
+  });
   createAuditLog({
     action: "CREATE",
     module: "system",

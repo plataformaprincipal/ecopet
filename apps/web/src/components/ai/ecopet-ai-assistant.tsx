@@ -9,43 +9,50 @@ import {
 } from "lucide-react";
 import { EcopetSymbol } from "@/components/brand/ecopet-symbol";
 import { Button } from "@/components/ui/button";
+import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/providers/i18n-provider";
 
 const QUICK_COMMANDS = [
-  { label: "Recomendar produtos", icon: ShoppingBag, href: "/marketplace" },
-  { label: "Encontrar veterinário", icon: Stethoscope, href: "/veterinarios" },
-  { label: "Explorar serviços", icon: Compass, href: "/explorar" },
-  { label: "Saúde do meu pet", icon: PawPrint, href: "/health" },
-  { label: "Agendar consulta", icon: Calendar, href: "/agenda" },
-];
-
-const MOCK_HISTORY = [
-  { role: "assistant", content: "Olá! Sou a ECOPET IA — seu assistente inteligente. Como posso ajudar você e seu pet hoje?" },
-];
+  { labelKey: "empty.ai.quickProducts", icon: ShoppingBag, href: "/marketplace" },
+  { labelKey: "empty.ai.quickVet", icon: Stethoscope, href: "/veterinarios" },
+  { labelKey: "empty.ai.quickExplore", icon: Compass, href: "/explorar" },
+  { labelKey: "empty.ai.quickPet", icon: PawPrint, href: "/meu-pet" },
+  { labelKey: "empty.ai.quickSchedule", icon: Calendar, href: "/agenda" },
+] as const;
 
 export function EcopetAIAssistant() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState(MOCK_HISTORY);
+  const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const send = useCallback(() => {
-    if (!message.trim()) return;
+  const send = useCallback(async () => {
+    if (!message.trim() || loading) return;
     const userMsg = message.trim();
     setMessage("");
-    setMessages((m) => [
-      ...m,
-      { role: "user", content: userMsg },
-      {
-        role: "assistant",
-        content: "Estou preparada para responder dúvidas, recomendar produtos, serviços e veterinários. Em breve com IA completa conectada à API ECOPET.",
-      },
-    ]);
-  }, [message]);
+    setMessages((m) => [...m, { role: "user", content: userMsg }]);
+    setLoading(true);
+    try {
+      const res = await api<{ reply: string }>("/api/ai/chat", {
+        method: "POST",
+        body: JSON.stringify({ message: userMsg, type: "general" }),
+      });
+      setMessages((m) => [...m, { role: "assistant", content: res.reply }]);
+    } catch {
+      setMessages((m) => [
+        ...m,
+        { role: "assistant", content: t("empty.ai.unavailable") },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  }, [message, loading, t]);
 
   return (
     <>
-      {/* Bolha flutuante com símbolo oficial */}
       <AnimatePresence>
         {!open && (
           <motion.button
@@ -55,14 +62,13 @@ export function EcopetAIAssistant() {
             type="button"
             onClick={() => setOpen(true)}
             className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-4 z-50 flex h-14 w-14 items-center justify-center rounded-2xl shadow-xl shadow-ecopet-dark/30 transition-transform hover:scale-105 lg:bottom-6"
-            aria-label="Abrir ECOPET IA"
+            aria-label={t("empty.ai.openLabel")}
           >
             <EcopetSymbol variant="accent" size={56} animated="glow" className="rounded-2xl shadow-lg" />
           </motion.button>
         )}
       </AnimatePresence>
 
-      {/* Painel expandido */}
       <AnimatePresence>
         {open && (
           <>
@@ -77,87 +83,55 @@ export function EcopetAIAssistant() {
               initial={{ opacity: 0, y: 40, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 40, scale: 0.95 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-4 z-50 flex h-[min(560px,calc(100vh-8rem))] w-[min(400px,calc(100vw-2rem))] flex-col overflow-hidden rounded-[16px] border border-ecopet-gray/10 bg-white shadow-2xl dark:border-white/10 dark:bg-ecopet-dark-card lg:bottom-6"
-              role="dialog"
-              aria-label="ECOPET IA Assistente"
+              className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-4 z-50 flex h-[min(520px,calc(100vh-8rem))] w-[min(400px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-ecopet-gray/10 bg-white shadow-2xl dark:bg-[#0f1419] lg:bottom-6"
             >
-              {/* Header */}
-              <div className="gradient-ecopet-accent flex items-center gap-3 px-4 py-3 text-white">
-                <EcopetSymbol variant="light" size={36} animated="pulse" />
-                <div className="flex-1 min-w-0">
-                  <p className="font-display font-extrabold">ECOPET IA</p>
-                  <p className="text-[10px] opacity-80">Assistente inteligente universal</p>
+              <header className="flex items-center justify-between border-b px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-ecopet-green" />
+                  <span className="font-display font-bold">ECOPET IA</span>
                 </div>
-                <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={() => setOpen(false)}>
+                <button type="button" onClick={() => setOpen(false)} aria-label={t("common.cancel")}>
                   <X className="h-5 w-5" />
-                </Button>
-              </div>
+                </button>
+              </header>
 
-              {/* Busca global */}
-              <div className="border-b border-ecopet-gray/10 px-3 py-2 dark:border-white/10">
-                <div className="flex items-center gap-2 rounded-xl bg-ecopet-gray/5 px-3 py-2 dark:bg-white/5">
-                  <Search className="h-4 w-4 text-ecopet-gray" />
-                  <input
-                    type="search"
-                    placeholder="Pesquisar na ECOPET..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="flex-1 bg-transparent text-sm outline-none"
-                  />
-                </div>
-              </div>
-
-              {/* Atalhos */}
-              <div className="flex gap-2 overflow-x-auto px-3 py-2 scrollbar-hide">
-                {QUICK_COMMANDS.map((cmd) => (
-                  <Link
-                    key={cmd.label}
-                    href={cmd.href}
-                    onClick={() => setOpen(false)}
-                    className="flex shrink-0 items-center gap-1.5 rounded-full border border-ecopet-green/20 bg-ecopet-green/5 px-3 py-1.5 text-xs font-medium text-ecopet-green"
-                  >
-                    <cmd.icon className="h-3 w-3" />
-                    {cmd.label}
-                  </Link>
-                ))}
-              </div>
-
-              {/* Chat */}
-              <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
-                {messages.map((msg, i) => (
-                  <div key={i} className={cn("flex", msg.role === "user" ? "justify-end" : "justify-start")}>
-                    <div className={cn(
-                      "max-w-[85%] rounded-2xl px-3 py-2 text-sm",
-                      msg.role === "user"
-                        ? "bg-ecopet-green text-white"
-                        : "bg-ecopet-gray/10 dark:bg-white/10"
-                    )}>
-                      {msg.role === "assistant" && (
-                        <Sparkles className="mb-1 h-3 w-3 text-ecopet-yellow" />
-                      )}
-                      {msg.content}
-                    </div>
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                {messages.length === 0 ? (
+                  <div className="flex h-full flex-col items-center justify-center text-center text-sm text-ecopet-gray">
+                    <EcopetSymbol variant="accent" size={48} className="mb-3" />
+                    <p>{t("empty.ai.noHistory")}</p>
                   </div>
-                ))}
+                ) : (
+                  messages.map((m, i) => (
+                    <div key={i} className={cn("rounded-xl px-3 py-2 text-sm", m.role === "user" ? "ml-8 bg-ecopet-green/10" : "mr-8 bg-ecopet-gray/10")}>
+                      {m.content}
+                    </div>
+                  ))
+                )}
               </div>
 
-              {/* Input */}
-              <div className="border-t border-ecopet-gray/10 p-3 dark:border-white/10">
+              <div className="border-t p-3 space-y-2">
+                <div className="flex flex-wrap gap-1">
+                  {QUICK_COMMANDS.map(({ labelKey, icon: Icon, href }) => (
+                    <Link key={labelKey} href={href} className="flex items-center gap-1 rounded-full bg-ecopet-green/10 px-2 py-1 text-[10px] font-semibold text-ecopet-green">
+                      <Icon className="h-3 w-3" /> {t(labelKey)}
+                    </Link>
+                  ))}
+                </div>
                 <div className="flex gap-2">
                   <input
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && send()}
-                    placeholder="Pergunte qualquer coisa..."
-                    className="flex-1 rounded-xl border border-ecopet-gray/20 px-3 py-2.5 text-sm outline-none focus:border-ecopet-green dark:bg-white/5"
+                    onKeyDown={(e) => e.key === "Enter" && void send()}
+                    placeholder={t("empty.ai.placeholder")}
+                    className="flex-1 rounded-xl border px-3 py-2 text-sm"
                   />
-                  <Button size="icon" onClick={send} className="shrink-0">
+                  <Button size="icon" onClick={() => void send()} disabled={loading || !message.trim()}>
                     <Send className="h-4 w-4" />
                   </Button>
                 </div>
-                <Link href="/ia" onClick={() => setOpen(false)} className="mt-2 flex items-center justify-center gap-1 text-xs text-ecopet-green">
-                  Abrir IA completa <ChevronRight className="h-3 w-3" />
+                <Link href="/ia" className="flex items-center justify-center gap-1 text-xs text-ecopet-green">
+                  {t("empty.ai.fullPage")} <ChevronRight className="h-3 w-3" />
                 </Link>
               </div>
             </motion.div>

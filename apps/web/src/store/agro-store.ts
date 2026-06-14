@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import type { AiAgroMessage, AlertPriority } from "@/lib/agro/types";
-import { AI_MOCK_RESPONSES } from "@/lib/agro/config";
 
 interface AgroState {
   selectedFarmId: string;
@@ -17,16 +16,9 @@ interface AgroState {
 }
 
 export const useAgroStore = create<AgroState>((set, get) => ({
-  selectedFarmId: "farm1",
+  selectedFarmId: "",
   aiChatOpen: false,
-  aiMessages: [
-    {
-      id: "welcome",
-      role: "assistant",
-      content: "Olá! Sou a IA Agro Inteligente ECOPET. Posso analisar produtividade, prever safras, recomendar irrigação, detectar pragas e otimizar custos. Como posso ajudar?",
-      timestamp: new Date().toISOString(),
-    },
-  ],
+  aiMessages: [] as AiAgroMessage[],
   alertFilter: "all",
   robotCommands: {},
 
@@ -40,13 +32,10 @@ export const useAgroStore = create<AgroState>((set, get) => ({
       content,
       timestamp: new Date().toISOString(),
     };
-    const response =
-      AI_MOCK_RESPONSES[content] ??
-      `Analisando dados da Fazenda ECOPET Verde... Com base nos sensores IoT, drones e modelos ML ativos, identifiquei oportunidades de otimização. Para "${content}", recomendo verificar o dashboard de monitoramento e os alertas críticos ativos.`;
     const assistantMsg: AiAgroMessage = {
       id: `a-${Date.now()}`,
       role: "assistant",
-      content: response,
+      content: "Nenhum dado agro disponível no momento. Cadastre fazendas e sensores para habilitar recomendações.",
       timestamp: new Date().toISOString(),
     };
     set((s) => ({ aiMessages: [...s.aiMessages, userMsg, assistantMsg] }));

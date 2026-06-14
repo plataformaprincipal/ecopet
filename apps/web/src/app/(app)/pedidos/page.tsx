@@ -7,10 +7,11 @@ import { AppHeader } from "@/components/layout/app-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useCurrentUser } from "@/hooks/use-current-user";
+import { useFoundationSession } from "@/hooks/use-foundation-session";
 import { fetchOrders, type Order } from "@/lib/orders/api";
 import { fetchPartnerOrders } from "@/lib/marketplace/partner-api";
 import { api } from "@/lib/api";
+import { useTranslation } from "@/providers/i18n-provider";
 
 const STATUS_LABEL: Record<string, string> = {
   PENDING: "Pendente",
@@ -52,52 +53,60 @@ function OrderCard({ order, isPartner }: { order: Order & { user?: { name: strin
 }
 
 export default function PedidosPage() {
-  const { user, token } = useCurrentUser();
+  const { t } = useTranslation();
+  const { user, role, loading: sessionLoading } = useFoundationSession();
   const [orders, setOrders] = useState<Order[]>([]);
   const [serviceRequests, setServiceRequests] = useState<{ id: string; description: string; status: string; createdAt: string }[]>([]);
   const [loading, setLoading] = useState(true);
-  const isPartner = Boolean(user && ["PETSHOP", "SELLER", "SERVICE_PROVIDER", "VETERINARIAN", "CLINIC", "PARTNER"].includes(user.role ?? ""));
+  const isPartner = role === "PARTNER";
 
   useEffect(() => {
-    if (!token) return;
-    const authToken = token;
+    if (!user) return;
     async function load() {
       setLoading(true);
       try {
         if (isPartner) {
-          setOrders(await fetchPartnerOrders(authToken));
+          setOrders(await fetchPartnerOrders());
         } else {
           setOrders(await fetchOrders());
-          const reqs = await api<{ id: string; description: string; status: string; createdAt: string }[]>("/api/services/custom/mine", { token: authToken });
+          const reqs = await api<{ id: string; description: string; status: string; createdAt: string }[]>("/api/services/custom/mine");
           setServiceRequests(reqs);
         }
+      } catch {
+        setOrders([]);
+        setServiceRequests([]);
       } finally {
         setLoading(false);
       }
     }
     void load();
-  }, [token, isPartner]);
+  }, [user, isPartner]);
+
+  if (sessionLoading) {
+    return (
+      <>
+        <AppHeader title={t("empty.orders.pageTitle")} />
+        <main className="mx-auto max-w-4xl flex-1 p-6 text-center text-sm text-ecopet-gray">{t("common.loading")}</main>
+      </>
+    );
+  }
 
   if (!user) {
     return (
       <>
-        <AppHeader title="Meus Pedidos e Serviços" />
-        <main className="mx-auto max-w-4xl flex-1 p-6 text-center text-sm">Faça login para acompanhar pedidos e serviços.</main>
+        <AppHeader title={t("empty.orders.pageTitle")} />
+        <main className="mx-auto max-w-4xl flex-1 p-6 text-center text-sm">{t("errors.unauthorized")}</main>
       </>
     );
   }
 
   return (
     <>
-      <AppHeader title="Meus Pedidos e Serviços" />
+      <AppHeader title={t("empty.orders.pageTitle")} />
       <main className="mx-auto max-w-4xl flex-1 space-y-6 p-4 lg:p-6">
         <div>
-          <h1 className="heading-2">{isPartner ? "Pedidos recebidos" : "Meus Pedidos e Serviços"}</h1>
-          <p className="secondary-text">Acompanhamento filtrado pela sua conta</p>
-        </div>
-
-        <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 px-4 py-3 text-sm">
-          Pagamento real será ativado na fase de integração financeira. Homologação em modo demonstração.
+          <h1 className="heading-2">{isPartner ? t("empty.orders.partnerTitle") : t("empty.orders.pageTitle")}</h1>
+          <p className="secondary-text">{t("empty.orders.subtitle")}</p>
         </div>
 
         {loading ? (
@@ -105,9 +114,9 @@ export default function PedidosPage() {
         ) : (
           <>
             <section>
-              <h2 className="section-title flex items-center gap-2 mb-3"><Package className="h-4 w-4" /> Produtos</h2>
+              <h2 className="section-title flex items-center gap-2 mb-3"><Package className="h-4 w-4" /> {t("empty.orders.productsSection")}</h2>
               {orders.length === 0 ? (
-                <Card className="border-dashed"><CardContent className="p-6 text-center text-sm text-ecopet-gray">Nenhum pedido encontrado.</CardContent></Card>
+                <Card className="border-dashed"><CardContent className="p-6 text-center text-sm text-ecopet-gray">{t("empty.orders.description")}</CardContent></Card>
               ) : (
                 <div className="grid gap-4">{orders.map((o) => <OrderCard key={o.id} order={o as Order & { user?: { name: string } }} isPartner={isPartner} />)}</div>
               )}
@@ -115,9 +124,9 @@ export default function PedidosPage() {
 
             {!isPartner && (
               <section>
-                <h2 className="section-title flex items-center gap-2 mb-3"><Wrench className="h-4 w-4" /> Serviços solicitados</h2>
+                <h2 className="section-title flex items-center gap-2 mb-3"><Wrench className="h-4 w-4" /> {t("empty.orders.servicesSection")}</h2>
                 {serviceRequests.length === 0 ? (
-                  <Card className="border-dashed"><CardContent className="p-6 text-center text-sm text-ecopet-gray">Nenhum serviço solicitado.</CardContent></Card>
+                  <Card className="border-dashed"><CardContent className="p-6 text-center text-sm text-ecopet-gray">{t("empty.orders.noServices")}</CardContent></Card>
                 ) : (
                   <div className="grid gap-3">
                     {serviceRequests.map((r) => (

@@ -1,4 +1,5 @@
 import { API_URL } from "./constants";
+import { buildApiUrl } from "./api-url.client";
 import { ApiRequestError, mapApiErrorMessage } from "./api-errors";
 import { USER_MESSAGES } from "@/lib/validation/documents";
 
@@ -7,10 +8,12 @@ export async function api<T>(
   options?: RequestInit & { token?: string }
 ): Promise<T> {
   const { token, ...init } = options || {};
+  const url = buildApiUrl(API_URL, path);
   let res: Response;
   try {
-    res = await fetch(`${API_URL}${path}`, {
+    res = await fetch(url, {
       ...init,
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
