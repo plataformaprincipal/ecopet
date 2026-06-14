@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import { MyPetDashboard } from "@/components/my-pet/my-pet-dashboard";
+import { MyPetDashboard } from "@/components/features/my-pet/my-pet-dashboard";
 
 export default function MeuPetPage() {
   return (

@@ -1,6 +1,6 @@
-import { PetshopHeader } from "@/components/petshop-web/petshop-header";
-import { PetshopFooter } from "@/components/petshop-web/petshop-footer";
-import { SchedulingForm } from "@/components/petshop-web/scheduling-form";
+import { PetshopHeader } from "@/components/features/petshop-web/petshop-header";
+import { PetshopFooter } from "@/components/features/petshop-web/petshop-footer";
+import { SchedulingForm } from "@/components/features/petshop-web/scheduling-form";
 
 export default function AgendamentoPage() {
   return (

@@ -1,4 +1,4 @@
-import { FoundationRegisterForm } from "@/components/foundation/register-form";
+import { FoundationRegisterForm } from "@/components/features/foundation/register-form";
 
 export default function CadastroPage() {
   return (

@@ -435,7 +435,7 @@ export async function updateProfile(params: {
       ...(params.data.avatar !== undefined ? { avatar: params.data.avatar } : {}),
       ...(params.data.address
         ? {
-            address: {
+            addressRecord: {
               upsert: {
                 create: {
                   street: params.data.address.street,
@@ -464,7 +464,7 @@ export async function updateProfile(params: {
           }
         : {}),
     },
-    include: { address: true },
+    include: { addressRecord: true },
   });
 
   await createAuditLog({
@@ -486,7 +486,7 @@ export async function updateProfile(params: {
       phone: updated.phone,
       bio: updated.bio,
       avatar: updated.avatar,
-      address: updated.address,
+      address: updated.addressRecord,
     },
   };
 }

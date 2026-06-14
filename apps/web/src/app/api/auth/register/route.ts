@@ -1,13 +1,21 @@
 import { NextResponse } from "next/server";
-import { UserRole } from "@prisma/client";
+import { UserRole, AccountStatus, ApprovalType, ApprovalStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { hashPassword, createSessionToken, sessionCookieOptions, SESSION_COOKIE, sanitizeUser, safeUserSelect } from "@/lib/auth";
-import { registerSchema } from "@/lib/validations/auth";
+import {
+  hashPassword,
+  createSessionToken,
+  sessionCookieOptions,
+  SESSION_COOKIE,
+  sanitizeUser,
+  safeUserSelect,
+} from "@/lib/auth";
+import { dashboardPathForRole } from "@/lib/auth/dashboard";
+import { registerSchema } from "@/schemas/auth";
 import { validateStrongPassword, PASSWORD_MISMATCH_MESSAGE } from "@/lib/password/validate-strong-password";
+import { apiSuccess, apiFailure } from "@/lib/api-response";
+import { emailRegisterCompleted } from "@/lib/mail/event-dispatch";
 
-function conflict(message: string, code: string) {
-  return NextResponse.json({ error: message, code }, { status: 409 });
-}
+const ALLOWED_REGISTER_ROLES = [UserRole.CLIENT, UserRole.PARTNER, UserRole.ONG] as const;
 
 export async function POST(request: Request) {
   try {
@@ -16,19 +24,17 @@ export async function POST(request: Request) {
 
     if (!parsed.success) {
       const first = parsed.error.errors[0];
-      return NextResponse.json(
-        { error: first?.message ?? "Dados inválidos", code: "VALIDATION" },
-        { status: 400 }
-      );
+      return apiFailure("VALIDATION", first?.message ?? "Dados inválidos", 400);
     }
 
     const data = parsed.data;
 
+    if (!ALLOWED_REGISTER_ROLES.includes(data.role as (typeof ALLOWED_REGISTER_ROLES)[number])) {
+      return apiFailure("FORBIDDEN", "Tipo de cadastro não permitido nesta página.", 403);
+    }
+
     if (data.password !== data.confirmPassword) {
-      return NextResponse.json(
-        { error: PASSWORD_MISMATCH_MESSAGE, code: "VALIDATION" },
-        { status: 400 }
-      );
+      return apiFailure("VALIDATION", PASSWORD_MISMATCH_MESSAGE, 400);
     }
 
     const pwdCheck = validateStrongPassword(data.password, {
@@ -36,33 +42,50 @@ export async function POST(request: Request) {
       name: data.name,
     });
     if (!pwdCheck.valid) {
-      return NextResponse.json(
-        { error: pwdCheck.error ?? "Senha não atende aos requisitos de segurança.", code: "VALIDATION" },
-        { status: 400 }
+      return apiFailure(
+        "VALIDATION",
+        pwdCheck.error ?? "Senha não atende aos requisitos de segurança.",
+        400
       );
     }
 
     const emailExists = await prisma.user.findUnique({ where: { email: data.email } });
     if (emailExists) {
-      return conflict("Este e-mail já está cadastrado. Faça login ou recupere sua senha.", "EMAIL_DUPLICATE");
+      return apiFailure(
+        "EMAIL_DUPLICATE",
+        "Este e-mail já está cadastrado. Faça login ou recupere sua senha.",
+        409
+      );
     }
 
     const phoneExists = await prisma.user.findFirst({ where: { phone: data.phone } });
     if (phoneExists) {
-      return conflict("Este telefone já está vinculado a uma conta.", "PHONE_DUPLICATE");
+      return apiFailure("PHONE_DUPLICATE", "Este telefone já está vinculado a uma conta.", 409);
     }
 
-    if (data.role === UserRole.PARTNER) {
-      const cnpjExists = await prisma.partnerProfile.findUnique({ where: { cnpj: data.cnpj } });
-      if (cnpjExists) {
-        return conflict("Este CNPJ já está cadastrado. Acesse a conta da organização ou solicite suporte.", "CNPJ_DUPLICATE");
+    if (data.role === UserRole.CLIENT && data.cpf) {
+      const cpfExists = await prisma.user.findUnique({ where: { cpf: data.cpf } });
+      if (cpfExists) {
+        return apiFailure(
+          "CPF_DUPLICATE",
+          "Este CPF já está cadastrado. Faça login ou recupere sua senha.",
+          409
+        );
       }
     }
 
-    if (data.role === UserRole.ONG) {
-      const cnpjExists = await prisma.ongProfile.findUnique({ where: { cnpj: data.cnpj } });
-      if (cnpjExists) {
-        return conflict("Este CNPJ já está cadastrado. Acesse a conta da organização ou solicite suporte.", "CNPJ_DUPLICATE");
+    if (data.role === UserRole.PARTNER || data.role === UserRole.ONG) {
+      const [partnerCnpj, ongCnpj, userCnpj] = await Promise.all([
+        prisma.partnerProfile.findUnique({ where: { cnpj: data.cnpj }, select: { id: true } }),
+        prisma.ongProfile.findUnique({ where: { cnpj: data.cnpj }, select: { id: true } }),
+        prisma.user.findFirst({ where: { cnpj: data.cnpj }, select: { id: true } }),
+      ]);
+      if (partnerCnpj || ongCnpj || userCnpj) {
+        return apiFailure(
+          "CNPJ_DUPLICATE",
+          "Este CNPJ já está cadastrado. Acesse a conta da organização ou solicite suporte.",
+          409
+        );
       }
     }
 
@@ -77,14 +100,19 @@ export async function POST(request: Request) {
             passwordHash,
             role: UserRole.CLIENT,
             phone: data.phone,
+            cpf: data.cpf ?? null,
             birthDate: new Date(data.birthDate),
+            address: data.address?.trim() || null,
+            city: data.city?.trim() || null,
+            state: data.state ?? null,
+            accountStatus: AccountStatus.ACTIVE,
           },
-          select: { id: true, name: true, email: true, role: true },
+          select: { id: true, name: true, email: true, role: true, accountStatus: true },
         });
       }
 
       if (data.role === UserRole.PARTNER) {
-        return tx.user.create({
+        const created = await tx.user.create({
           data: {
             name: data.name.trim(),
             email: data.email,
@@ -92,6 +120,7 @@ export async function POST(request: Request) {
             role: UserRole.PARTNER,
             phone: data.phone,
             cnpj: data.cnpj,
+            accountStatus: AccountStatus.PENDING,
             partnerProfile: {
               create: {
                 businessName: data.businessName.trim(),
@@ -106,11 +135,21 @@ export async function POST(request: Request) {
               },
             },
           },
-          select: { id: true, name: true, email: true, role: true },
+          select: { id: true, name: true, email: true, role: true, accountStatus: true },
         });
+        await tx.approvalRequest.create({
+          data: {
+            type: ApprovalType.PARTNER,
+            entityType: "User",
+            entityId: created.id,
+            requesterId: created.id,
+            status: ApprovalStatus.PENDING,
+          },
+        });
+        return created;
       }
 
-      return tx.user.create({
+      const created = await tx.user.create({
         data: {
           name: data.name.trim(),
           email: data.email,
@@ -118,11 +157,14 @@ export async function POST(request: Request) {
           role: UserRole.ONG,
           phone: data.phone,
           cnpj: data.cnpj,
+          accountStatus: AccountStatus.PENDING,
           ongProfile: {
             create: {
               ongName: data.ongName.trim(),
-              cnpj: data.cnpj,
+              name: data.ongName.trim(),
+              responsible: data.responsibleName.trim(),
               responsibleName: data.responsibleName.trim(),
+              cnpj: data.cnpj,
               address: data.address.trim(),
               city: data.city.trim(),
               state: data.state,
@@ -130,30 +172,42 @@ export async function POST(request: Request) {
             },
           },
         },
-        select: { id: true, name: true, email: true, role: true },
+        select: { id: true, name: true, email: true, role: true, accountStatus: true },
       });
+      await tx.approvalRequest.create({
+        data: {
+          type: ApprovalType.ONG,
+          entityType: "User",
+          entityId: created.id,
+          requesterId: created.id,
+          status: ApprovalStatus.PENDING,
+        },
+      });
+      return created;
     });
 
-    const token = await createSessionToken(user.id, user.role);
+    const token = await createSessionToken(user.id, user.role, user.accountStatus ?? AccountStatus.ACTIVE);
     const fullUser = await prisma.user.findUnique({
       where: { id: user.id },
       select: safeUserSelect,
     });
 
-    const response = NextResponse.json(
-      { message: "Conta criada com sucesso!", user: fullUser ? sanitizeUser(fullUser) : user },
-      { status: 201 }
+    const response = apiSuccess(
+      {
+        message: "Conta criada com sucesso!",
+        user: fullUser ? sanitizeUser(fullUser) : user,
+        redirectTo: dashboardPathForRole(user.role),
+      },
+      201
     );
 
     response.cookies.set(SESSION_COOKIE, token, sessionCookieOptions());
+    void emailRegisterCompleted(user.email, user.name);
     return response;
   } catch (error) {
     if (process.env.NODE_ENV !== "production") {
       console.error("[register:error]", error);
     }
-    return NextResponse.json(
-      { error: "Não foi possível concluir o cadastro. Tente novamente.", code: "UNEXPECTED" },
-      { status: 500 }
-    );
+    return apiFailure("UNEXPECTED", "Não foi possível concluir o cadastro. Tente novamente.", 500);
   }
 }

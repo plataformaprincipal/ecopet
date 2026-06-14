@@ -1,4 +1,4 @@
-import { FoundationProfileForm } from "@/components/foundation/profile-form";
+import { FoundationProfileForm } from "@/components/features/foundation/profile-form";
 
 export default function PerfilPage() {
   return (

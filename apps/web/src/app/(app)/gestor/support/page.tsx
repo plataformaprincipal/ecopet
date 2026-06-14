@@ -1,5 +1,5 @@
-import { GestorSupportPanel } from "@/components/gestor/gestor-support";
-import { GestorPageHeader } from "@/components/gestor/gestor-shell";
+import { GestorSupportPanel } from "@/components/features/gestor/gestor-support";
+import { GestorPageHeader } from "@/components/features/gestor/gestor-shell";
 
 export default function GestorSupportPage() {
   return (

@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { Send, Sparkles, AlertTriangle } from "lucide-react";
-import { EcopetSymbol } from "@/components/brand/ecopet-symbol";
+import { EcopetSymbol } from "@/components/shared/brand/ecopet-symbol";
 import { motion } from "framer-motion";
-import { AppHeader } from "@/components/layout/app-header";
+import { AppHeader } from "@/components/layouts/app-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { api } from "@/lib/api";

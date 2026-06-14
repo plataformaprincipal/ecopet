@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@ecopet/database";
 import type { AuthRequest } from "../middleware/auth.js";
 import { paramString } from "../lib/request-utils.js";
+import { sendSuccess, sendFailure } from "../lib/express-api-response.js";
 import { serializeProduct } from "../lib/serialize.js";
 import { asOptionalInputJson } from "../lib/prisma-json.js";
 import { createAuditLog } from "../services/audit-service.js";
@@ -14,7 +15,7 @@ const router = Router();
 
 function requirePartner(req: AuthRequest, res: import("express").Response, next: import("express").NextFunction) {
   if (!PARTNER_ROLES.includes(req.userRole ?? "")) {
-    return res.status(403).json({ error: "Acesso restrito a parceiros" });
+    return sendFailure(res, "FORBIDDEN", "Acesso restrito a parceiros", 403);
   }
   next();
 }
@@ -39,7 +40,7 @@ router.get("/products", async (req: AuthRequest, res, next) => {
       include: { category: true },
       orderBy: { updatedAt: "desc" },
     });
-    res.json(products.map(serializeProduct));
+    return sendSuccess(res, { products: products.map(serializeProduct), total: products.length });
   } catch (e) {
     next(e);
   }
@@ -64,7 +65,7 @@ router.post("/products", async (req: AuthRequest, res, next) => {
       include: { category: true },
     });
     await createAuditLog({ userId: req.userId, action: "CREATE", module: "marketplace", resource: "product", resourceId: product.id });
-    res.status(201).json(serializeProduct(product));
+    return sendSuccess(res, { product: serializeProduct(product) }, 201);
   } catch (e) {
     next(e);
   }
@@ -74,7 +75,7 @@ router.patch("/products/:id", async (req: AuthRequest, res, next) => {
   try {
     const data = productSchema.partial().parse(req.body);
     const existing = await prisma.product.findFirst({ where: { id: paramString(req.params.id), sellerId: req.userId! } });
-    if (!existing) return res.status(404).json({ error: "Produto não encontrado" });
+    if (!existing) return sendFailure(res, "NOT_FOUND", "Produto não encontrado", 404);
     const product = await prisma.product.update({
       where: { id: existing.id },
       data: {
@@ -84,7 +85,7 @@ router.patch("/products/:id", async (req: AuthRequest, res, next) => {
       },
       include: { category: true },
     });
-    res.json(serializeProduct(product));
+    return sendSuccess(res, { product: serializeProduct(product) });
   } catch (e) {
     next(e);
   }
@@ -93,9 +94,9 @@ router.patch("/products/:id", async (req: AuthRequest, res, next) => {
 router.delete("/products/:id", async (req: AuthRequest, res, next) => {
   try {
     const existing = await prisma.product.findFirst({ where: { id: paramString(req.params.id), sellerId: req.userId! } });
-    if (!existing) return res.status(404).json({ error: "Produto não encontrado" });
+    if (!existing) return sendFailure(res, "NOT_FOUND", "Produto não encontrado", 404);
     await prisma.product.delete({ where: { id: existing.id } });
-    res.json({ ok: true });
+    return sendSuccess(res, { deleted: true });
   } catch (e) {
     next(e);
   }
@@ -119,7 +120,7 @@ router.get("/services", async (req: AuthRequest, res, next) => {
       where: { providerId: req.userId! },
       orderBy: { updatedAt: "desc" },
     });
-    res.json(services);
+    return sendSuccess(res, { services, total: services.length });
   } catch (e) {
     next(e);
   }
@@ -136,7 +137,7 @@ router.post("/services", async (req: AuthRequest, res, next) => {
         approvalStatus: "PENDING",
       },
     });
-    res.status(201).json(service);
+    return sendSuccess(res, { service }, 201);
   } catch (e) {
     next(e);
   }
@@ -146,12 +147,12 @@ router.patch("/services/:id", async (req: AuthRequest, res, next) => {
   try {
     const data = serviceSchema.partial().parse(req.body);
     const existing = await prisma.service.findFirst({ where: { id: paramString(req.params.id), providerId: req.userId! } });
-    if (!existing) return res.status(404).json({ error: "Serviço não encontrado" });
+    if (!existing) return sendFailure(res, "NOT_FOUND", "Serviço não encontrado", 404);
     const service = await prisma.service.update({
       where: { id: existing.id },
       data: { ...data, approvalStatus: "PENDING" },
     });
-    res.json(service);
+    return sendSuccess(res, { service });
   } catch (e) {
     next(e);
   }
@@ -160,9 +161,9 @@ router.patch("/services/:id", async (req: AuthRequest, res, next) => {
 router.delete("/services/:id", async (req: AuthRequest, res, next) => {
   try {
     const existing = await prisma.service.findFirst({ where: { id: paramString(req.params.id), providerId: req.userId! } });
-    if (!existing) return res.status(404).json({ error: "Serviço não encontrado" });
+    if (!existing) return sendFailure(res, "NOT_FOUND", "Serviço não encontrado", 404);
     await prisma.service.delete({ where: { id: existing.id } });
-    res.json({ ok: true });
+    return sendSuccess(res, { deleted: true });
   } catch (e) {
     next(e);
   }
@@ -170,7 +171,8 @@ router.delete("/services/:id", async (req: AuthRequest, res, next) => {
 
 router.get("/orders", async (req: AuthRequest, res, next) => {
   try {
-    res.json(await listPartnerOrders(req.userId!));
+    const orders = await listPartnerOrders(req.userId!);
+    return sendSuccess(res, { orders, total: orders.length });
   } catch (e) {
     next(e);
   }
@@ -183,8 +185,9 @@ router.patch("/orders/:id/status", async (req: AuthRequest, res, next) => {
       note: z.string().optional(),
     }).parse(req.body);
     const order = await prisma.order.findFirst({ where: { id: paramString(req.params.id), partnerId: req.userId! } });
-    if (!order) return res.status(404).json({ error: "Pedido não encontrado" });
-    res.json(await updateOrderStatus(order.id, status, note, req.userId!));
+    if (!order) return sendFailure(res, "NOT_FOUND", "Pedido não encontrado", 404);
+    const updated = await updateOrderStatus(order.id, status, note, req.userId!);
+    return sendSuccess(res, { order: updated });
   } catch (e) {
     next(e);
   }

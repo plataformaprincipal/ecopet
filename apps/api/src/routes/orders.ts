@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import type { AuthRequest } from "../middleware/auth.js";
 import { paramString } from "../lib/request-utils.js";
+import { sendSuccess, sendFailure } from "../lib/express-api-response.js";
 import {
   createOrder,
   listUserOrders,
@@ -45,7 +46,7 @@ router.post("/checkout", async (req: AuthRequest, res, next) => {
   try {
     const data = checkoutSchema.parse(req.body);
     const order = await createOrder({ ...data, userId: req.userId! });
-    res.status(201).json(order);
+    return sendSuccess(res, { order }, 201);
   } catch (e) {
     next(e);
   }
@@ -54,7 +55,7 @@ router.post("/checkout", async (req: AuthRequest, res, next) => {
 router.get("/", async (req: AuthRequest, res, next) => {
   try {
     const orders = await listUserOrders(req.userId!);
-    res.json(orders);
+    return sendSuccess(res, { orders, total: orders.length });
   } catch (e) {
     next(e);
   }
@@ -63,7 +64,7 @@ router.get("/", async (req: AuthRequest, res, next) => {
 router.get("/:id", async (req: AuthRequest, res, next) => {
   try {
     const order = await getOrderById(paramString(req.params.id), req.userId!);
-    res.json(order);
+    return sendSuccess(res, { order });
   } catch (e) {
     next(e);
   }
@@ -73,7 +74,7 @@ router.post("/:id/pickup/confirm", async (req: AuthRequest, res, next) => {
   try {
     const { qrCode } = z.object({ qrCode: z.string().optional() }).parse(req.body);
     const order = await confirmPickup(paramString(req.params.id), req.userId!, qrCode);
-    res.json(order);
+    return sendSuccess(res, { order });
   } catch (e) {
     next(e);
   }
@@ -83,7 +84,7 @@ router.post("/:id/refund", async (req: AuthRequest, res, next) => {
   try {
     const { reason } = z.object({ reason: z.string().optional() }).parse(req.body);
     const refund = await requestOrderRefund(paramString(req.params.id), req.userId!, reason);
-    res.json(refund);
+    return sendSuccess(res, { refund });
   } catch (e) {
     next(e);
   }
@@ -93,14 +94,14 @@ router.patch("/:id/status", async (req: AuthRequest, res, next) => {
   try {
     const partnerRoles = ["PETSHOP", "SELLER", "SERVICE_PROVIDER", "VETERINARIAN", "CLINIC", "PARTNER", "ADMIN", "GESTOR"];
     if (!partnerRoles.includes(req.userRole ?? "")) {
-      return res.status(403).json({ error: "Apenas parceiros ou gestores podem atualizar status" });
+      return sendFailure(res, "FORBIDDEN", "Apenas parceiros ou gestores podem atualizar status", 403);
     }
     const { status, note } = z.object({
       status: z.enum(["PENDING", "PAID", "PROCESSING", "READY_PICKUP", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED", "PICKED_UP", "CANCELLED", "REFUNDED"]),
       note: z.string().optional(),
     }).parse(req.body);
     const order = await updateOrderStatus(paramString(req.params.id), status, note, req.userId!);
-    res.json(order);
+    return sendSuccess(res, { order });
   } catch (e) {
     next(e);
   }

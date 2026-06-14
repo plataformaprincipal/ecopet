@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { AlertTriangle, PawPrint, Phone } from "lucide-react";
-import { EcoPetLogo } from "@/components/brand/ecopet-logo";
+import { EcoPetLogo } from "@/components/shared/brand/ecopet-logo";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { getPublicPet } from "@/lib/pets/api";

@@ -1,4 +1,4 @@
-import { FoundationResetPasswordForm } from "@/components/foundation/reset-password-form";
+import { FoundationResetPasswordForm } from "@/components/features/foundation/reset-password-form";
 
 export default function RedefinirSenhaPage() {
   return (

@@ -2,8 +2,8 @@
 
 import { useParams } from "next/navigation";
 import { GESTOR_MODULES } from "@/lib/gestor/config";
-import { GestorPageHeader } from "@/components/gestor/gestor-shell";
-import { GestorModuleView } from "@/components/gestor/gestor-module-view";
+import { GestorPageHeader } from "@/components/features/gestor/gestor-shell";
+import { GestorModuleView } from "@/components/features/gestor/gestor-module-view";
 
 const DESCRIPTIONS: Record<string, string> = {
   financeiro: "Fluxo de caixa, Saldo ECOPET, reembolsos, comissões, DRE e projeções.",

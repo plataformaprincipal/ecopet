@@ -1,4 +1,4 @@
-import { ExplorePage } from "@/components/explore/explore-page";
+import { ExplorePage } from "@/components/features/explore/explore-page";
 
 export default function ExplorarPage() {
   return <ExplorePage />;

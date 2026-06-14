@@ -1,0 +1,232 @@
+import { AccountStatus, PartnerServiceStatus, ProductCatalogStatus, Prisma } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+
+export type PublicServiceFilters = {
+  q?: string;
+  category?: string;
+  species?: string;
+  city?: string;
+  state?: string;
+  partnerId?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  page?: number;
+  pageSize?: number;
+};
+
+export async function queryPublicServices(filters: PublicServiceFilters) {
+  const page = Math.max(1, filters.page ?? 1);
+  const pageSize = Math.min(50, Math.max(1, filters.pageSize ?? 12));
+  const skip = (page - 1) * pageSize;
+
+  const where: Prisma.ServiceWhereInput = {
+    deletedAt: null,
+    status: PartnerServiceStatus.ACTIVE,
+    isActive: true,
+    provider: {
+      accountStatus: AccountStatus.ACTIVE,
+      role: "PARTNER" as const,
+      ...(filters.city ? { partnerProfile: { city: { contains: filters.city, mode: "insensitive" } } } : {}),
+      ...(filters.state ? { partnerProfile: { state: { equals: filters.state, mode: "insensitive" } } } : {}),
+    },
+    ...(filters.category ? { category: filters.category as never } : {}),
+    ...(filters.species ? { speciesTarget: filters.species as never } : {}),
+    ...(filters.partnerId ? { providerId: filters.partnerId } : {}),
+    ...(filters.minPrice || filters.maxPrice
+      ? {
+          price: {
+            ...(filters.minPrice ? { gte: filters.minPrice } : {}),
+            ...(filters.maxPrice ? { lte: filters.maxPrice } : {}),
+          },
+        }
+      : {}),
+    ...(filters.q
+      ? {
+          OR: [
+            { name: { contains: filters.q, mode: "insensitive" } },
+            { description: { contains: filters.q, mode: "insensitive" } },
+          ],
+        }
+      : {}),
+  };
+
+  const [services, total] = await Promise.all([
+    prisma.service.findMany({
+      where,
+      include: {
+        provider: {
+          select: {
+            id: true,
+            name: true,
+            partnerProfile: {
+              select: { businessName: true, city: true, state: true, description: true },
+            },
+          },
+        },
+        serviceReviews: {
+          where: { moderationStatus: "VISIBLE" },
+          select: { rating: true },
+        },
+      },
+      orderBy: [{ rating: "desc" }, { createdAt: "desc" }],
+      skip,
+      take: pageSize,
+    }),
+    prisma.service.count({ where }),
+  ]);
+
+  return {
+    services: services.map((s) => {
+      const ratings = s.serviceReviews.map((r) => r.rating);
+      const avg = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : s.rating;
+      const { serviceReviews: _r, ...rest } = s;
+      return { ...rest, rating: avg, reviewCount: ratings.length || s.reviewCount };
+    }),
+    total,
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
+  };
+}
+
+export type PublicProductFilters = {
+  q?: string;
+  category?: string;
+  species?: string;
+  brand?: string;
+  city?: string;
+  state?: string;
+  partnerId?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  inStock?: boolean;
+  page?: number;
+  pageSize?: number;
+};
+
+export async function queryPublicProducts(filters: PublicProductFilters) {
+  const page = Math.max(1, filters.page ?? 1);
+  const pageSize = Math.min(50, Math.max(1, filters.pageSize ?? 12));
+  const skip = (page - 1) * pageSize;
+
+  const where: Prisma.ProductWhereInput = {
+    deletedAt: null,
+    status: ProductCatalogStatus.ACTIVE,
+    approvalStatus: "APPROVED",
+    stock: filters.inStock === false ? undefined : { gt: 0 },
+    seller: {
+      accountStatus: AccountStatus.ACTIVE,
+      role: "PARTNER" as const,
+      ...(filters.city ? { partnerProfile: { city: { contains: filters.city, mode: "insensitive" } } } : {}),
+      ...(filters.state ? { partnerProfile: { state: { equals: filters.state, mode: "insensitive" } } } : {}),
+    },
+    ...(filters.category ? { catalogCategory: filters.category as never } : {}),
+    ...(filters.species ? { speciesTarget: filters.species as never } : {}),
+    ...(filters.brand ? { brand: { contains: filters.brand, mode: "insensitive" } } : {}),
+    ...(filters.partnerId ? { sellerId: filters.partnerId } : {}),
+    ...(filters.minPrice || filters.maxPrice
+      ? {
+          price: {
+            ...(filters.minPrice ? { gte: filters.minPrice } : {}),
+            ...(filters.maxPrice ? { lte: filters.maxPrice } : {}),
+          },
+        }
+      : {}),
+    ...(filters.q
+      ? {
+          OR: [
+            { name: { contains: filters.q, mode: "insensitive" } },
+            { description: { contains: filters.q, mode: "insensitive" } },
+            { brand: { contains: filters.q, mode: "insensitive" } },
+          ],
+        }
+      : {}),
+  };
+
+  const [products, total] = await Promise.all([
+    prisma.product.findMany({
+      where,
+      include: {
+        seller: {
+          select: {
+            id: true,
+            name: true,
+            partnerProfile: { select: { businessName: true, city: true, state: true } },
+          },
+        },
+        reviews: { where: { moderationStatus: "VISIBLE" }, select: { rating: true } },
+      },
+      orderBy: [{ isFeatured: "desc" }, { rating: "desc" }, { createdAt: "desc" }],
+      skip,
+      take: pageSize,
+    }),
+    prisma.product.count({ where }),
+  ]);
+
+  return {
+    products: products.map((p) => {
+      const { reviews: _r, ...rest } = p;
+      return rest;
+    }),
+    total,
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
+  };
+}
+
+export async function getPublicPartner(partnerId: string) {
+  const partner = await prisma.user.findFirst({
+    where: {
+      id: partnerId,
+      role: "PARTNER",
+      accountStatus: AccountStatus.ACTIVE,
+      partnerProfile: { isNot: null },
+    },
+    select: {
+      id: true,
+      name: true,
+      partnerProfile: {
+        select: {
+          businessName: true,
+          description: true,
+          city: true,
+          state: true,
+          category: true,
+        },
+      },
+      services: {
+        where: { deletedAt: null, status: PartnerServiceStatus.ACTIVE, isActive: true },
+        select: { id: true, name: true, description: true, price: true, category: true, rating: true, reviewCount: true, image: true },
+      },
+      products: {
+        where: { deletedAt: null, status: ProductCatalogStatus.ACTIVE, approvalStatus: "APPROVED", stock: { gt: 0 } },
+        select: { id: true, name: true, description: true, price: true, images: true, rating: true, reviewCount: true, catalogCategory: true },
+      },
+      partnerServiceReviews: {
+        where: { moderationStatus: "VISIBLE" },
+        select: { rating: true, comment: true, createdAt: true, user: { select: { name: true } } },
+        orderBy: { createdAt: "desc" },
+        take: 20,
+      },
+    },
+  });
+  if (!partner) return null;
+
+  const ratings = partner.partnerServiceReviews.map((r) => r.rating);
+  const avgRating = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0;
+
+  return {
+    id: partner.id,
+    businessName: partner.partnerProfile?.businessName ?? partner.name,
+    description: partner.partnerProfile?.description,
+    city: partner.partnerProfile?.city,
+    state: partner.partnerProfile?.state,
+    category: partner.partnerProfile?.category,
+    services: partner.services,
+    products: partner.products,
+    reviews: partner.partnerServiceReviews,
+    rating: avgRating,
+    reviewCount: ratings.length,
+  };
+}

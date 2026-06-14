@@ -1,3 +1,4 @@
+/** Tipos legados do hub de integrações (gestor) */
 export type IntegrationStatus = "connected" | "disconnected" | "pending" | "error";
 
 export type RiskLevel = "low" | "medium" | "high";
@@ -40,7 +41,13 @@ export type IntegrationCategory =
   | "financial"
   | "legal"
   | "accounting"
-  | "marketing";
+  | "marketing"
+  | "accessibility"
+  | "upload"
+  | "payment"
+  | "maps"
+  | "shipping"
+  | "messaging";
 
 export interface ExternalIntegration {
   id: string;
@@ -118,3 +125,67 @@ export interface IntegrationAIInsight {
 }
 
 export type ProfileCategory = "CLIENT" | "PARTNER" | "NGO";
+
+/** Etapa 9A — status real de integrações da plataforma */
+export type IntegrationStatusValue =
+  | "ACTIVE"
+  | "NOT_CONFIGURED"
+  | "PARTIAL"
+  | "ERROR"
+  | "DISABLED"
+  | "DEV_ONLY";
+
+export type PlatformIntegrationCategory =
+  | "accessibility"
+  | "upload"
+  | "email"
+  | "payment"
+  | "ai"
+  | "maps"
+  | "shipping"
+  | "messaging"
+  | "erp"
+  | "storage";
+
+export type IntegrationDefinition = {
+  name: string;
+  provider: string;
+  category: PlatformIntegrationCategory;
+  requiredEnvVars: string[];
+  canRunInProduction: boolean;
+  canRunInDevelopment: boolean;
+  resolveStatus: (env?: NodeJS.ProcessEnv) => IntegrationStatusValue;
+  resolveMessage: (env?: NodeJS.ProcessEnv) => string;
+  recommendedAction: string;
+};
+
+export type IntegrationHealthItem = {
+  name: string;
+  provider: string;
+  category: PlatformIntegrationCategory;
+  status: IntegrationStatusValue;
+  requiredEnvVars: string[];
+  configuredEnvVars: string[];
+  missingEnvVars: string[];
+  lastCheckedAt: string;
+  canRunInProduction: boolean;
+  canRunInDevelopment: boolean;
+  message: string;
+  recommendedAction: string;
+};
+
+export type IntegrationHealthResponse = {
+  environment: string;
+  checkedAt: string;
+  integrations: IntegrationHealthItem[];
+  recentLogs: Array<{
+    id: string;
+    integrationName: string;
+    provider: string;
+    action: string;
+    status: string;
+    errorCode: string | null;
+    message: string | null;
+    createdAt: string;
+  }>;
+};

@@ -1,25 +1,18 @@
 import type { LucideIcon } from "lucide-react";
 import {
   Home,
-  Compass,
   ShoppingBag,
   PawPrint,
   User,
   LayoutDashboard,
-  Package,
   ClipboardList,
   Heart,
-  Megaphone,
-  Gift,
   MessageCircle,
-  Bell,
-  Sparkles,
-  Calendar,
   Shield,
   Users,
-  Building2,
-  FileText,
   Settings,
+  ShoppingCart,
+  Wrench,
 } from "lucide-react";
 import type { TranslationKey } from "@/lib/i18n/types";
 import type { AppRole } from "@/lib/permissions";
@@ -34,53 +27,86 @@ export type RoleSecondaryNavItem = {
 };
 
 const CLIENT_MAIN: RoleNavItem[] = [
-  { href: "/dashboard", labelKey: "nav.home", icon: Home, match: ["/dashboard", "/inicio"] },
-  { href: "/perfil", labelKey: "nav.profile", icon: User, match: ["/perfil"] },
-  { href: "/meu-pet", labelKey: "nav.myPet", icon: PawPrint, match: ["/meu-pet", "/pets", "/health", "/iot"] },
-  { href: "/explorar", labelKey: "nav.socialNetwork", icon: Compass, match: ["/explorar", "/feed", "/social"] },
+  { href: "/", labelKey: "nav.home", icon: Home, match: ["/", "/inicio", "/feed"] },
   { href: "/marketplace", labelKey: "nav.marketplace", icon: ShoppingBag, match: ["/marketplace"] },
+  {
+    href: "/dashboard/client",
+    labelKey: "nav.myDashboard",
+    icon: LayoutDashboard,
+    match: ["/dashboard", "/dashboard/client"],
+  },
+  {
+    href: "/dashboard/client/pets",
+    labelKey: "nav.pets",
+    icon: PawPrint,
+    match: ["/dashboard/client/pets", "/meu-pet", "/pets"],
+  },
+  { href: "/carrinho", labelKey: "nav.cart", icon: ShoppingCart, match: ["/carrinho", "/checkout"] },
 ];
 
 const CLIENT_SECONDARY: RoleSecondaryNavItem[] = [
-  { href: "/ia", labelKey: "nav.ai", icon: Sparkles },
-  { href: "/agenda", labelKey: "nav.agenda", icon: Calendar },
+  { href: "/perfil", labelKey: "nav.profile", icon: User },
   { href: "/social/mensagens", labelKey: "nav.messages", icon: MessageCircle },
-  { href: "/notificacoes", labelKey: "nav.notifications", icon: Bell },
   { href: "/configuracoes", labelKey: "nav.settings", icon: Settings },
 ];
 
 const PARTNER_MAIN: RoleNavItem[] = [
-  { href: "/dashboard", labelKey: "nav.home", icon: LayoutDashboard, match: ["/dashboard"] },
-  { href: "/perfil", labelKey: "nav.profile", icon: User, match: ["/perfil"] },
-  { href: "/marketplace", labelKey: "nav.products", icon: Package, match: ["/marketplace"] },
-  { href: "/pedidos", labelKey: "nav.orders", icon: ClipboardList, match: ["/pedidos"] },
+  { href: "/", labelKey: "nav.home", icon: Home, match: ["/", "/inicio"] },
+  { href: "/marketplace", labelKey: "nav.marketplace", icon: ShoppingBag, match: ["/marketplace"] },
+  {
+    href: "/dashboard/partner",
+    labelKey: "nav.myDashboard",
+    icon: LayoutDashboard,
+    match: ["/dashboard/partner"],
+  },
+  {
+    href: "/dashboard/partner/services",
+    labelKey: "nav.services",
+    icon: Wrench,
+    match: ["/dashboard/partner/services"],
+  },
+  {
+    href: "/dashboard/partner/orders",
+    labelKey: "nav.orders",
+    icon: ClipboardList,
+    match: ["/dashboard/partner/orders", "/pedidos"],
+  },
 ];
 
 const PARTNER_SECONDARY: RoleSecondaryNavItem[] = [
-  { href: "/agenda", labelKey: "nav.agenda", icon: Calendar },
+  { href: "/perfil", labelKey: "nav.profile", icon: User },
   { href: "/social/mensagens", labelKey: "nav.messages", icon: MessageCircle },
-  { href: "/notificacoes", labelKey: "nav.notifications", icon: Bell },
   { href: "/configuracoes", labelKey: "nav.settings", icon: Settings },
 ];
 
 const ONG_MAIN: RoleNavItem[] = [
-  { href: "/dashboard", labelKey: "nav.home", icon: LayoutDashboard, match: ["/dashboard", "/dashboard/ong"] },
-  { href: "/perfil", labelKey: "nav.profile", icon: User, match: ["/perfil"] },
+  { href: "/", labelKey: "nav.home", icon: Home, match: ["/", "/inicio"] },
   { href: "/adocao", labelKey: "nav.adoption", icon: Heart, match: ["/adocao", "/ong"] },
-  { href: "/dashboard/ong", labelKey: "nav.campaigns", icon: Megaphone, match: ["/dashboard/ong"] },
+  {
+    href: "/dashboard/ong",
+    labelKey: "nav.myDashboard",
+    icon: LayoutDashboard,
+    match: ["/dashboard/ong"],
+  },
+  { href: "/dashboard/ong/profile", labelKey: "nav.profile", icon: User, match: ["/dashboard/ong/profile", "/perfil"] },
+  { href: "/social/mensagens", labelKey: "nav.messages", icon: MessageCircle, match: ["/social/mensagens"] },
 ];
 
 const ONG_SECONDARY: RoleSecondaryNavItem[] = [
-  { href: "/social/mensagens", labelKey: "nav.messages", icon: MessageCircle },
-  { href: "/notificacoes", labelKey: "nav.notifications", icon: Bell },
   { href: "/configuracoes", labelKey: "nav.settings", icon: Settings },
 ];
 
 const ADMIN_MAIN: RoleNavItem[] = [
-  { href: "/gestor", labelKey: "nav.adminPanel", icon: Shield, match: ["/gestor", "/admin"] },
-  { href: "/gestor/permissions", labelKey: "nav.users", icon: Users, match: ["/gestor/permissions"] },
-  { href: "/gestor/integrations", labelKey: "nav.partners", icon: Building2, match: ["/gestor/integrations"] },
-  { href: "/gestor/audit", labelKey: "nav.logs", icon: FileText, match: ["/gestor/audit"] },
+  { href: "/dashboard/admin", labelKey: "nav.adminPanel", icon: Shield, match: ["/dashboard/admin", "/gestor", "/admin"] },
+  { href: "/gestor/permissions", labelKey: "nav.users", icon: Users, match: ["/gestor/permissions", "/dashboard/admin/accounts"] },
+  {
+    href: "/dashboard/admin/integrations",
+    labelKey: "nav.integrations",
+    icon: Settings,
+    match: ["/dashboard/admin/integrations", "/gestor/integrations"],
+  },
+  { href: "/dashboard/admin/orders", labelKey: "nav.orders", icon: ClipboardList, match: ["/dashboard/admin/orders"] },
+  { href: "/perfil", labelKey: "nav.profile", icon: User, match: ["/perfil"] },
 ];
 
 const ADMIN_SECONDARY: RoleSecondaryNavItem[] = [

@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { FoundationLoginForm } from "@/components/foundation/login-form";
+import { FoundationLoginForm } from "@/components/features/foundation/login-form";
 
 export default function LoginPage() {
   return (

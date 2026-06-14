@@ -1,7 +1,7 @@
 "use client";
 
-import { MarketplacePageWrapper } from "@/components/marketplace/marketplace-page-wrapper";
-import { MarketplaceHub } from "@/components/marketplace/marketplace-hub";
+import { MarketplacePageWrapper } from "@/components/features/marketplace/marketplace-page-wrapper";
+import { MarketplaceHub } from "@/components/features/marketplace/marketplace-hub";
 
 export default function MarketplacePage() {
   return (

@@ -3,10 +3,14 @@ import type { DeliveryMethod } from "@prisma/client";
 
 const PARTNER_ROLES = ["PETSHOP", "SELLER", "SERVICE_PROVIDER", "VETERINARIAN", "CLINIC", "PARTNER"] as const;
 
-const MOCK_PARTNER_MAP: Record<string, string> = {
-  mp1: "loja@ecopet.com.br",
-  mp2: "vet@ecopet.com.br",
-};
+/** Legado dev — desativado em produção. Remover quando marketplace real estiver ativo. */
+const MOCK_PARTNER_MAP: Record<string, string> =
+  process.env.NODE_ENV === "production" || process.env.ECOPET_DISABLE_MOCK_PARTNERS === "1"
+    ? {}
+    : {
+        mp1: "loja@ecopet.com.br",
+        mp2: "vet@ecopet.com.br",
+      };
 
 export async function resolvePartnerId(partnerId: string) {
   const email = MOCK_PARTNER_MAP[partnerId];
@@ -23,12 +27,12 @@ export async function getOrCreatePartnerLogistics(partnerId: string) {
   if (!config) {
     const partner = await prisma.user.findUnique({
       where: { id: resolvedId },
-      include: { address: true, petshopProfile: true },
+      include: { addressRecord: true, petshopProfile: true },
     });
     if (!partner || !PARTNER_ROLES.includes(partner.role as typeof PARTNER_ROLES[number])) {
       throw new Error("Parceiro inválido");
     }
-    const addr = partner.address;
+    const addr = partner.addressRecord;
     config = await prisma.partnerLogisticsConfig.create({
       data: {
         partnerId: resolvedId,

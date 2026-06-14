@@ -1,4 +1,4 @@
-import { USER_MESSAGES } from "@/lib/validation/documents";
+import { USER_MESSAGES } from "@/schemas/validation/documents";
 
 const TECHNICAL_PATTERNS = [
   /internal server error/i,

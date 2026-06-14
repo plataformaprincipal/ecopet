@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { AccountStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
   verifyPassword,
@@ -8,7 +9,11 @@ import {
   sanitizeUser,
   safeUserSelect,
 } from "@/lib/auth";
-import { loginSchema } from "@/lib/validations/auth";
+import { dashboardPathForRole } from "@/lib/auth/dashboard";
+import { loginSchema } from "@/schemas/auth";
+import { apiSuccess, apiFailure } from "@/lib/api-response";
+
+const BLOCKED_STATUSES: AccountStatus[] = [AccountStatus.REJECTED, AccountStatus.SUSPENDED];
 
 export async function POST(request: Request) {
   try {
@@ -17,40 +22,42 @@ export async function POST(request: Request) {
 
     if (!parsed.success) {
       const first = parsed.error.errors[0];
-      return NextResponse.json(
-        { error: first?.message ?? "Dados inválidos", code: "VALIDATION" },
-        { status: 400 }
-      );
+      return apiFailure("VALIDATION", first?.message ?? "Dados inválidos", 400);
     }
 
     const { email, password } = parsed.data;
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
-      return NextResponse.json(
-        { error: "Usuário ou senha incorretos.", code: "INVALID_CREDENTIALS" },
-        { status: 401 }
+      return apiFailure("INVALID_CREDENTIALS", "Usuário ou senha incorretos.", 401);
+    }
+
+    if (BLOCKED_STATUSES.includes(user.accountStatus)) {
+      return apiFailure(
+        "ACCOUNT_UNAVAILABLE",
+        "Sua conta está indisponível. Entre em contato com o suporte ECOPET.",
+        403
       );
     }
 
     const valid = await verifyPassword(password, user.passwordHash);
     if (!valid) {
-      return NextResponse.json(
-        { error: "Usuário ou senha incorretos.", code: "INVALID_CREDENTIALS" },
-        { status: 401 }
-      );
+      return apiFailure("INVALID_CREDENTIALS", "Usuário ou senha incorretos.", 401);
     }
 
-    const token = await createSessionToken(user.id, user.role);
+    const token = await createSessionToken(user.id, user.role, user.accountStatus);
 
     const fullUser = await prisma.user.findUnique({
       where: { id: user.id },
       select: safeUserSelect,
     });
 
-    const response = NextResponse.json({
+    const redirectTo = dashboardPathForRole(user.role);
+
+    const response = apiSuccess({
       message: "Login realizado com sucesso.",
       user: fullUser ? sanitizeUser(fullUser) : { id: user.id, email: user.email, role: user.role, name: user.name },
+      redirectTo,
     });
 
     response.cookies.set(SESSION_COOKIE, token, sessionCookieOptions());
@@ -59,9 +66,6 @@ export async function POST(request: Request) {
     if (process.env.NODE_ENV !== "production") {
       console.error("[login:error]", error);
     }
-    return NextResponse.json(
-      { error: "Não foi possível fazer login. Tente novamente.", code: "UNEXPECTED" },
-      { status: 500 }
-    );
+    return apiFailure("UNEXPECTED", "Não foi possível fazer login. Tente novamente.", 500);
   }
 }

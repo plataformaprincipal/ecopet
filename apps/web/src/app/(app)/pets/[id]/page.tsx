@@ -2,8 +2,8 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { AppHeader } from "@/components/layout/app-header";
-import { PetDetailView } from "@/components/my-pet/pet-detail-view";
+import { AppHeader } from "@/components/layouts/app-header";
+import { PetDetailView } from "@/components/features/my-pet/pet-detail-view";
 import { petsApi } from "@/lib/pets/api";
 import type { PetDetail } from "@/lib/pets/types";
 import { useCurrentUser } from "@/hooks/use-current-user";

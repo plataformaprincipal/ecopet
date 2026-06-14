@@ -1,7 +1,7 @@
 "use client";
 
-import { MarketplacePageWrapper } from "@/components/marketplace/marketplace-page-wrapper";
-import { CartPageContent } from "@/components/marketplace/cart-page-content";
+import { MarketplacePageWrapper } from "@/components/features/marketplace/marketplace-page-wrapper";
+import { CartPageContent } from "@/components/features/marketplace/cart-page-content";
 
 export default function CarrinhoPage() {
   return (

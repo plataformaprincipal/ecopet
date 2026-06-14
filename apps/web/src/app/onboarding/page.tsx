@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { EcoPetLogo } from "@/components/brand/ecopet-logo";
+import { EcoPetLogo } from "@/components/shared/brand/ecopet-logo";
 import { Button } from "@/components/ui/button";
 import { PawPrint, Sparkles, ShoppingBag } from "lucide-react";
 

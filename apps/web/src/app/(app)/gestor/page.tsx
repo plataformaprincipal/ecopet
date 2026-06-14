@@ -1,5 +1,5 @@
-import { GestorDashboard } from "@/components/gestor/gestor-dashboard";
-import { GestorPageHeader } from "@/components/gestor/gestor-shell";
+import { GestorDashboard } from "@/components/features/gestor/gestor-dashboard";
+import { GestorPageHeader } from "@/components/features/gestor/gestor-shell";
 
 export default function GestorHomePage() {
   return (

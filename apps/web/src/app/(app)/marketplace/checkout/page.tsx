@@ -1,7 +1,7 @@
 "use client";
 
-import { MarketplacePageWrapper } from "@/components/marketplace/marketplace-page-wrapper";
-import { CheckoutSteps } from "@/components/marketplace/checkout-steps";
+import { MarketplacePageWrapper } from "@/components/features/marketplace/marketplace-page-wrapper";
+import { CheckoutSteps } from "@/components/features/marketplace/checkout-steps";
 
 export default function CheckoutPage() {
   return (

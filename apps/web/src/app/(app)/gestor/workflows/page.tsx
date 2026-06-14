@@ -1,5 +1,5 @@
-import { GestorPageHeader } from "@/components/gestor/gestor-shell";
-import { WorkflowCenterHub } from "@/components/platform/workflow-visual-builder";
+import { GestorPageHeader } from "@/components/features/gestor/gestor-shell";
+import { WorkflowCenterHub } from "@/components/features/platform/workflow-visual-builder";
 
 export default function GestorWorkflowsPage() {
   return (

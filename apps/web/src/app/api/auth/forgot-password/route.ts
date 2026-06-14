@@ -1,17 +1,19 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { logMailError, sendPasswordResetEmail } from "@/lib/mail";
+import { logMailError } from "@/lib/mail";
+import { emailPasswordReset } from "@/lib/mail/event-dispatch";
 import { generateResetToken, hashResetToken, resetExpiresAt, resetPasswordLink } from "@/lib/password-reset";
 import { checkRateLimit, clientIp } from "@/lib/rate-limit";
 import { FORGOT_PASSWORD_GENERIC_MESSAGE } from "@/lib/constants/auth-messages";
-import { forgotPasswordSchema } from "@/lib/validations/password-reset";
+import { forgotPasswordSchema } from "@/schemas/password-reset";
+import { apiSuccess } from "@/lib/api-response";
 
 const RATE_WINDOW_MS = 15 * 60 * 1000;
 const RATE_LIMIT_IP = 10;
 const RATE_LIMIT_EMAIL = 5;
 
 function genericResponse() {
-  return NextResponse.json({ message: FORGOT_PASSWORD_GENERIC_MESSAGE });
+  return apiSuccess({ message: FORGOT_PASSWORD_GENERIC_MESSAGE });
 }
 
 export async function POST(request: Request) {
@@ -64,9 +66,12 @@ export async function POST(request: Request) {
 
     try {
       const resetUrl = resetPasswordLink(plainToken);
-      await sendPasswordResetEmail(user.email, resetUrl);
+      await emailPasswordReset(user.email, resetUrl, user.name);
     } catch (mailError) {
       logMailError("forgot-password", mailError);
+      if (process.env.NODE_ENV !== "production") {
+        console.info("[forgot-password:dev] E-mail não enviado — SMTP não configurado ou indisponível.");
+      }
     }
 
     return genericResponse();

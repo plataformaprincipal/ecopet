@@ -68,6 +68,8 @@
     "adminPanel": "Admin Panel",
     "users": "Users",
     "partners": "Partners",
+    "myDashboard": "My Dashboard",
+    "integrations": "Integrations",
     "logs": "Logs"
   },
   "errors": {

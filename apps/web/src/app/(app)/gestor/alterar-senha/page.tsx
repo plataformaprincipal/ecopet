@@ -1,7 +1,7 @@
 "use client";
 
-import { GestorChangePasswordForm } from "@/components/gestor/gestor-change-password";
-import { GestorPageHeader } from "@/components/gestor/gestor-shell";
+import { GestorChangePasswordForm } from "@/components/features/gestor/gestor-change-password";
+import { GestorPageHeader } from "@/components/features/gestor/gestor-shell";
 
 export default function GestorChangePasswordPage() {
   return (

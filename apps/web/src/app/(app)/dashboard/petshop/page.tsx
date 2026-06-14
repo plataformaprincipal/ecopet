@@ -1,4 +1,4 @@
-import { RoleDashboard } from "@/components/dashboard/role-dashboard";
+import { RoleDashboard } from "@/components/features/dashboard/role-dashboard";
 
 export default function PetshopDashboardPage() {
   return (

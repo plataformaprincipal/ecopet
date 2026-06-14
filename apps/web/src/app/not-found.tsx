@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { EcoPetLogo } from "@/components/brand/ecopet-logo";
+import { EcoPetLogo } from "@/components/shared/brand/ecopet-logo";
 import { Button } from "@/components/ui/button";
 
 export default function NotFound() {

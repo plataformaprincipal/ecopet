@@ -5,8 +5,8 @@ import {
   validateCpfField,
   validateCnpjField,
   USER_MESSAGES,
-} from "@/lib/validation/documents";
-import { onlyDigits } from "@/lib/validation/documents-shared";
+} from "@/schemas/validation/documents";
+import { onlyDigits } from "@/schemas/validation/documents-shared";
 
 function requireString(values: FormValues, key: string, label: string, errors: Record<string, string>) {
   if (!String(values[key] ?? "").trim()) errors[key] = `${label} é obrigatório`;

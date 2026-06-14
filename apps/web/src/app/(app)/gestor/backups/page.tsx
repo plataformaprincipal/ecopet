@@ -1,5 +1,5 @@
-import { GestorPageHeader } from "@/components/gestor/gestor-shell";
-import { BackupCenterPanel } from "@/components/platform/gestor-centers";
+import { GestorPageHeader } from "@/components/features/gestor/gestor-shell";
+import { BackupCenterPanel } from "@/components/features/platform/gestor-centers";
 
 export default function GestorBackupsPage() {
   return (

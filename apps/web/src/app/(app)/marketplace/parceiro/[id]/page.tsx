@@ -2,8 +2,8 @@
 
 import { Suspense } from "react";
 import { useParams, useSearchParams } from "next/navigation";
-import { MarketplacePageWrapper } from "@/components/marketplace/marketplace-page-wrapper";
-import { PartnerProfileHub } from "@/components/ecosystem/partner/partner-profile-hub";
+import { MarketplacePageWrapper } from "@/components/features/marketplace/marketplace-page-wrapper";
+import { PartnerProfileHub } from "@/components/features/ecosystem/partner/partner-profile-hub";
 
 function ParceiroContent() {
   const { id } = useParams();

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PawPrint } from "lucide-react";
-import { EcoPetLogo } from "@/components/brand/ecopet-logo";
+import { EcoPetLogo } from "@/components/shared/brand/ecopet-logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 

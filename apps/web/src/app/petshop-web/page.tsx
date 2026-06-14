@@ -1,6 +1,6 @@
-import { PetshopHeader } from "@/components/petshop-web/petshop-header";
-import { PetshopFooter } from "@/components/petshop-web/petshop-footer";
-import { HeroCarousel } from "@/components/petshop-web/hero-carousel";
+import { PetshopHeader } from "@/components/features/petshop-web/petshop-header";
+import { PetshopFooter } from "@/components/features/petshop-web/petshop-footer";
+import { HeroCarousel } from "@/components/features/petshop-web/hero-carousel";
 
 export default function PetshopWebHomePage() {
   return (

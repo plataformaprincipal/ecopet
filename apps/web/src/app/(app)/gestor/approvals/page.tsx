@@ -1,5 +1,5 @@
-import { GestorApprovalsPanel } from "@/components/gestor/gestor-approvals";
-import { GestorPageHeader } from "@/components/gestor/gestor-shell";
+import { GestorApprovalsPanel } from "@/components/features/gestor/gestor-approvals";
+import { GestorPageHeader } from "@/components/features/gestor/gestor-shell";
 
 export default function GestorApprovalsPage() {
   return (

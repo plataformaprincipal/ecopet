@@ -5,7 +5,9 @@ import crypto from "crypto";
 import jwt, { type SignOptions } from "jsonwebtoken";
 import { prisma } from "@ecopet/database";
 
-const JWT_SECRET = process.env.JWT_SECRET || "ecopet-dev-secret";
+import { apiEnv } from "./env.js";
+
+const JWT_SECRET = apiEnv.jwtSecret;
 const ACCESS_EXPIRY: SignOptions["expiresIn"] = (process.env.JWT_ACCESS_EXPIRY || "15m") as SignOptions["expiresIn"];
 const REFRESH_DAYS = Number(process.env.JWT_REFRESH_DAYS || 7);
 

@@ -1,7 +1,7 @@
 "use client";
 
-import { CreateMasterAdminForm } from "@/components/gestor/create-master-admin-form";
-import { GestorPageHeader } from "@/components/gestor/gestor-shell";
+import { CreateMasterAdminForm } from "@/components/features/gestor/create-master-admin-form";
+import { GestorPageHeader } from "@/components/features/gestor/gestor-shell";
 
 export default function GestorAtivacaoPage() {
   return (

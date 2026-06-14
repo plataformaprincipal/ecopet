@@ -1,5 +1,5 @@
-import { GestorModerationPanel } from "@/components/gestor/gestor-moderation";
-import { GestorPageHeader } from "@/components/gestor/gestor-shell";
+import { GestorModerationPanel } from "@/components/features/gestor/gestor-moderation";
+import { GestorPageHeader } from "@/components/features/gestor/gestor-shell";
 
 export default function GestorSocialPage() {
   return (

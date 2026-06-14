@@ -68,6 +68,8 @@
     "adminPanel": "Panel Admin",
     "users": "Usuarios",
     "partners": "Socios",
+    "myDashboard": "Mi Panel",
+    "integrations": "Integraciones",
     "logs": "Registros"
   },
   "errors": {

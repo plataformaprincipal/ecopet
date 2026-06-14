@@ -1,8 +1,8 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { MarketplacePageWrapper } from "@/components/marketplace/marketplace-page-wrapper";
-import { ServiceDetailContent } from "@/components/marketplace/service-detail-content";
+import { MarketplacePageWrapper } from "@/components/features/marketplace/marketplace-page-wrapper";
+import { ServiceDetailContent } from "@/components/features/marketplace/service-detail-content";
 
 export default function ServicoPage() {
   const { id } = useParams();

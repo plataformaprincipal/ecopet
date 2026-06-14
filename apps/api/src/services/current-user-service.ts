@@ -26,7 +26,7 @@ export const CURRENT_USER_SELECT = {
   createdAt: true,
   pets: { select: { id: true, name: true, photo: true, species: true } },
   gamification: true,
-  address: {
+  addressRecord: {
     select: {
       street: true,
       number: true,

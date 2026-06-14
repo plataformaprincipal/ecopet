@@ -2,8 +2,8 @@
 
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { MarketplacePageWrapper } from "@/components/marketplace/marketplace-page-wrapper";
-import { ChatHub } from "@/components/ecosystem/chat/chat-hub";
+import { MarketplacePageWrapper } from "@/components/features/marketplace/marketplace-page-wrapper";
+import { ChatHub } from "@/components/features/ecosystem/chat/chat-hub";
 
 function ChatContent() {
   const searchParams = useSearchParams();

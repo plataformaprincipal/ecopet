@@ -1,18 +1,18 @@
 import type { Metadata } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
-import "./globals.css";
+import "@/styles/globals.css";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { AuthSessionProvider } from "@/providers/session-provider";
 import { AuthTokenSync } from "@/providers/auth-token-sync";
 import { AccessibilityProvider } from "@/providers/accessibility-provider";
-import { SkipLink } from "@/components/accessibility/skip-link";
-import { AccessibilityToolbarLazy } from "@/components/accessibility/accessibility-toolbar-lazy";
+import { SkipLink } from "@/components/shared/accessibility/skip-link";
+import { AccessibilityToolbarLazy } from "@/components/shared/accessibility/accessibility-toolbar-lazy";
 import { I18nProvider } from "@/providers/i18n-provider";
 import { PreferencesSync } from "@/hooks/use-preferences-sync";
-import { AriaLiveProvider } from "@/components/accessibility/aria-live-region";
-import { EcopetFooter } from "@/components/layout/ecopet-footer";
+import { AriaLiveProvider } from "@/components/shared/accessibility/aria-live-region";
+import { EcopetFooter } from "@/components/layouts/ecopet-footer";
 import { SupportChatProvider } from "@/providers/support-chat-provider";
-import { SupportChatPanel } from "@/components/support/support-chat-panel";
+import { SupportChatPanel } from "@/components/features/support/support-chat-panel";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-jakarta", weight: ["500", "600", "700", "800"] });

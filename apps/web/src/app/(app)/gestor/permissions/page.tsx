@@ -1,5 +1,5 @@
-import { GestorPermissionsPanel } from "@/components/gestor/gestor-permissions";
-import { GestorPageHeader } from "@/components/gestor/gestor-shell";
+import { GestorPermissionsPanel } from "@/components/features/gestor/gestor-permissions";
+import { GestorPageHeader } from "@/components/features/gestor/gestor-shell";
 
 export default function GestorPermissionsPage() {
   return (

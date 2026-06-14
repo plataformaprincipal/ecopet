@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import { SettingsHub } from "@/components/settings/settings-hub";
+import { SettingsHub } from "@/components/features/settings/settings-hub";
 
 export default function ConfiguracoesPage() {
   return (

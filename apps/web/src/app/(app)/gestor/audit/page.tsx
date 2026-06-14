@@ -1,5 +1,5 @@
-import { GestorAuditPanel } from "@/components/gestor/gestor-audit";
-import { GestorPageHeader } from "@/components/gestor/gestor-shell";
+import { GestorAuditPanel } from "@/components/features/gestor/gestor-audit";
+import { GestorPageHeader } from "@/components/features/gestor/gestor-shell";
 
 export default function GestorAuditPage() {
   return (

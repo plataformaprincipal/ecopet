@@ -1,11 +1,10 @@
-import { NextResponse } from "next/server";
 import { getCurrentUser, sanitizeUser } from "@/lib/auth";
-import { apiError } from "@/lib/api-response";
+import { apiSuccess, apiFailure } from "@/lib/api-response";
 
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) {
-    return apiError("UNAUTHORIZED", 401);
+    return apiFailure("UNAUTHORIZED", "Sessão expirada. Faça login novamente.", 401);
   }
-  return NextResponse.json({ user: sanitizeUser(user) });
+  return apiSuccess({ user: sanitizeUser(user) });
 }

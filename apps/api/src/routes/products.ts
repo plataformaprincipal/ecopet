@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { prisma } from "@ecopet/database";
 import { serializeProduct } from "../lib/serialize.js";
+import { sendSuccess, sendFailure } from "../lib/express-api-response.js";
 
 const router = Router();
 
@@ -9,26 +10,28 @@ router.get("/", async (req, res, next) => {
     const { q, category, minPrice, maxPrice } = req.query;
     const products = await prisma.product.findMany({
       where: {
+        deletedAt: null,
+        status: "ACTIVE",
         approvalStatus: "APPROVED",
         stock: { gt: 0 },
-        ...(q ? { OR: [{ name: { contains: String(q) } }, { description: { contains: String(q) } }] } : {}),
-        ...(category ? { category: { slug: String(category) } } : {}),
+        ...(q ? { OR: [{ name: { contains: String(q), mode: "insensitive" } }, { description: { contains: String(q), mode: "insensitive" } }] } : {}),
+        ...(category ? { catalogCategory: String(category) as never } : {}),
         ...(minPrice || maxPrice
           ? {
               price: {
-                 ...(minPrice ? { gte: parseFloat(String(minPrice)) } : {}),
+                ...(minPrice ? { gte: parseFloat(String(minPrice)) } : {}),
                 ...(maxPrice ? { lte: parseFloat(String(maxPrice)) } : {}),
               },
             }
           : {}),
       },
       include: {
-        seller: { select: { id: true, name: true, isVerified: true } },
+        seller: { select: { id: true, name: true, isVerified: true, partnerProfile: { select: { businessName: true, city: true, state: true } } } },
         category: true,
       },
-      orderBy: [{ isSponsored: "desc" }, { createdAt: "desc" }],
+      orderBy: [{ isFeatured: "desc" }, { createdAt: "desc" }],
     });
-    res.json(products.map(serializeProduct));
+    return sendSuccess(res, { products: products.map(serializeProduct), total: products.length });
   } catch (e) {
     next(e);
   }
@@ -37,7 +40,7 @@ router.get("/", async (req, res, next) => {
 router.get("/categories", async (_req, res, next) => {
   try {
     const categories = await prisma.productCategory.findMany();
-    res.json(categories);
+    return sendSuccess(res, { categories });
   } catch (e) {
     next(e);
   }
@@ -45,16 +48,20 @@ router.get("/categories", async (_req, res, next) => {
 
 router.get("/:id", async (req, res, next) => {
   try {
-    const product = await prisma.product.findUnique({
-      where: { id: req.params.id },
+    const product = await prisma.product.findFirst({
+      where: { id: req.params.id, deletedAt: null, status: "ACTIVE", approvalStatus: "APPROVED" },
       include: {
-        seller: { select: { id: true, name: true, isVerified: true } },
+        seller: { select: { id: true, name: true, isVerified: true, partnerProfile: { select: { businessName: true, city: true, state: true } } } },
         category: true,
-        reviews: { include: { user: { select: { name: true, avatar: true } } }, take: 10 },
+        reviews: {
+          where: { moderationStatus: "VISIBLE" },
+          include: { user: { select: { name: true, avatar: true } } },
+          take: 10,
+        },
       },
     });
-    if (!product) return res.status(404).json({ error: "Produto não encontrado" });
-    res.json(serializeProduct(product));
+    if (!product) return sendFailure(res, "NOT_FOUND", "Produto não encontrado", 404);
+    return sendSuccess(res, { product: serializeProduct(product) });
   } catch (e) {
     next(e);
   }

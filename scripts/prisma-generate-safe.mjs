@@ -1,5 +1,5 @@
 /**
- * prisma generate com fallback no Windows quando o query engine está bloqueado (EPERM).
+ * prisma generate — fonte única: packages/database
  */
 import { spawnSync } from "child_process";
 import fs from "fs";
@@ -8,11 +8,11 @@ import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "..");
-const webDir = path.join(root, "apps", "web");
+const dbDir = path.join(root, "packages", "database");
 const enginePath = path.join(root, "node_modules", ".prisma", "client", "query_engine-windows.dll.node");
 
 const result = spawnSync("npx", ["prisma", "generate"], {
-  cwd: webDir,
+  cwd: dbDir,
   shell: true,
   stdio: "inherit",
   env: process.env,

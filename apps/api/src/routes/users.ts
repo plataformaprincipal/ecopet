@@ -5,6 +5,7 @@ import { authMiddleware, type AuthRequest } from "../middleware/auth.js";
 import { asInputJson } from "../lib/prisma-json.js";
 import { getCurrentUserById } from "../services/current-user-service.js";
 import { updateProfile } from "../services/auth-service.js";
+import { sendSuccess, sendFailure } from "../lib/express-api-response.js";
 
 const router = Router();
 
@@ -12,8 +13,8 @@ const router = Router();
 router.get("/profile", authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const user = await getCurrentUserById(req.userId!);
-    if (!user) return res.status(404).json({ error: "Usuário não encontrado" });
-    res.json(user);
+    if (!user) return sendFailure(res, "NOT_FOUND", "Usuário não encontrado", 404);
+    return sendSuccess(res, { user });
   } catch (e) {
     next(e);
   }
@@ -56,8 +57,8 @@ router.patch("/profile", authMiddleware, async (req: AuthRequest, res, next) => 
 router.get("/me", authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const user = await getCurrentUserById(req.userId!);
-    if (!user) return res.status(404).json({ error: "Usuário não encontrado" });
-    res.json(user);
+    if (!user) return sendFailure(res, "NOT_FOUND", "Usuário não encontrado", 404);
+    return sendSuccess(res, { user });
   } catch (e) {
     next(e);
   }

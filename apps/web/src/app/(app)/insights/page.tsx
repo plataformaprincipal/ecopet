@@ -2,8 +2,8 @@
 
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { AppHeader } from "@/components/layout/app-header";
-import { EcoPetInsightsDashboard } from "@/components/ecosystem/insights/ecopet-insights-dashboard";
+import { AppHeader } from "@/components/layouts/app-header";
+import { EcoPetInsightsDashboard } from "@/components/features/ecosystem/insights/ecopet-insights-dashboard";
 
 function InsightsContent() {
   const searchParams = useSearchParams();

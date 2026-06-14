@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/auth";
 import { hashResetToken } from "@/lib/password-reset";
 import { checkRateLimit, clientIp } from "@/lib/rate-limit";
-import { resetPasswordSchema } from "@/lib/validations/password-reset";
+import { resetPasswordSchema } from "@/schemas/password-reset";
 import { validateStrongPassword, PASSWORD_MISMATCH_MESSAGE } from "@/lib/password/validate-strong-password";
 import { SESSION_COOKIE, sessionCookieOptions } from "@/lib/auth-session";
+import { apiSuccess, apiFailure } from "@/lib/api-response";
 
 const RATE_WINDOW_MS = 15 * 60 * 1000;
 const RATE_LIMIT_IP = 20;
@@ -23,24 +23,24 @@ export async function GET(request: Request) {
   const token = searchParams.get("token");
 
   if (!token) {
-    return NextResponse.json({ valid: false, reason: "invalid" });
+    return apiFailure("TOKEN_INVALID", "Link inválido.", 400);
   }
 
   const record = await findActiveToken(token);
 
   if (!record) {
-    return NextResponse.json({ valid: false, reason: "invalid" });
+    return apiFailure("TOKEN_INVALID", "Link inválido ou expirado.", 400);
   }
 
   if (record.usedAt) {
-    return NextResponse.json({ valid: false, reason: "used" });
+    return apiFailure("TOKEN_USED", "Este link já foi utilizado.", 400);
   }
 
   if (record.expiresAt <= new Date()) {
-    return NextResponse.json({ valid: false, reason: "expired" });
+    return apiFailure("TOKEN_EXPIRED", "Link expirado.", 400);
   }
 
-  return NextResponse.json({
+  return apiSuccess({
     valid: true,
     passwordContext: {
       email: record.user.email,
@@ -53,10 +53,7 @@ export async function POST(request: Request) {
   try {
     const ip = clientIp(request);
     if (!checkRateLimit(`reset:ip:${ip}`, RATE_LIMIT_IP, RATE_WINDOW_MS)) {
-      return NextResponse.json(
-        { error: "Muitas tentativas. Aguarde alguns minutos.", code: "RATE_LIMIT" },
-        { status: 429 }
-      );
+      return apiFailure("RATE_LIMIT", "Muitas tentativas. Aguarde alguns minutos.", 429);
     }
 
     const body = await request.json();
@@ -64,41 +61,38 @@ export async function POST(request: Request) {
 
     if (!parsed.success) {
       const first = parsed.error.errors[0];
-      return NextResponse.json(
-        { error: first?.message ?? "Dados inválidos", code: "VALIDATION" },
-        { status: 400 }
-      );
+      return apiFailure("VALIDATION", first?.message ?? "Dados inválidos", 400);
     }
 
     const { token, password, confirmPassword } = parsed.data;
     const record = await findActiveToken(token);
 
     if (!record) {
-      return NextResponse.json(
-        { error: "Link inválido ou expirado. Solicite uma nova redefinição.", code: "TOKEN_INVALID" },
-        { status: 400 }
+      return apiFailure(
+        "TOKEN_INVALID",
+        "Link inválido ou expirado. Solicite uma nova redefinição.",
+        400
       );
     }
 
     if (record.usedAt) {
-      return NextResponse.json(
-        { error: "Este link já foi utilizado. Solicite uma nova redefinição.", code: "TOKEN_USED" },
-        { status: 400 }
+      return apiFailure(
+        "TOKEN_USED",
+        "Este link já foi utilizado. Solicite uma nova redefinição.",
+        400
       );
     }
 
     if (record.expiresAt <= new Date()) {
-      return NextResponse.json(
-        { error: "Link expirado. Solicite uma nova redefinição.", code: "TOKEN_EXPIRED" },
-        { status: 400 }
+      return apiFailure(
+        "TOKEN_EXPIRED",
+        "Link expirado. Solicite uma nova redefinição.",
+        400
       );
     }
 
     if (password !== confirmPassword) {
-      return NextResponse.json(
-        { error: PASSWORD_MISMATCH_MESSAGE, code: "VALIDATION" },
-        { status: 400 }
-      );
+      return apiFailure("VALIDATION", PASSWORD_MISMATCH_MESSAGE, 400);
     }
 
     const pwdCheck = validateStrongPassword(password, {
@@ -106,9 +100,10 @@ export async function POST(request: Request) {
       name: record.user.name,
     });
     if (!pwdCheck.valid) {
-      return NextResponse.json(
-        { error: pwdCheck.error ?? "Senha não atende aos requisitos de segurança.", code: "VALIDATION" },
-        { status: 400 }
+      return apiFailure(
+        "VALIDATION",
+        pwdCheck.error ?? "Senha não atende aos requisitos de segurança.",
+        400
       );
     }
 
@@ -134,7 +129,7 @@ export async function POST(request: Request) {
       }),
     ]);
 
-    const response = NextResponse.json({
+    const response = apiSuccess({
       message: "Senha redefinida com sucesso. Faça login com a nova senha.",
     });
 
@@ -144,9 +139,6 @@ export async function POST(request: Request) {
     if (process.env.NODE_ENV !== "production") {
       console.error("[reset-password:error]", error);
     }
-    return NextResponse.json(
-      { error: "Não foi possível redefinir a senha. Tente novamente.", code: "UNEXPECTED" },
-      { status: 500 }
-    );
+    return apiFailure("UNEXPECTED", "Não foi possível redefinir a senha. Tente novamente.", 500);
   }
 }

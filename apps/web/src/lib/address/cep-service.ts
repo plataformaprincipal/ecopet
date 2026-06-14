@@ -177,7 +177,7 @@ export function logCepLookup(
   durationMs: number,
   fromCache: boolean
 ) {
-  if (typeof console === "undefined") return;
+  if (process.env.NODE_ENV !== "development" || typeof console === "undefined") return;
   console.log("[ECOPET CEP] CEP consultado:", formatCepDisplay(cep), fromCache ? "(cache)" : "");
   console.log("[ECOPET CEP] Endereço encontrado:", {
     street: address.street,

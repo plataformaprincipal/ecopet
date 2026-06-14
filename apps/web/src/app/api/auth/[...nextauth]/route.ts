@@ -1,4 +1,5 @@
 import NextAuth from "next-auth";
+import { env } from "@/lib/env";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { getServerApiUrl } from "@/lib/api-url.server";
 
@@ -57,7 +58,7 @@ const handler = NextAuth({
       return session;
     },
   },
-  secret: process.env.NEXTAUTH_SECRET || "ecopet-dev-nextauth-secret",
+  secret: env.nextAuthSecret,
 });
 
 export { handler as GET, handler as POST };

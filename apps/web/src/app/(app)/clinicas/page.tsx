@@ -1,4 +1,4 @@
-import { AppHeader } from "@/components/layout/app-header";
+import { AppHeader } from "@/components/layouts/app-header";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function ClinicasPage() {

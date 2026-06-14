@@ -191,7 +191,7 @@ export async function registerUser(
         name: data.name.trim(),
         cpf,
         birthDate: new Date(data.birthDate),
-        address: { create: buildAddress(data.address) },
+        addressRecord: { create: buildAddress(data.address) },
         tutorProfile: {
           create: {
             petCount: data.petCount ?? 0,
@@ -208,7 +208,7 @@ export async function registerUser(
         ...baseUser,
         name: data.name.trim(),
         cpf,
-        ...(data.address ? { address: { create: buildAddress(data.address) } } : {}),
+        ...(data.address ? { addressRecord: { create: buildAddress(data.address) } } : {}),
         veterinarianProfile: {
           create: {
             crmv: data.crmv,
@@ -230,7 +230,7 @@ export async function registerUser(
       userData = {
         ...baseUser,
         name: data.name.trim(),
-        address: { create: buildAddress(data.address) },
+        addressRecord: { create: buildAddress(data.address) },
         clinicProfile: {
           create: {
             tradeName: data.tradeName.trim(),
@@ -252,7 +252,7 @@ export async function registerUser(
       userData = {
         ...baseUser,
         name: data.name.trim(),
-        address: { create: buildAddress(data.address) },
+        addressRecord: { create: buildAddress(data.address) },
         petshopProfile: {
           create: {
             tradeName: data.tradeName.trim(),
@@ -274,7 +274,7 @@ export async function registerUser(
       userData = {
         ...baseUser,
         name: data.name.trim(),
-        address: { create: buildAddress(data.address) },
+        addressRecord: { create: buildAddress(data.address) },
         sellerProfile: {
           create: {
             tradeName: data.tradeName.trim(),
@@ -297,7 +297,7 @@ export async function registerUser(
         ...baseUser,
         name: data.name.trim(),
         cpf: data.documentType === "CPF" ? doc : undefined,
-        ...(data.address ? { address: { create: buildAddress(data.address) } } : {}),
+        ...(data.address ? { addressRecord: { create: buildAddress(data.address) } } : {}),
         serviceProviderProfile: {
           create: {
             documentType: data.documentType,
@@ -320,7 +320,7 @@ export async function registerUser(
         ...baseUser,
         name: data.name.trim(),
         cpf: data.documentType === "CPF" ? doc : undefined,
-        address: { create: buildAddress(data.address) },
+        addressRecord: { create: buildAddress(data.address) },
         ongProfile: {
           create: {
             name: data.name.trim(),

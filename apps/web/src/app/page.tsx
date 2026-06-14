@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import {
   Sparkles, ShoppingBag, Heart, Stethoscope, Users, Shield, ArrowRight, ChevronDown, Star,
 } from "lucide-react";
-import { EcoPetLogo } from "@/components/brand/ecopet-logo";
+import { EcoPetLogo } from "@/components/shared/brand/ecopet-logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AI_DISCLAIMER } from "@/lib/constants";

@@ -10,6 +10,7 @@ apps/web/.env.smtp.local
 coverage
 *.db
 *.db-journal
+apps/web/public/uploads/dev
 
 # Prisma
 apps/web/prisma/migrations/**/migration_lock.toml

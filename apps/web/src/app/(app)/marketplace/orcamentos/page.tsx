@@ -3,8 +3,8 @@
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { ClipboardList } from "lucide-react";
-import { MarketplacePageWrapper } from "@/components/marketplace/marketplace-page-wrapper";
-import { QuoteBuilder } from "@/components/ecosystem/quotes/quote-builder";
+import { MarketplacePageWrapper } from "@/components/features/marketplace/marketplace-page-wrapper";
+import { QuoteBuilder } from "@/components/features/ecosystem/quotes/quote-builder";
 import { getQuotesForClient } from "@/lib/ecosystem/quotes-api";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useTranslation } from "@/providers/i18n-provider";

@@ -1,7 +1,7 @@
 "use client";
 
-import { AgroPageWrapper } from "@/components/agro/agro-page-wrapper";
-import { AgroDashboardContent } from "@/components/agro/agro-dashboard-content";
+import { AgroPageWrapper } from "@/components/features/agro/agro-page-wrapper";
+import { AgroDashboardContent } from "@/components/features/agro/agro-dashboard-content";
 
 export default function AgroDashboardPage() {
   return (

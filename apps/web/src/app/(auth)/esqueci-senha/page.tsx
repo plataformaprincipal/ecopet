@@ -1,4 +1,4 @@
-import { FoundationForgotPasswordForm } from "@/components/foundation/forgot-password-form";
+import { FoundationForgotPasswordForm } from "@/components/features/foundation/forgot-password-form";
 
 export default function EsqueciSenhaPage() {
   return (

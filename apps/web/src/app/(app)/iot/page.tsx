@@ -1,6 +1,6 @@
 "use client";
 
-import { IoTDashboard } from "@/components/iot/iot-dashboard";
+import { IoTDashboard } from "@/components/features/iot/iot-dashboard";
 
 export default function IoTPage() {
   return <IoTDashboard />;

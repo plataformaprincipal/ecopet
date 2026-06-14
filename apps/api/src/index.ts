@@ -1,4 +1,5 @@
 import "./env.js";
+import { validateApiProductionEnv } from "./lib/env.js";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -41,6 +42,7 @@ import marketplacePartnerRoutes from "./routes/marketplace-partner.js";
 import { authMiddleware } from "./middleware/auth.js";
 import { errorHandler } from "./middleware/error.js";
 import { logStructured } from "./lib/logger.js";
+import { sendSuccess } from "./lib/express-api-response.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -103,11 +105,15 @@ async function healthPayload() {
 }
 
 app.get("/health", async (_req, res) => {
-  res.json(await healthPayload());
+  const payload = await healthPayload();
+  const status = payload.database ? 200 : 503;
+  return sendSuccess(res, { status: payload.status, database: payload.database ? "connected" : "disconnected", service: payload.service, timestamp: payload.timestamp }, status);
 });
 
 app.get("/api/health", async (_req, res) => {
-  res.json(await healthPayload());
+  const payload = await healthPayload();
+  const status = payload.database ? 200 : 503;
+  return sendSuccess(res, { status: payload.status, database: payload.database ? "connected" : "disconnected", service: payload.service, timestamp: payload.timestamp }, status);
 });
 
 app.use("/api/auth", authRoutes);
@@ -177,6 +183,7 @@ io.on("connection", (socket) => {
 });
 
 async function startServer() {
+  validateApiProductionEnv();
   let port: number;
   try {
     port = await resolveAvailablePort(preferredPort);

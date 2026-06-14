@@ -1,7 +1,7 @@
 import { API_URL } from "./constants";
 import { buildApiUrl } from "./api-url.client";
 import { ApiRequestError, mapApiErrorMessage } from "./api-errors";
-import { USER_MESSAGES } from "@/lib/validation/documents";
+import { USER_MESSAGES } from "@/schemas/validation/documents";
 
 export async function api<T>(
   path: string,

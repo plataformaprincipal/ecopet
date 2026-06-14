@@ -25,7 +25,7 @@ export const PUBLIC_EXACT = new Set([
 
 export const PUBLIC_PREFIXES = ["/petshop-web", "/pet/"] as const;
 
-/** Marketplace: visitante pode navegar (sem carrinho/favoritos/checkout). */
+/** Marketplace público Etapa 7/8 */
 export function isPublicMarketplacePath(pathname: string): boolean {
   if (pathname === "/marketplace") return true;
   if (pathname.startsWith("/marketplace/produtos")) return true;
@@ -34,6 +34,11 @@ export function isPublicMarketplacePath(pathname: string): boolean {
   if (/^\/marketplace\/produto\/.+/.test(pathname)) return true;
   if (/^\/marketplace\/servico\/.+/.test(pathname)) return true;
   if (/^\/marketplace\/parceiro\/.+/.test(pathname)) return true;
+  if (pathname === "/servicos" || pathname.startsWith("/servicos/")) return true;
+  if (pathname === "/produtos" || pathname.startsWith("/produtos/")) return true;
+  if (pathname.startsWith("/parceiros/")) return true;
+  if (pathname.startsWith("/lojas/")) return true;
+  if (pathname === "/carrinho") return true;
   return false;
 }
 
@@ -64,37 +69,8 @@ export function requiresAuth(pathname: string): boolean {
   return true;
 }
 
-/** Após login, redirecionar conforme papel (fundação Prisma). */
-export function dashboardPathForRole(role: string): string {
-  switch (role) {
-    case "ADMIN":
-      return "/gestor";
-    case "PARTNER":
-    case "ONG":
-    case "CLIENT":
-      return "/dashboard";
-    case "GESTOR":
-      return "/gestor";
-    case "TUTOR":
-      return "/dashboard";
-    case "VETERINARIAN":
-      return "/dashboard/veterinario";
-    case "CLINIC":
-      return "/dashboard/clinica";
-    case "PETSHOP":
-      return "/dashboard/petshop";
-    case "SELLER":
-      return "/dashboard/seller";
-    case "SERVICE_PROVIDER":
-      return "/dashboard/prestador";
-    case "PROTECTOR":
-      return "/dashboard/ong";
-    case "AGROPET":
-      return "/agro";
-    default:
-      return "/dashboard";
-  }
-}
+/** Após login, redirecionar conforme papel — re-export centralizado */
+export { dashboardPathForRole } from "@/lib/auth/dashboard";
 
 export const EMPTY_MESSAGES = {
   posts: "Você ainda não possui publicações.",

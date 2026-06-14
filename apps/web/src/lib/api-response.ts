@@ -1,5 +1,21 @@
 import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
+export type ApiSuccessBody<T = unknown> = { success: true; data?: T };
+export type ApiFailureBody = { success: false; error: { code: string; message: string } };
+
+export function apiSuccess<T>(data?: T, status = 200) {
+  return NextResponse.json({ success: true, data } satisfies ApiSuccessBody<T>, { status });
+}
+
+export function apiFailure(code: string, message: string, status = 400) {
+  return NextResponse.json(
+    { success: false, error: { code, message } } satisfies ApiFailureBody,
+    { status }
+  );
+}
+
+/** @deprecated Prefer apiFailure com mensagem explícita */
 export type ApiErrorCode =
   | "UNAUTHORIZED"
   | "FORBIDDEN"
@@ -8,49 +24,23 @@ export type ApiErrorCode =
   | "CONFLICT"
   | "INTERNAL";
 
-const MESSAGE_KEYS: Record<ApiErrorCode, string> = {
-  UNAUTHORIZED: "errors.unauthorized",
-  FORBIDDEN: "errors.forbidden",
-  NOT_FOUND: "errors.notFound",
-  VALIDATION: "errors.validation",
-  CONFLICT: "errors.conflict",
-  INTERNAL: "errors.internal",
+const LEGACY_MESSAGES: Record<ApiErrorCode, string> = {
+  UNAUTHORIZED: "Sessão expirada. Faça login novamente.",
+  FORBIDDEN: "Você não tem permissão para esta ação.",
+  NOT_FOUND: "Recurso não encontrado.",
+  VALIDATION: "Alguns campos precisam ser corrigidos.",
+  CONFLICT: "Conflito com dados existentes.",
+  INTERNAL: "Erro interno. Tente novamente.",
 };
 
-export function apiError(code: ApiErrorCode, status: number, details?: Record<string, unknown>) {
-  return NextResponse.json(
-    {
-      error: {
-        code,
-        messageKey: MESSAGE_KEYS[code] ?? "errors.internal",
-        ...(details ? { details } : {}),
-      },
-    },
-    { status }
-  );
+export function apiError(code: ApiErrorCode, status: number) {
+  return apiFailure(code, LEGACY_MESSAGES[code] ?? LEGACY_MESSAGES.INTERNAL, status);
 }
 
-export function apiValidationError(messageKey = "errors.validation", details?: Record<string, unknown>) {
-  return NextResponse.json(
-    {
-      error: {
-        code: "VALIDATION",
-        messageKey,
-        ...(details ? { details } : {}),
-      },
-    },
-    { status: 400 }
-  );
+export function apiValidationError(message = LEGACY_MESSAGES.VALIDATION) {
+  return apiFailure("VALIDATION", message, 400);
 }
 
-export function apiConflict(messageKey = "errors.conflict") {
-  return NextResponse.json(
-    {
-      error: {
-        code: "CONFLICT",
-        messageKey,
-      },
-    },
-    { status: 409 }
-  );
+export function apiConflict(message = LEGACY_MESSAGES.CONFLICT) {
+  return apiFailure("CONFLICT", message, 409);
 }

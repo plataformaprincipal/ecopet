@@ -1,4 +1,4 @@
-import { AppHeader } from "@/components/layout/app-header";
+import { AppHeader } from "@/components/layouts/app-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

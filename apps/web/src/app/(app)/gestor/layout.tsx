@@ -1,8 +1,8 @@
 "use client";
 
-import { AppHeader } from "@/components/layout/app-header";
-import { EcoPetLogo } from "@/components/brand/ecopet-logo";
-import { GestorSidebar, GestorGuard } from "@/components/gestor/gestor-shell";
+import { AppHeader } from "@/components/layouts/app-header";
+import { EcoPetLogo } from "@/components/shared/brand/ecopet-logo";
+import { GestorSidebar, GestorGuard } from "@/components/features/gestor/gestor-shell";
 import { useFoundationSession } from "@/hooks/use-foundation-session";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "@/providers/i18n-provider";

@@ -1,6 +1,6 @@
-import { PetshopHeader } from "@/components/petshop-web/petshop-header";
-import { PetshopFooter } from "@/components/petshop-web/petshop-footer";
-import { PetRegistrationForm } from "@/components/petshop-web/pet-registration-form";
+import { PetshopHeader } from "@/components/features/petshop-web/petshop-header";
+import { PetshopFooter } from "@/components/features/petshop-web/petshop-footer";
+import { PetRegistrationForm } from "@/components/features/petshop-web/pet-registration-form";
 
 export default function CadastroPetPage() {
   return (

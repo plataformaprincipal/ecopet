@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@ecopet/database";
 import { PetSpecies, PetSize, ReadyServiceCategory, CustomRequestUrgency } from "@prisma/client";
 import { AuthRequest, authMiddleware } from "../middleware/auth.js";
+import { sendSuccess } from "../lib/express-api-response.js";
 
 const router = Router();
 
@@ -31,23 +32,25 @@ router.get("/", async (req, res, next) => {
       },
       orderBy: [{ rating: "desc" }, { createdAt: "desc" }],
     });
-    res.json(services);
+    return sendSuccess(res, { services, total: services.length });
   } catch (e) {
     next(e);
   }
 });
 
 router.get("/categories", (_req, res) => {
-  res.json([
-    { id: "BATH_GROOMING", label: "Banho e tosa" },
-    { id: "VET_CONSULTATION", label: "Consulta veterinária" },
-    { id: "VACCINATION", label: "Vacinação" },
-    { id: "DOG_WALKER", label: "Dog walker" },
-    { id: "PET_SITTER", label: "Pet sitter" },
-    { id: "TRAINING", label: "Adestramento" },
-    { id: "BOARDING", label: "Hospedagem" },
-    { id: "PET_TRANSPORT", label: "Transporte pet" },
-  ]);
+  return sendSuccess(res, {
+    categories: [
+      { id: "BATH_GROOMING", label: "Banho e tosa" },
+      { id: "VET_CONSULTATION", label: "Consulta veterinária" },
+      { id: "VACCINATION", label: "Vacinação" },
+      { id: "DOG_WALKER", label: "Dog walker" },
+      { id: "PET_SITTER", label: "Pet sitter" },
+      { id: "TRAINING", label: "Adestramento" },
+      { id: "BOARDING", label: "Hospedagem" },
+      { id: "PET_TRANSPORT", label: "Transporte pet" },
+    ],
+  });
 });
 
 router.post("/custom", authMiddleware, async (req: AuthRequest, res, next) => {
@@ -65,7 +68,7 @@ router.post("/custom", authMiddleware, async (req: AuthRequest, res, next) => {
         attachmentUrl: data.attachmentUrl || null,
       },
     });
-    res.status(201).json(request);
+    return sendSuccess(res, { request }, 201);
   } catch (e) {
     next(e);
   }
@@ -77,7 +80,7 @@ router.get("/custom/mine", authMiddleware, async (req: AuthRequest, res, next) =
       where: { tutorId: req.userId },
       orderBy: { createdAt: "desc" },
     });
-    res.json(requests);
+    return sendSuccess(res, { requests, total: requests.length });
   } catch (e) {
     next(e);
   }

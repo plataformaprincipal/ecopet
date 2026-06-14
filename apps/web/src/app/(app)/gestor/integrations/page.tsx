@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { GestorPageHeader, GestorLoading, GestorError } from "@/components/gestor/gestor-shell";
+import { GestorPageHeader, GestorLoading, GestorError } from "@/components/features/gestor/gestor-shell";
 import { api } from "@/lib/api";
 import { useAppStore } from "@/store/app-store";
 import { Badge } from "@/components/ui/badge";

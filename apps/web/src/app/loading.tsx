@@ -1,4 +1,4 @@
-import { EcoPetLogo } from "@/components/brand/ecopet-logo";
+import { EcoPetLogo } from "@/components/shared/brand/ecopet-logo";
 
 export default function Loading() {
   return (

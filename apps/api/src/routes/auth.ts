@@ -3,6 +3,7 @@ import { z } from "zod";
 import { paramString } from "../lib/request-utils.js";
 import { publicRegisterSchema } from "../schemas/register-schemas.js";
 import { registerUser } from "../services/register-service.js";
+import { sendSuccess, sendFailure } from "../lib/express-api-response.js";
 import {
   loginUser,
   changePassword,
@@ -38,6 +39,15 @@ import { logStructured } from "../lib/logger.js";
 import { Prisma } from "@prisma/client";
 
 const router = Router();
+
+function sendAppError(res: import("express").Response, e: AppError) {
+  return sendFailure(res, e.code ?? "INTERNAL", e.userMessage, e.status);
+}
+
+function sendLegacyError(res: import("express").Response, err: Error & { status?: number; message?: string }) {
+  if (err.status) return sendFailure(res, "VALIDATION", err.message, err.status);
+  throw err;
+}
 
 function logRegisterRequestBody(body: unknown) {
   if (process.env.NODE_ENV === "production") return;
@@ -79,7 +89,7 @@ const loginSchema = z.object({
 
 router.get("/bootstrap/status", async (_req, res, next) => {
   try {
-    res.json(await getBootstrapStatus());
+    return sendSuccess(res, await getBootstrapStatus());
   } catch (e) {
     next(e);
   }
@@ -91,11 +101,7 @@ router.post("/register", async (req, res, next) => {
     const parsed = publicRegisterSchema.safeParse(req.body);
     if (!parsed.success) {
       const first = parsed.error.errors[0];
-      return res.status(400).json({
-        error: first?.message || USER_MESSAGES.VALIDATION,
-        code: "VALIDATION",
-        details: parsed.error.flatten(),
-      });
+      return sendFailure(res, "VALIDATION", first?.message || USER_MESSAGES.VALIDATION, 400);
     }
     const { user, redirectTo } = await registerUser(parsed.data, {
       ip: req.ip,
@@ -109,7 +115,7 @@ router.post("/register", async (req, res, next) => {
     });
     setAuthCookies(res, accessToken, refreshToken);
     logStructured("auth", "register_success", { userId: user.id, email: user.email, role: user.role });
-    res.status(201).json({
+    return sendSuccess(res, {
       user,
       token: accessToken,
       redirectTo,
@@ -117,10 +123,10 @@ router.post("/register", async (req, res, next) => {
       message: user.accountStatus === "PENDING"
         ? "Cadastro recebido! Sua conta será analisada pela equipe EcoPet."
         : "Conta criada com sucesso!",
-    });
+    }, 201);
   } catch (e) {
     if (e instanceof AppError) {
-      return res.status(e.status).json({ error: e.userMessage, code: e.code });
+      return sendFailure(res, e.code ?? "INTERNAL", e.userMessage, e.status);
     }
     logRegisterFailure(e);
     next(e);
@@ -130,8 +136,8 @@ router.post("/register", async (req, res, next) => {
 router.get("/me", authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const user = await getCurrentUserById(req.userId!);
-    if (!user) return res.status(404).json({ error: "Usuário não encontrado" });
-    res.json(user);
+    if (!user) return sendFailure(res, "NOT_FOUND", "Usuário não encontrado", 404);
+    return sendSuccess(res, { user });
   } catch (e) {
     next(e);
   }
@@ -141,15 +147,15 @@ router.post("/refresh", async (req, res, next) => {
   try {
     const refreshToken = readRefreshToken(req);
     if (!refreshToken) {
-      return res.status(401).json({ error: USER_MESSAGES.SESSION, code: "SESSION" });
+      return sendFailure(res, "SESSION", USER_MESSAGES.SESSION, 401);
     }
     const rotated = await refreshAccessToken(refreshToken);
     if (!rotated) {
       clearAuthCookies(res);
-      return res.status(401).json({ error: USER_MESSAGES.SESSION, code: "SESSION" });
+      return sendFailure(res, "SESSION", USER_MESSAGES.SESSION, 401);
     }
     setAuthCookies(res, rotated.accessToken, refreshToken);
-    res.json({ token: rotated.accessToken, userId: rotated.userId, role: rotated.role });
+    return sendSuccess(res, { token: rotated.accessToken, userId: rotated.userId, role: rotated.role });
   } catch (e) {
     next(e);
   }
@@ -161,7 +167,7 @@ router.post("/logout", authMiddleware, async (req: AuthRequest, res, next) => {
     await logoutCurrentSession("", req.userId!, refreshToken);
     clearAuthCookies(res);
     logStructured("auth", "logout", { userId: req.userId });
-    res.json({ success: true });
+    return sendSuccess(res);
   } catch (e) {
     next(e);
   }
@@ -185,11 +191,9 @@ router.post("/login", async (req, res, next) => {
       email: result.user?.email,
       role: result.user?.role,
     });
-    res.json(result);
+    return sendSuccess(res, result);
   } catch (e) {
-    if (e instanceof AppError) {
-      return res.status(e.status).json({ error: e.userMessage, code: e.code });
-    }
+    if (e instanceof AppError) return sendAppError(res, e);
     next(e);
   }
 });
@@ -208,12 +212,12 @@ router.post("/bootstrap/create-master", authMiddleware, async (req: AuthRequest,
     }).parse(req.body);
 
     if (body.password !== body.confirmPassword) {
-      return res.status(400).json({ error: "As senhas não conferem" });
+      return sendFailure(res, "VALIDATION", "As senhas não conferem", 400);
     }
 
     const strength = validatePasswordStrength(body.password);
     if (!strength.valid) {
-      return res.status(400).json({ error: `Senha fraca: ${strength.errors.join(", ")}` });
+      return sendFailure(res, "VALIDATION", `Senha fraca: ${strength.errors.join(", ")}`, 400);
     }
 
     const master = await createMasterAdmin({
@@ -238,22 +242,23 @@ router.post("/bootstrap/create-master", authMiddleware, async (req: AuthRequest,
     });
     setAuthCookies(res, accessToken, refreshToken);
 
-    res.status(201).json({
-      success: true,
+    return sendSuccess(res, {
       token: accessToken,
       redirectTo: "/gestor",
       user: { id: master.id, email: master.email, username: master.username, name: master.name, role: master.role, isMasterAdmin: true },
-    });
+    }, 201);
   } catch (e) {
-    const err = e as Error & { status?: number };
-    if (err.status) return res.status(err.status).json({ error: err.message });
-    next(e);
+    try {
+      sendLegacyError(res, e as Error & { status?: number; message?: string });
+    } catch {
+      next(e);
+    }
   }
 });
 
 router.get("/password/policy", authMiddleware, async (req: AuthRequest, res, next) => {
   try {
-    res.json(await getPasswordChangePolicy(req.userId!));
+    return sendSuccess(res, await getPasswordChangePolicy(req.userId!));
   } catch (e) {
     next(e);
   }
@@ -263,11 +268,13 @@ router.post("/password/request-code", authMiddleware, async (req: AuthRequest, r
   try {
     const { currentPassword } = z.object({ currentPassword: z.string() }).parse(req.body);
     const result = await requestPasswordChangeCode(req.userId!, currentPassword, req.ip);
-    res.json(result);
+    return sendSuccess(res, result);
   } catch (e) {
-    const err = e as Error & { status?: number };
-    if (err.status) return res.status(err.status).json({ error: err.message });
-    next(e);
+    try {
+      sendLegacyError(res, e as Error & { status?: number; message?: string });
+    } catch {
+      next(e);
+    }
   }
 });
 
@@ -287,11 +294,13 @@ router.post("/change-password", authMiddleware, async (req: AuthRequest, res, ne
       emailCode,
       ip: req.ip,
     });
-    res.json(result);
+    return sendSuccess(res, result);
   } catch (e) {
-    const err = e as Error & { status?: number };
-    if (err.status) return res.status(err.status).json({ error: err.message });
-    next(e);
+    try {
+      sendLegacyError(res, e as Error & { status?: number; message?: string });
+    } catch {
+      next(e);
+    }
   }
 });
 
@@ -322,11 +331,13 @@ router.patch("/profile", authMiddleware, async (req: AuthRequest, res, next) => 
       data: { name, phone, bio, avatar, address },
       ip: req.ip,
     });
-    res.json(result);
+    return sendSuccess(res, result);
   } catch (e) {
-    const err = e as Error & { status?: number };
-    if (err.status) return res.status(err.status).json({ error: err.message });
-    next(e);
+    try {
+      sendLegacyError(res, e as Error & { status?: number; message?: string });
+    } catch {
+      next(e);
+    }
   }
 });
 
@@ -337,10 +348,10 @@ router.post("/forgot-password", forgotPasswordIpLimiter, async (req, res, next) 
       ip: req.ip,
       userAgent: req.get("user-agent") ?? undefined,
     });
-    res.json(result);
+    return sendSuccess(res, result);
   } catch (e) {
     if (e instanceof AppError) {
-      return res.status(e.status).json({ message: FORGOT_PASSWORD_MESSAGE });
+      return sendSuccess(res, { message: FORGOT_PASSWORD_MESSAGE });
     }
     next(e);
   }
@@ -350,7 +361,7 @@ router.get("/reset-password/validate", resetPasswordIpLimiter, async (req, res, 
   try {
     const token = String(req.query.token ?? "");
     const result = await validateResetToken(token);
-    res.json(result);
+    return sendSuccess(res, result);
   } catch (e) {
     next(e);
   }
@@ -373,23 +384,21 @@ router.post("/reset-password", resetPasswordIpLimiter, async (req, res, next) =>
     const confirmarNovaSenha = body.confirmarNovaSenha ?? body.confirmPassword ?? "";
 
     const result = await resetPassword(body.token, novaSenha, confirmarNovaSenha, { ip: req.ip });
-    res.json(result);
+    return sendSuccess(res, result);
   } catch (e) {
-    if (e instanceof AppError) {
-      return res.status(e.status).json({ error: e.userMessage, code: e.code });
-    }
+    if (e instanceof AppError) return sendAppError(res, e);
     next(e);
   }
 });
 
 router.post("/check-password-strength", (req, res) => {
   const { password } = z.object({ password: z.string() }).parse(req.body);
-  res.json(checkPasswordStrengthRealtime(password));
+  return sendSuccess(res, checkPasswordStrengthRealtime(password));
 });
 
 router.get("/sessions", authMiddleware, async (req: AuthRequest, res, next) => {
   try {
-    res.json(await listActiveSessions(req.userId!));
+    return sendSuccess(res, await listActiveSessions(req.userId!));
   } catch (e) {
     next(e);
   }
@@ -398,7 +407,7 @@ router.get("/sessions", authMiddleware, async (req: AuthRequest, res, next) => {
 router.delete("/sessions/:id", authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     await revokeSession(paramString(req.params.id), req.userId!);
-    res.json({ success: true });
+    return sendSuccess(res);
   } catch (e) {
     next(e);
   }

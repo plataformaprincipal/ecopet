@@ -1,9 +1,9 @@
 "use client";
 
 import { Suspense } from "react";
-import { MarketplacePageWrapper } from "@/components/marketplace/marketplace-page-wrapper";
-import { SearchPageContent } from "@/components/marketplace/search-page-content";
-import { MarketplaceGridSkeleton } from "@/components/marketplace/marketplace-skeleton";
+import { MarketplacePageWrapper } from "@/components/features/marketplace/marketplace-page-wrapper";
+import { SearchPageContent } from "@/components/features/marketplace/search-page-content";
+import { MarketplaceGridSkeleton } from "@/components/features/marketplace/marketplace-skeleton";
 
 export default function BuscaPage() {
   return (

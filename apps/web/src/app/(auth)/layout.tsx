@@ -1,4 +1,4 @@
-import { AuthLayoutSidebar } from "@/components/auth/auth-layout-sidebar";
+import { AuthLayoutSidebar } from "@/components/features/auth/auth-layout-sidebar";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
