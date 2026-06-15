@@ -230,20 +230,44 @@ enum TicketStatus {
   OPEN
   IN_PROGRESS
   WAITING
+  WAITING_USER
   RESOLVED
   CLOSED
 }
 
 enum TicketPriority {
   LOW
+  NORMAL
   MEDIUM
   HIGH
   URGENT
 }
 
+enum SupportCategory {
+  ACCOUNT
+  ORDER
+  PAYMENT
+  PET
+  PARTNER
+  ONG
+  TECHNICAL
+  OTHER
+}
+
+enum MessageReportStatus {
+  OPEN
+  REVIEWING
+  RESOLVED
+  REJECTED
+}
+
 enum ConversationType {
-  CLIENT_CLIENT
+  SUPPORT
+  CLIENT_ONG
   CLIENT_PARTNER
+  DIRECT
+  SYSTEM
+  CLIENT_CLIENT
   CLIENT_NGO
   CLIENT_ECOPET
   PARTNER_CLIENT
@@ -258,6 +282,9 @@ enum ConversationType {
 
 enum ConversationStatus {
   OPEN
+  ACTIVE
+  ARCHIVED
+  BLOCKED
   PENDING
   RESOLVED
   CLOSED
@@ -464,6 +491,12 @@ model User {
   notifications Notification[]
   sentMessages  Message[] @relation("Sender")
   conversations ConversationParticipant[]
+  createdConversations Conversation[] @relation("ConversationCreator")
+  messageReactions MessageReaction[] @relation("MessageReactions")
+  messageReportsFiled MessageReport[] @relation("MessageReportsFiled")
+  messageReportsReviewed MessageReport[] @relation("MessageReportsReviewed")
+  blocksInitiated UserBlock[] @relation("UserBlocksInitiated")
+  blocksReceived UserBlock[] @relation("UserBlocksReceived")
   orders        Order[]   @relation("BuyerOrders")
   partnerOrders Order[]   @relation("PartnerOrders")
   wallet        Wallet?
@@ -502,10 +535,27 @@ model User {
   assignedTickets     SupportTicket[] @relation("TicketAssignee")
   contentReports      ContentReport[] @relation("ReportAuthor")
   reviewedReports     ContentReport[] @relation("ReportReviewer")
+  socialPostsAuthored SocialPost[] @relation("SocialPostAuthor")
+  socialPostsModerated SocialPost[] @relation("SocialPostModerator")
+  socialCommentsAuthored SocialComment[] @relation("SocialCommentAuthor")
+  socialCommentsModerated SocialComment[] @relation("SocialCommentModerator")
+  socialPostLikes     SocialPostLike[]
+  socialCommentLikes  SocialCommentLike[]
+  socialPostSaves     SocialPostSave[]
+  socialPostShares    SocialPostShare[]
+  socialReportsFiled  SocialReport[] @relation("SocialReportReporter")
+  socialReportsReviewed SocialReport[] @relation("SocialReportReviewer")
+  publicSocialProfile PublicProfile?
+  userFollowsAsFollower UserFollow[] @relation("UserFollower")
+  userFollowsAsFollowing UserFollow[] @relation("UserFollowing")
+  socialBlocksInitiated UserSocialBlock[] @relation("SocialBlocker")
+  socialBlocksReceived UserSocialBlock[] @relation("SocialBlockBlocked")
   integrations        Integration[]
   operationalRobots   OperationalRobot[]
   customQuotesSent    CustomQuote[] @relation("QuoteRequester")
   customQuotesReceived CustomQuote[] @relation("QuoteProvider")
+  privacyRequests      DataPrivacyRequest[] @relation("PrivacyRequestUser")
+  privacyRequestsProcessed DataPrivacyRequest[] @relation("PrivacyRequestProcessor")
   department          Department? @relation(fields: [departmentId], references: [id])
   departmentId        String?
   sessions            UserSession[]
@@ -615,6 +665,7 @@ model Pet {
   media             PetMedia[]
   events            PetEvent[]
   posts             Post[]
+  socialPosts       SocialPost[]
   appointments      Appointment[]
   iotDevices        IotDevice[]
   reminders         PetReminder[]
@@ -1046,10 +1097,16 @@ model Post {
 }
 
 model Hashtag {
-  id     String @id @default(cuid())
-  tag    String @unique
-  count  Int    @default(0)
-  posts  PostHashtag[]
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  usageCount  Int      @default(0)
+  tag         String?  @unique
+  count       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  posts       PostHashtag[]
+  socialPosts SocialPostHashtag[]
 }
 
 model PostHashtag {
@@ -1359,22 +1416,33 @@ model Notification {
 }
 
 model Conversation {
-  id           String                    @id @default(cuid())
-  type         ConversationType          @default(CLIENT_ECOPET)
-  status       ConversationStatus        @default(OPEN)
-  title        String?
-  metadata     Json?
-  ticketId     String?                   @unique
-  createdAt    DateTime                  @default(now())
-  updatedAt    DateTime                  @updatedAt
-  participants ConversationParticipant[]
-  messages     Message[]
-  ticket       SupportTicket?            @relation(fields: [ticketId], references: [id])
-  quotes       CustomQuote[]
-  guestSession GuestChatSession?
+  id            String                    @id @default(cuid())
+  type          ConversationType          @default(CLIENT_ECOPET)
+  status        ConversationStatus        @default(OPEN)
+  title         String?
+  metadata      Json?
+  createdById   String?
+  lastMessageAt DateTime?
+  archivedAt    DateTime?
+  blockedAt     DateTime?
+  closedAt      DateTime?
+  ticketId      String?                   @unique
+  directKey     String?                   @unique
+  createdAt     DateTime                  @default(now())
+  updatedAt     DateTime                  @updatedAt
+  createdBy     User?                     @relation("ConversationCreator", fields: [createdById], references: [id])
+  participants  ConversationParticipant[]
+  messages      Message[]
+  ticket        SupportTicket?            @relation(fields: [ticketId], references: [id])
+  quotes        CustomQuote[]
+  guestSession  GuestChatSession?
+  socialShares  SocialPostShare[]
+  reports       MessageReport[]
 
   @@index([type])
   @@index([status])
+  @@index([lastMessageAt])
+  @@index([createdById])
 }
 
 model ConversationParticipant {
@@ -1382,36 +1450,105 @@ model ConversationParticipant {
   conversationId String
   userId         String
   role           String?
+  roleSnapshot   String?
+  joinedAt       DateTime     @default(now())
+  leftAt         DateTime?
   lastReadAt     DateTime?
+  isMuted        Boolean      @default(false)
+  isArchived     Boolean      @default(false)
+  isBlocked      Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([conversationId, userId])
+  @@index([userId])
+  @@index([conversationId])
 }
 
 model Message {
-  id             String       @id @default(cuid())
+  id             String              @id @default(cuid())
   conversationId String
   senderId       String
   content        String
-  type           MessageType  @default(TEXT)
+  type           MessageType         @default(TEXT)
   metadata       Json?
-  read           Boolean      @default(false)
-  createdAt      DateTime     @default(now())
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender         User         @relation("Sender", fields: [senderId], references: [id])
+  read           Boolean             @default(false)
+  editedAt       DateTime?
+  deletedAt      DateTime?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  conversation   Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User                @relation("Sender", fields: [senderId], references: [id])
   attachments    MessageAttachment[]
+  reactions      MessageReaction[]
+  reports        MessageReport[]
 
   @@index([conversationId, createdAt])
+  @@index([senderId])
 }
 
 model MessageAttachment {
-  id        String  @id @default(cuid())
+  id              String   @id @default(cuid())
+  messageId       String
+  url             String
+  fileName        String
+  mimeType        String?
+  size            Int?
+  storageProvider String?
+  createdAt       DateTime @default(now())
+  message         Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+}
+
+model MessageReaction {
+  id        String   @id @default(cuid())
   messageId String
-  url       String
-  fileName  String
-  mimeType  String?
-  size      Int?
-  message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId    String
+  emoji     String
+  createdAt DateTime @default(now())
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user      User     @relation("MessageReactions", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId, emoji])
+  @@index([messageId])
+}
+
+model MessageReport {
+  id             String              @id @default(cuid())
+  messageId      String
+  conversationId String
+  reporterId     String
+  reason         String
+  description    String?
+  status         MessageReportStatus @default(OPEN)
+  reviewedById   String?
+  reviewedAt     DateTime?
+  resolution     String?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  message        Message             @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  conversation   Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  reporter       User                @relation("MessageReportsFiled", fields: [reporterId], references: [id], onDelete: Cascade)
+  reviewedBy     User?               @relation("MessageReportsReviewed", fields: [reviewedById], references: [id])
+
+  @@index([status])
+  @@index([conversationId])
+  @@index([messageId])
+}
+
+model UserBlock {
+  id        String   @id @default(cuid())
+  blockerId String
+  blockedId String
+  reason    String?
+  createdAt DateTime @default(now())
+  blocker   User     @relation("UserBlocksInitiated", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked   User     @relation("UserBlocksReceived", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+  @@index([blockerId])
+  @@index([blockedId])
 }
 
 model AdoptionListing {
@@ -1604,25 +1741,27 @@ model ApprovalRequest {
 }
 
 model SupportTicket {
-  id           String         @id @default(cuid())
-  number       Int            @unique
+  id           String            @id @default(cuid())
+  number       Int               @unique
   subject      String
   description  String
-  category     String
-  priority     TicketPriority @default(MEDIUM)
-  status       TicketStatus   @default(OPEN)
+  category     SupportCategory   @default(OTHER)
+  priority     TicketPriority    @default(NORMAL)
+  status       TicketStatus      @default(OPEN)
   requesterId  String
   assigneeId   String?
   aiSuggested  String?
   metadata     Json?
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
   resolvedAt   DateTime?
-  requester    User           @relation("TicketRequester", fields: [requesterId], references: [id])
-  assignee     User?          @relation("TicketAssignee", fields: [assigneeId], references: [id])
+  closedAt     DateTime?
+  requester    User              @relation("TicketRequester", fields: [requesterId], references: [id])
+  assignee     User?             @relation("TicketAssignee", fields: [assigneeId], references: [id])
   conversation Conversation?
 
   @@index([status, priority])
+  @@index([status])
   @@index([requesterId])
 }
 
@@ -2810,4 +2949,302 @@ model AIChatLog {
 
   @@index([userId, createdAt])
   @@index([conversationId])
+}
+
+// ─── Feed Social (Etapa 11) ───────────────────────────────────────────────
+
+enum SocialPostVisibility {
+  PUBLIC
+  FOLLOWERS
+  PRIVATE
+}
+
+enum SocialPostStatus {
+  PUBLISHED
+  HIDDEN
+  REPORTED
+  REMOVED
+}
+
+enum SocialCommentStatus {
+  PUBLISHED
+  HIDDEN
+  REPORTED
+  REMOVED
+}
+
+enum SocialMediaType {
+  IMAGE
+  VIDEO
+  DOCUMENT
+}
+
+enum SocialReportStatus {
+  OPEN
+  REVIEWING
+  RESOLVED
+  REJECTED
+}
+
+enum SocialReportReason {
+  SPAM
+  HARASSMENT
+  HATE
+  VIOLENCE
+  SEXUAL_CONTENT
+  ANIMAL_ABUSE
+  SCAM
+  MISINFORMATION
+  OTHER
+}
+
+enum PublicProfileVisibility {
+  PUBLIC
+  PRIVATE
+}
+
+model SocialPost {
+  id                String               @id @default(cuid())
+  authorId          String
+  petId             String?
+  content           String
+  visibility        SocialPostVisibility @default(PUBLIC)
+  status            SocialPostStatus     @default(PUBLISHED)
+  locationText      String?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  editedAt          DateTime?
+  deletedAt         DateTime?
+  moderatedAt       DateTime?
+  moderatedById     String?
+  moderationReason  String?
+
+  author            User                 @relation("SocialPostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  pet               Pet?                 @relation(fields: [petId], references: [id], onDelete: SetNull)
+  moderatedBy       User?                @relation("SocialPostModerator", fields: [moderatedById], references: [id], onDelete: SetNull)
+  media             SocialPostMedia[]
+  likes             SocialPostLike[]
+  comments          SocialComment[]
+  saves             SocialPostSave[]
+  shares            SocialPostShare[]
+  hashtags          SocialPostHashtag[]
+  reports           SocialReport[]
+
+  @@index([authorId])
+  @@index([createdAt])
+  @@index([status])
+  @@index([visibility])
+  @@index([petId])
+}
+
+model SocialPostMedia {
+  id              String          @id @default(cuid())
+  postId          String
+  fileUrl         String
+  fileName        String
+  mimeType        String
+  fileSize        Int
+  mediaType       SocialMediaType
+  storageProvider String
+  sortOrder       Int             @default(0)
+  createdAt       DateTime        @default(now())
+  post            SocialPost      @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+}
+
+model SocialPostLike {
+  id        String     @id @default(cuid())
+  postId    String
+  userId    String
+  createdAt DateTime   @default(now())
+  post      SocialPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
+}
+
+model SocialComment {
+  id                String              @id @default(cuid())
+  postId            String
+  authorId          String
+  parentCommentId   String?
+  content           String
+  status            SocialCommentStatus @default(PUBLISHED)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  editedAt          DateTime?
+  deletedAt         DateTime?
+  moderatedAt       DateTime?
+  moderatedById     String?
+  moderationReason  String?
+
+  post              SocialPost          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author            User                @relation("SocialCommentAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  parentComment     SocialComment?      @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: SetNull)
+  replies           SocialComment[]     @relation("CommentReplies")
+  moderatedBy       User?               @relation("SocialCommentModerator", fields: [moderatedById], references: [id], onDelete: SetNull)
+  likes             SocialCommentLike[]
+  reports           SocialReport[]
+
+  @@index([postId])
+  @@index([authorId])
+  @@index([parentCommentId])
+}
+
+model SocialCommentLike {
+  id        String        @id @default(cuid())
+  commentId String
+  userId    String
+  createdAt DateTime      @default(now())
+  comment   SocialComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([commentId, userId])
+  @@index([commentId])
+  @@index([userId])
+}
+
+model SocialPostSave {
+  id        String     @id @default(cuid())
+  postId    String
+  userId    String
+  createdAt DateTime   @default(now())
+  post      SocialPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([userId])
+}
+
+model SocialPostShare {
+  id                   String        @id @default(cuid())
+  postId               String
+  userId               String
+  targetConversationId String?
+  message              String?
+  createdAt            DateTime      @default(now())
+  post                 SocialPost    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user                 User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  targetConversation   Conversation? @relation(fields: [targetConversationId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([postId])
+}
+
+model SocialReport {
+  id           String             @id @default(cuid())
+  postId       String?
+  commentId    String?
+  reporterId   String
+  reason       SocialReportReason
+  description  String?
+  status       SocialReportStatus @default(OPEN)
+  reviewedById String?
+  reviewedAt   DateTime?
+  resolution   String?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  post         SocialPost?        @relation(fields: [postId], references: [id], onDelete: SetNull)
+  comment      SocialComment?     @relation(fields: [commentId], references: [id], onDelete: SetNull)
+  reporter     User               @relation("SocialReportReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reviewedBy   User?              @relation("SocialReportReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([postId])
+  @@index([commentId])
+  @@index([reporterId])
+}
+
+model SocialPostHashtag {
+  id        String     @id @default(cuid())
+  postId    String
+  hashtagId String
+  createdAt DateTime   @default(now())
+  post      SocialPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  hashtag   Hashtag    @relation(fields: [hashtagId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, hashtagId])
+  @@index([hashtagId])
+}
+
+model PublicProfile {
+  id          String                  @id @default(cuid())
+  userId      String                  @unique
+  displayName String
+  bio         String?
+  avatarUrl   String?
+  coverUrl    String?
+  visibility  PublicProfileVisibility @default(PUBLIC)
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+  user        User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model UserFollow {
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+  follower    User     @relation("UserFollower", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("UserFollowing", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+}
+
+model UserSocialBlock {
+  id        String   @id @default(cuid())
+  blockerId String
+  blockedId String
+  reason    String?
+  createdAt DateTime @default(now())
+  blocker   User     @relation("SocialBlocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked   User     @relation("SocialBlockBlocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+  @@index([blockerId])
+  @@index([blockedId])
+}
+
+enum DataPrivacyRequestType {
+  EXPORT
+  DELETE_ACCOUNT
+  RECTIFY
+  REVOKE_CONSENT
+}
+
+enum DataPrivacyRequestStatus {
+  OPEN
+  IN_REVIEW
+  COMPLETED
+  REJECTED
+}
+
+model DataPrivacyRequest {
+  id            String                   @id @default(cuid())
+  userId        String
+  type          DataPrivacyRequestType
+  status        DataPrivacyRequestStatus @default(OPEN)
+  description   String?
+  requestedAt   DateTime                 @default(now())
+  processedAt   DateTime?
+  processedById String?
+  resolution    String?
+  metadata      Json?
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @updatedAt
+
+  user        User  @relation("PrivacyRequestUser", fields: [userId], references: [id], onDelete: Cascade)
+  processedBy User? @relation("PrivacyRequestProcessor", fields: [processedById], references: [id], onDelete: SetNull)
+
+  @@index([userId, status])
+  @@index([status, requestedAt])
+  @@index([type])
 }

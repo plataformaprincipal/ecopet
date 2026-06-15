@@ -31,8 +31,8 @@ export async function saveLocalDevUpload(params: {
   mimeType: string;
   fileName: string;
   ownerId: string;
-}) {
-  if (isProduction()) {
+}, env = process.env) {
+  if (isProduction() && env.UPLOAD_DEV_FALLBACK !== "1") {
     throw new Error("Upload local não permitido em produção.");
   }
 

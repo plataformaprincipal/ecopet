@@ -21,6 +21,11 @@ export const PUBLIC_EXACT = new Set([
   "/termos-de-uso",
   "/privacidade",
   "/politica-de-privacidade",
+  "/legal/privacidade",
+  "/legal/termos",
+  "/legal/cookies",
+  "/legal/lgpd",
+  "/legal/exclusao-de-conta",
 ]);
 
 export const PUBLIC_PREFIXES = ["/petshop-web", "/pet/"] as const;

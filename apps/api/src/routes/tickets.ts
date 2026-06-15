@@ -4,7 +4,7 @@ import { paramString } from "../lib/request-utils.js";
 import { createTicket, listTickets, updateTicket } from "../services/ticket-service.js";
 import { createAuditLog } from "../services/audit-service.js";
 import { isGestorRole } from "../services/rbac-service.js";
-import type { TicketPriority } from "@prisma/client";
+import type { SupportCategory, TicketPriority } from "@prisma/client";
 
 const router = Router();
 
@@ -31,7 +31,7 @@ router.post("/", async (req: AuthRequest, res, next) => {
     const ticket = await createTicket({
       subject,
       description,
-      category,
+      category: (category as SupportCategory) || "OTHER",
       priority,
       requesterId: req.userId!,
     });

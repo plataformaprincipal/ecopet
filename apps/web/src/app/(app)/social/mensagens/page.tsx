@@ -1,5 +1,6 @@
-import { MessagesPageContent } from "@/components/features/social/messages-page-content";
+import { redirect } from "next/navigation";
 
+/** @deprecated Use /dashboard/messages */
 export default function SocialMensagensPage() {
-  return <MessagesPageContent />;
+  redirect("/dashboard/messages");
 }

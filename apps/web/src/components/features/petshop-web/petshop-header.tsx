@@ -12,7 +12,7 @@ const NAV = [
 
 const INTEGRATIONS = [
   { href: "/marketplace", label: "Marketplace ECOPET", external: false },
-  { href: "/inicio", label: "Rede Social", external: false },
+  { href: "/feed", label: "Rede Social", external: false },
   { href: "/health", label: "ECOPET Health", external: false },
   { href: "/dashboard/petshop", label: "Painel Pet Shop", external: false },
 ];

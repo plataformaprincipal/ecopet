@@ -44,7 +44,7 @@ function OrderCard({ order, isPartner }: { order: Order & { user?: { name: strin
         {last?.note && <p className="text-xs italic">{last.note}</p>}
         <div className="flex gap-2 pt-2">
           <Button variant="outline" size="sm" asChild>
-            <Link href="/social/mensagens"><MessageCircle className="h-3 w-3 mr-1" /> Chat</Link>
+            <Link href="/dashboard/messages"><MessageCircle className="h-3 w-3 mr-1" /> Chat</Link>
           </Button>
         </div>
       </CardContent>

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
-export default function PrivacidadeRedirectPage() {
-  redirect("/politica-de-privacidade");
+export default function LegacyPrivacidadeRedirect() {
+  redirect("/legal/privacidade");
 }

@@ -70,7 +70,9 @@
     "partners": "Parceiros",
     "myDashboard": "Meu Painel",
     "integrations": "Integrações",
-    "logs": "Logs"
+    "logs": "Logs",
+    "support": "Suporte",
+    "reports": "Denúncias"
   },
   "errors": {
     "unauthorized": "Sessão expirada ou não autenticado.",

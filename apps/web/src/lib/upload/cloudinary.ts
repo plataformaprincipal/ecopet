@@ -6,7 +6,11 @@ export type UploadPurpose =
   | "user_avatar"
   | "service_image"
   | "product_image"
-  | "partner_logo";
+  | "partner_logo"
+  | "chat_attachment"
+  | "social_post_media"
+  | "social_profile_avatar"
+  | "social_profile_cover";
 
 const ALLOWED_MIME: Record<UploadPurpose, string[]> = {
   pet_avatar: ["image/jpeg", "image/png", "image/webp"],
@@ -15,6 +19,10 @@ const ALLOWED_MIME: Record<UploadPurpose, string[]> = {
   service_image: ["image/jpeg", "image/png", "image/webp"],
   product_image: ["image/jpeg", "image/png", "image/webp"],
   partner_logo: ["image/jpeg", "image/png", "image/webp"],
+  chat_attachment: ["image/jpeg", "image/png", "image/webp", "application/pdf"],
+  social_post_media: ["image/jpeg", "image/png", "image/webp"],
+  social_profile_avatar: ["image/jpeg", "image/png", "image/webp"],
+  social_profile_cover: ["image/jpeg", "image/png", "image/webp"],
 };
 
 const MAX_BYTES: Record<UploadPurpose, number> = {
@@ -24,6 +32,10 @@ const MAX_BYTES: Record<UploadPurpose, number> = {
   service_image: 5 * 1024 * 1024,
   product_image: 5 * 1024 * 1024,
   partner_logo: 5 * 1024 * 1024,
+  chat_attachment: 10 * 1024 * 1024,
+  social_post_media: 10 * 1024 * 1024,
+  social_profile_avatar: 5 * 1024 * 1024,
+  social_profile_cover: 8 * 1024 * 1024,
 };
 
 export function isCloudinaryConfigured() {

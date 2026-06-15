@@ -65,7 +65,7 @@ export function UserDashboard() {
             { label: "Pets", value: user.pets?.length ?? 0, icon: PawPrint, href: "/meu-pet" },
             { label: "Carrinho", value: cartCount, icon: ShoppingBag, href: "/marketplace/carrinho" },
             { label: "Notificações", value: unread, icon: Bell, href: "/notificacoes" },
-            { label: "Mensagens", value: "—", icon: MessageCircle, href: "/social/mensagens" },
+            { label: "Mensagens", value: "—", icon: MessageCircle, href: "/dashboard/messages" },
           ].map((item) => (
             <Link key={item.label} href={item.href}>
               <Card className="card-premium h-full transition hover:border-ecopet-green/40 hover:shadow-md">
@@ -113,7 +113,7 @@ export function UserDashboard() {
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button asChild variant="outline" size="sm"><Link href="/inicio">Feed</Link></Button>
+              <Button asChild variant="outline" size="sm"><Link href="/feed">Feed</Link></Button>
               <Button asChild variant="outline" size="sm"><Link href="/marketplace">Marketplace</Link></Button>
               <Button asChild variant="outline" size="sm"><Link href="/perfil">Perfil</Link></Button>
               <Button asChild size="sm"><Link href="/ia">ECOPET AI <ArrowRight className="ml-1 h-3 w-3" /></Link></Button>

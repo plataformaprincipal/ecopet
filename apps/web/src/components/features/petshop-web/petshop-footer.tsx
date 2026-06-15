@@ -9,7 +9,7 @@ const FOOTER_LINKS = {
   ],
   ecopet: [
     { href: "/marketplace", label: "Marketplace" },
-    { href: "/inicio", label: "Rede Social" },
+    { href: "/feed", label: "Rede Social" },
     { href: "/health", label: "ECOPET Health" },
     { href: "/ia", label: "Assistente IA" },
   ],

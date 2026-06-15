@@ -45,6 +45,17 @@
     "test:foundation:orders": "node scripts/test-foundation-orders.mjs",
     "test:foundation:integrations": "node scripts/test-foundation-integrations.mjs",
     "test:foundation:navigation": "node scripts/test-foundation-navigation.mjs",
+    "test:foundation:chat": "node scripts/test-foundation-chat.mjs",
+    "test:foundation:social": "node scripts/test-foundation-social.mjs",
+    "test:foundation:gestor": "node scripts/test-foundation-gestor.mjs",
+    "test:foundation:all": "node scripts/test-foundation-all.mjs",
+    "test:security": "node scripts/test-security.mjs",
+    "test:server:start": "node scripts/start-stable-test-server.mjs",
+    "test:server:stop": "node scripts/stop-stable-test-server.mjs",
+    "test:etapa13": "node scripts/run-etapa13-validation.mjs",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "db:backup:local": "node scripts/db-backup-local.mjs",
     "test:express:contract": "node scripts/test-express-contract.mjs",
     "admin:bootstrap": "node scripts/admin-bootstrap.mjs",
     "test:permissions": "node scripts/run-permissions-tests.mjs",
@@ -57,8 +68,10 @@
     "type-check": "npm run type-check -w @ecopet/database && npm run type-check -w @ecopet/web && npm run type-check -w @ecopet/api"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.0",
     "concurrently": "^9.1.2",
-    "maildev": "^2.2.1"
+    "maildev": "^2.2.1",
+    "wait-on": "^9.0.10"
   },
   "engines": {
     "node": ">=20"

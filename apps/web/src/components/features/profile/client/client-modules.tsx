@@ -90,7 +90,7 @@ export function ClientOverviewModule() {
       </ProfileSection>
       )}
       {hasSocialStats && (
-      <ProfileSection title="Atividade social" action={{ label: "Ver feed", href: "/inicio" }}>
+      <ProfileSection title="Atividade social" action={{ label: "Ver feed", href: "/feed" }}>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {CLIENT_SOCIAL_STATS.map((s) => (
             <div key={s.label} className="rounded-xl bg-ecopet-gray/5 p-3 text-center">

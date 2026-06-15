@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ecopet
+          POSTGRES_PASSWORD: ecopet_ci
+          POSTGRES_DB: ecopet
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://ecopet:ecopet_ci@localhost:5432/ecopet?schema=public
+      DIRECT_URL: postgresql://ecopet:ecopet_ci@localhost:5432/ecopet?schema=public
+      AUTH_SECRET: ci-auth-secret-minimum-32-characters-long
+      NEXTAUTH_SECRET: ci-nextauth-secret-minimum-32-chars
+      NEXTAUTH_URL: http://localhost:3000
+      APP_URL: http://localhost:3000
+      JWT_SECRET: ci-jwt-secret-minimum-32-characters-long
+      NODE_ENV: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run db:generate
+
+      - run: npm run db:migrate:deploy
+        working-directory: packages/database
+
+      - run: npm run type-check
+
+      - run: npm run lint
+
+      - run: npm run build
+
+      - name: Start web server
+        run: |
+          npm run start -w @ecopet/web &
+          npx wait-on http://localhost:3000/api/health --timeout 120000
+
+      - name: Foundation tests (subset)
+        run: |
+          WEB_URL=http://localhost:3000 npm run test:foundation:auth
+          WEB_URL=http://localhost:3000 npm run test:foundation:gestor
+          WEB_URL=http://localhost:3000 npm run test:security

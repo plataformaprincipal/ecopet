@@ -27,7 +27,7 @@ export const SOCIAL_NAV = [
   { href: "/social/stories", label: "Stories" },
   { href: "/social/tendencias", label: "Tendências" },
   { href: "/social/salvos", label: "Salvos" },
-  { href: "/social/mensagens", label: "Mensagens" },
+  { href: "/dashboard/messages", label: "Mensagens" },
 ] as const;
 
 export function formatSocialTime(iso: string): string {

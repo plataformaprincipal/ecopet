@@ -1,5 +1,6 @@
-import { SocialHome } from "@/components/features/home/social-home";
+import { redirect } from "next/navigation";
 
+/** /inicio redireciona para o feed canônico (Etapa 11). */
 export default function InicioPage() {
-  return <SocialHome />;
+  redirect("/feed");
 }

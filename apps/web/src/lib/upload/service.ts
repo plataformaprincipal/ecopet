@@ -58,7 +58,7 @@ export async function executeUpload(input: UploadInput): Promise<UploadResult> {
     );
   }
 
-  if (provider === "local_dev" && isProduction()) {
+  if (provider === "local_dev" && isProduction() && process.env.UPLOAD_DEV_FALLBACK !== "1") {
     await writeIntegrationLog({
       integrationName: "upload_local_dev",
       provider: "Local Dev",

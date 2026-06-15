@@ -10,8 +10,11 @@ import {
 } from "../services/chat-service.js";
 import { createAuditLog } from "../services/audit-service.js";
 import type { ConversationType } from "@prisma/client";
+import { deprecatedChatApi } from "../middleware/deprecated-chat-api.js";
 
 const router = Router();
+
+router.use(deprecatedChatApi);
 
 router.get("/", async (req: AuthRequest, res, next) => {
   try {

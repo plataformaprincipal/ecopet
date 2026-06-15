@@ -13,6 +13,7 @@ const root = path.resolve(__dirname, "..");
 const webEnv = path.join(root, "apps", "web", ".env");
 const webExample = path.join(root, "apps", "web", ".env.example");
 const rootEnv = path.join(root, ".env");
+const databaseEnv = path.join(root, "packages", "database", ".env");
 
 const SYNC_KEYS = [
   "APP_URL",
@@ -33,6 +34,7 @@ const SYNC_KEYS = [
   "SMTP_FROM_NAME",
   "SMTP_FROM_EMAIL",
   "TEST_EMAIL",
+  "UPLOAD_DEV_FALLBACK",
 ];
 
 const ALIGN_KEYS = [
@@ -147,6 +149,34 @@ function main() {
   }
 
   mergeSmtpIntoWebEnv({ silent: false, force: Boolean(process.env.SMTP_MERGE_FORCE) });
+
+  const web = readEnvFile(webEnv);
+  const databaseUrl = web.map.get("DATABASE_URL") ?? fromRoot.map.get("DATABASE_URL");
+  let directUrl = web.map.get("DIRECT_URL") ?? fromRoot.map.get("DIRECT_URL");
+  if (databaseUrl?.trim() && !directUrl?.trim()) {
+    directUrl = databaseUrl;
+  }
+
+  if (databaseUrl?.trim()) {
+    const dbLines = [
+      "# Gerado por npm run sync:env — não editar manualmente",
+      formatEnvLine("DATABASE_URL", databaseUrl),
+      formatEnvLine("DIRECT_URL", directUrl ?? databaseUrl),
+      "",
+    ];
+    fs.writeFileSync(databaseEnv, dbLines.join("\n"), "utf8");
+    console.log("✓ packages/database/.env sincronizado (DATABASE_URL, DIRECT_URL)");
+  }
+
+  if (fs.existsSync(rootEnv) && databaseUrl?.trim()) {
+    let rootLines = fs.readFileSync(rootEnv, "utf8").split(/\r?\n/);
+    const rootParsed = parseEnv(fs.readFileSync(rootEnv, "utf8"));
+    if (!rootParsed.map.get("DIRECT_URL")?.trim()) {
+      rootLines = upsertEnvLine(rootLines, "DIRECT_URL", directUrl ?? databaseUrl);
+      fs.writeFileSync(rootEnv, rootLines.join("\n").replace(/\n?$/, "\n"), "utf8");
+      console.log("✓ DIRECT_URL adicionado em .env raiz");
+    }
+  }
 }
 
 main();

@@ -1,16 +1,43 @@
 node_modules
 .next
 dist
+out
+.turbo
+.vercel
+tsconfig.tsbuildinfo
+
+# Environment & secrets
 .env
-.env.local
+.env.*
+!.env.example
+!**/.env.example
+!**/.env.*.example
 apps/web/.env.smtp.local
+packages/database/.env
+
+# Local runtime data
 .ecopet/
 *.log
 .DS_Store
 coverage
 *.db
 *.db-journal
+
+# Uploads & backups (never commit)
 apps/web/public/uploads/dev
+.ecopet/backups/
+*.sql
+*.dump
+*.bak
+*.pem
+*.key
+credentials.json
 
 # Prisma
 apps/web/prisma/migrations/**/migration_lock.toml
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/

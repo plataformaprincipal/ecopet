@@ -1,10 +1,12 @@
 import { Router } from "express";
 import { prisma } from "@ecopet/database";
 import { AuthRequest, authMiddleware } from "../middleware/auth.js";
+import { deprecatedSocialApi } from "../middleware/deprecated-social-api.js";
 import { paramString } from "../lib/request-utils.js";
 import { serializePost } from "../lib/serialize.js";
 
 const router = Router();
+router.use(deprecatedSocialApi);
 
 router.get("/feed", async (req, res, next) => {
   try {

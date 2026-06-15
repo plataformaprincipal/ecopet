@@ -12,11 +12,19 @@ import {
 import { dashboardPathForRole } from "@/lib/auth/dashboard";
 import { loginSchema } from "@/schemas/auth";
 import { apiSuccess, apiFailure } from "@/lib/api-response";
+import { checkAuthRateLimit, clientIp } from "@/lib/rate-limit";
 
 const BLOCKED_STATUSES: AccountStatus[] = [AccountStatus.REJECTED, AccountStatus.SUSPENDED];
+const LOGIN_LIMIT = 10;
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 
 export async function POST(request: Request) {
   try {
+    const ip = clientIp(request);
+    if (!checkAuthRateLimit(`login:${ip}`, LOGIN_LIMIT, LOGIN_WINDOW_MS)) {
+      return apiFailure("RATE_LIMIT", "Muitas tentativas. Aguarde alguns minutos.", 429);
+    }
+
     const body = await request.json();
     const parsed = loginSchema.safeParse(body);
 

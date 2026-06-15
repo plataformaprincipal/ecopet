@@ -5,6 +5,7 @@ export type UploadResult = {
   publicId: string;
   sizeBytes: number;
   mimeType: string;
+  provider?: string;
 };
 
 export async function uploadFile(file: File, purpose: UploadPurpose): Promise<UploadResult> {

@@ -1,5 +1,37 @@
 import type { SocialPost, Conversation, ChatMessage, SocialProfile, SocialComment, SocialStory, SocialReel, TrendTag, AiSuggestion, AiCommunityInsight, ExploreSection } from "./types";
 import { api } from "@/lib/api";
+import type { ApiSocialPost } from "./client-api";
+
+function mapSocialPostToLegacy(post: ApiSocialPost): SocialPost {
+  return {
+    id: post.id,
+    type: "photo",
+    author: {
+      id: post.author.id,
+      type: "tutor",
+      name: post.author.name,
+      username: post.author.name.toLowerCase().replace(/\s+/g, ""),
+      avatar: post.author.avatarUrl ?? "",
+      bio: "",
+      location: post.locationText ?? "",
+      isVerified: false,
+      followers: 0,
+      following: 0,
+      badges: [],
+    },
+    pet: post.pet
+      ? { id: post.pet.id, name: post.pet.name, avatar: post.pet.photo ?? "" }
+      : undefined,
+    createdAt: post.createdAt,
+    caption: post.content ?? "",
+    hashtags: post.hashtags.map((h) => h.name),
+    media: post.media.map((m) => ({ url: m.fileUrl, type: m.mediaType === "VIDEO" ? "video" : "image" })),
+    likes: post.counts.likes,
+    commentsCount: post.counts.comments,
+    shares: post.counts.shares,
+    saves: post.counts.saves,
+  };
+}
 
 type ApiFeedPost = {
   id: string;
@@ -85,11 +117,11 @@ type ApiMessage = {
   sender: { id: string; name: string; avatar: string | null; role: string };
 };
 
-export async function fetchSocialFeed(token?: string): Promise<{ posts: SocialPost[]; isDemo: boolean }> {
-  if (!token) return { posts: [], isDemo: false };
+export async function fetchSocialFeed(_token?: string): Promise<{ posts: SocialPost[]; isDemo: boolean }> {
   try {
-    const rows = await api<ApiFeedPost[]>("/api/posts/feed", { token });
-    return { posts: rows.map(mapApiPostToSocial), isDemo: false };
+    const { fetchFeed } = await import("./client-api");
+    const data = await fetchFeed();
+    return { posts: data.posts.map(mapSocialPostToLegacy), isDemo: false };
   } catch {
     return { posts: [], isDemo: false };
   }
@@ -108,11 +140,11 @@ export async function fetchProfile(_id: string): Promise<SocialProfile | undefin
   return undefined;
 }
 
-export async function fetchPost(id: string, token?: string): Promise<SocialPost | undefined> {
+export async function fetchPost(id: string, _token?: string): Promise<SocialPost | undefined> {
   try {
-    const rows = await api<ApiFeedPost[]>(`/api/posts/${id}`, token ? { token } : undefined);
-    const post = Array.isArray(rows) ? rows[0] : (rows as unknown as ApiFeedPost);
-    return post ? mapApiPostToSocial(post) : undefined;
+    const { fetchPost: fetchSocialPost } = await import("./client-api");
+    const data = await fetchSocialPost(id);
+    return mapSocialPostToLegacy(data.post);
   } catch {
     return undefined;
   }

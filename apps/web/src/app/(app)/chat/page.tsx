@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function ChatRedirectPage() {
-  redirect("/social/mensagens");
+  redirect("/dashboard/messages");
 }

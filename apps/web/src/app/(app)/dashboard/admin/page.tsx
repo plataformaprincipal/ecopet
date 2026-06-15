@@ -21,6 +21,21 @@ export default async function AdminDashboardPage() {
         />
         <div className="flex flex-wrap gap-3">
           <Button asChild>
+            <Link href="/dashboard/admin/gestor">Gestor EcoPet (BI)</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/dashboard/admin/gestor/reports">Relatórios</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/dashboard/admin/gestor/overview">BI</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/dashboard/admin/gestor/audit">Auditoria</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/dashboard/admin/privacy-requests">LGPD</Link>
+          </Button>
+          <Button asChild variant="outline">
             <Link href="/dashboard/admin/accounts">Aprovação de contas</Link>
           </Button>
           <Button asChild variant="outline">

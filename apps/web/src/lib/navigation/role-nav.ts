@@ -46,7 +46,8 @@ const CLIENT_MAIN: RoleNavItem[] = [
 
 const CLIENT_SECONDARY: RoleSecondaryNavItem[] = [
   { href: "/perfil", labelKey: "nav.profile", icon: User },
-  { href: "/social/mensagens", labelKey: "nav.messages", icon: MessageCircle },
+  { href: "/dashboard/messages", labelKey: "nav.messages", icon: MessageCircle },
+  { href: "/dashboard/support", labelKey: "nav.support", icon: ClipboardList },
   { href: "/configuracoes", labelKey: "nav.settings", icon: Settings },
 ];
 
@@ -75,7 +76,8 @@ const PARTNER_MAIN: RoleNavItem[] = [
 
 const PARTNER_SECONDARY: RoleSecondaryNavItem[] = [
   { href: "/perfil", labelKey: "nav.profile", icon: User },
-  { href: "/social/mensagens", labelKey: "nav.messages", icon: MessageCircle },
+  { href: "/dashboard/messages", labelKey: "nav.messages", icon: MessageCircle },
+  { href: "/dashboard/support", labelKey: "nav.support", icon: ClipboardList },
   { href: "/configuracoes", labelKey: "nav.settings", icon: Settings },
 ];
 
@@ -89,10 +91,11 @@ const ONG_MAIN: RoleNavItem[] = [
     match: ["/dashboard/ong"],
   },
   { href: "/dashboard/ong/profile", labelKey: "nav.profile", icon: User, match: ["/dashboard/ong/profile", "/perfil"] },
-  { href: "/social/mensagens", labelKey: "nav.messages", icon: MessageCircle, match: ["/social/mensagens"] },
+  { href: "/dashboard/messages", labelKey: "nav.messages", icon: MessageCircle, match: ["/dashboard/messages", "/social/mensagens"] },
 ];
 
 const ONG_SECONDARY: RoleSecondaryNavItem[] = [
+  { href: "/dashboard/support", labelKey: "nav.support", icon: ClipboardList },
   { href: "/configuracoes", labelKey: "nav.settings", icon: Settings },
 ];
 
@@ -110,6 +113,8 @@ const ADMIN_MAIN: RoleNavItem[] = [
 ];
 
 const ADMIN_SECONDARY: RoleSecondaryNavItem[] = [
+  { href: "/dashboard/admin/support", labelKey: "nav.support", icon: ClipboardList },
+  { href: "/dashboard/admin/messages/reports", labelKey: "nav.reports", icon: Shield },
   { href: "/configuracoes", labelKey: "nav.settings", icon: Settings },
 ];
 

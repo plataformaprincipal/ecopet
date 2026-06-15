@@ -32,7 +32,7 @@ export const USER_ROLES = {
 } as const;
 
 export const NAV_ITEMS = [
-  { href: "/inicio", label: "Início", icon: "Home" },
+  { href: "/feed", label: "Início", icon: "Home" },
   { href: "/explorar", label: "Explorar", icon: "Compass" },
   { href: "/marketplace", label: "Marketplace", icon: "ShoppingBag" },
   { href: "/meu-pet", label: "Meu Pet", icon: "PawPrint" },

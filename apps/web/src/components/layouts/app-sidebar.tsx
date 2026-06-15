@@ -32,7 +32,7 @@ const navLabelKeys: Record<string, TranslationKey> = {
   "/ia": "nav.ia",
   "/pets": "nav.pets",
   "/adocao": "nav.adoption",
-  "/social/mensagens": "nav.chat",
+  "/dashboard/messages": "nav.chat",
 };
 
 const icons: Record<string, React.ElementType> = {

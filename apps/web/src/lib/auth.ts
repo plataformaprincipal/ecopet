@@ -96,5 +96,14 @@ export async function getCurrentUser() {
 export type SafeUser = NonNullable<Awaited<ReturnType<typeof getCurrentUser>>>;
 
 export function sanitizeUser(user: SafeUser) {
-  return user;
+  const { cpf, cnpj, partnerProfile, ongProfile, ...rest } = user;
+  return {
+    ...rest,
+    cpf: cpf ?? null,
+    cnpj: cnpj ?? null,
+    partnerProfile: partnerProfile
+      ? { ...partnerProfile, cnpj: partnerProfile.cnpj }
+      : null,
+    ongProfile: ongProfile ? { ...ongProfile, cnpj: ongProfile.cnpj } : null,
+  };
 }

@@ -1,5 +1,5 @@
 import { prisma } from "@ecopet/database";
-import type { TicketPriority, TicketStatus } from "@prisma/client";
+import type { SupportCategory, TicketPriority, TicketStatus } from "@prisma/client";
 import { assignSlaOnCreate, markSlaResponded, markSlaResolved } from "./sla-service.js";
 import { emitPlatformEvent } from "./platform-governance-service.js";
 export async function listTickets(params: {
@@ -26,7 +26,7 @@ export async function listTickets(params: {
 export async function createTicket(params: {
   subject: string;
   description: string;
-  category: string;
+  category: SupportCategory;
   priority?: TicketPriority;
   requesterId: string;
 }) {
@@ -39,7 +39,7 @@ export async function createTicket(params: {
       subject: params.subject,
       description: params.description,
       category: params.category,
-      priority: params.priority ?? "MEDIUM",
+      priority: params.priority ?? "NORMAL",
       requesterId: params.requesterId,
     },
     include: {

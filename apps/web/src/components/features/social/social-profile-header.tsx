@@ -31,7 +31,7 @@ export function SocialProfileHeader({ profile }: SocialProfileHeaderProps) {
           </div>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" asChild>
-              <Link href="/social/mensagens"><MessageCircle className="h-4 w-4" /> Contato</Link>
+              <Link href="/dashboard/messages"><MessageCircle className="h-4 w-4" /> Contato</Link>
             </Button>
             {(profile.type === "veterinarian" || profile.type === "clinic") && (
               <Button variant="secondary" size="sm" asChild>

@@ -12,10 +12,10 @@ export interface MainNavItem {
 /** Navegação principal do super app ECOPET (5 abas) */
 export const MAIN_NAV: MainNavItem[] = [
   {
-    href: "/inicio",
+    href: "/feed",
     labelKey: "nav.home",
     icon: Home,
-    match: ["/inicio", "/feed", "/social/stories", "/social/reels", "/social/tendencias", "/social/post", "/social/salvos"],
+    match: ["/inicio", "/feed", "/feed/post", "/feed/saved", "/feed/search", "/feed/profile", "/social/stories", "/social/reels", "/social/tendencias", "/social/post", "/social/salvos"],
   },
   {
     href: "/explorar",
@@ -49,11 +49,11 @@ export const SECONDARY_NAV: { href: string; labelKey: TranslationKey; icon: stri
   { href: "/ia", labelKey: "nav.ai", icon: "Sparkles" },
   { href: "/iot", labelKey: "nav.iot", icon: "Radio" },
   { href: "/agenda", labelKey: "nav.agenda", icon: "Calendar" },
-  { href: "/social/mensagens", labelKey: "nav.messages", icon: "MessageCircle" },
+  { href: "/dashboard/messages", labelKey: "nav.messages", icon: "MessageCircle" },
   { href: "/notificacoes", labelKey: "nav.notifications", icon: "Bell" },
   { href: "/agro", labelKey: "nav.agro", icon: "Sprout" },
   { href: "/social/reels", labelKey: "nav.reels", icon: "Film" },
-  { href: "/social/salvos", labelKey: "nav.saved", icon: "Bookmark" },
+  { href: "/feed/saved", labelKey: "nav.saved", icon: "Bookmark" },
 ];
 
 export function isNavActive(pathname: string, item: MainNavItem) {

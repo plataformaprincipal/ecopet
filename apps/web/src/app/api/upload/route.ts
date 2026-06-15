@@ -24,7 +24,10 @@ const VALID_PURPOSES: UploadPurpose[] = [
   "product_image",
 
   "partner_logo",
-
+  "chat_attachment",
+  "social_post_media",
+  "social_profile_avatar",
+  "social_profile_cover",
 ];
 
 
@@ -93,7 +96,7 @@ export async function POST(request: Request) {
 
     });
 
-    return apiSuccess({ upload: result }, 201);
+    return apiSuccess({ upload: { ...result, provider: result.provider } }, 201);
 
   } catch (e) {
 
