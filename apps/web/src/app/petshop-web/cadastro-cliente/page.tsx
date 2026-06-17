@@ -13,6 +13,7 @@ export default function CadastroClientePage() {
               <h1 className="petshop-section-title mb-2">Cadastro de Cliente</h1>
               <p className="text-muted mb-4">
                 Preencha todos os campos abaixo. Campos marcados com <span className="text-danger">*</span> são obrigatórios.
+                No endereço, apenas <strong>Complemento</strong> e <strong>Referência</strong> são opcionais.
               </p>
               <ClientRegistrationForm />
             </div>

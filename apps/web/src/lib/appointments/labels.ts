@@ -15,8 +15,8 @@ export const SERVICE_LABELS: Record<AppointmentServiceType, string> = {
 
 export const ATTENDANCE_LABELS: Record<AppointmentAttendanceMode, string> = {
   IN_PERSON: "Atendimento presencial",
-  TELEBUSCA: "Telebusca",
-  TUTOR_DELIVERY: "Entrega do pet pelo tutor",
+  TELEBUSCA: "Tele-busca do pet",
+  TUTOR_DELIVERY: "Entrega do pet no local",
 };
 
 export const STATUS_LABELS: Record<AppointmentStatus, string> = {

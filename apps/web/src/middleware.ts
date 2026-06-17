@@ -46,6 +46,18 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get(SESSION_COOKIE)?.value;
 
+  if (pathname === "/" && token) {
+    try {
+      await verifySessionToken(token);
+      return applyRefreshedCookie(
+        NextResponse.redirect(new URL("/inicio", request.url)),
+        null
+      );
+    } catch {
+      /* token inválido — visitante vê landing */
+    }
+  }
+
   let role: AppRole | null = null;
   let accountStatus: AccountStatus | null = null;
   let refreshedCookie: string | null = null;
@@ -77,6 +89,19 @@ export async function middleware(request: NextRequest) {
     } catch {
       /* token inválido */
     }
+  }
+
+  if (pathname === "/inicio") {
+    if (!token || !role) {
+      return loginRedirect(request, pathname);
+    }
+    if (!canAccessRoute(role, pathname)) {
+      return applyRefreshedCookie(dashboardRedirect(request, role), refreshedCookie);
+    }
+    return applyRefreshedCookie(
+      NextResponse.redirect(new URL("/feed", request.url)),
+      refreshedCookie
+    );
   }
 
   if (!requiresAuth(pathname)) {

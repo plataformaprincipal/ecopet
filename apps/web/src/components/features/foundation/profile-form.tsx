@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FileUploadField } from "@/components/ui/file-upload-field";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { LogoutButton } from "@/components/shared/auth/logout-button";
 
 type Profile = {
   id: string;
@@ -344,6 +345,11 @@ export function FoundationProfileForm({ dashboardPath = "/dashboard" }: { dashbo
             <Button type="button" variant="outline" asChild>
               <Link href={dashboardPath}>Voltar ao dashboard</Link>
             </Button>
+          </div>
+
+          <div className="mt-6 border-t border-gray-200 pt-4">
+            <p className="mb-2 text-sm text-gray-600">Encerrar sessão neste dispositivo</p>
+            <LogoutButton />
           </div>
         </form>
       </CardContent>

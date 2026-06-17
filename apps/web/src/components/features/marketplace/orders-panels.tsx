@@ -5,14 +5,32 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
+const PAYMENT_LABELS: Record<string, string> = {
+  PIX: "PIX na entrega",
+  CARD: "Cartão na entrega",
+  CASH: "Dinheiro na entrega",
+};
+
 type Order = {
   id: string;
   orderNumber: number;
   status: string;
   total: number;
   createdAt: string;
+  paymentMethod?: string;
   items?: { name: string; quantity: number; price: number }[];
   statusHistory?: { status: string; note?: string; createdAt: string }[];
+};
+
+const CLIENT_STATUS_LABELS: Record<string, string> = {
+  PENDING_CONFIRMATION: "Aguardando confirmação",
+  CONFIRMED: "Confirmado",
+  PREPARING: "Em preparação",
+  READY_FOR_PICKUP: "Pronto para retirada",
+  OUT_FOR_DELIVERY: "Saiu para entrega",
+  DELIVERED: "Entregue",
+  COMPLETED: "Concluído",
+  CANCELLED: "Cancelado",
 };
 
 const PARTNER_NEXT: Record<string, string[]> = {
@@ -61,11 +79,26 @@ export function ClientOrdersPanel({ mode = "list", orderId }: { mode?: "list" | 
       <Card>
         <CardContent className="space-y-3 p-4 text-sm">
           <p><strong>Pedido:</strong> #{order.orderNumber}</p>
-          <p><strong>Status:</strong> {order.status}</p>
+          <p><strong>Status:</strong> {CLIENT_STATUS_LABELS[order.status] ?? order.status}</p>
           <p><strong>Total:</strong> R$ {Number(order.total).toFixed(2)}</p>
+          {order.paymentMethod && (
+            <p><strong>Pagamento:</strong> {PAYMENT_LABELS[order.paymentMethod] ?? order.paymentMethod}</p>
+          )}
+          <p><strong>Data:</strong> {new Date(order.createdAt).toLocaleString("pt-BR")}</p>
           {order.items?.map((item, i) => (
             <p key={i}>{item.name} · {item.quantity}x · R$ {Number(item.price).toFixed(2)}</p>
           ))}
+          {order.statusHistory && order.statusHistory.length > 0 && (
+            <div className="mt-2 space-y-1 border-t pt-2">
+              <p className="font-medium">Andamento</p>
+              {order.statusHistory.map((h, i) => (
+                <p key={i} className="text-xs text-muted-foreground">
+                  {CLIENT_STATUS_LABELS[h.status] ?? h.status}
+                  {h.note ? ` — ${h.note}` : ""} · {new Date(h.createdAt).toLocaleString("pt-BR")}
+                </p>
+              ))}
+            </div>
+          )}
           {order.status === "PENDING_CONFIRMATION" && (
             <Button size="sm" variant="outline" onClick={cancel}>Cancelar pedido</Button>
           )}
@@ -87,7 +120,7 @@ export function ClientOrdersPanel({ mode = "list", orderId }: { mode?: "list" | 
           <CardContent className="flex justify-between p-4 text-sm">
             <div>
               <p className="font-medium">#{o.orderNumber}</p>
-              <p>{o.status} · R$ {Number(o.total).toFixed(2)}</p>
+              <p>{CLIENT_STATUS_LABELS[o.status] ?? o.status} · R$ {Number(o.total).toFixed(2)}</p>
             </div>
             <Button asChild size="sm" variant="outline"><Link href={`/dashboard/client/orders/${o.id}`}>Ver</Link></Button>
           </CardContent>
@@ -140,6 +173,9 @@ export function PartnerOrdersPanel({ mode = "list", orderId }: { mode?: "list" |
           <p><strong>Pedido:</strong> #{order.orderNumber}</p>
           <p><strong>Status:</strong> {order.status}</p>
           <p><strong>Total:</strong> R$ {Number(order.total).toFixed(2)}</p>
+          {order.paymentMethod && (
+            <p><strong>Pagamento:</strong> {PAYMENT_LABELS[order.paymentMethod] ?? order.paymentMethod}</p>
+          )}
           {order.items?.map((item, i) => (
             <p key={i}>{item.name} · {item.quantity}x</p>
           ))}

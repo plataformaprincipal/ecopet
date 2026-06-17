@@ -12,8 +12,10 @@ export default function AgendamentoPage() {
             <div className="col-lg-8">
               <h1 className="petshop-section-title mb-2">Agendamento</h1>
               <p className="text-muted mb-4">
-                Agende <strong>tele-busca</strong> (consulta remota) ou <strong>entrega do pet no local</strong>.
-                Todos os campos são obrigatórios.
+                Agende os serviços de <strong>Banho</strong> e/ou <strong>Tosa</strong> via{" "}
+                <strong>tele-busca</strong> (busca do pet em domicílio) ou{" "}
+                <strong>entrega no local</strong> (tutor leva o pet ao petshop).
+                Utilize o calendário para escolher data e horário.
               </p>
               <SchedulingForm />
             </div>

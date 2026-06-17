@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { SeusDadosPanel } from "@/components/features/profile/seus-dados-panel";
 import { EcopetWatermark } from "@/components/shared/brand/ecopet-symbol";
 import { PersonaTabs } from "@/components/features/profile/shared/persona-tabs";
+import { LogoutButton } from "@/components/shared/auth/logout-button";
 import type { ProfileModule } from "@/lib/profile/types";
 
 const SETTINGS_MODULES: ProfileModule[] = [
@@ -71,6 +72,11 @@ export function SettingsHub() {
                   <SettingRow label="Sessões ativas" value="3 dispositivos" action={<Button variant="outline" size="sm">Gerenciar</Button>} />
                   <SettingRow label="Dispositivos confiáveis" value="iPhone, MacBook" />
                   <SettingRow label="Histórico de acessos" action={<Button variant="ghost" size="sm">Ver logs <ChevronRight className="h-4 w-4" /></Button>} />
+                  <div className="mt-6 border-t border-ecopet-gray/10 pt-4 dark:border-white/10">
+                    <h3 className="mb-2 text-sm font-semibold text-ecopet-dark dark:text-white">Sessão</h3>
+                    <p className="mb-3 text-sm text-ecopet-gray">Encerre sua sessão neste dispositivo.</p>
+                    <LogoutButton />
+                  </div>
                 </CardContent>
               </Card>
             )}

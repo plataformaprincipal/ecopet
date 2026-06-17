@@ -15,6 +15,7 @@ import { fetchProduct, fetchReviews, fetchRelatedProducts } from "@/lib/marketpl
 import { formatMpPrice, discountPct, AI_TAG_LABELS } from "@/lib/marketplace/config";
 import type { MarketplaceProduct, MarketplaceReview } from "@/lib/marketplace/types";
 import { cn } from "@/lib/utils";
+import { productImageAlt, avatarAlt } from "@/lib/accessibility/image-alt";
 
 interface ProductDetailContentProps {
   id: string;
@@ -56,13 +57,13 @@ export function ProductDetailContent({ id }: ProductDetailContentProps) {
       <div className="grid gap-8 lg:grid-cols-2">
         <div>
           <div className="relative aspect-square overflow-hidden rounded-2xl bg-gray-100">
-            <Image src={product.images[imgIdx]} alt={product.name} fill className="object-cover" priority />
+            <Image src={product.images[imgIdx]} alt={productImageAlt(product.name, { index: imgIdx, shortDescription: product.description })} fill className="object-cover" priority />
           </div>
           {product.images.length > 1 && (
             <div className="mt-2 flex gap-2">
               {product.images.map((img, i) => (
                 <button key={i} type="button" onClick={() => setImgIdx(i)} className={cn("relative h-16 w-16 overflow-hidden rounded-lg border-2", imgIdx === i ? "border-ecopet-green" : "border-transparent")}>
-                  <Image src={img} alt="" fill className="object-cover" />
+                  <Image src={img} alt={productImageAlt(product.name, { index: i, shortDescription: product.description })} fill className="object-cover" />
                 </button>
               ))}
             </div>
@@ -88,7 +89,7 @@ export function ProductDetailContent({ id }: ProductDetailContentProps) {
 
           <Link href={`/marketplace/parceiro/${product.partnerId}`} className="mt-4 inline-flex items-center gap-2 rounded-xl border p-3 hover:border-ecopet-green">
             <div className="relative h-10 w-10 overflow-hidden rounded-full">
-              <Image src={product.partner.avatar} alt="" fill className="object-cover" />
+              <Image src={product.partner.avatar} alt={avatarAlt(product.partner.name)} fill className="object-cover" />
             </div>
             <div>
               <p className="text-sm font-semibold">{product.partner.name}</p>

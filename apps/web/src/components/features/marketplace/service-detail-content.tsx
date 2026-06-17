@@ -14,6 +14,7 @@ import { fetchService, fetchReviews, fetchRelatedServices } from "@/lib/marketpl
 import { formatMpPrice, AI_TAG_LABELS } from "@/lib/marketplace/config";
 import type { MarketplaceService, MarketplaceReview } from "@/lib/marketplace/types";
 import { cn } from "@/lib/utils";
+import { serviceImageAlt, avatarAlt } from "@/lib/accessibility/image-alt";
 
 interface ServiceDetailContentProps {
   id: string;
@@ -53,7 +54,7 @@ export function ServiceDetailContent({ id }: ServiceDetailContentProps) {
 
       <div className="grid gap-8 lg:grid-cols-2">
         <div className="relative aspect-video overflow-hidden rounded-2xl bg-gray-100">
-          <Image src={service.image} alt={service.name} fill className="object-cover" priority />
+          <Image src={service.image} alt={serviceImageAlt(service.name)} fill className="object-cover" priority />
           {service.emergency && <Badge className="absolute left-3 top-3 bg-red-500 text-white">Emergência</Badge>}
         </div>
 
@@ -80,7 +81,7 @@ export function ServiceDetailContent({ id }: ServiceDetailContentProps) {
 
           <Link href={`/marketplace/parceiro/${service.partnerId}`} className="mt-4 inline-flex items-center gap-2 rounded-xl border p-3 hover:border-ecopet-green">
             <div className="relative h-10 w-10 overflow-hidden rounded-full">
-              <Image src={service.partner.avatar} alt="" fill className="object-cover" />
+              <Image src={service.partner.avatar} alt={avatarAlt(service.partner.name)} fill className="object-cover" />
             </div>
             <div>
               <p className="text-sm font-semibold">{service.partner.name}</p>

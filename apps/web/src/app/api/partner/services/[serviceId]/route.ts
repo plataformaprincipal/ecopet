@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiFailure } from "@/lib/api-response";
 import { requireActivePartner } from "@/lib/auth/require-auth";
-import { partnerServiceSchema } from "@/schemas/partner-service";
+import { partnerServiceUpdateSchema } from "@/schemas/partner-service";
+import { ContentApprovalStatus } from "@prisma/client";
 
 type RouteContext = { params: Promise<{ serviceId: string }> };
 
@@ -27,7 +28,7 @@ export async function PUT(request: Request, context: RouteContext) {
   });
   if (!existing) return apiFailure("NOT_FOUND", "Serviço não encontrado.", 404);
 
-  const parsed = partnerServiceSchema.partial().safeParse(await request.json());
+  const parsed = partnerServiceUpdateSchema.safeParse(await request.json());
   if (!parsed.success) {
     return apiFailure("VALIDATION", parsed.error.errors[0]?.message ?? "Inválido", 400);
   }
@@ -38,16 +39,25 @@ export async function PUT(request: Request, context: RouteContext) {
     data: {
       ...(data.name !== undefined ? { name: data.name.trim() } : {}),
       ...(data.description !== undefined ? { description: data.description.trim() } : {}),
+      ...(data.shortDescription !== undefined ? { shortDescription: data.shortDescription?.trim() ?? null } : {}),
+      ...(data.subcategory !== undefined ? { subcategory: data.subcategory?.trim() ?? null } : {}),
       ...(data.category !== undefined ? { category: data.category } : {}),
       ...(data.price !== undefined ? { price: data.price } : {}),
+      ...(data.priceOnRequest !== undefined ? { priceOnRequest: data.priceOnRequest } : {}),
       ...(data.durationMin !== undefined ? { durationMin: data.durationMin } : {}),
       ...(data.status !== undefined
         ? { status: data.status, isActive: data.status === "ACTIVE" }
         : {}),
       ...(data.modality !== undefined ? { modality: data.modality } : {}),
       ...(data.speciesTarget !== undefined ? { speciesTarget: data.speciesTarget } : {}),
+      ...(data.city !== undefined ? { city: data.city?.trim() ?? null } : {}),
+      ...(data.state !== undefined ? { state: data.state ?? null } : {}),
+      ...(data.serviceLocation !== undefined ? { serviceLocation: data.serviceLocation?.trim() ?? null } : {}),
+      ...(data.tags !== undefined ? { tags: data.tags ?? undefined } : {}),
+      ...(data.extraDetails !== undefined ? { extraDetails: data.extraDetails ?? undefined } : {}),
       ...(data.notes !== undefined ? { notes: data.notes } : {}),
       ...(data.image !== undefined ? { image: data.image } : {}),
+      approvalStatus: ContentApprovalStatus.APPROVED,
     },
   });
 

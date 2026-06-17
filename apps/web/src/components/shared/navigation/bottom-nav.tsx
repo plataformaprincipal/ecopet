@@ -7,6 +7,7 @@ import { isNavActive } from "@/lib/navigation/role-nav";
 import { getNavigationMode, resolveNavigation } from "@/lib/navigation/secure-nav";
 import { useFoundationSession } from "@/hooks/use-foundation-session";
 import { useTranslation } from "@/providers/i18n-provider";
+import { LogoutButton } from "@/components/shared/auth/logout-button";
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -48,6 +49,11 @@ export function BottomNav() {
           );
         })}
       </div>
+      {mode === "authenticated" && (
+        <div className="border-t border-ecopet-gray/10 px-3 pb-[env(safe-area-inset-bottom)] dark:border-white/10">
+          <LogoutButton variant="mobile" />
+        </div>
+      )}
     </nav>
   );
 }

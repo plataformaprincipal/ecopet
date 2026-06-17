@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Fralda pet descartável ajustável">
+  <rect width="400" height="400" fill="#fff5f8"/>
+  <path d="M120 140 Q200 100 280 140 L280 260 Q200 300 120 260 Z" fill="#f48fb1"/>
+  <ellipse cx="200" cy="200" rx="60" ry="40" fill="#fce4ec"/>
+  <rect x="170" y="185" width="60" height="30" rx="8" fill="#ec407a"/>
+  <text x="200" y="290" text-anchor="middle" font-family="Arial,sans-serif" font-size="14" fill="#880e4f">12 unidades</text>
+  <text x="200" y="340" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" fill="#880e4f">Fralda Pet</text>
+</svg>

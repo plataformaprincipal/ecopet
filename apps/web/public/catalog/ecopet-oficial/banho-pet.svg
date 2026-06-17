@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Serviço de banho pet">
+  <rect width="400" height="400" fill="#e8f6ff"/>
+  <ellipse cx="200" cy="280" rx="130" ry="40" fill="#b3e5fc"/>
+  <circle cx="200" cy="180" r="55" fill="#8d6e63"/>
+  <circle cx="180" cy="168" r="6" fill="#fff"/>
+  <circle cx="220" cy="168" r="6" fill="#fff"/>
+  <path d="M185 195 Q200 210 215 195" stroke="#fff" stroke-width="4" fill="none"/>
+  <path d="M160 120 Q180 90 200 110 Q220 90 240 120" stroke="#4fc3f7" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <circle cx="170" cy="100" r="8" fill="#4fc3f7"/>
+  <circle cx="200" cy="85" r="10" fill="#4fc3f7"/>
+  <circle cx="230" cy="100" r="8" fill="#4fc3f7"/>
+  <text x="200" y="340" text-anchor="middle" font-family="Arial,sans-serif" font-size="20" fill="#01579b">Banho Pet</text>
+</svg>

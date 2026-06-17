@@ -6,6 +6,7 @@ import { Heart } from "lucide-react";
 import { fetchComments } from "@/lib/social/api";
 import type { SocialComment } from "@/lib/social/types";
 import { formatSocialTime } from "@/lib/social/config";
+import { avatarAlt } from "@/lib/accessibility/image-alt";
 import { useTranslation } from "@/providers/i18n-provider";
 
 interface PostCommentsProps {
@@ -34,7 +35,7 @@ export function PostComments({ postId }: PostCommentsProps) {
         {comments.map((comment) => (
           <div key={comment.id} className="flex gap-3">
             <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full">
-              <Image src={comment.author.avatar || "/icon.png"} alt="" width={32} height={32} className="object-cover" />
+              <Image src={comment.author.avatar || "/icon.png"} alt={avatarAlt(comment.author.name)} width={32} height={32} className="object-cover" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">

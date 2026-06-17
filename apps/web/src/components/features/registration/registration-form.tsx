@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/features/auth/password-input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "@/lib/api";
+import { ApiRequestError, mapRegisterConflictMessage } from "@/lib/api-errors";
 import { useAppStore } from "@/store/app-store";
 import {
   BRAZILIAN_STATES,
@@ -308,7 +309,11 @@ export function RegistrationForm() {
       setSuccess({ message, redirectTo: res.redirectTo });
       setTimeout(() => router.push(res.redirectTo), 2000);
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : t("auth.register.errorGeneric"));
+      if (err instanceof ApiRequestError && err.status === 409) {
+        setFormError(mapRegisterConflictMessage(err.code, err.message));
+      } else {
+        setFormError(err instanceof Error ? err.message : t("auth.register.errorGeneric"));
+      }
     } finally {
       setLoading(false);
     }

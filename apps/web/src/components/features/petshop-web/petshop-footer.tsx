@@ -5,6 +5,7 @@ const FOOTER_LINKS = {
     { href: "/petshop-web", label: "Início" },
     { href: "/petshop-web/cadastro-cliente", label: "Cadastro Cliente" },
     { href: "/petshop-web/cadastro-pet", label: "Cadastro Pet" },
+    { href: "/petshop-web/perfil", label: "Perfil Tutor & Pet" },
     { href: "/petshop-web/agendamento", label: "Agendamento" },
   ],
   ecopet: [

@@ -134,6 +134,34 @@ async function ensureCompletedAppointment() {
   });
 }
 
+async function ensureActiveService() {
+  let activeSvc = await prisma.service.findFirst({
+    where: { status: "ACTIVE", deletedAt: null, isActive: true, provider: { accountStatus: AccountStatus.ACTIVE, role: "PARTNER" } },
+  });
+  if (activeSvc) return activeSvc;
+
+  const partner = await prisma.user.findFirst({
+    where: { role: "PARTNER", accountStatus: AccountStatus.ACTIVE },
+    select: { id: true, email: true },
+  });
+  assert(partner?.email, "precisa de parceiro ACTIVE para marketplace");
+
+  activeSvc = await prisma.service.create({
+    data: {
+      providerId: partner.id,
+      name: `Serviço Marketplace ${Date.now()}`,
+      description: "Serviço público para testes de marketplace",
+      category: "BATH_GROOMING",
+      price: 70,
+      durationMin: 45,
+      status: "ACTIVE",
+      isActive: true,
+      approvalStatus: "APPROVED",
+    },
+  });
+  return activeSvc;
+}
+
 async function main() {
   const publicList = await req("/api/public/services");
   assert(publicList.status === 200 && publicList.data.success, "public services");
@@ -150,10 +178,7 @@ async function main() {
     assert(p.status === 404, "pending partner hidden");
   }
 
-  const activeSvc = await prisma.service.findFirst({
-    where: { status: "ACTIVE", deletedAt: null, provider: { accountStatus: AccountStatus.ACTIVE } },
-  });
-  assert(activeSvc, "need active service in DB from prior tests");
+  const activeSvc = await ensureActiveService();
   const visitorSvc = await req(`/api/public/services/${activeSvc.id}`);
   assert(visitorSvc.status === 200, "visitor sees active service");
 

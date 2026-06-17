@@ -263,5 +263,4 @@ export const PENDING_APPROVAL_ROLES: UserRole[] = [
   UserRole.PETSHOP,
   UserRole.SELLER,
   UserRole.SERVICE_PROVIDER,
-  UserRole.ONG,
 ];

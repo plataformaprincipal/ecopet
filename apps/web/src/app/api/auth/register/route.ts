@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { UserRole, AccountStatus, ApprovalType, ApprovalStatus } from "@prisma/client";
+import { UserRole, AccountStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
   hashPassword,
@@ -120,7 +120,7 @@ export async function POST(request: Request) {
             role: UserRole.PARTNER,
             phone: data.phone,
             cnpj: data.cnpj,
-            accountStatus: AccountStatus.PENDING,
+            accountStatus: AccountStatus.ACTIVE,
             partnerProfile: {
               create: {
                 businessName: data.businessName.trim(),
@@ -137,15 +137,6 @@ export async function POST(request: Request) {
           },
           select: { id: true, name: true, email: true, role: true, accountStatus: true },
         });
-        await tx.approvalRequest.create({
-          data: {
-            type: ApprovalType.PARTNER,
-            entityType: "User",
-            entityId: created.id,
-            requesterId: created.id,
-            status: ApprovalStatus.PENDING,
-          },
-        });
         return created;
       }
 
@@ -157,7 +148,7 @@ export async function POST(request: Request) {
           role: UserRole.ONG,
           phone: data.phone,
           cnpj: data.cnpj,
-          accountStatus: AccountStatus.PENDING,
+          accountStatus: AccountStatus.ACTIVE,
           ongProfile: {
             create: {
               ongName: data.ongName.trim(),
@@ -173,15 +164,6 @@ export async function POST(request: Request) {
           },
         },
         select: { id: true, name: true, email: true, role: true, accountStatus: true },
-      });
-      await tx.approvalRequest.create({
-        data: {
-          type: ApprovalType.ONG,
-          entityType: "User",
-          entityId: created.id,
-          requesterId: created.id,
-          status: ApprovalStatus.PENDING,
-        },
       });
       return created;
     });

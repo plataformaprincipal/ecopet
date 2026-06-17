@@ -1,19 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { resolveServiceAlt } from "@/lib/catalog/images";
 
 type Service = {
   id: string;
   name: string;
   description: string;
+  shortDescription?: string;
   price: number;
   rating: number;
   reviewCount: number;
   category: string;
+  image?: string | null;
+  extraDetails?: { catalogKey?: string; imageAlt?: string };
   provider?: { partnerProfile?: { businessName?: string; city?: string; state?: string } };
 };
 
@@ -49,21 +54,36 @@ export function PublicServicesList({ detailBase = "/servicos" }: { detailBase?: 
       ) : (
         <>
           <p className="text-sm text-muted-foreground">{total} serviço(s) encontrado(s)</p>
-          {services.map((s) => (
-            <Card key={s.id}>
-              <CardContent className="flex justify-between gap-4 p-4">
-                <div>
-                  <p className="font-medium">{s.name}</p>
-                  <p className="text-sm text-muted-foreground line-clamp-2">{s.description}</p>
-                  <p className="text-sm">R$ {s.price.toFixed(2)} · ⭐ {s.rating.toFixed(1)} ({s.reviewCount})</p>
-                  {s.provider?.partnerProfile?.city && (
-                    <p className="text-xs text-muted-foreground">{s.provider.partnerProfile.city} — {s.provider.partnerProfile.state}</p>
+          {services.map((s) => {
+            const catalogKey = s.extraDetails?.catalogKey;
+            const alt = resolveServiceAlt(s.name, catalogKey, s.shortDescription, s.extraDetails);
+            return (
+              <Card key={s.id}>
+                <CardContent className="flex gap-4 p-4">
+                  {s.image && (
+                    <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg border bg-muted/30">
+                      <Image src={s.image} alt={alt} fill className="object-contain p-1" unoptimized />
+                    </div>
                   )}
-                </div>
-                <Button asChild size="sm" variant="outline"><Link href={`${detailBase}/${s.id}`}>Ver</Link></Button>
-              </CardContent>
-            </Card>
-          ))}
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium">{s.name}</p>
+                    <p className="line-clamp-2 text-sm text-muted-foreground">{s.shortDescription ?? s.description}</p>
+                    <p className="text-sm">
+                      R$ {s.price.toFixed(2)} · ⭐ {s.rating.toFixed(1)} ({s.reviewCount})
+                    </p>
+                    {s.provider?.partnerProfile?.city && (
+                      <p className="text-xs text-muted-foreground">
+                        {s.provider.partnerProfile.city} — {s.provider.partnerProfile.state}
+                      </p>
+                    )}
+                  </div>
+                  <Button asChild size="sm" variant="outline">
+                    <Link href={`${detailBase}/${s.id}`}>Ver</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
         </>
       )}
     </div>

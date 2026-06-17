@@ -15,8 +15,6 @@ interface RoleDashboardProps {
 
 export function RoleDashboard({ title, description, actions = [] }: RoleDashboardProps) {
   const { user, loading } = useCurrentUser();
-  const isPending = user?.accountStatus === "PENDING";
-
   return (
     <>
       <AppHeader title={title} />
@@ -25,21 +23,6 @@ export function RoleDashboard({ title, description, actions = [] }: RoleDashboar
           <div className="h-40 animate-pulse rounded-2xl bg-ecopet-gray/10" />
         ) : (
           <>
-            {isPending && (
-              <Card className="mb-6 border-amber-200 bg-amber-50">
-                <CardHeader className="pb-2">
-                  <CardTitle className="flex items-center gap-2 text-amber-900">
-                    <Clock className="h-5 w-5" />
-                    Conta pendente de aprovação
-                  </CardTitle>
-                  <CardDescription className="text-amber-800">
-                    Sua documentação está em análise. Você receberá um e-mail quando a conta for aprovada.
-                    Enquanto isso, explore recursos limitados da plataforma.
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            )}
-
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">

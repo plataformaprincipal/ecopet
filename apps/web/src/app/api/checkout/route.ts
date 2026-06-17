@@ -16,6 +16,7 @@ export async function POST(request: Request) {
     const order = await checkoutFromCart({
       userId: user!.id,
       deliveryMethod: parsed.data.deliveryMethod,
+      paymentMethod: parsed.data.paymentMethod,
       phone: parsed.data.phone,
       notes: parsed.data.notes,
       address: parsed.data.address,

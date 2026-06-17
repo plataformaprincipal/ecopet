@@ -15,6 +15,7 @@ import { formatSocialTime } from "@/lib/social/config";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
+import { avatarAlt } from "@/lib/accessibility/image-alt";
 import { useTranslation } from "@/providers/i18n-provider";
 
 export function MessagesPageContent() {
@@ -81,7 +82,7 @@ export function MessagesPageContent() {
                   )}
                 >
                   <div className="relative h-12 w-12 overflow-hidden rounded-full">
-                    <Image src={conv.participant.avatar} alt="" width={48} height={48} className="object-cover" />
+                    <Image src={conv.participant.avatar} alt={avatarAlt(conv.participant.name)} width={48} height={48} className="object-cover" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between">

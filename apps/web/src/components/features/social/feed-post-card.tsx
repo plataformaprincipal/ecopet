@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { productImageAlt } from "@/lib/accessibility/image-alt";
 import {
   Heart,
   MessageCircle,
@@ -136,7 +137,12 @@ export function FeedPostCard({ post, showCommentsDefault = false }: FeedPostCard
             {post.type === "carousel" && post.media.length > 1 ? (
               <>
                 <div className="relative aspect-square">
-                  <Image src={post.media[carouselIndex].url} alt="" fill className="object-cover" />
+                  <Image
+                    src={post.media[carouselIndex].url}
+                    alt={post.media[carouselIndex].alt ?? `Mídia de ${post.author.name}`}
+                    fill
+                    className="object-cover"
+                  />
                 </div>
                 <button
                   type="button"
@@ -162,7 +168,12 @@ export function FeedPostCard({ post, showCommentsDefault = false }: FeedPostCard
               </>
             ) : (
               <Link href={`/social/post/${post.id}`} className="relative block aspect-square">
-                <Image src={post.media[0].url} alt="" fill className="object-cover" />
+                <Image
+                  src={post.media[0].url}
+                  alt={post.media[0].alt ?? `Mídia de ${post.author.name}`}
+                  fill
+                  className="object-cover"
+                />
                 {post.type === "reel" && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/20">
                     <div className="rounded-full bg-white/90 px-4 py-2 text-sm font-semibold">▶ Reel</div>
@@ -209,7 +220,7 @@ export function FeedPostCard({ post, showCommentsDefault = false }: FeedPostCard
         {post.marketplace && (
           <div className="mx-4 mb-3 flex items-center gap-3 rounded-xl border border-ecopet-green/20 bg-ecopet-green/5 p-3">
             <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg">
-              <Image src={post.marketplace.image} alt="" fill className="object-cover" />
+              <Image src={post.marketplace.image} alt={productImageAlt(post.marketplace.name)} fill className="object-cover" />
             </div>
             <div className="flex-1">
               <p className="text-sm font-semibold">{post.marketplace.name}</p>
@@ -237,7 +248,7 @@ export function FeedPostCard({ post, showCommentsDefault = false }: FeedPostCard
         {post.adoption && (
           <div className="mx-4 mb-3 flex items-center gap-3 rounded-xl border border-rose-500/20 bg-rose-500/5 p-3">
             <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg">
-              <Image src={post.adoption.image} alt="" fill className="object-cover" />
+              <Image src={post.adoption.image} alt={`Foto de ${post.adoption.petName} para adoção`} fill className="object-cover" />
             </div>
             <div className="flex-1">
               <p className="text-sm font-semibold">{post.adoption.petName} — {post.adoption.species}</p>

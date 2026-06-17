@@ -1172,6 +1172,8 @@ model Product {
   name             String
   slug             String?
   description      String
+  shortDescription String?
+  subcategory      String?
   catalogCategory  ProductCatalogCategory?
   brand            String?
   speciesTarget    PetSpecies?
@@ -1179,10 +1181,16 @@ model Product {
   comparePrice     Float?
   images           Json?
   stock            Int                    @default(0)
+  minStock         Int                    @default(0)
+  unit             String?
   sku              String?
   barcode          String?
   weightGrams      Int?
   dimensions       Json?
+  tags             Json?
+  pickupAvailable  Boolean                @default(true)
+  deliveryAvailable Boolean               @default(true)
+  extraDetails     Json?
   status           ProductCatalogStatus   @default(DRAFT)
   isFeatured       Boolean                @default(false)
   isSponsored      Boolean                @default(false)
@@ -1594,7 +1602,10 @@ model Service {
   category    ReadyServiceCategory
   name        String
   description String
+  shortDescription String?
+  subcategory String?
   price       Float
+  priceOnRequest Boolean           @default(false)
   durationMin Int?
   image       String?
   rating         Float                @default(0)
@@ -1603,6 +1614,11 @@ model Service {
   status      PartnerServiceStatus @default(DRAFT)
   modality    ServiceModality?
   speciesTarget PetSpecies?
+  city        String?
+  state       String?
+  serviceLocation String?
+  tags        Json?
+  extraDetails Json?
   notes       String?
   approvalStatus ContentApprovalStatus @default(PENDING)
   deletedAt   DateTime?

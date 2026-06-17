@@ -55,14 +55,22 @@ async function main() {
   const activeEmail = `partner.act.${ts}@test.ecopet.local`;
   const clientEmail = `client.appt.${ts}@test.ecopet.local`;
 
-  await registerPartner(pendingEmail, AccountStatus.PENDING, ts + 1);
-  const pendingSvc = await req("/api/partner/services", {
+  await registerPartner(pendingEmail, AccountStatus.ACTIVE, ts + 1);
+  const partnerSvc = await req("/api/partner/services", {
     method: "POST",
     body: JSON.stringify({
-      name: "Banho", description: "Banho completo", category: "BATH_GROOMING", price: 50, durationMin: 60,
+      name: "Banho", description: "Banho completo", category: "BATH_GROOMING", price: 50, durationMin: 60, status: "ACTIVE",
     }),
   });
-  assert(pendingSvc.status === 403, "pending partner blocked");
+  assert(partnerSvc.status === 201, "partner ativo cria serviço imediatamente");
+
+  await prisma.user.update({ where: { email: pendingEmail }, data: { accountStatus: AccountStatus.SUSPENDED } });
+  jar.clear();
+  const suspendedLogin = await req("/api/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email: pendingEmail, password: pwd }),
+  });
+  assert(suspendedLogin.status === 403, "parceiro suspenso não faz login");
 
   await registerPartner(activeEmail, AccountStatus.ACTIVE, ts + 2);
   await login(activeEmail);

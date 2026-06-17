@@ -23,6 +23,7 @@ import { fetchPartner, fetchPartnerProducts, fetchPartnerServices, fetchReviews 
 import { getQuotesForPartner } from "@/lib/ecosystem/quotes-api";
 import type { MarketplacePartner, MarketplaceProduct, MarketplaceService, MarketplaceReview } from "@/lib/marketplace/types";
 import type { CustomQuote } from "@/lib/ecosystem/types";
+import { avatarAlt } from "@/lib/accessibility/image-alt";
 import { cn } from "@/lib/utils";
 
 const TYPE_LABELS: Record<string, string> = {
@@ -77,7 +78,7 @@ export function PartnerProfileContent({ id, expanded, tabOnly }: PartnerProfileC
   return (
     <div>
       <div className="relative h-40 overflow-hidden rounded-2xl lg:h-56">
-        <Image src={partner.cover} alt="" fill className="object-cover" />
+        <Image src={partner.cover} alt="" fill className="object-cover" aria-hidden />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
       </div>
 
@@ -85,7 +86,7 @@ export function PartnerProfileContent({ id, expanded, tabOnly }: PartnerProfileC
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="flex items-end gap-4">
             <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl border-4 border-white shadow-lg dark:border-[#0f1419] lg:h-28 lg:w-28">
-              <Image src={partner.avatar} alt={partner.name} fill className="object-cover" />
+              <Image src={partner.avatar} alt={avatarAlt(partner.tradeName || partner.name)} fill className="object-cover" />
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
@@ -268,7 +269,7 @@ function renderTabContent(
           {partner.portfolio.map((item) => (
             <div key={item.id} className="overflow-hidden rounded-2xl">
               <div className="relative aspect-video">
-                <Image src={item.url} alt={item.caption ?? ""} fill className="object-cover" />
+                <Image src={item.url} alt={item.caption || `Foto do portfólio de ${partner.tradeName}`} fill className="object-cover" />
               </div>
               {item.caption && <p className="p-2 text-sm text-ecopet-gray">{item.caption}</p>}
             </div>
@@ -293,7 +294,7 @@ function renderTabContent(
                 <div key={r.id} className="rounded-xl border p-4">
                   <div className="flex items-center gap-2">
                     <div className="relative h-8 w-8 overflow-hidden rounded-full">
-                      <Image src={r.avatar} alt="" fill className="object-cover" />
+                      <Image src={r.avatar} alt={avatarAlt(r.author)} fill className="object-cover" />
                     </div>
                     <span className="text-sm font-semibold">{r.author}</span>
                     <RatingStars rating={r.rating} />

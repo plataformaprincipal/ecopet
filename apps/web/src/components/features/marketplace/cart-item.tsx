@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { formatMpPrice } from "@/lib/marketplace/config";
 import { useMarketplaceStore } from "@/store/marketplace-store";
 import { CartQuoteItem } from "@/components/features/ecosystem/quotes/cart-quote-item";
+import { productImageAlt, serviceImageAlt } from "@/lib/accessibility/image-alt";
 import type { CartItem as CartItemType } from "@/lib/marketplace/types";
 
 interface CartItemProps {
@@ -22,7 +23,12 @@ export function CartItem({ item }: CartItemProps) {
   return (
     <div className="flex gap-3 rounded-xl border border-ecopet-gray/10 p-3">
       <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-gray-100">
-        <Image src={item.image} alt={item.name} fill className="object-cover" />
+        <Image
+          src={item.image}
+          alt={item.type === "service" ? serviceImageAlt(item.name) : productImageAlt(item.name)}
+          fill
+          className="object-cover"
+        />
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">

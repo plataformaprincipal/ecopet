@@ -58,14 +58,15 @@ export default function PetshopWebHomePage() {
               <div className="col-lg-6">
                 <h2 className="petshop-section-title mb-3">Cadastre-se e agende online</h2>
                 <p className="text-muted">
-                  Utilize nossos formulários para cadastro de cliente e pet, e agende tele-busca ou entrega do pet no local.
-                  Todos os campos são obrigatórios para garantir um atendimento seguro e personalizado.
+                  Utilize nossos formulários para cadastro de tutor e pet, atualize o perfil e agende banho, tosa,
+                  tele-busca ou entrega do pet no local. Complemento e referência no endereço são opcionais.
                 </p>
               </div>
               <div className="col-lg-6">
-                <div className="d-grid gap-2 d-sm-flex">
+                <div className="d-grid gap-2 d-sm-flex flex-wrap">
                   <a href="/petshop-web/cadastro-cliente" className="btn btn-success btn-lg flex-fill">Cadastro Cliente</a>
                   <a href="/petshop-web/cadastro-pet" className="btn btn-outline-success btn-lg flex-fill">Cadastro Pet</a>
+                  <a href="/petshop-web/perfil" className="btn btn-outline-success btn-lg flex-fill">Perfil</a>
                   <a href="/petshop-web/agendamento" className="btn btn-warning btn-lg flex-fill text-dark fw-semibold">Agendar</a>
                 </div>
               </div>

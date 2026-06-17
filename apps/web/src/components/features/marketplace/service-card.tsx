@@ -12,6 +12,7 @@ import type { MarketplaceService } from "@/lib/marketplace/types";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/providers/i18n-provider";
 import { useAriaAnnounce } from "@/components/shared/accessibility/aria-live-region";
+import { serviceImageAlt } from "@/lib/accessibility/image-alt";
 
 interface ServiceCardProps {
   service: MarketplaceService;
@@ -43,7 +44,7 @@ export function ServiceCard({ service, compact }: ServiceCardProps) {
   return (
     <article className="group flex flex-col overflow-hidden rounded-2xl border border-ecopet-gray/10 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg dark:bg-white/5">
       <Link href={`/marketplace/servico/${service.id}`} className="relative block aspect-video overflow-hidden bg-gray-100">
-        <Image src={service.image} alt={service.name} fill className="object-cover transition-transform group-hover:scale-105" sizes="(max-width:768px) 100vw, 33vw" />
+        <Image src={service.image} alt={serviceImageAlt(service.name)} fill className="object-cover transition-transform group-hover:scale-105" sizes="(max-width:768px) 100vw, 33vw" />
         <div className="absolute left-2 top-2 flex flex-wrap gap-1">
           <Badge className="bg-ecopet-dark text-white">{t("marketplace.serviceBadge")}</Badge>
           {service.emergency && <Badge className="bg-red-500 text-white">{t("marketplace.emergency")}</Badge>}

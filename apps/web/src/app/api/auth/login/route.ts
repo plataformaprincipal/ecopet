@@ -13,6 +13,7 @@ import { dashboardPathForRole } from "@/lib/auth/dashboard";
 import { loginSchema } from "@/schemas/auth";
 import { apiSuccess, apiFailure } from "@/lib/api-response";
 import { checkAuthRateLimit, clientIp } from "@/lib/rate-limit";
+import { isInstitutionalCatalogUser } from "@/lib/catalog/constants";
 
 const BLOCKED_STATUSES: AccountStatus[] = [AccountStatus.REJECTED, AccountStatus.SUSPENDED];
 const LOGIN_LIMIT = 10;
@@ -44,6 +45,14 @@ export async function POST(request: Request) {
       return apiFailure(
         "ACCOUNT_UNAVAILABLE",
         "Sua conta está indisponível. Entre em contato com o suporte ECOPET.",
+        403
+      );
+    }
+
+    if (isInstitutionalCatalogUser(user)) {
+      return apiFailure(
+        "ACCOUNT_UNAVAILABLE",
+        "Conta institucional sem acesso de login público.",
         403
       );
     }

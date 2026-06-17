@@ -1,6 +1,8 @@
 /**
- * ECOPET Petshop Web — JavaScript dinâmico
- * Carrossel, relógio, validação de formulários e interações
+ * ECOPET Petshop Web — JavaScript dinâmico (Fase 2)
+ * -------------------------------------------------
+ * Módulos: relógio, carrossel Bootstrap, validação de formulários,
+ * CEP, serviços (banho/tosa), agendamento e contadores animados.
  */
 (function () {
   "use strict";
@@ -12,7 +14,7 @@
 
     function tick() {
       var now = new Date();
-      var options = {
+      el.textContent = now.toLocaleDateString("pt-BR", {
         weekday: "long",
         day: "2-digit",
         month: "long",
@@ -20,15 +22,14 @@
         hour: "2-digit",
         minute: "2-digit",
         second: "2-digit",
-      };
-      el.textContent = now.toLocaleDateString("pt-BR", options);
+      });
     }
 
     tick();
     setInterval(tick, 1000);
   }
 
-  /* ── Carrossel Bootstrap — auto-play e indicadores ── */
+  /* ── Carrossel Bootstrap — auto-play e controles customizados ── */
   function initCarousel() {
     var carouselEl = document.getElementById("petshopHeroCarousel");
     if (!carouselEl || typeof bootstrap === "undefined") return;
@@ -40,25 +41,50 @@
       pause: "hover",
     });
 
-    /* Botões customizados */
     var prevBtn = document.getElementById("carouselPrev");
     var nextBtn = document.getElementById("carouselNext");
     if (prevBtn) prevBtn.addEventListener("click", function () { carousel.prev(); });
     if (nextBtn) nextBtn.addEventListener("click", function () { carousel.next(); });
   }
 
-  /* ── Destaque do menu ativo ── */
+  /* ── Destaque do menu ativo conforme URL ── */
   function initActiveNav() {
     var path = window.location.pathname;
     document.querySelectorAll(".petshop-navbar .nav-link").forEach(function (link) {
       var href = link.getAttribute("href");
-      if (href && path === href) {
-        link.classList.add("active");
-      }
+      if (href && path === href) link.classList.add("active");
     });
   }
 
-  /* ── Validação genérica de formulários ── */
+  /* ── Valida CEP (8 dígitos) nos formulários com endereço ── */
+  function validateCepFields(form) {
+    var valid = true;
+    form.querySelectorAll('[id$="-zipCode"]').forEach(function (cepInput) {
+      cepInput.classList.remove("is-invalid");
+      var digits = cepInput.value.replace(/\D/g, "");
+      if (digits.length !== 8) {
+        cepInput.classList.add("is-invalid");
+        valid = false;
+      }
+    });
+    return valid;
+  }
+
+  /* ── Valida seleção de serviços Banho/Tosa no agendamento ── */
+  function validateServicos(form) {
+    var checkboxes = form.querySelectorAll('input[name="servico"]:checked');
+    var errorEl = document.getElementById("servicoError");
+    if (!form.querySelector('input[name="servico"]')) return true;
+
+    if (checkboxes.length === 0) {
+      if (errorEl) errorEl.style.display = "block";
+      return false;
+    }
+    if (errorEl) errorEl.style.display = "none";
+    return true;
+  }
+
+  /* ── Validação genérica de campos obrigatórios ── */
   function validateForm(form) {
     var valid = true;
     var firstInvalid = null;
@@ -86,15 +112,16 @@
       }
     });
 
-    /* E-mail */
-    var emailFields = form.querySelectorAll('input[type="email"]');
-    emailFields.forEach(function (field) {
+    form.querySelectorAll('input[type="email"]').forEach(function (field) {
       if (field.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(field.value)) {
         field.classList.add("is-invalid");
         valid = false;
         if (!firstInvalid) firstInvalid = field;
       }
     });
+
+    if (!validateCepFields(form)) valid = false;
+    if (!validateServicos(form)) valid = false;
 
     if (firstInvalid) firstInvalid.focus();
     return valid;
@@ -121,16 +148,33 @@
       showFeedback(form, true, successMessage);
       form.reset();
       form.querySelectorAll(".is-invalid").forEach(function (f) { f.classList.remove("is-invalid"); });
+      var servicoErr = document.getElementById("servicoError");
+      if (servicoErr) servicoErr.style.display = "none";
+      initSchedulingToggle();
     });
 
-    /* Remove erro ao digitar */
     form.querySelectorAll("input, select, textarea").forEach(function (field) {
       field.addEventListener("input", function () { field.classList.remove("is-invalid"); });
       field.addEventListener("change", function () { field.classList.remove("is-invalid"); });
     });
+
+    form.querySelectorAll('input[name="servico"]').forEach(function (cb) {
+      cb.addEventListener("change", function () {
+        var errorEl = document.getElementById("servicoError");
+        if (errorEl) errorEl.style.display = "none";
+      });
+    });
   }
 
-  /* ── Agendamento: mostrar/ocultar endereço ── */
+  /* ── Agendamento: data mínima = hoje; endereço só em tele-busca ── */
+  function initSchedulingDate() {
+    var dateInput = document.getElementById("dataAgendamento");
+    if (!dateInput) return;
+    var today = new Date();
+    var iso = today.toISOString().slice(0, 10);
+    dateInput.setAttribute("min", iso);
+  }
+
   function initSchedulingToggle() {
     var form = document.getElementById("formAgendamento");
     if (!form) return;
@@ -141,7 +185,7 @@
     function update() {
       var selected = form.querySelector('input[name="tipoServico"]:checked');
       if (!addressBlock || !selected) return;
-      if (selected.value === "entrega") {
+      if (selected.value === "tele-busca") {
         addressBlock.style.display = "block";
         addressBlock.querySelectorAll("[data-entrega-required]").forEach(function (f) {
           f.setAttribute("required", "required");
@@ -159,7 +203,7 @@
     update();
   }
 
-  /* ── Contador animado nos cards ── */
+  /* ── Contador animado nos cards da home ── */
   function initCounters() {
     document.querySelectorAll("[data-counter]").forEach(function (el) {
       var target = parseInt(el.getAttribute("data-counter"), 10);
@@ -176,18 +220,22 @@
     });
   }
 
-  /* ── Inicialização ── */
+  /* ── Inicialização geral ── */
   function init() {
     initClock();
     initActiveNav();
+    initSchedulingDate();
     initSchedulingToggle();
     initCounters();
 
-    bindForm("formCadastroCliente", "Cadastro realizado com sucesso! Em breve entraremos em contato.");
+    bindForm("formCadastroCliente", "Cadastro do tutor realizado com sucesso! Em breve entraremos em contato.");
     bindForm("formCadastroPet", "Pet cadastrado com sucesso! Vinculado ao perfil do tutor.");
-    bindForm("formAgendamento", "Agendamento confirmado! Você receberá confirmação por e-mail/SMS.");
+    bindForm("formPerfilTutorPet", "Perfil do tutor e do pet atualizado com sucesso!");
+    bindForm(
+      "formAgendamento",
+      "Agendamento confirmado! Você receberá confirmação por e-mail/SMS com data, horário e serviço escolhido."
+    );
 
-    /* Bootstrap carousel após bundle carregar */
     if (typeof bootstrap !== "undefined") {
       initCarousel();
     } else {

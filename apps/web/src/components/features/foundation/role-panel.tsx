@@ -3,6 +3,7 @@ import { formatUserRole } from "@/lib/auth/format-user-role";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { LogoutButton } from "@/components/shared/auth/logout-button";
 
 interface FoundationRolePanelProps {
   user: SafeUser;
@@ -76,7 +77,7 @@ export function FoundationRolePanel({ user, title, description }: FoundationRole
                   <Button asChild variant="outline"><Link href="/carrinho">Carrinho</Link></Button>
                 </>
               )}
-              {user.role === "PARTNER" && user.accountStatus === "ACTIVE" && (
+              {user.role === "PARTNER" && user.accountStatus !== "SUSPENDED" && user.accountStatus !== "REJECTED" && (
                 <>
                   <Button asChild variant="outline"><Link href="/dashboard/partner/services">Serviços</Link></Button>
                   <Button asChild variant="outline"><Link href="/dashboard/partner/products">Produtos</Link></Button>
@@ -98,6 +99,7 @@ export function FoundationRolePanel({ user, title, description }: FoundationRole
               <Button asChild variant="outline">
                 <Link href="/configuracoes">Configurações</Link>
               </Button>
+              <LogoutButton />
             </div>
           </CardContent>
         </Card>

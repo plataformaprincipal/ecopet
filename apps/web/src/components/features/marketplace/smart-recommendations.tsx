@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { AI_TAG_LABELS } from "@/lib/marketplace/config";
+import { productImageAlt } from "@/lib/accessibility/image-alt";
 import type { AiRecommendation } from "@/lib/marketplace/types";
 
 interface SmartRecommendationsProps {
@@ -29,7 +30,7 @@ export function SmartRecommendations({ recommendations, title = "Recomendados pe
           >
             {rec.image && (
               <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl">
-                <Image src={rec.image} alt="" fill className="object-cover" />
+                <Image src={rec.image} alt={productImageAlt(rec.title)} fill className="object-cover" />
               </div>
             )}
             <div className="min-w-0">

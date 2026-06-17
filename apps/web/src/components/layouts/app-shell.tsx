@@ -15,7 +15,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const mode = getNavigationMode(loading, role);
 
   const usePublicShell =
-    isPublicMarketplacePath(pathname) && (mode === "loading" || mode === "unauthenticated");
+    isPublicMarketplacePath(pathname) && mode === "unauthenticated";
 
   if (usePublicShell) {
     return (

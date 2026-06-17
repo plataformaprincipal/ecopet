@@ -1,13 +1,22 @@
 import { prisma } from "@/lib/prisma";
-import { OrderStatus, DeliveryMethod, Prisma } from "@prisma/client";
+import { OrderStatus, DeliveryMethod, PaymentMethod, Prisma } from "@prisma/client";
 import { createInternalNotification } from "@/lib/notifications/internal";
 import { emailOrderEvent } from "@/lib/mail/event-dispatch";
 import { getOrCreateCart, serializeCart } from "@/lib/cart/cart-service";
-import { createPaymentIntentSafe } from "@/lib/payments/gateway";
+
+const PAYMENT_AT_DELIVERY_LABEL: Record<PaymentMethod, string> = {
+  PIX: "PIX na entrega",
+  CARD: "Cartão na entrega",
+  CASH: "Dinheiro na entrega",
+  TRANSFER: "Transferência",
+  WALLET: "Carteira",
+  BOLETO: "Boleto",
+};
 
 export async function checkoutFromCart(params: {
   userId: string;
   deliveryMethod: DeliveryMethod;
+  paymentMethod?: PaymentMethod;
   phone: string;
   notes?: string | null;
   address: Prisma.InputJsonValue;
@@ -18,6 +27,8 @@ export async function checkoutFromCart(params: {
   if (serialized.multiPartner) throw new Error("MULTI_PARTNER_CART");
 
   const partnerId = serialized.partnerId!;
+  const paymentMethod = params.paymentMethod ?? PaymentMethod.PIX;
+  const paymentNote = PAYMENT_AT_DELIVERY_LABEL[paymentMethod] ?? paymentMethod;
   const orderNumber = (await prisma.order.aggregate({ _max: { orderNumber: true } }))._max.orderNumber ?? 1000;
 
   const order = await prisma.$transaction(async (tx) => {
@@ -53,6 +64,7 @@ export async function checkoutFromCart(params: {
         total: serialized.subtotal,
         shippingAddress: params.address,
         deliveryMethod: params.deliveryMethod,
+        paymentMethod,
         deliveryNotes: params.notes ?? null,
         items: {
           create: serialized.items.map((item) => ({
@@ -65,7 +77,10 @@ export async function checkoutFromCart(params: {
           })),
         },
         statusHistory: {
-          create: { status: OrderStatus.PENDING_CONFIRMATION, note: "Pedido criado" },
+          create: {
+            status: OrderStatus.PENDING_CONFIRMATION,
+            note: `Pedido criado — pagamento: ${paymentNote}`,
+          },
         },
       },
       include: { items: true },
@@ -111,15 +126,6 @@ export async function checkoutFromCart(params: {
       `Você recebeu o pedido #${order.orderNumber}.`
     );
   }
-
-  // Etapa 9A — registra intenção apenas se gateway real configurado; nunca simula pagamento
-  void createPaymentIntentSafe({
-    orderId: order.id,
-    orderNumber: order.orderNumber,
-    amount: order.total,
-    customerEmail: user?.email ?? "",
-    customerName: user?.name ?? "",
-  });
 
   return order;
 }

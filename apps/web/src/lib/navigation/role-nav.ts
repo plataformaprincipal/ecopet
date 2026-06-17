@@ -27,7 +27,7 @@ export type RoleSecondaryNavItem = {
 };
 
 const CLIENT_MAIN: RoleNavItem[] = [
-  { href: "/", labelKey: "nav.home", icon: Home, match: ["/", "/inicio", "/feed"] },
+  { href: "/inicio", labelKey: "nav.home", icon: Home, match: ["/inicio", "/feed"] },
   { href: "/marketplace", labelKey: "nav.marketplace", icon: ShoppingBag, match: ["/marketplace"] },
   {
     href: "/dashboard/client",
@@ -52,7 +52,7 @@ const CLIENT_SECONDARY: RoleSecondaryNavItem[] = [
 ];
 
 const PARTNER_MAIN: RoleNavItem[] = [
-  { href: "/", labelKey: "nav.home", icon: Home, match: ["/", "/inicio"] },
+  { href: "/inicio", labelKey: "nav.home", icon: Home, match: ["/inicio", "/feed"] },
   { href: "/marketplace", labelKey: "nav.marketplace", icon: ShoppingBag, match: ["/marketplace"] },
   {
     href: "/dashboard/partner",
@@ -82,7 +82,7 @@ const PARTNER_SECONDARY: RoleSecondaryNavItem[] = [
 ];
 
 const ONG_MAIN: RoleNavItem[] = [
-  { href: "/", labelKey: "nav.home", icon: Home, match: ["/", "/inicio"] },
+  { href: "/inicio", labelKey: "nav.home", icon: Home, match: ["/inicio", "/feed"] },
   { href: "/adocao", labelKey: "nav.adoption", icon: Heart, match: ["/adocao", "/ong"] },
   {
     href: "/dashboard/ong",

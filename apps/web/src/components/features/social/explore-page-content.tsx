@@ -52,7 +52,7 @@ export function ExplorePageContent() {
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {section.items.map((item) => (
                     <Link key={item.id} href={item.href} className="group relative aspect-square overflow-hidden rounded-2xl">
-                      {item.image && <Image src={item.image} alt="" fill className="object-cover transition group-hover:scale-105" />}
+                      {item.image && <Image src={item.image} alt={item.title} fill className="object-cover transition group-hover:scale-105" />}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                       <div className="absolute bottom-2 left-2 right-2 text-white">
                         <p className="text-sm font-semibold">{item.title}</p>
@@ -84,7 +84,7 @@ export function ExplorePageContent() {
                         <CardContent className="flex items-center gap-3 p-3">
                           {item.image && (
                             <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl">
-                              <Image src={item.image} alt="" fill className="object-cover" />
+                              <Image src={item.image} alt={item.title} fill className="object-cover" />
                             </div>
                           )}
                           <div className="flex-1">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import type { AccountStatus } from "@prisma/client";
 import { SESSION_CHANGED_EVENT } from "@/lib/auth/session-events";
@@ -28,6 +28,7 @@ export function useFoundationSession() {
   const pathname = usePathname();
   const [user, setUser] = useState<FoundationSession | null>(null);
   const [loading, setLoading] = useState(true);
+  const hasResolvedOnce = useRef(false);
 
   const refreshUser = useCallback(async () => {
     setLoading(true);
@@ -37,20 +38,26 @@ export function useFoundationSession() {
       setUser(null);
     } finally {
       setLoading(false);
+      hasResolvedOnce.current = true;
     }
   }, []);
 
   useEffect(() => {
     let cancelled = false;
+    const isInitialLoad = !hasResolvedOnce.current;
 
     (async () => {
+      if (isInitialLoad) setLoading(true);
       try {
         const sessionUser = await fetchFoundationSession();
         if (!cancelled) setUser(sessionUser);
       } catch {
-        if (!cancelled) setUser(null);
+        if (!cancelled && isInitialLoad) setUser(null);
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          if (isInitialLoad) setLoading(false);
+          hasResolvedOnce.current = true;
+        }
       }
     })();
 

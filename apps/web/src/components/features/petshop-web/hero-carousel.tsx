@@ -1,25 +1,33 @@
 import Image from "next/image";
 
+/**
+ * Carrossel Bootstrap da página inicial — Fase 2
+ * Imagens com atributo alt para audiodescrição (acessibilidade).
+ */
 const SLIDES = [
   {
     img: "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=1200&q=80",
     title: "Bem-vindo ao Pet Shop ECOPET",
     text: "Cuidado premium para o seu melhor amigo — Grupo Café Platine",
+    alt: "Cão feliz recebendo carinho de um profissional em ambiente de pet shop iluminado",
   },
   {
     img: "https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=1200&q=80",
     title: "Banho, Tosa & Bem-estar",
     text: "Profissionais qualificados e produtos selecionados",
+    alt: "Cachorro de pelo branco após banho e tosa, com aparência limpa e bem cuidada",
   },
   {
     img: "https://images.unsplash.com/photo-1628009368238-7bb8cfc3877f?w=1200&q=80",
     title: "Tele-busca Veterinária",
     text: "Agende consulta remota com um clique",
+    alt: "Tutor segurando gato enquanto conversa por videochamada com veterinário em teleatendimento",
   },
   {
     img: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=1200&q=80",
     title: "Entrega Domiciliar do Pet",
     text: "Buscamos e levamos seu pet com total segurança",
+    alt: "Cão golden retriever sorridente em ambiente domiciliar acolhedor",
   },
 ];
 
@@ -35,7 +43,7 @@ export function HeroCarousel() {
             data-bs-slide-to={i}
             className={i === 0 ? "active" : ""}
             aria-current={i === 0 ? "true" : undefined}
-            aria-label={`Slide ${i + 1}`}
+            aria-label={`Slide ${i + 1}: ${SLIDES[i].title}`}
           />
         ))}
       </div>
@@ -45,7 +53,7 @@ export function HeroCarousel() {
           <div key={i} className={`carousel-item${i === 0 ? " active" : ""}`}>
             <Image
               src={slide.img}
-              alt={slide.title}
+              alt={slide.alt}
               width={1200}
               height={600}
               className="d-block w-100"
@@ -63,11 +71,23 @@ export function HeroCarousel() {
         ))}
       </div>
 
-      <button id="carouselPrev" className="carousel-control-prev" type="button" data-bs-target="#petshopHeroCarousel" data-bs-slide="prev">
+      <button
+        id="carouselPrev"
+        className="carousel-control-prev"
+        type="button"
+        data-bs-target="#petshopHeroCarousel"
+        data-bs-slide="prev"
+      >
         <span className="carousel-control-prev-icon" aria-hidden="true" />
         <span className="visually-hidden">Anterior</span>
       </button>
-      <button id="carouselNext" className="carousel-control-next" type="button" data-bs-target="#petshopHeroCarousel" data-bs-slide="next">
+      <button
+        id="carouselNext"
+        className="carousel-control-next"
+        type="button"
+        data-bs-target="#petshopHeroCarousel"
+        data-bs-slide="next"
+      >
         <span className="carousel-control-next-icon" aria-hidden="true" />
         <span className="visually-hidden">Próximo</span>
       </button>

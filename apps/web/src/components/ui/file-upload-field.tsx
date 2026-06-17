@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { UploadPurpose } from "@/lib/upload/cloudinary";
@@ -14,7 +15,13 @@ type FileUploadFieldProps = {
   accept?: string;
   allowManualUrl?: boolean;
   manualUrlLabel?: string;
+  previewAlt?: string;
+  fieldId?: string;
 };
+
+function isImageUrl(url: string) {
+  return /\.(jpe?g|png|gif|webp)(\?|$)/i.test(url) || url.includes("cloudinary.com");
+}
 
 export function FileUploadField({
   purpose,
@@ -24,10 +31,15 @@ export function FileUploadField({
   accept,
   allowManualUrl = true,
   manualUrlLabel = "Ou informe URL",
+  previewAlt,
+  fieldId,
 }: FileUploadFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+  const id = fieldId ?? `upload-${purpose}`;
+  const errorId = `${id}-error`;
+  const hintId = `${id}-hint`;
 
   async function handleFile(file: File | null) {
     if (!file) return;
@@ -43,15 +55,21 @@ export function FileUploadField({
     }
   }
 
+  const imageAlt = previewAlt ?? `Pré-visualização: ${label}`;
+
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium">{label}</label>
+      <label htmlFor={id} className="text-sm font-medium">
+        {label}
+      </label>
       <div className="flex flex-wrap items-center gap-2">
         <input
           ref={inputRef}
+          id={id}
           type="file"
           className="hidden"
           accept={accept}
+          aria-describedby={`${hintId}${error ? ` ${errorId}` : ""}`}
           onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
         />
         <Button
@@ -69,14 +87,27 @@ export function FileUploadField({
           </a>
         )}
       </div>
+      {value && isImageUrl(value) && (
+        <div className="relative h-24 w-24 overflow-hidden rounded-lg border">
+          <Image src={value} alt={imageAlt} fill className="object-cover" unoptimized />
+        </div>
+      )}
       {allowManualUrl && (
         <Input
           placeholder={manualUrlLabel}
           value={value ?? ""}
           onChange={(e) => onChange(e.target.value)}
+          aria-describedby={hintId}
         />
       )}
-      {error && <p className="text-xs text-red-600">{error}</p>}
+      <p id={hintId} className="text-xs text-muted-foreground">
+        Formatos aceitos conforme o campo. A imagem terá texto alternativo descritivo na vitrine.
+      </p>
+      {error && (
+        <p id={errorId} className="text-xs text-red-600" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

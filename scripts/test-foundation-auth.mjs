@@ -135,7 +135,21 @@ async function main() {
   });
   assert(partner.status === 201, "register partner 201");
   assert(partner.data.data?.redirectTo === "/dashboard/partner", "redirect partner");
-  assert(partner.data.data?.user?.accountStatus === "PENDING", "partner PENDING");
+  assert(partner.data.data?.user?.accountStatus === "ACTIVE", "partner ACTIVE imediato");
+  assert(!partner.data.data?.pendingApproval, "sem pendingApproval no cadastro");
+
+  const partnerMe = await req("/api/auth/me");
+  assert(partnerMe.status === 200, "partner sessão após cadastro");
+  assert(partnerMe.data.data?.user?.role === "PARTNER", "partner role após cadastro");
+
+  cookieJar.delete("cookie");
+  const partnerLogin = await req("/api/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email: partnerEmail, password }),
+  });
+  assert(partnerLogin.status === 200, "partner login imediato");
+  assert(partnerLogin.data.data?.redirectTo === "/dashboard/partner", "partner redirect login");
+  assert(partnerLogin.data.data?.user?.accountStatus === "ACTIVE", "partner ACTIVE no login");
 
   // 9. Duplicate CNPJ
   const dupCnpj = await req("/api/auth/register", {
@@ -178,7 +192,17 @@ async function main() {
     }),
   });
   assert(ong.status === 201, "register ong 201");
-  assert(ong.data.data?.user?.accountStatus === "PENDING", "ong PENDING");
+  assert(ong.data.data?.user?.accountStatus === "ACTIVE", "ong ACTIVE imediato");
+  assert(ong.data.data?.redirectTo === "/dashboard/ong", "redirect ong");
+
+  cookieJar.delete("cookie");
+  const ongLogin = await req("/api/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email: ongEmail, password }),
+  });
+  assert(ongLogin.status === 200, "ong login imediato");
+  assert(ongLogin.data.data?.redirectTo === "/dashboard/ong", "ong redirect login");
+  assert(ongLogin.data.data?.user?.accountStatus === "ACTIVE", "ong ACTIVE no login");
 
   // 11. Logout
   const logout = await req("/api/auth/logout", { method: "POST" });

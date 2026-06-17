@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { RatingStars } from "./rating-stars";
 import { useMarketplaceStore } from "@/store/marketplace-store";
 import type { MarketplacePartner } from "@/lib/marketplace/types";
+import { avatarAlt } from "@/lib/accessibility/image-alt";
 import { cn } from "@/lib/utils";
 
 const PARTNER_TYPE_LABELS: Record<string, string> = {
@@ -36,7 +37,7 @@ export function PartnerCard({ partner, horizontal }: PartnerCardProps) {
         className="flex items-center gap-4 rounded-2xl border border-ecopet-gray/10 bg-white p-4 transition-all hover:shadow-md dark:bg-white/5"
       >
         <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl">
-          <Image src={partner.avatar} alt={partner.name} fill className="object-cover" />
+          <Image src={partner.avatar} alt={avatarAlt(partner.tradeName || partner.name)} fill className="object-cover" />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1">
@@ -56,13 +57,13 @@ export function PartnerCard({ partner, horizontal }: PartnerCardProps) {
   return (
     <article className="overflow-hidden rounded-2xl border border-ecopet-gray/10 bg-white shadow-sm transition-all hover:shadow-lg dark:bg-white/5">
       <Link href={`/marketplace/parceiro/${partner.id}`} className="relative block h-24 overflow-hidden">
-        <Image src={partner.cover} alt="" fill className="object-cover" />
+        <Image src={partner.cover} alt="" fill className="object-cover" aria-hidden />
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
       </Link>
       <div className="relative px-4 pb-4">
         <div className="relative -mt-8 mb-2">
           <div className="relative h-16 w-16 overflow-hidden rounded-xl border-4 border-white shadow-md dark:border-[#0f1419]">
-            <Image src={partner.avatar} alt={partner.name} fill className="object-cover" />
+            <Image src={partner.avatar} alt={avatarAlt(partner.tradeName || partner.name)} fill className="object-cover" />
           </div>
         </div>
         <div className="flex items-start justify-between gap-2">

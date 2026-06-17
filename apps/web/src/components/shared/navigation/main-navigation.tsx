@@ -12,6 +12,7 @@ import {
 } from "@/lib/navigation/secure-nav";
 import { useFoundationSession } from "@/hooks/use-foundation-session";
 import { useTranslation } from "@/providers/i18n-provider";
+import { LogoutButton } from "@/components/shared/auth/logout-button";
 
 export function MainNavigation() {
   const pathname = usePathname();
@@ -80,6 +81,12 @@ export function MainNavigation() {
                   );
                 })}
               </div>
+            </div>
+          )}
+
+          {mode === "authenticated" && (
+            <div className="border-t border-ecopet-gray/10 p-3 dark:border-white/10">
+              <LogoutButton variant="sidebar" />
             </div>
           )}
         </>

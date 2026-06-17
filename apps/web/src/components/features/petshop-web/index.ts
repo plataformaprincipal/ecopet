@@ -3,4 +3,5 @@ export { PetshopFooter } from "./petshop-footer";
 export { HeroCarousel } from "./hero-carousel";
 export { ClientRegistrationForm } from "./client-registration-form";
 export { PetRegistrationForm } from "./pet-registration-form";
+export { TutorPetProfileForm } from "./tutor-pet-profile-form";
 export { SchedulingForm } from "./scheduling-form";

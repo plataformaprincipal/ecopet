@@ -25,7 +25,7 @@ async function req(pathname, opts = {}) {
   const cookie = cookieJar.get("cookie");
   if (cookie) headers.Cookie = cookie;
 
-  const res = await fetch(`${WEB}${pathname}`, { ...opts, headers });
+  const res = await fetch(`${WEB}${pathname}`, { ...opts, headers, redirect: "manual" });
   const setCookie = res.headers.get("set-cookie");
   if (setCookie) {
     const session = setCookie.split(";")[0];
@@ -33,8 +33,9 @@ async function req(pathname, opts = {}) {
     if (setCookie.includes("Max-Age=0") || setCookie.includes("max-age=0")) cookieJar.delete("cookie");
   }
 
-  const data = await res.json().catch(() => ({}));
-  return { status: res.status, data };
+  const contentType = res.headers.get("content-type") || "";
+  const data = contentType.includes("json") ? await res.json().catch(() => ({})) : {};
+  return { status: res.status, data, location: res.headers.get("location") };
 }
 
 function navLabelKeysFromRoleNav(roleBlock) {
@@ -66,6 +67,8 @@ async function main() {
   assert(!searchPanel.includes("key={c.slug}"), "search-panel não deve usar apenas c.slug como key");
 
   const roleNavSrc = readSrc("lib/navigation/role-nav.ts");
+  assert(roleNavSrc.includes('href: "/inicio"'), "role-nav autenticado deve apontar Início para /inicio");
+  assert(!roleNavSrc.includes('href: "/", labelKey: "nav.home"'), "role-nav autenticado não deve apontar Início para /");
   assert(!roleNavSrc.includes("common.signIn"), "role-nav autenticado não deve ter Entrar");
   assert(!roleNavSrc.includes("common.createAccount"), "role-nav autenticado não deve ter Criar Conta");
 
@@ -100,7 +103,41 @@ async function main() {
 
   const registerSrc = readSrc("components/features/foundation/register-form.tsx");
   assert(registerSrc.includes("notifySessionChanged"), "cadastro deve notificar mudança de sessão");
+  assert(registerSrc.includes("confirmSessionCookie"), "cadastro deve confirmar cookie antes do redirect");
   assert(registerSrc.includes("router.refresh"), "cadastro deve refrescar após redirect");
+
+  const loginSrc = readSrc("components/features/foundation/login-form.tsx");
+  assert(loginSrc.includes("confirmSessionCookie"), "login deve confirmar cookie antes do redirect");
+
+  const middlewareSrc = readSrc("middleware.ts");
+  assert(middlewareSrc.includes('pathname === "/"') && middlewareSrc.includes('"/inicio"'), "middleware redireciona / autenticado para /inicio");
+
+  const hookSrc2 = readSrc("hooks/use-foundation-session.ts");
+  assert(hookSrc2.includes("hasResolvedOnce"), "hook deve revalidar sessão sem limpar usuário na navegação");
+
+  const logoutClientSrc = readSrc("lib/auth/logout-client.ts");
+  assert(logoutClientSrc.includes("/api/auth/logout"), "logout-client deve chamar API de logout");
+
+  const useLogoutSrc = readSrc("hooks/use-logout.ts");
+  assert(useLogoutSrc.includes("notifySessionChanged"), "useLogout deve notificar mudança de sessão");
+  assert(useLogoutSrc.includes("performLogout"), "useLogout deve usar performLogout");
+
+  const logoutBtnSrc = readSrc("components/shared/auth/logout-button.tsx");
+  assert(logoutBtnSrc.includes('dashboard.logout'), "LogoutButton deve exibir texto Sair");
+
+  const mainNavSrc = readSrc("components/shared/navigation/main-navigation.tsx");
+  assert(mainNavSrc.includes("LogoutButton"), "menu principal deve ter Sair quando autenticado");
+
+  const bottomNavSrc = readSrc("components/shared/navigation/bottom-nav.tsx");
+  assert(bottomNavSrc.includes("LogoutButton"), "menu mobile deve ter Sair quando autenticado");
+
+  assert(rolePanelSrc.includes("LogoutButton"), "painéis devem ter botão Sair");
+
+  const settingsSrc = readSrc("components/features/settings/settings-hub.tsx");
+  assert(settingsSrc.includes("LogoutButton"), "configurações deve ter Sair");
+
+  const profileFormSrc = readSrc("components/features/foundation/profile-form.tsx");
+  assert(profileFormSrc.includes("LogoutButton"), "perfil deve ter Sair");
 
   console.log("[static] código de navegação/sessão OK");
 
@@ -132,11 +169,35 @@ async function main() {
   assert(meAfterRegister.data.data?.user?.role === "CLIENT", "role CLIENT na sessão");
   assert(meAfterRegister.data.data?.user?.email === clientEmail, "email na sessão");
 
+  const feedNav = await req("/feed");
+  assert(feedNav.status === 200, "navegação /feed mantém sessão (200, sem redirect login)");
+  const meAfterFeed = await req("/api/auth/me");
+  assert(meAfterFeed.status === 200, "sessão ativa após /feed");
+  assert(meAfterFeed.data.data?.user?.role === "CLIENT", "role CLIENT após /feed");
+
+  const inicioNav = await req("/inicio");
+  assert(
+    inicioNav.status === 307 || inicioNav.status === 308,
+    "navegação /inicio redireciona para feed"
+  );
+  assert(inicioNav.location?.includes("/feed"), "/inicio redireciona para /feed");
+  const meAfterInicio = await req("/api/auth/me");
+  assert(meAfterInicio.status === 200, "sessão ativa após /inicio");
+  assert(meAfterInicio.data.data?.user?.role === "CLIENT", "role CLIENT após /inicio");
+
+  const homeAuthed = await req("/");
+  assert(
+    homeAuthed.status === 307 || homeAuthed.status === 308,
+    "visitante autenticado em / redireciona para /inicio"
+  );
+  assert(homeAuthed.location?.includes("/inicio"), "/ autenticado redireciona para /inicio");
+
   const logout = await req("/api/auth/logout", { method: "POST" });
   assert(logout.status === 200, "logout ok");
 
   const meAfterLogout = await req("/api/auth/me");
   assert(meAfterLogout.status === 401, "sessão limpa após logout");
+  console.log("[api] logout encerra sessão (me 401)");
 
   const login = await req("/api/auth/login", {
     method: "POST",

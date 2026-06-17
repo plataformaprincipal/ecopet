@@ -40,18 +40,36 @@ export async function hasAppointmentConflict(
   partnerId: string,
   startAt: Date,
   endAt: Date,
-  excludeId?: string
+  excludeId?: string,
+  serviceId?: string
 ) {
-  const conflicts = await prisma.appointment.findFirst({
+  const appointments = await prisma.appointment.findMany({
     where: {
       partnerId,
+      ...(serviceId ? { serviceId } : {}),
       id: excludeId ? { not: excludeId } : undefined,
       status: { in: ["PENDING", "CONFIRMED", "SCHEDULED"] },
-      scheduledAt: { lt: endAt },
-      OR: [{ endAt: { gt: startAt } }, { endAt: null, scheduledAt: { gte: startAt } }],
+    },
+    select: {
+      scheduledAt: true,
+      endAt: true,
+      service: { select: { durationMin: true } },
     },
   });
-  return Boolean(conflicts);
+
+  return appointments.some((a) => {
+    const durationMs = (a.service?.durationMin ?? 60) * 60_000;
+    const aEnd = a.endAt ?? new Date(a.scheduledAt.getTime() + durationMs);
+    return a.scheduledAt < endAt && aEnd > startAt;
+  });
+}
+
+export function resolveServiceType(serviceName: string, category: string): AppointmentServiceType {
+  const lower = serviceName.toLowerCase();
+  if (lower.includes("banho") && lower.includes("tosa")) return "BANHO_TOSA";
+  if (lower.includes("banho")) return "BANHO";
+  if (lower.includes("tosa")) return "TOSA";
+  return defaultServiceType(category);
 }
 
 export function defaultServiceType(category: string): AppointmentServiceType {

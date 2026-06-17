@@ -78,32 +78,6 @@ export function canAccessWithAccountStatus(
     };
   }
 
-  if (accountStatus === "PENDING") {
-    if (isPendingAllowedPath(pathname)) return { allowed: true };
-
-    if (
-      role === "PARTNER" &&
-      PARTNER_PENDING_BLOCKED_PREFIXES.some((p) => pathMatchesPrefix(pathname, p))
-    ) {
-      return {
-        allowed: false,
-        redirectTo: ACCOUNT_STATUS_PAGES.PENDING_REVIEW,
-        code: "PENDING_LIMITED",
-      };
-    }
-
-    if (
-      role === "ONG" &&
-      ONG_PENDING_BLOCKED_PREFIXES.some((p) => pathMatchesPrefix(pathname, p))
-    ) {
-      return {
-        allowed: false,
-        redirectTo: ACCOUNT_STATUS_PAGES.PENDING_REVIEW,
-        code: "PENDING_LIMITED",
-      };
-    }
-  }
-
   return { allowed: true };
 }
 

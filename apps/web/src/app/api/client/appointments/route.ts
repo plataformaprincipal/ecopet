@@ -4,10 +4,11 @@ import { requireClient } from "@/lib/auth/require-auth";
 import { appointmentCreateSchema } from "@/schemas/partner-service";
 import {
   defaultAttendanceMode,
-  defaultServiceType,
   hasAppointmentConflict,
   isWithinAvailability,
+  resolveServiceType,
 } from "@/lib/appointments/booking";
+import { startOfLocalDay, startOfTomorrowLocal } from "@/lib/appointments/datetime";
 import { createInternalNotification } from "@/lib/notifications/internal";
 import { emailAppointmentEvent } from "@/lib/mail/event-dispatch";
 import { AccountStatus, PartnerServiceStatus } from "@prisma/client";
@@ -38,10 +39,15 @@ export async function POST(request: Request) {
     return apiFailure("VALIDATION", parsed.error.errors[0]?.message ?? "Inválido", 400);
   }
 
-  const { petId, serviceId, startAt, notes } = parsed.data;
+  const { petId, serviceId, startAt, notes, attendanceMode, pickupAddress, pickupComplement, pickupReference, pickupPhone } =
+    parsed.data;
   const start = new Date(startAt);
   if (start <= new Date()) {
     return apiFailure("VALIDATION", "Não é possível agendar no passado.", 400);
+  }
+  const startDay = startOfLocalDay(start);
+  if (startDay < startOfTomorrowLocal()) {
+    return apiFailure("VALIDATION", "Agendamentos disponíveis a partir de amanhã.", 400);
   }
 
   const pet = await prisma.pet.findFirst({
@@ -90,8 +96,48 @@ export async function POST(request: Request) {
     return apiFailure("VALIDATION", "Horário bloqueado pelo parceiro.", 400);
   }
 
-  if (await hasAppointmentConflict(service.providerId, start, end)) {
-    return apiFailure("VALIDATION", "Horário indisponível.", 409);
+  if (await hasAppointmentConflict(service.providerId, start, end, undefined, service.id)) {
+    return apiFailure("VALIDATION", "Horário indisponível para este serviço.", 409);
+  }
+
+  const mode = attendanceMode ?? defaultAttendanceMode();
+
+  if (mode === "TELEBUSCA") {
+    if (!pickupAddress?.trim() || !pickupPhone?.trim()) {
+      return apiFailure(
+        "VALIDATION",
+        "Para tele-busca, informe endereço e telefone de contato.",
+        400
+      );
+    }
+  }
+
+  const observationParts: string[] = [];
+  if (notes?.trim()) observationParts.push(notes.trim());
+  if (mode === "TELEBUSCA") {
+    observationParts.push(
+      [
+        "Tele-busca:",
+        `Endereço: ${pickupAddress}`,
+        pickupComplement ? `Complemento: ${pickupComplement}` : null,
+        pickupReference ? `Referência: ${pickupReference}` : null,
+        `Telefone: ${pickupPhone}`,
+      ]
+        .filter(Boolean)
+        .join(" | ")
+    );
+  } else if (mode === "TUTOR_DELIVERY") {
+    const partnerAddr = await prisma.partnerProfile.findUnique({
+      where: { userId: service.providerId },
+      select: { address: true, city: true, state: true, businessHours: true, businessName: true },
+    });
+    if (partnerAddr) {
+      observationParts.push(
+        `Entrega no local: ${partnerAddr.businessName} — ${partnerAddr.address}, ${partnerAddr.city}/${partnerAddr.state}${
+          partnerAddr.businessHours ? ` | Horário: ${partnerAddr.businessHours}` : ""
+        }`
+      );
+    }
   }
 
   const appointment = await prisma.appointment.create({
@@ -100,13 +146,13 @@ export async function POST(request: Request) {
       petId,
       partnerId: service.providerId,
       serviceId: service.id,
-      serviceType: defaultServiceType(service.category),
-      attendanceMode: defaultAttendanceMode(),
+      serviceType: resolveServiceType(service.name, service.category),
+      attendanceMode: mode,
       scheduledDate: start,
       scheduledTime: start.toISOString().slice(11, 16),
       scheduledAt: start,
       endAt: end,
-      observations: notes ?? null,
+      observations: observationParts.length ? observationParts.join("\n") : null,
       status: "PENDING",
     },
   });

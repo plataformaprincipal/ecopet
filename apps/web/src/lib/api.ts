@@ -1,6 +1,6 @@
 import { API_URL } from "./constants";
 import { buildApiUrl } from "./api-url.client";
-import { ApiRequestError, mapApiErrorMessage } from "./api-errors";
+import { ApiRequestError, mapApiErrorMessage, parseApiFailureError } from "./api-errors";
 import { USER_MESSAGES } from "@/schemas/validation/documents";
 
 export async function api<T>(
@@ -26,9 +26,10 @@ export async function api<T>(
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
-    const rawMessage = typeof err.error === "string" ? err.error : USER_MESSAGES.UNEXPECTED;
-    const code = typeof err.code === "string" ? err.code : undefined;
-    const message = mapApiErrorMessage(rawMessage, code);
+    const { code, message: rawMessage } = parseApiFailureError(
+      typeof err === "object" && err !== null ? err : { error: res.statusText }
+    );
+    const message = mapApiErrorMessage(rawMessage || USER_MESSAGES.UNEXPECTED, code);
     throw new ApiRequestError(message, code, res.status);
   }
   return res.json();

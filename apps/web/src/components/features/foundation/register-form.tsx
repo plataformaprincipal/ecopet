@@ -13,8 +13,16 @@ import {
 } from "@/lib/password/validate-strong-password";
 import { dashboardPathForRole } from "@/lib/auth/dashboard";
 import { notifySessionChanged } from "@/lib/auth/session-events";
+import { confirmSessionCookie } from "@/lib/auth/confirm-session";
+import { mapRegisterConflictMessage, parseApiFailureError } from "@/lib/api-errors";
 
 type Role = "CLIENT" | "PARTNER" | "ONG";
+
+const ROLE_OPTIONS: { value: Role; label: string }[] = [
+  { value: "CLIENT", label: "Cliente" },
+  { value: "PARTNER", label: "Parceiro" },
+  { value: "ONG", label: "ONG" },
+];
 
 export function FoundationRegisterForm() {
   const router = useRouter();
@@ -102,15 +110,25 @@ export function FoundationRegisterForm() {
         credentials: "include",
       });
       const data = await res.json();
-      if (!res.ok) {
-        setError(data.error ?? "Erro ao cadastrar");
+      if (!res.ok || data.success === false) {
+        const { code, message } = parseApiFailureError(data);
+        const msg =
+          res.status === 409
+            ? mapRegisterConflictMessage(code, message)
+            : message || "Erro ao cadastrar";
+        setError(msg);
         return;
       }
       const redirectTo =
         data.data?.redirectTo ??
         (data.data?.user?.role ? dashboardPathForRole(data.data.user.role) : "/dashboard");
-      notifySessionChanged();
+      const sessionReady = await confirmSessionCookie();
+      if (!sessionReady) {
+        setError("Conta criada, mas a sessão não foi iniciada. Tente entrar com seu e-mail e senha.");
+        return;
+      }
       router.push(redirectTo);
+      notifySessionChanged();
       router.refresh();
     } catch {
       setError("Não foi possível conectar ao servidor.");
@@ -126,22 +144,32 @@ export function FoundationRegisterForm() {
         <CardDescription>Escolha o tipo de conta e preencha seus dados.</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="flex gap-2">
-            {(["CLIENT", "PARTNER", "ONG"] as Role[]).map((r) => (
-              <Button
-                key={r}
-                type="button"
-                variant={role === r ? "default" : "outline"}
-                onClick={() => setRole(r)}
-              >
-                {r === "CLIENT" ? "Cliente" : r === "PARTNER" ? "Parceiro" : "ONG"}
-              </Button>
-            ))}
-          </div>
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate aria-describedby="register-form-hint">
+          <p id="register-form-hint" className="text-sm text-muted-foreground">
+            Campos com * são obrigatórios. Escolha o tipo de conta abaixo.
+          </p>
 
-          <Field label="Nome completo" value={form.name} onChange={(v) => setField("name", v)} required />
-          <Field label="E-mail" type="email" value={form.email} onChange={(v) => setField("email", v)} required />
+          <fieldset>
+            <legend className="mb-2 text-sm font-medium">Tipo de conta *</legend>
+            <div className="flex flex-wrap gap-4" role="radiogroup">
+              {ROLE_OPTIONS.map((opt) => (
+                <label key={opt.value} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    name="register-role"
+                    value={opt.value}
+                    checked={role === opt.value}
+                    onChange={() => setRole(opt.value)}
+                    required
+                  />
+                  {opt.label}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <Field id="register-name" label="Nome completo" placeholder="Seu nome completo" value={form.name} onChange={(v) => setField("name", v)} required hint="Como aparecerá no seu perfil." />
+          <Field id="register-email" label="E-mail" type="email" placeholder="seu@email.com" value={form.email} onChange={(v) => setField("email", v)} required />
           <FoundationPasswordField
             id="register-password"
             label="Senha"
@@ -189,9 +217,9 @@ export function FoundationRegisterForm() {
             </>
           )}
 
-          {error && <p className="text-sm text-red-600" role="alert">{error}</p>}
+          {error && <p id="register-error" className="text-sm text-red-600" role="alert" aria-live="polite">{error}</p>}
 
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className="w-full" disabled={loading} aria-describedby={error ? "register-error" : undefined}>
             {loading ? "Cadastrando..." : "Cadastrar"}
           </Button>
         </form>
@@ -205,31 +233,50 @@ export function FoundationRegisterForm() {
 }
 
 function Field({
+  id: idProp,
   label,
   value,
   onChange,
   type = "text",
+  placeholder,
   required,
   maxLength,
+  hint,
 }: {
+  id?: string;
   label: string;
   value: string;
   onChange: (v: string) => void;
   type?: string;
+  placeholder?: string;
   required?: boolean;
   maxLength?: number;
+  hint?: string;
 }) {
+  const id = idProp ?? `register-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+  const hintId = hint ? `${id}-hint` : undefined;
   return (
     <div>
-      <label className="text-sm font-medium">{label}</label>
+      <label htmlFor={id} className="text-sm font-medium">
+        {label}
+        {required ? " *" : ""}
+      </label>
       <Input
+        id={id}
         type={type}
+        placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         required={required}
         maxLength={maxLength}
         className="mt-1"
+        aria-describedby={hintId}
       />
+      {hint && (
+        <p id={hintId} className="mt-1 text-xs text-muted-foreground">
+          {hint}
+        </p>
+      )}
     </div>
   );
 }

@@ -1,8 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiFailure } from "@/lib/api-response";
 import { requireActivePartner } from "@/lib/auth/require-auth";
-import { productSchema } from "@/schemas/product";
-import { Prisma, ProductCatalogStatus } from "@prisma/client";
+import { productUpdateSchema } from "@/schemas/product";
+import { ContentApprovalStatus, Prisma, ProductCatalogStatus } from "@prisma/client";
 
 type RouteContext = { params: Promise<{ productId: string }> };
 
@@ -28,7 +28,7 @@ export async function PUT(request: Request, context: RouteContext) {
   });
   if (!existing) return apiFailure("NOT_FOUND", "Produto não encontrado.", 404);
 
-  const parsed = productSchema.partial().safeParse(await request.json());
+  const parsed = productUpdateSchema.safeParse(await request.json());
   if (!parsed.success) {
     return apiFailure("VALIDATION", parsed.error.errors[0]?.message ?? "Inválido", 400);
   }
@@ -39,20 +39,29 @@ export async function PUT(request: Request, context: RouteContext) {
     data: {
       ...(data.name !== undefined ? { name: data.name.trim() } : {}),
       ...(data.description !== undefined ? { description: data.description.trim() } : {}),
+      ...(data.shortDescription !== undefined ? { shortDescription: data.shortDescription?.trim() ?? null } : {}),
+      ...(data.subcategory !== undefined ? { subcategory: data.subcategory?.trim() ?? null } : {}),
       ...(data.catalogCategory !== undefined ? { catalogCategory: data.catalogCategory } : {}),
       ...(data.brand !== undefined ? { brand: data.brand } : {}),
       ...(data.speciesTarget !== undefined ? { speciesTarget: data.speciesTarget } : {}),
       ...(data.price !== undefined ? { price: data.price } : {}),
       ...(data.comparePrice !== undefined ? { comparePrice: data.comparePrice } : {}),
       ...(data.stock !== undefined ? { stock: data.stock } : {}),
+      ...(data.minStock !== undefined ? { minStock: data.minStock } : {}),
+      ...(data.unit !== undefined ? { unit: data.unit } : {}),
       ...(data.sku !== undefined ? { sku: data.sku } : {}),
       ...(data.barcode !== undefined ? { barcode: data.barcode } : {}),
       ...(data.weightGrams !== undefined ? { weightGrams: data.weightGrams } : {}),
+      ...(data.dimensions !== undefined ? { dimensions: data.dimensions ?? undefined } : {}),
+      ...(data.tags !== undefined ? { tags: data.tags ?? undefined } : {}),
+      ...(data.pickupAvailable !== undefined ? { pickupAvailable: data.pickupAvailable } : {}),
+      ...(data.deliveryAvailable !== undefined ? { deliveryAvailable: data.deliveryAvailable } : {}),
+      ...(data.extraDetails !== undefined ? { extraDetails: data.extraDetails ?? undefined } : {}),
       ...(data.status !== undefined ? { status: data.status } : {}),
       ...(data.images !== undefined
         ? { images: data.images === null ? Prisma.JsonNull : data.images }
         : {}),
-      approvalStatus: "PENDING",
+      approvalStatus: ContentApprovalStatus.APPROVED,
     },
   });
 

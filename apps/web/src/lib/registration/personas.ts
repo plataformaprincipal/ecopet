@@ -33,7 +33,6 @@ export const PENDING_APPROVAL_ROLES: RegistrationRole[] = [
   "PETSHOP",
   "SELLER",
   "SERVICE_PROVIDER",
-  "ONG",
 ];
 
 export const BRAZILIAN_STATES = [

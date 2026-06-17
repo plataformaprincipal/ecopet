@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Cama pet almofadada lavável">
+  <rect width="400" height="400" fill="#eef4ff"/>
+  <rect x="70" y="220" width="260" height="50" rx="12" fill="#6b8f71"/>
+  <rect x="90" y="170" width="220" height="70" rx="30" fill="#a8c5a0"/>
+  <ellipse cx="200" cy="185" rx="70" ry="35" fill="#d4e8cf"/>
+  <circle cx="170" cy="175" r="8" fill="#003b16"/>
+  <circle cx="230" cy="175" r="8" fill="#003b16"/>
+  <text x="200" y="340" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" fill="#003b16">Cama Pet</text>
+</svg>

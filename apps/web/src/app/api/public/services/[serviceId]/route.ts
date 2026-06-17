@@ -21,7 +21,16 @@ export async function GET(_req: Request, context: RouteContext) {
           id: true,
           name: true,
           partnerProfile: {
-            select: { businessName: true, city: true, state: true, description: true, category: true },
+            select: {
+              businessName: true,
+              city: true,
+              state: true,
+              address: true,
+              zipCode: true,
+              description: true,
+              category: true,
+              businessHours: true,
+            },
           },
         },
       },

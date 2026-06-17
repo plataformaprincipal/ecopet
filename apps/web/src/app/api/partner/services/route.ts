@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiFailure } from "@/lib/api-response";
 import { requireActivePartner } from "@/lib/auth/require-auth";
 import { partnerServiceSchema } from "@/schemas/partner-service";
-import { PartnerServiceStatus } from "@prisma/client";
+import { ContentApprovalStatus, PartnerServiceStatus } from "@prisma/client";
 
 export async function GET() {
   const { user, error } = await requireActivePartner();
@@ -26,20 +26,30 @@ export async function POST(request: Request) {
   }
 
   const data = parsed.data;
+  const status = data.status ?? PartnerServiceStatus.ACTIVE;
   const service = await prisma.service.create({
     data: {
       providerId: user!.id,
       name: data.name.trim(),
       description: data.description.trim(),
+      shortDescription: data.shortDescription?.trim() ?? null,
+      subcategory: data.subcategory?.trim() ?? null,
       category: data.category,
       price: data.price,
+      priceOnRequest: data.priceOnRequest ?? false,
       durationMin: data.durationMin ?? 60,
-      status: data.status ?? PartnerServiceStatus.DRAFT,
+      status,
       modality: data.modality ?? null,
       speciesTarget: data.speciesTarget ?? null,
+      city: data.city?.trim() ?? null,
+      state: data.state ?? null,
+      serviceLocation: data.serviceLocation?.trim() ?? null,
+      tags: data.tags ?? undefined,
+      extraDetails: data.extraDetails ?? undefined,
       notes: data.notes ?? null,
       image: data.image ?? null,
-      isActive: data.status === PartnerServiceStatus.ACTIVE,
+      isActive: status === PartnerServiceStatus.ACTIVE,
+      approvalStatus: ContentApprovalStatus.APPROVED,
     },
   });
 

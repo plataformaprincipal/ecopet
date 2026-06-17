@@ -29,19 +29,7 @@ export async function requireAuth(allowedRoles?: UserRole[]) {
 }
 
 export async function requireActivePartner() {
-  const result = await requireAuth([UserRole.PARTNER]);
-  if (result.error) return result;
-  if (result.user!.accountStatus !== "ACTIVE") {
-    return {
-      user: null,
-      error: apiFailure(
-        "ACCOUNT_PENDING",
-        "Conta de parceiro aguardando aprovação administrativa.",
-        403
-      ),
-    };
-  }
-  return result;
+  return requireAuth([UserRole.PARTNER]);
 }
 
 export async function requireClient() {

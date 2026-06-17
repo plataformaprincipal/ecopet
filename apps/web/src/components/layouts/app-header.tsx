@@ -7,10 +7,13 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/providers/i18n-provider";
 import { LanguageSelector } from "@/components/features/i18n/language-selector";
 import { NotificationBell } from "@/components/features/notifications/notification-bell";
+import { useFoundationSession } from "@/hooks/use-foundation-session";
+import { LogoutButton } from "@/components/shared/auth/logout-button";
 
 export function AppHeader({ title }: { title?: string }) {
   const { theme, setTheme } = useTheme();
   const { t } = useTranslation();
+  const { isAuthenticated, loading } = useFoundationSession();
 
   return (
     <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-ecopet-gray/10 bg-white/90 px-4 backdrop-blur-xl dark:border-white/10 dark:bg-[#0a0d10]/90 lg:px-8">
@@ -36,6 +39,7 @@ export function AppHeader({ title }: { title?: string }) {
         >
           {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </Button>
+        {!loading && isAuthenticated && <LogoutButton variant="header" />}
       </div>
     </header>
   );

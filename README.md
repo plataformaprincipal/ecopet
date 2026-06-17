@@ -2,6 +2,28 @@
 
 Plataforma profissional para tutores, parceiros, ONGs e gestão AgroPet. Monorepo TypeScript com Next.js 15, Express e PostgreSQL.
 
+## Ajuda e acessibilidade
+
+- **Guia completo:** [docs/AJUDA_ECOPET.md](docs/AJUDA_ECOPET.md) — cadastro, produtos, serviços, pedidos, agendamentos e requisitos técnicos.
+- **Manual do usuário:** [docs/MANUAL_DO_USUARIO.md](docs/MANUAL_DO_USUARIO.md) — passo a passo para tutores e clientes.
+- **Formulário demonstrativo (acessibilidade):** [http://localhost:3000/ajuda/formulario-acessivel](http://localhost:3000/ajuda/formulario-acessivel) — página estática com todos os tipos de campo exigidos (text, email, number, password, checkbox, radio, select, textarea).
+
+## Execução local (resumo)
+
+```bash
+npm install
+cp .env.example .env          # editar credenciais locais (nunca commitar .env)
+npm run db:generate
+npm run db:migrate:deploy     # ou npm run db:push em dev
+npm run bootstrap:catalog     # catálogo inicial (opcional)
+npm run dev
+```
+
+- **Web:** http://localhost:3000  
+- **API:** http://localhost:4000
+
+Validação: `npm run type-check` · `npm run lint` · `npm run build`
+
 ## Arquitetura
 
 ```
@@ -160,7 +182,7 @@ Ver `.env.example` para lista completa.
 
 ## Acessibilidade
 
-Fundação global com skip link, toolbar de acessibilidade, foco visível, HTML semântico e suporte a leitores de tela. Preparado para integração VLibras.
+Fundação global com skip link, toolbar de acessibilidade, foco visível, HTML semântico e suporte a leitores de tela. Imagens com `alt` descritivo, formulários com rótulos associados e página demonstrativa em `/ajuda/formulario-acessivel`. Documentação: [docs/AJUDA_ECOPET.md](docs/AJUDA_ECOPET.md).
 
 ## Identidade visual
 

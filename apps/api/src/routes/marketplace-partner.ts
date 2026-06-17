@@ -60,7 +60,8 @@ router.post("/products", async (req: AuthRequest, res, next) => {
         stock: data.stock ?? 0,
         images: asOptionalInputJson(data.images),
         sku: data.sku,
-        approvalStatus: "PENDING",
+        status: "ACTIVE",
+        approvalStatus: "APPROVED",
       },
       include: { category: true },
     });
@@ -81,7 +82,7 @@ router.patch("/products/:id", async (req: AuthRequest, res, next) => {
       data: {
         ...data,
         images: data.images ? asOptionalInputJson(data.images) : undefined,
-        approvalStatus: "PENDING",
+        approvalStatus: "APPROVED",
       },
       include: { category: true },
     });
@@ -134,7 +135,9 @@ router.post("/services", async (req: AuthRequest, res, next) => {
         providerId: req.userId!,
         type: "READY_SERVICE",
         ...data,
-        approvalStatus: "PENDING",
+        status: "ACTIVE",
+        isActive: true,
+        approvalStatus: "APPROVED",
       },
     });
     return sendSuccess(res, { service }, 201);
@@ -150,7 +153,7 @@ router.patch("/services/:id", async (req: AuthRequest, res, next) => {
     if (!existing) return sendFailure(res, "NOT_FOUND", "Serviço não encontrado", 404);
     const service = await prisma.service.update({
       where: { id: existing.id },
-      data: { ...data, approvalStatus: "PENDING" },
+      data: { ...data, approvalStatus: "APPROVED" },
     });
     return sendSuccess(res, { service });
   } catch (e) {

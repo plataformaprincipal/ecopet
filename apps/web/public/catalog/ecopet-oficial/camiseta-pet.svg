@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Camiseta pet básica confortável">
+  <rect width="400" height="400" fill="#f0f7f2"/>
+  <rect x="120" y="90" width="160" height="200" rx="24" fill="#0f5a2a"/>
+  <rect x="80" y="110" width="40" height="80" rx="16" fill="#0f5a2a"/>
+  <rect x="280" y="110" width="40" height="80" rx="16" fill="#0f5a2a"/>
+  <circle cx="200" cy="170" r="28" fill="#f5c800"/>
+  <path d="M170 250 Q200 280 230 250" stroke="#f7f4dc" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <text x="200" y="340" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" fill="#003b16">Camiseta Pet</text>
+</svg>

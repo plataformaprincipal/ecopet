@@ -1,7 +1,7 @@
 /**
- * Testes Etapa 8 — Produtos do parceiro
+ * Testes Etapa — Produtos do parceiro (acesso imediato, sem aprovação admin)
  */
-import { PrismaClient, AccountStatus } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 
 const WEB = process.env.WEB_URL || "http://localhost:3000";
 const prisma = new PrismaClient();
@@ -21,9 +21,9 @@ async function req(path, opts = {}) {
   return { status: res.status, data: await res.json().catch(() => ({})) };
 }
 
-async function registerPartner(email, active, suffix) {
+async function registerPartner(email, suffix) {
   jar.clear();
-  await req("/api/auth/register", {
+  const reg = await req("/api/auth/register", {
     method: "POST",
     body: JSON.stringify({
       role: "PARTNER", name: "Loja", email, password: pwd, confirmPassword: pwd,
@@ -31,43 +31,85 @@ async function registerPartner(email, active, suffix) {
       category: "Pet Shop", address: "Rua A", city: "SP", state: "SP",
     }),
   });
-  if (active) await prisma.user.update({ where: { email }, data: { accountStatus: AccountStatus.ACTIVE } });
+  assert(reg.status === 201, "register partner");
+  assert(reg.data.data?.user?.accountStatus === "ACTIVE", "partner ACTIVE sem aprovação");
 }
 
 async function main() {
   const ts = Date.now();
-  const pending = `partner.prod.pend.${ts}@test.ecopet.local`;
-  const active = `partner.prod.act.${ts}@test.ecopet.local`;
+  const partnerEmail = `partner.prod.${ts}@test.ecopet.local`;
+  const clientEmail = `client.prod.${ts}@test.ecopet.local`;
 
-  await registerPartner(pending, false, ts + 1);
-  const pendCreate = await req("/api/partner/products", {
-    method: "POST",
-    body: JSON.stringify({ name: "Ração", description: "Ração premium", catalogCategory: "FOOD", price: 50, stock: 10 }),
-  });
-  assert(pendCreate.status === 403, "pending blocked");
-
-  await registerPartner(active, true, ts + 2);
-  await req("/api/auth/login", { method: "POST", body: JSON.stringify({ email: active, password: pwd }) });
+  await registerPartner(partnerEmail, ts);
 
   const create = await req("/api/partner/products", {
     method: "POST",
     body: JSON.stringify({
-      name: "Ração Ativa", description: "Produto real", catalogCategory: "FOOD", price: 45, stock: 5, status: "ACTIVE",
+      name: "Ração Ativa", description: "Produto real completo", shortDescription: "Ração premium",
+      catalogCategory: "FOOD", brand: "EcoMarca", price: 45, comparePrice: 40, stock: 5, status: "ACTIVE",
+      sku: `SKU-${ts}`, unit: "kg", speciesTarget: "DOG",
     }),
   });
   if (!create.data?.data?.product) {
-    throw new Error(`active creates product — status ${create.status} body ${JSON.stringify(create.data)}`);
+    throw new Error(`criar produto — status ${create.status} body ${JSON.stringify(create.data)}`);
   }
-  assert(create.status === 201, "active creates product");
+  assert(create.status === 201, "parceiro cria produto");
+  assert(create.data.data.product.approvalStatus === "APPROVED", "produto APPROVED na criação");
   const productId = create.data.data.product.id;
 
-  await prisma.product.update({
-    where: { id: productId },
-    data: { approvalStatus: "APPROVED" },
-  });
-
   const list = await req("/api/partner/products");
-  assert(list.data.data.products.some((p) => p.id === productId), "partner lists own");
+  assert(list.data.data.products.some((p) => p.id === productId), "parceiro lista próprio produto");
+
+  const pubList = await req("/api/public/products");
+  assert(pubList.data.data.products.some((p) => p.id === productId), "produto aparece em /api/public/products");
+
+  const pubActive = await req(`/api/public/products/${productId}`);
+  assert(pubActive.status === 200, "cliente vê detalhe público");
+
+  jar.clear();
+  await req("/api/auth/register", {
+    method: "POST",
+    body: JSON.stringify({
+      role: "CLIENT", name: "Cliente", email: clientEmail, password: pwd, confirmPassword: pwd,
+      phone: phone(ts + 3), birthDate: "1990-01-01",
+    }),
+  });
+  const cartAdd = await req("/api/cart/items", {
+    method: "POST",
+    body: JSON.stringify({ productId, quantity: 1 }),
+  });
+  assert(cartAdd.status === 200 || cartAdd.status === 201, "cliente adiciona ao carrinho");
+
+  const clientCreate = await req("/api/partner/products", {
+    method: "POST",
+    body: JSON.stringify({ name: "X", description: "Y", catalogCategory: "FOOD", price: 1, stock: 1 }),
+  });
+  assert(clientCreate.status === 403, "cliente não cria produto");
+
+  const otherPartner = `other.prod.${ts}@test.ecopet.local`;
+  await registerPartner(otherPartner, ts + 9);
+  const foreignEdit = await req(`/api/partner/products/${productId}`, {
+    method: "PUT",
+    body: JSON.stringify({ name: "Hack" }),
+  });
+  assert(foreignEdit.status === 404, "parceiro não edita produto de outro");
+
+  jar.clear();
+  await req("/api/auth/login", { method: "POST", body: JSON.stringify({ email: partnerEmail, password: pwd }) });
+  const edited = await req(`/api/partner/products/${productId}`, {
+    method: "PUT",
+    body: JSON.stringify({ name: "Ração Editada", approvalStatus: "PENDING" }),
+  });
+  assert(edited.status === 200, "parceiro edita próprio produto");
+  assert(edited.data.data.product.approvalStatus === "APPROVED", "edição mantém APPROVED");
+
+  const deactivated = await req(`/api/partner/products/${productId}`, {
+    method: "PUT",
+    body: JSON.stringify({ status: "INACTIVE" }),
+  });
+  assert(deactivated.status === 200, "parceiro desativa produto");
+  const pubInactive = await req(`/api/public/products/${productId}`);
+  assert(pubInactive.status === 404, "produto inativo não aparece publicamente");
 
   const draft = await req("/api/partner/products", {
     method: "POST",
@@ -75,19 +117,7 @@ async function main() {
   });
   const draftId = draft.data.data.product.id;
   const pubDraft = await req(`/api/public/products/${draftId}`);
-  assert(pubDraft.status === 404, "draft not public");
-
-  const pubActive = await req(`/api/public/products/${productId}`);
-  assert(pubActive.status === 200, "active public");
-
-  const zeroStock = await req("/api/partner/products", {
-    method: "POST",
-    body: JSON.stringify({ name: "Zero", description: "Sem estoque", catalogCategory: "FOOD", price: 1, stock: 0, status: "ACTIVE" }),
-  });
-  const zeroId = zeroStock.data.data.product.id;
-  await prisma.product.update({ where: { id: zeroId }, data: { approvalStatus: "APPROVED" } });
-  const pubZero = await req(`/api/public/products/${zeroId}`);
-  assert(pubZero.status === 404 || pubZero.data?.data?.product?.stock === 0, "zero stock hidden or empty");
+  assert(pubDraft.status === 404, "rascunho não é público");
 
   console.log("✓ test:foundation:products passou");
 }

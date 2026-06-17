@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Saco de ração seca premium para cães adultos">
+  <rect width="400" height="400" fill="#faf6ee"/>
+  <rect x="130" y="80" width="140" height="220" rx="8" fill="#c8862a"/>
+  <rect x="145" y="95" width="110" height="80" rx="6" fill="#f5e6c8"/>
+  <circle cx="200" cy="135" r="28" fill="#8b5a2b"/>
+  <path d="M185 130 Q200 115 215 130 Q200 145 185 130" fill="#f5c800"/>
+  <text x="200" y="200" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" font-weight="bold" fill="#5a3a10">RAÇÃO</text>
+  <text x="200" y="225" text-anchor="middle" font-family="Arial,sans-serif" font-size="14" fill="#5a3a10">Cães 10kg</text>
+  <text x="200" y="340" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" fill="#5a3a10">Ração Premium</text>
+</svg>

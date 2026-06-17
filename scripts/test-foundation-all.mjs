@@ -11,11 +11,13 @@ const root = path.resolve(__dirname, "..");
 
 const SUITES = [
   "test-foundation-auth.mjs",
+  "test-foundation-catalog.mjs",
   "test-foundation-profiles.mjs",
   "test-foundation-pets.mjs",
   "test-foundation-appointments.mjs",
   "test-foundation-marketplace.mjs",
   "test-foundation-products.mjs",
+  "test-foundation-services.mjs",
   "test-foundation-cart.mjs",
   "test-foundation-orders.mjs",
   "test-foundation-integrations.mjs",

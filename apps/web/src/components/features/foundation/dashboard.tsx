@@ -1,24 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { SafeUser } from "@/lib/auth";
-import { notifySessionChanged } from "@/lib/auth/session-events";
+import { LogoutButton } from "@/components/shared/auth/logout-button";
 import { useTranslation } from "@/providers/i18n-provider";
 
 export function FoundationDashboard({ user }: { user: SafeUser }) {
-  const router = useRouter();
   const { t } = useTranslation();
   const roleKey = `dashboard.roles.${user.role}` as const;
-
-  async function handleLogout() {
-    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
-    notifySessionChanged();
-    router.push("/login");
-    router.refresh();
-  }
 
   return (
     <div className="mx-auto max-w-2xl space-y-4 p-6">
@@ -50,9 +41,7 @@ export function FoundationDashboard({ user }: { user: SafeUser }) {
             <Button variant="default" asChild>
               <Link href="/perfil">{t("dashboard.editProfile")}</Link>
             </Button>
-            <Button variant="outline" onClick={handleLogout}>
-              {t("dashboard.logout")}
-            </Button>
+            <LogoutButton />
           </div>
         </CardContent>
       </Card>

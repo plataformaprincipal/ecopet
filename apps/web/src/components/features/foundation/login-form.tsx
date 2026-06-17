@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { dashboardPathForRole } from "@/lib/auth/dashboard";
 import { notifySessionChanged } from "@/lib/auth/session-events";
+import { confirmSessionCookie } from "@/lib/auth/confirm-session";
 
 function parseApiError(data: { error?: string | { message?: string } }): string {
   if (typeof data.error === "string") return data.error;
@@ -45,6 +46,11 @@ export function FoundationLoginForm() {
         data.data?.redirectTo ??
         (data.user?.role ? dashboardPathForRole(data.user.role) : null) ??
         (callbackUrl?.startsWith("/") ? callbackUrl : "/dashboard");
+      const sessionReady = await confirmSessionCookie();
+      if (!sessionReady) {
+        setError("Login realizado, mas a sessão não foi iniciada. Tente novamente.");
+        return;
+      }
       router.push(redirectTo);
       notifySessionChanged();
       router.refresh();
@@ -62,21 +68,43 @@ export function FoundationLoginForm() {
         <CardDescription>Use seu e-mail e senha para acessar.</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate aria-describedby={error ? "login-error" : undefined}>
           <div>
-            <label className="text-sm font-medium">E-mail</label>
-            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1" />
+            <label htmlFor="login-email" className="text-sm font-medium">
+              E-mail
+            </label>
+            <Input
+              id="login-email"
+              type="email"
+              placeholder="Informe o e-mail"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="mt-1"
+              autoComplete="email"
+            />
           </div>
           <div>
-            <label className="text-sm font-medium">Senha</label>
-            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="mt-1" />
+            <label htmlFor="login-password" className="text-sm font-medium">
+              Senha
+            </label>
+            <Input
+              id="login-password"
+              type="password"
+              placeholder="Digite sua senha"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="mt-1"
+              autoComplete="current-password"
+            />
           </div>
           <p className="text-right text-sm">
             <Link href="/esqueci-senha" className="text-green-700 hover:underline">
               Esqueci minha senha
             </Link>
           </p>
-          {error && <p className="text-sm text-red-600" role="alert">{error}</p>}
+          {error && <p id="login-error" className="text-sm text-red-600" role="alert" aria-live="polite">{error}</p>}
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Entrando..." : "Entrar"}
           </Button>
