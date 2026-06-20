@@ -81,7 +81,7 @@ async function ensureCompletedAppointment() {
     method: "POST",
     body: JSON.stringify({
       role: "CLIENT", name: "Cliente Review", email: clientEmail, password: pwd, confirmPassword: pwd,
-      phone: phone(ts), birthDate: "1990-01-01",
+      phone: phone(ts), birthDate: "1990-01-01", username: `mkt${ts}`, gender: "MASCULINO", acceptTerms: true, acceptPrivacy: true,
     }),
   });
   if (reg.status !== 201) return null;

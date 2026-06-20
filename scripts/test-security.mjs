@@ -66,7 +66,13 @@ async function registerUser(jarName, role, email, extra = {}) {
     phone: phone(email.length + Date.now()),
     ...extra,
   };
-  if (role === "CLIENT") base.birthDate = "1990-01-01";
+  if (role === "CLIENT") {
+    base.birthDate = "1990-01-01";
+    base.username = `user${String(Date.now()).slice(-10)}`;
+    base.gender = "MASCULINO";
+    base.acceptTerms = true;
+    base.acceptPrivacy = true;
+  }
   if (role === "PARTNER") {
     Object.assign(base, {
       businessName: "Loja Sec",

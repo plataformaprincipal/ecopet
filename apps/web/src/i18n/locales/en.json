@@ -162,12 +162,14 @@
       "copyright": "© 2026 ECOPET"
     },
     "forgotPassword": {
-      "title": "Forgot password",
-      "description": "Enter your email to receive a reset link",
+      "title": "Recover password",
+      "description": "Enter your registered email or phone number. We will send instructions to reset your password.",
+      "identifier": "Email or Phone",
+      "identifierPlaceholder": "Enter your email or phone number",
       "submit": "Send instructions",
       "submitting": "Sending...",
-      "success": "If the email is registered, we will send password reset instructions.",
-      "checkInbox": "Check your inbox and spam folder.",
+      "success": "If the email or phone is registered, you will receive password reset instructions shortly.",
+      "checkInbox": "Check your inbox, SMS or spam folder.",
       "backToLogin": "Back to login"
     },
     "resetPassword": {

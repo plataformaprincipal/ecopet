@@ -70,7 +70,7 @@ async function main() {
     method: "POST",
     body: JSON.stringify({
       role: "CLIENT", name: "Cliente Svc", email: clientEmail, password: pwd, confirmPassword: pwd,
-      phone: phone(ts + 1), birthDate: "1990-01-01",
+      phone: phone(ts + 1), birthDate: "1990-01-01", username: `svc${ts}`, gender: "MASCULINO", acceptTerms: true, acceptPrivacy: true,
     }),
   });
   const pet = await req("/api/client/pets", { method: "POST", body: JSON.stringify({ name: "Rex", species: "DOG" }) });

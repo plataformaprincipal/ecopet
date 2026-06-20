@@ -123,6 +123,10 @@ async function main() {
       confirmPassword: pwd,
       phone: `119${String(ts).slice(-8)}`,
       birthDate: "1990-01-01",
+      username: `cat${String(ts).slice(-8)}`,
+      gender: "MASCULINO",
+      acceptTerms: true,
+      acceptPrivacy: true,
     }),
   });
   assert(reg.status === 201, "cliente cadastra");

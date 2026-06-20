@@ -162,12 +162,14 @@
       "copyright": "© 2026 ECOPET"
     },
     "forgotPassword": {
-      "title": "Olvidé mi contraseña",
-      "description": "Ingresa tu correo para recibir el enlace de restablecimiento",
+      "title": "Recuperar contraseña",
+      "description": "Ingresa tu correo o teléfono registrado. Enviaremos instrucciones para restablecer tu contraseña.",
+      "identifier": "Correo o Teléfono",
+      "identifierPlaceholder": "Ingresa tu correo o teléfono",
       "submit": "Enviar instrucciones",
       "submitting": "Enviando...",
-      "success": "Si el correo está registrado, enviaremos instrucciones para restablecer la contraseña.",
-      "checkInbox": "Revisa tu bandeja de entrada y la carpeta de spam.",
+      "success": "Si el correo o teléfono está registrado, recibirás instrucciones para restablecer la contraseña en breve.",
+      "checkInbox": "Revisa tu bandeja de entrada, SMS o carpeta de spam.",
       "backToLogin": "Volver al inicio de sesión"
     },
     "resetPassword": {

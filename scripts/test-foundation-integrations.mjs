@@ -137,6 +137,10 @@ async function main() {
       confirmPassword: password,
       phone: `119${String(ts).slice(-8)}`,
       birthDate: "1990-05-15",
+      username: `int${String(ts).slice(-8)}`,
+      gender: "MASCULINO",
+      acceptTerms: true,
+      acceptPrivacy: true,
     }),
   });
   const clientBlocked = await req("/api/admin/integrations/health");

@@ -64,6 +64,16 @@ function assert(cond, msg) {
   if (!cond) throw new Error(msg);
 }
 
+function clientFields(seed = Date.now()) {
+  const s = String(seed).replace(/\D/g, "").slice(-10) || "1";
+  return {
+    username: `user${s}`,
+    gender: "MASCULINO",
+    acceptTerms: true,
+    acceptPrivacy: true,
+  };
+}
+
 async function main() {
   const ts = Date.now();
   const password = "SenhaForte@123";
@@ -97,6 +107,7 @@ async function main() {
         confirmPassword: confirm,
         phone: `11922${pwdPhoneSuffix}`,
         birthDate: "1990-05-15",
+        ...clientFields(`${label}${ts}`),
       }),
     });
     assert(r.status === 400, `${label}: expected 400, got ${r.status} — ${r.data.error}`);
@@ -118,6 +129,7 @@ async function main() {
       confirmPassword: "Abcd1235",
       phone: `11920${pwdPhoneSuffix}`,
       birthDate: "1990-05-15",
+      ...clientFields(`mismatch${ts}`),
     }),
   });
   assert(rConfirmMismatch.status === 400, `confirm mismatch: ${rConfirmMismatch.data.error}`);
@@ -134,13 +146,14 @@ async function main() {
         confirmPassword: pwd,
         phone: `119${phoneSuffix}${String(ts).slice(-6)}`,
         birthDate: "1990-05-15",
+        ...clientFields(`${emailSuffix}${ts}`),
       }),
     });
     assert(r.status === 201, `${label}: expected 201, got ${r.status} — ${r.data.error}`);
     console.log(`✓ Cadastro senha ${label} → 201`);
   }
 
-  await expectPwdAccept("Abcd1234", "média", "media", "19");
+  await expectPwdAccept("Abcd1234!", "média", "media", "19");
   await expectPwdAccept("Abcd1234@x", "forte", "forte", "18");
   await expectPwdAccept("Abcd12345678@X!", "excelente", "excelente", "17");
 
@@ -155,12 +168,13 @@ async function main() {
       confirmPassword: `contendo.email.${ts}Aa1!`,
       phone: `11921${pwdPhoneSuffix}`,
       birthDate: "1990-05-15",
+      ...clientFields(`emailpwd${ts}`),
     }),
   });
   assert(rEmailPwd.status === 400, `contendo e-mail: ${rEmailPwd.data.error}`);
   console.log("✓ Senha contendo e-mail → 400");
 
-  await expectPwdReject("Cliente@123", "contendo nome");
+  await expectPwdReject("Cliente@123!", "contendo nome");
 
   // CLIENT
   const clientEmail = `teste.${ts}@ecopet.com`;
@@ -174,6 +188,7 @@ async function main() {
       confirmPassword: password,
       phone: `11988${String(ts).slice(-6)}`,
       birthDate: "1990-05-15",
+      ...clientFields(ts),
     }),
   }, cookie);
   cookie = r1.cookie;
@@ -184,12 +199,13 @@ async function main() {
     method: "POST",
     body: JSON.stringify({
       role: "CLIENT",
-      name: "Dup",
+      name: "Email Dup",
       email: clientEmail,
       password,
       confirmPassword: password,
       phone: "11999998888",
       birthDate: "1990-05-15",
+      ...clientFields(`dup${ts}`),
     }),
   });
   assert(r1dup.status === 409 && r1dup.data.code === "EMAIL_DUPLICATE", "EMAIL duplicate");
@@ -199,12 +215,13 @@ async function main() {
     method: "POST",
     body: JSON.stringify({
       role: "CLIENT",
-      name: "Future",
+      name: "Data Future",
       email: `future.${ts}@ecopet.com`,
       password,
       confirmPassword: password,
       phone: "11988887777",
       birthDate: "2099-01-01",
+      ...clientFields(`future${ts}`),
     }),
   });
   assert(rFuture.status === 400, "birthDate future rejected");
@@ -221,6 +238,7 @@ async function main() {
       phone: `11933${String(ts).slice(-6)}`,
       cpf: "99999999999",
       birthDate: "1990-05-15",
+      ...clientFields(`cpf${ts}`),
     }),
   });
   assert(cpfIgnoredRegister.status === 201, "register CLIENT ignora cpf no body");

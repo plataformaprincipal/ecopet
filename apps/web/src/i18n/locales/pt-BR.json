@@ -101,8 +101,8 @@
       "title": "Bem-vindo de volta",
       "subtitle": "Entre na sua conta ECOPET",
       "email": "E-mail",
-      "identifier": "E-mail ou usuário",
-      "identifierPlaceholder": "email@exemplo.com ou gestorveras",
+      "identifier": "E-mail ou Nome de Usuário",
+      "identifierPlaceholder": "Digite seu e-mail ou nome de usuário",
       "password": "Senha",
       "submit": "Entrar",
       "forgot": "Esqueceu a senha?",
@@ -164,12 +164,14 @@
       "copyright": "© 2026 ECOPET"
     },
     "forgotPassword": {
-      "title": "Esqueci minha senha",
-      "description": "Informe seu e-mail para receber o link de redefinição",
+      "title": "Recuperar senha",
+      "description": "Informe seu e-mail ou telefone cadastrado. Enviaremos instruções para redefinir sua senha.",
+      "identifier": "E-mail ou Telefone",
+      "identifierPlaceholder": "Digite seu e-mail ou telefone",
       "submit": "Enviar instruções",
       "submitting": "Enviando...",
-      "success": "Se o e-mail estiver cadastrado, enviaremos instruções para redefinição da senha.",
-      "checkInbox": "Verifique sua caixa de entrada e a pasta de spam.",
+      "success": "Se o e-mail ou telefone estiver cadastrado, você receberá instruções para redefinir sua senha em instantes.",
+      "checkInbox": "Verifique sua caixa de entrada, SMS ou pasta de spam.",
       "backToLogin": "Voltar ao login"
     },
     "resetPassword": {

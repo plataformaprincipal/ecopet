@@ -3,10 +3,18 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import type { CountryCode } from "libphonenumber-js";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FoundationPasswordField, FoundationConfirmPasswordField } from "@/components/features/foundation/password-field";
+import { InternationalPhoneField } from "@/components/features/foundation/international-phone-field";
+import { ClientRegisterForm } from "@/components/features/foundation/client-register-form";
+import {
+  RegisterRoleSelector,
+  REGISTER_ROLE_REQUIRED_MESSAGE,
+  type RegisterRole,
+} from "@/components/features/foundation/register-role-selector";
 import {
   PASSWORD_MISMATCH_MESSAGE,
   validateStrongPassword,
@@ -15,27 +23,28 @@ import { dashboardPathForRole } from "@/lib/auth/dashboard";
 import { notifySessionChanged } from "@/lib/auth/session-events";
 import { confirmSessionCookie } from "@/lib/auth/confirm-session";
 import { mapRegisterConflictMessage, parseApiFailureError } from "@/lib/api-errors";
-
-type Role = "CLIENT" | "PARTNER" | "ONG";
-
-const ROLE_OPTIONS: { value: Role; label: string }[] = [
-  { value: "CLIENT", label: "Cliente" },
-  { value: "PARTNER", label: "Parceiro" },
-  { value: "ONG", label: "ONG" },
-];
+import {
+  resolveRegistrationPhoneE164,
+  getPhoneLiveFeedback,
+  BR_DDD_REQUIRED_MESSAGE,
+  BR_PHONE_INVALID_MESSAGE,
+  PHONE_INVALID_MESSAGE,
+} from "@/lib/validation/international-phone";
 
 export function FoundationRegisterForm() {
   const router = useRouter();
-  const [role, setRole] = useState<Role>("CLIENT");
+  const [role, setRole] = useState<RegisterRole | null>(null);
+  const [roleError, setRoleError] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [phoneCountry, setPhoneCountry] = useState<CountryCode>("BR");
+  const [brazilDdd, setBrazilDdd] = useState("");
   const [form, setForm] = useState<Record<string, string>>({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
     phone: "",
-    birthDate: "",
     businessName: "",
     legalName: "",
     cnpj: "",
@@ -51,10 +60,38 @@ export function FoundationRegisterForm() {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
+  function handleRoleChange(next: RegisterRole) {
+    setRole(next);
+    setRoleError("");
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    if (!role) {
+      setRoleError(REGISTER_ROLE_REQUIRED_MESSAGE);
+      return;
+    }
+
     setLoading(true);
     setError("");
+
+    const normalizedPhone = resolveRegistrationPhoneE164(
+      form.phone,
+      phoneCountry,
+      phoneCountry === "BR" ? brazilDdd : undefined
+    );
+    if (!normalizedPhone) {
+      setError(
+        phoneCountry === "BR" && !brazilDdd
+          ? BR_DDD_REQUIRED_MESSAGE
+          : phoneCountry === "BR"
+            ? BR_PHONE_INVALID_MESSAGE
+            : PHONE_INVALID_MESSAGE
+      );
+      setLoading(false);
+      return;
+    }
 
     const payload: Record<string, string> = {
       role,
@@ -62,12 +99,9 @@ export function FoundationRegisterForm() {
       email: form.email,
       password: form.password,
       confirmPassword: form.confirmPassword,
-      phone: form.phone,
+      phone: normalizedPhone,
     };
 
-    if (role === "CLIENT") {
-      payload.birthDate = form.birthDate;
-    }
     if (role === "PARTNER") {
       payload.businessName = form.businessName;
       payload.legalName = form.legalName;
@@ -138,95 +172,142 @@ export function FoundationRegisterForm() {
   }
 
   return (
-    <Card className="mx-auto w-full max-w-lg">
+    <Card className="mx-auto w-full max-w-4xl overflow-hidden">
       <CardHeader>
         <CardTitle>Criar conta EcoPet</CardTitle>
-        <CardDescription>Escolha o tipo de conta e preencha seus dados.</CardDescription>
+        <CardDescription>Escolha como deseja usar a plataforma e preencha seus dados.</CardDescription>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4" noValidate aria-describedby="register-form-hint">
-          <p id="register-form-hint" className="text-sm text-muted-foreground">
-            Campos com * são obrigatórios. Escolha o tipo de conta abaixo.
+      <CardContent className="min-w-0 space-y-6">
+        <RegisterRoleSelector value={role} onChange={handleRoleChange} error={roleError} />
+
+        {role === "CLIENT" && <ClientRegisterForm embedded />}
+
+        {role === "PARTNER" && (
+          <form onSubmit={handleSubmit} className="mx-auto w-full max-w-lg space-y-4" noValidate aria-describedby="register-form-hint">
+            <p id="register-form-hint" className="text-sm text-muted-foreground">
+              Campos com * são obrigatórios.
+            </p>
+
+            <Field id="register-name" label="Nome completo" placeholder="Seu nome completo" value={form.name} onChange={(v) => setField("name", v)} required hint="Como aparecerá no seu perfil." />
+            <Field id="register-email" label="E-mail" type="email" placeholder="seu@email.com" value={form.email} onChange={(v) => setField("email", v)} required />
+            <FoundationPasswordField
+              id="register-password"
+              label="Senha"
+              value={form.password}
+              onChange={(v) => setField("password", v)}
+              context={{ email: form.email, name: form.name }}
+              required
+            />
+            <FoundationConfirmPasswordField
+              id="register-confirm-password"
+              label="Confirmar senha"
+              value={form.confirmPassword}
+              password={form.password}
+              onChange={(v) => setField("confirmPassword", v)}
+              required
+            />
+            <InternationalPhoneField
+              id="register-phone"
+              value={form.phone}
+              onChange={(v) => setField("phone", v)}
+              country={phoneCountry}
+              onCountryChange={setPhoneCountry}
+              brazilDdd={brazilDdd}
+              onBrazilDddChange={setBrazilDdd}
+              required
+              error={
+                (() => {
+                  const fb = getPhoneLiveFeedback(form.phone, phoneCountry, phoneCountry === "BR" ? brazilDdd : undefined);
+                  return fb.message && !fb.valid ? fb.message : undefined;
+                })()
+              }
+            />
+
+            <Field label="Nome fantasia" value={form.businessName} onChange={(v) => setField("businessName", v)} required />
+            <Field label="Razão social" value={form.legalName} onChange={(v) => setField("legalName", v)} required />
+            <Field label="CNPJ" value={form.cnpj} onChange={(v) => setField("cnpj", v)} required />
+            <Field label="Categoria" value={form.category} onChange={(v) => setField("category", v)} required />
+            <Field label="Endereço" value={form.address} onChange={(v) => setField("address", v)} required />
+            <Field label="Cidade" value={form.city} onChange={(v) => setField("city", v)} required />
+            <Field label="UF" value={form.state} onChange={(v) => setField("state", v)} required maxLength={2} />
+
+            {error && <p id="register-error" className="text-sm text-red-600" role="alert" aria-live="polite">{error}</p>}
+
+            <Button type="submit" className="w-full" disabled={loading} aria-describedby={error ? "register-error" : undefined}>
+              {loading ? "Cadastrando..." : "Cadastrar"}
+            </Button>
+
+            <p className="text-center text-sm text-gray-600">
+              Já tem conta? <Link href="/login" className="font-semibold text-green-700 hover:underline">Entrar</Link>
+            </p>
+          </form>
+        )}
+
+        {role === "ONG" && (
+          <form onSubmit={handleSubmit} className="mx-auto w-full max-w-lg space-y-4" noValidate aria-describedby="register-form-hint-ong">
+            <p id="register-form-hint-ong" className="text-sm text-muted-foreground">
+              Campos com * são obrigatórios.
+            </p>
+
+            <Field id="register-name-ong" label="Nome completo" placeholder="Seu nome completo" value={form.name} onChange={(v) => setField("name", v)} required />
+            <Field id="register-email-ong" label="E-mail" type="email" placeholder="seu@email.com" value={form.email} onChange={(v) => setField("email", v)} required />
+            <FoundationPasswordField
+              id="register-password-ong"
+              label="Senha"
+              value={form.password}
+              onChange={(v) => setField("password", v)}
+              context={{ email: form.email, name: form.name }}
+              required
+            />
+            <FoundationConfirmPasswordField
+              id="register-confirm-password-ong"
+              label="Confirmar senha"
+              value={form.confirmPassword}
+              password={form.password}
+              onChange={(v) => setField("confirmPassword", v)}
+              required
+            />
+            <InternationalPhoneField
+              id="register-phone-ong"
+              value={form.phone}
+              onChange={(v) => setField("phone", v)}
+              country={phoneCountry}
+              onCountryChange={setPhoneCountry}
+              brazilDdd={brazilDdd}
+              onBrazilDddChange={setBrazilDdd}
+              required
+              error={
+                (() => {
+                  const fb = getPhoneLiveFeedback(form.phone, phoneCountry, phoneCountry === "BR" ? brazilDdd : undefined);
+                  return fb.message && !fb.valid ? fb.message : undefined;
+                })()
+              }
+            />
+
+            <Field label="Nome da ONG" value={form.ongName} onChange={(v) => setField("ongName", v)} required />
+            <Field label="CNPJ" value={form.cnpj} onChange={(v) => setField("cnpj", v)} required />
+            <Field label="Responsável" value={form.responsibleName} onChange={(v) => setField("responsibleName", v)} required />
+            <Field label="Endereço" value={form.address} onChange={(v) => setField("address", v)} required />
+            <Field label="Cidade" value={form.city} onChange={(v) => setField("city", v)} required />
+            <Field label="UF" value={form.state} onChange={(v) => setField("state", v)} required maxLength={2} />
+
+            {error && <p id="register-error-ong" className="text-sm text-red-600" role="alert" aria-live="polite">{error}</p>}
+
+            <Button type="submit" className="w-full" disabled={loading} aria-describedby={error ? "register-error-ong" : undefined}>
+              {loading ? "Cadastrando..." : "Cadastrar"}
+            </Button>
+
+            <p className="text-center text-sm text-gray-600">
+              Já tem conta? <Link href="/login" className="font-semibold text-green-700 hover:underline">Entrar</Link>
+            </p>
+          </form>
+        )}
+
+        {!role && (
+          <p className="text-center text-sm text-muted-foreground" aria-live="polite">
+            Selecione uma opção acima para continuar o cadastro.
           </p>
-
-          <fieldset>
-            <legend className="mb-2 text-sm font-medium">Tipo de conta *</legend>
-            <div className="flex flex-wrap gap-4" role="radiogroup">
-              {ROLE_OPTIONS.map((opt) => (
-                <label key={opt.value} className="flex items-center gap-2 text-sm">
-                  <input
-                    type="radio"
-                    name="register-role"
-                    value={opt.value}
-                    checked={role === opt.value}
-                    onChange={() => setRole(opt.value)}
-                    required
-                  />
-                  {opt.label}
-                </label>
-              ))}
-            </div>
-          </fieldset>
-
-          <Field id="register-name" label="Nome completo" placeholder="Seu nome completo" value={form.name} onChange={(v) => setField("name", v)} required hint="Como aparecerá no seu perfil." />
-          <Field id="register-email" label="E-mail" type="email" placeholder="seu@email.com" value={form.email} onChange={(v) => setField("email", v)} required />
-          <FoundationPasswordField
-            id="register-password"
-            label="Senha"
-            value={form.password}
-            onChange={(v) => setField("password", v)}
-            context={{ email: form.email, name: form.name }}
-            required
-          />
-          <FoundationConfirmPasswordField
-            id="register-confirm-password"
-            label="Confirmar senha"
-            value={form.confirmPassword}
-            password={form.password}
-            onChange={(v) => setField("confirmPassword", v)}
-            required
-          />
-          <Field label="Telefone" value={form.phone} onChange={(v) => setField("phone", v)} required />
-
-          {role === "CLIENT" && (
-            <>
-              <Field label="Data de nascimento" type="date" value={form.birthDate} onChange={(v) => setField("birthDate", v)} required />
-            </>
-          )}
-
-          {role === "PARTNER" && (
-            <>
-              <Field label="Nome fantasia" value={form.businessName} onChange={(v) => setField("businessName", v)} required />
-              <Field label="Razão social" value={form.legalName} onChange={(v) => setField("legalName", v)} required />
-              <Field label="CNPJ" value={form.cnpj} onChange={(v) => setField("cnpj", v)} required />
-              <Field label="Categoria" value={form.category} onChange={(v) => setField("category", v)} required />
-              <Field label="Endereço" value={form.address} onChange={(v) => setField("address", v)} required />
-              <Field label="Cidade" value={form.city} onChange={(v) => setField("city", v)} required />
-              <Field label="UF" value={form.state} onChange={(v) => setField("state", v)} required maxLength={2} />
-            </>
-          )}
-
-          {role === "ONG" && (
-            <>
-              <Field label="Nome da ONG" value={form.ongName} onChange={(v) => setField("ongName", v)} required />
-              <Field label="CNPJ" value={form.cnpj} onChange={(v) => setField("cnpj", v)} required />
-              <Field label="Responsável" value={form.responsibleName} onChange={(v) => setField("responsibleName", v)} required />
-              <Field label="Endereço" value={form.address} onChange={(v) => setField("address", v)} required />
-              <Field label="Cidade" value={form.city} onChange={(v) => setField("city", v)} required />
-              <Field label="UF" value={form.state} onChange={(v) => setField("state", v)} required maxLength={2} />
-            </>
-          )}
-
-          {error && <p id="register-error" className="text-sm text-red-600" role="alert" aria-live="polite">{error}</p>}
-
-          <Button type="submit" className="w-full" disabled={loading} aria-describedby={error ? "register-error" : undefined}>
-            {loading ? "Cadastrando..." : "Cadastrar"}
-          </Button>
-        </form>
-
-        <p className="mt-4 text-center text-sm text-gray-600">
-          Já tem conta? <Link href="/login" className="font-semibold text-green-700 hover:underline">Entrar</Link>
-        </p>
+        )}
       </CardContent>
     </Card>
   );
@@ -270,6 +351,7 @@ function Field({
         required={required}
         maxLength={maxLength}
         className="mt-1"
+        aria-label={label}
         aria-describedby={hintId}
       />
       {hint && (

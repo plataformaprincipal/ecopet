@@ -70,8 +70,8 @@ async function main() {
   await req("/api/auth/register", {
     method: "POST",
     body: JSON.stringify({
-      role: "CLIENT", name: "Cliente", email: clientEmail, password: pwd, confirmPassword: pwd,
-      phone: phone(ts + 3), birthDate: "1990-01-01",
+      role: "CLIENT", name: "Cliente Teste", email: clientEmail, password: pwd, confirmPassword: pwd,
+      phone: phone(ts + 3), birthDate: "1990-01-01", username: `prd${ts}`, gender: "MASCULINO", acceptTerms: true, acceptPrivacy: true,
     }),
   });
   const cartAdd = await req("/api/cart/items", {

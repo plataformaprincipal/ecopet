@@ -99,8 +99,8 @@ async function main() {
   const clientReg = await req("/api/auth/register", {
     method: "POST",
     body: JSON.stringify({
-      role: "CLIENT", name: "Cliente", email: clientEmail, password: pwd, confirmPassword: pwd,
-      phone: phone(ts + 3), birthDate: "1990-01-01",
+      role: "CLIENT", name: "Cliente Teste", email: clientEmail, password: pwd, confirmPassword: pwd,
+      phone: phone(ts + 3), birthDate: "1990-01-01", username: `apt${ts}`, gender: "MASCULINO", acceptTerms: true, acceptPrivacy: true,
     }),
   });
   assert(clientReg.status === 201, `client register (${clientReg.status} ${clientReg.data?.error?.message ?? ""})`);

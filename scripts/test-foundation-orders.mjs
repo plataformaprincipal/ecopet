@@ -27,8 +27,8 @@ async function main() {
   await req("/api/auth/register", {
     method: "POST",
     body: JSON.stringify({
-      role: "CLIENT", name: "Cliente", email: clientEmail, password: pwd, confirmPassword: pwd,
-      phone: phone(ts), birthDate: "1990-01-01",
+      role: "CLIENT", name: "Cliente Teste", email: clientEmail, password: pwd, confirmPassword: pwd,
+      phone: phone(ts), birthDate: "1990-01-01", username: `ord${ts}`, gender: "MASCULINO", acceptTerms: true, acceptPrivacy: true,
     }),
   });
 

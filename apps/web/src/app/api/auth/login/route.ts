@@ -9,13 +9,19 @@ import {
   sanitizeUser,
   safeUserSelect,
 } from "@/lib/auth";
+import { findUserByLoginIdentifier } from "@/lib/auth/login-identifier";
 import { dashboardPathForRole } from "@/lib/auth/dashboard";
 import { loginSchema } from "@/schemas/auth";
 import { apiSuccess, apiFailure } from "@/lib/api-response";
 import { checkAuthRateLimit, clientIp } from "@/lib/rate-limit";
 import { isInstitutionalCatalogUser } from "@/lib/catalog/constants";
+import {
+  LOGIN_ACCOUNT_INACTIVE_MESSAGE,
+  LOGIN_ACCOUNT_SUSPENDED_MESSAGE,
+  LOGIN_USER_NOT_FOUND_MESSAGE,
+  LOGIN_WRONG_PASSWORD_MESSAGE,
+} from "@/lib/constants/auth-messages";
 
-const BLOCKED_STATUSES: AccountStatus[] = [AccountStatus.REJECTED, AccountStatus.SUSPENDED];
 const LOGIN_LIMIT = 10;
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 
@@ -34,32 +40,32 @@ export async function POST(request: Request) {
       return apiFailure("VALIDATION", first?.message ?? "Dados inválidos", 400);
     }
 
-    const { email, password } = parsed.data;
+    const { identifier, password } = parsed.data;
 
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) {
-      return apiFailure("INVALID_CREDENTIALS", "Usuário ou senha incorretos.", 401);
+    if (!checkAuthRateLimit(`login:id:${identifier.toLowerCase()}`, LOGIN_LIMIT, LOGIN_WINDOW_MS)) {
+      return apiFailure("RATE_LIMIT", "Muitas tentativas. Aguarde alguns minutos.", 429);
     }
 
-    if (BLOCKED_STATUSES.includes(user.accountStatus)) {
-      return apiFailure(
-        "ACCOUNT_UNAVAILABLE",
-        "Sua conta está indisponível. Entre em contato com o suporte ECOPET.",
-        403
-      );
+    const user = await findUserByLoginIdentifier(prisma, identifier);
+    if (!user) {
+      return apiFailure("USER_NOT_FOUND", LOGIN_USER_NOT_FOUND_MESSAGE, 401);
+    }
+
+    if (user.accountStatus === AccountStatus.SUSPENDED) {
+      return apiFailure("ACCOUNT_SUSPENDED", LOGIN_ACCOUNT_SUSPENDED_MESSAGE, 403);
+    }
+
+    if (user.accountStatus !== AccountStatus.ACTIVE) {
+      return apiFailure("ACCOUNT_INACTIVE", LOGIN_ACCOUNT_INACTIVE_MESSAGE, 403);
     }
 
     if (isInstitutionalCatalogUser(user)) {
-      return apiFailure(
-        "ACCOUNT_UNAVAILABLE",
-        "Conta institucional sem acesso de login público.",
-        403
-      );
+      return apiFailure("ACCOUNT_INACTIVE", LOGIN_ACCOUNT_INACTIVE_MESSAGE, 403);
     }
 
     const valid = await verifyPassword(password, user.passwordHash);
     if (!valid) {
-      return apiFailure("INVALID_CREDENTIALS", "Usuário ou senha incorretos.", 401);
+      return apiFailure("WRONG_PASSWORD", LOGIN_WRONG_PASSWORD_MESSAGE, 401);
     }
 
     const token = await createSessionToken(user.id, user.role, user.accountStatus);

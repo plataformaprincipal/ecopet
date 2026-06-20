@@ -106,8 +106,96 @@ async function main() {
   assert(registerSrc.includes("confirmSessionCookie"), "cadastro deve confirmar cookie antes do redirect");
   assert(registerSrc.includes("router.refresh"), "cadastro deve refrescar após redirect");
 
+  const clientRegisterSrc = readSrc("components/features/foundation/client-register-form.tsx");
+  const emailValSrc = readSrc("lib/validation/email.ts");
+  assert(emailValSrc.includes("Digite um e-mail válido"), "validação e-mail inválido definida");
+  assert(emailValSrc.includes("E-mail válido"), "validação e-mail válido definida");
+  assert(clientRegisterSrc.includes("getEmailLiveFeedback"), "cadastro CLIENT usa feedback de e-mail em tempo real");
+  assert(!clientRegisterSrc.includes("arthuralves"), "cadastro CLIENT não deve exibir exemplo de username");
+  assert(!clientRegisterSrc.includes("Exemplo:"), "cadastro CLIENT não deve exibir exemplo visual de username");
+  assert(clientRegisterSrc.includes('placeholder="Digite seu nome de usuário"'), "placeholder username simples");
+  assert(clientRegisterSrc.includes("ClientLegalAcceptance"), "cadastro CLIENT usa aceites legais premium");
+  assert(clientRegisterSrc.includes("CLIENT_LEGAL_ACCEPTANCE_MESSAGE"), "mensagem aceite legal cliente");
+  assert(!clientRegisterSrc.includes('href="/legal/termos"'), "cadastro CLIENT não usa termos genéricos");
+  assert(!registerSrc.includes("/legal/cliente/termos"), "formulário parceiro/ONG não exibe termos cliente");
+  const clientLegalSrc = readSrc("components/features/foundation/client-legal-acceptance.tsx");
+  assert(clientLegalSrc.includes('href={doc.href}') || clientLegalSrc.includes("CLIENT_LEGAL"), "links legais cliente no componente de aceite");
+  assert(clientLegalSrc.includes("client-accept-"), "checkboxes aceite cliente");
+  const legalLinksSrcEarly = readSrc("lib/legal/legal-links.ts");
+  assert(legalLinksSrcEarly.includes('"/legal/cliente/termos"'), "link termos exclusivos cliente");
+  assert(legalLinksSrcEarly.includes('"/legal/cliente/privacidade"'), "link privacidade exclusiva cliente");
+  assert(clientRegisterSrc.includes("disabled={!canSubmit}"), "botão cadastro desabilitado sem aceites");
+  assert(clientRegisterSrc.includes('aria-live="polite"'), "feedbacks acessíveis com aria-live");
+  assert(clientRegisterSrc.includes("InternationalPhoneField"), "cadastro CLIENT usa telefone internacional");
+  assert(!clientRegisterSrc.includes("brazil-phone"), "cadastro CLIENT sem validação BR exclusiva");
+
+  const intPhoneSrc = readSrc("lib/validation/international-phone.ts");
+  assert(intPhoneSrc.includes("libphonenumber-js"), "validação telefone usa libphonenumber-js");
+  assert(intPhoneSrc.includes("PHONE_VALID_MESSAGE"), "feedback telefone válido");
+
+  const phoneFieldSrc = readSrc("components/features/foundation/international-phone-field.tsx");
+  assert(phoneFieldSrc.includes('type="tel"'), "campo telefone type=tel");
+  assert(phoneFieldSrc.includes("aria-live"), "telefone com aria-live");
+  assert(phoneFieldSrc.includes("BRAZIL_DDD_OPTIONS"), "seletor DDD brasileiro");
+
+  const brazilPhoneSrc = readSrc("lib/validation/brazil-phone.ts");
+  assert(brazilPhoneSrc.includes("VALID_BRAZIL_DDD"), "lista DDDs brasileiros");
+  assert(brazilPhoneSrc.includes("BR_PHONE_VALID_MESSAGE"), "mensagem telefone BR válido");
+  assert(clientRegisterSrc.includes("getBirthDateBounds"), "cadastro CLIENT limita calendário de nascimento");
+  console.log("[static] cadastro CLIENT (e-mail, username, aceites, gênero, data) OK");
+
+  const roleSelectorSrc = readSrc("components/features/foundation/register-role-selector.tsx");
+  assert(roleSelectorSrc.includes("Como você deseja usar a EcoPet?"), "título seletor de tipo de conta");
+  assert(roleSelectorSrc.includes('role="radio"'), "cards de tipo de conta com radio acessível");
+  assert(roleSelectorSrc.includes("lg:grid-cols-3"), "cards responsivos desktop 3 colunas");
+  assert(roleSelectorSrc.includes("REGISTER_ROLE_REQUIRED_MESSAGE"), "mensagem tipo de conta obrigatório");
+  assert(registerSrc.includes("RegisterRoleSelector"), "formulário usa seletor de tipo de conta");
+  assert(registerSrc.includes("RegisterRole | null"), "tipo de conta inicia sem seleção");
+
+  const genderSelectorSrc = readSrc("components/features/foundation/register-gender-selector.tsx");
+  assert(genderSelectorSrc.includes('role="radiogroup"'), "gênero com radiogroup acessível");
+  assert(genderSelectorSrc.includes("GENDER_META"), "gênero com ícones e descrições");
+  assert(genderSelectorSrc.includes("grid-cols-2"), "gênero responsivo mobile");
+  assert(genderSelectorSrc.includes("lg:grid-cols-5"), "gênero desktop 5 cards");
+
+  const legalLinksSrc = readSrc("lib/legal/legal-links.ts");
+  assert(legalLinksSrc.includes("PARTNER_LEGAL"), "estrutura termos parceiro preparada");
+  assert(legalLinksSrc.includes("ONG_LEGAL"), "estrutura termos ONG preparada");
+  const clientTermsPageSrc = readSrc("app/legal/cliente/termos/page.tsx");
+  assert(clientTermsPageSrc.includes("Termos de Uso e de Serviço do Cliente EcoPet"), "página termos cliente");
+  const clientPrivacyPageSrc = readSrc("app/legal/cliente/privacidade/page.tsx");
+  assert(clientPrivacyPageSrc.includes("Política de Privacidade do Cliente EcoPet"), "página privacidade cliente");
+
+  const birthDateSrc = readSrc("lib/validation/birth-date.ts");
+  assert(birthDateSrc.includes("getMaxBirthDateString"), "utilitário data máxima nascimento");
+  assert(birthDateSrc.includes("getMinBirthDateString"), "utilitário data mínima nascimento");
+  assert(birthDateSrc.includes("É necessário ter mais de 1 ano"), "validação idade mínima");
+  console.log("[static] seletores visuais e validação de data OK");
+
+  const passwordSrc = readSrc("lib/password/validate-strong-password.ts");
+  assert(passwordSrc.includes('"excellent"'), "nível Excelente de senha");
+  assert(passwordSrc.includes("Excelente"), "rótulo Excelente de senha");
+  assert(!passwordSrc.includes("Muito Forte"), "rótulo Muito Forte removido");
+
+  // --- Páginas legais exclusivas do Cliente ---
+  const clientTermsPage = await req("/legal/cliente/termos");
+  assert(clientTermsPage.status === 200, "página /legal/cliente/termos carrega");
+  const clientPrivacyPage = await req("/legal/cliente/privacidade");
+  assert(clientPrivacyPage.status === 200, "página /legal/cliente/privacidade carrega");
+  console.log("[http] páginas legais cliente OK");
+
   const loginSrc = readSrc("components/features/foundation/login-form.tsx");
   assert(loginSrc.includes("confirmSessionCookie"), "login deve confirmar cookie antes do redirect");
+  assert(loginSrc.includes("login-identifier"), "login usa campo e-mail ou username");
+  assert(loginSrc.includes("E-mail ou Nome de Usuário"), "label login e-mail ou username");
+  assert(loginSrc.includes("Digite seu e-mail ou nome de usuário"), "placeholder login");
+
+  const authMessagesSrc = readSrc("lib/constants/auth-messages.ts");
+  assert(authMessagesSrc.includes("Senha incorreta"), "mensagem senha incorreta");
+  assert(authMessagesSrc.includes("E-mail ou nome de usuário não encontrado"), "mensagem usuário não encontrado");
+
+  const forgotSrc = readSrc("components/features/foundation/forgot-password-form.tsx");
+  assert(forgotSrc.includes("E-mail ou Telefone"), "recuperação e-mail ou telefone");
 
   const middlewareSrc = readSrc("middleware.ts");
   assert(middlewareSrc.includes('pathname === "/"') && middlewareSrc.includes('"/inicio"'), "middleware redireciona / autenticado para /inicio");
@@ -157,8 +245,12 @@ async function main() {
       email: clientEmail,
       password,
       confirmPassword: password,
-      phone: `119${String(ts).slice(-8)}`,
+      phone: `+55119${String(ts).slice(-8)}`,
       birthDate: "1990-05-15",
+      username: `nav${String(ts).slice(-8)}`,
+      gender: "MASCULINO",
+      acceptTerms: true,
+      acceptPrivacy: true,
     }),
   });
   assert(register.status === 201, "cadastro CLIENT 201");

@@ -134,6 +134,10 @@ export async function runHttpPermissionTests() {
     confirmPassword: password,
     phone: `11911${String(ts).slice(-6)}`,
     birthDate: "1990-05-15",
+    username: `perm${String(ts).slice(-8)}`,
+    gender: "MASCULINO",
+    acceptTerms: true,
+    acceptPrivacy: true,
   }, "CLIENT");
 
   await registerOrFail({

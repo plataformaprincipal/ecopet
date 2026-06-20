@@ -1,9 +1,32 @@
 import { z } from "zod";
 import { emailSchema } from "@/schemas/auth";
 import { PASSWORD_MISMATCH_MESSAGE } from "@/lib/password/validate-strong-password";
+import { sanitizePhoneInput } from "@/lib/validation/international-phone";
 
-export const forgotPasswordSchema = z.object({
-  email: emailSchema,
+export const forgotPasswordSchema = z
+  .object({
+    identifier: z.string().optional(),
+    email: z.string().optional(),
+  })
+  .transform((data) => ({
+    identifier: (data.identifier ?? data.email ?? "").trim(),
+  }))
+  .refine((data) => data.identifier.length > 0, {
+    message: "Informe e-mail ou telefone",
+    path: ["identifier"],
+  })
+  .refine(
+    (data) => {
+      if (data.identifier.includes("@")) return true;
+      const sanitized = sanitizePhoneInput(data.identifier);
+      return sanitized.replace(/\D/g, "").length >= 8;
+    },
+    { message: "Informe um e-mail ou telefone válido", path: ["identifier"] }
+  );
+
+export const verifyResetCodeSchema = z.object({
+  identifier: z.string().min(1, "Informe e-mail ou telefone"),
+  code: z.string().min(4, "Informe o código de verificação"),
 });
 
 export const resetPasswordSchema = z
@@ -16,3 +39,8 @@ export const resetPasswordSchema = z
     message: PASSWORD_MISMATCH_MESSAGE,
     path: ["confirmPassword"],
   });
+
+/** Compatibilidade legada */
+export const forgotPasswordEmailSchema = z.object({
+  email: emailSchema,
+});

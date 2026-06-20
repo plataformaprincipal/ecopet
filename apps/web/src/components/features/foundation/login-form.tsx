@@ -10,7 +10,7 @@ import { dashboardPathForRole } from "@/lib/auth/dashboard";
 import { notifySessionChanged } from "@/lib/auth/session-events";
 import { confirmSessionCookie } from "@/lib/auth/confirm-session";
 
-function parseApiError(data: { error?: string | { message?: string } }): string {
+function parseApiError(data: { error?: string | { message?: string; code?: string } }): string {
   if (typeof data.error === "string") return data.error;
   if (data.error && typeof data.error === "object" && data.error.message) return data.error.message;
   return "Erro ao entrar";
@@ -20,7 +20,7 @@ export function FoundationLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl");
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -34,7 +34,7 @@ export function FoundationLoginForm() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ identifier, password }),
         credentials: "include",
       });
       const data = await res.json();
@@ -65,23 +65,31 @@ export function FoundationLoginForm() {
     <Card className="mx-auto w-full max-w-md">
       <CardHeader>
         <CardTitle>Entrar no EcoPet</CardTitle>
-        <CardDescription>Use seu e-mail e senha para acessar.</CardDescription>
+        <CardDescription>Use seu e-mail ou nome de usuário e senha para acessar.</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4" noValidate aria-describedby={error ? "login-error" : undefined}>
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4"
+          noValidate
+          aria-describedby={error ? "login-error" : undefined}
+        >
           <div>
-            <label htmlFor="login-email" className="text-sm font-medium">
-              E-mail
+            <label htmlFor="login-identifier" className="text-sm font-medium">
+              E-mail ou Nome de Usuário
             </label>
             <Input
-              id="login-email"
-              type="email"
-              placeholder="Informe o e-mail"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              id="login-identifier"
+              type="text"
+              placeholder="Digite seu e-mail ou nome de usuário"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
               required
               className="mt-1"
-              autoComplete="email"
+              autoComplete="username"
+              aria-label="E-mail ou Nome de Usuário"
+              aria-invalid={!!error}
+              aria-describedby={error ? "login-error" : undefined}
             />
           </div>
           <div>
@@ -97,6 +105,7 @@ export function FoundationLoginForm() {
               required
               className="mt-1"
               autoComplete="current-password"
+              aria-label="Senha"
             />
           </div>
           <p className="text-right text-sm">
@@ -104,13 +113,20 @@ export function FoundationLoginForm() {
               Esqueci minha senha
             </Link>
           </p>
-          {error && <p id="login-error" className="text-sm text-red-600" role="alert" aria-live="polite">{error}</p>}
+          {error && (
+            <p id="login-error" className="text-sm text-red-600" role="alert" aria-live="polite">
+              {error}
+            </p>
+          )}
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Entrando..." : "Entrar"}
           </Button>
         </form>
         <p className="mt-4 text-center text-sm text-gray-600">
-          Não tem conta? <Link href="/cadastro" className="font-semibold text-green-700 hover:underline">Cadastre-se</Link>
+          Não tem conta?{" "}
+          <Link href="/cadastro" className="font-semibold text-green-700 hover:underline">
+            Cadastre-se
+          </Link>
         </p>
       </CardContent>
     </Card>

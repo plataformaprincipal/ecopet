@@ -8,10 +8,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { api } from "@/lib/api";
 import { ApiRequestError } from "@/lib/api-errors";
 import { useTranslation } from "@/providers/i18n-provider";
+import { FORGOT_PASSWORD_GENERIC_MESSAGE } from "@/lib/constants/auth-messages";
+
+function parseApiError(err: unknown): string {
+  if (err instanceof ApiRequestError) {
+    if (err.message) return err.message;
+  }
+  return "";
+}
 
 export default function RecuperarSenhaPage() {
   const { t } = useTranslation();
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [sent, setSent] = useState(false);
   const [devToken, setDevToken] = useState<string>();
   const [loading, setLoading] = useState(false);
@@ -24,15 +32,18 @@ export default function RecuperarSenhaPage() {
     try {
       const res = await api<{ message?: string; resetToken?: string }>("/api/auth/forgot-password", {
         method: "POST",
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ identifier }),
       });
       setSent(true);
       if (res.resetToken) setDevToken(res.resetToken);
     } catch (err) {
-      if (err instanceof ApiRequestError && (err.status ?? 0) >= 500) {
+      const message = parseApiError(err);
+      if (message) {
+        setError(message);
+      } else if (err instanceof ApiRequestError && (err.status ?? 0) >= 500) {
         setError(t("common.error"));
       } else {
-        setSent(true);
+        setError(t("common.error"));
       }
     } finally {
       setLoading(false);
@@ -48,8 +59,8 @@ export default function RecuperarSenhaPage() {
       <CardContent>
         {sent ? (
           <div className="space-y-3 text-sm">
-            <p className="font-semibold text-ecopet-green" role="status">
-              {t("auth.forgotPassword.success")}
+            <p className="font-semibold text-ecopet-green" role="status" aria-live="polite">
+              {FORGOT_PASSWORD_GENERIC_MESSAGE}
             </p>
             <p className="text-ecopet-gray">{t("auth.forgotPassword.checkInbox")}</p>
             {devToken && (
@@ -59,23 +70,38 @@ export default function RecuperarSenhaPage() {
             )}
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-4"
+            noValidate
+            aria-describedby={error ? "recovery-error" : undefined}
+          >
             <div>
-              <label htmlFor="recovery-email" className="text-sm font-medium">
-                {t("auth.login.email")}
+              <label htmlFor="recovery-identifier" className="text-sm font-medium">
+                {t("auth.forgotPassword.identifier")}
               </label>
               <Input
-                id="recovery-email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="seu@email.com"
+                id="recovery-identifier"
+                type="text"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                placeholder={t("auth.forgotPassword.identifierPlaceholder")}
                 required
-                autoComplete="email"
+                autoComplete="username"
+                inputMode="email"
+                className="mt-1"
+                aria-label={t("auth.forgotPassword.identifier")}
+                aria-invalid={!!error}
+                aria-describedby={error ? "recovery-error" : undefined}
               />
             </div>
             {error && (
-              <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600" role="alert">
+              <p
+                id="recovery-error"
+                className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600"
+                role="alert"
+                aria-live="polite"
+              >
                 {error}
               </p>
             )}

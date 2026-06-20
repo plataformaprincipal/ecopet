@@ -23,6 +23,8 @@ export const PUBLIC_EXACT = new Set([
   "/politica-de-privacidade",
   "/legal/privacidade",
   "/legal/termos",
+  "/legal/cliente/termos",
+  "/legal/cliente/privacidade",
   "/legal/cookies",
   "/legal/lgpd",
   "/legal/exclusao-de-conta",

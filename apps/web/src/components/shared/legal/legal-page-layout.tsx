@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { EcoPetLogo } from "@/components/shared/brand/ecopet-logo";
 
-interface LegalSection {
+export interface LegalSection {
   title: string;
   paragraphs: string[];
   list?: string[];

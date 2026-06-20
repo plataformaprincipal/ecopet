@@ -11,7 +11,8 @@
     "db:generate": "npm run generate -w @ecopet/database",
     "db:push": "npm run push -w @ecopet/database",
     "db:setup": "node ../../scripts/ensure-postgres.mjs && npm run db:push",
-    "test:cep": "node --import tsx --test src/lib/address/cep-service.test.ts"
+    "test:cep": "node --import tsx --test src/lib/address/cep-service.test.ts",
+    "test:password": "node --import tsx --test src/lib/password/validate-strong-password.test.ts"
   },
   "dependencies": {
     "@ecopet/database": "*",
@@ -30,6 +31,7 @@
     "clsx": "^2.1.1",
     "framer-motion": "^12.12.1",
     "jose": "^6.0.11",
+    "libphonenumber-js": "^1.13.7",
     "lucide-react": "^0.511.0",
     "next": "^15.3.2",
     "next-auth": "^4.24.11",

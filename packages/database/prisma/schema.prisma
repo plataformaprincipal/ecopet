@@ -585,6 +585,7 @@ model User {
 
   @@index([email])
   @@index([username])
+  @@index([phone])
   @@index([role])
   @@index([organizationId])
 }

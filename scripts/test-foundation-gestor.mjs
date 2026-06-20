@@ -53,7 +53,14 @@ async function registerAndLogin(jarName, role, email) {
     confirmPassword: password,
     phone: `11${String(Date.now()).slice(-9)}`,
   };
-  if (role === "CLIENT") base.birthDate = "1990-01-15";
+  if (role === "CLIENT") {
+    base.birthDate = "1990-01-15";
+    base.username = `user${String(Date.now()).slice(-10)}`;
+    base.gender = "MASCULINO";
+    base.acceptTerms = true;
+    base.acceptPrivacy = true;
+    base.phone = `119${String(Date.now()).slice(-8)}`;
+  }
   if (role === "PARTNER") {
     Object.assign(base, {
       businessName: "Loja Gestor",

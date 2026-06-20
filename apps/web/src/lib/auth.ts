@@ -26,6 +26,7 @@ export async function verifyPassword(password: string, passwordHash: string): Pr
 export const safeUserSelect = {
   id: true,
   name: true,
+  username: true,
   email: true,
   role: true,
   accountStatus: true,

@@ -37,10 +37,18 @@ export async function POST(request: Request) {
       return apiFailure("VALIDATION", PASSWORD_MISMATCH_MESSAGE, 400);
     }
 
-    const pwdCheck = validateStrongPassword(data.password, {
-      email: data.email,
-      name: data.name,
-    });
+    const pwdContext =
+      data.role === UserRole.CLIENT
+        ? {
+            email: data.email,
+            name: data.name,
+            username: data.username,
+            phone: data.phone,
+            birthDate: data.birthDate,
+          }
+        : { email: data.email, name: data.name };
+
+    const pwdCheck = validateStrongPassword(data.password, pwdContext);
     if (!pwdCheck.valid) {
       return apiFailure(
         "VALIDATION",
@@ -61,6 +69,20 @@ export async function POST(request: Request) {
     const phoneExists = await prisma.user.findFirst({ where: { phone: data.phone } });
     if (phoneExists) {
       return apiFailure("PHONE_DUPLICATE", "Este telefone já está vinculado a uma conta.", 409);
+    }
+
+    if (data.role === UserRole.CLIENT) {
+      const usernameExists = await prisma.user.findUnique({
+        where: { username: data.username },
+        select: { id: true },
+      });
+      if (usernameExists) {
+        return apiFailure(
+          "USERNAME_DUPLICATE",
+          "Este nome de usuário já está em uso. Escolha outro.",
+          409
+        );
+      }
     }
 
     if (data.role === UserRole.CLIENT && data.cpf) {
@@ -93,19 +115,36 @@ export async function POST(request: Request) {
 
     const user = await prisma.$transaction(async (tx) => {
       if (data.role === UserRole.CLIENT) {
+        const genderValue =
+          data.gender === "OUTRO" && data.genderOther?.trim()
+            ? `Outro: ${data.genderOther.trim()}`
+            : data.gender === "MASCULINO"
+              ? "Masculino"
+              : data.gender === "FEMININO"
+                ? "Feminino"
+                : data.gender === "NAO_BINARIO"
+                  ? "Não Binário"
+                  : data.gender === "NAO_DECLARAR"
+                    ? "Prefiro Não Declarar"
+                    : "Outro";
+
         return tx.user.create({
           data: {
-            name: data.name.trim(),
+            name: data.name,
             email: data.email,
+            username: data.username,
             passwordHash,
             role: UserRole.CLIENT,
             phone: data.phone,
+            gender: genderValue,
             cpf: data.cpf ?? null,
             birthDate: new Date(data.birthDate),
             address: data.address?.trim() || null,
             city: data.city?.trim() || null,
             state: data.state ?? null,
             accountStatus: AccountStatus.ACTIVE,
+            termsAcceptedAt: new Date(),
+            lgpdAcceptedAt: new Date(),
           },
           select: { id: true, name: true, email: true, role: true, accountStatus: true },
         });

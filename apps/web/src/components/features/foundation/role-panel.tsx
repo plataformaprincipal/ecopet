@@ -1,5 +1,6 @@
 import type { SafeUser } from "@/lib/auth";
 import { formatUserRole } from "@/lib/auth/format-user-role";
+import { getClientDisplayUsername, getFirstName } from "@/lib/validation/full-name";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,9 +22,17 @@ export function FoundationRolePanel({ user, title, description }: FoundationRole
           ? "Rejeitada"
           : "Ativa";
 
+  const isClient = user.role === "CLIENT";
+  const displayUsername = getClientDisplayUsername(user.username, user.name);
+
   return (
     <main className="min-h-screen bg-gray-50 py-8">
       <div className="mx-auto max-w-2xl space-y-4 p-6">
+        {isClient && (
+          <p className="text-xl font-semibold text-green-800" aria-label={`Saudação: Olá, ${getFirstName(user.name)}`}>
+            Olá, {getFirstName(user.name)}
+          </p>
+        )}
         <Card>
           <CardHeader>
             <CardTitle>{title}</CardTitle>
@@ -31,7 +40,7 @@ export function FoundationRolePanel({ user, title, description }: FoundationRole
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             <p>
-              <strong>Usuário:</strong> {user.name}
+              <strong>Usuário:</strong> {isClient ? displayUsername : user.name}
             </p>
             <p>
               <strong>E-mail:</strong> {user.email}
