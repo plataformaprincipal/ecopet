@@ -1,15 +1,12 @@
 import { USER_MESSAGES } from "@/schemas/validation/documents";
+import {
+  USER_ALREADY_REGISTERED_MESSAGE,
+  isDuplicateRegistrationCode,
+} from "@/lib/registration/document-messages";
 
 export type ApiFailurePayload = {
   error?: string | { code?: string; message?: string };
   code?: string;
-};
-
-const REGISTER_CONFLICT_MESSAGES: Record<string, string> = {
-  EMAIL_DUPLICATE: "Este e-mail já está cadastrado.",
-  CPF_DUPLICATE: "Este CPF já está cadastrado.",
-  CNPJ_DUPLICATE: "Este CNPJ já está cadastrado.",
-  USERNAME_DUPLICATE: "Este nome de usuário já está em uso.",
 };
 
 export function parseApiFailureError(body: ApiFailurePayload): { code?: string; message: string } {
@@ -21,11 +18,11 @@ export function parseApiFailureError(body: ApiFailurePayload): { code?: string; 
   return { code, message };
 }
 
-export function mapRegisterConflictMessage(code?: string, message?: string): string {
-  if (code && REGISTER_CONFLICT_MESSAGES[code]) {
-    return REGISTER_CONFLICT_MESSAGES[code];
+export function mapRegisterConflictMessage(code?: string, _message?: string): string {
+  if (isDuplicateRegistrationCode(code)) {
+    return USER_ALREADY_REGISTERED_MESSAGE;
   }
-  if (message) return message;
+  if (_message) return _message;
   return USER_MESSAGES.UNEXPECTED;
 }
 
@@ -45,14 +42,8 @@ export function mapApiErrorMessage(message: string, code?: string): string {
   if (code === "USER_NOT_FOUND") return message;
   if (code === "USER_OR_PASSWORD_INCORRECT") return message;
   if (code === "ACCOUNT_UNAVAILABLE" || code === "ACCOUNT_LOCKED" || code === "EMAIL_NOT_VERIFIED") return message;
-  if (
-    code === "EMAIL_DUPLICATE" ||
-    code === "CPF_DUPLICATE" ||
-    code === "CNPJ_DUPLICATE" ||
-    code === "PHONE_DUPLICATE" ||
-    code === "USERNAME_DUPLICATE"
-  ) {
-    return message;
+  if (isDuplicateRegistrationCode(code)) {
+    return USER_ALREADY_REGISTERED_MESSAGE;
   }
   if (code === "VALIDATION") return message || USER_MESSAGES.VALIDATION;
   if (code === "DATABASE") return USER_MESSAGES.DATABASE;

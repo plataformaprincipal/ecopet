@@ -10,6 +10,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { FoundationPasswordField, FoundationConfirmPasswordField } from "@/components/features/foundation/password-field";
 import { InternationalPhoneField } from "@/components/features/foundation/international-phone-field";
 import { ClientRegisterForm } from "@/components/features/foundation/client-register-form";
+import { PartnerRegisterForm } from "@/components/features/foundation/partner/partner-register-form";
+import { StepValidationFeedback } from "@/components/features/foundation/step-validation-feedback";
 import {
   RegisterRoleSelector,
   REGISTER_ROLE_REQUIRED_MESSAGE,
@@ -30,6 +32,10 @@ import {
   BR_PHONE_INVALID_MESSAGE,
   PHONE_INVALID_MESSAGE,
 } from "@/lib/validation/international-phone";
+import { collectUniqueErrorMessages, duplicateRegistrationError } from "@/lib/registration/collect-step-errors";
+import { useDocumentAvailability } from "@/lib/registration/use-document-availability";
+import { maskCnpj, onlyDigits, validateCnpjChecksum } from "@/schemas/validation/documents-shared";
+import { cn } from "@/lib/utils";
 
 export function FoundationRegisterForm() {
   const router = useRouter();
@@ -37,6 +43,8 @@ export function FoundationRegisterForm() {
   const [roleError, setRoleError] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [stepFeedback, setStepFeedback] = useState<string[]>([]);
   const [phoneCountry, setPhoneCountry] = useState<CountryCode>("BR");
   const [brazilDdd, setBrazilDdd] = useState("");
   const [form, setForm] = useState<Record<string, string>>({
@@ -58,6 +66,35 @@ export function FoundationRegisterForm() {
 
   function setField(key: string, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }));
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+    setStepFeedback([]);
+  }
+
+  const cnpjAvailability = useDocumentAvailability("cnpj", role === "ONG" ? form.cnpj : "");
+
+  function validateOngForm(): Record<string, string> {
+    const errors: Record<string, string> = {};
+    if (!form.name.trim()) errors.name = "Informe o nome completo.";
+    if (!form.email.trim()) errors.email = "Digite um e-mail válido.";
+    if (!form.password) errors.password = "Senha obrigatória.";
+    if (form.password !== form.confirmPassword) errors.confirmPassword = PASSWORD_MISMATCH_MESSAGE;
+    const phoneFb = getPhoneLiveFeedback(form.phone, phoneCountry, phoneCountry === "BR" ? brazilDdd : undefined);
+    if (!phoneFb.valid) errors.phone = phoneFb.message ?? PHONE_INVALID_MESSAGE;
+    if (!form.ongName.trim()) errors.ongName = "Informe o nome da ONG.";
+    const cnpjDigits = onlyDigits(form.cnpj);
+    if (!validateCnpjChecksum(cnpjDigits)) errors.cnpj = "Digite um CNPJ válido.";
+    else if (cnpjAvailability === "taken") Object.assign(errors, duplicateRegistrationError());
+    if (!form.responsibleName.trim()) errors.responsibleName = "Informe o responsável.";
+    if (!form.address.trim()) errors.address = "Informe o endereço.";
+    if (!form.city.trim()) errors.city = "Informe a cidade.";
+    if (form.state.trim().length !== 2) errors.state = "Informe a UF.";
+    const pwdCheck = validateStrongPassword(form.password, { email: form.email, name: form.name });
+    if (!pwdCheck.valid) errors.password = pwdCheck.error ?? "Senha não atende aos requisitos de segurança.";
+    return errors;
   }
 
   function handleRoleChange(next: RegisterRole) {
@@ -73,8 +110,21 @@ export function FoundationRegisterForm() {
       return;
     }
 
+    if (role === "ONG") {
+      if (cnpjAvailability === "checking") {
+        setStepFeedback(["Aguarde a verificação do CNPJ."]);
+        return;
+      }
+      const errors = validateOngForm();
+      setFieldErrors(errors);
+      const messages = collectUniqueErrorMessages(errors);
+      setStepFeedback(messages);
+      if (messages.length > 0) return;
+    }
+
     setLoading(true);
     setError("");
+    setStepFeedback([]);
 
     const normalizedPhone = resolveRegistrationPhoneE164(
       form.phone,
@@ -182,66 +232,7 @@ export function FoundationRegisterForm() {
 
         {role === "CLIENT" && <ClientRegisterForm embedded />}
 
-        {role === "PARTNER" && (
-          <form onSubmit={handleSubmit} className="mx-auto w-full max-w-lg space-y-4" noValidate aria-describedby="register-form-hint">
-            <p id="register-form-hint" className="text-sm text-muted-foreground">
-              Campos com * são obrigatórios.
-            </p>
-
-            <Field id="register-name" label="Nome completo" placeholder="Seu nome completo" value={form.name} onChange={(v) => setField("name", v)} required hint="Como aparecerá no seu perfil." />
-            <Field id="register-email" label="E-mail" type="email" placeholder="seu@email.com" value={form.email} onChange={(v) => setField("email", v)} required />
-            <FoundationPasswordField
-              id="register-password"
-              label="Senha"
-              value={form.password}
-              onChange={(v) => setField("password", v)}
-              context={{ email: form.email, name: form.name }}
-              required
-            />
-            <FoundationConfirmPasswordField
-              id="register-confirm-password"
-              label="Confirmar senha"
-              value={form.confirmPassword}
-              password={form.password}
-              onChange={(v) => setField("confirmPassword", v)}
-              required
-            />
-            <InternationalPhoneField
-              id="register-phone"
-              value={form.phone}
-              onChange={(v) => setField("phone", v)}
-              country={phoneCountry}
-              onCountryChange={setPhoneCountry}
-              brazilDdd={brazilDdd}
-              onBrazilDddChange={setBrazilDdd}
-              required
-              error={
-                (() => {
-                  const fb = getPhoneLiveFeedback(form.phone, phoneCountry, phoneCountry === "BR" ? brazilDdd : undefined);
-                  return fb.message && !fb.valid ? fb.message : undefined;
-                })()
-              }
-            />
-
-            <Field label="Nome fantasia" value={form.businessName} onChange={(v) => setField("businessName", v)} required />
-            <Field label="Razão social" value={form.legalName} onChange={(v) => setField("legalName", v)} required />
-            <Field label="CNPJ" value={form.cnpj} onChange={(v) => setField("cnpj", v)} required />
-            <Field label="Categoria" value={form.category} onChange={(v) => setField("category", v)} required />
-            <Field label="Endereço" value={form.address} onChange={(v) => setField("address", v)} required />
-            <Field label="Cidade" value={form.city} onChange={(v) => setField("city", v)} required />
-            <Field label="UF" value={form.state} onChange={(v) => setField("state", v)} required maxLength={2} />
-
-            {error && <p id="register-error" className="text-sm text-red-600" role="alert" aria-live="polite">{error}</p>}
-
-            <Button type="submit" className="w-full" disabled={loading} aria-describedby={error ? "register-error" : undefined}>
-              {loading ? "Cadastrando..." : "Cadastrar"}
-            </Button>
-
-            <p className="text-center text-sm text-gray-600">
-              Já tem conta? <Link href="/login" className="font-semibold text-green-700 hover:underline">Entrar</Link>
-            </p>
-          </form>
-        )}
+        {role === "PARTNER" && <PartnerRegisterForm embedded />}
 
         {role === "ONG" && (
           <form onSubmit={handleSubmit} className="mx-auto w-full max-w-lg space-y-4" noValidate aria-describedby="register-form-hint-ong">
@@ -249,8 +240,8 @@ export function FoundationRegisterForm() {
               Campos com * são obrigatórios.
             </p>
 
-            <Field id="register-name-ong" label="Nome completo" placeholder="Seu nome completo" value={form.name} onChange={(v) => setField("name", v)} required />
-            <Field id="register-email-ong" label="E-mail" type="email" placeholder="seu@email.com" value={form.email} onChange={(v) => setField("email", v)} required />
+            <Field id="register-name-ong" label="Nome completo" placeholder="Seu nome completo" value={form.name} onChange={(v) => setField("name", v)} required error={fieldErrors.name} />
+            <Field id="register-email-ong" label="E-mail" type="email" placeholder="seu@email.com" value={form.email} onChange={(v) => setField("email", v)} required error={fieldErrors.email} />
             <FoundationPasswordField
               id="register-password-ong"
               label="Senha"
@@ -284,18 +275,19 @@ export function FoundationRegisterForm() {
               }
             />
 
-            <Field label="Nome da ONG" value={form.ongName} onChange={(v) => setField("ongName", v)} required />
-            <Field label="CNPJ" value={form.cnpj} onChange={(v) => setField("cnpj", v)} required />
-            <Field label="Responsável" value={form.responsibleName} onChange={(v) => setField("responsibleName", v)} required />
-            <Field label="Endereço" value={form.address} onChange={(v) => setField("address", v)} required />
-            <Field label="Cidade" value={form.city} onChange={(v) => setField("city", v)} required />
-            <Field label="UF" value={form.state} onChange={(v) => setField("state", v)} required maxLength={2} />
+            <Field label="Nome da ONG" value={form.ongName} onChange={(v) => setField("ongName", v)} required error={fieldErrors.ongName} />
+            <Field label="CNPJ" value={form.cnpj} onChange={(v) => setField("cnpj", maskCnpj(v))} required error={fieldErrors.cnpj} />
+            <Field label="Responsável" value={form.responsibleName} onChange={(v) => setField("responsibleName", v)} required error={fieldErrors.responsibleName} />
+            <Field label="Endereço" value={form.address} onChange={(v) => setField("address", v)} required error={fieldErrors.address} />
+            <Field label="Cidade" value={form.city} onChange={(v) => setField("city", v)} required error={fieldErrors.city} />
+            <Field label="UF" value={form.state} onChange={(v) => setField("state", v.toUpperCase())} required maxLength={2} error={fieldErrors.state} />
 
             {error && <p id="register-error-ong" className="text-sm text-red-600" role="alert" aria-live="polite">{error}</p>}
 
             <Button type="submit" className="w-full" disabled={loading} aria-describedby={error ? "register-error-ong" : undefined}>
               {loading ? "Cadastrando..." : "Cadastrar"}
             </Button>
+            <StepValidationFeedback messages={stepFeedback} />
 
             <p className="text-center text-sm text-gray-600">
               Já tem conta? <Link href="/login" className="font-semibold text-green-700 hover:underline">Entrar</Link>
@@ -323,6 +315,7 @@ function Field({
   required,
   maxLength,
   hint,
+  error,
 }: {
   id?: string;
   label: string;
@@ -333,9 +326,11 @@ function Field({
   required?: boolean;
   maxLength?: number;
   hint?: string;
+  error?: string;
 }) {
   const id = idProp ?? `register-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
   const hintId = hint ? `${id}-hint` : undefined;
+  const errorId = error ? `${id}-error` : undefined;
   return (
     <div>
       <label htmlFor={id} className="text-sm font-medium">
@@ -350,13 +345,19 @@ function Field({
         onChange={(e) => onChange(e.target.value)}
         required={required}
         maxLength={maxLength}
-        className="mt-1"
+        className={cn("mt-1", error && "border-red-500")}
         aria-label={label}
-        aria-describedby={hintId}
+        aria-describedby={[hintId, errorId].filter(Boolean).join(" ") || undefined}
+        aria-invalid={!!error}
       />
       {hint && (
         <p id={hintId} className="mt-1 text-xs text-muted-foreground">
           {hint}
+        </p>
+      )}
+      {error && (
+        <p id={errorId} className="mt-1 text-sm text-red-600" role="alert" aria-live="polite">
+          {error}
         </p>
       )}
     </div>

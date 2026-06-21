@@ -8,6 +8,7 @@ import { optionalSanitizeText, sanitizeText } from "@/lib/sanitize";
 import { getProfileUpdateSchema } from "@/schemas/profile";
 import { syncAddressRecord } from "@/lib/address-sync";
 import { writeAuditLog } from "@/lib/audit-log";
+import { USER_ALREADY_REGISTERED_MESSAGE } from "@/lib/registration/document-messages";
 
 function stripProtectedFields(body: Record<string, unknown>) {
   const { role, email, verificationStatus, password, passwordHash, ...rest } = body;
@@ -69,7 +70,7 @@ export async function PUT(request: Request) {
           where: { cpf: clientData.cpf, id: { not: user.id } },
         });
         if (cpfExists) {
-          return apiFailure("CPF_DUPLICATE", "Este CPF já está cadastrado.", 409);
+          return apiFailure("CPF_DUPLICATE", USER_ALREADY_REGISTERED_MESSAGE, 409);
         }
       }
 
@@ -122,7 +123,7 @@ export async function PUT(request: Request) {
         }),
       ]);
       if (partnerCnpj || ongCnpj || userCnpj) {
-        return apiFailure("CNPJ_DUPLICATE", "Este CNPJ já está cadastrado.", 409);
+        return apiFailure("CNPJ_DUPLICATE", USER_ALREADY_REGISTERED_MESSAGE, 409);
       }
 
       const criticalChange =
@@ -199,7 +200,7 @@ export async function PUT(request: Request) {
       }),
     ]);
     if (partnerCnpj || ongCnpj || userCnpj) {
-      return apiFailure("CNPJ_DUPLICATE", "Este CNPJ já está cadastrado.", 409);
+      return apiFailure("CNPJ_DUPLICATE", USER_ALREADY_REGISTERED_MESSAGE, 409);
     }
 
     const criticalChange =

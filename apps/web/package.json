@@ -12,7 +12,10 @@
     "db:push": "npm run push -w @ecopet/database",
     "db:setup": "node ../../scripts/ensure-postgres.mjs && npm run db:push",
     "test:cep": "node --import tsx --test src/lib/address/cep-service.test.ts",
-    "test:password": "node --import tsx --test src/lib/password/validate-strong-password.test.ts"
+    "test:cnpj": "node --import tsx --test src/lib/integrations/cnpj/cnpj-service.test.ts",
+    "test:password": "node --import tsx --test src/lib/password/validate-strong-password.test.ts",
+    "test:partner:rules": "node --import tsx --test src/lib/partner/operation-rules.test.ts src/lib/partner/document-validation.test.ts",
+    "test:registration:rules": "node --import tsx --test src/lib/registration/collect-step-errors.test.ts"
   },
   "dependencies": {
     "@ecopet/database": "*",

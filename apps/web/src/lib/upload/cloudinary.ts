@@ -7,6 +7,7 @@ export type UploadPurpose =
   | "service_image"
   | "product_image"
   | "partner_logo"
+  | "partner_document"
   | "chat_attachment"
   | "social_post_media"
   | "social_profile_avatar"
@@ -18,7 +19,8 @@ const ALLOWED_MIME: Record<UploadPurpose, string[]> = {
   user_avatar: ["image/jpeg", "image/png", "image/webp"],
   service_image: ["image/jpeg", "image/png", "image/webp"],
   product_image: ["image/jpeg", "image/png", "image/webp"],
-  partner_logo: ["image/jpeg", "image/png", "image/webp"],
+  partner_logo: ["image/jpeg", "image/png", "image/webp", "image/svg+xml"],
+  partner_document: ["image/jpeg", "image/png", "image/webp", "application/pdf"],
   chat_attachment: ["image/jpeg", "image/png", "image/webp", "application/pdf"],
   social_post_media: ["image/jpeg", "image/png", "image/webp"],
   social_profile_avatar: ["image/jpeg", "image/png", "image/webp"],
@@ -31,7 +33,8 @@ const MAX_BYTES: Record<UploadPurpose, number> = {
   user_avatar: 5 * 1024 * 1024,
   service_image: 5 * 1024 * 1024,
   product_image: 5 * 1024 * 1024,
-  partner_logo: 5 * 1024 * 1024,
+  partner_logo: 10 * 1024 * 1024,
+  partner_document: 20 * 1024 * 1024,
   chat_attachment: 10 * 1024 * 1024,
   social_post_media: 10 * 1024 * 1024,
   social_profile_avatar: 5 * 1024 * 1024,

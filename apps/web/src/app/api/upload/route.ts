@@ -24,6 +24,7 @@ const VALID_PURPOSES: UploadPurpose[] = [
   "product_image",
 
   "partner_logo",
+  "partner_document",
   "chat_attachment",
   "social_post_media",
   "social_profile_avatar",

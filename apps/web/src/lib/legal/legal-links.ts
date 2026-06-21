@@ -13,12 +13,15 @@ export const CLIENT_LEGAL = {
   },
 } as const;
 
-/** Estrutura reservada — não exibir no cadastro até implementação futura. */
+export const PARTNER_LEGAL_ACCEPTANCE_MESSAGE =
+  "Você precisa aceitar os Termos de Uso e a Política de Privacidade para continuar.";
+
+/** Termos e privacidade exclusivos do cadastro de Parceiro EcoPet. */
 export const PARTNER_LEGAL = {
   terms: {
     href: "/legal/parceiro/termos",
-    title: "Termos de Uso e de Serviço do Parceiro EcoPet",
-    checkboxLabel: "Aceito os Termos de Uso e de Serviço do Parceiro EcoPet",
+    title: "Termos de Uso e de Parceria do Parceiro EcoPet",
+    checkboxLabel: "Aceito os Termos de Uso e de Parceria do Parceiro EcoPet",
   },
   privacy: {
     href: "/legal/parceiro/privacidade",

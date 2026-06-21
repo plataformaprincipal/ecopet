@@ -441,7 +441,7 @@ model User {
   passwordHash  String
   name          String
   cpf           String?   @unique
-  cnpj          String?
+  cnpj          String?   @unique
   birthDate     DateTime?
   phone         String?
   address       String?
@@ -1011,9 +1011,11 @@ model OngProfile {
 model PartnerProfile {
   id                 String             @id @default(cuid())
   userId             String             @unique
+  partnerType        String?
   businessName       String
   legalName          String
-  cnpj               String             @unique
+  cnpj               String?            @unique
+  corporateType      String?
   category           String
   commercialEmail    String?
   responsibleName    String?
@@ -1023,6 +1025,14 @@ model PartnerProfile {
   zipCode            String?
   description        String?
   businessHours      String?
+  activityStartDate  DateTime?
+  activityAreas      Json?
+  addressDetails     Json?
+  operationDetails   Json?
+  financialDetails   Json?
+  verificationDocuments Json?
+  cnpjDetails        Json?
+  logoAlt            String?
   verificationStatus VerificationStatus @default(PENDING)
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt

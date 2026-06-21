@@ -2,6 +2,8 @@
  * Testes de fundação: cadastro, login, sessão, proteção por role.
  * Usa e-mails únicos por execução — não é seed permanente.
  */
+import { generateValidCnpj } from "./cnpj-test-utils.mjs";
+
 const WEB = process.env.WEB_URL || "http://localhost:3000";
 
 function assert(cond, msg) {
@@ -9,8 +11,7 @@ function assert(cond, msg) {
 }
 
 function generateCnpj() {
-  const base = String(Date.now()).slice(-8).padStart(8, "0") + "0001";
-  return base.padEnd(14, "0").slice(0, 14);
+  return generateValidCnpj(Date.now());
 }
 
 const cookieJar = new Map();
@@ -428,6 +429,11 @@ async function main() {
     ),
   });
   assert(dup.status === 409, "email duplicado 409");
+  assert(
+    validationMessage(dup) === "Usuário já cadastrado.",
+    "e-mail duplicado → mensagem genérica"
+  );
+  assert(dup.data?.error?.code === "EMAIL_DUPLICATE", "e-mail duplicado → código técnico preservado");
 
   // 7. Login client (e-mail)
   const clientUsername = `client${String(ts).slice(-8)}`;
@@ -546,7 +552,7 @@ async function main() {
 
   // 11. Register PARTNER
   const partnerEmail = `partner.${ts}@test.ecopet.local`;
-  const cnpj = generateCnpj();
+  const cnpj = generateValidCnpj(ts);
   const partner = await req("/api/auth/register", {
     method: "POST",
     body: JSON.stringify({
@@ -602,10 +608,14 @@ async function main() {
     }),
   });
   assert(dupCnpj.status === 409, "cnpj duplicado 409");
+  assert(
+    validationMessage(dupCnpj) === "Usuário já cadastrado.",
+    "cnpj duplicado ONG → mensagem genérica"
+  );
 
   // 13. Register ONG
   const ongEmail = `ong.${ts}@test.ecopet.local`;
-  const ongCnpj = `${String(Date.now()).slice(-10)}04`.padEnd(14, "0").slice(0, 14);
+  const ongCnpj = generateValidCnpj(ts + 200);
   const ong = await req("/api/auth/register", {
     method: "POST",
     body: JSON.stringify({

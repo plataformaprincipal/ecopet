@@ -23,14 +23,15 @@ import {
   validateBirthDate,
 } from "@/lib/validation/birth-date";
 
-import { onlyDigits, validateCpfChecksum } from "./validation/documents-shared";
+import { onlyDigits, validateCpfChecksum, validateCnpjChecksum } from "./validation/documents-shared";
 
 export const cpfSchema = z
   .string()
-  .min(11, "CPF inválido")
+  .min(11, "Digite um CPF válido.")
   .transform(onlyDigits)
-  .refine((v) => v.length === 11, "CPF inválido")
-  .refine(validateCpfChecksum, "CPF inválido");
+  .refine((v) => v.length === 11, "Digite um CPF válido.")
+  .refine((v) => !/^(\d)\1+$/.test(v), "Digite um CPF válido.")
+  .refine(validateCpfChecksum, "Digite um CPF válido.");
 
 function internationalPhoneRefine(value: string): boolean {
   const sanitized = sanitizePhoneInput(value);
@@ -111,9 +112,11 @@ export const birthDateSchema = z
 
 export const cnpjSchema = z
   .string()
-  .min(14, "CNPJ inválido")
+  .min(14, "Digite um CNPJ válido.")
   .transform(onlyDigits)
-  .refine((v) => v.length === 14, "CNPJ inválido");
+  .refine((v) => v.length === 14, "Digite um CNPJ válido.")
+  .refine((v) => !/^(\d)\1+$/.test(v), "Digite um CNPJ válido.")
+  .refine(validateCnpjChecksum, "Digite um CNPJ válido.");
 
 const baseRegisterFields = z.object({
   role: z.nativeEnum(UserRole),
@@ -140,7 +143,7 @@ export const clientRegisterSchema = baseRegisterFields.extend({
   state: z.string().length(2, "UF inválida").transform((v) => v.toUpperCase()).optional(),
 });
 
-export const partnerRegisterSchema = baseRegisterFields.extend({
+export const partnerRegisterSchemaLegacy = baseRegisterFields.extend({
   role: z.literal(UserRole.PARTNER),
   businessName: z.string().min(2, "Nome fantasia obrigatório"),
   legalName: z.string().min(2, "Razão social obrigatória"),
@@ -163,7 +166,6 @@ export const ongRegisterSchema = baseRegisterFields.extend({
 
 const registerUnion = z.discriminatedUnion("role", [
   clientRegisterSchema,
-  partnerRegisterSchema,
   ongRegisterSchema,
 ]);
 

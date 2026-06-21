@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Check, X } from "lucide-react";
+import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,6 +49,8 @@ import {
   getBirthDateBounds,
 } from "@/lib/validation/birth-date";
 import { cn } from "@/lib/utils";
+import { StepValidationFeedback } from "@/components/features/foundation/step-validation-feedback";
+import { collectUniqueErrorMessages, duplicateRegistrationError } from "@/lib/registration/collect-step-errors";
 
 type Step = "personal" | "security" | "conclusion";
 
@@ -68,6 +70,7 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
   const [termsError, setTermsError] = useState("");
+  const [stepFeedback, setStepFeedback] = useState<string[]>([]);
 
   const [form, setForm] = useState({
     name: "",
@@ -88,6 +91,7 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
       delete next[key];
       return next;
     });
+    setStepFeedback([]);
   }
 
   const passwordContext = useMemo(
@@ -194,7 +198,7 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
     if (!USERNAME_PATTERN.test(username)) {
       errors.username = "Use 4–30 caracteres: letras, números, _ e .";
     } else if (usernameStatus === "taken") {
-      errors.username = "Este nome de usuário já está em uso.";
+      Object.assign(errors, duplicateRegistrationError());
     }
 
     if (!form.birthDate) {
@@ -210,15 +214,18 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
   function handleNextStep(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    if (usernameStatus === "checking") {
+      setStepFeedback(["Aguarde a verificação do nome de usuário."]);
+      return;
+    }
     const errors = validatePersonalStep();
-    if (Object.keys(errors).length > 0) {
+    const messages = collectUniqueErrorMessages(errors);
+    setStepFeedback(messages);
+    if (messages.length > 0) {
       setFieldErrors(errors);
       return;
     }
-    if (usernameStatus === "checking") {
-      setError("Aguarde a verificação do nome de usuário.");
-      return;
-    }
+    setStepFeedback([]);
     setStep("security");
   }
 
@@ -228,28 +235,27 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
     setError("");
     setTermsError("");
 
+    const securityErrors: FieldErrors = {};
     if (!acceptTerms || !acceptPrivacy) {
       setTermsError(CLIENT_LEGAL_ACCEPTANCE_MESSAGE);
-      setLoading(false);
-      return;
+      securityErrors.legal = "Você precisa aceitar os termos para continuar.";
     }
-
-    setStep("conclusion");
-
     if (form.password !== form.confirmPassword) {
-      setError(PASSWORD_MISMATCH_MESSAGE);
-      setStep("security");
-      setLoading(false);
-      return;
+      securityErrors.confirmPassword = PASSWORD_MISMATCH_MESSAGE;
     }
-
     const pwdCheck = validateStrongPassword(form.password, passwordContext);
     if (!pwdCheck.valid) {
-      setError(pwdCheck.error ?? "Senha não atende aos requisitos de segurança.");
-      setStep("security");
+      securityErrors.password = pwdCheck.error ?? "Senha não atende aos requisitos de segurança.";
+    }
+    const messages = collectUniqueErrorMessages(securityErrors);
+    if (messages.length > 0) {
+      setStepFeedback(messages);
       setLoading(false);
       return;
     }
+    setStepFeedback([]);
+
+    setStep("conclusion");
 
     const normalizedPhone = resolveRegistrationPhoneE164(
       form.phone,
@@ -415,11 +421,6 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
                       <Check className="h-3 w-3" aria-hidden /> Disponível
                     </>
                   )}
-                  {usernameStatus === "taken" && (
-                    <>
-                      <X className="h-3 w-3" aria-hidden /> Já utilizado
-                    </>
-                  )}
                   {usernameStatus === "invalid" && "Formato inválido"}
                 </p>
               )}
@@ -445,6 +446,7 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
             <Button type="submit" className="w-full">
               Continuar para segurança
             </Button>
+            <StepValidationFeedback messages={stepFeedback} />
           </form>
         )}
 
@@ -506,6 +508,7 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
                 {loading ? "Cadastrando..." : "Cadastrar"}
               </Button>
             </div>
+            <StepValidationFeedback messages={stepFeedback} />
           </form>
         )}
 

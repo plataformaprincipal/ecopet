@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { UserRole, AccountStatus } from "@prisma/client";
+import { UserRole, AccountStatus, VerificationStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
   hashPassword,
@@ -10,31 +10,256 @@ import {
   safeUserSelect,
 } from "@/lib/auth";
 import { dashboardPathForRole } from "@/lib/auth/dashboard";
-import { registerSchema } from "@/schemas/auth";
+import { registerSchema, partnerRegisterSchemaLegacy } from "@/schemas/auth";
+import {
+  partnerRegisterSchema,
+  composePartnerAddressLine,
+  composePartnerCategory,
+  type PartnerRegisterInput,
+} from "@/schemas/partner-register";
 import { validateStrongPassword, PASSWORD_MISMATCH_MESSAGE } from "@/lib/password/validate-strong-password";
 import { apiSuccess, apiFailure } from "@/lib/api-response";
 import { emailRegisterCompleted } from "@/lib/mail/event-dispatch";
+import {
+  isCpfGloballyAvailable,
+  isCnpjGloballyAvailable,
+} from "@/lib/registration/document-availability";
+import { USER_ALREADY_REGISTERED_MESSAGE } from "@/lib/registration/document-messages";
 
 const ALLOWED_REGISTER_ROLES = [UserRole.CLIENT, UserRole.PARTNER, UserRole.ONG] as const;
+
+function formatBusinessHours(data: PartnerRegisterInput): string {
+  const op = data.operationDetails;
+  const parts = [...op.modes];
+  if (op.weekdays?.length) parts.push(`Dias: ${op.weekdays.join(",")}`);
+  if (op.openTime && op.closeTime) parts.push(`${op.openTime}-${op.closeTime}`);
+  return parts.join(" | ");
+}
+
+async function createPartnerUser(data: PartnerRegisterInput) {
+  const isAutonomous = data.partnerType === "AUTONOMOUS";
+  const businessName = isAutonomous ? data.professionalName.trim() : data.businessName.trim();
+  const legalName = isAutonomous ? data.name.trim() : data.legalName.trim();
+  const addressLine = composePartnerAddressLine(data.addressDetails);
+  const category = composePartnerCategory(data.activityAreas, data.activityAreasOther);
+  const passwordHash = await hashPassword(data.password);
+
+  const profileCreate = {
+    partnerType: data.partnerType,
+    businessName,
+    legalName,
+    cnpj: isAutonomous ? null : data.cnpj,
+    corporateType: isAutonomous ? null : data.corporateType,
+    category,
+    address: addressLine,
+    city: data.addressDetails.city.trim(),
+    state: data.addressDetails.state,
+    zipCode: data.addressDetails.zipCode.replace(/\D/g, ""),
+    description: data.businessDescription.trim(),
+    businessHours: formatBusinessHours(data),
+    activityStartDate: new Date(`${data.activityStartDate}T12:00:00`),
+    activityAreas: data.activityAreas,
+    addressDetails: data.addressDetails,
+    operationDetails: data.operationDetails,
+    financialDetails: data.financialDetails,
+    verificationDocuments: data.verificationDocuments ?? undefined,
+    cnpjDetails: data.cnpjDetails ?? undefined,
+    logoAlt: data.logoAlt ?? undefined,
+    responsibleName: data.name.trim(),
+    commercialEmail: data.email,
+    verificationStatus: VerificationStatus.APPROVED,
+  } as Prisma.PartnerProfileUncheckedCreateWithoutUserInput;
+
+  return prisma.$transaction(async (tx) => {
+    const created = await tx.user.create({
+      data: {
+        name: data.name.trim(),
+        email: data.email,
+        username: data.username,
+        passwordHash,
+        role: UserRole.PARTNER,
+        phone: data.phone,
+        cpf: isAutonomous ? data.cpf : null,
+        cnpj: isAutonomous ? null : data.cnpj,
+        avatarUrl: data.logoUrl ?? undefined,
+        accountStatus: AccountStatus.ACTIVE,
+        termsAcceptedAt: new Date(),
+        lgpdAcceptedAt: new Date(),
+        zipCode: data.addressDetails.zipCode.replace(/\D/g, ""),
+        city: data.addressDetails.city.trim(),
+        state: data.addressDetails.state,
+        address: addressLine,
+        partnerProfile: {
+          create: profileCreate,
+        },
+      },
+      select: { id: true, name: true, email: true, role: true, accountStatus: true },
+    });
+    return created;
+  });
+}
+
+async function createLegacyPartnerUser(data: {
+  name: string;
+  email: string;
+  password: string;
+  phone: string;
+  businessName: string;
+  legalName: string;
+  cnpj: string;
+  category: string;
+  address: string;
+  city: string;
+  state: string;
+  username?: string;
+}) {
+  const passwordHash = await hashPassword(data.password);
+  return prisma.$transaction(async (tx) => {
+    return tx.user.create({
+      data: {
+        name: data.name.trim(),
+        email: data.email,
+        username: data.username ?? null,
+        passwordHash,
+        role: UserRole.PARTNER,
+        phone: data.phone,
+        cnpj: data.cnpj,
+        accountStatus: AccountStatus.ACTIVE,
+        termsAcceptedAt: new Date(),
+        lgpdAcceptedAt: new Date(),
+        partnerProfile: {
+          create: {
+            partnerType: "CORPORATE",
+            businessName: data.businessName.trim(),
+            legalName: data.legalName.trim(),
+            cnpj: data.cnpj,
+            category: data.category.trim(),
+            address: data.address.trim(),
+            city: data.city.trim(),
+            state: data.state,
+            responsibleName: data.name.trim(),
+            commercialEmail: data.email,
+            verificationStatus: VerificationStatus.APPROVED,
+          },
+        },
+      },
+      select: { id: true, name: true, email: true, role: true, accountStatus: true },
+    });
+  });
+}
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const parsed = registerSchema.safeParse(body);
 
-    if (!parsed.success) {
-      const first = parsed.error.errors[0];
+    let partnerData: PartnerRegisterInput | null = null;
+    let legacyPartner = false;
+    let parsedClientOng = registerSchema.safeParse(body);
+
+    if (body?.role === UserRole.PARTNER) {
+      parsedClientOng = { success: false, error: {} as never };
+      const modern = partnerRegisterSchema.safeParse(body);
+      if (modern.success) {
+        partnerData = modern.data;
+      } else {
+        const legacy = partnerRegisterSchemaLegacy.safeParse(body);
+        if (legacy.success) {
+          legacyPartner = true;
+        } else {
+          const first =
+            modern.error.errors[0] ?? legacy.error.errors[0];
+          return apiFailure("VALIDATION", first?.message ?? "Dados inválidos", 400);
+        }
+      }
+    }
+
+    if (!partnerData && !legacyPartner && !parsedClientOng.success) {
+      const first = parsedClientOng.error.errors[0];
       return apiFailure("VALIDATION", first?.message ?? "Dados inválidos", 400);
     }
 
-    const data = parsed.data;
+    const data = parsedClientOng.success ? parsedClientOng.data : null;
 
-    if (!ALLOWED_REGISTER_ROLES.includes(data.role as (typeof ALLOWED_REGISTER_ROLES)[number])) {
+    if (data && !ALLOWED_REGISTER_ROLES.includes(data.role as (typeof ALLOWED_REGISTER_ROLES)[number])) {
       return apiFailure("FORBIDDEN", "Tipo de cadastro não permitido nesta página.", 403);
     }
 
-    if (data.password !== data.confirmPassword) {
+    if (partnerData) {
+      if (partnerData.password !== partnerData.confirmPassword) {
+        return apiFailure("VALIDATION", PASSWORD_MISMATCH_MESSAGE, 400);
+      }
+    } else if (data && data.password !== data.confirmPassword) {
       return apiFailure("VALIDATION", PASSWORD_MISMATCH_MESSAGE, 400);
+    }
+
+    const email = partnerData?.email ?? (legacyPartner ? body.email : data!.email);
+    const phone = partnerData?.phone ?? (legacyPartner ? body.phone : data!.phone);
+
+    const emailExists = await prisma.user.findUnique({ where: { email } });
+    if (emailExists) {
+      return apiFailure("EMAIL_DUPLICATE", USER_ALREADY_REGISTERED_MESSAGE, 409);
+    }
+
+    const phoneExists = await prisma.user.findFirst({ where: { phone } });
+    if (phoneExists) {
+      return apiFailure("PHONE_DUPLICATE", USER_ALREADY_REGISTERED_MESSAGE, 409);
+    }
+
+    if (partnerData) {
+      const usernameExists = await prisma.user.findUnique({ where: { username: partnerData.username } });
+      if (usernameExists) {
+        return apiFailure("USERNAME_DUPLICATE", USER_ALREADY_REGISTERED_MESSAGE, 409);
+      }
+      if (partnerData.partnerType === "AUTONOMOUS") {
+        const cpfAvailable = await isCpfGloballyAvailable(partnerData.cpf);
+        if (!cpfAvailable) {
+          return apiFailure("CPF_DUPLICATE", USER_ALREADY_REGISTERED_MESSAGE, 409);
+        }
+      } else {
+        const cnpjAvailable = await isCnpjGloballyAvailable(partnerData.cnpj);
+        if (!cnpjAvailable) {
+          return apiFailure("CNPJ_DUPLICATE", USER_ALREADY_REGISTERED_MESSAGE, 409);
+        }
+      }
+    }
+
+    if (legacyPartner) {
+      const legacy = partnerRegisterSchemaLegacy.parse(body);
+      const pwdCheck = validateStrongPassword(legacy.password, { email: legacy.email, name: legacy.name });
+      if (!pwdCheck.valid) {
+        return apiFailure("VALIDATION", pwdCheck.error ?? "Senha inválida.", 400);
+      }
+      const cnpjAvailable = await isCnpjGloballyAvailable(legacy.cnpj);
+      if (!cnpjAvailable) {
+        return apiFailure("CNPJ_DUPLICATE", USER_ALREADY_REGISTERED_MESSAGE, 409);
+      }
+      const user = await createLegacyPartnerUser(legacy);
+      const token = await createSessionToken(user.id, user.role, user.accountStatus ?? AccountStatus.ACTIVE);
+      const fullUser = await prisma.user.findUnique({ where: { id: user.id }, select: safeUserSelect });
+      const response = apiSuccess(
+        { message: "Conta criada com sucesso!", user: fullUser ? sanitizeUser(fullUser) : user, redirectTo: dashboardPathForRole(user.role) },
+        201
+      );
+      response.cookies.set(SESSION_COOKIE, token, sessionCookieOptions());
+      void emailRegisterCompleted(user.email, user.name);
+      return response;
+    }
+
+    if (partnerData) {
+      const user = await createPartnerUser(partnerData);
+      const token = await createSessionToken(user.id, user.role, user.accountStatus ?? AccountStatus.ACTIVE);
+      const fullUser = await prisma.user.findUnique({ where: { id: user.id }, select: safeUserSelect });
+      const response = apiSuccess(
+        { message: "Cadastro de parceiro concluído com sucesso.", user: fullUser ? sanitizeUser(fullUser) : user, redirectTo: dashboardPathForRole(user.role) },
+        201
+      );
+      response.cookies.set(SESSION_COOKIE, token, sessionCookieOptions());
+      void emailRegisterCompleted(user.email, user.name);
+      return response;
+    }
+
+    if (!data) {
+      return apiFailure("VALIDATION", "Dados inválidos", 400);
     }
 
     const pwdContext =
@@ -42,72 +267,35 @@ export async function POST(request: Request) {
         ? {
             email: data.email,
             name: data.name,
-            username: data.username,
+            username: "username" in data ? data.username : undefined,
             phone: data.phone,
-            birthDate: data.birthDate,
+            birthDate: "birthDate" in data ? data.birthDate : undefined,
           }
         : { email: data.email, name: data.name };
 
     const pwdCheck = validateStrongPassword(data.password, pwdContext);
     if (!pwdCheck.valid) {
-      return apiFailure(
-        "VALIDATION",
-        pwdCheck.error ?? "Senha não atende aos requisitos de segurança.",
-        400
-      );
-    }
-
-    const emailExists = await prisma.user.findUnique({ where: { email: data.email } });
-    if (emailExists) {
-      return apiFailure(
-        "EMAIL_DUPLICATE",
-        "Este e-mail já está cadastrado. Faça login ou recupere sua senha.",
-        409
-      );
-    }
-
-    const phoneExists = await prisma.user.findFirst({ where: { phone: data.phone } });
-    if (phoneExists) {
-      return apiFailure("PHONE_DUPLICATE", "Este telefone já está vinculado a uma conta.", 409);
+      return apiFailure("VALIDATION", pwdCheck.error ?? "Senha não atende aos requisitos de segurança.", 400);
     }
 
     if (data.role === UserRole.CLIENT) {
-      const usernameExists = await prisma.user.findUnique({
-        where: { username: data.username },
-        select: { id: true },
-      });
+      const usernameExists = await prisma.user.findUnique({ where: { username: data.username }, select: { id: true } });
       if (usernameExists) {
-        return apiFailure(
-          "USERNAME_DUPLICATE",
-          "Este nome de usuário já está em uso. Escolha outro.",
-          409
-        );
+        return apiFailure("USERNAME_DUPLICATE", USER_ALREADY_REGISTERED_MESSAGE, 409);
       }
     }
 
     if (data.role === UserRole.CLIENT && data.cpf) {
-      const cpfExists = await prisma.user.findUnique({ where: { cpf: data.cpf } });
-      if (cpfExists) {
-        return apiFailure(
-          "CPF_DUPLICATE",
-          "Este CPF já está cadastrado. Faça login ou recupere sua senha.",
-          409
-        );
+      const cpfAvailable = await isCpfGloballyAvailable(data.cpf);
+      if (!cpfAvailable) {
+        return apiFailure("CPF_DUPLICATE", USER_ALREADY_REGISTERED_MESSAGE, 409);
       }
     }
 
-    if (data.role === UserRole.PARTNER || data.role === UserRole.ONG) {
-      const [partnerCnpj, ongCnpj, userCnpj] = await Promise.all([
-        prisma.partnerProfile.findUnique({ where: { cnpj: data.cnpj }, select: { id: true } }),
-        prisma.ongProfile.findUnique({ where: { cnpj: data.cnpj }, select: { id: true } }),
-        prisma.user.findFirst({ where: { cnpj: data.cnpj }, select: { id: true } }),
-      ]);
-      if (partnerCnpj || ongCnpj || userCnpj) {
-        return apiFailure(
-          "CNPJ_DUPLICATE",
-          "Este CNPJ já está cadastrado. Acesse a conta da organização ou solicite suporte.",
-          409
-        );
+    if (data.role === UserRole.ONG) {
+      const cnpjAvailable = await isCnpjGloballyAvailable(data.cnpj);
+      if (!cnpjAvailable) {
+        return apiFailure("CNPJ_DUPLICATE", USER_ALREADY_REGISTERED_MESSAGE, 409);
       }
     }
 
@@ -150,35 +338,6 @@ export async function POST(request: Request) {
         });
       }
 
-      if (data.role === UserRole.PARTNER) {
-        const created = await tx.user.create({
-          data: {
-            name: data.name.trim(),
-            email: data.email,
-            passwordHash,
-            role: UserRole.PARTNER,
-            phone: data.phone,
-            cnpj: data.cnpj,
-            accountStatus: AccountStatus.ACTIVE,
-            partnerProfile: {
-              create: {
-                businessName: data.businessName.trim(),
-                legalName: data.legalName.trim(),
-                cnpj: data.cnpj,
-                category: data.category.trim(),
-                address: data.address.trim(),
-                city: data.city.trim(),
-                state: data.state,
-                responsibleName: data.name.trim(),
-                commercialEmail: data.email,
-              },
-            },
-          },
-          select: { id: true, name: true, email: true, role: true, accountStatus: true },
-        });
-        return created;
-      }
-
       const created = await tx.user.create({
         data: {
           name: data.name.trim(),
@@ -208,10 +367,7 @@ export async function POST(request: Request) {
     });
 
     const token = await createSessionToken(user.id, user.role, user.accountStatus ?? AccountStatus.ACTIVE);
-    const fullUser = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: safeUserSelect,
-    });
+    const fullUser = await prisma.user.findUnique({ where: { id: user.id }, select: safeUserSelect });
 
     const response = apiSuccess(
       {
