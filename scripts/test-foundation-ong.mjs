@@ -132,6 +132,65 @@ function ongPayload(ts, overrides = {}) {
   };
 }
 
+function individualOngPayload(ts, overrides = {}) {
+  const suffix = String(ts).slice(-8);
+  return {
+    role: "ONG",
+    ongType: "INDIVIDUAL",
+    name: "Protetor Teste Silva",
+    cpf: generateValidCpf(ts),
+    email: `prot.${ts}@test.ecopet.local`,
+    phone: `+55119${suffix}`,
+    username: `prt${suffix}`,
+    activityStartDate: "2019-06-01",
+    actionTypes: ["RESCUE", "ADOPTION"],
+    description:
+      "Atuo há anos resgatando animais abandonados e promovendo adoções responsáveis na minha região com foco em bem-estar animal.",
+    city: "São Paulo",
+    state: "SP",
+    password,
+    confirmPassword: password,
+    acceptTerms: true,
+    acceptPrivacy: true,
+    providedDocumentTypes: ["LEGAL_REP_ID", "CPF_DOC", "RESIDENCE_PROOF"],
+    ...overrides,
+  };
+}
+
+function institutionOngPayload(ts, overrides = {}) {
+  const suffix = String(ts).slice(-8);
+  return {
+    role: "ONG",
+    ongType: "INSTITUTION",
+    name: "Representante ONG Silva",
+    cpf: generateValidCpf(ts + 50),
+    email: `inst.${ts}@test.ecopet.local`,
+    phone: `+55119${suffix}`,
+    username: `ong${suffix}`,
+    cnpj: generateValidCnpj(ts),
+    ongName: "Instituto Pets",
+    legalName: "Instituto Pets Proteção LTDA",
+    foundedDate: "2015-01-15",
+    focusArea: "Proteção Animal",
+    representativeRole: "Presidente",
+    actionTypes: ["RESCUE", "SHELTER"],
+    description:
+      "Instituto dedicado ao resgate, acolhimento e adoção de animais em situação de vulnerabilidade com transparência e impacto social.",
+    city: "Campinas",
+    state: "SP",
+    password,
+    confirmPassword: password,
+    acceptTerms: true,
+    acceptPrivacy: true,
+    providedDocumentTypes: ["LEGAL_REP_ID", "RESIDENCE_PROOF", "CNPJ_CARD", "SOCIAL_STATUTE"],
+    profileDetails: {
+      mission: "Proteger e reabilitar animais abandonados.",
+      vision: "Ser referência em proteção animal na região.",
+    },
+    ...overrides,
+  };
+}
+
 async function main() {
   const ts = Date.now();
   console.log("=== EcoPet ONG + Global Document Uniqueness Tests ===\n");
@@ -143,8 +202,37 @@ async function main() {
     method: "POST",
     body: JSON.stringify(ongPayload(ts)),
   });
-  assert(ong.status === 201, `ONG cadastro → 201 (${validationMessage(ong)})`);
-  console.log("[ong] cadastro válido → 201");
+  assert(ong.status === 201, `ONG legado cadastro → 201 (${validationMessage(ong)})`);
+  console.log("[ong] cadastro legado CNPJ → 201");
+
+  const individual = await req("/api/auth/register", {
+    method: "POST",
+    body: JSON.stringify(individualOngPayload(ts + 10)),
+  });
+  assert(individual.status === 201, `protetor individual → 201 (${validationMessage(individual)})`);
+  console.log("[ong] protetor individual (CPF) → 201");
+
+  const individualCpf = individualOngPayload(ts + 10).cpf;
+  const dupIndividualCpf = await req("/api/auth/register", {
+    method: "POST",
+    body: JSON.stringify(
+      individualOngPayload(ts + 11, {
+        cpf: individualCpf,
+        email: `prot.dup.${ts}@test.ecopet.local`,
+        username: `prtd${String(ts + 11).slice(-8)}`,
+        phone: `+55119${String(ts + 11).slice(-8)}`,
+      })
+    ),
+  });
+  assertDuplicateResponse(dupIndividualCpf, "CPF_DUPLICATE");
+  console.log("[ong] CPF duplicado protetor → 409 + mensagem genérica");
+
+  const institution = await req("/api/auth/register", {
+    method: "POST",
+    body: JSON.stringify(institutionOngPayload(ts + 20)),
+  });
+  assert(institution.status === 201, `ONG institucional → 201 (${validationMessage(institution)})`);
+  console.log("[ong] ONG institucional (CNPJ) → 201");
 
   const ongCnpj = ongPayload(ts).cnpj;
 
@@ -299,14 +387,36 @@ async function main() {
   const apiErrorsSrc = readSrc("lib/api-errors.ts");
   const clientFormSrc = readSrc("components/features/foundation/client-register-form.tsx");
   const partnerFormSrc = readSrc("components/features/foundation/partner/partner-register-form.tsx");
-  const registerFormSrc = readSrc("components/features/foundation/register-form.tsx");
+  const ongFormSrc = readSrc("components/features/foundation/ong/ong-register-form.tsx");
+  const ongTypeSrc = readSrc("components/features/foundation/ong/ong-type-selector.tsx");
+  const ongLegalSrc = readSrc("components/features/foundation/ong/ong-legal-acceptance.tsx");
+  const legalLinksSrc = readSrc("lib/legal/legal-links.ts");
+  const ongTermsSrc = readSrc("lib/legal/ong-terms-content.ts");
+  const ongPrivacySrc = readSrc("lib/legal/ong-privacy-content.ts");
 
   assert(apiErrorsSrc.includes("USER_ALREADY_REGISTERED_MESSAGE"), "api-errors mapeia mensagem genérica");
   assert(clientFormSrc.includes("duplicateRegistrationError"), "cliente usa erro genérico de duplicidade");
   assert(partnerFormSrc.includes("duplicateRegistrationError"), "parceiro usa erro genérico de duplicidade");
-  assert(registerFormSrc.includes("duplicateRegistrationError"), "ONG usa erro genérico de duplicidade");
+  assert(ongFormSrc.includes("duplicateRegistrationError"), "ONG usa erro genérico de duplicidade");
+  assert(ongTypeSrc.includes("Como você atua na proteção animal?"), "etapa 0 tipo de cadastro ONG");
+  assert(ongFormSrc.includes("OngDocumentationStep"), "etapa documentação ONG");
+  assert(ongFormSrc.includes("OngLegalAcceptance"), "etapa termos ONG");
+  assert(ongLegalSrc.includes("ONG_LEGAL"), "componente usa links exclusivos ONG");
+  assert(legalLinksSrc.includes("Aceito os Termos de Uso e de Colaboração da ONG EcoPet"), "checkbox termos ONG");
+  assert(legalLinksSrc.includes("Aceito a Política de Privacidade da ONG EcoPet"), "checkbox privacidade ONG");
+  assert(legalLinksSrc.includes("/legal/ong/termos"), "href termos ONG");
+  assert(legalLinksSrc.includes("/legal/ong/privacidade"), "href privacidade ONG");
+  assert(ongLegalSrc.includes("ONG_LEGAL_ACCEPTANCE_MESSAGE"), "componente usa mensagem aceite ONG");
+  assert(legalLinksSrc.includes("Você precisa aceitar os Termos de Uso e a Política de Privacidade para continuar."), "mensagem aceite ONG");
+  assert(legalLinksSrc.includes("Termos de Uso e de Colaboração da ONG EcoPet"), "título termos ONG em legal-links");
+  assert(ongTermsSrc.includes("Adoção responsável"), "termos ONG cobrem adoção responsável");
+  assert(ongTermsSrc.includes("Campanhas de arrecadação"), "termos ONG cobrem arrecadação");
+  assert(ongPrivacySrc.includes("CPF"), "privacidade ONG cobre CPF");
+  assert(ongPrivacySrc.includes("CNPJ"), "privacidade ONG cobre CNPJ");
+  assert(ongPrivacySrc.includes("LGPD"), "privacidade ONG menciona LGPD");
   assert(!clientFormSrc.includes("Já utilizado"), "cliente não revela campo duplicado no live feedback");
-  console.log("[ui] frontend preparado para mensagem genérica → OK");
+  assert(!ongLegalSrc.includes("Parceiro EcoPet"), "ONG não exibe documentos do parceiro");
+  console.log("[ui] documentos legais ONG completos + integração cadastro → OK");
 
   console.log("\n✓ Todos os testes de ONG e unicidade global passaram.");
 }

@@ -25,6 +25,11 @@ import {
   isCnpjGloballyAvailable,
 } from "@/lib/registration/document-availability";
 import { USER_ALREADY_REGISTERED_MESSAGE } from "@/lib/registration/document-messages";
+import {
+  ongRegisterSchema,
+  ongLegacyRegisterSchema,
+  type OngRegisterInput,
+} from "@/schemas/ong-register";
 
 const ALLOWED_REGISTER_ROLES = [UserRole.CLIENT, UserRole.PARTNER, UserRole.ONG] as const;
 
@@ -148,12 +153,121 @@ async function createLegacyPartnerUser(data: {
   });
 }
 
+async function createLegacyOngUser(data: {
+  name: string;
+  email: string;
+  password: string;
+  phone: string;
+  ongName: string;
+  cnpj: string;
+  responsibleName: string;
+  address: string;
+  city: string;
+  state: string;
+}) {
+  const passwordHash = await hashPassword(data.password);
+  return prisma.$transaction(async (tx) => {
+    return tx.user.create({
+      data: {
+        name: data.name.trim(),
+        email: data.email,
+        passwordHash,
+        role: UserRole.ONG,
+        phone: data.phone,
+        cnpj: data.cnpj,
+        accountStatus: AccountStatus.ACTIVE,
+        ongProfile: {
+          create: {
+            ongName: data.ongName.trim(),
+            name: data.ongName.trim(),
+            responsible: data.responsibleName.trim(),
+            responsibleName: data.responsibleName.trim(),
+            cnpj: data.cnpj,
+            documentType: "CNPJ",
+            address: data.address.trim(),
+            city: data.city.trim(),
+            state: data.state,
+            institutionalEmail: data.email,
+            verificationStatus: VerificationStatus.APPROVED,
+          },
+        },
+      },
+      select: { id: true, name: true, email: true, role: true, accountStatus: true },
+    });
+  });
+}
+
+async function createOngUser(data: OngRegisterInput) {
+  const passwordHash = await hashPassword(data.password);
+  const isIndividual = data.ongType === "INDIVIDUAL";
+  const docDigits = isIndividual ? data.cpf : data.cnpj;
+  const displayName = isIndividual ? data.name.trim() : data.ongName.trim();
+
+  const profileDetailsPayload = {
+    ...(data.profileDetails ?? {}),
+    legalName: !isIndividual && "legalName" in data ? data.legalName : undefined,
+  };
+
+  const photos = {
+    profileImageUrl: data.profileDetails?.profileImageUrl,
+    coverImageUrl: data.profileDetails?.coverImageUrl,
+    logoUrl: data.profileDetails?.logoUrl,
+    ...profileDetailsPayload,
+  };
+
+  return prisma.$transaction(async (tx) => {
+    return tx.user.create({
+      data: {
+        name: data.name.trim(),
+        email: data.email,
+        username: data.username,
+        passwordHash,
+        role: UserRole.ONG,
+        phone: data.phone,
+        cpf: data.cpf,
+        cnpj: isIndividual ? null : data.cnpj,
+        city: data.city.trim(),
+        state: data.state,
+        address: data.address?.trim() || null,
+        accountStatus: AccountStatus.ACTIVE,
+        termsAcceptedAt: new Date(),
+        lgpdAcceptedAt: new Date(),
+        ongProfile: {
+          create: {
+            ongName: displayName,
+            name: isIndividual ? data.name.trim() : data.tradeName?.trim() || data.ongName.trim(),
+            tradeName: !isIndividual ? data.tradeName?.trim() || null : null,
+            documentType: isIndividual ? "CPF" : "CNPJ",
+            cnpj: docDigits,
+            responsible: data.name.trim(),
+            responsibleName: data.name.trim(),
+            institutionalEmail: data.email,
+            address: data.address?.trim() || null,
+            city: data.city.trim(),
+            state: data.state,
+            description: data.description.trim(),
+            focusArea: !isIndividual && "focusArea" in data ? data.focusArea : null,
+            actionTypes: data.actionTypes,
+            animalCapacity: data.animalCapacity ?? null,
+            photos: photos as Prisma.InputJsonValue,
+            documents: data.verificationDocuments ?? undefined,
+            verificationStatus: VerificationStatus.APPROVED,
+          } as Prisma.OngProfileUncheckedCreateWithoutUserInput,
+        },
+      },
+      select: { id: true, name: true, email: true, role: true, accountStatus: true },
+    });
+  });
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
 
     let partnerData: PartnerRegisterInput | null = null;
     let legacyPartner = false;
+    let ongData: OngRegisterInput | null = null;
+    let legacyOng = false;
     let parsedClientOng = registerSchema.safeParse(body);
 
     if (body?.role === UserRole.PARTNER) {
@@ -173,7 +287,23 @@ export async function POST(request: Request) {
       }
     }
 
-    if (!partnerData && !legacyPartner && !parsedClientOng.success) {
+    if (body?.role === UserRole.ONG) {
+      parsedClientOng = { success: false, error: {} as never };
+      const modern = ongRegisterSchema.safeParse(body);
+      if (modern.success) {
+        ongData = modern.data;
+      } else {
+        const legacy = ongLegacyRegisterSchema.safeParse(body);
+        if (legacy.success) {
+          legacyOng = true;
+        } else {
+          const first = modern.error.errors[0] ?? legacy.error.errors[0];
+          return apiFailure("VALIDATION", first?.message ?? "Dados inválidos", 400);
+        }
+      }
+    }
+
+    if (!partnerData && !legacyPartner && !ongData && !legacyOng && !parsedClientOng.success) {
       const first = parsedClientOng.error.errors[0];
       return apiFailure("VALIDATION", first?.message ?? "Dados inválidos", 400);
     }
@@ -188,12 +318,22 @@ export async function POST(request: Request) {
       if (partnerData.password !== partnerData.confirmPassword) {
         return apiFailure("VALIDATION", PASSWORD_MISMATCH_MESSAGE, 400);
       }
+    } else if (ongData) {
+      if (ongData.password !== ongData.confirmPassword) {
+        return apiFailure("VALIDATION", PASSWORD_MISMATCH_MESSAGE, 400);
+      }
     } else if (data && data.password !== data.confirmPassword) {
       return apiFailure("VALIDATION", PASSWORD_MISMATCH_MESSAGE, 400);
     }
 
-    const email = partnerData?.email ?? (legacyPartner ? body.email : data!.email);
-    const phone = partnerData?.phone ?? (legacyPartner ? body.phone : data!.phone);
+    const email =
+      partnerData?.email ??
+      ongData?.email ??
+      (legacyPartner || legacyOng ? body.email : data!.email);
+    const phone =
+      partnerData?.phone ??
+      ongData?.phone ??
+      (legacyPartner || legacyOng ? body.phone : data!.phone);
 
     const emailExists = await prisma.user.findUnique({ where: { email } });
     if (emailExists) {
@@ -217,6 +357,23 @@ export async function POST(request: Request) {
         }
       } else {
         const cnpjAvailable = await isCnpjGloballyAvailable(partnerData.cnpj);
+        if (!cnpjAvailable) {
+          return apiFailure("CNPJ_DUPLICATE", USER_ALREADY_REGISTERED_MESSAGE, 409);
+        }
+      }
+    }
+
+    if (ongData) {
+      const usernameExists = await prisma.user.findUnique({ where: { username: ongData.username } });
+      if (usernameExists) {
+        return apiFailure("USERNAME_DUPLICATE", USER_ALREADY_REGISTERED_MESSAGE, 409);
+      }
+      const cpfAvailable = await isCpfGloballyAvailable(ongData.cpf);
+      if (!cpfAvailable) {
+        return apiFailure("CPF_DUPLICATE", USER_ALREADY_REGISTERED_MESSAGE, 409);
+      }
+      if (ongData.ongType === "INSTITUTION") {
+        const cnpjAvailable = await isCnpjGloballyAvailable(ongData.cnpj);
         if (!cnpjAvailable) {
           return apiFailure("CNPJ_DUPLICATE", USER_ALREADY_REGISTERED_MESSAGE, 409);
         }
@@ -258,6 +415,41 @@ export async function POST(request: Request) {
       return response;
     }
 
+    if (legacyOng) {
+      const legacy = ongLegacyRegisterSchema.parse(body);
+      const pwdCheck = validateStrongPassword(legacy.password, { email: legacy.email, name: legacy.name });
+      if (!pwdCheck.valid) {
+        return apiFailure("VALIDATION", pwdCheck.error ?? "Senha inválida.", 400);
+      }
+      const cnpjAvailable = await isCnpjGloballyAvailable(legacy.cnpj);
+      if (!cnpjAvailable) {
+        return apiFailure("CNPJ_DUPLICATE", USER_ALREADY_REGISTERED_MESSAGE, 409);
+      }
+      const user = await createLegacyOngUser(legacy);
+      const token = await createSessionToken(user.id, user.role, user.accountStatus ?? AccountStatus.ACTIVE);
+      const fullUser = await prisma.user.findUnique({ where: { id: user.id }, select: safeUserSelect });
+      const response = apiSuccess(
+        { message: "Conta criada com sucesso!", user: fullUser ? sanitizeUser(fullUser) : user, redirectTo: dashboardPathForRole(user.role) },
+        201
+      );
+      response.cookies.set(SESSION_COOKIE, token, sessionCookieOptions());
+      void emailRegisterCompleted(user.email, user.name);
+      return response;
+    }
+
+    if (ongData) {
+      const user = await createOngUser(ongData);
+      const token = await createSessionToken(user.id, user.role, user.accountStatus ?? AccountStatus.ACTIVE);
+      const fullUser = await prisma.user.findUnique({ where: { id: user.id }, select: safeUserSelect });
+      const response = apiSuccess(
+        { message: "Cadastro de ONG concluído com sucesso.", user: fullUser ? sanitizeUser(fullUser) : user, redirectTo: dashboardPathForRole(user.role) },
+        201
+      );
+      response.cookies.set(SESSION_COOKIE, token, sessionCookieOptions());
+      void emailRegisterCompleted(user.email, user.name);
+      return response;
+    }
+
     if (!data) {
       return apiFailure("VALIDATION", "Dados inválidos", 400);
     }
@@ -289,13 +481,6 @@ export async function POST(request: Request) {
       const cpfAvailable = await isCpfGloballyAvailable(data.cpf);
       if (!cpfAvailable) {
         return apiFailure("CPF_DUPLICATE", USER_ALREADY_REGISTERED_MESSAGE, 409);
-      }
-    }
-
-    if (data.role === UserRole.ONG) {
-      const cnpjAvailable = await isCnpjGloballyAvailable(data.cnpj);
-      if (!cnpjAvailable) {
-        return apiFailure("CNPJ_DUPLICATE", USER_ALREADY_REGISTERED_MESSAGE, 409);
       }
     }
 
@@ -338,32 +523,7 @@ export async function POST(request: Request) {
         });
       }
 
-      const created = await tx.user.create({
-        data: {
-          name: data.name.trim(),
-          email: data.email,
-          passwordHash,
-          role: UserRole.ONG,
-          phone: data.phone,
-          cnpj: data.cnpj,
-          accountStatus: AccountStatus.ACTIVE,
-          ongProfile: {
-            create: {
-              ongName: data.ongName.trim(),
-              name: data.ongName.trim(),
-              responsible: data.responsibleName.trim(),
-              responsibleName: data.responsibleName.trim(),
-              cnpj: data.cnpj,
-              address: data.address.trim(),
-              city: data.city.trim(),
-              state: data.state,
-              institutionalEmail: data.email,
-            },
-          },
-        },
-        select: { id: true, name: true, email: true, role: true, accountStatus: true },
-      });
-      return created;
+      throw new Error("Unsupported role in client-only path");
     });
 
     const token = await createSessionToken(user.id, user.role, user.accountStatus ?? AccountStatus.ACTIVE);

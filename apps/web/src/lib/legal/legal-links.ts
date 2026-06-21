@@ -30,12 +30,15 @@ export const PARTNER_LEGAL = {
   },
 } as const;
 
-/** Estrutura reservada — não exibir no cadastro até implementação futura. */
+/** Termos e privacidade exclusivos do cadastro de ONG e Protetor Individual EcoPet. */
+export const ONG_LEGAL_ACCEPTANCE_MESSAGE =
+  "Você precisa aceitar os Termos de Uso e a Política de Privacidade para continuar.";
+
 export const ONG_LEGAL = {
   terms: {
     href: "/legal/ong/termos",
-    title: "Termos de Uso e de Serviço da ONG EcoPet",
-    checkboxLabel: "Aceito os Termos de Uso e de Serviço da ONG EcoPet",
+    title: "Termos de Uso e de Colaboração da ONG EcoPet",
+    checkboxLabel: "Aceito os Termos de Uso e de Colaboração da ONG EcoPet",
   },
   privacy: {
     href: "/legal/ong/privacidade",
