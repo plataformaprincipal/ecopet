@@ -10,7 +10,6 @@ import {
 import { EcoPetLogo } from "@/components/shared/brand/ecopet-logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { AI_DISCLAIMER } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/providers/i18n-provider";
 import { LanguageSelector } from "@/components/features/i18n/language-selector";
@@ -115,7 +114,7 @@ export default function LandingPage() {
                 <Link href="/login"><Button variant="outline" size="lg">{t("common.signIn")}</Button></Link>
                 <Link href="/marketplace"><Button variant="ghost" size="lg">{t("common.viewMarketplace")} <ArrowRight className="h-4 w-4" aria-hidden /></Button></Link>
               </div>
-              <p className="mt-4 text-xs text-ecopet-gray">{AI_DISCLAIMER}</p>
+              <p className="mt-4 text-xs text-ecopet-gray">{t("ecopetAi.disclaimer")}</p>
             </motion.div>
             <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.15 }}
               className="relative aspect-[4/3] overflow-hidden rounded-[24px] shadow-premium-lg lg:ml-auto">

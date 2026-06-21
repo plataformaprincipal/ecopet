@@ -20,6 +20,7 @@ import {
 import { validateStrongPassword, PASSWORD_MISMATCH_MESSAGE } from "@/lib/password/validate-strong-password";
 import { apiSuccess, apiFailure } from "@/lib/api-response";
 import { emailRegisterCompleted } from "@/lib/mail/event-dispatch";
+import { localeFromAcceptLanguage } from "@/lib/email/templates";
 import {
   isCpfGloballyAvailable,
   isCnpjGloballyAvailable,
@@ -398,7 +399,7 @@ export async function POST(request: Request) {
         201
       );
       response.cookies.set(SESSION_COOKIE, token, sessionCookieOptions());
-      void emailRegisterCompleted(user.email, user.name);
+      void emailRegisterCompleted(user.email, user.name, user.role, localeFromAcceptLanguage(request.headers.get("accept-language")));
       return response;
     }
 
@@ -411,7 +412,7 @@ export async function POST(request: Request) {
         201
       );
       response.cookies.set(SESSION_COOKIE, token, sessionCookieOptions());
-      void emailRegisterCompleted(user.email, user.name);
+      void emailRegisterCompleted(user.email, user.name, user.role, localeFromAcceptLanguage(request.headers.get("accept-language")));
       return response;
     }
 
@@ -433,7 +434,7 @@ export async function POST(request: Request) {
         201
       );
       response.cookies.set(SESSION_COOKIE, token, sessionCookieOptions());
-      void emailRegisterCompleted(user.email, user.name);
+      void emailRegisterCompleted(user.email, user.name, user.role, localeFromAcceptLanguage(request.headers.get("accept-language")));
       return response;
     }
 
@@ -446,7 +447,7 @@ export async function POST(request: Request) {
         201
       );
       response.cookies.set(SESSION_COOKIE, token, sessionCookieOptions());
-      void emailRegisterCompleted(user.email, user.name);
+      void emailRegisterCompleted(user.email, user.name, user.role, localeFromAcceptLanguage(request.headers.get("accept-language")));
       return response;
     }
 
@@ -539,7 +540,7 @@ export async function POST(request: Request) {
     );
 
     response.cookies.set(SESSION_COOKIE, token, sessionCookieOptions());
-    void emailRegisterCompleted(user.email, user.name);
+    void emailRegisterCompleted(user.email, user.name, user.role, localeFromAcceptLanguage(request.headers.get("accept-language")));
     return response;
   } catch (error) {
     if (process.env.NODE_ENV !== "production") {

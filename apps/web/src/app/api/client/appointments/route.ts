@@ -11,6 +11,7 @@ import {
 import { startOfLocalDay, startOfTomorrowLocal } from "@/lib/appointments/datetime";
 import { createInternalNotification } from "@/lib/notifications/internal";
 import { emailAppointmentEvent } from "@/lib/mail/event-dispatch";
+import { getUserEmailLocale } from "@/lib/email/templates";
 import { AccountStatus, PartnerServiceStatus } from "@prisma/client";
 
 export async function GET() {
@@ -175,24 +176,24 @@ export async function POST(request: Request) {
   ]);
 
   const [clientUser, partnerUser] = await Promise.all([
-    prisma.user.findUnique({ where: { id: user!.id }, select: { email: true, name: true } }),
-    prisma.user.findUnique({ where: { id: service.providerId }, select: { email: true, name: true } }),
+    prisma.user.findUnique({ where: { id: user!.id }, select: { email: true, name: true, preferences: true } }),
+    prisma.user.findUnique({ where: { id: service.providerId }, select: { email: true, name: true, preferences: true } }),
   ]);
   if (clientUser?.email) {
-    void emailAppointmentEvent(
-      "APPOINTMENT_CREATED",
-      clientUser.email,
-      "Agendamento solicitado — EcoPet",
-      `Olá ${clientUser.name}, seu agendamento para ${service.name} foi registrado.`
-    );
+    void emailAppointmentEvent("APPOINTMENT_CREATED", clientUser.email, {
+      name: clientUser.name,
+      serviceName: service.name,
+      locale: getUserEmailLocale(clientUser.preferences),
+    });
   }
   if (partnerUser?.email) {
-    void emailAppointmentEvent(
-      "APPOINTMENT_CREATED",
-      partnerUser.email,
-      "Novo agendamento — EcoPet",
-      `Você recebeu um novo agendamento para ${service.name}.`
-    );
+    void emailAppointmentEvent("APPOINTMENT_CREATED", partnerUser.email, {
+      name: partnerUser.name,
+      serviceName: service.name,
+      locale: getUserEmailLocale(partnerUser.preferences),
+      title: "Novo agendamento — EcoPet",
+      message: `Você recebeu um novo agendamento para ${service.name}.`,
+    });
   }
 
   return apiSuccess({ appointment }, 201);

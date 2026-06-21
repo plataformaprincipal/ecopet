@@ -195,7 +195,7 @@ async function main() {
   assert(authMessagesSrc.includes("E-mail ou nome de usuário não encontrado"), "mensagem usuário não encontrado");
 
   const forgotSrc = readSrc("components/features/foundation/forgot-password-form.tsx");
-  assert(forgotSrc.includes("E-mail ou Telefone"), "recuperação e-mail ou telefone");
+  assert(forgotSrc.includes("Enviar código") || forgotSrc.includes('auth.forgotPassword.submit'), "recuperação enviar código");
 
   const middlewareSrc = readSrc("middleware.ts");
   assert(middlewareSrc.includes('pathname === "/"') && middlewareSrc.includes('"/inicio"'), "middleware redireciona / autenticado para /inicio");

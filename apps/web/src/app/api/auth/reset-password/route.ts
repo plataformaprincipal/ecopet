@@ -5,7 +5,10 @@ import { checkRateLimit, clientIp } from "@/lib/rate-limit";
 import { resetPasswordSchema } from "@/schemas/password-reset";
 import { validateStrongPassword, PASSWORD_MISMATCH_MESSAGE } from "@/lib/password/validate-strong-password";
 import { SESSION_COOKIE, sessionCookieOptions } from "@/lib/auth-session";
+import { logRecoveryAudit } from "@/lib/auth/recovery-audit";
 import { apiSuccess, apiFailure } from "@/lib/api-response";
+import { emailPasswordChanged } from "@/lib/mail/event-dispatch";
+import { getUserEmailLocale } from "@/lib/email/templates";
 
 const RATE_WINDOW_MS = 15 * 60 * 1000;
 const RATE_LIMIT_IP = 20;
@@ -14,7 +17,7 @@ async function findActiveToken(token: string) {
   const tokenHash = hashResetToken(token);
   return prisma.passwordResetToken.findUnique({
     where: { tokenHash },
-    include: { user: { select: { id: true, email: true, name: true } } },
+    include: { user: { select: { id: true, email: true, name: true, preferences: true } } },
   });
 }
 
@@ -128,6 +131,18 @@ export async function POST(request: Request) {
         data: { usedAt: now },
       }),
     ]);
+
+    await logRecoveryAudit({
+      userId: record.userId,
+      event: "reset_success",
+      ip,
+    });
+
+    void emailPasswordChanged(
+      record.user.email,
+      record.user.name,
+      getUserEmailLocale(record.user.preferences)
+    );
 
     const response = apiSuccess({
       message: "Senha redefinida com sucesso. Faça login com a nova senha.",

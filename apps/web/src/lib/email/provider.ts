@@ -41,13 +41,60 @@ async function logEmail(
 async function sendViaResend(payload: { to: string; subject: string; html: string; text: string }) {
   const key = process.env.RESEND_API_KEY?.trim();
   if (!key) return false;
-  const from = process.env.SMTP_FROM_EMAIL ?? "noreply@ecopet.local";
+  const from = resolveEmailFrom();
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
     body: JSON.stringify({ from, to: payload.to, subject: payload.subject, html: payload.html, text: payload.text }),
   });
   return res.ok;
+}
+
+async function sendViaSendGrid(payload: { to: string; subject: string; html: string; text: string }) {
+  const key = process.env.SENDGRID_API_KEY?.trim();
+  if (!key) return false;
+  const from = resolveEmailFrom();
+  const res = await fetch("https://api.sendgrid.com/v3/mail/send", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      personalizations: [{ to: [{ email: payload.to }] }],
+      from: { email: from },
+      subject: payload.subject,
+      content: [
+        { type: "text/plain", value: payload.text },
+        { type: "text/html", value: payload.html },
+      ],
+    }),
+  });
+  return res.ok;
+}
+
+async function sendViaBrevo(payload: { to: string; subject: string; html: string; text: string }) {
+  const key = process.env.BREVO_API_KEY?.trim();
+  if (!key) return false;
+  const from = resolveEmailFrom();
+  const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: { "api-key": key, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      sender: { email: from, name: process.env.SMTP_FROM_NAME ?? "EcoPet" },
+      to: [{ email: payload.to }],
+      subject: payload.subject,
+      htmlContent: payload.html,
+      textContent: payload.text,
+    }),
+  });
+  return res.ok;
+}
+
+function resolveEmailFrom(): string {
+  return (
+    process.env.EMAIL_FROM?.trim() ||
+    process.env.SMTP_FROM_EMAIL?.trim() ||
+    process.env.RESEND_FROM?.trim() ||
+    "noreply@ecopet.local"
+  );
 }
 
 export function assertEmailConfigured(requireDelivery = false): void {
@@ -97,6 +144,34 @@ export async function sendPlatformEmail(params: {
   }
 
   try {
+    if (isResendConfigured()) {
+      const sent = await sendViaResend({ to, subject, html, text });
+      if (sent) {
+        await logEmail(event, to, subject, EmailStatus.SENT, "resend");
+        await writeIntegrationLog({ integrationName: "resend", provider: "Resend", action: event, status: "OK" });
+        return { sent: true, provider: "resend" };
+      }
+      await logEmail(event, to, subject, EmailStatus.FAILED, "resend", "Falha na API Resend");
+    }
+
+    if (process.env.SENDGRID_API_KEY?.trim()) {
+      const sent = await sendViaSendGrid({ to, subject, html, text });
+      if (sent) {
+        await logEmail(event, to, subject, EmailStatus.SENT, "sendgrid");
+        await writeIntegrationLog({ integrationName: "sendgrid", provider: "SendGrid", action: event, status: "OK" });
+        return { sent: true, provider: "sendgrid" };
+      }
+    }
+
+    if (process.env.BREVO_API_KEY?.trim()) {
+      const sent = await sendViaBrevo({ to, subject, html, text });
+      if (sent) {
+        await logEmail(event, to, subject, EmailStatus.SENT, "brevo");
+        await writeIntegrationLog({ integrationName: "brevo", provider: "Brevo", action: event, status: "OK" });
+        return { sent: true, provider: "brevo" };
+      }
+    }
+
     if (isSmtpConfigured()) {
       await sendMail({ to, subject, html, text });
       await logEmail(event, to, subject, EmailStatus.SENT, "smtp");
@@ -104,15 +179,8 @@ export async function sendPlatformEmail(params: {
       return { sent: true, provider: "smtp" };
     }
 
-    const sent = await sendViaResend({ to, subject, html, text });
-    if (sent) {
-      await logEmail(event, to, subject, EmailStatus.SENT, "resend");
-      await writeIntegrationLog({ integrationName: "resend", provider: "Resend", action: event, status: "OK" });
-      return { sent: true, provider: "resend" };
-    }
-
-    await logEmail(event, to, subject, EmailStatus.FAILED, "resend", "Falha na API Resend");
-    return { sent: false, provider: "resend", errorCode: "RESEND_FAILED" };
+    await logEmail(event, to, subject, EmailStatus.FAILED, undefined, "Nenhum provedor disponível");
+    return { sent: false, errorCode: "EMAIL_SEND_FAILED" };
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     await logEmail(event, to, subject, EmailStatus.FAILED, undefined, msg);

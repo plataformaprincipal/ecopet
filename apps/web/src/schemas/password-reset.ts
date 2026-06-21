@@ -26,7 +26,10 @@ export const forgotPasswordSchema = z
 
 export const verifyResetCodeSchema = z.object({
   identifier: z.string().min(1, "Informe e-mail ou telefone"),
-  code: z.string().min(4, "Informe o código de verificação"),
+  code: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, "Informe o código de 6 dígitos"),
 });
 
 export const resetPasswordSchema = z

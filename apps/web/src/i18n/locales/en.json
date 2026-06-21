@@ -29,6 +29,9 @@
     "continueShopping": "Continue shopping",
     "emptyCart": "Your cart is empty"
   },
+  "ecopetAi": {
+    "disclaimer": "EcoPet AI does not replace veterinarians, animal scientists, trainers, specialists, or other qualified professionals. The information provided is for informational and decision-support purposes only."
+  },
   "nav": {
     "home": "Home",
     "feed": "Feed",
@@ -109,8 +112,9 @@
       "submitAccount": "Sign in to account",
       "entering": "Signing in...",
       "loading": "Loading...",
-      "forgot": "Forgot password?",
-      "forgotLink": "Forgot my password",
+      "forgot": "Forgot your password?",
+      "forgotLink": "Forgot your password?",
+      "forgotLinkAria": "Forgot your password? Go to password recovery",
       "noAccount": "Don't have an account?",
       "signUpLink": "Sign up",
       "showPassword": "Show password",
@@ -630,15 +634,30 @@
       "copyright": "© 2026 ECOPET"
     },
     "forgotPassword": {
-      "title": "Recover password",
-      "description": "Enter your registered email or phone number. We will send instructions to reset your password.",
+      "title": "Recover Password",
+      "description": "Enter your email or phone number to receive recovery instructions.",
       "identifier": "Email or Phone",
       "identifierPlaceholder": "Enter your email or phone number",
-      "submit": "Send instructions",
+      "submit": "Send Code",
       "submitting": "Sending...",
-      "success": "If the email or phone is registered, you will receive password reset instructions shortly.",
-      "checkInbox": "Check your inbox, SMS or spam folder.",
-      "backToLogin": "Back to login"
+      "success": "If the details are correct, we will send recovery instructions.",
+      "codeDescription": "Enter the 6-digit code you received.",
+      "codeStepTitle": "Verify code",
+      "codeLabel": "Verification code",
+      "codePlaceholder": "000000",
+      "verifyCode": "Verify code",
+      "verifying": "Verifying...",
+      "resendCode": "Resend code",
+      "resendWait": "Resend in {{seconds}}s",
+      "sendFailed": "Could not send the code right now. Please try again in a few minutes.",
+      "changeIdentifier": "Change email or phone",
+      "checkInbox": "Check your inbox or spam folder.",
+      "checkSms": "Check SMS messages on your phone.",
+      "backToLogin": "Back to login",
+      "notFound": "Email or phone not found.",
+      "phoneUnavailable": "Phone recovery is temporarily unavailable.",
+      "codeInvalid": "Invalid verification code.",
+      "codeExpired": "The code has expired. Request a new code."
     },
     "resetPassword": {
       "title": "Reset password",

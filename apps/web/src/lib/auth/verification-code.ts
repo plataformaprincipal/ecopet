@@ -5,7 +5,7 @@ export const VERIFICATION_PURPOSE_PASSWORD_RESET = "PASSWORD_RESET";
 export function verificationCodeTtlMs(): number {
   const testMs = process.env.AUTH_TEST_OTP_TTL_MS;
   if (testMs && /^\d+$/.test(testMs)) return parseInt(testMs, 10);
-  return 15 * 60 * 1000;
+  return 10 * 60 * 1000;
 }
 
 export function generateVerificationCode(): string {

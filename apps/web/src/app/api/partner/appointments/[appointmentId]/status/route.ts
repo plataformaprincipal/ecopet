@@ -3,6 +3,7 @@ import { apiSuccess, apiFailure } from "@/lib/api-response";
 import { requireActivePartner } from "@/lib/auth/require-auth";
 import { createInternalNotification } from "@/lib/notifications/internal";
 import { emailAppointmentEvent } from "@/lib/mail/event-dispatch";
+import { getUserEmailLocale } from "@/lib/email/templates";
 import { z } from "zod";
 
 const statusSchema = z.object({
@@ -58,7 +59,10 @@ export async function PATCH(request: Request, context: RouteContext) {
     data: { appointmentId },
   });
 
-  const client = await prisma.user.findUnique({ where: { id: appointment.userId }, select: { email: true, name: true } });
+  const client = await prisma.user.findUnique({
+    where: { id: appointment.userId },
+    select: { email: true, name: true, preferences: true },
+  });
   if (client?.email) {
     const eventMap: Partial<Record<string, "APPOINTMENT_CONFIRMED" | "APPOINTMENT_CANCELLED" | "APPOINTMENT_COMPLETED">> = {
       CONFIRMED: "APPOINTMENT_CONFIRMED",
@@ -67,12 +71,13 @@ export async function PATCH(request: Request, context: RouteContext) {
     };
     const mailEvent = eventMap[parsed.data.status];
     if (mailEvent) {
-      void emailAppointmentEvent(
-        mailEvent,
-        client.email,
-        `Agendamento ${parsed.data.status} — EcoPet`,
-        `Olá ${client.name}, seu agendamento foi atualizado para: ${parsed.data.status}.`
-      );
+      void emailAppointmentEvent(mailEvent, client.email, {
+        name: client.name,
+        serviceName: "Agendamento",
+        locale: getUserEmailLocale(client.preferences),
+        title: `Agendamento ${parsed.data.status} — EcoPet`,
+        message: `Olá ${client.name}, seu agendamento foi atualizado para: ${parsed.data.status}.`,
+      });
     }
   }
 

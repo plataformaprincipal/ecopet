@@ -44,13 +44,23 @@ function ResetPasswordFormInner() {
     fetch(`/api/auth/reset-password?token=${encodeURIComponent(token)}`)
       .then(async (res) => {
         const data = await res.json();
-        if (data.valid) {
+        const payload = data.data ?? data;
+        const errCode = data.error?.code;
+
+        if (res.ok && data.success !== false && payload.valid) {
           setTokenValid(true);
-          if (data.passwordContext) {
-            setPasswordContext(data.passwordContext);
+          if (payload.passwordContext) {
+            setPasswordContext(payload.passwordContext);
           }
+          return;
+        }
+
+        if (errCode === "TOKEN_EXPIRED") {
+          setTokenError(tokenMessages.expired);
+        } else if (errCode === "TOKEN_USED") {
+          setTokenError(tokenMessages.used);
         } else {
-          setTokenError(tokenMessages[data.reason as string] ?? tokenMessages.invalid);
+          setTokenError(tokenMessages.invalid);
         }
       })
       .catch(() => setTokenError(t("common.error")))
@@ -124,7 +134,7 @@ function ResetPasswordFormInner() {
           <p className="text-sm text-red-600" role="alert">
             {tokenError}
           </p>
-          <Link href="/esqueci-senha" className="inline-block text-sm font-semibold text-green-700 hover:underline">
+          <Link href="/recuperar-senha" className="inline-block text-sm font-semibold text-green-700 underline-offset-2 transition-colors hover:text-emerald-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ecopet-green/40 focus-visible:ring-offset-2 rounded-sm">
             {t("auth.resetPassword.requestNewLink")}
           </Link>
         </CardContent>

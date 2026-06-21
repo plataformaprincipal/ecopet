@@ -38,6 +38,14 @@ import {
   OPERATION_SCHEDULE_MESSAGE,
 } from "@/lib/partner/operation-rules";
 import { CPF_NAME_MISMATCH_MESSAGE } from "@/lib/integrations/cpf/cpf-service";
+import {
+  FORGOT_PASSWORD_GENERIC_MESSAGE,
+  FORGOT_PASSWORD_NOT_FOUND_MESSAGE,
+  FORGOT_PASSWORD_PHONE_UNAVAILABLE_MESSAGE,
+  FORGOT_PASSWORD_SEND_FAILED_MESSAGE,
+  VERIFY_CODE_EXPIRED_MESSAGE,
+  VERIFY_CODE_INVALID_MESSAGE,
+} from "@/lib/constants/auth-messages";
 
 export type AuthTranslator = (key: TranslationKey, params?: Record<string, string>) => string;
 
@@ -119,6 +127,12 @@ const VALIDATION_MESSAGE_KEYS: Record<string, TranslationKey> = {
   "Descreva melhor sua causa.": "auth.register.ong.validation.descriptionIndividual",
   "Informe a missão da instituição.": "auth.register.ong.validation.missionRequired",
   "Informe a visão da instituição.": "auth.register.ong.validation.visionRequired",
+  [FORGOT_PASSWORD_GENERIC_MESSAGE]: "auth.forgotPassword.success",
+  [FORGOT_PASSWORD_SEND_FAILED_MESSAGE]: "auth.forgotPassword.sendFailed",
+  [FORGOT_PASSWORD_NOT_FOUND_MESSAGE]: "auth.forgotPassword.notFound",
+  [FORGOT_PASSWORD_PHONE_UNAVAILABLE_MESSAGE]: "auth.forgotPassword.phoneUnavailable",
+  [VERIFY_CODE_INVALID_MESSAGE]: "auth.forgotPassword.codeInvalid",
+  [VERIFY_CODE_EXPIRED_MESSAGE]: "auth.forgotPassword.codeExpired",
 };
 
 const PASSWORD_ERROR_KEYS: Record<string, TranslationKey> = {

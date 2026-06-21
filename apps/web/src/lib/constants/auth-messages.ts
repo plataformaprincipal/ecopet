@@ -7,7 +7,9 @@ export const LOGIN_ACCOUNT_INACTIVE_MESSAGE = "Esta conta não está disponível
 
 export const FORGOT_PASSWORD_NOT_FOUND_MESSAGE = "E-mail ou telefone não encontrado.";
 export const FORGOT_PASSWORD_GENERIC_MESSAGE =
-  "Se o e-mail ou telefone estiver cadastrado, você receberá instruções para redefinir sua senha em instantes.";
+  "Se os dados estiverem corretos, enviaremos instruções de recuperação.";
+export const FORGOT_PASSWORD_SEND_FAILED_MESSAGE =
+  "Não foi possível enviar o código agora. Tente novamente em alguns minutos.";
 export const FORGOT_PASSWORD_PHONE_UNAVAILABLE_MESSAGE =
   "Recuperação por telefone temporariamente indisponível.";
 

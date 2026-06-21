@@ -14,8 +14,9 @@ import { getClientApiUrl } from "./api-url.client";
 
 export const API_URL = getClientApiUrl();
 
+/** @deprecated Use i18n key `ecopetAi.disclaimer` in componentes React. */
 export const AI_DISCLAIMER =
-  "A IA ECOPET não substitui um veterinário. Em caso de emergência, procure atendimento profissional imediatamente.";
+  "A IA EcoPet não substitui médicos-veterinários, zootecnistas, adestradores, especialistas ou outros profissionais qualificados. As informações fornecidas possuem caráter informativo e de apoio à tomada de decisão.";
 
 export const USER_ROLES = {
   TUTOR: "Tutor",

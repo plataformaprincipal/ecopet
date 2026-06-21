@@ -5,6 +5,7 @@ export const AUTH_ROUTES = [
   "/cadastro",
   "/recuperar-senha",
   "/redefinir-senha",
+  "/esqueci-senha",
   "/forgot-password",
   "/reset-password",
 ] as const;
@@ -15,6 +16,7 @@ export const PUBLIC_EXACT = new Set([
   "/cadastro",
   "/recuperar-senha",
   "/redefinir-senha",
+  "/esqueci-senha",
   "/forgot-password",
   "/reset-password",
   "/termos",

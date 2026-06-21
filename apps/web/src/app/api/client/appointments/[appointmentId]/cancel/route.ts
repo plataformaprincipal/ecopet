@@ -3,6 +3,7 @@ import { apiSuccess, apiFailure } from "@/lib/api-response";
 import { requireClient } from "@/lib/auth/require-auth";
 import { createInternalNotification } from "@/lib/notifications/internal";
 import { emailAppointmentEvent } from "@/lib/mail/event-dispatch";
+import { getUserEmailLocale } from "@/lib/email/templates";
 
 type RouteContext = { params: Promise<{ appointmentId: string }> };
 
@@ -33,15 +34,33 @@ export async function PATCH(_req: Request, context: RouteContext) {
       type: "APPOINTMENT_CANCELLED_BY_CLIENT",
       data: { appointmentId },
     });
-    const partner = await prisma.user.findUnique({ where: { id: appointment.partnerId }, select: { email: true } });
+    const partner = await prisma.user.findUnique({
+      where: { id: appointment.partnerId },
+      select: { email: true, name: true, preferences: true },
+    });
     if (partner?.email) {
-      void emailAppointmentEvent("APPOINTMENT_CANCELLED", partner.email, "Agendamento cancelado — EcoPet", "Um cliente cancelou um agendamento.");
+      void emailAppointmentEvent("APPOINTMENT_CANCELLED", partner.email, {
+        name: partner.name,
+        serviceName: "Agendamento",
+        locale: getUserEmailLocale(partner.preferences),
+        title: "Agendamento cancelado — EcoPet",
+        message: "Um cliente cancelou um agendamento.",
+      });
     }
   }
 
-  const client = await prisma.user.findUnique({ where: { id: user!.id }, select: { email: true } });
+  const client = await prisma.user.findUnique({
+    where: { id: user!.id },
+    select: { email: true, name: true, preferences: true },
+  });
   if (client?.email) {
-    void emailAppointmentEvent("APPOINTMENT_CANCELLED", client.email, "Agendamento cancelado — EcoPet", "Seu agendamento foi cancelado com sucesso.");
+    void emailAppointmentEvent("APPOINTMENT_CANCELLED", client.email, {
+      name: client.name,
+      serviceName: "Agendamento",
+      locale: getUserEmailLocale(client.preferences),
+      title: "Agendamento cancelado — EcoPet",
+      message: "Seu agendamento foi cancelado com sucesso.",
+    });
   }
 
   return apiSuccess({ appointment: updated });

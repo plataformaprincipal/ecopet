@@ -29,6 +29,9 @@
     "continueShopping": "Continuar comprando",
     "emptyCart": "Tu carrito está vacío"
   },
+  "ecopetAi": {
+    "disclaimer": "La IA de EcoPet no sustituye a veterinarios, zootecnistas, adiestradores, especialistas u otros profesionales calificados. La información proporcionada tiene carácter informativo y de apoyo a la toma de decisiones."
+  },
   "nav": {
     "home": "Inicio",
     "feed": "Feed",
@@ -110,7 +113,8 @@
       "entering": "Entrando...",
       "loading": "Cargando...",
       "forgot": "¿Olvidaste tu contraseña?",
-      "forgotLink": "Olvidé mi contraseña",
+      "forgotLink": "¿Olvidaste tu contraseña?",
+      "forgotLinkAria": "¿Olvidaste tu contraseña? Ir a recuperación de contraseña",
       "noAccount": "¿No tienes cuenta?",
       "signUpLink": "Regístrate",
       "showPassword": "Mostrar contraseña",
@@ -630,15 +634,30 @@
       "copyright": "© 2026 ECOPET"
     },
     "forgotPassword": {
-      "title": "Recuperar contraseña",
-      "description": "Ingresa tu correo o teléfono registrado. Enviaremos instrucciones para restablecer tu contraseña.",
+      "title": "Recuperar Contraseña",
+      "description": "Ingresa tu correo o teléfono para recibir las instrucciones de recuperación.",
       "identifier": "Correo o Teléfono",
       "identifierPlaceholder": "Ingresa tu correo o teléfono",
-      "submit": "Enviar instrucciones",
+      "submit": "Enviar Código",
       "submitting": "Enviando...",
-      "success": "Si el correo o teléfono está registrado, recibirás instrucciones para restablecer la contraseña en breve.",
-      "checkInbox": "Revisa tu bandeja de entrada, SMS o carpeta de spam.",
-      "backToLogin": "Volver al inicio de sesión"
+      "success": "Si los datos son correctos, enviaremos instrucciones de recuperación.",
+      "codeDescription": "Ingresa el código de 6 dígitos que recibiste.",
+      "codeStepTitle": "Verificar código",
+      "codeLabel": "Código de verificación",
+      "codePlaceholder": "000000",
+      "verifyCode": "Verificar código",
+      "verifying": "Verificando...",
+      "resendCode": "Reenviar código",
+      "resendWait": "Reenviar en {{seconds}}s",
+      "sendFailed": "No fue posible enviar el código ahora. Inténtalo de nuevo en unos minutos.",
+      "changeIdentifier": "Cambiar correo o teléfono",
+      "checkInbox": "Revisa tu bandeja de entrada o carpeta de spam.",
+      "checkSms": "Revisa los mensajes SMS de tu teléfono.",
+      "backToLogin": "Volver al inicio de sesión",
+      "notFound": "Correo o teléfono no encontrado.",
+      "phoneUnavailable": "Recuperación por teléfono temporalmente no disponible.",
+      "codeInvalid": "Código de verificación inválido.",
+      "codeExpired": "El código expiró. Solicita un nuevo código."
     },
     "resetPassword": {
       "title": "Restablecer contraseña",

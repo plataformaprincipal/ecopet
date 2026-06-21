@@ -1,9 +1,6 @@
-import { FoundationForgotPasswordForm } from "@/components/features/foundation/forgot-password-form";
+import { redirect } from "next/navigation";
 
+/** Alias legado → rota canônica de recuperação */
 export default function EsqueciSenhaPage() {
-  return (
-    <main className="min-h-screen bg-gray-50 px-4 py-10">
-      <FoundationForgotPasswordForm />
-    </main>
-  );
+  redirect("/recuperar-senha");
 }

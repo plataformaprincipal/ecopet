@@ -269,11 +269,12 @@ async function main() {
   assert(forgot.data.success === true, "forgot success shape");
 
   const userRow = await prisma.user.findUnique({ where: { email: `client.p.${ts}@test.ecopet.local` } });
-  const tokenRow = await prisma.passwordResetToken.findFirst({
-    where: { userId: userRow.id, usedAt: null },
+  const otpRow = await prisma.verificationCode.findFirst({
+    where: { userId: userRow.id, purpose: "PASSWORD_RESET", used: false },
     orderBy: { createdAt: "desc" },
   });
-  assert(tokenRow, "reset token created in db");
+  assert(otpRow, "OTP hash criado após forgot password");
+  assert(otpRow.code.length === 64, "OTP salvo como hash SHA-256");
 
   // Simulate token for test (we have hash only — create known token)
   const plainToken = generateResetToken();

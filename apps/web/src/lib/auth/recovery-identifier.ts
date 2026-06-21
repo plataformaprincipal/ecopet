@@ -5,6 +5,7 @@ import {
   sanitizePhoneInput,
 } from "@/lib/validation/international-phone";
 import { normalizeBrazilPhoneFromE164 } from "@/lib/validation/brazil-phone";
+import { isSmsConfigured } from "@/lib/sms/provider";
 
 export type RecoveryIdentifierType = "email" | "phone";
 
@@ -47,5 +48,9 @@ export async function findUserByRecoveryIdentifier(
 }
 
 export function isPhoneSmsRecoveryEnabled(): boolean {
-  return process.env.PHONE_SMS_RECOVERY_ENABLED === "1";
+  if (process.env.PHONE_SMS_RECOVERY_ENABLED === "0") return false;
+  if (process.env.PHONE_SMS_RECOVERY_ENABLED === "1") return true;
+  if (isSmsConfigured()) return true;
+  if (process.env.NODE_ENV !== "production") return true;
+  return false;
 }

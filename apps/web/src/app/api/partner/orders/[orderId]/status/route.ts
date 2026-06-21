@@ -5,6 +5,7 @@ import { apiSuccess, apiFailure } from "@/lib/api-response";
 import { requireActivePartner } from "@/lib/auth/require-auth";
 import { createInternalNotification } from "@/lib/notifications/internal";
 import { emailOrderEvent } from "@/lib/mail/event-dispatch";
+import { getUserEmailLocale } from "@/lib/email/templates";
 
 const statusSchema = z.object({
   status: z.nativeEnum(OrderStatus),
@@ -76,13 +77,21 @@ export async function PATCH(request: Request, context: RouteContext) {
     data: { orderId, status: nextStatus },
   });
 
-  const buyer = await prisma.user.findUnique({ where: { id: order.userId }, select: { email: true } });
+  const buyer = await prisma.user.findUnique({
+    where: { id: order.userId },
+    select: { email: true, name: true, preferences: true },
+  });
   if (buyer?.email && ["CONFIRMED", "CANCELLED", "COMPLETED"].includes(nextStatus)) {
     const event =
       nextStatus === "CONFIRMED" ? "ORDER_CONFIRMED"
       : nextStatus === "CANCELLED" ? "ORDER_CANCELLED"
       : "ORDER_COMPLETED";
-    void emailOrderEvent(event, buyer.email, order.orderNumber, `Seu pedido #${order.orderNumber} está ${nextStatus}.`);
+    void emailOrderEvent(event, buyer.email, order.orderNumber, {
+      name: buyer.name,
+      locale: getUserEmailLocale(buyer.preferences),
+      message: `Seu pedido #${order.orderNumber} está ${nextStatus}.`,
+      title: `Pedido #${order.orderNumber} — EcoPet`,
+    });
   }
 
   return apiSuccess({ order: updated });

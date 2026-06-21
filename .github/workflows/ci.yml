@@ -56,7 +56,7 @@ jobs:
 
       - name: Start web server
         run: |
-          npm run start -w @ecopet/web &
+          AUTH_TEST_EXPOSE_OTP=1 PHONE_SMS_RECOVERY_ENABLED=1 npm run start -w @ecopet/web &
           npx wait-on http://localhost:3000/api/health --timeout 120000
 
       - name: Foundation tests (subset)

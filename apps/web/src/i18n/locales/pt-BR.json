@@ -29,6 +29,9 @@
     "continueShopping": "Continuar comprando",
     "emptyCart": "Seu carrinho está vazio"
   },
+  "ecopetAi": {
+    "disclaimer": "A IA EcoPet não substitui médicos-veterinários, zootecnistas, adestradores, especialistas ou outros profissionais qualificados. As informações fornecidas possuem caráter informativo e de apoio à tomada de decisão."
+  },
   "nav": {
     "home": "Início",
     "feed": "Feed",
@@ -112,7 +115,8 @@
       "entering": "Entrando...",
       "loading": "Carregando...",
       "forgot": "Esqueceu a senha?",
-      "forgotLink": "Esqueci minha senha",
+      "forgotLink": "Esqueceu a senha?",
+      "forgotLinkAria": "Esqueceu a senha? Ir para recuperação de senha",
       "noAccount": "Não tem conta?",
       "signUpLink": "Cadastre-se",
       "showPassword": "Mostrar senha",
@@ -634,15 +638,30 @@
       "copyright": "© 2026 ECOPET"
     },
     "forgotPassword": {
-      "title": "Recuperar senha",
-      "description": "Informe seu e-mail ou telefone cadastrado. Enviaremos instruções para redefinir sua senha.",
+      "title": "Recuperar Senha",
+      "description": "Informe seu e-mail ou telefone para receber as instruções de recuperação.",
       "identifier": "E-mail ou Telefone",
       "identifierPlaceholder": "Digite seu e-mail ou telefone",
-      "submit": "Enviar instruções",
+      "submit": "Enviar Código",
       "submitting": "Enviando...",
-      "success": "Se o e-mail ou telefone estiver cadastrado, você receberá instruções para redefinir sua senha em instantes.",
-      "checkInbox": "Verifique sua caixa de entrada, SMS ou pasta de spam.",
-      "backToLogin": "Voltar ao login"
+      "success": "Se os dados estiverem corretos, enviaremos instruções de recuperação.",
+      "codeDescription": "Digite o código de 6 dígitos que você recebeu.",
+      "codeStepTitle": "Verificar código",
+      "codeLabel": "Código de verificação",
+      "codePlaceholder": "000000",
+      "verifyCode": "Verificar código",
+      "verifying": "Verificando...",
+      "resendCode": "Reenviar código",
+      "resendWait": "Reenviar em {{seconds}}s",
+      "sendFailed": "Não foi possível enviar o código agora. Tente novamente em alguns minutos.",
+      "changeIdentifier": "Alterar e-mail ou telefone",
+      "checkInbox": "Verifique sua caixa de entrada ou pasta de spam.",
+      "checkSms": "Verifique as mensagens SMS do seu telefone.",
+      "backToLogin": "Voltar ao login",
+      "notFound": "E-mail ou telefone não encontrado.",
+      "phoneUnavailable": "Recuperação por telefone temporariamente indisponível.",
+      "codeInvalid": "Código de verificação inválido.",
+      "codeExpired": "O código expirou. Solicite um novo código."
     },
     "resetPassword": {
       "title": "Redefinir senha",

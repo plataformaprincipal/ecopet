@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { OrderStatus, DeliveryMethod, PaymentMethod, Prisma } from "@prisma/client";
 import { createInternalNotification } from "@/lib/notifications/internal";
 import { emailOrderEvent } from "@/lib/mail/event-dispatch";
+import { getUserEmailLocale } from "@/lib/email/templates";
 import { getOrCreateCart, serializeCart } from "@/lib/cart/cart-service";
 
 const PAYMENT_AT_DELIVERY_LABEL: Record<PaymentMethod, string> = {
@@ -107,24 +108,28 @@ export async function checkoutFromCart(params: {
     }),
   ]);
 
-  const user = await prisma.user.findUnique({ where: { id: params.userId }, select: { email: true, name: true } });
+  const user = await prisma.user.findUnique({
+    where: { id: params.userId },
+    select: { email: true, name: true, preferences: true },
+  });
   if (user?.email) {
-    void emailOrderEvent(
-      "ORDER_CREATED",
-      user.email,
-      order.orderNumber,
-      `Olá ${user.name}, seu pedido #${order.orderNumber} foi registrado.`
-    );
+    void emailOrderEvent("ORDER_CREATED", user.email, order.orderNumber, {
+      name: user.name,
+      locale: getUserEmailLocale(user.preferences),
+    });
   }
 
-  const partner = await prisma.user.findUnique({ where: { id: partnerId }, select: { email: true, name: true } });
+  const partner = await prisma.user.findUnique({
+    where: { id: partnerId },
+    select: { email: true, name: true, preferences: true },
+  });
   if (partner?.email) {
-    void emailOrderEvent(
-      "ORDER_CREATED",
-      partner.email,
-      order.orderNumber,
-      `Você recebeu o pedido #${order.orderNumber}.`
-    );
+    void emailOrderEvent("ORDER_CREATED", partner.email, order.orderNumber, {
+      name: partner.name,
+      locale: getUserEmailLocale(partner.preferences),
+      title: "Novo pedido — EcoPet",
+      message: `Você recebeu o pedido #${order.orderNumber}.`,
+    });
   }
 
   return order;

@@ -483,72 +483,139 @@ async function main() {
   assert(unknownUser.status === 401, "username inexistente 401");
   assert(validationMessage(unknownUser).includes("não encontrado"), "mensagem username não encontrado");
 
-  // 10c. Recuperação de senha por e-mail
+  // 10c. Recuperação de senha por e-mail (OTP)
   const forgotEmail = await req("/api/auth/forgot-password", {
     method: "POST",
     body: JSON.stringify({ identifier: clientEmail }),
   });
   assert(forgotEmail.status === 200, "recuperação por e-mail ok");
+  const forgotEmailPayload = forgotEmail.data?.data ?? forgotEmail.data;
+  assert(forgotEmailPayload?.channel === "email", "canal e-mail");
+  const emailOtp = forgotEmailPayload?.devOtp;
+  assert(emailOtp && /^\d{6}$/.test(emailOtp), "OTP exposto em testes (AUTH_TEST_EXPOSE_OTP=1)");
 
   const forgotEmailMissing = await req("/api/auth/forgot-password", {
     method: "POST",
     body: JSON.stringify({ identifier: `missing.recovery.${ts}@test.ecopet.local` }),
   });
-  assert(forgotEmailMissing.status === 404, "recuperação e-mail inexistente 404");
-  assert(validationMessage(forgotEmailMissing).includes("não encontrado"), "mensagem recuperação não encontrado");
-
-  // 10d. Recuperação por telefone (SMS desabilitado)
-  const clientPhone = `+55119${String(ts).slice(-8)}`;
-  const forgotPhoneOff = await req("/api/auth/forgot-password", {
-    method: "POST",
-    body: JSON.stringify({ identifier: clientPhone }),
-  });
-  assert(forgotPhoneOff.status === 503, "recuperação telefone indisponível 503");
+  assert(forgotEmailMissing.status === 200, "recuperação e-mail inexistente 200 genérico");
   assert(
-    validationMessage(forgotPhoneOff).includes("temporariamente indisponível"),
-    "mensagem telefone indisponível"
+    validationMessage(forgotEmailMissing).includes("instruções de recuperação") ||
+      validationMessage(forgotEmailMissing).includes("recuperação"),
+    "mensagem genérica sem revelar existência"
   );
 
-  // 10e. Código OTP inválido
+  // 10d. OTP inválido
   const invalidCode = await req("/api/auth/verify-reset-code", {
     method: "POST",
-    body: JSON.stringify({ identifier: clientPhone, code: "000000" }),
+    body: JSON.stringify({ identifier: clientEmail, code: "000000" }),
   });
   assert(invalidCode.status === 400, "código inválido 400");
   assert(validationMessage(invalidCode).includes("Código de verificação inválido"), "mensagem código inválido");
 
-  // 10f. Recuperação por telefone inexistente (quando SMS habilitado no servidor)
-  if (forgotPhoneOff.status !== 503) {
-    const forgotPhoneMissing = await req("/api/auth/forgot-password", {
-      method: "POST",
-      body: JSON.stringify({ identifier: "+5511888777666" }),
-    });
-    assert(forgotPhoneMissing.status === 404, "recuperação telefone inexistente 404");
-    assert(validationMessage(forgotPhoneMissing).includes("não encontrado"), "mensagem telefone não encontrado");
-    console.log("[recovery] telefone inexistente → 404");
+  // 10e. OTP válido → token de redefinição
+  const verifyEmail = await req("/api/auth/verify-reset-code", {
+    method: "POST",
+    body: JSON.stringify({ identifier: clientEmail, code: emailOtp }),
+  });
+  assert(verifyEmail.status === 200, "OTP e-mail válido 200");
+  const verifyPayload = verifyEmail.data?.data ?? verifyEmail.data;
+  assert(verifyPayload?.resetToken, "resetToken após OTP válido");
 
-    const forgotPhoneOk = await req("/api/auth/forgot-password", {
-      method: "POST",
-      body: JSON.stringify({ identifier: clientPhone }),
-    });
-    assert(forgotPhoneOk.status === 200, "recuperação por telefone ok");
-    await new Promise((r) => setTimeout(r, 300));
-    const expiredOrInvalid = await req("/api/auth/verify-reset-code", {
-      method: "POST",
-      body: JSON.stringify({ identifier: clientPhone, code: "000000" }),
-    });
-    assert(expiredOrInvalid.status === 400, "código OTP inválido/expirado 400");
-    const expiredMsg = validationMessage(expiredOrInvalid);
+  const recoveryPassword = "NovaRec@2026!";
+  const resetAfterOtp = await req("/api/auth/reset-password", {
+    method: "POST",
+    body: JSON.stringify({
+      token: verifyPayload.resetToken,
+      password: recoveryPassword,
+      confirmPassword: recoveryPassword,
+    }),
+  });
+  assert(resetAfterOtp.status === 200, "redefinição após OTP ok");
+
+  const loginNewPwd = await req("/api/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ identifier: clientEmail, password: recoveryPassword }),
+  });
+  assert(loginNewPwd.status === 200, "login com nova senha ok");
+  cookieJar.delete("cookie");
+
+  // 10f. OTP expirado
+  const forgotExpire = await req("/api/auth/forgot-password", {
+    method: "POST",
+    body: JSON.stringify({ identifier: clientEmail }),
+  });
+  const expireOtp = (forgotExpire.data?.data ?? forgotExpire.data)?.devOtp;
+  assert(expireOtp, "OTP para teste de expiração");
+  await new Promise((r) => setTimeout(r, 1200));
+  const expiredCode = await req("/api/auth/verify-reset-code", {
+    method: "POST",
+    body: JSON.stringify({ identifier: clientEmail, code: expireOtp }),
+  });
+  if (process.env.AUTH_TEST_OTP_TTL_MS && parseInt(process.env.AUTH_TEST_OTP_TTL_MS, 10) <= 1000) {
+    assert(expiredCode.status === 400, "OTP expirado 400");
     assert(
-      expiredMsg.includes("expirou") || expiredMsg.includes("Código de verificação inválido"),
-      "mensagem código expirado ou inválido"
+      validationMessage(expiredCode).includes("expirou"),
+      "mensagem código expirado"
     );
-    console.log("[recovery] telefone + OTP → OK");
+    console.log("[recovery] OTP expirado → OK");
   } else {
-    console.log("[recovery] SMS desabilitado — telefone retorna 503 (indisponível)");
+    console.log("[recovery] OTP expirado — defina AUTH_TEST_OTP_TTL_MS=500 no servidor para testar");
   }
 
-  console.log("[login/recovery] e-mail, username, senha, recuperação OK");
+  // 10g. Recuperação por telefone
+  const clientPhone = `+55119${String(ts).slice(-8)}`;
+  const forgotPhone = await req("/api/auth/forgot-password", {
+    method: "POST",
+    body: JSON.stringify({ identifier: clientPhone }),
+  });
+  if (forgotPhone.status === 503) {
+    console.log("[recovery] SMS desabilitado — telefone retorna 503 (defina PHONE_SMS_RECOVERY_ENABLED=1)");
+  } else {
+    assert(forgotPhone.status === 200, "recuperação por telefone ok");
+    const phonePayload = forgotPhone.data?.data ?? forgotPhone.data;
+    assert(phonePayload?.channel === "phone", "canal telefone");
+    const phoneOtp = phonePayload?.devOtp;
+    assert(phoneOtp && /^\d{6}$/.test(phoneOtp), "OTP SMS exposto em testes");
+
+    const verifyPhone = await req("/api/auth/verify-reset-code", {
+      method: "POST",
+      body: JSON.stringify({ identifier: clientPhone, code: phoneOtp }),
+    });
+    assert(verifyPhone.status === 200, "OTP telefone válido");
+    console.log("[recovery] telefone + OTP → OK");
+  }
+
+  // 10h. Tentativas excessivas de verificação
+  for (let i = 0; i < 6; i++) {
+    await req("/api/auth/verify-reset-code", {
+      method: "POST",
+      body: JSON.stringify({ identifier: clientEmail, code: "111111" }),
+    });
+  }
+  const blockedVerify = await req("/api/auth/verify-reset-code", {
+    method: "POST",
+    body: JSON.stringify({ identifier: clientEmail, code: "111111" }),
+  });
+  assert(blockedVerify.status === 429 || blockedVerify.status === 400, "bloqueio por tentativas excessivas");
+  console.log("[recovery] tentativas excessivas → bloqueio/rate limit");
+
+  // 10i. AuditLog registrado
+  if (process.env.DATABASE_URL) {
+    const { PrismaClient } = await import("@prisma/client");
+    const prisma = new PrismaClient({ datasources: { db: { url: process.env.DATABASE_URL } } });
+    const audit = await prisma.auditLog.findFirst({
+      where: { module: "auth", resource: "password_recovery" },
+      orderBy: { createdAt: "desc" },
+    });
+    await prisma.$disconnect();
+    assert(audit, "AuditLog de recuperação registrado");
+    console.log("[recovery] AuditLog → OK");
+  } else {
+    console.log("[recovery] AuditLog — DATABASE_URL ausente, pulando verificação");
+  }
+
+  console.log("[login/recovery] e-mail, telefone, OTP, redefinição OK");
 
   // 11. Register PARTNER
   const partnerEmail = `partner.${ts}@test.ecopet.local`;

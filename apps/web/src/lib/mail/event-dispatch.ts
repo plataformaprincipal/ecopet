@@ -1,7 +1,17 @@
+import { sendEmail } from "@/lib/email/email-service";
 import { sendTransactionalEmail, type TransactionalEmailEvent } from "@/lib/mail/transactional";
-import { passwordResetEmail } from "@/lib/mail/templates/password-reset";
-import { welcomeEmail } from "@/lib/mail/templates/welcome";
 import { getAppUrl } from "@/lib/mail/config";
+import { sendPasswordRecoveryOtpEmail } from "@/lib/email/password-recovery-email";
+import {
+  renderRegistrationCompletedEmail,
+  renderPasswordRecoveryEmail,
+  renderOrderPlacedEmail,
+  renderAppointmentScheduledEmail,
+  renderNotificationEmail,
+  renderPasswordChangedEmail,
+  getUserEmailLocale,
+  type EmailLocale,
+} from "@/lib/email/templates";
 
 /** Dispara e-mail transacional sem interromper o fluxo principal. */
 export async function dispatchEmail(
@@ -19,14 +29,91 @@ export async function dispatchEmail(
   }
 }
 
-export async function emailRegisterCompleted(to: string, name: string) {
-  const tpl = welcomeEmail(name, getAppUrl());
-  await dispatchEmail("REGISTER_COMPLETED", to, tpl.subject, tpl.text, tpl.html);
+/** Envia e-mail premium via Resend SDK (templates EcoPet). */
+export async function dispatchPremiumEmail(params: {
+  to: string;
+  subject: string;
+  html: string;
+  text: string;
+  logPrefix?: string;
+}) {
+  return sendEmail({
+    to: params.to,
+    subject: params.subject,
+    html: params.html,
+    text: params.text,
+    logPrefix: params.logPrefix ?? "[email]",
+  });
 }
 
-export async function emailPasswordReset(to: string, resetUrl: string, name?: string) {
-  const tpl = passwordResetEmail(resetUrl, name);
-  await dispatchEmail("PASSWORD_RESET", to, tpl.subject, tpl.text, tpl.html, { requireDelivery: false });
+export async function emailRegisterCompleted(
+  to: string,
+  name: string,
+  role: string,
+  locale?: EmailLocale
+) {
+  const resolvedLocale = locale ?? "pt-BR";
+  const tpl = renderRegistrationCompletedEmail({
+    locale: resolvedLocale,
+    appUrl: getAppUrl(),
+    name,
+    role,
+  });
+  await dispatchPremiumEmail({
+    to,
+    subject: tpl.subject,
+    html: tpl.html,
+    text: tpl.text,
+    logPrefix: "[register]",
+  });
+}
+
+export async function emailPasswordReset(
+  to: string,
+  _resetUrl: string,
+  options?: { name?: string; code?: string; locale?: EmailLocale }
+) {
+  const locale = options?.locale ?? "pt-BR";
+  const tpl = renderPasswordRecoveryEmail({
+    locale,
+    appUrl: getAppUrl(),
+    name: options?.name ?? to.split("@")[0] ?? "Usuário",
+    code: options?.code ?? "000000",
+  });
+  await dispatchPremiumEmail({
+    to,
+    subject: tpl.subject,
+    html: tpl.html,
+    text: tpl.text,
+    logPrefix: "[password-reset]",
+  });
+}
+
+export async function emailPasswordResetOtp(
+  to: string,
+  code: string,
+  options?: { name?: string; locale?: EmailLocale }
+) {
+  return sendPasswordRecoveryOtpEmail(to, code, options);
+}
+
+export async function emailPasswordChanged(
+  to: string,
+  name: string,
+  locale?: EmailLocale
+) {
+  const tpl = renderPasswordChangedEmail({
+    locale: locale ?? "pt-BR",
+    appUrl: getAppUrl(),
+    name,
+  });
+  await dispatchPremiumEmail({
+    to,
+    subject: tpl.subject,
+    html: tpl.html,
+    text: tpl.text,
+    logPrefix: "[password-changed]",
+  });
 }
 
 export async function emailAppointmentEvent(
@@ -35,18 +122,69 @@ export async function emailAppointmentEvent(
     "APPOINTMENT_CREATED" | "APPOINTMENT_CONFIRMED" | "APPOINTMENT_CANCELLED" | "APPOINTMENT_COMPLETED"
   >,
   to: string,
-  subject: string,
-  body: string
+  params: {
+    name: string;
+    serviceName: string;
+    locale?: EmailLocale;
+    title?: string;
+    message?: string;
+  }
 ) {
-  await dispatchEmail(event, to, subject, body, `<p>${body}</p>`);
+  const locale = params.locale ?? "pt-BR";
+  const tpl =
+    event === "APPOINTMENT_CREATED"
+      ? renderAppointmentScheduledEmail({
+          locale,
+          appUrl: getAppUrl(),
+          name: params.name,
+          serviceName: params.serviceName,
+        })
+      : renderNotificationEmail({
+          locale,
+          appUrl: getAppUrl(),
+          title: params.title,
+          message: params.message ?? params.serviceName,
+        });
+
+  await dispatchPremiumEmail({
+    to,
+    subject: tpl.subject,
+    html: tpl.html,
+    text: tpl.text,
+    logPrefix: `[appointment:${event}]`,
+  });
 }
 
 export async function emailOrderEvent(
   event: Extract<TransactionalEmailEvent, "ORDER_CREATED" | "ORDER_CONFIRMED" | "ORDER_CANCELLED" | "ORDER_COMPLETED">,
   to: string,
   orderNumber: number,
-  body: string
+  params: { name: string; locale?: EmailLocale; message?: string; title?: string }
 ) {
-  const subject = `Pedido #${orderNumber} — EcoPet`;
-  await dispatchEmail(event, to, subject, body, `<p>${body}</p>`);
+  const locale = params.locale ?? "pt-BR";
+  const tpl =
+    event === "ORDER_CREATED"
+      ? renderOrderPlacedEmail({
+          locale,
+          appUrl: getAppUrl(),
+          name: params.name,
+          orderNumber,
+        })
+      : renderNotificationEmail({
+          locale,
+          appUrl: getAppUrl(),
+          title: params.title,
+          message: params.message ?? `Pedido #${orderNumber}`,
+        });
+
+  await dispatchPremiumEmail({
+    to,
+    subject: tpl.subject,
+    html: tpl.html,
+    text: tpl.text,
+    logPrefix: `[order:${event}]`,
+  });
 }
+
+export { getUserEmailLocale };
+

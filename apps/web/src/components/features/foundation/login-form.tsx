@@ -118,8 +118,12 @@ export function FoundationLoginForm() {
             />
           </div>
           <p className="text-right text-sm">
-            <Link href="/esqueci-senha" className="text-green-700 hover:underline">
-              {t("auth.login.forgotLink")}
+            <Link
+              href="/recuperar-senha"
+              className="inline-block rounded-sm font-medium text-ecopet-green underline-offset-2 transition-colors hover:text-emerald-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ecopet-green/40 focus-visible:ring-offset-2 dark:text-emerald-400 dark:hover:text-emerald-300"
+              aria-label={t("auth.login.forgotLinkAria")}
+            >
+              {t("auth.login.forgot")}
             </Link>
           </p>
           {error && (

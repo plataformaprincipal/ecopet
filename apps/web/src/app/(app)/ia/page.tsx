@@ -8,8 +8,8 @@ import { AppHeader } from "@/components/layouts/app-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { api } from "@/lib/api";
-import { AI_DISCLAIMER } from "@/lib/constants";
 import { useAppStore } from "@/store/app-store";
+import { useTranslation } from "@/providers/i18n-provider";
 
 const modes = [
   { id: "general", label: "Geral" },
@@ -19,6 +19,7 @@ const modes = [
 ] as const;
 
 export default function IAPage() {
+  const { t } = useTranslation();
   const token = useAppStore((s) => s.apiToken);
   const [mode, setMode] = useState<string>("general");
   const [message, setMessage] = useState("");
@@ -43,7 +44,7 @@ export default function IAPage() {
         ...m,
         {
           role: "assistant",
-          content: `Configure a API e faça login para usar a IA completa.\n\n${AI_DISCLAIMER}`,
+          content: `Configure a API e faça login para usar a IA completa.\n\n${t("ecopetAi.disclaimer")}`,
         },
       ]);
     } finally {
@@ -58,7 +59,7 @@ export default function IAPage() {
         <Card className="mb-4 border-ecopet-yellow/30 bg-ecopet-yellow/5">
           <CardContent className="flex items-start gap-3 p-4">
             <AlertTriangle className="h-5 w-5 shrink-0 text-ecopet-yellow" />
-            <p className="text-sm font-medium text-ecopet-dark dark:text-white">{AI_DISCLAIMER}</p>
+            <p className="text-sm font-medium text-ecopet-dark dark:text-white">{t("ecopetAi.disclaimer")}</p>
           </CardContent>
         </Card>
 

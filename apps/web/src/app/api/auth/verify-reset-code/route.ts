@@ -12,15 +12,21 @@ import {
   VERIFY_CODE_INVALID_MESSAGE,
 } from "@/lib/constants/auth-messages";
 import { generateResetToken, hashResetToken, resetExpiresAt } from "@/lib/password-reset";
+import { logRecoveryAudit } from "@/lib/auth/recovery-audit";
+import {
+  isRecoveryBlocked,
+  onRecoveryVerifyFailure,
+  RECOVERY_BLOCKED_MESSAGE,
+} from "@/lib/auth/recovery-security";
 
-const VERIFY_LIMIT = 10;
+const VERIFY_IP_LIMIT = 20;
 const VERIFY_WINDOW_MS = 15 * 60 * 1000;
 
 export async function POST(request: Request) {
   try {
     const ip = clientIp(request);
-    if (!checkAuthRateLimit(`verify-reset:ip:${ip}`, VERIFY_LIMIT, VERIFY_WINDOW_MS)) {
-      return apiFailure("RATE_LIMIT", "Muitas tentativas. Aguarde alguns minutos.", 429);
+    if (!checkAuthRateLimit(`verify-reset:ip:${ip}`, VERIFY_IP_LIMIT, VERIFY_WINDOW_MS)) {
+      return apiFailure("RATE_LIMIT", RECOVERY_BLOCKED_MESSAGE, 429);
     }
 
     const body = await request.json();
@@ -33,12 +39,14 @@ export async function POST(request: Request) {
 
     const { identifier, code } = parsed.data;
 
-    if (!checkAuthRateLimit(`verify-reset:id:${identifier.toLowerCase()}`, VERIFY_LIMIT, VERIFY_WINDOW_MS)) {
-      return apiFailure("RATE_LIMIT", "Muitas tentativas. Aguarde alguns minutos.", 429);
+    if (isRecoveryBlocked(identifier)) {
+      await logRecoveryAudit({ event: "blocked", ip, metadata: { step: "verify" } });
+      return apiFailure("RATE_LIMIT", RECOVERY_BLOCKED_MESSAGE, 429);
     }
 
     const user = await findUserByRecoveryIdentifier(prisma, identifier);
     if (!user) {
+      await logRecoveryAudit({ event: "verify_failed", ip, metadata: { reason: "user_not_found" } });
       return apiFailure("CODE_INVALID", VERIFY_CODE_INVALID_MESSAGE, 400);
     }
 
@@ -58,6 +66,13 @@ export async function POST(request: Request) {
 
     if (!matching) {
       const hasExpired = records.some((r) => r.expiresAt <= now);
+      onRecoveryVerifyFailure(identifier);
+      await logRecoveryAudit({
+        userId: user.id,
+        event: "verify_failed",
+        ip,
+        metadata: { reason: hasExpired ? "expired" : "invalid" },
+      });
       if (hasExpired && records.length > 0) {
         return apiFailure("CODE_EXPIRED", VERIFY_CODE_EXPIRED_MESSAGE, 400);
       }
@@ -65,6 +80,13 @@ export async function POST(request: Request) {
     }
 
     if (matching.expiresAt <= now) {
+      onRecoveryVerifyFailure(identifier);
+      await logRecoveryAudit({
+        userId: user.id,
+        event: "verify_failed",
+        ip,
+        metadata: { reason: "expired" },
+      });
       return apiFailure("CODE_EXPIRED", VERIFY_CODE_EXPIRED_MESSAGE, 400);
     }
 
@@ -82,6 +104,12 @@ export async function POST(request: Request) {
         tokenHash,
         expiresAt: resetExpiresAt(now),
       },
+    });
+
+    await logRecoveryAudit({
+      userId: user.id,
+      event: "verify_success",
+      ip,
     });
 
     return apiSuccess({
