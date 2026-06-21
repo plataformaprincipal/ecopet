@@ -17,6 +17,8 @@ import {
   CLIENT_LEGAL,
   CLIENT_LEGAL_ACCEPTANCE_MESSAGE,
 } from "@/lib/legal/legal-links";
+import { useAuthMessages } from "@/lib/i18n/use-auth-messages";
+import type { TranslationKey } from "@/lib/i18n/types";
 
 type ClientLegalAcceptanceProps = {
   acceptTerms: boolean;
@@ -34,6 +36,8 @@ const LEGAL_CARDS: {
   accent: string;
   borderSelected: string;
   bgSelected: string;
+  checkboxKey: TranslationKey;
+  previewKey: TranslationKey;
 }[] = [
   {
     key: "terms",
@@ -41,6 +45,8 @@ const LEGAL_CARDS: {
     accent: "text-emerald-700",
     borderSelected: "border-emerald-600 ring-emerald-500/30",
     bgSelected: "bg-emerald-50/80 dark:bg-emerald-950/30",
+    checkboxKey: "auth.terms.client.terms",
+    previewKey: "auth.terms.client.termsPreview",
   },
   {
     key: "privacy",
@@ -48,6 +54,8 @@ const LEGAL_CARDS: {
     accent: "text-teal-700",
     borderSelected: "border-teal-600 ring-teal-500/30",
     bgSelected: "bg-teal-50/80 dark:bg-teal-950/30",
+    checkboxKey: "auth.terms.client.privacy",
+    previewKey: "auth.terms.client.privacyPreview",
   },
 ];
 
@@ -58,6 +66,7 @@ export function ClientLegalAcceptance({
   onAcceptPrivacyChange,
   error,
 }: ClientLegalAcceptanceProps) {
+  const { t, tv } = useAuthMessages();
   const [previewDoc, setPreviewDoc] = useState<LegalDocKey | null>(null);
 
   const checkedMap: Record<LegalDocKey, boolean> = {
@@ -88,17 +97,20 @@ export function ClientLegalAcceptance({
           <ShieldCheck className="h-5 w-5" />
         </div>
         <div>
-          <h2 id="client-legal-acceptance-heading" className="font-display text-base font-semibold text-ecopet-dark dark:text-white">
-            Proteção e transparência
+          <h2
+            id="client-legal-acceptance-heading"
+            className="font-display text-base font-semibold text-ecopet-dark dark:text-white"
+          >
+            {t("auth.terms.legalHeading")}
           </h2>
           <p id="client-legal-acceptance-hint" className="mt-1 text-xs leading-relaxed text-muted-foreground">
-            Leia e aceite os documentos exclusivos do Cliente EcoPet para concluir seu cadastro com segurança.
+            {t("auth.terms.legalHint")}
           </p>
         </div>
       </header>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        {LEGAL_CARDS.map(({ key, icon: Icon, accent, borderSelected, bgSelected }) => {
+        {LEGAL_CARDS.map(({ key, icon: Icon, accent, borderSelected, bgSelected, checkboxKey, previewKey }) => {
           const doc = legalMap[key];
           const checked = checkedMap[key];
           const inputId = `client-accept-${key}`;
@@ -137,7 +149,7 @@ export function ClientLegalAcceptance({
                       required
                     />
                     <span className="text-sm font-medium leading-snug text-ecopet-dark dark:text-white">
-                      {doc.checkboxLabel}
+                      {t(checkboxKey)}
                     </span>
                   </label>
 
@@ -148,7 +160,7 @@ export function ClientLegalAcceptance({
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 underline-offset-2 hover:underline dark:text-emerald-400"
                     >
-                      Ler documento completo
+                      {t("auth.terms.readFull")}
                       <ExternalLink className="h-3 w-3" aria-hidden />
                     </Link>
 
@@ -163,24 +175,18 @@ export function ClientLegalAcceptance({
                           size="sm"
                           className="h-7 px-2 text-xs text-muted-foreground hover:text-emerald-700"
                         >
-                          Pré-visualizar
+                          {t("auth.terms.preview")}
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto">
                         <DialogHeader>
                           <DialogTitle>{doc.title}</DialogTitle>
-                          <DialogDescription>
-                            Resumo introdutório. Para o texto integral, abra a página oficial.
-                          </DialogDescription>
+                          <DialogDescription>{t("auth.terms.previewSummary")}</DialogDescription>
                         </DialogHeader>
-                        <p className="text-sm leading-relaxed text-muted-foreground">
-                          {key === "terms"
-                            ? "Estes termos regulam o uso da EcoPet por tutores e responsáveis por pets, incluindo compras, serviços, agendamentos, tele-busca, proteção animal e responsabilidades do Cliente."
-                            : "Esta política descreve como a EcoPet coleta, utiliza, armazena e protege seus dados pessoais, pets, pedidos e agendamentos, em conformidade com a LGPD."}
-                        </p>
+                        <p className="text-sm leading-relaxed text-muted-foreground">{t(previewKey)}</p>
                         <Button asChild variant="outline" size="sm" className="w-fit">
                           <Link href={doc.href} target="_blank" rel="noopener noreferrer">
-                            Abrir página completa
+                            {t("auth.terms.openFullPage")}
                           </Link>
                         </Button>
                       </DialogContent>
@@ -200,7 +206,7 @@ export function ClientLegalAcceptance({
           role="alert"
           aria-live="polite"
         >
-          {error || CLIENT_LEGAL_ACCEPTANCE_MESSAGE}
+          {tv(error) || t("auth.terms.acceptanceRequired")}
         </p>
       )}
     </section>

@@ -51,6 +51,7 @@ import {
 import { cn } from "@/lib/utils";
 import { StepValidationFeedback } from "@/components/features/foundation/step-validation-feedback";
 import { collectUniqueErrorMessages, duplicateRegistrationError } from "@/lib/registration/collect-step-errors";
+import { useAuthMessages } from "@/lib/i18n/use-auth-messages";
 
 type Step = "personal" | "security" | "conclusion";
 
@@ -60,6 +61,7 @@ const USERNAME_PATTERN = /^[a-zA-Z0-9_.]{4,30}$/;
 
 export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
   const router = useRouter();
+  const { t, tv, tpwError, tApi, validation: v } = useAuthMessages();
   const [step, setStep] = useState<Step>("personal");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -139,10 +141,10 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
   const nameLiveError = useMemo(() => {
     if (!form.name.trim()) return undefined;
     const name = normalizeFullName(form.name);
-    if (!isValidFullName(name)) return FULL_NAME_INCOMPLETE_MESSAGE;
-    if (name.length > 120) return "Nome deve ter no máximo 120 caracteres.";
+    if (!isValidFullName(name)) return v.fullNameIncomplete;
+    if (name.length > 120) return v.nameTooLong;
     return undefined;
-  }, [form.name]);
+  }, [form.name, v.fullNameIncomplete, v.nameTooLong]);
 
   const emailLiveFeedback = useMemo(() => getEmailLiveFeedback(form.email), [form.email]);
 
@@ -155,8 +157,9 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
 
   const birthDateLiveError = useMemo(() => {
     if (!form.birthDate) return undefined;
-    return validateBirthDate(form.birthDate);
-  }, [form.birthDate]);
+    const err = validateBirthDate(form.birthDate);
+    return err ? tv(err) : undefined;
+  }, [form.birthDate, tv]);
 
   const canSubmit = acceptTerms && acceptPrivacy && !loading;
 
@@ -164,48 +167,48 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
     const errors: FieldErrors = {};
     const name = normalizeFullName(form.name);
     if (!isValidFullName(name)) {
-      errors.name = FULL_NAME_INCOMPLETE_MESSAGE;
+      errors.name = v.fullNameIncomplete;
     } else if (name.length > 120) {
-      errors.name = "Nome deve ter no máximo 120 caracteres.";
+      errors.name = v.nameTooLong;
     }
 
     const email = form.email.trim().toLowerCase();
     if (!isValidRegistrationEmail(email)) {
-      errors.email = EMAIL_INVALID_MESSAGE;
+      errors.email = v.emailInvalid;
     }
 
     if (phoneCountry === "BR") {
       if (!brazilDdd) {
-        errors.phone = BR_DDD_REQUIRED_MESSAGE;
+        errors.phone = v.brDddRequired;
       } else if (!form.phone.trim()) {
-        errors.phone = BR_PHONE_INVALID_MESSAGE;
+        errors.phone = v.brPhoneInvalid;
       } else if (!phoneLiveFeedback.valid) {
-        errors.phone = phoneLiveFeedback.message ?? BR_PHONE_INVALID_MESSAGE;
+        errors.phone = tv(phoneLiveFeedback.message) ?? v.brPhoneInvalid;
       }
     } else if (!form.phone.trim()) {
-      errors.phone = PHONE_INVALID_MESSAGE;
+      errors.phone = v.phoneInvalid;
     } else if (!phoneLiveFeedback.valid) {
-      errors.phone = phoneLiveFeedback.message ?? PHONE_INVALID_MESSAGE;
+      errors.phone = tv(phoneLiveFeedback.message) ?? v.phoneInvalid;
     }
 
     if (!form.gender) {
-      errors.gender = GENDER_VALIDATION_MESSAGE;
+      errors.gender = v.genderRequired;
     } else if (form.gender === "OUTRO" && form.genderOther.trim().length < 2) {
-      errors.genderOther = "Informe seu gênero.";
+      errors.genderOther = v.genderSpecify;
     }
 
     const username = form.username.trim();
     if (!USERNAME_PATTERN.test(username)) {
-      errors.username = "Use 4–30 caracteres: letras, números, _ e .";
+      errors.username = v.usernameFormat;
     } else if (usernameStatus === "taken") {
       Object.assign(errors, duplicateRegistrationError());
     }
 
     if (!form.birthDate) {
-      errors.birthDate = "Data de nascimento obrigatória.";
+      errors.birthDate = v.birthDateRequired;
     } else {
       const birthError = validateBirthDate(form.birthDate);
-      if (birthError) errors.birthDate = birthError;
+      if (birthError) errors.birthDate = tv(birthError) ?? birthError;
     }
 
     return errors;
@@ -215,11 +218,11 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
     e.preventDefault();
     setError("");
     if (usernameStatus === "checking") {
-      setStepFeedback(["Aguarde a verificação do nome de usuário."]);
+      setStepFeedback([t("auth.client.usernameCheckingWait")]);
       return;
     }
     const errors = validatePersonalStep();
-    const messages = collectUniqueErrorMessages(errors);
+    const messages = collectUniqueErrorMessages(errors).map((m) => tv(m));
     setStepFeedback(messages);
     if (messages.length > 0) {
       setFieldErrors(errors);
@@ -238,16 +241,18 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
     const securityErrors: FieldErrors = {};
     if (!acceptTerms || !acceptPrivacy) {
       setTermsError(CLIENT_LEGAL_ACCEPTANCE_MESSAGE);
-      securityErrors.legal = "Você precisa aceitar os termos para continuar.";
+      securityErrors.legal = t("auth.terms.acceptanceRequired");
     }
     if (form.password !== form.confirmPassword) {
-      securityErrors.confirmPassword = PASSWORD_MISMATCH_MESSAGE;
+      securityErrors.confirmPassword = v.passwordMismatch;
     }
     const pwdCheck = validateStrongPassword(form.password, passwordContext);
     if (!pwdCheck.valid) {
-      securityErrors.password = pwdCheck.error ?? "Senha não atende aos requisitos de segurança.";
+      securityErrors.password = pwdCheck.errorId
+        ? tpwError(pwdCheck.errorId)
+        : v.passwordWeak;
     }
-    const messages = collectUniqueErrorMessages(securityErrors);
+    const messages = collectUniqueErrorMessages(securityErrors).map((m) => tv(m));
     if (messages.length > 0) {
       setStepFeedback(messages);
       setLoading(false);
@@ -263,7 +268,7 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
       phoneCountry === "BR" ? brazilDdd : undefined
     );
     if (!normalizedPhone) {
-      setError(PHONE_INVALID_MESSAGE);
+      setError(v.phoneInvalid);
       setStep("personal");
       setLoading(false);
       return;
@@ -296,8 +301,8 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
         const { code, message } = parseApiFailureError(data);
         const msg =
           res.status === 409
-            ? mapRegisterConflictMessage(code, message)
-            : message || "Erro ao cadastrar";
+            ? tv(mapRegisterConflictMessage(code, message))
+            : tApi(message, code) || t("auth.client.registerError");
         setError(msg);
         setStep("security");
         return;
@@ -307,7 +312,7 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
         (data.data?.user?.role ? dashboardPathForRole(data.data.user.role) : "/dashboard");
       const sessionReady = await confirmSessionCookie();
       if (!sessionReady) {
-        setError("Conta criada, mas a sessão não foi iniciada. Tente entrar com seu e-mail e senha.");
+        setError(t("auth.client.sessionError"));
         setStep("security");
         return;
       }
@@ -315,7 +320,7 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
       notifySessionChanged();
       router.refresh();
     } catch {
-      setError("Não foi possível conectar ao servidor.");
+      setError(t("auth.login.connectionError"));
       setStep("security");
     } finally {
       setLoading(false);
@@ -330,10 +335,10 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
           <form onSubmit={handleNextStep} className="mx-auto w-full max-w-lg space-y-4" noValidate>
             <AccessibleField
               id="client-name"
-              label="Nome Completo"
+              label={t("auth.client.fullName")}
               value={form.name}
               onChange={(v) => setField("name", v)}
-              placeholder="Digite seu nome completo"
+              placeholder={t("auth.client.fullNamePlaceholder")}
               required
               error={fieldErrors.name ?? nameLiveError}
               onBlur={() => setField("name", normalizeFullName(form.name))}
@@ -341,14 +346,14 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
 
             <AccessibleField
               id="client-email"
-              label="E-mail"
+              label={t("auth.register.fields.email")}
               type="email"
               value={form.email}
               onChange={(v) => setField("email", v)}
-              placeholder="Digite seu e-mail"
+              placeholder={t("auth.client.emailPlaceholder")}
               required
-              error={fieldErrors.email ?? (emailLiveFeedback.message && !emailLiveFeedback.valid ? emailLiveFeedback.message : undefined)}
-              success={emailLiveFeedback.valid ? emailLiveFeedback.message : undefined}
+              error={fieldErrors.email ?? (emailLiveFeedback.message && !emailLiveFeedback.valid ? tv(emailLiveFeedback.message) : undefined)}
+              success={emailLiveFeedback.valid ? tv(emailLiveFeedback.message) : undefined}
               onBlur={() => setField("email", form.email.trim().toLowerCase())}
             />
 
@@ -363,7 +368,7 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
               required
               error={
                 fieldErrors.phone ??
-                (phoneLiveFeedback.message && !phoneLiveFeedback.valid ? phoneLiveFeedback.message : undefined)
+                (phoneLiveFeedback.message && !phoneLiveFeedback.valid ? tv(phoneLiveFeedback.message) : undefined)
               }
             />
 
@@ -376,10 +381,10 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
             {form.gender === "OUTRO" && (
               <AccessibleField
                 id="client-gender-other"
-                label="Informe seu gênero"
+                label={t("auth.gender.specify")}
                 value={form.genderOther}
                 onChange={(v) => setField("genderOther", v)}
-                placeholder="Informe seu gênero"
+                placeholder={t("auth.gender.specifyPlaceholder")}
                 required
                 error={fieldErrors.genderOther}
               />
@@ -387,18 +392,18 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
 
             <div>
               <label htmlFor="client-username" className="text-sm font-medium">
-                Nome de Usuário *
+                {t("auth.client.username")} *
               </label>
               <Input
                 id="client-username"
                 type="text"
                 value={form.username}
                 onChange={(e) => setField("username", e.target.value.replace(/[^a-zA-Z0-9_.]/g, ""))}
-                placeholder="Digite seu nome de usuário"
+                placeholder={t("auth.client.usernamePlaceholder")}
                 required
                 maxLength={30}
                 className="mt-1"
-                aria-label="Nome de usuário"
+                aria-label={t("auth.client.username")}
                 aria-describedby="client-username-status"
                 aria-invalid={!!fieldErrors.username || usernameStatus === "taken" || usernameStatus === "invalid"}
               />
@@ -415,13 +420,13 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
                   role="status"
                   aria-live="polite"
                 >
-                  {usernameStatus === "checking" && "Verificando disponibilidade..."}
+                  {usernameStatus === "checking" && t("auth.client.usernameChecking")}
                   {usernameStatus === "available" && (
                     <>
-                      <Check className="h-3 w-3" aria-hidden /> Disponível
+                      <Check className="h-3 w-3" aria-hidden /> {t("auth.client.usernameAvailable")}
                     </>
                   )}
-                  {usernameStatus === "invalid" && "Formato inválido"}
+                  {usernameStatus === "invalid" && t("auth.client.usernameInvalid")}
                 </p>
               )}
               {fieldErrors.username && (
@@ -433,7 +438,7 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
 
             <AccessibleField
               id="client-birthdate"
-              label="Data de Nascimento"
+              label={t("auth.client.birthDate")}
               type="date"
               value={form.birthDate}
               onChange={(v) => setField("birthDate", v)}
@@ -444,7 +449,7 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
             />
 
             <Button type="submit" className="w-full">
-              Continuar para segurança
+              {t("auth.client.continueSecurity")}
             </Button>
             <StepValidationFeedback messages={stepFeedback} />
           </form>
@@ -454,15 +459,15 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
           <form onSubmit={handleSubmit} className="mx-auto w-full max-w-2xl space-y-5" noValidate>
             <div className="rounded-2xl border border-gray-200/80 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-ecopet-dark-card">
               <h2 className="font-display text-base font-semibold text-ecopet-dark dark:text-white">
-                Defina sua senha
+                {t("auth.client.passwordSectionTitle")}
               </h2>
               <p className="mt-1 text-xs text-muted-foreground">
-                Use uma senha forte com letras, números e símbolos. Evite dados pessoais e sequências óbvias.
+                {t("auth.client.passwordSectionHint")}
               </p>
               <div className="mt-4 space-y-4">
                 <FoundationPasswordField
                   id="client-password"
-                  label="Senha"
+                  label={t("auth.login.password")}
                   value={form.password}
                   onChange={(v) => setField("password", v)}
                   context={passwordContext}
@@ -471,7 +476,7 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
                 />
                 <FoundationConfirmPasswordField
                   id="client-confirm-password"
-                  label="Confirmar Senha"
+                  label={t("auth.client.confirmPassword")}
                   value={form.confirmPassword}
                   password={form.password}
                   onChange={(v) => setField("confirmPassword", v)}
@@ -502,10 +507,10 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
 
             <div className="flex gap-2">
               <Button type="button" variant="outline" className="flex-1" onClick={() => setStep("personal")}>
-                Voltar
+                {t("auth.client.back")}
               </Button>
               <Button type="submit" className="flex-1" disabled={!canSubmit}>
-                {loading ? "Cadastrando..." : "Cadastrar"}
+                {loading ? t("auth.client.registering") : t("auth.client.register")}
               </Button>
             </div>
             <StepValidationFeedback messages={stepFeedback} />
@@ -514,14 +519,14 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
 
         {step === "conclusion" && loading && (
           <p className="text-center text-sm text-muted-foreground" role="status" aria-live="polite">
-            Finalizando seu cadastro...
+            {t("auth.client.finalize")}
           </p>
         )}
 
         <p className="mt-4 text-center text-sm text-gray-600">
-          Já tem conta?{" "}
+          {t("auth.register.hasAccount")}{" "}
           <Link href="/login" className="font-semibold text-green-700 hover:underline">
-            Entrar
+            {t("auth.login.submit")}
           </Link>
         </p>
     </>
@@ -534,8 +539,8 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
   return (
     <Card className="mx-auto w-full max-w-4xl overflow-hidden">
       <CardHeader>
-        <CardTitle>Criar conta — Cliente</CardTitle>
-        <CardDescription>Preencha seus dados para acessar o EcoPet.</CardDescription>
+        <CardTitle>{t("auth.client.title")}</CardTitle>
+        <CardDescription>{t("auth.client.description")}</CardDescription>
       </CardHeader>
       <CardContent>{formBody}</CardContent>
     </Card>

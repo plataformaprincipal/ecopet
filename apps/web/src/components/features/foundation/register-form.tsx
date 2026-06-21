@@ -7,27 +7,26 @@ import { PartnerRegisterForm } from "@/components/features/foundation/partner/pa
 import { OngRegisterForm } from "@/components/features/foundation/ong/ong-register-form";
 import {
   RegisterRoleSelector,
-  REGISTER_ROLE_REQUIRED_MESSAGE,
   type RegisterRole,
 } from "@/components/features/foundation/register-role-selector";
+import { useAuthMessages } from "@/lib/i18n/use-auth-messages";
 
 export function FoundationRegisterForm() {
+  const { t } = useAuthMessages();
   const [role, setRole] = useState<RegisterRole | null>(null);
-  const [roleError, setRoleError] = useState("");
 
   function handleRoleChange(next: RegisterRole) {
     setRole(next);
-    setRoleError("");
   }
 
   return (
     <Card className="mx-auto w-full max-w-4xl overflow-hidden">
       <CardHeader>
-        <CardTitle>Criar conta EcoPet</CardTitle>
-        <CardDescription>Escolha como deseja usar a plataforma e preencha seus dados.</CardDescription>
+        <CardTitle>{t("auth.registerFoundation.title")}</CardTitle>
+        <CardDescription>{t("auth.registerFoundation.description")}</CardDescription>
       </CardHeader>
       <CardContent className="min-w-0 space-y-6">
-        <RegisterRoleSelector value={role} onChange={handleRoleChange} error={roleError} />
+        <RegisterRoleSelector value={role} onChange={handleRoleChange} />
 
         {role === "CLIENT" && <ClientRegisterForm embedded />}
 
@@ -37,7 +36,7 @@ export function FoundationRegisterForm() {
 
         {!role && (
           <p className="text-center text-sm text-muted-foreground" aria-live="polite">
-            Selecione uma opção acima para continuar o cadastro.
+            {t("auth.registerFoundation.selectRoleHint")}
           </p>
         )}
       </CardContent>

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { EcoPetLogo } from "@/components/shared/brand/ecopet-logo";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/providers/i18n-provider";
+import { LanguageSelector } from "@/components/features/i18n/language-selector";
 
 /** Barra superior para visitantes no marketplace público. */
 export function PublicAppBar() {
@@ -31,6 +32,7 @@ export function PublicAppBar() {
           </Link>
         </nav>
         <div className="flex items-center gap-2">
+          <LanguageSelector compact className="shrink-0" />
           <Button asChild variant="ghost" size="sm">
             <Link href="/login">{t("common.signIn")}</Link>
           </Button>

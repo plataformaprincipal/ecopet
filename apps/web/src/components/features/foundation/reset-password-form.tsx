@@ -7,20 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FoundationPasswordField, FoundationConfirmPasswordField } from "@/components/features/foundation/password-field";
 import {
-  PASSWORD_MISMATCH_MESSAGE,
   validateStrongPassword,
   type PasswordValidationContext,
 } from "@/lib/password/validate-strong-password";
-
-const TOKEN_MESSAGES: Record<string, string> = {
-  invalid: "Link inválido. Solicite uma nova redefinição de senha.",
-  expired: "Este link expirou. Solicite uma nova redefinição de senha.",
-  used: "Este link já foi utilizado. Solicite uma nova redefinição de senha.",
-};
+import { useAuthMessages } from "@/lib/i18n/use-auth-messages";
 
 function ResetPasswordFormInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t, tpwError, tv, tApi } = useAuthMessages();
   const token = searchParams.get("token") ?? "";
 
   const [password, setPassword] = useState("");
@@ -33,10 +28,16 @@ function ResetPasswordFormInner() {
   const [done, setDone] = useState(false);
   const [passwordContext, setPasswordContext] = useState<PasswordValidationContext>({});
 
+  const tokenMessages: Record<string, string> = {
+    invalid: t("auth.resetPassword.tokenInvalid"),
+    expired: t("auth.resetPassword.tokenExpired"),
+    used: t("auth.resetPassword.tokenUsed"),
+  };
+
   useEffect(() => {
     if (!token) {
       setValidating(false);
-      setTokenError(TOKEN_MESSAGES.invalid);
+      setTokenError(tokenMessages.invalid);
       return;
     }
 
@@ -49,11 +50,12 @@ function ResetPasswordFormInner() {
             setPasswordContext(data.passwordContext);
           }
         } else {
-          setTokenError(TOKEN_MESSAGES[data.reason as string] ?? TOKEN_MESSAGES.invalid);
+          setTokenError(tokenMessages[data.reason as string] ?? tokenMessages.invalid);
         }
       })
-      .catch(() => setTokenError("Não foi possível validar o link. Tente novamente."))
+      .catch(() => setTokenError(t("common.error")))
       .finally(() => setValidating(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -61,13 +63,13 @@ function ResetPasswordFormInner() {
     setError("");
 
     if (password !== confirmPassword) {
-      setError(PASSWORD_MISMATCH_MESSAGE);
+      setError(t("auth.validation.passwordMismatch"));
       return;
     }
 
     const pwdCheck = validateStrongPassword(password, passwordContext);
     if (!pwdCheck.valid) {
-      setError(pwdCheck.error ?? "Senha não atende aos requisitos de segurança.");
+      setError(pwdCheck.errorId ? tpwError(pwdCheck.errorId) : t("auth.validation.passwordWeak"));
       return;
     }
 
@@ -81,14 +83,14 @@ function ResetPasswordFormInner() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error ?? "Não foi possível redefinir a senha.");
+        setError(tApi(typeof data.error === "string" ? data.error : data.error?.message ?? ""));
         return;
       }
 
       setDone(true);
       setTimeout(() => router.push("/login"), 2500);
     } catch {
-      setError("Não foi possível conectar ao servidor.");
+      setError(t("auth.login.connectionError"));
     } finally {
       setLoading(false);
     }
@@ -97,7 +99,9 @@ function ResetPasswordFormInner() {
   if (validating) {
     return (
       <Card className="mx-auto w-full max-w-md">
-        <CardContent className="p-8 text-center text-sm text-gray-600">Validando link...</CardContent>
+        <CardContent className="p-8 text-center text-sm text-gray-600">
+          {t("auth.resetPassword.validating")}
+        </CardContent>
       </Card>
     );
   }
@@ -106,8 +110,8 @@ function ResetPasswordFormInner() {
     return (
       <Card className="mx-auto w-full max-w-md">
         <CardContent className="p-8 text-center">
-          <p className="font-semibold text-green-700">Senha redefinida com sucesso!</p>
-          <p className="mt-2 text-sm text-gray-600">Redirecionando para o login...</p>
+          <p className="font-semibold text-green-700">{t("auth.resetPassword.success")}</p>
+          <p className="mt-2 text-sm text-gray-600">{t("auth.resetPassword.redirecting")}</p>
         </CardContent>
       </Card>
     );
@@ -121,7 +125,7 @@ function ResetPasswordFormInner() {
             {tokenError}
           </p>
           <Link href="/esqueci-senha" className="inline-block text-sm font-semibold text-green-700 hover:underline">
-            Solicitar novo link
+            {t("auth.resetPassword.requestNewLink")}
           </Link>
         </CardContent>
       </Card>
@@ -131,14 +135,14 @@ function ResetPasswordFormInner() {
   return (
     <Card className="mx-auto w-full max-w-md">
       <CardHeader>
-        <CardTitle>Redefinir senha</CardTitle>
-        <CardDescription>Escolha uma senha forte conforme os requisitos abaixo.</CardDescription>
+        <CardTitle>{t("auth.resetPassword.title")}</CardTitle>
+        <CardDescription>{t("auth.resetPassword.description")}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <FoundationPasswordField
             id="new-password"
-            label="Nova senha"
+            label={t("auth.resetPassword.newPassword")}
             value={password}
             onChange={setPassword}
             context={passwordContext}
@@ -146,7 +150,7 @@ function ResetPasswordFormInner() {
           />
           <FoundationConfirmPasswordField
             id="confirm-password"
-            label="Confirmar nova senha"
+            label={t("auth.resetPassword.confirmPassword")}
             value={confirmPassword}
             password={password}
             onChange={setConfirmPassword}
@@ -154,16 +158,16 @@ function ResetPasswordFormInner() {
           />
           {error && (
             <p className="text-sm text-red-600" role="alert">
-              {error}
+              {tv(error)}
             </p>
           )}
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Salvando..." : "Redefinir senha"}
+            {loading ? t("auth.resetPassword.submitting") : t("auth.resetPassword.submit")}
           </Button>
         </form>
         <p className="mt-6 text-center text-sm text-gray-600">
           <Link href="/login" className="font-semibold text-green-700 hover:underline">
-            Voltar ao login
+            {t("auth.resetPassword.backToLogin")}
           </Link>
         </p>
       </CardContent>
@@ -172,8 +176,10 @@ function ResetPasswordFormInner() {
 }
 
 export function FoundationResetPasswordForm() {
+  const { t } = useAuthMessages();
+
   return (
-    <Suspense fallback={<div className="text-center text-sm text-gray-600">Carregando...</div>}>
+    <Suspense fallback={<div className="text-center text-sm text-gray-600">{t("auth.login.loading")}</div>}>
       <ResetPasswordFormInner />
     </Suspense>
   );

@@ -21,6 +21,7 @@ export type PasswordRequirementCheck = {
 export type StrongPasswordResult = {
   valid: boolean;
   error?: string;
+  errorId?: string;
   level: PasswordStrengthLevel;
   levelLabel: string;
   requirements: PasswordRequirementCheck[];
@@ -230,14 +231,14 @@ export function classifyPasswordLevel(
   levelLabel: string;
 } {
   if (password.length === 0) {
-    return { level: "very_weak", levelLabel: "🔴 Muito Fraca" };
+    return { level: "very_weak", levelLabel: "very_weak" };
   }
 
   const mandatory = meetsMandatoryRequirements(password);
   const diversity = charDiversityScore(password);
 
   if (password.length < 4 || diversity <= 1) {
-    return { level: "very_weak", levelLabel: "🔴 Muito Fraca" };
+    return { level: "very_weak", levelLabel: "very_weak" };
   }
 
   if (!mandatory) {
@@ -250,9 +251,9 @@ export function classifyPasswordLevel(
     ].filter(Boolean).length;
 
     if (metCount <= 2 || password.length < 6) {
-      return { level: "weak", levelLabel: "🟠 Fraca" };
+      return { level: "weak", levelLabel: "weak" };
     }
-    return { level: "medium", levelLabel: "🟡 Média" };
+    return { level: "medium", levelLabel: "medium" };
   }
 
   const personal = hasPersonalDataInPassword(password, context);
@@ -263,10 +264,10 @@ export function classifyPasswordLevel(
     password.length > 12 && !personal && !weakPattern && !repetitive;
 
   if (excellentEligible) {
-    return { level: "excellent", levelLabel: "💎 Excelente" };
+    return { level: "excellent", levelLabel: "excellent" };
   }
 
-  return { level: "strong", levelLabel: "🟢 Forte" };
+  return { level: "strong", levelLabel: "strong" };
 }
 
 export function validateStrongPassword(
@@ -345,6 +346,7 @@ export function validateStrongPassword(
   return {
     valid,
     error: failedValidation ? ERROR_MESSAGES[failedValidation.id] : undefined,
+    errorId: failedValidation?.id,
     level,
     levelLabel,
     requirements,

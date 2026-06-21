@@ -1,28 +1,33 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { useAuthMessages } from "@/lib/i18n/use-auth-messages";
 
 type RegisterStep = "personal" | "security" | "conclusion";
 
-const DEFAULT_STEPS: { id: RegisterStep; label: string }[] = [
-  { id: "personal", label: "Dados pessoais" },
-  { id: "security", label: "Segurança" },
-  { id: "conclusion", label: "Conclusão" },
-];
+const DEFAULT_STEP_IDS: RegisterStep[] = ["personal", "security", "conclusion"];
 
 type RegisterProgressProps =
   | { current: RegisterStep; steps?: never; currentIndex?: never }
   | { steps: string[]; currentIndex: number; current?: never };
 
 export function RegisterProgress(props: RegisterProgressProps) {
-  const labels = "steps" in props && props.steps ? props.steps : DEFAULT_STEPS.map((s) => s.label);
+  const { t } = useAuthMessages();
+
+  const defaultLabels = [
+    t("auth.progress.personal"),
+    t("auth.progress.security"),
+    t("auth.progress.conclusion"),
+  ];
+
+  const labels = "steps" in props && props.steps ? props.steps : defaultLabels;
   const currentIndex =
     "currentIndex" in props && props.steps
       ? props.currentIndex
-      : DEFAULT_STEPS.findIndex((s) => s.id === props.current);
+      : DEFAULT_STEP_IDS.findIndex((s) => s === props.current);
 
   return (
-    <nav aria-label="Progresso do cadastro" className="mb-6">
+    <nav aria-label={t("auth.progress.ariaLabel")} className="mb-6">
       <ol className="flex items-center justify-between gap-1 overflow-x-auto pb-1">
         {labels.map((label, index) => {
           const isActive = index === currentIndex;

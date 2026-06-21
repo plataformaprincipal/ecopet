@@ -2,6 +2,8 @@
 
 import { Building2, Heart, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuthMessages } from "@/lib/i18n/use-auth-messages";
+import type { TranslationKey } from "@/lib/i18n/types";
 
 export type RegisterRole = "CLIENT" | "PARTNER" | "ONG";
 
@@ -9,26 +11,26 @@ export const REGISTER_ROLE_REQUIRED_MESSAGE = "Escolha como você deseja usar a 
 
 const ROLE_OPTIONS: {
   value: RegisterRole;
-  label: string;
-  description: string;
+  labelKey: TranslationKey;
+  descriptionKey: TranslationKey;
   icon: typeof UserRound;
 }[] = [
   {
     value: "CLIENT",
-    label: "Cliente",
-    description: "Quero comprar produtos, cadastrar meus pets e agendar serviços.",
+    labelKey: "auth.role.CLIENT.label",
+    descriptionKey: "auth.role.CLIENT.description",
     icon: UserRound,
   },
   {
     value: "PARTNER",
-    label: "Parceiro",
-    description: "Quero vender produtos ou oferecer serviços pet.",
+    labelKey: "auth.role.PARTNER.label",
+    descriptionKey: "auth.role.PARTNER.description",
     icon: Building2,
   },
   {
     value: "ONG",
-    label: "ONG",
-    description: "Quero divulgar ações, pets para adoção e iniciativas de proteção animal.",
+    labelKey: "auth.role.ONG.label",
+    descriptionKey: "auth.role.ONG.description",
     icon: Heart,
   },
 ];
@@ -46,15 +48,17 @@ export function RegisterRoleSelector({
   error,
   id = "register-role-group",
 }: RegisterRoleSelectorProps) {
+  const { t, tv } = useAuthMessages();
+
   return (
     <fieldset className="w-full min-w-0">
       <legend className="mb-3 text-base font-semibold text-gray-900">
-        Como você deseja usar a EcoPet?
+        {t("auth.role.legend")}
       </legend>
       <div
         id={id}
         role="radiogroup"
-        aria-label="Tipo de conta"
+        aria-label={t("auth.role.ariaLabel")}
         aria-invalid={!!error}
         aria-describedby={error ? `${id}-error` : undefined}
         className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
@@ -92,16 +96,18 @@ export function RegisterRoleSelector({
                 <span
                   className={cn(
                     "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors",
-                    selected ? "bg-green-600 text-white" : "bg-gray-100 text-gray-600 group-hover:bg-green-100 group-hover:text-green-700"
+                    selected
+                      ? "bg-green-600 text-white"
+                      : "bg-gray-100 text-gray-600 group-hover:bg-green-100 group-hover:text-green-700"
                   )}
                   aria-hidden
                 >
                   <Icon className="h-5 w-5" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <span className="block text-sm font-semibold text-gray-900">{opt.label}</span>
+                  <span className="block text-sm font-semibold text-gray-900">{t(opt.labelKey)}</span>
                   <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
-                    {opt.description}
+                    {t(opt.descriptionKey)}
                   </span>
                 </div>
               </div>
@@ -116,7 +122,7 @@ export function RegisterRoleSelector({
       </div>
       {error && (
         <p id={`${id}-error`} className="mt-2 text-sm text-red-600" role="alert" aria-live="polite">
-          {error}
+          {tv(error)}
         </p>
       )}
     </fieldset>

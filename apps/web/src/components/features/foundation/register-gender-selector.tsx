@@ -4,34 +4,29 @@ import type { LucideIcon } from "lucide-react";
 import { Sparkles, User, UserRound, Users, ShieldOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CLIENT_GENDER_OPTIONS } from "@/schemas/auth";
+import { useAuthMessages } from "@/lib/i18n/use-auth-messages";
+import type { TranslationKey } from "@/lib/i18n/types";
 
 export const GENDER_VALIDATION_MESSAGE =
   "Informe o gênero ou selecione uma das opções disponíveis.";
 
 const GENDER_META: Record<
   string,
-  { icon: LucideIcon; description: string }
+  { icon: LucideIcon; descriptionKey: TranslationKey }
 > = {
-  MASCULINO: {
-    icon: User,
-    description: "Identidade masculina",
-  },
-  FEMININO: {
-    icon: UserRound,
-    description: "Identidade feminina",
-  },
-  NAO_BINARIO: {
-    icon: Users,
-    description: "Identidade fora do binário masculino/feminino",
-  },
-  NAO_DECLARAR: {
-    icon: ShieldOff,
-    description: "Prefiro não informar publicamente",
-  },
-  OUTRO: {
-    icon: Sparkles,
-    description: "Desejo informar outra identidade",
-  },
+  MASCULINO: { icon: User, descriptionKey: "auth.gender.descriptions.MASCULINO" },
+  FEMININO: { icon: UserRound, descriptionKey: "auth.gender.descriptions.FEMININO" },
+  NAO_BINARIO: { icon: Users, descriptionKey: "auth.gender.descriptions.NAO_BINARIO" },
+  NAO_DECLARAR: { icon: ShieldOff, descriptionKey: "auth.gender.descriptions.NAO_DECLARAR" },
+  OUTRO: { icon: Sparkles, descriptionKey: "auth.gender.descriptions.OUTRO" },
+};
+
+const GENDER_LABEL_KEYS: Record<string, TranslationKey> = {
+  MASCULINO: "auth.gender.options.MASCULINO",
+  FEMININO: "auth.gender.options.FEMININO",
+  NAO_BINARIO: "auth.gender.options.NAO_BINARIO",
+  NAO_DECLARAR: "auth.gender.options.NAO_DECLARAR",
+  OUTRO: "auth.gender.options.OUTRO",
 };
 
 type RegisterGenderSelectorProps = {
@@ -47,15 +42,15 @@ export function RegisterGenderSelector({
   error,
   id = "client-gender-group",
 }: RegisterGenderSelectorProps) {
+  const { t, tv } = useAuthMessages();
+
   return (
     <fieldset className="w-full min-w-0">
-      <legend className="mb-3 text-sm font-medium">
-        Gênero *
-      </legend>
+      <legend className="mb-3 text-sm font-medium">{t("auth.gender.label")} *</legend>
       <div
         id={id}
         role="radiogroup"
-        aria-label="Gênero"
+        aria-label={t("auth.gender.label")}
         aria-invalid={!!error}
         aria-describedby={error ? `${id}-error` : undefined}
         className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5"
@@ -65,6 +60,7 @@ export function RegisterGenderSelector({
           const inputId = `client-gender-${opt.value.toLowerCase()}`;
           const meta = GENDER_META[opt.value];
           const Icon = meta?.icon ?? User;
+          const labelKey = GENDER_LABEL_KEYS[opt.value];
 
           return (
             <label
@@ -101,10 +97,10 @@ export function RegisterGenderSelector({
                 <Icon className="h-5 w-5" />
               </span>
               <span className="block text-sm font-semibold leading-tight text-ecopet-dark dark:text-white">
-                {opt.label}
+                {labelKey ? t(labelKey) : opt.label}
               </span>
               <span className="block text-xs leading-snug text-muted-foreground">
-                {meta?.description}
+                {meta ? t(meta.descriptionKey) : ""}
               </span>
               {selected && (
                 <span
@@ -118,7 +114,7 @@ export function RegisterGenderSelector({
       </div>
       {error && (
         <p id={`${id}-error`} className="mt-2 text-sm text-red-600" role="alert" aria-live="polite">
-          {error}
+          {tv(error)}
         </p>
       )}
     </fieldset>

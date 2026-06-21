@@ -28,14 +28,12 @@ export function AppHeader({ title }: { title?: string }) {
           <Input placeholder={t("common.search")} className="w-48 pl-10 lg:w-56" aria-label={t("common.search")} />
         </div>
         <NotificationBell variant="header" />
-        <div className="hidden w-36 lg:block">
-          <LanguageSelector compact />
-        </div>
+        <LanguageSelector compact className="shrink-0" />
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          aria-label="Alternar tema"
+          aria-label={t("a11y.themeToggle")}
         >
           {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </Button>

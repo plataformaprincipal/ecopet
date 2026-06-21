@@ -9,6 +9,7 @@ import {
   validateStrongPassword,
   type PasswordValidationContext,
 } from "@/lib/password/validate-strong-password";
+import { useAuthMessages } from "@/lib/i18n/use-auth-messages";
 
 const LEVEL_COLORS: Record<string, string> = {
   very_weak: "bg-red-500",
@@ -34,15 +35,15 @@ const LEVEL_TEXT: Record<string, string> = {
   excellent: "text-emerald-800",
 };
 
-const SECURITY_RECOMMENDATIONS = [
-  "Evite utilizar seu nome, sobrenome ou apelido.",
-  "Evite utilizar nomes de familiares, pets ou pessoas próximas.",
-  "Evite datas de nascimento, aniversários ou números de documentos.",
-  "Evite palavras comuns, sequências numéricas ou combinações fáceis de adivinhar.",
-  "Evite utilizar informações públicas disponíveis em redes sociais.",
-  "Prefira combinar letras maiúsculas, minúsculas, números e símbolos.",
-  "Quanto maior a senha, maior a proteção da sua conta.",
-];
+const TIP_KEYS = [
+  "auth.password.tips.avoidName",
+  "auth.password.tips.avoidFamily",
+  "auth.password.tips.avoidDates",
+  "auth.password.tips.avoidCommon",
+  "auth.password.tips.avoidSocial",
+  "auth.password.tips.combine",
+  "auth.password.tips.length",
+] as const;
 
 type FoundationPasswordFieldProps = {
   id: string;
@@ -65,8 +66,10 @@ export function FoundationPasswordField({
   autoComplete = "new-password",
   showRecommendations = false,
 }: FoundationPasswordFieldProps) {
+  const { t, tpwLevel, tpwReq } = useAuthMessages();
   const [visible, setVisible] = useState(false);
   const analysis = useMemo(() => validateStrongPassword(value, context), [value, context]);
+  const levelLabel = tpwLevel(analysis.level);
 
   return (
     <div>
@@ -90,18 +93,20 @@ export function FoundationPasswordField({
           type="button"
           onClick={() => setVisible((v) => !v)}
           className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-800"
-          aria-label={visible ? "Ocultar senha" : "Mostrar senha"}
+          aria-label={visible ? t("auth.login.hidePassword") : t("auth.login.showPassword")}
         >
           {visible ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
-          <span className="sr-only">{visible ? "Ocultar" : "Mostrar"}</span>
+          <span className="sr-only">
+            {visible ? t("auth.login.hidePassword") : t("auth.login.showPassword")}
+          </span>
         </button>
       </div>
 
       {value.length > 0 && (
         <div id={`${id}-strength`} className="mt-3 space-y-2">
           <div className="flex items-center justify-between text-xs">
-            <span className="font-medium text-gray-600">Força da senha</span>
-            <span className={cn("font-semibold", LEVEL_TEXT[analysis.level])}>{analysis.levelLabel}</span>
+            <span className="font-medium text-gray-600">{t("auth.password.strengthLabel")}</span>
+            <span className={cn("font-semibold", LEVEL_TEXT[analysis.level])}>{levelLabel}</span>
           </div>
           <div className="h-1.5 overflow-hidden rounded-full bg-gray-200">
             <div
@@ -124,10 +129,10 @@ export function FoundationPasswordField({
               }
               aria-valuemin={1}
               aria-valuemax={5}
-              aria-label="Força da senha"
+              aria-label={t("auth.password.strengthLabel")}
             />
           </div>
-          <ul className="mt-2 space-y-1" aria-label="Requisitos de senha">
+          <ul className="mt-2 space-y-1" aria-label={t("auth.password.requirementsLabel")}>
             {analysis.requirements.map((req) => (
               <li
                 key={req.id}
@@ -141,7 +146,9 @@ export function FoundationPasswordField({
                 ) : (
                   <X className="mt-0.5 h-3 w-3 shrink-0 opacity-70" aria-hidden />
                 )}
-                <span>{req.met ? "✓" : "✗"} {req.label}</span>
+                <span>
+                  {req.met ? "✓" : "✗"} {tpwReq(req.id)}
+                </span>
               </li>
             ))}
           </ul>
@@ -152,16 +159,16 @@ export function FoundationPasswordField({
         <aside
           id={`${id}-recommendations`}
           className="mt-4 rounded-lg border border-green-100 bg-green-50/50 p-4 text-xs text-gray-700"
-          aria-label="Recomendações de segurança para senha"
+          aria-label={t("auth.password.recommendationsAria")}
         >
           <h3 className="mb-2 font-semibold text-green-900">
-            Recomendações para uma senha mais segura
+            {t("auth.password.recommendationsTitle")}
           </h3>
           <ul className="space-y-1">
-            {SECURITY_RECOMMENDATIONS.map((tip) => (
-              <li key={tip} className="flex gap-1.5">
+            {TIP_KEYS.map((key) => (
+              <li key={key} className="flex gap-1.5">
                 <span aria-hidden>✓</span>
-                <span>{tip}</span>
+                <span>{t(key)}</span>
               </li>
             ))}
           </ul>
@@ -188,6 +195,7 @@ export function FoundationConfirmPasswordField({
   onChange,
   required,
 }: FoundationConfirmPasswordFieldProps) {
+  const { t } = useAuthMessages();
   const [visible, setVisible] = useState(false);
   const matches = value.length > 0 && value === password;
   const mismatch = value.length > 0 && value !== password;
@@ -215,7 +223,9 @@ export function FoundationConfirmPasswordField({
           type="button"
           onClick={() => setVisible((v) => !v)}
           className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-800"
-          aria-label={visible ? "Ocultar confirmação de senha" : "Mostrar confirmação de senha"}
+          aria-label={
+            visible ? t("auth.password.hideConfirm") : t("auth.password.showConfirm")
+          }
         >
           {visible ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
         </button>
@@ -233,20 +243,22 @@ export function FoundationConfirmPasswordField({
         >
           {matches ? (
             <>
-              <Check className="h-3.5 w-3.5" aria-hidden /> ✓ Senhas coincidem
+              <Check className="h-3.5 w-3.5" aria-hidden /> ✓ {t("auth.password.match")}
             </>
           ) : (
             <>
-              <X className="h-3.5 w-3.5" aria-hidden /> ✗ Senhas diferentes
+              <X className="h-3.5 w-3.5" aria-hidden /> ✗ {t("auth.password.mismatch")}
             </>
           )}
         </p>
       )}
       {mismatch && (
         <p className="sr-only" role="alert">
-          {PASSWORD_MISMATCH_MESSAGE}
+          {t("auth.validation.passwordMismatch")}
         </p>
       )}
     </div>
   );
 }
+
+export { PASSWORD_MISMATCH_MESSAGE };

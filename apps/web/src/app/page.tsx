@@ -13,6 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { AI_DISCLAIMER } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/providers/i18n-provider";
+import { LanguageSelector } from "@/components/features/i18n/language-selector";
 
 function FaqItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
@@ -88,6 +89,7 @@ export default function LandingPage() {
             <Link href="/termos-de-uso" className="text-sm font-medium text-ecopet-gray hover:text-ecopet-green">{t("common.terms")}</Link>
           </nav>
           <div className="flex items-center gap-2">
+            <LanguageSelector compact className="shrink-0" />
             <Link href="/login"><Button variant="ghost" size="sm">{t("common.signIn")}</Button></Link>
             <Link href="/cadastro"><Button size="sm">{t("common.createAccount")}</Button></Link>
           </div>

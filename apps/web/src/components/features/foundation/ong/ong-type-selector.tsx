@@ -2,6 +2,7 @@
 
 import { ONG_TYPES, ONG_TYPE_REQUIRED_MESSAGE, type OngType } from "@/lib/ong/constants";
 import { PartnerSelectableCards } from "@/components/features/foundation/partner/partner-selectable-cards";
+import { useOngRegisterCopy } from "@/lib/i18n/use-register-copy";
 
 type OngTypeSelectorProps = {
   value: OngType | null;
@@ -10,18 +11,20 @@ type OngTypeSelectorProps = {
 };
 
 export function OngTypeSelector({ value, onChange, error }: OngTypeSelectorProps) {
+  const { o, tv } = useOngRegisterCopy();
+
   return (
     <section aria-labelledby="ong-type-heading">
       <h2 id="ong-type-heading" className="mb-4 text-lg font-semibold">
-        Como você atua na proteção animal?
+        {o.typeHeading}
       </h2>
       <PartnerSelectableCards
         name="ong-type"
-        legend="Tipo de cadastro *"
+        legend={o.legends.ongType}
         options={ONG_TYPES.map((t) => ({
           value: t.value,
-          label: t.label,
-          description: `${t.description} Documento principal: ${t.documentLabel}.`,
+          label: o.ongType(t.value),
+          description: `${o.ongTypeDesc(t.value)} ${o.hints.documentLabel(t.documentLabel)}`,
           icon: t.icon,
         }))}
         value={value ?? ""}
@@ -31,7 +34,7 @@ export function OngTypeSelector({ value, onChange, error }: OngTypeSelectorProps
       />
       {error && (
         <p className="mt-2 text-sm text-red-600" role="alert" aria-live="polite">
-          {error || ONG_TYPE_REQUIRED_MESSAGE}
+          {tv(error) || o.validation.ongTypeRequired}
         </p>
       )}
     </section>

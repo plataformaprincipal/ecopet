@@ -13,6 +13,7 @@ import {
   type AccessibilityPreferences,
   type Locale,
 } from "@/lib/accessibility/types";
+import { normalizeLocale } from "@/i18n/detect";
 
 type BooleanKey = {
   [K in keyof AccessibilityPreferences]: AccessibilityPreferences[K] extends boolean ? K : never;
@@ -65,7 +66,10 @@ export const useAccessibilityStore = create<AccessibilityState>()(
           set({ brailleEnabled: false });
         }
       },
-      setLocale: (locale) => set({ locale }),
+      setLocale: (locale) => {
+        const normalized = normalizeLocale(locale) ?? locale;
+        set({ locale: normalized });
+      },
       reset: () => set({ ...DEFAULT_PREFERENCES }),
       hasActiveSettings: () => {
         const s = get();

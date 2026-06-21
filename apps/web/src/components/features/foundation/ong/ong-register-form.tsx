@@ -12,7 +12,7 @@ import { FoundationPasswordField, FoundationConfirmPasswordField } from "@/compo
 import { InternationalPhoneField } from "@/components/features/foundation/international-phone-field";
 import { PartnerSelectableCards } from "@/components/features/foundation/partner/partner-selectable-cards";
 import { PartnerLogoUpload, type PartnerLogoValue } from "@/components/features/foundation/partner/partner-logo-upload";
-import { OngTypeSelector, ONG_TYPE_REQUIRED_MESSAGE } from "@/components/features/foundation/ong/ong-type-selector";
+import { OngTypeSelector } from "@/components/features/foundation/ong/ong-type-selector";
 import {
   OngDocumentationStep,
   type OngDocumentItem,
@@ -59,6 +59,7 @@ import { cn } from "@/lib/utils";
 import { StepValidationFeedback } from "@/components/features/foundation/step-validation-feedback";
 import { collectUniqueErrorMessages, duplicateRegistrationError } from "@/lib/registration/collect-step-errors";
 import { useDocumentAvailability } from "@/lib/registration/use-document-availability";
+import { useOngRegisterCopy } from "@/lib/i18n/use-register-copy";
 
 const BRAZIL_STATES = [
   "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG",
@@ -77,29 +78,32 @@ type StepId =
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9_.]{4,30}$/;
 
-function stepLabels(ongType: OngType | null): { id: StepId; label: string }[] {
+function stepLabels(
+  ongType: OngType | null,
+  steps: ReturnType<typeof useOngRegisterCopy>["o"]["steps"]
+): { id: StepId; label: string }[] {
   if (ongType === "INSTITUTION") {
     return [
-      { id: "type", label: "Tipo" },
-      { id: "responsible", label: "Representante" },
-      { id: "institutional", label: "Institucional" },
-      { id: "activity", label: "Atuação" },
-      { id: "profile", label: "Perfil" },
-      { id: "documentation", label: "Documentação" },
-      { id: "security", label: "Segurança" },
+      { id: "type", label: steps.type },
+      { id: "responsible", label: steps.responsibleInstitution },
+      { id: "institutional", label: steps.institutional },
+      { id: "activity", label: steps.activity },
+      { id: "profile", label: steps.profile },
+      { id: "documentation", label: steps.documentation },
+      { id: "security", label: steps.security },
     ];
   }
   if (ongType === "INDIVIDUAL") {
     return [
-      { id: "type", label: "Tipo" },
-      { id: "responsible", label: "Responsável" },
-      { id: "activity", label: "Atuação" },
-      { id: "profile", label: "Perfil" },
-      { id: "documentation", label: "Documentação" },
-      { id: "security", label: "Segurança" },
+      { id: "type", label: steps.type },
+      { id: "responsible", label: steps.responsible },
+      { id: "activity", label: steps.activity },
+      { id: "profile", label: steps.profile },
+      { id: "documentation", label: steps.documentation },
+      { id: "security", label: steps.security },
     ];
   }
-  return [{ id: "type", label: "Tipo" }];
+  return [{ id: "type", label: steps.type }];
 }
 
 function Field({
@@ -112,6 +116,7 @@ function Field({
   required,
   maxLength,
   error,
+  tv,
 }: {
   id: string;
   label: string;
@@ -122,6 +127,7 @@ function Field({
   required?: boolean;
   maxLength?: number;
   error?: string;
+  tv?: (message: string | undefined) => string;
 }) {
   return (
     <div>
@@ -142,7 +148,7 @@ function Field({
       />
       {error && (
         <p className="mt-1 text-sm text-red-600" role="alert">
-          {error}
+          {tv ? tv(error) : error}
         </p>
       )}
     </div>
@@ -153,10 +159,14 @@ function CoverImageUpload({
   value,
   onChange,
   label,
+  uploadLabel,
+  replaceLabel,
 }: {
   value: File | null;
   onChange: (file: File | null) => void;
   label: string;
+  uploadLabel: string;
+  replaceLabel: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -193,7 +203,7 @@ function CoverImageUpload({
       />
       <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => inputRef.current?.click()}>
         <Upload className="mr-1.5 h-3.5 w-3.5" aria-hidden />
-        {value ? "Substituir imagem" : "Enviar imagem"}
+        {value ? replaceLabel : uploadLabel}
       </Button>
     </div>
   );
@@ -201,6 +211,7 @@ function CoverImageUpload({
 
 export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
   const router = useRouter();
+  const { t, tv, tpwError, tApi, validation: v, o } = useOngRegisterCopy();
   const [step, setStep] = useState<StepId>("type");
   const [form, setForm] = useState<OngFormState>(INITIAL_ONG_FORM);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -236,7 +247,7 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
     }
   }, [form]);
 
-  const steps = stepLabels(form.ongType);
+  const steps = stepLabels(form.ongType, o.steps);
   const currentIndex = steps.findIndex((s) => s.id === step);
   const progressSteps = steps.map((s) => s.label);
   const actionAreas = form.ongType === "INSTITUTION" ? INSTITUTION_ACTION_AREAS : INDIVIDUAL_ACTION_AREAS;
@@ -285,49 +296,49 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
     const errors: Record<string, string> = {};
 
     if (current === "type") {
-      if (!form.ongType) errors.ongType = ONG_TYPE_REQUIRED_MESSAGE;
+      if (!form.ongType) errors.ongType = o.validation.ongTypeRequired;
     }
 
     if (current === "responsible") {
-      if (!isValidFullName(form.name)) errors.name = FULL_NAME_INCOMPLETE_MESSAGE;
+      if (!isValidFullName(form.name)) errors.name = v.fullNameIncomplete;
       const cpfDigits = onlyDigits(form.cpf);
-      if (!validateCpfChecksum(cpfDigits)) errors.cpf = "Digite um CPF válido.";
+      if (!validateCpfChecksum(cpfDigits)) errors.cpf = v.cpfInvalid;
       else if (cpfAvailability === "taken") Object.assign(errors, duplicateRegistrationError());
-      if (!getEmailLiveFeedback(form.email).valid) errors.email = EMAIL_INVALID_MESSAGE;
+      if (!getEmailLiveFeedback(form.email).valid) errors.email = v.emailInvalid;
       const phoneFb = getPhoneLiveFeedback(form.phone, phoneCountry, phoneCountry === "BR" ? brazilDdd : undefined);
-      if (!phoneFb.valid) errors.phone = phoneFb.message ?? PHONE_INVALID_MESSAGE;
-      if (!USERNAME_PATTERN.test(form.username)) errors.username = "Nome de usuário inválido (4–30 caracteres).";
+      if (!phoneFb.valid) errors.phone = phoneFb.message ?? v.phoneInvalid;
+      if (!USERNAME_PATTERN.test(form.username)) errors.username = o.validation.usernameInvalid;
       if (usernameStatus === "taken") Object.assign(errors, duplicateRegistrationError());
       if (form.ongType === "INDIVIDUAL") {
         const dateErr = validateActivityStartDate(form.activityStartDate);
-        if (dateErr) errors.activityStartDate = dateErr;
+        if (dateErr) errors.activityStartDate = tv(dateErr) ?? dateErr;
       }
       if (form.ongType === "INSTITUTION") {
-        if (!form.representativeRole) errors.representativeRole = "Informe o cargo do representante.";
+        if (!form.representativeRole) errors.representativeRole = o.validation.representativeRoleRequired;
         if (form.representativeRole === "Outro" && form.representativeRoleOther.trim().length < 2) {
-          errors.representativeRoleOther = "Informe o cargo.";
+          errors.representativeRoleOther = o.validation.representativeRoleOtherRequired;
         }
       }
     }
 
     if (current === "institutional" && form.ongType === "INSTITUTION") {
-      if (!validateCnpjChecksum(onlyDigits(form.cnpj))) errors.cnpj = "Digite um CNPJ válido.";
+      if (!validateCnpjChecksum(onlyDigits(form.cnpj))) errors.cnpj = v.cnpjInvalid;
       else if (cnpjAvailability === "taken") Object.assign(errors, duplicateRegistrationError());
-      if (form.ongName.trim().length < 2) errors.ongName = "Nome da ONG obrigatório.";
-      if (form.legalName.trim().length < 2) errors.legalName = "Razão social obrigatória.";
-      if (!form.foundedDate) errors.foundedDate = "Data de fundação obrigatória.";
-      if (!form.focusArea) errors.focusArea = "Selecione a área de atuação.";
+      if (form.ongName.trim().length < 2) errors.ongName = o.validation.ongNameRequired;
+      if (form.legalName.trim().length < 2) errors.legalName = o.validation.legalNameRequired;
+      if (!form.foundedDate) errors.foundedDate = o.validation.foundedDateRequired;
+      if (!form.focusArea) errors.focusArea = o.validation.focusAreaRequired;
       if (form.focusArea === "Outro" && form.focusAreaOther.trim().length < 2) {
-        errors.focusAreaOther = "Informe a área de atuação.";
+        errors.focusAreaOther = o.validation.focusAreaOtherRequired;
       }
-      if (!form.city.trim()) errors.city = "Cidade obrigatória.";
-      if (form.state.length !== 2) errors.state = "UF obrigatória.";
+      if (!form.city.trim()) errors.city = o.validation.cityRequired;
+      if (form.state.length !== 2) errors.state = o.validation.stateRequired;
     }
 
     if (current === "activity") {
-      if (!form.actionTypes.length) errors.actionTypes = "Selecione ao menos uma área de atuação.";
+      if (!form.actionTypes.length) errors.actionTypes = o.validation.actionTypesRequired;
       if (form.actionTypes.includes("OUTROS") && form.actionTypesOther.trim().length < 3) {
-        errors.actionTypesOther = "Descreva sua área de atuação.";
+        errors.actionTypesOther = o.validation.actionTypesOtherRequired;
       }
     }
 
@@ -335,16 +346,16 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
       if (form.description.trim().length < 40) {
         errors.description =
           form.ongType === "INSTITUTION"
-            ? "Descreva melhor a instituição."
-            : "Descreva melhor sua causa.";
+            ? o.validation.descriptionInstitution
+            : o.validation.descriptionIndividual;
       }
       if (form.ongType === "INDIVIDUAL") {
-        if (!form.city.trim()) errors.city = "Cidade obrigatória.";
-        if (form.state.length !== 2) errors.state = "UF obrigatória.";
+        if (!form.city.trim()) errors.city = o.validation.cityRequired;
+        if (form.state.length !== 2) errors.state = o.validation.stateRequired;
       }
       if (form.ongType === "INSTITUTION") {
-        if (form.mission.trim().length < 10) errors.mission = "Informe a missão da instituição.";
-        if (form.vision.trim().length < 10) errors.vision = "Informe a visão da instituição.";
+        if (form.mission.trim().length < 10) errors.mission = o.validation.missionRequired;
+        if (form.vision.trim().length < 10) errors.vision = o.validation.visionRequired;
       }
     }
 
@@ -369,11 +380,13 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
         }
       }
       const pwd = validateStrongPassword(form.password, passwordContext);
-      if (!pwd.valid) errors.password = pwd.error ?? "Senha inválida.";
-      if (form.password !== form.confirmPassword) errors.confirmPassword = PASSWORD_MISMATCH_MESSAGE;
+      if (!pwd.valid) {
+        errors.password = pwd.errorId ? tpwError(pwd.errorId) : o.validation.passwordInvalid;
+      }
+      if (form.password !== form.confirmPassword) errors.confirmPassword = v.passwordMismatch;
       if (!acceptTerms || !acceptPrivacy) {
         setTermsError(ONG_LEGAL_ACCEPTANCE_MESSAGE);
-        errors.legal = ONG_LEGAL_ACCEPTANCE_MESSAGE;
+        errors.legal = t("auth.terms.acceptanceRequired");
       } else {
         setTermsError("");
       }
@@ -385,20 +398,20 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
 
   function goNext() {
     if (step === "responsible" && cpfAvailability === "checking") {
-      setStepFeedback(["Aguarde a verificação do CPF."]);
+      setStepFeedback([o.validation.waitCpf]);
       return;
     }
     if (step === "institutional" && cnpjAvailability === "checking") {
-      setStepFeedback(["Aguarde a verificação do CNPJ."]);
+      setStepFeedback([o.validation.waitCnpj]);
       return;
     }
     if (step === "responsible" && usernameStatus === "checking") {
-      setStepFeedback(["Aguarde a verificação do nome de usuário."]);
+      setStepFeedback([o.validation.waitUsername]);
       return;
     }
 
     const errors = validateStep(step);
-    const messages = collectUniqueErrorMessages(errors);
+    const messages = collectUniqueErrorMessages(errors).map((m) => tv(m));
     setStepFeedback(messages);
     if (messages.length > 0) return;
 
@@ -413,7 +426,7 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
 
   async function handleSubmit() {
     const errors = validateStep("security");
-    const messages = collectUniqueErrorMessages(errors);
+    const messages = collectUniqueErrorMessages(errors).map((m) => tv(m));
     setStepFeedback(messages);
     if (messages.length > 0) return;
 
@@ -422,7 +435,7 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
       const docCheck = validateRequiredOngDocuments(form.ongType, provided);
       if (!docCheck.valid) {
         setDocsError(docCheck.message ?? "");
-        setError(docCheck.message ?? "Documentos obrigatórios pendentes.");
+        setError(docCheck.message ?? o.validation.docsPending);
         return;
       }
     }
@@ -431,7 +444,7 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
     setError("");
     const phoneE164 = resolveRegistrationPhoneE164(form.phone, phoneCountry, phoneCountry === "BR" ? brazilDdd : undefined);
     if (!phoneE164) {
-      setError(phoneCountry === "BR" && !brazilDdd ? BR_DDD_REQUIRED_MESSAGE : PHONE_INVALID_MESSAGE);
+      setError(phoneCountry === "BR" && !brazilDdd ? v.brDddRequired : v.phoneInvalid);
       setLoading(false);
       return;
     }
@@ -449,7 +462,7 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
       const data = await res.json();
       if (!res.ok || data.success === false) {
         const { code, message } = parseApiFailureError(data);
-        setError(res.status === 409 ? mapRegisterConflictMessage(code, message) : message || "Erro ao cadastrar");
+        setError(res.status === 409 ? mapRegisterConflictMessage(code, message) : tApi(message, code) || o.validation.registerError);
         return;
       }
       localStorage.removeItem(ONG_DRAFT_KEY);
@@ -468,7 +481,7 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
         })),
       });
     } catch {
-      setError("Não foi possível conectar ao servidor.");
+      setError(t("auth.login.connectionError"));
     } finally {
       setLoading(false);
     }
@@ -482,12 +495,10 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
           <Check className="h-8 w-8" aria-hidden />
         </div>
-        <h2 className="text-xl font-semibold">Conta criada com sucesso!</h2>
-        <p className="text-sm text-muted-foreground">
-          Sua conta ONG está ativa com acesso imediato ao painel.
-        </p>
+        <h2 className="text-xl font-semibold">{o.success.title}</h2>
+        <p className="text-sm text-muted-foreground">{o.success.description}</p>
         <Button className="w-full" onClick={() => router.push(dashboardPathForRole("ONG"))}>
-          Acessar painel da ONG
+          {o.success.dashboard}
         </Button>
       </div>
     );
@@ -517,11 +528,11 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
       {step === "responsible" && (
         <section className="space-y-4" aria-labelledby="ong-responsible-step">
           <h2 id="ong-responsible-step" className="text-lg font-semibold">
-            {form.ongType === "INSTITUTION" ? "Representante legal" : "Responsável"}
+            {form.ongType === "INSTITUTION" ? o.sections.responsibleInstitution : o.sections.responsible}
           </h2>
-          <Field id="ong-name" label="Nome completo" value={form.name} onChange={(v) => patch({ name: v })} required error={fieldErrors.name} />
-          <Field id="ong-cpf" label="CPF" value={form.cpf} onChange={(v) => patch({ cpf: maskCpf(v) })} required error={fieldErrors.cpf} />
-          <Field id="ong-email" label="E-mail" type="email" value={form.email} onChange={(v) => patch({ email: v })} required error={fieldErrors.email} />
+          <Field id="ong-name" label={o.fields.fullName} value={form.name} onChange={(v) => patch({ name: v })} required error={fieldErrors.name} tv={tv} />
+          <Field id="ong-cpf" label={o.fields.cpf} value={form.cpf} onChange={(v) => patch({ cpf: maskCpf(v) })} required error={fieldErrors.cpf} tv={tv} />
+          <Field id="ong-email" label={o.fields.email} type="email" value={form.email} onChange={(v) => patch({ email: v })} required error={fieldErrors.email} tv={tv} />
           <InternationalPhoneField
             id="ong-phone"
             value={form.phone}
@@ -536,45 +547,47 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
           <div>
             <Field
               id="ong-username"
-              label="Nome de usuário"
+              label={o.fields.username}
               value={form.username}
               onChange={(v) => patch({ username: v.toLowerCase() })}
               required
               error={fieldErrors.username}
+              tv={tv}
             />
             {usernameStatus === "checking" && (
               <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-                <Loader2 className="h-3 w-3 animate-spin" aria-hidden /> Verificando...
+                <Loader2 className="h-3 w-3 animate-spin" aria-hidden /> {o.hints.usernameChecking}
               </p>
             )}
             {usernameStatus === "available" && (
-              <p className="mt-1 text-xs text-emerald-700">Nome de usuário disponível.</p>
+              <p className="mt-1 text-xs text-emerald-700">{o.hints.usernameAvailable}</p>
             )}
             {usernameStatus === "taken" && (
-              <p className="mt-1 text-xs text-red-600">Usuário já cadastrado.</p>
+              <p className="mt-1 text-xs text-red-600">{o.hints.usernameTaken}</p>
             )}
           </div>
           {form.ongType === "INDIVIDUAL" && (
             <Field
               id="ong-activity-start"
-              label="Data de início das atividades"
+              label={o.fields.activityStart}
               type="date"
               value={form.activityStartDate}
               onChange={(v) => patch({ activityStartDate: v })}
               required
               error={fieldErrors.activityStartDate}
+              tv={tv}
             />
           )}
           {form.ongType === "INDIVIDUAL" && (
             <p className="text-xs text-muted-foreground">
-              Entre {activityBounds.min} e {activityBounds.max}.
+              {o.hints.activityDateRange(activityBounds.min, activityBounds.max)}
             </p>
           )}
           {form.ongType === "INSTITUTION" && (
             <>
               <div>
                 <label htmlFor="ong-role" className="text-sm font-medium">
-                  Cargo do representante *
+                  {o.fields.representativeRole} *
                 </label>
                 <select
                   id="ong-role"
@@ -582,25 +595,26 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
                   value={form.representativeRole}
                   onChange={(e) => patch({ representativeRole: e.target.value })}
                 >
-                  <option value="">Selecione</option>
+                  <option value="">{o.actions.select}</option>
                   {ONG_REPRESENTATIVE_ROLES.map((r) => (
                     <option key={r} value={r}>
-                      {r}
+                      {o.representativeRole(r)}
                     </option>
                   ))}
                 </select>
                 {fieldErrors.representativeRole && (
-                  <p className="mt-1 text-sm text-red-600">{fieldErrors.representativeRole}</p>
+                  <p className="mt-1 text-sm text-red-600">{tv(fieldErrors.representativeRole)}</p>
                 )}
               </div>
               {form.representativeRole === "Outro" && (
                 <Field
                   id="ong-role-other"
-                  label="Informe o cargo"
+                  label={o.fields.representativeRoleOther}
                   value={form.representativeRoleOther}
                   onChange={(v) => patch({ representativeRoleOther: v })}
                   required
                   error={fieldErrors.representativeRoleOther}
+                  tv={tv}
                 />
               )}
             </>
@@ -611,16 +625,16 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
       {step === "institutional" && form.ongType === "INSTITUTION" && (
         <section className="space-y-4" aria-labelledby="ong-institutional-step">
           <h2 id="ong-institutional-step" className="text-lg font-semibold">
-            Dados institucionais
+            {o.sections.institutional}
           </h2>
-          <Field id="ong-cnpj" label="CNPJ" value={form.cnpj} onChange={(v) => patch({ cnpj: maskCnpj(v) })} required error={fieldErrors.cnpj} />
-          <Field id="ong-name-inst" label="Nome da ONG" value={form.ongName} onChange={(v) => patch({ ongName: v })} required error={fieldErrors.ongName} />
-          <Field id="ong-legal-name" label="Razão social" value={form.legalName} onChange={(v) => patch({ legalName: v })} required error={fieldErrors.legalName} />
-          <Field id="ong-trade-name" label="Nome fantasia" value={form.tradeName} onChange={(v) => patch({ tradeName: v })} />
-          <Field id="ong-founded" label="Data de fundação" type="date" value={form.foundedDate} onChange={(v) => patch({ foundedDate: v })} required error={fieldErrors.foundedDate} />
+          <Field id="ong-cnpj" label={t("auth.register.fields.cnpj")} value={form.cnpj} onChange={(v) => patch({ cnpj: maskCnpj(v) })} required error={fieldErrors.cnpj} tv={tv} />
+          <Field id="ong-name-inst" label={o.fields.ongName} value={form.ongName} onChange={(v) => patch({ ongName: v })} required error={fieldErrors.ongName} tv={tv} />
+          <Field id="ong-legal-name" label={o.fields.legalName} value={form.legalName} onChange={(v) => patch({ legalName: v })} required error={fieldErrors.legalName} tv={tv} />
+          <Field id="ong-trade-name" label={t("auth.register.fields.tradeName")} value={form.tradeName} onChange={(v) => patch({ tradeName: v })} tv={tv} />
+          <Field id="ong-founded" label={o.fields.foundedDate} type="date" value={form.foundedDate} onChange={(v) => patch({ foundedDate: v })} required error={fieldErrors.foundedDate} tv={tv} />
           <div>
             <label htmlFor="ong-focus" className="text-sm font-medium">
-              Área de atuação *
+              {o.fields.focusArea} *
             </label>
             <select
               id="ong-focus"
@@ -628,23 +642,23 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
               value={form.focusArea}
               onChange={(e) => patch({ focusArea: e.target.value })}
             >
-              <option value="">Selecione</option>
+              <option value="">{o.actions.select}</option>
               {ONG_FOCUS_AREAS.map((a) => (
                 <option key={a} value={a}>
-                  {a}
+                  {o.focusArea(a)}
                 </option>
               ))}
             </select>
-            {fieldErrors.focusArea && <p className="mt-1 text-sm text-red-600">{fieldErrors.focusArea}</p>}
+            {fieldErrors.focusArea && <p className="mt-1 text-sm text-red-600">{tv(fieldErrors.focusArea)}</p>}
           </div>
           {form.focusArea === "Outro" && (
-            <Field id="ong-focus-other" label="Descreva a área" value={form.focusAreaOther} onChange={(v) => patch({ focusAreaOther: v })} required error={fieldErrors.focusAreaOther} />
+            <Field id="ong-focus-other" label={o.fields.focusAreaOther} value={form.focusAreaOther} onChange={(v) => patch({ focusAreaOther: v })} required error={fieldErrors.focusAreaOther} tv={tv} />
           )}
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field id="ong-city-inst" label="Cidade" value={form.city} onChange={(v) => patch({ city: v })} required error={fieldErrors.city} />
+            <Field id="ong-city-inst" label={o.fields.city} value={form.city} onChange={(v) => patch({ city: v })} required error={fieldErrors.city} tv={tv} />
             <div>
               <label htmlFor="ong-state-inst" className="text-sm font-medium">
-                Estado *
+                {o.fields.state} *
               </label>
               <select
                 id="ong-state-inst"
@@ -652,14 +666,14 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
                 value={form.state}
                 onChange={(e) => patch({ state: e.target.value })}
               >
-                <option value="">UF</option>
+                <option value="">{o.fields.statePlaceholder}</option>
                 {BRAZIL_STATES.map((st) => (
                   <option key={st} value={st}>
                     {st}
                   </option>
                 ))}
               </select>
-              {fieldErrors.state && <p className="mt-1 text-sm text-red-600">{fieldErrors.state}</p>}
+              {fieldErrors.state && <p className="mt-1 text-sm text-red-600">{tv(fieldErrors.state)}</p>}
             </div>
           </div>
         </section>
@@ -668,12 +682,12 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
       {step === "activity" && (
         <section className="space-y-4" aria-labelledby="ong-activity-step">
           <h2 id="ong-activity-step" className="text-lg font-semibold">
-            Atuação
+            {o.sections.activity}
           </h2>
           <PartnerSelectableCards
             name="ong-action-types"
-            legend="Áreas de atuação *"
-            options={actionAreas.map((a) => ({ value: a.value, label: a.label, icon: a.icon }))}
+            legend={o.legends.actionAreas}
+            options={actionAreas.map((a) => ({ value: a.value, label: o.actionArea(a.value), icon: a.icon }))}
             value={form.actionTypes}
             onChange={(v) => patch({ actionTypes: v as string[] })}
             multiple
@@ -683,11 +697,12 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
           {form.actionTypes.includes("OUTROS") && (
             <Field
               id="ong-action-other"
-              label="Descreva a área de atuação"
+              label={o.fields.actionAreaOther}
               value={form.actionTypesOther}
               onChange={(v) => patch({ actionTypesOther: v })}
               required
               error={fieldErrors.actionTypesOther}
+              tv={tv}
             />
           )}
         </section>
@@ -696,7 +711,7 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
       {step === "profile" && (
         <section className="space-y-6" aria-labelledby="ong-profile-step">
           <h2 id="ong-profile-step" className="text-lg font-semibold">
-            {form.ongType === "INSTITUTION" ? "Perfil institucional" : "Perfil da causa"}
+            {form.ongType === "INSTITUTION" ? o.sections.profileInstitution : o.sections.profileIndividual}
           </h2>
 
           {form.ongType === "INDIVIDUAL" ? (
@@ -718,12 +733,14 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
           <CoverImageUpload
             value={coverImage}
             onChange={setCoverImage}
-            label={form.ongType === "INSTITUTION" ? "Imagem de capa" : "Foto de capa"}
+            label={form.ongType === "INSTITUTION" ? o.fields.coverInstitution : o.fields.coverIndividual}
+            uploadLabel={o.fields.uploadImage}
+            replaceLabel={o.fields.replaceImage}
           />
 
           <div>
             <label htmlFor="ong-description" className="text-sm font-medium">
-              {form.ongType === "INSTITUTION" ? "Descrição institucional *" : "Descrição da causa *"}
+              {form.ongType === "INSTITUTION" ? o.fields.descriptionInstitution : o.fields.descriptionIndividual}
             </label>
             <textarea
               id="ong-description"
@@ -732,30 +749,31 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
               onChange={(e) => patch({ description: e.target.value })}
               maxLength={1200}
             />
-            {fieldErrors.description && <p className="mt-1 text-sm text-red-600">{fieldErrors.description}</p>}
+            {fieldErrors.description && <p className="mt-1 text-sm text-red-600">{tv(fieldErrors.description)}</p>}
           </div>
 
           {form.ongType === "INSTITUTION" && (
             <>
-              <Field id="ong-mission" label="Missão" value={form.mission} onChange={(v) => patch({ mission: v })} required error={fieldErrors.mission} />
-              <Field id="ong-vision" label="Visão" value={form.vision} onChange={(v) => patch({ vision: v })} required error={fieldErrors.vision} />
+              <Field id="ong-mission" label={o.fields.mission} value={form.mission} onChange={(v) => patch({ mission: v })} required error={fieldErrors.mission} tv={tv} />
+              <Field id="ong-vision" label={o.fields.vision} value={form.vision} onChange={(v) => patch({ vision: v })} required error={fieldErrors.vision} tv={tv} />
             </>
           )}
 
           <Field
             id="ong-capacity"
-            label="Quantidade aproximada de animais atendidos"
+            label={o.fields.animalCapacity}
             type="number"
             value={form.animalCapacity}
             onChange={(v) => patch({ animalCapacity: v.replace(/\D/g, "") })}
+            tv={tv}
           />
 
           {form.ongType === "INDIVIDUAL" && (
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field id="ong-city" label="Cidade" value={form.city} onChange={(v) => patch({ city: v })} required error={fieldErrors.city} />
+              <Field id="ong-city" label={o.fields.city} value={form.city} onChange={(v) => patch({ city: v })} required error={fieldErrors.city} tv={tv} />
               <div>
                 <label htmlFor="ong-state" className="text-sm font-medium">
-                  Estado *
+                  {o.fields.state} *
                 </label>
                 <select
                   id="ong-state"
@@ -763,30 +781,30 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
                   value={form.state}
                   onChange={(e) => patch({ state: e.target.value })}
                 >
-                  <option value="">UF</option>
+                  <option value="">{o.fields.statePlaceholder}</option>
                   {BRAZIL_STATES.map((st) => (
                     <option key={st} value={st}>
                       {st}
                     </option>
                   ))}
                 </select>
-                {fieldErrors.state && <p className="mt-1 text-sm text-red-600">{fieldErrors.state}</p>}
+                {fieldErrors.state && <p className="mt-1 text-sm text-red-600">{tv(fieldErrors.state)}</p>}
               </div>
             </div>
           )}
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field id="ong-instagram" label="Instagram" value={form.socialLinks.instagram ?? ""} onChange={(v) => patchSocial("instagram", v)} />
-            <Field id="ong-facebook" label="Facebook" value={form.socialLinks.facebook ?? ""} onChange={(v) => patchSocial("facebook", v)} />
-            <Field id="ong-linkedin" label="LinkedIn" value={form.socialLinks.linkedin ?? ""} onChange={(v) => patchSocial("linkedin", v)} />
+            <Field id="ong-instagram" label={o.fields.instagram} value={form.socialLinks.instagram ?? ""} onChange={(v) => patchSocial("instagram", v)} tv={tv} />
+            <Field id="ong-facebook" label={o.fields.facebook} value={form.socialLinks.facebook ?? ""} onChange={(v) => patchSocial("facebook", v)} tv={tv} />
+            <Field id="ong-linkedin" label={o.fields.linkedin} value={form.socialLinks.linkedin ?? ""} onChange={(v) => patchSocial("linkedin", v)} tv={tv} />
             {form.ongType === "INSTITUTION" && (
-              <Field id="ong-youtube" label="YouTube" value={form.socialLinks.youtube ?? ""} onChange={(v) => patchSocial("youtube", v)} />
+              <Field id="ong-youtube" label={o.fields.youtube} value={form.socialLinks.youtube ?? ""} onChange={(v) => patchSocial("youtube", v)} tv={tv} />
             )}
-            <Field id="ong-whatsapp" label="WhatsApp" value={form.socialLinks.whatsapp ?? ""} onChange={(v) => patchSocial("whatsapp", v)} />
-            <Field id="ong-website" label="Site" value={form.socialLinks.website ?? ""} onChange={(v) => patchSocial("website", v)} />
+            <Field id="ong-whatsapp" label={o.fields.whatsapp} value={form.socialLinks.whatsapp ?? ""} onChange={(v) => patchSocial("whatsapp", v)} tv={tv} />
+            <Field id="ong-website" label={o.fields.website} value={form.socialLinks.website ?? ""} onChange={(v) => patchSocial("website", v)} tv={tv} />
           </div>
 
-          <Field id="ong-pix" label="Pix para doações" value={form.pixKey} onChange={(v) => patch({ pixKey: v })} />
+          <Field id="ong-pix" label={o.fields.pixDonations} value={form.pixKey} onChange={(v) => patch({ pixKey: v })} tv={tv} />
         </section>
       )}
 
@@ -802,27 +820,27 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
       {step === "security" && (
         <section className="space-y-6" aria-labelledby="ong-security-step">
           <h2 id="ong-security-step" className="text-lg font-semibold">
-            Segurança
+            {o.sections.security}
           </h2>
           <FoundationPasswordField
             id="ong-password"
-            label="Senha"
+            label={o.fields.password}
             value={form.password}
             onChange={(v) => patch({ password: v })}
             context={passwordContext}
             required
             showRecommendations
           />
-          {fieldErrors.password && <p className="text-sm text-red-600">{fieldErrors.password}</p>}
+          {fieldErrors.password && <p className="text-sm text-red-600">{tv(fieldErrors.password)}</p>}
           <FoundationConfirmPasswordField
             id="ong-confirm-password"
-            label="Confirmar senha"
+            label={o.fields.confirmPassword}
             value={form.confirmPassword}
             password={form.password}
             onChange={(v) => patch({ confirmPassword: v })}
             required
           />
-          {fieldErrors.confirmPassword && <p className="text-sm text-red-600">{fieldErrors.confirmPassword}</p>}
+          {fieldErrors.confirmPassword && <p className="text-sm text-red-600">{tv(fieldErrors.confirmPassword)}</p>}
           <OngLegalAcceptance
             acceptTerms={acceptTerms}
             acceptPrivacy={acceptPrivacy}
@@ -836,22 +854,22 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
       {step !== "type" && (
         <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
           <Button type="button" variant="outline" onClick={goBack} disabled={loading}>
-            Voltar
+            {o.actions.back}
           </Button>
           {step === "security" ? (
             <Button type="button" onClick={() => void handleSubmit()} disabled={loading || !acceptTerms || !acceptPrivacy}>
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
-                  Cadastrando...
+                  {o.actions.finishing}
                 </>
               ) : (
-                "Concluir cadastro"
+                o.actions.finish
               )}
             </Button>
           ) : (
             <Button type="button" onClick={goNext}>
-              Continuar
+              {o.actions.continue}
             </Button>
           )}
         </div>
@@ -859,16 +877,16 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
 
       {error && (
         <p className="text-sm text-red-600" role="alert" aria-live="polite">
-          {error}
+          {tv(error) || error}
         </p>
       )}
       <StepValidationFeedback messages={stepFeedback} />
 
       {!embedded && (
         <p className="text-center text-sm text-gray-600">
-          Já tem conta?{" "}
+          {t("auth.register.hasAccount")}{" "}
           <Link href="/login" className="font-semibold text-green-700 hover:underline">
-            Entrar
+            {t("auth.login.submitAccount")}
           </Link>
         </p>
       )}

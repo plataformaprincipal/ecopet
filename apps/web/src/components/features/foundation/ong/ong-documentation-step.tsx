@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  DOCUMENT_STATUS_LABELS,
   formatFileSize,
   getOngDocumentDefinitions,
   ONG_DOCUMENT_ACCEPT,
@@ -22,6 +21,7 @@ import {
   type OngDocumentDefinition,
 } from "@/lib/ong/document-types";
 import type { OngType } from "@/lib/ong/constants";
+import { useOngRegisterCopy } from "@/lib/i18n/use-register-copy";
 import { cn } from "@/lib/utils";
 
 export type OngDocumentItem = {
@@ -48,19 +48,7 @@ function isPdf(file: File) {
   return file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
 }
 
-function validateDocFile(file: File): string | null {
-  if (file.size > ONG_DOCUMENT_MAX_BYTES) {
-    return `Arquivo excede ${formatFileSize(ONG_DOCUMENT_MAX_BYTES)}.`;
-  }
-  const allowed = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
-  if (!allowed.includes(file.type) && !file.name.match(/\.(pdf|jpe?g|png|webp)$/i)) {
-    return "Formato não permitido. Use PDF, JPG, PNG ou WEBP.";
-  }
-  return null;
-}
-
-function StatusBadge({ status }: { status: DocumentUploadStatus }) {
-  const label = DOCUMENT_STATUS_LABELS[status];
+function StatusBadge({ status, label }: { status: DocumentUploadStatus; label: string }) {
   if (status === "uploaded") {
     return (
       <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700">
@@ -98,11 +86,21 @@ function DocumentCard({
   documents,
   onUpload,
   onRemove,
+  requiredBadge,
+  attachLabel,
+  replaceLabel,
+  removeLabel,
+  statusLabel,
 }: {
   definition: OngDocumentDefinition;
   documents: OngDocumentItem[];
   onUpload: (type: string, label: string, file: File) => void;
   onRemove: (type: string) => void;
+  requiredBadge: string;
+  attachLabel: string;
+  replaceLabel: string;
+  removeLabel: string;
+  statusLabel: (status: DocumentUploadStatus) => string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const Icon = definition.icon;
@@ -135,7 +133,7 @@ function DocumentCard({
             {definition.required && (
               <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-200/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-900">
                 <AlertTriangle className="h-3 w-3" aria-hidden />
-                Obrigatório
+                {requiredBadge}
               </span>
             )}
           </div>
@@ -143,7 +141,7 @@ function DocumentCard({
             <p className="mt-0.5 text-xs text-muted-foreground">{definition.hint}</p>
           )}
           <div className="mt-2">
-            <StatusBadge status={status} />
+            <StatusBadge status={status} label={statusLabel(status)} />
           </div>
           {uploaded && (
             <p className="mt-1 truncate text-xs text-muted-foreground">
@@ -164,12 +162,12 @@ function DocumentCard({
           <div className="mt-2 flex flex-wrap gap-2">
             <Button type="button" size="sm" variant="outline" onClick={() => inputRef.current?.click()}>
               <Upload className="mr-1.5 h-3.5 w-3.5" aria-hidden />
-              {uploaded ? "Substituir" : "Anexar"}
+              {uploaded ? replaceLabel : attachLabel}
             </Button>
             {uploaded && (
               <Button type="button" size="sm" variant="ghost" onClick={() => onRemove(definition.id)}>
                 <Trash2 className="mr-1.5 h-3.5 w-3.5" aria-hidden />
-                Remover
+                {removeLabel}
               </Button>
             )}
           </div>
@@ -185,6 +183,8 @@ export function OngDocumentationStep({
   onChange,
   error,
 }: OngDocumentationStepProps) {
+  const { t, tv } = useOngRegisterCopy();
+  const docNs = "auth.register.ong.documentation";
   const [globalError, setGlobalError] = useState("");
   const { required, optional } = getOngDocumentDefinitions(ongType);
   const requiredDone = required.filter((d) =>
@@ -192,11 +192,18 @@ export function OngDocumentationStep({
   ).length;
   const progressPct = required.length ? Math.round((requiredDone / required.length) * 100) : 0;
 
+  const statusLabel = (status: DocumentUploadStatus) =>
+    t(`${docNs}.status.${status}` as "auth.register.ong.documentation.status.pending");
+
   const addDocument = useCallback(
     (type: string, typeLabel: string, file: File) => {
-      const err = validateDocFile(file);
-      if (err) {
-        setGlobalError(err);
+      if (file.size > ONG_DOCUMENT_MAX_BYTES) {
+        setGlobalError(t(`${docNs}.fileTooLarge`, { size: formatFileSize(ONG_DOCUMENT_MAX_BYTES) }));
+        return;
+      }
+      const allowed = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
+      if (!allowed.includes(file.type) && !file.name.match(/\.(pdf|jpe?g|png|webp)$/i)) {
+        setGlobalError(t(`${docNs}.formatNotAllowed`));
         return;
       }
       setGlobalError("");
@@ -205,28 +212,31 @@ export function OngDocumentationStep({
         { id: newId(), type, typeLabel, file, status: "uploaded" },
       ]);
     },
-    [documents, onChange]
+    [documents, onChange, t, docNs]
   );
 
   const removeByType = (type: string) => {
     onChange(documents.filter((d) => d.type !== type));
   };
 
+  const displayError = error ? tv(error) || error : globalError;
+
   return (
     <section className="space-y-6" aria-labelledby="ong-docs-step">
       <div>
         <h2 id="ong-docs-step" className="text-lg font-semibold">
-          Documentação
+          {t(`${docNs}.title`)}
         </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Envie os documentos obrigatórios para concluir o cadastro e, se desejar, complemente com documentos adicionais.
-        </p>
+        <p className="mt-1 text-sm text-muted-foreground">{t(`${docNs}.description`)}</p>
       </div>
 
-      <div aria-label="Progresso de documentos obrigatórios">
+      <div aria-label={t(`${docNs}.progressAria`)}>
         <div className="mb-1 flex justify-between text-xs text-muted-foreground">
           <span>
-            {requiredDone} de {required.length} obrigatório(s) enviado(s)
+            {t(`${docNs}.progressCount`, {
+              done: String(requiredDone),
+              total: String(required.length),
+            })}
           </span>
           <span>{progressPct}%</span>
         </div>
@@ -242,16 +252,20 @@ export function OngDocumentationStep({
         </div>
       </div>
 
-      {(error || globalError) && (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700" role="alert" aria-live="polite">
-          {error || globalError}
+      {displayError && (
+        <p
+          className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+          role="alert"
+          aria-live="polite"
+        >
+          {displayError}
         </p>
       )}
 
       <div className="space-y-3">
         <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-amber-900">
           <AlertTriangle className="h-4 w-4" aria-hidden />
-          Documentos obrigatórios
+          {t(`${docNs}.requiredHeading`)}
         </h3>
         <div className="grid gap-3 sm:grid-cols-2">
           {required.map((def) => (
@@ -261,13 +275,18 @@ export function OngDocumentationStep({
               documents={documents}
               onUpload={addDocument}
               onRemove={removeByType}
+              requiredBadge={t(`${docNs}.requiredBadge`)}
+              attachLabel={t(`${docNs}.attach`)}
+              replaceLabel={t(`${docNs}.replace`)}
+              removeLabel={t(`${docNs}.remove`)}
+              statusLabel={statusLabel}
             />
           ))}
         </div>
       </div>
 
       <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-muted-foreground">Documentos adicionais (opcional)</h3>
+        <h3 className="text-sm font-semibold text-muted-foreground">{t(`${docNs}.optionalHeading`)}</h3>
         <div className="grid gap-3 sm:grid-cols-2">
           {optional.map((def) => (
             <DocumentCard
@@ -276,13 +295,18 @@ export function OngDocumentationStep({
               documents={documents}
               onUpload={addDocument}
               onRemove={removeByType}
+              requiredBadge={t(`${docNs}.requiredBadge`)}
+              attachLabel={t(`${docNs}.attach`)}
+              replaceLabel={t(`${docNs}.replace`)}
+              removeLabel={t(`${docNs}.remove`)}
+              statusLabel={statusLabel}
             />
           ))}
         </div>
       </div>
 
       {documents.length > 0 && (
-        <ul className="space-y-2 rounded-xl border bg-gray-50/80 p-3" aria-label="Resumo dos documentos anexados">
+        <ul className="space-y-2 rounded-xl border bg-gray-50/80 p-3" aria-label={t(`${docNs}.summaryAria`)}>
           {documents.map((doc) => (
             <li key={doc.id} className="flex flex-wrap items-center gap-3 text-sm">
               {isPdf(doc.file) ? (
@@ -291,7 +315,7 @@ export function OngDocumentationStep({
                 <ImageIcon className="h-4 w-4 text-blue-600" aria-hidden />
               )}
               <span className="min-w-0 flex-1 truncate font-medium">{doc.typeLabel}</span>
-              <StatusBadge status={doc.status} />
+              <StatusBadge status={doc.status} label={statusLabel(doc.status)} />
             </li>
           ))}
         </ul>

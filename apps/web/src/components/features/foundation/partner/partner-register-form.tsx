@@ -11,7 +11,7 @@ import { RegisterProgress } from "@/components/features/foundation/register-prog
 import { FoundationPasswordField, FoundationConfirmPasswordField } from "@/components/features/foundation/password-field";
 import { InternationalPhoneField } from "@/components/features/foundation/international-phone-field";
 import { AddressByCepField } from "@/components/shared/address/address-by-cep-field";
-import { PartnerTypeSelector, PARTNER_TYPE_REQUIRED_MESSAGE } from "@/components/features/foundation/partner/partner-type-selector";
+import { PartnerTypeSelector } from "@/components/features/foundation/partner/partner-type-selector";
 import { PartnerSelectableCards } from "@/components/features/foundation/partner/partner-selectable-cards";
 import { PartnerLegalAcceptance,
   PARTNER_LEGAL_ACCEPTANCE_MESSAGE,
@@ -77,6 +77,7 @@ import { cn } from "@/lib/utils";
 import { StepValidationFeedback } from "@/components/features/foundation/step-validation-feedback";
 import { collectUniqueErrorMessages, duplicateRegistrationError } from "@/lib/registration/collect-step-errors";
 import { useDocumentAvailability } from "@/lib/registration/use-document-availability";
+import { usePartnerRegisterCopy } from "@/lib/i18n/use-register-copy";
 
 type StepId =
   | "type"
@@ -91,32 +92,36 @@ type StepId =
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9_.]{4,30}$/;
 
-function stepLabels(partnerType: PartnerType | null): { id: StepId; label: string }[] {
+function stepLabels(
+  partnerType: PartnerType | null,
+  steps: ReturnType<typeof usePartnerRegisterCopy>["p"]["steps"]
+): { id: StepId; label: string }[] {
   if (partnerType === "CORPORATE") {
     return [
-      { id: "type", label: "Tipo" },
-      { id: "legal", label: "Representante" },
-      { id: "corporate", label: "Corporativo" },
-      { id: "professional", label: "Profissional" },
-      { id: "operation", label: "Funcionamento" },
-      { id: "documentation", label: "Documentação" },
-      { id: "financial", label: "Financeiro" },
-      { id: "security", label: "Segurança" },
+      { id: "type", label: steps.type },
+      { id: "legal", label: steps.legal },
+      { id: "corporate", label: steps.corporate },
+      { id: "professional", label: steps.professional },
+      { id: "operation", label: steps.operation },
+      { id: "documentation", label: steps.documentation },
+      { id: "financial", label: steps.financial },
+      { id: "security", label: steps.security },
     ];
   }
   return [
-    { id: "type", label: "Tipo" },
-    { id: "legal", label: "Representante" },
-    { id: "professional", label: "Profissional" },
-    { id: "operation", label: "Funcionamento" },
-    { id: "documentation", label: "Documentação" },
-    { id: "financial", label: "Financeiro" },
-    { id: "security", label: "Segurança" },
+    { id: "type", label: steps.type },
+    { id: "legal", label: steps.legal },
+    { id: "professional", label: steps.professional },
+    { id: "operation", label: steps.operation },
+    { id: "documentation", label: steps.documentation },
+    { id: "financial", label: steps.financial },
+    { id: "security", label: steps.security },
   ];
 }
 
 export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
   const router = useRouter();
+  const { t, tv, tpwError, tApi, validation: v, p } = usePartnerRegisterCopy();
   const [step, setStep] = useState<StepId>("type");
   const [form, setForm] = useState<PartnerFormState>(INITIAL_PARTNER_FORM);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -156,7 +161,7 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
     }
   }, [form]);
 
-  const steps = stepLabels(form.partnerType);
+  const steps = stepLabels(form.partnerType, p.steps);
   const currentIndex = steps.findIndex((s) => s.id === step);
   const progressSteps = steps.map((s) => s.label);
   const canSubmitPartner = acceptTerms && acceptPrivacy && !loading;
@@ -296,59 +301,59 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
     const errors: Record<string, string> = {};
 
     if (current === "type") {
-      if (!form.partnerType) errors.partnerType = PARTNER_TYPE_REQUIRED_MESSAGE;
+      if (!form.partnerType) errors.partnerType = p.validation.partnerTypeRequired;
     }
 
     if (current === "legal") {
-      if (!isValidFullName(form.name)) errors.name = FULL_NAME_INCOMPLETE_MESSAGE;
+      if (!isValidFullName(form.name)) errors.name = v.fullNameIncomplete;
       const cpfDigits = onlyDigits(form.cpf);
       if (form.partnerType === "AUTONOMOUS") {
-        if (!validateCpfChecksum(cpfDigits)) errors.cpf = "Digite um CPF válido.";
+        if (!validateCpfChecksum(cpfDigits)) errors.cpf = v.cpfInvalid;
         else if (cpfAvailability === "taken") Object.assign(errors, duplicateRegistrationError());
       }
-      if (!getEmailLiveFeedback(form.email).valid) errors.email = EMAIL_INVALID_MESSAGE;
+      if (!getEmailLiveFeedback(form.email).valid) errors.email = v.emailInvalid;
       const phoneFb = getPhoneLiveFeedback(form.phone, phoneCountry, phoneCountry === "BR" ? brazilDdd : undefined);
-      if (!phoneFb.valid) errors.phone = phoneFb.message ?? PHONE_INVALID_MESSAGE;
-      if (!USERNAME_PATTERN.test(form.username)) errors.username = "Nome de usuário inválido (4–30 caracteres).";
+      if (!phoneFb.valid) errors.phone = phoneFb.message ?? v.phoneInvalid;
+      if (!USERNAME_PATTERN.test(form.username)) errors.username = p.validation.usernameInvalid;
       if (usernameStatus === "taken") Object.assign(errors, duplicateRegistrationError());
       const dateErr = validateActivityStartDate(form.activityStartDate);
-      if (dateErr) errors.activityStartDate = dateErr;
+      if (dateErr) errors.activityStartDate = tv(dateErr) ?? dateErr;
     }
 
     if (current === "corporate" && form.partnerType === "CORPORATE") {
-      if (!validateCnpjChecksum(onlyDigits(form.cnpj))) errors.cnpj = "Digite um CNPJ válido.";
+      if (!validateCnpjChecksum(onlyDigits(form.cnpj))) errors.cnpj = v.cnpjInvalid;
       else if (cnpjAvailability === "taken") Object.assign(errors, duplicateRegistrationError());
-      if (form.businessName.trim().length < 2) errors.businessName = "Nome comercial obrigatório.";
-      if (form.legalName.trim().length < 2) errors.legalName = "Razão social obrigatória.";
-      if (!form.corporateType) errors.corporateType = "Selecione o tipo corporativo.";
+      if (form.businessName.trim().length < 2) errors.businessName = p.validation.businessNameRequired;
+      if (form.legalName.trim().length < 2) errors.legalName = p.validation.legalNameRequired;
+      if (!form.corporateType) errors.corporateType = p.validation.corporateTypeRequired;
       if (form.corporateType === "Outro" && form.corporateTypeOther.trim().length < 2) {
-        errors.corporateTypeOther = "Informe o tipo corporativo.";
+        errors.corporateTypeOther = p.validation.corporateTypeOtherRequired;
       }
     }
 
     if (current === "professional") {
       if (form.partnerType === "AUTONOMOUS" && form.professionalName.trim().length < 2) {
-        errors.professionalName = "Nome comercial obrigatório.";
+        errors.professionalName = p.validation.businessNameRequired;
       }
-      if (!form.activityAreas.length) errors.activityAreas = "Selecione ao menos uma área de atuação.";
+      if (!form.activityAreas.length) errors.activityAreas = p.validation.activityAreasRequired;
       if (form.activityAreas.includes("OUTROS") && form.activityAreasOther.trim().length < 3) {
-        errors.activityAreasOther = "Descreva sua área de atuação.";
+        errors.activityAreasOther = p.validation.activityAreasOtherRequired;
       }
-      if (form.businessDescription.length < 80) errors.businessDescription = "Descreva melhor sua atuação profissional.";
-      if (form.businessDescription.length > 800) errors.businessDescription = "A descrição deve ter no máximo 800 caracteres.";
+      if (form.businessDescription.length < 80) errors.businessDescription = p.validation.descriptionTooShort;
+      if (form.businessDescription.length > 800) errors.businessDescription = p.validation.descriptionTooLong;
       const a = form.addressDetails;
-      if (!a.zipCode || a.zipCode.replace(/\D/g, "").length !== 8) errors["addressDetails.zipCode"] = "Digite um CEP válido.";
-      if (!a.streetType) errors["addressDetails.streetType"] = "Selecione o tipo de logradouro.";
-      if (a.streetType === "Outro" && !a.streetTypeOther.trim()) errors["addressDetails.streetTypeOther"] = "Informe o tipo de logradouro.";
-      if (!a.street.trim()) errors["addressDetails.street"] = "Logradouro obrigatório.";
-      if (!a.number.trim()) errors["addressDetails.number"] = "Número obrigatório.";
-      if (!a.district.trim()) errors["addressDetails.district"] = "Bairro obrigatório.";
-      if (!a.city.trim()) errors["addressDetails.city"] = "Cidade obrigatória.";
-      if (a.state.length !== 2) errors["addressDetails.state"] = "UF obrigatória.";
+      if (!a.zipCode || a.zipCode.replace(/\D/g, "").length !== 8) errors["addressDetails.zipCode"] = p.validation.zipCodeInvalid;
+      if (!a.streetType) errors["addressDetails.streetType"] = p.validation.streetTypeRequired;
+      if (a.streetType === "Outro" && !a.streetTypeOther.trim()) errors["addressDetails.streetTypeOther"] = p.validation.streetTypeOtherRequired;
+      if (!a.street.trim()) errors["addressDetails.street"] = p.validation.streetRequired;
+      if (!a.number.trim()) errors["addressDetails.number"] = p.validation.numberRequired;
+      if (!a.district.trim()) errors["addressDetails.district"] = p.validation.districtRequired;
+      if (!a.city.trim()) errors["addressDetails.city"] = p.validation.cityRequired;
+      if (a.state.length !== 2) errors["addressDetails.state"] = p.validation.stateRequired;
     }
 
     if (current === "operation") {
-      if (!form.operationModes.length) errors.operationModes = "Selecione ao menos uma forma de funcionamento.";
+      if (!form.operationModes.length) errors.operationModes = p.validation.operationModesRequired;
       const scheduleErr = validateOperationSchedule(
         form.operationModes,
         form.weekdays,
@@ -358,7 +363,7 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
       if (scheduleErr) {
         errors[scheduleErr.field ?? "openTime"] = scheduleErr.message;
       }
-      if (!form.serviceRadius) errors.serviceRadius = "Selecione o raio de atendimento.";
+      if (!form.serviceRadius) errors.serviceRadius = p.validation.serviceRadiusRequired;
     }
 
     if (current === "documentation" && form.partnerType) {
@@ -382,25 +387,27 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
     }
 
     if (current === "financial") {
-      if (!form.paymentMethods.length) errors.paymentMethods = "Selecione ao menos uma forma de pagamento.";
+      if (!form.paymentMethods.length) errors.paymentMethods = p.validation.paymentMethodsRequired;
       if (form.paymentMethods.includes("Pix") && (!form.pixKeyType || !form.pixKey.trim())) {
-        errors.pixKey = "Informe a chave Pix.";
+        errors.pixKey = p.validation.pixKeyRequired;
       }
       if (form.paymentMethods.includes("Transferência bancária")) {
         if (!form.bankName || !form.agency || !form.accountNumber || !form.accountHolder) {
-          errors.bankName = "Preencha os dados bancários.";
+          errors.bankName = p.validation.bankRequired;
         }
-        if (form.bankName === "Outros" && !form.bankNameOther.trim()) errors.bankNameOther = "Informe o banco.";
+        if (form.bankName === "Outros" && !form.bankNameOther.trim()) errors.bankNameOther = p.validation.bankOtherRequired;
       }
     }
 
     if (current === "security") {
       const pwd = validateStrongPassword(form.password, passwordContext);
-      if (!pwd.valid) errors.password = pwd.error ?? "Senha inválida.";
-      if (form.password !== form.confirmPassword) errors.confirmPassword = PASSWORD_MISMATCH_MESSAGE;
+      if (!pwd.valid) {
+        errors.password = pwd.errorId ? tpwError(pwd.errorId) : p.validation.passwordInvalid;
+      }
+      if (form.password !== form.confirmPassword) errors.confirmPassword = v.passwordMismatch;
       if (!acceptTerms || !acceptPrivacy) setTermsError(PARTNER_LEGAL_ACCEPTANCE_MESSAGE);
       else setTermsError("");
-      if (!acceptTerms || !acceptPrivacy) errors.legal = PARTNER_LEGAL_ACCEPTANCE_MESSAGE;
+      if (!acceptTerms || !acceptPrivacy) errors.legal = t("auth.terms.acceptanceRequired");
     }
 
     setFieldErrors(errors);
@@ -409,20 +416,20 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
 
   function goNext() {
     if (form.partnerType === "AUTONOMOUS" && step === "legal" && cpfAvailability === "checking") {
-      setStepFeedback(["Aguarde a verificação do CPF."]);
+      setStepFeedback([p.validation.waitCpf]);
       return;
     }
     if (form.partnerType === "CORPORATE" && step === "corporate" && cnpjAvailability === "checking") {
-      setStepFeedback(["Aguarde a verificação do CNPJ."]);
+      setStepFeedback([p.validation.waitCnpj]);
       return;
     }
     if (step === "legal" && usernameStatus === "checking") {
-      setStepFeedback(["Aguarde a verificação do nome de usuário."]);
+      setStepFeedback([p.validation.waitUsername]);
       return;
     }
 
     const errors = validateStep(step);
-    const messages = collectUniqueErrorMessages(errors);
+    const messages = collectUniqueErrorMessages(errors).map((m) => tv(m));
     setStepFeedback(messages);
     if (messages.length > 0) return;
 
@@ -437,7 +444,7 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
 
   async function handleSubmit() {
     const errors = validateStep("security");
-    const messages = collectUniqueErrorMessages(errors);
+    const messages = collectUniqueErrorMessages(errors).map((m) => tv(m));
     setStepFeedback(messages);
     if (messages.length > 0) return;
     if (form.partnerType) {
@@ -445,7 +452,7 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
       const docCheck = validateRequiredDocuments(form.partnerType, provided);
       if (!docCheck.valid) {
         setDocsError(docCheck.message ?? "");
-        setError(docCheck.message ?? "Documentos obrigatórios pendentes.");
+        setError(docCheck.message ?? p.validation.docsPending);
         return;
       }
     }
@@ -453,7 +460,7 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
     setError("");
     const phoneE164 = resolveRegistrationPhoneE164(form.phone, phoneCountry, phoneCountry === "BR" ? brazilDdd : undefined);
     if (!phoneE164) {
-      setError(phoneCountry === "BR" && !brazilDdd ? BR_DDD_REQUIRED_MESSAGE : PHONE_INVALID_MESSAGE);
+      setError(phoneCountry === "BR" && !brazilDdd ? v.brDddRequired : v.phoneInvalid);
       setLoading(false);
       return;
     }
@@ -470,7 +477,7 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
       const data = await res.json();
       if (!res.ok || data.success === false) {
         const { code, message } = parseApiFailureError(data);
-        setError(res.status === 409 ? mapRegisterConflictMessage(code, message) : message || "Erro ao cadastrar");
+        setError(res.status === 409 ? mapRegisterConflictMessage(code, message) : tApi(message, code) || p.validation.registerError);
         return;
       }
       localStorage.removeItem(PARTNER_DRAFT_KEY);
@@ -489,7 +496,7 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
         cnpjDetails: form.cnpjDetails,
       });
     } catch {
-      setError("Não foi possível conectar ao servidor.");
+      setError(t("auth.login.connectionError"));
     } finally {
       setLoading(false);
     }
@@ -497,7 +504,7 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
 
   const activityBounds = getActivityStartDateBounds();
   const filteredAreas = ACTIVITY_AREAS.filter((a) =>
-    a.label.toLowerCase().includes(areaFilter.toLowerCase())
+    p.activityArea(a.value).toLowerCase().includes(areaFilter.toLowerCase())
   );
 
   if (step === "success") {
@@ -506,10 +513,10 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
           <Check className="h-8 w-8" aria-hidden />
         </div>
-        <h2 className="text-xl font-semibold">Cadastro de parceiro concluído com sucesso.</h2>
-        <p className="text-sm text-muted-foreground">Sua conta está ativa. Acesse o painel para configurar produtos e serviços.</p>
+        <h2 className="text-xl font-semibold">{p.success.title}</h2>
+        <p className="text-sm text-muted-foreground">{p.success.description}</p>
         <Button className="w-full" onClick={() => router.push(dashboardPathForRole("PARTNER"))}>
-          Acessar painel do parceiro
+          {p.success.dashboard}
         </Button>
       </div>
     );
@@ -530,21 +537,21 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
       {step === "legal" && (
         <section className="space-y-4" aria-labelledby="partner-legal-step">
           <h2 id="partner-legal-step" className="text-lg font-semibold">
-            Dados do representante legal
+            {p.sections.legal}
           </h2>
-          <Field label="Nome completo do responsável" id="partner-name" value={form.name} onChange={(v) => patch({ name: v })} error={fieldErrors.name} required hint="Escreva o seu nome completo." />
+          <Field label={p.fields.responsibleName} id="partner-name" value={form.name} onChange={(v) => patch({ name: v })} error={fieldErrors.name} required hint={v.fullNameIncomplete} tv={tv} />
           {form.partnerType === "AUTONOMOUS" && (
             <>
-              <Field label="CPF" id="partner-cpf" value={form.cpf} onChange={(v) => patch({ cpf: maskCpf(v) })} error={fieldErrors.cpf} required />
+              <Field label={p.fields.cpf} id="partner-cpf" value={form.cpf} onChange={(v) => patch({ cpf: maskCpf(v) })} error={fieldErrors.cpf} required tv={tv} />
               {cpfSyncMessage && !cpfNameMismatch && (
                 <p className="text-xs text-muted-foreground" aria-live="polite">{cpfSyncMessage}</p>
               )}
               {cpfNameMismatch && (
-                <p className="text-sm text-amber-700" role="status" aria-live="polite">{CPF_NAME_MISMATCH_MESSAGE}</p>
+                <p className="text-sm text-amber-700" role="status" aria-live="polite">{tv(CPF_NAME_MISMATCH_MESSAGE)}</p>
               )}
             </>
           )}
-          <Field label="E-mail" id="partner-email" type="email" value={form.email} onChange={(v) => patch({ email: v })} error={fieldErrors.email} required autoComplete="email" />
+          <Field label={p.fields.email} id="partner-email" type="email" value={form.email} onChange={(v) => patch({ email: v })} error={fieldErrors.email} required autoComplete="email" tv={tv} />
           <InternationalPhoneField
             id="partner-phone"
             value={form.phone}
@@ -557,23 +564,23 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
             error={fieldErrors.phone}
           />
           <div>
-            <Field label="Nome de usuário" id="partner-username" value={form.username} onChange={(v) => patch({ username: v })} error={fieldErrors.username} required autoComplete="username" />
-            {usernameStatus === "available" && <p className="mt-1 text-xs text-green-700">Nome de usuário disponível</p>}
+            <Field label={p.fields.username} id="partner-username" value={form.username} onChange={(v) => patch({ username: v })} error={fieldErrors.username} required autoComplete="username" tv={tv} />
+            {usernameStatus === "available" && <p className="mt-1 text-xs text-green-700">{p.hints.usernameAvailable}</p>}
           </div>
-          <Field label="Data de início das atividades" id="partner-activity-start" type="date" value={form.activityStartDate} onChange={(v) => patch({ activityStartDate: v })} error={fieldErrors.activityStartDate} required min={activityBounds.min} max={activityBounds.max} />
+          <Field label={p.fields.activityStart} id="partner-activity-start" type="date" value={form.activityStartDate} onChange={(v) => patch({ activityStartDate: v })} error={fieldErrors.activityStartDate} required min={activityBounds.min} max={activityBounds.max} tv={tv} />
         </section>
       )}
 
       {step === "corporate" && form.partnerType === "CORPORATE" && (
         <section className="space-y-4" aria-labelledby="partner-corporate-step">
           <h2 id="partner-corporate-step" className="text-lg font-semibold">
-            Dados corporativos
+            {p.sections.corporate}
           </h2>
-          <Field label="CNPJ" id="partner-cnpj" value={form.cnpj} onChange={(v) => patch({ cnpj: maskCnpj(v) })} error={fieldErrors.cnpj} required />
+          <Field label={p.fields.cnpj} id="partner-cnpj" value={form.cnpj} onChange={(v) => patch({ cnpj: maskCnpj(v) })} error={fieldErrors.cnpj} required tv={tv} />
           {cnpjLookupLoading && (
             <p className="flex items-center gap-2 text-sm text-muted-foreground" aria-live="polite">
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-              Consultando CNPJ na Receita Federal via BrasilAPI...
+              {p.cnpj.loading}
             </p>
           )}
           {cnpjWarnings.map((w) => (
@@ -582,10 +589,10 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
           {cnpjLookupInfo && !cnpjLookupLoading && (
             <p className="text-xs text-emerald-800" aria-live="polite">{cnpjLookupInfo}</p>
           )}
-          <Field label="Nome comercial" id="partner-business-name" value={form.businessName} onChange={(v) => patch({ businessName: v })} error={fieldErrors.businessName} required />
-          <Field label="Razão social" id="partner-legal-name" value={form.legalName} onChange={(v) => patch({ legalName: v })} error={fieldErrors.legalName} required />
+          <Field label={p.fields.businessName} id="partner-business-name" value={form.businessName} onChange={(v) => patch({ businessName: v })} error={fieldErrors.businessName} required tv={tv} />
+          <Field label={p.fields.legalName} id="partner-legal-name" value={form.legalName} onChange={(v) => patch({ legalName: v })} error={fieldErrors.legalName} required tv={tv} />
           <div>
-            <label htmlFor="partner-corporate-type" className="text-sm font-medium">Tipo corporativo *</label>
+            <label htmlFor="partner-corporate-type" className="text-sm font-medium">{p.fields.corporateType} *</label>
             <select
               id="partner-corporate-type"
               className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
@@ -593,15 +600,15 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
               onChange={(e) => patch({ corporateType: e.target.value })}
               aria-invalid={!!fieldErrors.corporateType}
             >
-              <option value="">Selecione</option>
+              <option value="">{p.actions.select}</option>
               {CORPORATE_TYPES.map((t) => (
-                <option key={t} value={t}>{t}</option>
+                <option key={t} value={t}>{p.corporateType(t)}</option>
               ))}
             </select>
-            {fieldErrors.corporateType && <p className="mt-1 text-sm text-red-600" role="alert">{fieldErrors.corporateType}</p>}
+            {fieldErrors.corporateType && <p className="mt-1 text-sm text-red-600" role="alert">{tv(fieldErrors.corporateType)}</p>}
           </div>
           {form.corporateType === "Outro" && (
-            <Field label="Informe o tipo corporativo" id="partner-corporate-other" value={form.corporateTypeOther} onChange={(v) => patch({ corporateTypeOther: v })} error={fieldErrors.corporateTypeOther} required />
+            <Field label={p.fields.corporateTypeOther} id="partner-corporate-other" value={form.corporateTypeOther} onChange={(v) => patch({ corporateTypeOther: v })} error={fieldErrors.corporateTypeOther} required tv={tv} />
           )}
         </section>
       )}
@@ -609,7 +616,7 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
       {step === "professional" && (
         <section className="space-y-6" aria-labelledby="partner-professional-step">
           <h2 id="partner-professional-step" className="text-lg font-semibold">
-            Dados profissionais
+            {p.sections.professional}
           </h2>
           <PartnerLogoUpload
             value={logo}
@@ -623,19 +630,19 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
             fieldId="partner-logo"
           />
           {form.partnerType === "AUTONOMOUS" && (
-            <Field label="Nome comercial / profissional" id="partner-prof-name" value={form.professionalName} onChange={(v) => patch({ professionalName: v })} error={fieldErrors.professionalName} required />
+            <Field label={p.fields.professionalName} id="partner-prof-name" value={form.professionalName} onChange={(v) => patch({ professionalName: v })} error={fieldErrors.professionalName} required tv={tv} />
           )}
           <div>
-            <label htmlFor="partner-area-search" className="text-sm font-medium">Área de atuação *</label>
+            <label htmlFor="partner-area-search" className="text-sm font-medium">{p.fields.activityArea} *</label>
             <div className="relative mt-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" aria-hidden />
-              <Input id="partner-area-search" placeholder="Buscar área..." value={areaFilter} onChange={(e) => setAreaFilter(e.target.value)} className="pl-9" />
+              <Input id="partner-area-search" placeholder={p.fields.activityAreaSearch} value={areaFilter} onChange={(e) => setAreaFilter(e.target.value)} className="pl-9" />
             </div>
             <div className="mt-3">
               <PartnerSelectableCards
                 name="activity-areas"
-                legend="Selecione uma ou mais áreas"
-                options={filteredAreas.map((a) => ({ value: a.value, label: a.label, icon: a.icon }))}
+                legend={p.legends.activityAreas}
+                options={filteredAreas.map((a) => ({ value: a.value, label: p.activityArea(a.value), icon: a.icon }))}
                 value={form.activityAreas}
                 onChange={(v) => patch({ activityAreas: v as string[] })}
                 multiple
@@ -644,11 +651,11 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
               />
             </div>
             {form.activityAreas.includes("OUTROS") && (
-              <Field label="Descreva sua área de atuação" id="partner-area-other" value={form.activityAreasOther} onChange={(v) => patch({ activityAreasOther: v })} error={fieldErrors.activityAreasOther} required />
+              <Field label={p.fields.activityAreaOther} id="partner-area-other" value={form.activityAreasOther} onChange={(v) => patch({ activityAreasOther: v })} error={fieldErrors.activityAreasOther} required tv={tv} />
             )}
           </div>
           <div>
-            <label htmlFor="partner-description" className="text-sm font-medium">Descrição do negócio *</label>
+            <label htmlFor="partner-description" className="text-sm font-medium">{p.fields.businessDescription} *</label>
             <textarea
               id="partner-description"
               className="mt-1 min-h-[120px] w-full rounded-md border px-3 py-2 text-sm"
@@ -658,13 +665,13 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
               aria-describedby="partner-description-count"
               aria-invalid={!!fieldErrors.businessDescription}
             />
-            <p id="partner-description-count" className="mt-1 text-xs text-muted-foreground">{form.businessDescription.length} / 800</p>
-            {fieldErrors.businessDescription && <p className="mt-1 text-sm text-red-600" role="alert">{fieldErrors.businessDescription}</p>}
+            <p id="partner-description-count" className="mt-1 text-xs text-muted-foreground">{p.hints.descriptionCount(form.businessDescription.length)}</p>
+            {fieldErrors.businessDescription && <p className="mt-1 text-sm text-red-600" role="alert">{tv(fieldErrors.businessDescription)}</p>}
           </div>
           <div className="space-y-3">
-            <h3 className="font-medium">Endereço completo</h3>
+            <h3 className="font-medium">{p.sections.address}</h3>
             <div>
-              <label htmlFor="partner-street-type" className="text-sm font-medium">Tipo de logradouro *</label>
+              <label htmlFor="partner-street-type" className="text-sm font-medium">{p.fields.streetType} *</label>
               <select
                 id="partner-street-type"
                 className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
@@ -672,12 +679,12 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
                 onChange={(e) => patch({ addressDetails: { ...form.addressDetails, streetType: e.target.value } })}
               >
                 {STREET_TYPES.map((t) => (
-                  <option key={t} value={t}>{t}</option>
+                  <option key={t} value={t}>{p.streetType(t)}</option>
                 ))}
               </select>
             </div>
             {form.addressDetails.streetType === "Outro" && (
-              <Field label="Informe o tipo de logradouro" id="partner-street-type-other" value={form.addressDetails.streetTypeOther} onChange={(v) => patch({ addressDetails: { ...form.addressDetails, streetTypeOther: v } })} error={fieldErrors["addressDetails.streetTypeOther"]} required />
+              <Field label={p.fields.streetTypeOther} id="partner-street-type-other" value={form.addressDetails.streetTypeOther} onChange={(v) => patch({ addressDetails: { ...form.addressDetails, streetTypeOther: v } })} error={fieldErrors["addressDetails.streetTypeOther"]} required tv={tv} />
             )}
             <AddressByCepField
               value={form.addressDetails}
@@ -701,12 +708,12 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
       {step === "operation" && (
         <section className="space-y-6" aria-labelledby="partner-operation-step">
           <h2 id="partner-operation-step" className="text-lg font-semibold">
-            Dados de funcionamento
+            {p.sections.operation}
           </h2>
           <PartnerSelectableCards
             name="operation-modes"
-            legend="Funcionamento *"
-            options={OPERATION_MODES.map((m) => ({ value: m.value, label: m.label }))}
+            legend={p.legends.operation}
+            options={OPERATION_MODES.map((m) => ({ value: m.value, label: p.operationMode(m.value) }))}
             value={form.operationModes}
             onChange={(v) => patch({ operationModes: v as string[] })}
             multiple
@@ -714,25 +721,25 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
           />
           {form.operationModes.includes("BY_APPOINTMENT") && (
             <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
-              O cliente poderá solicitar horários conforme sua disponibilidade.
+              {p.hints.byAppointment}
             </p>
           )}
           {form.operationModes.includes("EMERGENCY") && (
             <p className="rounded-lg bg-orange-50 px-3 py-2 text-sm text-orange-900">
-              Atendimento emergencial — dias e horários fixos não são obrigatórios.
+              {p.hints.emergency}
             </p>
           )}
           {form.operationModes.includes("HOURS_24") && (
             <p className="rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-900">
-              Atendimento 24 horas — dias e horários fixos não são obrigatórios.
+              {p.hints.hours24}
             </p>
           )}
           {requiresOperationSchedule(form.operationModes) && (
             <>
               <PartnerSelectableCards
                 name="weekdays"
-                legend="Dias de atendimento *"
-                options={WEEKDAYS.map((d) => ({ value: d.value, label: d.label }))}
+                legend={p.legends.weekdays}
+                options={WEEKDAYS.map((d) => ({ value: d.value, label: p.weekday(d.value) }))}
                 value={form.weekdays}
                 onChange={(v) => patch({ weekdays: v as string[] })}
                 multiple
@@ -740,15 +747,15 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
                 error={fieldErrors.weekdays}
               />
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Horário de abertura" id="partner-open" type="time" value={form.openTime} onChange={(v) => patch({ openTime: v })} error={fieldErrors.openTime} required />
-                <Field label="Horário de fechamento" id="partner-close" type="time" value={form.closeTime} onChange={(v) => patch({ closeTime: v })} error={fieldErrors.closeTime} required />
+                <Field label={p.fields.openTime} id="partner-open" type="time" value={form.openTime} onChange={(v) => patch({ openTime: v })} error={fieldErrors.openTime} required tv={tv} />
+                <Field label={p.fields.closeTime} id="partner-close" type="time" value={form.closeTime} onChange={(v) => patch({ closeTime: v })} error={fieldErrors.closeTime} required tv={tv} />
               </div>
             </>
           )}
           <PartnerSelectableCards
             name="service-radius"
-            legend="Raio de atendimento *"
-            options={SERVICE_RADIUS_OPTIONS.map((r) => ({ value: r.value, label: r.label }))}
+            legend={p.legends.serviceRadius}
+            options={SERVICE_RADIUS_OPTIONS.map((r) => ({ value: r.value, label: p.serviceRadius(r.value) }))}
             value={form.serviceRadius}
             onChange={(v) => patch({ serviceRadius: v as string })}
             error={fieldErrors.serviceRadius}
@@ -756,20 +763,20 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
           />
           <PartnerSelectableCards
             name="delivery-options"
-            legend="Entrega e tele-busca"
-            options={DELIVERY_OPTIONS.map((d) => ({ value: d.value, label: d.label }))}
+            legend={p.legends.delivery}
+            options={DELIVERY_OPTIONS.map((d) => ({ value: d.value, label: p.deliveryOption(d.value) }))}
             value={form.deliveryOptions}
             onChange={(v) => patch({ deliveryOptions: v as string[] })}
             multiple
           />
           {(form.deliveryOptions.includes("DELIVERY") || form.deliveryOptions.includes("TELEBUS")) && (
-            <Field label="Observações logísticas" id="partner-logistics" value={form.logisticsNotes} onChange={(v) => patch({ logisticsNotes: v })} placeholder="Taxa, raio ou sob consulta" />
+            <Field label={p.fields.logisticsNotes} id="partner-logistics" value={form.logisticsNotes} onChange={(v) => patch({ logisticsNotes: v })} placeholder={p.hints.logisticsPlaceholder} tv={tv} />
           )}
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Instagram" id="partner-instagram" value={form.instagram} onChange={(v) => patch({ instagram: v })} />
-            <Field label="WhatsApp" id="partner-whatsapp" value={form.whatsapp} onChange={(v) => patch({ whatsapp: v })} />
-            <Field label="Site" id="partner-website" value={form.website} onChange={(v) => patch({ website: v })} />
-            <Field label="LinkedIn" id="partner-linkedin" value={form.linkedin} onChange={(v) => patch({ linkedin: v })} />
+            <Field label={p.fields.instagram} id="partner-instagram" value={form.instagram} onChange={(v) => patch({ instagram: v })} tv={tv} />
+            <Field label={p.fields.whatsapp} id="partner-whatsapp" value={form.whatsapp} onChange={(v) => patch({ whatsapp: v })} tv={tv} />
+            <Field label={p.fields.website} id="partner-website" value={form.website} onChange={(v) => patch({ website: v })} tv={tv} />
+            <Field label={p.fields.linkedin} id="partner-linkedin" value={form.linkedin} onChange={(v) => patch({ linkedin: v })} tv={tv} />
           </div>
         </section>
       )}
@@ -786,12 +793,12 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
       {step === "financial" && (
         <section className="space-y-6" aria-labelledby="partner-financial-step">
           <h2 id="partner-financial-step" className="text-lg font-semibold">
-            Dados financeiros
+            {p.sections.financial}
           </h2>
           <PartnerSelectableCards
             name="payment-methods"
-            legend="Formas de pagamento aceitas *"
-            options={PAYMENT_METHODS.map((p) => ({ value: p, label: p }))}
+            legend={p.legends.paymentMethods}
+            options={PAYMENT_METHODS.map((pm) => ({ value: pm, label: p.paymentMethod(pm) }))}
             value={form.paymentMethods}
             onChange={(v) => patch({ paymentMethods: v as string[] })}
             multiple
@@ -801,39 +808,39 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
           {form.paymentMethods.includes("Pix") && (
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <label htmlFor="partner-pix-type" className="text-sm font-medium">Tipo de chave Pix *</label>
+                <label htmlFor="partner-pix-type" className="text-sm font-medium">{p.fields.pixKeyType} *</label>
                 <select id="partner-pix-type" className="mt-1 w-full rounded-md border px-3 py-2 text-sm" value={form.pixKeyType} onChange={(e) => patch({ pixKeyType: e.target.value })}>
-                  <option value="">Selecione</option>
-                  {PIX_KEY_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                  <option value="">{p.actions.select}</option>
+                  {PIX_KEY_TYPES.map((pt) => <option key={pt} value={pt}>{p.pixKeyType(pt)}</option>)}
                 </select>
               </div>
-              <Field label="Chave Pix" id="partner-pix-key" value={form.pixKey} onChange={(v) => patch({ pixKey: v })} error={fieldErrors.pixKey} required />
+              <Field label={p.fields.pixKey} id="partner-pix-key" value={form.pixKey} onChange={(v) => patch({ pixKey: v })} error={fieldErrors.pixKey} required tv={tv} />
             </div>
           )}
           {form.paymentMethods.includes("Transferência bancária") && (
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <label htmlFor="partner-bank" className="text-sm font-medium">Banco *</label>
+                <label htmlFor="partner-bank" className="text-sm font-medium">{p.fields.bank} *</label>
                 <select id="partner-bank" className="mt-1 w-full rounded-md border px-3 py-2 text-sm" value={form.bankName} onChange={(e) => patch({ bankName: e.target.value })}>
-                  <option value="">Selecione</option>
-                  {BANK_OPTIONS.map((b) => <option key={b} value={b}>{b}</option>)}
+                  <option value="">{p.actions.select}</option>
+                  {BANK_OPTIONS.map((b) => <option key={b} value={b}>{p.bank(b)}</option>)}
                 </select>
-                {fieldErrors.bankName && <p className="mt-1 text-sm text-red-600">{fieldErrors.bankName}</p>}
+                {fieldErrors.bankName && <p className="mt-1 text-sm text-red-600">{tv(fieldErrors.bankName)}</p>}
               </div>
               {form.bankName === "Outros" && (
-                <Field label="Informe o banco" id="partner-bank-other" value={form.bankNameOther} onChange={(v) => patch({ bankNameOther: v })} error={fieldErrors.bankNameOther} required />
+                <Field label={p.fields.bankOther} id="partner-bank-other" value={form.bankNameOther} onChange={(v) => patch({ bankNameOther: v })} error={fieldErrors.bankNameOther} required tv={tv} />
               )}
-              <Field label="Agência" id="partner-agency" value={form.agency} onChange={(v) => patch({ agency: v })} required />
-              <Field label="Conta corrente" id="partner-account" value={form.accountNumber} onChange={(v) => patch({ accountNumber: v })} required />
-              <Field label="Dígito" id="partner-digit" value={form.accountDigit} onChange={(v) => patch({ accountDigit: v })} />
+              <Field label={p.fields.agency} id="partner-agency" value={form.agency} onChange={(v) => patch({ agency: v })} required tv={tv} />
+              <Field label={p.fields.account} id="partner-account" value={form.accountNumber} onChange={(v) => patch({ accountNumber: v })} required tv={tv} />
+              <Field label={p.fields.accountDigit} id="partner-digit" value={form.accountDigit} onChange={(v) => patch({ accountDigit: v })} tv={tv} />
               <div>
-                <label htmlFor="partner-account-type" className="text-sm font-medium">Tipo de conta</label>
+                <label htmlFor="partner-account-type" className="text-sm font-medium">{p.fields.accountType}</label>
                 <select id="partner-account-type" className="mt-1 w-full rounded-md border px-3 py-2 text-sm" value={form.accountType} onChange={(e) => patch({ accountType: e.target.value })}>
-                  {ACCOUNT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                  {ACCOUNT_TYPES.map((at) => <option key={at} value={at}>{p.accountType(at)}</option>)}
                 </select>
               </div>
-              <Field label="Titular da conta" id="partner-holder" value={form.accountHolder} onChange={(v) => patch({ accountHolder: v })} required />
-              <Field label="CPF/CNPJ do titular" id="partner-holder-doc" value={form.accountHolderDocument} onChange={(v) => patch({ accountHolderDocument: v })} />
+              <Field label={p.fields.accountHolder} id="partner-holder" value={form.accountHolder} onChange={(v) => patch({ accountHolder: v })} required tv={tv} />
+              <Field label={p.fields.accountHolderDoc} id="partner-holder-doc" value={form.accountHolderDocument} onChange={(v) => patch({ accountHolderDocument: v })} tv={tv} />
             </div>
           )}
         </section>
@@ -842,12 +849,12 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
       {step === "security" && (
         <section className="space-y-6" aria-labelledby="partner-security-step">
           <h2 id="partner-security-step" className="text-lg font-semibold">
-            Segurança
+            {p.sections.security}
           </h2>
-          <FoundationPasswordField id="partner-password" label="Senha" value={form.password} onChange={(v) => patch({ password: v })} context={passwordContext} required showRecommendations />
-          {fieldErrors.password && <p className="text-sm text-red-600" role="alert">{fieldErrors.password}</p>}
-          <FoundationConfirmPasswordField id="partner-confirm-password" label="Confirmar senha" value={form.confirmPassword} password={form.password} onChange={(v) => patch({ confirmPassword: v })} required />
-          {fieldErrors.confirmPassword && <p className="text-sm text-red-600" role="alert">{fieldErrors.confirmPassword}</p>}
+          <FoundationPasswordField id="partner-password" label={p.fields.password} value={form.password} onChange={(v) => patch({ password: v })} context={passwordContext} required showRecommendations />
+          {fieldErrors.password && <p className="text-sm text-red-600" role="alert">{tv(fieldErrors.password)}</p>}
+          <FoundationConfirmPasswordField id="partner-confirm-password" label={p.fields.confirmPassword} value={form.confirmPassword} password={form.password} onChange={(v) => patch({ confirmPassword: v })} required />
+          {fieldErrors.confirmPassword && <p className="text-sm text-red-600" role="alert">{tv(fieldErrors.confirmPassword)}</p>}
           <PartnerLegalAcceptance
             acceptTerms={acceptTerms}
             acceptPrivacy={acceptPrivacy}
@@ -858,24 +865,24 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
         </section>
       )}
 
-      {error && <p className="text-sm text-red-600" role="alert" aria-live="polite">{error}</p>}
+      {error && <p className="text-sm text-red-600" role="alert" aria-live="polite">{tv(error) || error}</p>}
 
       <div className="space-y-3">
         <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
           {step !== "type" ? (
             <Button type="button" variant="outline" onClick={goBack}>
-              Voltar
+              {p.actions.back}
             </Button>
           ) : (
             <div />
           )}
           {step === "security" ? (
             <Button type="button" onClick={() => void handleSubmit()} disabled={!canSubmitPartner}>
-              {loading ? "Concluindo..." : "Concluir cadastro"}
+              {loading ? p.actions.finishing : p.actions.finish}
             </Button>
           ) : (
             <Button type="button" onClick={goNext}>
-              Continuar
+              {p.actions.continue}
             </Button>
           )}
         </div>
@@ -884,7 +891,10 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
 
       {!embedded && (
         <p className="text-center text-sm text-gray-600">
-          Já tem conta? <Link href="/login" className="font-semibold text-green-700 hover:underline">Entrar</Link>
+          {t("auth.register.hasAccount")}{" "}
+          <Link href="/login" className="font-semibold text-green-700 hover:underline">
+            {t("auth.login.submitAccount")}
+          </Link>
         </p>
       )}
     </div>
@@ -904,6 +914,7 @@ function Field({
   max,
   autoComplete,
   placeholder,
+  tv,
 }: {
   label: string;
   id: string;
@@ -917,6 +928,7 @@ function Field({
   max?: string;
   autoComplete?: string;
   placeholder?: string;
+  tv?: (message: string | undefined) => string;
 }) {
   const hintId = hint ? `${id}-hint` : undefined;
   const errorId = error ? `${id}-error` : undefined;
@@ -942,7 +954,7 @@ function Field({
         aria-describedby={[hintId, errorId].filter(Boolean).join(" ") || undefined}
       />
       {hint && <p id={hintId} className="mt-1 text-xs text-muted-foreground">{hint}</p>}
-      {error && <p id={errorId} className="mt-1 text-sm text-red-600" role="alert" aria-live="polite">{error}</p>}
+      {error && <p id={errorId} className="mt-1 text-sm text-red-600" role="alert" aria-live="polite">{tv ? tv(error) : error}</p>}
     </div>
   );
 }

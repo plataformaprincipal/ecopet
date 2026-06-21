@@ -14,8 +14,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ONG_LEGAL, ONG_LEGAL_ACCEPTANCE_MESSAGE } from "@/lib/legal/legal-links";
-import { ONG_TERMS_PREVIEW } from "@/lib/legal/ong-terms-content";
-import { ONG_PRIVACY_PREVIEW } from "@/lib/legal/ong-privacy-content";
+import { useAuthMessages } from "@/lib/i18n/use-auth-messages";
+import type { TranslationKey } from "@/lib/i18n/types";
 
 type OngLegalAcceptanceProps = {
   acceptTerms: boolean;
@@ -33,6 +33,8 @@ const LEGAL_CARDS: {
   accent: string;
   borderSelected: string;
   bgSelected: string;
+  checkboxKey: TranslationKey;
+  previewKey: TranslationKey;
 }[] = [
   {
     key: "terms",
@@ -40,6 +42,8 @@ const LEGAL_CARDS: {
     accent: "text-emerald-700",
     borderSelected: "border-emerald-600 ring-emerald-500/30",
     bgSelected: "bg-emerald-50/80 dark:bg-emerald-950/30",
+    checkboxKey: "auth.terms.ong.terms",
+    previewKey: "auth.terms.ong.termsPreview",
   },
   {
     key: "privacy",
@@ -47,13 +51,10 @@ const LEGAL_CARDS: {
     accent: "text-teal-700",
     borderSelected: "border-teal-600 ring-teal-500/30",
     bgSelected: "bg-teal-50/80 dark:bg-teal-950/30",
+    checkboxKey: "auth.terms.ong.privacy",
+    previewKey: "auth.terms.ong.privacyPreview",
   },
 ];
-
-const PREVIEW_TEXT: Record<LegalDocKey, string> = {
-  terms: ONG_TERMS_PREVIEW,
-  privacy: ONG_PRIVACY_PREVIEW,
-};
 
 export function OngLegalAcceptance({
   acceptTerms,
@@ -62,6 +63,7 @@ export function OngLegalAcceptance({
   onAcceptPrivacyChange,
   error,
 }: OngLegalAcceptanceProps) {
+  const { t, tv } = useAuthMessages();
   const [previewDoc, setPreviewDoc] = useState<LegalDocKey | null>(null);
 
   const checkedMap: Record<LegalDocKey, boolean> = {
@@ -92,17 +94,20 @@ export function OngLegalAcceptance({
           <ShieldCheck className="h-5 w-5" />
         </div>
         <div>
-          <h2 id="ong-legal-acceptance-heading" className="font-display text-base font-semibold text-ecopet-dark dark:text-white">
-            Termos da ONG EcoPet
+          <h2
+            id="ong-legal-acceptance-heading"
+            className="font-display text-base font-semibold text-ecopet-dark dark:text-white"
+          >
+            {t("auth.terms.ong.legalHeading")}
           </h2>
           <p id="ong-legal-acceptance-hint" className="mt-1 text-xs leading-relaxed text-muted-foreground">
-            Documentos jurídicos exclusivos para ONGs e protetores — independentes dos termos do Cliente EcoPet.
+            {t("auth.terms.ong.legalSubheading")}
           </p>
         </div>
       </header>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        {LEGAL_CARDS.map(({ key, icon: Icon, accent, borderSelected, bgSelected }) => {
+        {LEGAL_CARDS.map(({ key, icon: Icon, accent, borderSelected, bgSelected, checkboxKey, previewKey }) => {
           const doc = legalMap[key];
           const checked = checkedMap[key];
           const inputId = `ong-accept-${key}`;
@@ -141,7 +146,7 @@ export function OngLegalAcceptance({
                       required
                     />
                     <span className="text-sm font-medium leading-snug text-ecopet-dark dark:text-white">
-                      {doc.checkboxLabel}
+                      {t(checkboxKey)}
                     </span>
                   </label>
 
@@ -152,27 +157,30 @@ export function OngLegalAcceptance({
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 underline-offset-2 hover:underline dark:text-emerald-400"
                     >
-                      Ler documento completo
+                      {t("auth.terms.readFull")}
                       <ExternalLink className="h-3 w-3" aria-hidden />
                     </Link>
 
                     <Dialog open={previewDoc === key} onOpenChange={(open) => setPreviewDoc(open ? key : null)}>
                       <DialogTrigger asChild>
-                        <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs text-muted-foreground hover:text-emerald-700">
-                          Pré-visualizar
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-2 text-xs text-muted-foreground hover:text-emerald-700"
+                        >
+                          {t("auth.terms.preview")}
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto">
                         <DialogHeader>
                           <DialogTitle>{doc.title}</DialogTitle>
-                          <DialogDescription>
-                            Resumo introdutório. Para o texto integral, abra a página oficial da ONG EcoPet.
-                          </DialogDescription>
+                          <DialogDescription>{t("auth.terms.previewSummary")}</DialogDescription>
                         </DialogHeader>
-                        <p className="text-sm leading-relaxed text-muted-foreground">{PREVIEW_TEXT[key]}</p>
+                        <p className="text-sm leading-relaxed text-muted-foreground">{t(previewKey)}</p>
                         <Button asChild variant="outline" size="sm" className="w-fit">
                           <Link href={doc.href} target="_blank" rel="noopener noreferrer">
-                            Abrir página completa
+                            {t("auth.terms.openFullPage")}
                           </Link>
                         </Button>
                       </DialogContent>
@@ -192,7 +200,7 @@ export function OngLegalAcceptance({
           role="alert"
           aria-live="polite"
         >
-          {error || ONG_LEGAL_ACCEPTANCE_MESSAGE}
+          {tv(error) || t("auth.terms.acceptanceRequired")}
         </p>
       )}
     </section>

@@ -17,7 +17,6 @@ import {
   HandMetal,
   Volume2,
   BookOpen,
-  Languages,
   Link2,
   Focus,
   MousePointer2,
@@ -42,8 +41,6 @@ import type { AccessibilityPreferences } from "@/lib/accessibility/types";
 import { useTranslation } from "@/providers/i18n-provider";
 import { hideVLibras } from "@/lib/accessibility/vlibras-loader";
 import { useAriaAnnounce } from "./aria-live-region";
-import { LanguageSelector } from "@/components/features/i18n/language-selector";
-
 type BooleanKey = {
   [K in keyof AccessibilityPreferences]: AccessibilityPreferences[K] extends boolean ? K : never;
 }[keyof AccessibilityPreferences];
@@ -208,12 +205,6 @@ export function AccessibilityToolbar() {
               <ToggleBtn icon={ScanEye} label={t("a11y.labels.readingMask")} active={readingMask} onClick={() => handleToggle("readingMask", t("a11y.labels.readingMask"))} />
               <ToggleBtn icon={Ruler} label={t("a11y.labels.readingGuide")} active={readingGuide} onClick={() => handleToggle("readingGuide", t("a11y.labels.readingGuide"))} />
               <p className="px-3 pb-2 text-[11px] leading-relaxed text-ecopet-gray">{t("a11y.brailleNote")}</p>
-            </Section>
-
-            <Section title={t("a11y.sections.languages")} icon={Languages} defaultOpen>
-              <div className="px-2 pb-2">
-                <LanguageSelector />
-              </div>
             </Section>
 
             <Section title={t("a11y.sections.preferences")} icon={Settings2}>

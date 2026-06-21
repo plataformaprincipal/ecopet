@@ -10,7 +10,7 @@
     "terms": "Términos",
     "benefits": "Beneficios",
     "faq": "FAQ",
-    "signIn": "Entrar",
+    "signIn": "Iniciar sesión",
     "createAccount": "Crear cuenta",
     "createAccountFree": "Crear cuenta gratis",
     "viewMarketplace": "Ver Marketplace",
@@ -98,13 +98,35 @@
     "login": {
       "title": "Bienvenido de nuevo",
       "subtitle": "Inicia sesión en tu cuenta ECOPET",
+      "pageTitle": "Entrar en EcoPet",
+      "pageDescription": "Usa tu correo o nombre de usuario y contraseña para acceder.",
       "email": "Correo electrónico",
-      "identifier": "Correo o usuario",
-      "identifierPlaceholder": "email@ejemplo.com o usuario",
+      "identifier": "Correo o nombre de usuario",
+      "identifierPlaceholder": "Ingresa tu correo o nombre de usuario",
       "password": "Contraseña",
+      "passwordPlaceholder": "Ingresa tu contraseña",
       "submit": "Entrar",
+      "submitAccount": "Entrar en la cuenta",
+      "entering": "Entrando...",
+      "loading": "Cargando...",
       "forgot": "¿Olvidaste tu contraseña?",
-      "noAccount": "¿No tienes cuenta?"
+      "forgotLink": "Olvidé mi contraseña",
+      "noAccount": "¿No tienes cuenta?",
+      "signUpLink": "Regístrate",
+      "showPassword": "Mostrar contraseña",
+      "hidePassword": "Ocultar contraseña",
+      "success": "Inicio de sesión exitoso",
+      "sessionError": "Inicio de sesión realizado, pero no se pudo iniciar la sesión. Inténtalo de nuevo.",
+      "connectionError": "No fue posible conectar al servidor.",
+      "genericError": "Error al iniciar sesión",
+      "errors": {
+        "wrongPassword": "Contraseña incorrecta",
+        "userNotFound": "Correo o nombre de usuario no encontrado",
+        "alreadyRegistered": "Usuario ya registrado",
+        "accountSuspended": "Cuenta suspendida",
+        "accountUnavailable": "Cuenta no disponible",
+        "requiredFields": "Campos obligatorios"
+      }
     },
     "register": {
       "title": "Crear cuenta ECOPET",
@@ -136,13 +158,34 @@
         "no": "No"
       },
       "roles": {
-        "TUTOR": { "label": "Cliente / Tutor", "description": "Dueño de mascota — productos, salud y comunidad" },
-        "VETERINARIAN": { "label": "Veterinario", "description": "Profesional con CRMV" },
-        "CLINIC": { "label": "Clínica veterinaria", "description": "Establecimiento con equipo y servicios" },
-        "PETSHOP": { "label": "Pet shop", "description": "Tienda física con productos y/o servicios" },
-        "SELLER": { "label": "Socio / Tienda", "description": "Vendedor en el marketplace ECOPET" },
-        "SERVICE_PROVIDER": { "label": "Prestador de servicios", "description": "Baño, paseo, adiestramiento y más" },
-        "ONG": { "label": "ONG / Protector", "description": "Adopción, rescate y campañas" }
+        "TUTOR": {
+          "label": "Cliente / Tutor",
+          "description": "Dueño de mascota — productos, salud y comunidad"
+        },
+        "VETERINARIAN": {
+          "label": "Veterinario",
+          "description": "Profesional con CRMV"
+        },
+        "CLINIC": {
+          "label": "Clínica veterinaria",
+          "description": "Establecimiento con equipo y servicios"
+        },
+        "PETSHOP": {
+          "label": "Pet shop",
+          "description": "Tienda física con productos y/o servicios"
+        },
+        "SELLER": {
+          "label": "Socio / Tienda",
+          "description": "Vendedor en el marketplace ECOPET"
+        },
+        "SERVICE_PROVIDER": {
+          "label": "Prestador de servicios",
+          "description": "Baño, paseo, adiestramiento y más"
+        },
+        "ONG": {
+          "label": "ONG / Protector",
+          "description": "Adopción, rescate y campañas"
+        }
       },
       "nameLabels": {
         "fullName": "Nombre completo",
@@ -154,6 +197,431 @@
         "termsOfUse": "Términos de uso",
         "acceptPrivacy": "He leído y acepto la",
         "privacyPolicy": "Política de privacidad"
+      },
+      "partner": {
+        "typeHeading": "¿Cuál es su tipo de actuación?",
+        "steps": {
+          "type": "Tipo",
+          "legal": "Representante",
+          "corporate": "Corporativo",
+          "professional": "Profesional",
+          "operation": "Funcionamiento",
+          "documentation": "Documentación",
+          "financial": "Financiero",
+          "security": "Seguridad"
+        },
+        "sections": {
+          "legal": "Datos del representante legal",
+          "corporate": "Datos corporativos",
+          "professional": "Datos profesionales",
+          "operation": "Datos de funcionamiento",
+          "financial": "Datos financieros",
+          "security": "Seguridad",
+          "address": "Dirección completa"
+        },
+        "fields": {
+          "responsibleName": "Nombre completo del responsable",
+          "activityStart": "Fecha de inicio de actividades",
+          "businessName": "Nombre comercial",
+          "corporateType": "Tipo corporativo",
+          "corporateTypeOther": "Indique el tipo corporativo",
+          "professionalName": "Nombre comercial / profesional",
+          "activityArea": "Área de actuación",
+          "activityAreaSearch": "Buscar área...",
+          "activityAreaOther": "Describa su área de actuación",
+          "businessDescription": "Descripción del negocio",
+          "streetType": "Street type",
+          "streetTypeOther": "Specify street type",
+          "openTime": "Opening time",
+          "closeTime": "Closing time",
+          "logisticsNotes": "Logistics notes",
+          "pixKeyType": "Pix key type",
+          "pixKey": "Pix key",
+          "bank": "Bank",
+          "bankOther": "Specify bank",
+          "agency": "Branch",
+          "account": "Account number",
+          "accountDigit": "Digit",
+          "accountType": "Account type",
+          "accountHolder": "Account holder",
+          "accountHolderDoc": "Holder CPF/CNPJ",
+          "instagram": "Instagram",
+          "website": "Website",
+          "linkedin": "LinkedIn"
+        },
+        "legends": {
+          "partnerType": "Tipo de socio *",
+          "activityAreas": "Select one or more areas",
+          "operation": "Operations *",
+          "weekdays": "Service days *",
+          "serviceRadius": "Service radius *",
+          "delivery": "Delivery and pickup",
+          "paymentMethods": "Accepted payment methods *"
+        },
+        "actions": {
+          "continue": "Continuar",
+          "finish": "Finalizar registro",
+          "finishing": "Finalizando...",
+          "select": "Seleccione"
+        },
+        "hints": {
+          "descriptionCount": "{count} / 800",
+          "byAppointment": "Customers can request times according to your availability.",
+          "emergency": "Emergency service — fixed days and hours are not required.",
+          "hours24": "24-hour service — fixed days and hours are not required.",
+          "logisticsPlaceholder": "Fee, radius or on request",
+          "usernameAvailable": "Username available"
+        },
+        "cnpj": {
+          "loading": "Looking up CNPJ via BrasilAPI...",
+          "notFound": "CNPJ not found in lookup.",
+          "filled": "Status: {status}. Data filled automatically — please review if needed.",
+          "unavailable": "CNPJ lookup unavailable. Please fill in manually."
+        },
+        "success": {
+          "title": "Registro de socio completado con éxito.",
+          "description": "Su cuenta está activa. Acceda al panel para configurar productos y servicios."
+        },
+        "validation": {
+          "partnerTypeRequired": "Seleccione el tipo de socio para continuar.",
+          "usernameInvalid": "Invalid username (4–30 characters).",
+          "businessNameRequired": "Trade name is required.",
+          "legalNameRequired": "Legal name is required.",
+          "corporateTypeRequired": "Select a corporate type.",
+          "corporateTypeOtherRequired": "Specify the corporate type.",
+          "activityAreasRequired": "Select at least one area of activity.",
+          "activityAreasOtherRequired": "Describe your area of activity.",
+          "descriptionTooShort": "Please describe your professional activity in more detail.",
+          "descriptionTooLong": "Description must be at most 800 characters.",
+          "zipCodeInvalid": "Enter a valid postal code.",
+          "streetTypeRequired": "Select a street type.",
+          "streetTypeOtherRequired": "Specify the street type.",
+          "streetRequired": "Street is required.",
+          "numberRequired": "Number is required.",
+          "districtRequired": "District is required.",
+          "cityRequired": "City is required.",
+          "stateRequired": "State is required.",
+          "operationModesRequired": "Select at least one operating mode.",
+          "operationScheduleRequired": "Enter operating days and hours.",
+          "closeTimeAfterOpen": "Closing time must be after opening time.",
+          "serviceRadiusRequired": "Select a service radius.",
+          "paymentMethodsRequired": "Select at least one payment method.",
+          "pixKeyRequired": "Enter the Pix key.",
+          "bankRequired": "Fill in bank details.",
+          "bankOtherRequired": "Specify the bank.",
+          "passwordInvalid": "Invalid password.",
+          "docsPending": "Required documents pending.",
+          "docsAutonomousMissing": "Upload the legal representative ID and proof of residence.",
+          "docsCorporateMissing": "Upload all required documents to complete registration.",
+          "waitCpf": "Please wait for CPF verification.",
+          "waitCnpj": "Please wait for CNPJ verification."
+        },
+        "options": {
+          "activityAreas": {
+            "SAUDE_ANIMAL": "Salud animal",
+            "ESTETICA_BEM_ESTAR": "Estética y bienestar",
+            "COMERCIO_PET": "Comercio pet",
+            "ALIMENTACAO": "Alimentación",
+            "HOSPEDAGEM_CRECHE": "Hospedaje y guardería",
+            "TREINAMENTO": "Entrenamiento y comportamiento",
+            "TRANSPORTE": "Transporte",
+            "REPRODUCAO": "Reproducción y genética",
+            "EVENTOS": "Eventos y ocio",
+            "SERVICOS_TECNICOS": "Servicios técnicos",
+            "EQUINOS": "Equinos",
+            "BOVINOS_AGRO": "Bovinos y agro",
+            "AQUARISMO": "Acuariofilia",
+            "EXOTICOS": "Animales exóticos",
+            "TECNOLOGIA": "Tecnología",
+            "EDUCACAO": "Educación",
+            "PROTECAO_ANIMAL": "Protección animal",
+            "OUTROS": "Otros"
+          },
+          "operationModes": {
+            "FIXED_HOURS": "Fixed hours",
+            "SPECIFIC_DAYS": "Specific hours",
+            "BY_APPOINTMENT": "By appointment",
+            "EMERGENCY": "Emergency service",
+            "HOURS_24": "24-hour service"
+          },
+          "weekdays": {
+            "MON": "Monday",
+            "TUE": "Tuesday",
+            "WED": "Wednesday",
+            "THU": "Thursday",
+            "FRI": "Friday",
+            "SAT": "Saturday",
+            "SUN": "Sunday"
+          },
+          "serviceRadius": {
+            "LOCAL_ONLY": "On-site only",
+            "KM_2": "Up to 2 km",
+            "KM_5": "Up to 5 km",
+            "KM_10": "Up to 10 km",
+            "KM_20": "Up to 20 km",
+            "KM_50": "Up to 50 km",
+            "REGIONAL": "Regional service",
+            "NATIONAL": "National service",
+            "REMOTE": "Online / remote service"
+          },
+          "deliveryOptions": {
+            "DELIVERY": "I offer delivery",
+            "TELEBUS": "I offer pickup service",
+            "CLIENT_DROPOFF": "Customer drops off on site",
+            "HOME_SERVICE": "Home service"
+          },
+          "streetTypes": {
+            "RUA": "Street",
+            "AVENIDA": "Avenue",
+            "TRAVESSA": "Lane",
+            "ALAMEDA": "Alley",
+            "PRACA": "Square",
+            "ESTRADA": "Road",
+            "RODOVIA": "Highway",
+            "LADEIRA": "Hill",
+            "VIELA": "Path",
+            "CONDOMINIO": "Condominium",
+            "SITIO": "Farm (sitio)",
+            "FAZENDA": "Farm",
+            "CHACARA": "Country house",
+            "COMUNIDADE": "Community",
+            "DISTRITO": "District",
+            "OUTRO": "Other"
+          },
+          "corporateTypes": {
+            "MEI": "MEI",
+            "MICROEMPRESA": "Microenterprise",
+            "EPP": "Small business (EPP)",
+            "LTDA": "Ltd. company",
+            "SOCIEDADE_SIMPLES": "Simple partnership",
+            "ASSOCIACAO": "Association",
+            "COOPERATIVA": "Cooperative",
+            "PRESTADORA": "Service provider",
+            "OUTRO": "Other"
+          },
+          "paymentMethods": {
+            "PIX": "Pix",
+            "DINHEIRO": "Cash",
+            "CREDIT_CARD": "Credit card",
+            "DEBIT_CARD": "Debit card",
+            "BOLETO": "Bank slip",
+            "BANK_TRANSFER": "Bank transfer",
+            "PAYMENT_LINK": "Payment link",
+            "DIGITAL_WALLET": "Digital wallet",
+            "APPLE_PAY": "Apple Pay",
+            "GOOGLE_PAY": "Google Pay",
+            "MERCADO_PAGO": "Mercado Pago",
+            "PICPAY": "PicPay",
+            "PAYPAL": "PayPal",
+            "PAGSEGURO": "PagSeguro",
+            "STRIPE": "Stripe",
+            "PAGAR_ME": "Pagar.me",
+            "ON_SITE": "Pay on site",
+            "ON_PICKUP": "Pay on pickup",
+            "ON_DELIVERY": "Pay on delivery",
+            "MONTHLY": "Monthly subscription",
+            "ON_REQUEST": "On request"
+          },
+          "pixKeyTypes": {
+            "CPF": "CPF",
+            "CNPJ": "CNPJ",
+            "EMAIL": "Email",
+            "PHONE": "Phone",
+            "RANDOM": "Random key"
+          },
+          "banks": {
+            "BB": "Banco do Brasil",
+            "CAIXA": "Caixa Econômica Federal",
+            "BRADESCO": "Bradesco",
+            "ITAU": "Itaú",
+            "SANTANDER": "Santander",
+            "NUBANK": "Nubank",
+            "INTER": "Inter",
+            "C6": "C6 Bank",
+            "SICREDI": "Sicredi",
+            "SICOOB": "Sicoob",
+            "PAN": "Banco Pan",
+            "BTG": "BTG Pactual",
+            "MERCADO_PAGO": "Mercado Pago",
+            "PAGSEGURO": "PagSeguro",
+            "STONE": "Stone",
+            "PICPAY": "PicPay",
+            "OUTROS": "Other"
+          },
+          "accountTypes": {
+            "CHECKING": "Checking",
+            "SAVINGS": "Savings",
+            "PAYMENT": "Payment"
+          },
+          "partnerTypes": {
+            "AUTONOMOUS": "Profesional autónomo",
+            "CORPORATE": "MEI / Empresa / Prestador de servicios"
+          },
+          "partnerTypeDescriptions": {
+            "AUTONOMOUS": "Soy profesional independiente y actúo en nombre propio.",
+            "CORPORATE": "Tengo CNPJ, nombre comercial, razón social o presto servicios como persona jurídica."
+          }
+        },
+        "documentation": {
+          "title": "Documentación y verificación",
+          "description": "Envíe los documentos obligatorios para completar el registro y, si lo desea, agregue documentos adicionales.",
+          "progressAria": "Required documents progress",
+          "progressCount": "{done} of {total} required uploaded",
+          "requiredHeading": "Required documents",
+          "optionalHeading": "Additional documents (optional)",
+          "requiredBadge": "Required",
+          "attach": "Attach",
+          "replace": "Replace",
+          "remove": "Remove",
+          "summaryAria": "Attached documents summary",
+          "fileTooLarge": "File exceeds {size}.",
+          "formatNotAllowed": "Format not allowed. Use PDF, JPG, PNG or WEBP.",
+          "status": {
+            "pending": "Not uploaded",
+            "uploaded": "Uploaded",
+            "validated": "Validated",
+            "rejected": "Rejected"
+          }
+        }
+      },
+      "ong": {
+        "typeHeading": "¿Cómo actúa en la protección animal?",
+        "steps": {
+          "type": "Tipo",
+          "responsible": "Responsable",
+          "responsibleInstitution": "Representante",
+          "institutional": "Institucional",
+          "activity": "Actuación",
+          "profile": "Perfil",
+          "documentation": "Documentación",
+          "security": "Seguridad"
+        },
+        "sections": {
+          "responsible": "Responsable",
+          "responsibleInstitution": "Representante legal",
+          "institutional": "Datos institucionales",
+          "activity": "Actuación",
+          "profileIndividual": "Perfil de la causa",
+          "profileInstitution": "Perfil institucional",
+          "security": "Security"
+        },
+        "fields": {
+          "representativeRole": "Representative role",
+          "representativeRoleOther": "Specify role",
+          "ongName": "NGO name",
+          "foundedDate": "Founded date",
+          "focusArea": "Focus area",
+          "focusAreaOther": "Describe the area",
+          "city": "City",
+          "state": "State",
+          "statePlaceholder": "State",
+          "actionAreaOther": "Describe area of activity",
+          "descriptionIndividual": "Cause description *",
+          "descriptionInstitution": "Institutional description *",
+          "mission": "Mission",
+          "vision": "Vision",
+          "animalCapacity": "Approximate number of animals served",
+          "coverIndividual": "Cover photo",
+          "coverInstitution": "Cover image",
+          "pixDonations": "Pix for donations",
+          "facebook": "Facebook",
+          "youtube": "YouTube",
+          "uploadImage": "Upload image",
+          "replaceImage": "Replace image"
+        },
+        "legends": {
+          "ongType": "Registration type *",
+          "actionAreas": "Areas of activity *"
+        },
+        "hints": {
+          "activityDateRange": "Between {min} and {max}.",
+          "documentLabel": "Primary document: {doc}.",
+          "usernameTaken": "Username already registered."
+        },
+        "success": {
+          "title": "¡Cuenta creada con éxito!",
+          "description": "Su cuenta ONG está activa con acceso inmediato al panel."
+        },
+        "validation": {
+          "ongTypeRequired": "Seleccione cómo actúa en la protección animal.",
+          "representativeRoleRequired": "Enter the representative role.",
+          "representativeRoleOtherRequired": "Specify the role.",
+          "ongNameRequired": "NGO name is required.",
+          "foundedDateRequired": "Founded date is required.",
+          "focusAreaRequired": "Select a focus area.",
+          "focusAreaOtherRequired": "Specify the focus area.",
+          "actionTypesRequired": "Select at least one area of activity.",
+          "descriptionIndividual": "Please describe your cause in more detail.",
+          "descriptionInstitution": "Please describe the institution in more detail.",
+          "missionRequired": "Enter the institution mission.",
+          "visionRequired": "Enter the institution vision.",
+          "docsPending": "Upload required documents to continue."
+        },
+        "options": {
+          "ongTypes": {
+            "INDIVIDUAL": "Protector individual",
+            "INSTITUTION": "ONG / Instituto / Asociación"
+          },
+          "ongTypeDescriptions": {
+            "INDIVIDUAL": "Actúo individualmente realizando rescates, adopciones, cuidados, hogares temporales y acciones de protección animal.",
+            "INSTITUTION": "Represento una organización, instituto, asociación o entidad orientada a la protección animal."
+          },
+          "actionAreas": {
+            "RESCUE": "Animal rescue",
+            "ADOPTION": "Adoption",
+            "FOSTER": "Foster home",
+            "NEUTERING": "Spay/neuter",
+            "FEEDING": "Animal feeding",
+            "EDUCATION": "Animal education",
+            "AWARENESS": "Awareness",
+            "PROTECTION": "Animal protection",
+            "DEFENSE": "Animal defense",
+            "EMERGENCY": "Emergency care",
+            "CAMPAIGNS": "Solidarity campaigns",
+            "FUNDRAISING": "Fundraising",
+            "ADOPTION_FAIRS": "Adoption fairs",
+            "SHELTER": "Animal shelter",
+            "SOCIAL_VET": "Social veterinary hospital",
+            "OUTROS": "Other"
+          },
+          "representativeRoles": {
+            "PRESIDENT": "President",
+            "DIRECTOR": "Director",
+            "FOUNDER": "Founder",
+            "COORDINATOR": "Coordinator",
+            "LEGAL_REP": "Legal representative",
+            "OTHER": "Other"
+          },
+          "focusAreas": {
+            "PROTECTION": "Animal protection",
+            "RESCUE_ADOPTION": "Rescue and adoption",
+            "HEALTH": "Animal health",
+            "EDUCATION": "Education and awareness",
+            "RIGHTS": "Animal rights defense",
+            "OTHER": "Other"
+          }
+        },
+        "documentation": {
+          "title": "Documentación",
+          "description": "Upload required documents to complete registration and optionally add additional documents.",
+          "progressAria": "Required documents progress",
+          "progressCount": "{done} of {total} required uploaded",
+          "requiredHeading": "Required documents",
+          "optionalHeading": "Additional documents (optional)",
+          "requiredBadge": "Required",
+          "attach": "Attach",
+          "replace": "Replace",
+          "remove": "Remove",
+          "summaryAria": "Attached documents summary",
+          "fileTooLarge": "File exceeds {size}.",
+          "formatNotAllowed": "Format not allowed. Use PDF, JPG, PNG or WEBP.",
+          "status": {
+            "pending": "Not uploaded",
+            "uploaded": "Uploaded",
+            "validated": "Validated",
+            "rejected": "Rejected"
+          }
+        }
       }
     },
     "layout": {
@@ -189,6 +657,199 @@
       "tokenUsed": "Este enlace ya fue utilizado. Solicita una nueva recuperación.",
       "passwordMin": "La contraseña debe tener al menos 8 caracteres.",
       "passwordMismatch": "Las contraseñas no coinciden."
+    },
+    "validation": {
+      "fullNameIncomplete": "Escribe tu nombre completo.",
+      "emailInvalid": "Ingresa un correo electrónico válido.",
+      "emailValid": "Correo válido.",
+      "phoneInvalid": "Ingresa un teléfono válido.",
+      "phoneValid": "Teléfono válido.",
+      "phoneRequired": "Teléfono obligatorio",
+      "brPhoneInvalid": "Ingresa un teléfono brasileño válido.",
+      "brDddRequired": "Selecciona el DDD.",
+      "brPhoneValid": "Teléfono brasileño válido.",
+      "cpfInvalid": "Ingresa un CPF válido.",
+      "cpfNameMismatch": "El CPF ingresado no coincide con el nombre informado.",
+      "cnpjInvalid": "Ingresa un CNPJ válido.",
+      "birthDateFuture": "La fecha de nacimiento no puede ser futura.",
+      "birthDateTooYoung": "Debes tener más de 1 año.",
+      "birthDateTooOld": "La edad máxima permitida es de 130 años.",
+      "birthDateRequired": "Fecha de nacimiento obligatoria.",
+      "selectOption": "Selecciona una opción.",
+      "fieldRequired": "Campo obligatorio.",
+      "passwordMismatch": "Las contraseñas no coinciden.",
+      "passwordUppercase": "La contraseña debe contener al menos una letra mayúscula.",
+      "passwordLowercase": "La contraseña debe contener al menos una letra minúscula.",
+      "passwordNumber": "La contraseña debe contener al menos un número.",
+      "passwordSpecial": "La contraseña debe contener al menos un carácter especial.",
+      "passwordMinLength": "La contraseña debe tener al menos 8 caracteres.",
+      "passwordNoSpace": "La contraseña no puede contener espacios.",
+      "passwordWeak": "La contraseña debe ser fuerte.",
+      "passwordNoEmail": "La contraseña no puede contener tu correo.",
+      "passwordNoUsername": "La contraseña no puede contener tu nombre de usuario.",
+      "passwordNoName": "La contraseña no puede contener tu nombre.",
+      "passwordNoPhone": "La contraseña no puede contener el teléfono.",
+      "passwordNoBirthdate": "La contraseña no puede contener la fecha de nacimiento.",
+      "userAlreadyRegistered": "Usuario ya registrado.",
+      "genderRequired": "Indica tu género o selecciona una de las opciones disponibles.",
+      "nameTooLong": "El nombre debe tener como máximo 120 caracteres.",
+      "usernameFormat": "Usa 4–30 caracteres: letras, números, _ y .",
+      "activityStartFuture": "La fecha de inicio de actividades no puede ser futura.",
+      "activityStartInvalid": "Ingresa una fecha de inicio válida.",
+      "activityStartTooOld": "Ingresa una fecha de inicio válida."
+    },
+    "password": {
+      "strengthLabel": "Fortaleza de la contraseña",
+      "requirementsLabel": "Requisitos de contraseña",
+      "recommendationsTitle": "Recomendaciones para una contraseña más segura",
+      "recommendationsAria": "Recomendaciones de seguridad para contraseña",
+      "match": "Las contraseñas coinciden",
+      "mismatch": "Las contraseñas no coinciden",
+      "showConfirm": "Mostrar confirmación de contraseña",
+      "hideConfirm": "Ocultar confirmación de contraseña",
+      "level": {
+        "veryWeak": "Muy débil",
+        "weak": "Débil",
+        "medium": "Media",
+        "strong": "Fuerte",
+        "excellent": "Excelente"
+      },
+      "requirements": {
+        "length": "Más de 8 caracteres",
+        "length12": "Más de 12 caracteres para contraseña excelente",
+        "uppercase": "Letra mayúscula",
+        "lowercase": "Letra minúscula",
+        "number": "Número",
+        "special": "Carácter especial",
+        "noSpace": "Sin espacios",
+        "noEmail": "No contiene el correo",
+        "noName": "No contiene nombre o apellido",
+        "noUsername": "No contiene el nombre de usuario",
+        "noPhone": "No contiene el teléfono",
+        "noBirthdate": "No contiene la fecha de nacimiento",
+        "noCommon": "Evita secuencias predecibles"
+      },
+      "tips": {
+        "avoidName": "Evita utilizar tu nombre, apellido o apodo.",
+        "avoidFamily": "Evita nombres de familiares, mascotas o personas cercanas.",
+        "avoidDates": "Evita fechas de nacimiento, aniversarios o documentos.",
+        "avoidCommon": "Evita palabras comunes, secuencias numéricas o combinaciones fáciles de adivinar.",
+        "avoidSocial": "Evita información pública disponible en redes sociales.",
+        "combine": "Prefiere combinar letras, números y símbolos.",
+        "length": "Cuanto más larga sea la contraseña, mayor será la protección de tu cuenta."
+      }
+    },
+    "gender": {
+      "label": "Género",
+      "specify": "Indica tu género",
+      "specifyPlaceholder": "Indica tu género",
+      "options": {
+        "MASCULINO": "Masculino",
+        "FEMININO": "Femenino",
+        "NAO_BINARIO": "No binario",
+        "NAO_DECLARAR": "Prefiero no declarar",
+        "OUTRO": "Otro"
+      },
+      "descriptions": {
+        "MASCULINO": "Identidad masculina",
+        "FEMININO": "Identidad femenina",
+        "NAO_BINARIO": "Identidad fuera del binario masculino/femenino",
+        "NAO_DECLARAR": "Prefiero no informar públicamente",
+        "OUTRO": "Deseo indicar otra identidad"
+      }
+    },
+    "role": {
+      "legend": "¿Cómo deseas usar EcoPet?",
+      "ariaLabel": "Tipo de cuenta",
+      "CLIENT": {
+        "label": "Cliente",
+        "description": "Quiero comprar productos, registrar mis mascotas y agendar servicios."
+      },
+      "PARTNER": {
+        "label": "Socio",
+        "description": "Quiero vender productos u ofrecer servicios para mascotas."
+      },
+      "ONG": {
+        "label": "ONG",
+        "description": "Quiero promover adopciones, rescates e iniciativas de protección animal."
+      }
+    },
+    "terms": {
+      "acceptanceRequired": "Debes aceptar los Términos de Uso y la Política de Privacidad para continuar.",
+      "legalHeading": "Protección y transparencia",
+      "legalHint": "Lee y acepta los documentos exclusivos del Cliente EcoPet para completar tu registro con seguridad.",
+      "readFull": "Leer documento completo",
+      "preview": "Vista previa",
+      "previewSummary": "Resumen introductorio. Para el texto completo, abre la página oficial.",
+      "openFullPage": "Abrir página completa",
+      "client": {
+        "terms": "Acepto los Términos de Uso y de Servicio del Cliente EcoPet",
+        "privacy": "Acepto la Política de Privacidad del Cliente EcoPet",
+        "termsPreview": "Estos términos regulan el uso de EcoPet por tutores y responsables de mascotas, incluyendo compras, servicios, citas, telemedicina, bienestar animal y responsabilidades del Cliente.",
+        "privacyPreview": "Esta política describe cómo EcoPet recopila, utiliza, almacena y protege tus datos personales, mascotas, pedidos y citas, conforme a la legislación aplicable."
+      },
+      "partner": {
+        "terms": "Acepto los Términos de Uso y de Asociación del Socio EcoPet",
+        "privacy": "Acepto la Política de Privacidad del Socio EcoPet",
+        "legalHint": "Lee y acepta los documentos exclusivos del Socio EcoPet para completar tu registro con seguridad.",
+        "legalHeading": "Términos del Socio EcoPet",
+        "legalSubheading": "Documentos jurídicos exclusivos para socios — independientes de los términos del Cliente EcoPet.",
+        "termsPreview": "Estos Términos regulan exclusivamente la asociación comercial en EcoPet: registro, productos, servicios, citas, entregas, recogida, transporte de animales, reputación, verificación documental, protección animal y responsabilidades del Socio.",
+        "privacyPreview": "Esta Política describe exclusivamente cómo EcoPet trata los datos de Socios — CPF, CNPJ, contacto, dirección, financiero, documentos, fotos, logotipo, acceso e historial — conforme a la legislación aplicable."
+      },
+      "ong": {
+        "terms": "Acepto los Términos de Uso y de Colaboración de la ONG EcoPet",
+        "privacy": "Acepto la Política de Privacidad de la ONG EcoPet",
+        "legalHint": "Lee y acepta los documentos exclusivos de la ONG EcoPet para completar tu registro con seguridad.",
+        "legalHeading": "Términos de la ONG EcoPet",
+        "legalSubheading": "Documentos jurídicos exclusivos para ONGs y protectores — independientes de los términos del Cliente EcoPet.",
+        "termsPreview": "Estos Términos regulan exclusivamente la colaboración de ONGs y protectores individuales en EcoPet: rescate, adopción responsable, hogares temporales, campañas, recaudaciones, ferias de adopción, divulgación de animales, uso ético de la plataforma, combate al fraude y maltrato, además de las responsabilidades del registrado y limitaciones de EcoPet.",
+        "privacyPreview": "Esta Política describe exclusivamente cómo EcoPet trata los datos de ONGs y protectores individuales — CPF, CNPJ, representante legal, contacto, dirección, documentos, comprobantes, fotografías, imágenes de animales, autenticación, cookies e historial — conforme a la legislación aplicable."
+      }
+    },
+    "progress": {
+      "ariaLabel": "Progreso del registro",
+      "personal": "Datos personales",
+      "security": "Seguridad",
+      "conclusion": "Conclusión"
+    },
+    "registerFoundation": {
+      "title": "Crear cuenta EcoPet",
+      "description": "Elige cómo deseas usar la plataforma y completa tus datos.",
+      "selectRoleHint": "Selecciona una opción arriba para continuar el registro.",
+      "roleRequired": "Elige cómo deseas usar EcoPet."
+    },
+    "client": {
+      "title": "Crear cuenta — Cliente",
+      "description": "Completa tus datos para acceder a EcoPet.",
+      "fullName": "Nombre completo",
+      "fullNamePlaceholder": "Ingresa tu nombre completo",
+      "emailPlaceholder": "Ingresa tu correo",
+      "username": "Nombre de usuario",
+      "usernamePlaceholder": "Ingresa tu nombre de usuario",
+      "birthDate": "Fecha de nacimiento",
+      "passwordSectionTitle": "Define tu contraseña",
+      "passwordSectionHint": "Usa una contraseña fuerte con letras, números y símbolos. Evita datos personales y secuencias obvias.",
+      "confirmPassword": "Confirmar contraseña",
+      "continueSecurity": "Continuar a seguridad",
+      "back": "Volver",
+      "registering": "Registrando...",
+      "register": "Registrarse",
+      "finalize": "Finalizando tu registro...",
+      "success": "Registro completado",
+      "dashboard": "Panel del cliente",
+      "usernameChecking": "Verificando disponibilidad...",
+      "usernameAvailable": "Disponible",
+      "usernameInvalid": "Formato inválido",
+      "usernameCheckingWait": "Espera mientras verificamos tu nombre de usuario.",
+      "sessionError": "Cuenta creada, pero no se pudo iniciar sesión. Entra con tu correo y contraseña.",
+      "registerError": "Error al registrarse"
+    },
+    "partnerPanel": {
+      "dashboard": "Panel del socio"
+    },
+    "ongPanel": {
+      "dashboard": "Panel de la ONG"
     }
   },
   "landing": {
@@ -207,25 +868,67 @@
     "benefitsTitle": "Todo en un ecosistema premium",
     "benefitsSubtitle": "Inspirado en Chewy, Stripe y Nubank — simple, confiable y elegante.",
     "features": {
-      "social": { "title": "Red Social Pet", "desc": "Feed, stories y comunidad con curaduría premium." },
-      "marketplace": { "title": "Marketplace", "desc": "Productos y servicios de socios confiables." },
-      "ai": { "title": "IA ECOPET", "desc": "Triaje, nutrición y asistente inteligente." },
-      "health": { "title": "Salud Animal", "desc": "Historial médico, vacunas e historial completo." },
-      "adoption": { "title": "ONGs y Adopción", "desc": "Conecta protectores y tutores responsables." },
-      "partners": { "title": "Socios y AgroPet", "desc": "Gestión para clínicas, petshops y productores." }
+      "social": {
+        "title": "Red Social Pet",
+        "desc": "Feed, stories y comunidad con curaduría premium."
+      },
+      "marketplace": {
+        "title": "Marketplace",
+        "desc": "Productos y servicios de socios confiables."
+      },
+      "ai": {
+        "title": "IA ECOPET",
+        "desc": "Triaje, nutrición y asistente inteligente."
+      },
+      "health": {
+        "title": "Salud Animal",
+        "desc": "Historial médico, vacunas e historial completo."
+      },
+      "adoption": {
+        "title": "ONGs y Adopción",
+        "desc": "Conecta protectores y tutores responsables."
+      },
+      "partners": {
+        "title": "Socios y AgroPet",
+        "desc": "Gestión para clínicas, petshops y productores."
+      }
     },
     "testimonialsTitle": "Confianza de tutores y socios",
     "testimonials": {
-      "marina": { "name": "Marina S.", "role": "Tutora", "text": "Por fin una app que une salud, compras y comunidad sin parecer genérica." },
-      "paulo": { "name": "Dr. Paulo R.", "role": "Veterinario socio", "text": "Historial y agendamiento integrados — estándar internacional de UX." },
-      "ong": { "name": "ONG Patinhas", "role": "Organización", "text": "Adopción y difusión con herramientas profesionales y accesibles." }
+      "marina": {
+        "name": "Marina S.",
+        "role": "Tutora",
+        "text": "Por fin una app que une salud, compras y comunidad sin parecer genérica."
+      },
+      "paulo": {
+        "name": "Dr. Paulo R.",
+        "role": "Veterinario socio",
+        "text": "Historial y agendamiento integrados — estándar internacional de UX."
+      },
+      "ong": {
+        "name": "ONG Patinhas",
+        "role": "Organización",
+        "text": "Adopción y difusión con herramientas profesionales y accesibles."
+      }
     },
     "faqTitle": "Preguntas frecuentes",
     "faq": {
-      "free": { "q": "¿Necesito pagar para usar ECOPET?", "a": "No. El plan Free incluye feed social, registro de mascota e IA básica. Los planes premium amplían recursos." },
-      "marketplace": { "q": "¿Puedo explorar el marketplace sin cuenta?", "a": "Sí. Los visitantes navegan productos y servicios públicamente. Carrito y favoritos requieren login." },
-      "ai": { "q": "¿La IA reemplaza al veterinario?", "a": "No. La IA ECOPET es asistiva e informativa. Consulte siempre a un profesional para diagnósticos." },
-      "accessibility": { "q": "¿La plataforma es accesible?", "a": "Sí. Ofrecemos VLibras, alto contraste, ajuste de fuente, lector de pantalla y navegación por teclado." }
+      "free": {
+        "q": "¿Necesito pagar para usar ECOPET?",
+        "a": "No. El plan Free incluye feed social, registro de mascota e IA básica. Los planes premium amplían recursos."
+      },
+      "marketplace": {
+        "q": "¿Puedo explorar el marketplace sin cuenta?",
+        "a": "Sí. Los visitantes navegan productos y servicios públicamente. Carrito y favoritos requieren login."
+      },
+      "ai": {
+        "q": "¿La IA reemplaza al veterinario?",
+        "a": "No. La IA ECOPET es asistiva e informativa. Consulte siempre a un profesional para diagnósticos."
+      },
+      "accessibility": {
+        "q": "¿La plataforma es accesible?",
+        "a": "Sí. Ofrecemos VLibras, alto contraste, ajuste de fuente, lector de pantalla y navegación por teclado."
+      }
     },
     "ctaTitle": "¿Listo para empezar?",
     "ctaSubtitle": "Crea tu cuenta y personaliza tu ecosistema pet. Marketplace público disponible para visitantes.",
@@ -372,6 +1075,7 @@
     "themeDark": "Activar tema oscuro",
     "themeLightActivated": "Tema claro activado.",
     "themeDarkActivated": "Tema oscuro activado.",
+    "themeToggle": "Alternar tema claro/oscuro",
     "language": {
       "title": "Idioma de la interfaz",
       "autoTranslate": "Traducción automática vía API",
@@ -379,8 +1083,18 @@
     }
   },
   "lang": {
+    "header": {
+      "label": "Idioma"
+    },
     "selector": {
-      "label": "Seleccionar idioma"
+      "label": "Seleccionar idioma",
+      "current": "Idioma actual",
+      "openMenu": "Abrir menú de idiomas",
+      "abbrev": {
+        "pt-BR": "PT",
+        "en": "EN",
+        "es": "ES"
+      }
     },
     "regions": {
       "europe": "Europa",

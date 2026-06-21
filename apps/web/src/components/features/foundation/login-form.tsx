@@ -9,16 +9,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { dashboardPathForRole } from "@/lib/auth/dashboard";
 import { notifySessionChanged } from "@/lib/auth/session-events";
 import { confirmSessionCookie } from "@/lib/auth/confirm-session";
+import { useAuthMessages } from "@/lib/i18n/use-auth-messages";
 
-function parseApiError(data: { error?: string | { message?: string; code?: string } }): string {
-  if (typeof data.error === "string") return data.error;
-  if (data.error && typeof data.error === "object" && data.error.message) return data.error.message;
-  return "Erro ao entrar";
+function parseApiError(data: {
+  error?: string | { message?: string; code?: string };
+}): { message: string; code?: string } {
+  if (typeof data.error === "string") return { message: data.error };
+  if (data.error && typeof data.error === "object" && data.error.message) {
+    return { message: data.error.message, code: data.error.code };
+  }
+  return { message: "" };
 }
 
 export function FoundationLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t, tApi } = useAuthMessages();
   const callbackUrl = searchParams.get("callbackUrl");
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
@@ -39,7 +45,10 @@ export function FoundationLoginForm() {
       });
       const data = await res.json();
       if (!res.ok || data.success === false) {
-        setError(parseApiError(data));
+        const parsed = parseApiError(data);
+        setError(
+          tApi(parsed.message || t("auth.login.genericError"), parsed.code)
+        );
         return;
       }
       const redirectTo =
@@ -48,14 +57,14 @@ export function FoundationLoginForm() {
         (callbackUrl?.startsWith("/") ? callbackUrl : "/dashboard");
       const sessionReady = await confirmSessionCookie();
       if (!sessionReady) {
-        setError("Login realizado, mas a sessão não foi iniciada. Tente novamente.");
+        setError(t("auth.login.sessionError"));
         return;
       }
       router.push(redirectTo);
       notifySessionChanged();
       router.refresh();
     } catch {
-      setError("Não foi possível conectar ao servidor.");
+      setError(t("auth.login.connectionError"));
     } finally {
       setLoading(false);
     }
@@ -64,8 +73,8 @@ export function FoundationLoginForm() {
   return (
     <Card className="mx-auto w-full max-w-md">
       <CardHeader>
-        <CardTitle>Entrar no EcoPet</CardTitle>
-        <CardDescription>Use seu e-mail ou nome de usuário e senha para acessar.</CardDescription>
+        <CardTitle>{t("auth.login.pageTitle")}</CardTitle>
+        <CardDescription>{t("auth.login.pageDescription")}</CardDescription>
       </CardHeader>
       <CardContent>
         <form
@@ -76,41 +85,41 @@ export function FoundationLoginForm() {
         >
           <div>
             <label htmlFor="login-identifier" className="text-sm font-medium">
-              E-mail ou Nome de Usuário
+              {t("auth.login.identifier")}
             </label>
             <Input
               id="login-identifier"
               type="text"
-              placeholder="Digite seu e-mail ou nome de usuário"
+              placeholder={t("auth.login.identifierPlaceholder")}
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
               required
               className="mt-1"
               autoComplete="username"
-              aria-label="E-mail ou Nome de Usuário"
+              aria-label={t("auth.login.identifier")}
               aria-invalid={!!error}
               aria-describedby={error ? "login-error" : undefined}
             />
           </div>
           <div>
             <label htmlFor="login-password" className="text-sm font-medium">
-              Senha
+              {t("auth.login.password")}
             </label>
             <Input
               id="login-password"
               type="password"
-              placeholder="Digite sua senha"
+              placeholder={t("auth.login.passwordPlaceholder")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               className="mt-1"
               autoComplete="current-password"
-              aria-label="Senha"
+              aria-label={t("auth.login.password")}
             />
           </div>
           <p className="text-right text-sm">
             <Link href="/esqueci-senha" className="text-green-700 hover:underline">
-              Esqueci minha senha
+              {t("auth.login.forgotLink")}
             </Link>
           </p>
           {error && (
@@ -119,13 +128,13 @@ export function FoundationLoginForm() {
             </p>
           )}
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Entrando..." : "Entrar"}
+            {loading ? t("auth.login.entering") : t("auth.login.submit")}
           </Button>
         </form>
         <p className="mt-4 text-center text-sm text-gray-600">
-          Não tem conta?{" "}
+          {t("auth.login.noAccount")}{" "}
           <Link href="/cadastro" className="font-semibold text-green-700 hover:underline">
-            Cadastre-se
+            {t("auth.login.signUpLink")}
           </Link>
         </p>
       </CardContent>
