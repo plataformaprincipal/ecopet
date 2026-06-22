@@ -13,6 +13,7 @@ import { AriaLiveProvider } from "@/components/shared/accessibility/aria-live-re
 import { EcopetFooter } from "@/components/layouts/ecopet-footer";
 import { SupportChatProvider } from "@/providers/support-chat-provider";
 import { SupportChatPanel } from "@/components/features/support/support-chat-panel";
+import { VLibrasWidget } from "@/components/accessibility/VLibrasWidget";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-jakarta", weight: ["500", "600", "700", "800"] });
@@ -94,6 +95,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </I18nProvider>
           </AccessibilityProvider>
         </ThemeProvider>
+        <VLibrasWidget />
       </body>
     </html>
   );

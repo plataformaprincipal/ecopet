@@ -39,7 +39,7 @@ import {
 } from "@/store/accessibility-store";
 import type { AccessibilityPreferences } from "@/lib/accessibility/types";
 import { useTranslation } from "@/providers/i18n-provider";
-import { hideVLibras } from "@/lib/accessibility/vlibras-loader";
+import { hideVLibras, isVLibrasAvatarVisible, retryVLibrasLoad } from "@/lib/accessibility/vlibras-loader";
 import { useAriaAnnounce } from "./aria-live-region";
 type BooleanKey = {
   [K in keyof AccessibilityPreferences]: AccessibilityPreferences[K] extends boolean ? K : never;
@@ -88,15 +88,25 @@ export function AccessibilityToolbar() {
   const atMin = fontScale <= FONT_SCALE_MIN;
   const atMax = fontScale >= FONT_SCALE_MAX;
 
+  const handleVLibrasRetry = useCallback(() => {
+    retryVLibrasLoad();
+    useAccessibilityStore.setState({ librasEnabled: true, vlibrasStatus: "loading" });
+    announce(t("a11y.vlibrasLoading"), "polite");
+  }, [announce, t]);
+
   const handleToggle = useCallback(
     (key: BooleanKey, label: string) => {
       const wasActive = useAccessibilityStore.getState()[key];
       toggle(key);
       announce(`${label} ${!wasActive ? t("a11y.activated") : t("a11y.deactivated")}`, "polite");
 
-      if (key === "librasEnabled" && wasActive) {
-        hideVLibras();
-        useAccessibilityStore.getState().setVlibrasStatus("idle");
+      if (key === "librasEnabled") {
+        if (wasActive) {
+          hideVLibras();
+          useAccessibilityStore.getState().setVlibrasStatus("idle");
+        } else {
+          useAccessibilityStore.getState().setVlibrasStatus("loading");
+        }
       }
     },
     [toggle, announce, t]
@@ -190,10 +200,21 @@ export function AccessibilityToolbar() {
               {librasEnabled && vlibrasStatus === "loading" && (
                 <p className="px-3 text-[11px] text-ecopet-gray" role="status">{t("a11y.vlibrasLoading")}</p>
               )}
-              {librasEnabled && vlibrasStatus === "error" && (
-                <p className="px-3 text-[11px] text-amber-700 dark:text-amber-400" role="alert">{t("a11y.vlibrasError")}</p>
+              {(vlibrasStatus === "unavailable" || vlibrasStatus === "error") && (
+                <>
+                  <p className="px-3 text-[11px] text-amber-700 dark:text-amber-400" role="alert">
+                    {t("a11y.vlibrasAvatarFailed")}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleVLibrasRetry}
+                    className="mx-3 mb-2 w-[calc(100%-1.5rem)] rounded-lg border border-ecopet-green/30 px-3 py-2 text-left text-xs font-semibold text-ecopet-green hover:bg-ecopet-green/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ecopet-green"
+                  >
+                    {t("a11y.vlibrasRetry")}
+                  </button>
+                </>
               )}
-              {librasEnabled && vlibrasStatus === "ready" && (
+              {librasEnabled && vlibrasStatus === "ready" && isVLibrasAvatarVisible() && (
                 <p className="px-3 text-[11px] text-ecopet-green" role="status">{t("a11y.vlibrasReady")}</p>
               )}
               <p className="px-3 pb-2 text-[11px] leading-relaxed text-ecopet-gray">{t("a11y.librasNote")}</p>

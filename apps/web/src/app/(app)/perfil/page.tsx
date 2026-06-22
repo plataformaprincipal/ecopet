@@ -1,9 +1,17 @@
-import { FoundationProfileForm } from "@/components/features/foundation/profile-form";
+import { redirect } from "next/navigation";
+import { UserRole } from "@prisma/client";
+import { getCurrentUser } from "@/lib/auth";
+import { profilePathForRole } from "@/lib/public-client/auth-redirect";
 
-export default function PerfilPage() {
-  return (
-    <main className="min-h-screen bg-gray-50 px-4 py-10">
-      <FoundationProfileForm />
-    </main>
+export default async function PerfilPage() {
+  const user = await getCurrentUser();
+
+  if (user) {
+    redirect(profilePathForRole(user.role));
+  }
+
+  const { PublicProfileGate } = await import(
+    "@/components/features/public-client/public-profile-gate"
   );
+  return <PublicProfileGate />;
 }

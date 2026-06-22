@@ -10,7 +10,7 @@ Toolbar global em todas as páginas via `layout.tsx` (carregamento lazy).
 | `skip-link.tsx` | Skip link para `#main-content` |
 | `aria-live-region.tsx` | Anúncios para leitor de tela |
 | `reading-assist.tsx` | Máscara e guia de leitura |
-| `vlibras-widget.tsx` | VLibras (gov.br) sob demanda |
+| `components/accessibility/VLibrasWidget.tsx` | VLibras global (gov.br) — todas as rotas |
 
 ## Modos implementados
 
@@ -28,7 +28,7 @@ Toolbar global em todas as páginas via `layout.tsx` (carregamento lazy).
 
 ## Libras
 
-Ativar **Libras** carrega script oficial de `vlibras.gov.br` (validado). Requer internet. Fallback amigável se indisponível.
+Widget global em `layout.tsx`. Script oficial de `vlibras.gov.br` (validado). Padrão ativo; toggle no painel EcoPet oculta/exibe. Ver [`docs/integrations/vlibras.md`](../../../../docs/integrations/vlibras.md).
 
 ## Segurança
 

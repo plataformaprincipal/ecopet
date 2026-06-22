@@ -67,10 +67,19 @@ export function isPrivateMarketplacePath(pathname: string): boolean {
   return PRIVATE_MARKETPLACE_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
+/** Rotas públicas do fluxo pré-cadastro cliente */
+export function isPublicClientPath(pathname: string): boolean {
+  if (pathname === "/explorar") return true;
+  if (pathname === "/meu-pet") return true;
+  if (pathname === "/perfil") return true;
+  return false;
+}
+
 export function isPublicPath(pathname: string): boolean {
   if (PUBLIC_EXACT.has(pathname)) return true;
   if (PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))) return true;
   if (isPublicMarketplacePath(pathname)) return true;
+  if (isPublicClientPath(pathname)) return true;
   return false;
 }
 

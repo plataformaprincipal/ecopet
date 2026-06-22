@@ -23,8 +23,15 @@ export const PENDING_ALLOWED_PREFIXES = [
   "/api/partner",
   "/dashboard/partner",
   "/dashboard/partner/profile",
+  "/parceiro",
+  "/parceiro/comunidade",
+  "/parceiro/perfil-gestao",
+  "/api/partner/dashboard",
   "/dashboard/ong",
   "/dashboard/ong/profile",
+  "/ong",
+  "/ong/perfil-gestao",
+  "/api/ong",
   "/perfil",
   "/configuracoes",
   "/conta/em-analise",
@@ -42,8 +49,13 @@ export const PARTNER_PENDING_BLOCKED_PREFIXES = [
   "/agenda",
 ] as const;
 
-/** ONG PENDING: sem funções institucionais sensíveis. */
-export const ONG_PENDING_BLOCKED_PREFIXES = ["/adocao", "/ong"] as const;
+/** ONG PENDING: sem funções institucionais públicas (exceto perfil). */
+export const ONG_PENDING_BLOCKED_PREFIXES = [
+  "/adocao",
+  "/ong/comunidade",
+  "/ong/adocoes",
+  "/ong/atividades-ia",
+] as const;
 
 export type AccountAccessResult = {
   allowed: boolean;

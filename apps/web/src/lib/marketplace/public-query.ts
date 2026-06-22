@@ -1,4 +1,4 @@
-import { AccountStatus, PartnerServiceStatus, ProductCatalogStatus, Prisma } from "@prisma/client";
+import { AccountStatus, PartnerServiceStatus, ProductCatalogStatus, Prisma, VerificationStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export type PublicServiceFilters = {
@@ -228,5 +228,101 @@ export async function getPublicPartner(partnerId: string) {
     reviews: partner.partnerServiceReviews,
     rating: avgRating,
     reviewCount: ratings.length,
+  };
+}
+
+export type PublicPartnerFilters = {
+  q?: string;
+  category?: string;
+  city?: string;
+  state?: string;
+  page?: number;
+  pageSize?: number;
+};
+
+export async function queryPublicPartners(filters: PublicPartnerFilters) {
+  const page = Math.max(1, filters.page ?? 1);
+  const pageSize = Math.min(50, Math.max(1, filters.pageSize ?? 12));
+  const skip = (page - 1) * pageSize;
+
+  const where: Prisma.UserWhereInput = {
+    role: "PARTNER",
+    accountStatus: AccountStatus.ACTIVE,
+    partnerProfile: {
+      is: {
+        verificationStatus: VerificationStatus.APPROVED,
+        ...(filters.category ? { category: { contains: filters.category, mode: "insensitive" as const } } : {}),
+        ...(filters.city ? { city: { contains: filters.city, mode: "insensitive" as const } } : {}),
+        ...(filters.state ? { state: { equals: filters.state, mode: "insensitive" as const } } : {}),
+      },
+    },
+    ...(filters.q
+      ? {
+          OR: [
+            { name: { contains: filters.q, mode: "insensitive" } },
+            { partnerProfile: { businessName: { contains: filters.q, mode: "insensitive" } } },
+            { partnerProfile: { description: { contains: filters.q, mode: "insensitive" } } },
+          ],
+        }
+      : {}),
+  };
+
+  const [partners, total] = await Promise.all([
+    prisma.user.findMany({
+      where,
+      select: {
+        id: true,
+        name: true,
+        partnerProfile: {
+          select: {
+            businessName: true,
+            description: true,
+            city: true,
+            state: true,
+            category: true,
+          },
+        },
+        _count: {
+          select: {
+            products: {
+              where: {
+                deletedAt: null,
+                status: ProductCatalogStatus.ACTIVE,
+                approvalStatus: "APPROVED",
+                stock: { gt: 0 },
+              },
+            },
+            services: {
+              where: {
+                deletedAt: null,
+                status: PartnerServiceStatus.ACTIVE,
+                isActive: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: pageSize,
+    }),
+    prisma.user.count({ where }),
+  ]);
+
+  return {
+    partners: partners.map((p) => ({
+      id: p.id,
+      name: p.partnerProfile?.businessName ?? p.name,
+      description: p.partnerProfile?.description,
+      city: p.partnerProfile?.city,
+      state: p.partnerProfile?.state,
+      category: p.partnerProfile?.category,
+      productCount: p._count.products,
+      serviceCount: p._count.services,
+    })),
+    total,
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
   };
 }

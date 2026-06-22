@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
   Home,
+  Compass,
   ShoppingBag,
   PawPrint,
   User,
@@ -10,9 +11,11 @@ import {
   MessageCircle,
   Shield,
   Users,
+  UsersRound,
   Settings,
   ShoppingCart,
   Wrench,
+  Sparkles,
 } from "lucide-react";
 import type { TranslationKey } from "@/lib/i18n/types";
 import type { AppRole } from "@/lib/permissions";
@@ -27,50 +30,50 @@ export type RoleSecondaryNavItem = {
 };
 
 const CLIENT_MAIN: RoleNavItem[] = [
-  { href: "/inicio", labelKey: "nav.home", icon: Home, match: ["/inicio", "/feed"] },
-  { href: "/marketplace", labelKey: "nav.marketplace", icon: ShoppingBag, match: ["/marketplace"] },
-  {
-    href: "/dashboard/client",
-    labelKey: "nav.myDashboard",
-    icon: LayoutDashboard,
-    match: ["/dashboard", "/dashboard/client"],
-  },
-  {
-    href: "/dashboard/client/pets",
-    labelKey: "nav.pets",
-    icon: PawPrint,
-    match: ["/dashboard/client/pets", "/meu-pet", "/pets"],
-  },
-  { href: "/carrinho", labelKey: "nav.cart", icon: ShoppingCart, match: ["/carrinho", "/checkout"] },
+  { href: "/cliente", labelKey: "nav.home", icon: Home, match: ["/cliente", "/inicio"] },
+  { href: "/cliente/explorar", labelKey: "nav.explore", icon: Compass, match: ["/cliente/explorar", "/explorar"] },
+  { href: "/cliente/marketplace", labelKey: "nav.marketplace", icon: ShoppingBag, match: ["/cliente/marketplace", "/marketplace"] },
+  { href: "/cliente/meu-pet", labelKey: "nav.myPet", icon: PawPrint, match: ["/cliente/meu-pet", "/meu-pet", "/pets"] },
+  { href: "/cliente/perfil", labelKey: "nav.profile", icon: User, match: ["/cliente/perfil", "/perfil"] },
 ];
 
 const CLIENT_SECONDARY: RoleSecondaryNavItem[] = [
-  { href: "/perfil", labelKey: "nav.profile", icon: User },
   { href: "/dashboard/messages", labelKey: "nav.messages", icon: MessageCircle },
-  { href: "/dashboard/support", labelKey: "nav.support", icon: ClipboardList },
+  { href: "/dashboard/client/orders", labelKey: "nav.orders", icon: ClipboardList },
+  { href: "/carrinho", labelKey: "nav.cart", icon: ShoppingCart },
   { href: "/configuracoes", labelKey: "nav.settings", icon: Settings },
 ];
 
 const PARTNER_MAIN: RoleNavItem[] = [
-  { href: "/inicio", labelKey: "nav.home", icon: Home, match: ["/inicio", "/feed"] },
-  { href: "/marketplace", labelKey: "nav.marketplace", icon: ShoppingBag, match: ["/marketplace"] },
   {
-    href: "/dashboard/partner",
+    href: "/parceiro/comunidade",
+    labelKey: "nav.home",
+    icon: Home,
+    match: ["/parceiro/comunidade", "/parceiro", "/feed"],
+  },
+  {
+    href: "/parceiro/marketplace",
+    labelKey: "nav.marketplace",
+    icon: ShoppingBag,
+    match: ["/parceiro/marketplace", "/marketplace"],
+  },
+  {
+    href: "/parceiro/atividades-ia",
     labelKey: "nav.myDashboard",
     icon: LayoutDashboard,
-    match: ["/dashboard/partner"],
+    match: ["/parceiro/atividades-ia", "/dashboard/partner"],
   },
   {
-    href: "/dashboard/partner/services",
+    href: "/parceiro/agenda-servicos",
     labelKey: "nav.services",
     icon: Wrench,
-    match: ["/dashboard/partner/services"],
+    match: ["/parceiro/agenda-servicos", "/dashboard/partner/services", "/dashboard/partner/appointments"],
   },
   {
-    href: "/dashboard/partner/orders",
-    labelKey: "nav.orders",
-    icon: ClipboardList,
-    match: ["/dashboard/partner/orders", "/pedidos"],
+    href: "/parceiro/perfil-gestao",
+    labelKey: "nav.profile",
+    icon: User,
+    match: ["/parceiro/perfil-gestao", "/perfil"],
   },
 ];
 
@@ -82,15 +85,11 @@ const PARTNER_SECONDARY: RoleSecondaryNavItem[] = [
 ];
 
 const ONG_MAIN: RoleNavItem[] = [
-  { href: "/inicio", labelKey: "nav.home", icon: Home, match: ["/inicio", "/feed"] },
-  { href: "/adocao", labelKey: "nav.adoption", icon: Heart, match: ["/adocao", "/ong"] },
-  {
-    href: "/dashboard/ong",
-    labelKey: "nav.myDashboard",
-    icon: LayoutDashboard,
-    match: ["/dashboard/ong"],
-  },
-  { href: "/dashboard/ong/profile", labelKey: "nav.profile", icon: User, match: ["/dashboard/ong/profile", "/perfil"] },
+  { href: "/ong", labelKey: "nav.myDashboard", icon: LayoutDashboard, match: ["/ong"] },
+  { href: "/ong/comunidade", labelKey: "nav.community", icon: UsersRound, match: ["/ong/comunidade"] },
+  { href: "/ong/adocoes", labelKey: "nav.adoption", icon: Heart, match: ["/ong/adocoes", "/adocao"] },
+  { href: "/ong/atividades-ia", labelKey: "nav.aiActivities", icon: Sparkles, match: ["/ong/atividades-ia"] },
+  { href: "/ong/perfil-gestao", labelKey: "nav.profile", icon: User, match: ["/ong/perfil-gestao", "/dashboard/ong/profile", "/perfil"] },
   { href: "/dashboard/messages", labelKey: "nav.messages", icon: MessageCircle, match: ["/dashboard/messages", "/social/mensagens"] },
 ];
 

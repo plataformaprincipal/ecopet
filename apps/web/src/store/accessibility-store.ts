@@ -19,7 +19,7 @@ type BooleanKey = {
   [K in keyof AccessibilityPreferences]: AccessibilityPreferences[K] extends boolean ? K : never;
 }[keyof AccessibilityPreferences];
 
-export type VLibrasStatus = "idle" | "loading" | "ready" | "error";
+export type VLibrasStatus = "idle" | "loading" | "ready" | "error" | "unavailable";
 
 interface AccessibilityState extends AccessibilityPreferences {
   vlibrasStatus: VLibrasStatus;

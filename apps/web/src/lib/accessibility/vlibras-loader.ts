@@ -1,449 +1,334 @@
-import { VLIBRAS_SCRIPT_URL, VLIBRAS_WIDGET_URL } from "./constants";
-
-
+import {
+  VLIBRAS_AVATAR_POLL_MS,
+  VLIBRAS_AVATAR_TIMEOUT_MS,
+  VLIBRAS_SCRIPT_TIMEOUT_MS,
+  VLIBRAS_SCRIPT_URLS,
+  VLIBRAS_TOTAL_LOAD_TIMEOUT_MS,
+  VLIBRAS_WIDGET_URL,
+} from "./constants";
+import {
+  isVLibrasLoadReady,
+  type VLibrasLoadOutcome,
+  vlibrasFromScriptEvent,
+  vlibrasReady,
+  nextScriptUrl,
+} from "./vlibras-load-outcome";
 
 declare global {
-
   interface Window {
-
     VLibras?: {
-
       Widget: new (url: string) => VLibrasWidgetInstance;
-
     };
-
   }
-
 }
 
-
-
 export type VLibrasWidgetInstance = {
-
   destroy?: () => void;
-
 };
 
+export type { VLibrasLoadOutcome, VLibrasLoadStatus } from "./vlibras-load-outcome";
+export { handleScriptOnError, isVLibrasLoadReady } from "./vlibras-load-outcome";
 
-
-let scriptPromise: Promise<void> | null = null;
-
+let scriptPromise: Promise<boolean> | null = null;
 let widgetInstance: VLibrasWidgetInstance | null = null;
-
-let onloadTriggered = false;
-
-
 
 const SCRIPT_ID = "ecopet-vlibras-plugin";
 
 export const VW_ROOT_ID = "ecopet-vlibras-root";
-
 export const VW_ACTIVE_CLASS = "ecopet-vlibras-active";
+export const VW_HIDDEN_CLASS = "ecopet-vlibras-hidden";
 
+function vlog(message: string, detail?: unknown): void {
+  if (typeof console === "undefined") return;
+  if (detail !== undefined) {
+    console.log(`[VLIBRAS] ${message}`, detail);
+  } else {
+    console.log(`[VLIBRAS] ${message}`);
+  }
+}
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
-/** Retorna o container oficial `[vw]` montado pelo VLibrasWidget. */
+async function withTimeout<T>(
+  promise: Promise<T>,
+  ms: number,
+  onTimeout: () => T
+): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeoutPromise = new Promise<T>((resolve) => {
+    timeoutId = setTimeout(() => {
+      vlog("Timeout", `operação excedeu ${ms}ms`);
+      resolve(onTimeout());
+    }, ms);
+  });
+
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+}
 
 export function getVLibrasRoot(): HTMLElement | null {
-
   if (typeof document === "undefined") return null;
-
   return (
-
     document.getElementById(VW_ROOT_ID) ??
-
     (document.querySelector("[vw]") as HTMLElement | null)
-
   );
-
 }
 
-
-
-/** Exibe ou oculta o avatar oficial sem remover o DOM. */
+async function waitForVLibrasRoot(timeoutMs = 3000): Promise<HTMLElement | null> {
+  const start = performance.now();
+  while (performance.now() - start < timeoutMs) {
+    const root = getVLibrasRoot();
+    if (root) return root;
+    await sleep(50);
+  }
+  return getVLibrasRoot();
+}
 
 export function setVLibrasVisible(visible: boolean): void {
-
   const el = getVLibrasRoot();
-
   if (!el) return;
-
   el.classList.toggle(VW_ACTIVE_CLASS, visible);
-
+  el.classList.toggle(VW_HIDDEN_CLASS, !visible);
   el.setAttribute("aria-hidden", visible ? "false" : "true");
-
 }
 
-
-
-function isAccessButtonReady(): boolean {
-
-  const btn = document.querySelector("[vw-access-button]");
-
-  return Boolean(btn?.querySelector(".vp-access-button, img[data-src], img[src]"));
-
+/** Avatar oficial — única prova de que o VLibras está funcional. */
+export function isVLibrasAvatarVisible(): boolean {
+  if (typeof document === "undefined") return false;
+  return Boolean(document.querySelector("[vw-access-button] .vp-access-button"));
 }
 
-
-
-/**
-
- * O plugin gov.br registra a injeção do avatar em `window.onload`.
-
- * Em SPA (Next.js) o onload já ocorreu — é preciso dispará-lo manualmente após `new Widget`.
-
- */
-
-function triggerVLibrasOnloadIfNeeded(): void {
-
-  if (onloadTriggered || isAccessButtonReady()) return;
-
-  if (document.readyState !== "complete") return;
-
-  const handler = window.onload;
-
-  if (typeof handler !== "function") return;
-
-  onloadTriggered = true;
-
-  handler.call(window, new Event("load"));
-
-}
-
-
-
-function waitForVLibrasGlobal(): Promise<void> {
-
-  return new Promise((resolve, reject) => {
-
-    if (typeof window !== "undefined" && window.VLibras) {
-
-      resolve();
-
-      return;
-
-    }
-
-    let attempts = 0;
-
-    const tick = () => {
-
-      if (window.VLibras) {
-
-        resolve();
-
-        return;
-
-      }
-
-      if (++attempts > 150) {
-
-        reject(new Error("VLibras global not available"));
-
-        return;
-
-      }
-
-      requestAnimationFrame(tick);
-
-    };
-
-    tick();
-
-  });
-
-}
-
-
-
-function waitForAccessButton(): Promise<void> {
-
-  return new Promise((resolve, reject) => {
-
-    let attempts = 0;
-
-    const tick = () => {
-
-      const btn = document.querySelector("[vw-access-button]") as HTMLElement | null;
-
-      const root = getVLibrasRoot();
-
-      if (btn && root?.classList.contains(VW_ACTIVE_CLASS) && isAccessButtonReady()) {
-
-        const rect = btn.getBoundingClientRect();
-
-        const style = getComputedStyle(btn);
-
-        const inViewport =
-
-          rect.width >= 32 &&
-
-          rect.height >= 32 &&
-
-          rect.bottom > 0 &&
-
-          rect.top < window.innerHeight &&
-
-          rect.right > 0 &&
-
-          rect.left < window.innerWidth;
-
-        const fixed = style.position === "fixed";
-
-        if (inViewport || (fixed && rect.width >= 32 && rect.height >= 32)) {
-
-          resolve();
-
-          return;
-
-        }
-
-      }
-
-      if (++attempts > 250) {
-
-        reject(new Error("VLibras access button not visible"));
-
-        return;
-
-      }
-
-      requestAnimationFrame(tick);
-
-    };
-
-    tick();
-
-  });
-
-}
-
-
-
-function initWidget(): void {
-
+function dispatchSpaLoadEvent(): void {
   if (typeof window === "undefined") return;
-
-  if (widgetInstance) {
-
-    triggerVLibrasOnloadIfNeeded();
-
-    return;
-
+  window.dispatchEvent(new Event("load"));
+  vlog("Evento load disparado");
+  const handler = window.onload;
+  if (typeof handler === "function") {
+    handler.call(window, new Event("load"));
   }
-
-  if (!window.VLibras) return;
-
-
-
-  const root = getVLibrasRoot();
-
-  if (!root) {
-
-    throw new Error("VLibras container [vw] not found");
-
-  }
-
-
-
-  setVLibrasVisible(true);
-
-
-
-  widgetInstance = new window.VLibras.Widget(VLIBRAS_WIDGET_URL);
-
-  triggerVLibrasOnloadIfNeeded();
-
 }
 
+/** Aguarda injeção do avatar (poll 500ms, timeout 10s). Sempre resolve true/false. */
+export async function ensureAvatarInjected(
+  timeoutMs = VLIBRAS_AVATAR_TIMEOUT_MS
+): Promise<boolean> {
+  vlog("ensureAvatarInjected iniciado", { timeoutMs, pollMs: VLIBRAS_AVATAR_POLL_MS });
+  const start = performance.now();
 
-
-function loadScriptOnce(): Promise<void> {
-
-  if (typeof window === "undefined") return Promise.resolve();
-
-  if (widgetInstance && isAccessButtonReady()) return Promise.resolve();
-
-  if (scriptPromise) return scriptPromise;
-
-
-
-  scriptPromise = new Promise((resolve, reject) => {
-
-    const finish = () => {
-
-      waitForVLibrasGlobal()
-
-        .then(() => {
-
-          try {
-
-            initWidget();
-
-            resolve();
-
-          } catch (err) {
-
-            scriptPromise = null;
-
-            reject(err);
-
-          }
-
-        })
-
-        .catch((err) => {
-
-          scriptPromise = null;
-
-          reject(err);
-
-        });
-
-    };
-
-
-
-    const existing = document.getElementById(SCRIPT_ID) as HTMLScriptElement | null;
-
-    if (existing) {
-
-      if (window.VLibras) {
-
-        finish();
-
-      } else {
-
-        existing.addEventListener("load", finish, { once: true });
-
-        existing.addEventListener(
-
-          "error",
-
-          () => {
-
-            scriptPromise = null;
-
-            reject(new Error("VLibras script failed"));
-
-          },
-
-          { once: true }
-
-        );
-
-      }
-
-      return;
-
+  while (performance.now() - start < timeoutMs) {
+    dispatchSpaLoadEvent();
+    if (isVLibrasAvatarVisible()) {
+      vlog("Avatar encontrado");
+      return true;
     }
+    await sleep(VLIBRAS_AVATAR_POLL_MS);
+  }
 
+  vlog("Avatar não encontrado");
+  vlog("Timeout");
+  return false;
+}
 
+function removeInjectedScript(): void {
+  document.getElementById(SCRIPT_ID)?.remove();
+}
+
+function waitForVLibrasGlobal(timeoutMs = VLIBRAS_SCRIPT_TIMEOUT_MS): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (window.VLibras) {
+      resolve(true);
+      return;
+    }
+    const started = performance.now();
+    const tick = () => {
+      if (window.VLibras) {
+        resolve(true);
+        return;
+      }
+      if (performance.now() - started >= timeoutMs) {
+        vlog("Erro de carregamento", "window.VLibras indisponível");
+        resolve(false);
+        return;
+      }
+      requestAnimationFrame(tick);
+    };
+    tick();
+  });
+}
+
+function createWidgetInstance(): boolean {
+  try {
+    if (!window.VLibras) {
+      vlog("Erro de carregamento", "window.VLibras ausente");
+      return false;
+    }
+    const root = getVLibrasRoot();
+    if (!root) {
+      vlog("Erro de carregamento", "container [vw] ausente");
+      return false;
+    }
+    setVLibrasVisible(true);
+    if (!widgetInstance) {
+      widgetInstance = new window.VLibras.Widget(VLIBRAS_WIDGET_URL);
+      vlog("Widget criado");
+      dispatchSpaLoadEvent();
+    }
+    return true;
+  } catch (err) {
+    vlog("Erro de carregamento", err);
+    return false;
+  }
+}
+
+function injectScript(url: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    removeInjectedScript();
 
     const script = document.createElement("script");
-
     script.id = SCRIPT_ID;
-
-    script.src = VLIBRAS_SCRIPT_URL;
-
+    script.src = url;
     script.async = true;
 
-    script.onload = finish;
+    let settled = false;
+    const finish = (ok: boolean) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeoutId);
+      resolve(ok);
+    };
+
+    const timeoutId = setTimeout(() => {
+      vlog("Timeout", `script ${url}`);
+      removeInjectedScript();
+      finish(false);
+    }, VLIBRAS_SCRIPT_TIMEOUT_MS);
+
+    script.onload = () => {
+      vlog("Script carregado", url);
+      finish(true);
+    };
 
     script.onerror = () => {
-
-      scriptPromise = null;
-
-      reject(new Error("VLibras script failed"));
-
+      vlog("Erro de carregamento", `script.onerror ${url}`);
+      removeInjectedScript();
+      finish(false);
     };
 
     document.body.appendChild(script);
-
   });
-
-
-
-  return scriptPromise;
-
 }
 
+async function loadScriptWithFallback(): Promise<boolean> {
+  if (typeof window === "undefined") return false;
 
-
-/**
-
- * Carrega script oficial, garante DOM `[vw]` e inicializa Widget — uma instância por sessão.
-
- * Deve ser chamado apenas no navegador (useEffect / evento do painel).
-
- */
-
-export async function ensureVLibras(): Promise<void> {
-
-  if (typeof window === "undefined") return;
-
-
-
-  const root = getVLibrasRoot();
-
-  if (!root) {
-
-    throw new Error("VLibras container not mounted");
-
+  if (window.VLibras) {
+    vlog("Script carregado", "window.VLibras já presente");
+    return true;
   }
 
+  const attempted: string[] = [];
+  const maxRounds = VLIBRAS_SCRIPT_URLS.length;
 
+  for (let round = 0; round < maxRounds; round++) {
+    const url = nextScriptUrl(VLIBRAS_SCRIPT_URLS, attempted);
+    if (!url) break;
+    attempted.push(url);
+
+    const loaded = await injectScript(url);
+    if (!loaded) continue;
+
+    const globalReady = await waitForVLibrasGlobal();
+    if (globalReady) return true;
+  }
+
+  vlog("Erro de carregamento", "todas as URLs falharam");
+  scriptPromise = null;
+  return false;
+}
+
+async function ensureScriptLoaded(): Promise<boolean> {
+  if (typeof window === "undefined") return false;
+  if (window.VLibras) return true;
+  if (scriptPromise) return scriptPromise;
+
+  scriptPromise = loadScriptWithFallback().then((ok) => {
+    if (!ok) scriptPromise = null;
+    return ok;
+  });
+
+  return scriptPromise;
+}
+
+async function loadVLibrasPipeline(): Promise<VLibrasLoadOutcome> {
+  vlog("loadVLibras pipeline iniciado");
+
+  const root = await waitForVLibrasRoot();
+  if (!root) {
+    vlog("Erro de carregamento", "container não montado");
+    return vlibrasFromScriptEvent("init-failed");
+  }
 
   setVLibrasVisible(true);
 
-
-
-  if (widgetInstance && isAccessButtonReady()) {
-
-    await waitForAccessButton();
-
-    return;
-
+  if (isVLibrasAvatarVisible()) {
+    vlog("Avatar encontrado");
+    return vlibrasReady();
   }
 
+  const scriptOk = await ensureScriptLoaded();
+  if (!scriptOk) {
+    return vlibrasFromScriptEvent("onerror");
+  }
 
+  const widgetOk = createWidgetInstance();
+  if (!widgetOk) {
+    return vlibrasFromScriptEvent("init-failed");
+  }
 
-  await loadScriptOnce();
+  const avatarOk = await ensureAvatarInjected();
+  if (!avatarOk) {
+    return vlibrasFromScriptEvent("button-missing");
+  }
 
-  triggerVLibrasOnloadIfNeeded();
-
-  await waitForAccessButton();
-
+  return vlibrasReady();
 }
 
+/**
+ * Pipeline completo com teto global — nunca fica pendente além de VLIBRAS_TOTAL_LOAD_TIMEOUT_MS.
+ * READY só quando [vw-access-button] .vp-access-button existe.
+ */
+export async function ensureVLibras(): Promise<VLibrasLoadOutcome> {
+  if (typeof window === "undefined") {
+    return vlibrasFromScriptEvent("init-failed");
+  }
 
-
-export function hideVLibras(): void {
-
-  setVLibrasVisible(false);
-
+  return withTimeout(
+    loadVLibrasPipeline(),
+    VLIBRAS_TOTAL_LOAD_TIMEOUT_MS,
+    () => vlibrasFromScriptEvent("button-missing")
+  );
 }
-
-
 
 export function isVLibrasReady(): boolean {
-
-  return widgetInstance !== null && isAccessButtonReady();
-
+  return isVLibrasAvatarVisible();
 }
 
-
+export function hideVLibras(): void {
+  setVLibrasVisible(false);
+}
 
 export function resetVLibrasWidget(): void {
-
   widgetInstance?.destroy?.();
-
   widgetInstance = null;
-
   scriptPromise = null;
-
-  onloadTriggered = false;
-
+  removeInjectedScript();
 }
 
-
+export function retryVLibrasLoad(): void {
+  resetVLibrasWidget();
+}

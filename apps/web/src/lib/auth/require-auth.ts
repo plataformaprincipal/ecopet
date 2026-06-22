@@ -35,3 +35,7 @@ export async function requireActivePartner() {
 export async function requireClient() {
   return requireAuth([UserRole.CLIENT]);
 }
+
+export async function requireOng() {
+  return requireAuth([UserRole.ONG]);
+}

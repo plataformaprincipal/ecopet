@@ -23,12 +23,12 @@ export function contentSecurityPolicy(): string {
   const isProd = process.env.NODE_ENV === "production";
   const directives = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vlibras.gov.br https://*.vlibras.gov.br",
-    "style-src 'self' 'unsafe-inline' https://vlibras.gov.br https://*.vlibras.gov.br",
-    "img-src 'self' data: blob: https: http:",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vlibras.gov.br https://www.vlibras.gov.br https://*.vlibras.gov.br",
+    "style-src 'self' 'unsafe-inline' https://vlibras.gov.br https://www.vlibras.gov.br https://*.vlibras.gov.br",
+    "img-src 'self' data: blob: https: http: https://vlibras.gov.br https://www.vlibras.gov.br https://*.vlibras.gov.br",
     "font-src 'self' data: https:",
-    "connect-src 'self' https: wss:",
-    "frame-src 'self' https://vlibras.gov.br https://*.vlibras.gov.br",
+    "connect-src 'self' https: wss: https://vlibras.gov.br https://www.vlibras.gov.br https://*.vlibras.gov.br",
+    "frame-src 'self' https://vlibras.gov.br https://www.vlibras.gov.br https://*.vlibras.gov.br",
     "frame-ancestors 'self'",
     "base-uri 'self'",
     "form-action 'self'",

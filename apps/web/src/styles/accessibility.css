@@ -278,35 +278,61 @@ html[dir="rtl"] .a11y-toolbar-root {
   right: 1rem;
 }
 
-/* VLibras — visibilidade e empilhamento apenas; layout oficial fica com o gov.br */
+/* VLibras — visível, clicável e acima de overlays EcoPet (toolbar, chat, modais) */
 [vw],
-#ecopet-vlibras-root {
+#ecopet-vlibras-root,
+[vw-access-button],
+[vw-plugin-wrapper] {
   direction: ltr !important;
   unicode-bidi: isolate;
+  z-index: 2147483646 !important;
 }
 
-[vw]:not(.ecopet-vlibras-active),
-#ecopet-vlibras-root:not(.ecopet-vlibras-active) {
+[vw].ecopet-vlibras-hidden,
+#ecopet-vlibras-root.ecopet-vlibras-hidden {
   display: none !important;
   visibility: hidden !important;
   opacity: 0 !important;
   pointer-events: none !important;
 }
 
-[vw].ecopet-vlibras-active,
-#ecopet-vlibras-root.ecopet-vlibras-active {
+[vw]:not(.ecopet-vlibras-hidden),
+#ecopet-vlibras-root:not(.ecopet-vlibras-hidden) {
   display: block !important;
   visibility: visible !important;
   opacity: 1 !important;
   overflow: visible !important;
-  /* Espaço acima da FAB/barra de acessibilidade EcoPet — sem alterar filhos */
+  pointer-events: auto !important;
+}
+
+[vw-access-button] {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+[vw-plugin-wrapper] {
+  pointer-events: auto !important;
+}
+
+[vw] .vp-access-button,
+[vw-access-button] .vp-access-button {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+/* Espaço acima da FAB de acessibilidade EcoPet (canto inferior esquerdo) */
+[vw]:not(.ecopet-vlibras-hidden),
+#ecopet-vlibras-root:not(.ecopet-vlibras-hidden) {
   margin-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px)) !important;
 }
 
 /* Garante que layout EcoPet não crie clipping em overlays fixos (VLibras, toolbar, chat) */
 html,
 body {
-  overflow-x: visible;
+  overflow-x: hidden;
   overflow-y: auto;
 }
 

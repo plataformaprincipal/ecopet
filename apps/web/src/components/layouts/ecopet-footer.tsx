@@ -17,11 +17,10 @@ type NavLink = { href: string; labelKey: TranslationKey; authRequired?: boolean 
 const NAV_LINKS: NavLink[] = [
   { href: "/", labelKey: "nav.home" },
   { href: "/marketplace", labelKey: "nav.marketplace" },
-  { href: "/social/explorar", labelKey: "nav.socialNetwork", authRequired: true },
+  { href: "/explorar", labelKey: "nav.explore" },
   { href: "/marketplace/servicos", labelKey: "nav.services" },
-  { href: "/agenda", labelKey: "nav.scheduling", authRequired: true },
-  { href: "/meu-pet", labelKey: "nav.petRegistration", authRequired: true },
-  { href: "/perfil", labelKey: "nav.profile", authRequired: true },
+  { href: "/meu-pet", labelKey: "nav.petRegistration" },
+  { href: "/perfil", labelKey: "nav.profile" },
   { href: "/termos-de-uso", labelKey: "nav.termsOfUse" },
   { href: "/politica-de-privacidade", labelKey: "nav.privacyPolicy" },
 ];

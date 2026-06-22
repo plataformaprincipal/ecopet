@@ -5,7 +5,6 @@ import { useAccessibilityStore } from "@/store/accessibility-store";
 import { DEFAULT_PREFERENCES } from "@/lib/accessibility/types";
 import type { AccessibilityPreferences } from "@/lib/accessibility/types";
 import { ReadingAssist } from "@/components/shared/accessibility/reading-assist";
-import { VLibrasWidget } from "@/components/shared/accessibility/vlibras-widget";
 import { BrailleMode } from "@/components/shared/accessibility/braille-mode";
 import { applyDocumentDirection } from "@/i18n/rtl";
 import type { LocaleCode } from "@/i18n/locales/registry";
@@ -63,7 +62,6 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     <>
       {children}
       <ReadingAssist />
-      <VLibrasWidget />
       <BrailleMode />
     </>
   );

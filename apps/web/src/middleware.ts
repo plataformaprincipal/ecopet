@@ -99,7 +99,9 @@ export async function middleware(request: NextRequest) {
       return applyRefreshedCookie(dashboardRedirect(request, role), refreshedCookie);
     }
     return applyRefreshedCookie(
-      NextResponse.redirect(new URL("/feed", request.url)),
+      NextResponse.redirect(
+        new URL(role === "CLIENT" ? "/cliente" : "/feed", request.url)
+      ),
       refreshedCookie
     );
   }

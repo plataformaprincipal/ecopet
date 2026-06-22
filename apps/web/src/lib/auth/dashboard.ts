@@ -4,11 +4,11 @@ import type { AppRole } from "@/lib/permissions";
 export function dashboardPathForRole(role: string): string {
   switch (role) {
     case "CLIENT":
-      return "/dashboard/client";
+      return "/cliente";
     case "PARTNER":
-      return "/dashboard/partner";
+      return "/parceiro/comunidade";
     case "ONG":
-      return "/dashboard/ong";
+      return "/ong";
     case "ADMIN":
       return "/dashboard/admin";
     case "GESTOR":

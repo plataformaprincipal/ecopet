@@ -1,12 +1,21 @@
-"use client";
+import { redirect } from "next/navigation";
+import { UserRole } from "@prisma/client";
+import { getCurrentUser } from "@/lib/auth";
 
-import { Suspense } from "react";
-import { MyPetDashboard } from "@/components/features/my-pet/my-pet-dashboard";
+export default async function MeuPetPage() {
+  const user = await getCurrentUser();
 
-export default function MeuPetPage() {
-  return (
-    <Suspense fallback={<div className="p-8 text-center text-sm text-ecopet-gray">Carregando...</div>}>
-      <MyPetDashboard />
-    </Suspense>
+  if (user?.role === UserRole.CLIENT) {
+    redirect("/cliente/meu-pet");
+  }
+
+  if (user) {
+    const { meuPetPathForRole } = await import("@/lib/public-client/auth-redirect");
+    redirect(meuPetPathForRole(user.role));
+  }
+
+  const { PublicMeuPetPreview } = await import(
+    "@/components/features/public-client/public-meu-pet-preview"
   );
+  return <PublicMeuPetPreview />;
 }
