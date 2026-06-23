@@ -29,10 +29,12 @@ export async function resolveCartIdentity(userId?: string | null) {
 
 export async function mergeAnonymousCart(userId: string, sessionId: string) {
   const [userCart, anonCart] = await Promise.all([
-    prisma.cart.findUnique({ where: { userId }, include: { items: true } }),
+    prisma.cart.findUnique({ where: { userId }, include: { items: { include: { product: true } } } }),
     prisma.cart.findUnique({ where: { sessionId }, include: { items: true } }),
   ]);
-  if (!anonCart?.items.length) return userCart ?? prisma.cart.create({ data: { userId } });
+  if (!anonCart?.items.length) {
+    return userCart ?? getOrCreateCart(userId);
+  }
 
   const cart = userCart ?? (await prisma.cart.create({ data: { userId } }));
   for (const item of anonCart.items) {
@@ -43,7 +45,7 @@ export async function mergeAnonymousCart(userId: string, sessionId: string) {
     });
   }
   await prisma.cart.delete({ where: { id: anonCart.id } });
-  return prisma.cart.findUnique({ where: { id: cart.id }, include: { items: { include: { product: true } } } });
+  return getOrCreateCart(userId);
 }
 
 export async function validateProductForCart(productId: string) {
@@ -93,7 +95,11 @@ export async function resolveCartForRequest() {
     newSessionId = effectiveSessionId;
   }
 
-  const cart = await getOrCreateCart(user?.id, effectiveSessionId);
+  let cart =
+    user?.id && effectiveSessionId
+      ? await mergeAnonymousCart(user.id, effectiveSessionId)
+      : await getOrCreateCart(user?.id, effectiveSessionId);
+
   return { cart, newSessionId };
 }
 

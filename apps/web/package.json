@@ -16,7 +16,9 @@
     "test:password": "node --import tsx --test src/lib/password/validate-strong-password.test.ts",
     "test:partner:rules": "node --import tsx --test src/lib/partner/operation-rules.test.ts src/lib/partner/document-validation.test.ts",
     "test:registration:rules": "node --import tsx --test src/lib/registration/collect-step-errors.test.ts",
-    "test:vlibras": "node --import tsx --test src/lib/accessibility/vlibras-load-outcome.test.ts"
+    "test:vlibras": "node --import tsx --test src/lib/accessibility/vlibras-load-outcome.test.ts",
+    "test:social:permissions": "node --import tsx --test src/lib/social/persona-permissions.test.ts",
+    "test:talkjs": "node --import tsx --test src/lib/talkjs/server.test.ts"
   },
   "dependencies": {
     "@ecopet/database": "*",
@@ -29,6 +31,7 @@
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-switch": "^1.2.5",
     "@radix-ui/react-tabs": "^1.1.12",
+    "@talkjs/react": "^0.1.12",
     "bcryptjs": "^3.0.2",
     "class-variance-authority": "^0.7.1",
     "cloudinary": "^2.6.1",
@@ -46,6 +49,7 @@
     "resend": "^6.14.0",
     "socket.io-client": "^4.8.1",
     "tailwind-merge": "^3.3.0",
+    "talkjs": "^0.46.0",
     "twilio": "^6.0.2",
     "zod": "^3.25.28",
     "zustand": "^5.0.5"

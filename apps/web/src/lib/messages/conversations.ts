@@ -94,6 +94,9 @@ export async function listUserConversations(params: {
         type: c.type,
         status: c.status,
         title: c.title,
+        talkjsConversationId: c.talkjsConversationId,
+        contextType: c.contextType,
+        contextId: c.contextId,
         lastMessageAt: c.lastMessageAt,
         unreadCount,
         lastMessage: last

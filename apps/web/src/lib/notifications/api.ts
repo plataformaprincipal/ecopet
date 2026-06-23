@@ -1,53 +1,105 @@
-import type { Notification, AiSummary } from "./types";
-import { api } from "@/lib/api";
-
-const LOAD_DELAY_MS = 400;
+import type { Notification, NotificationPreferences, ChannelStatus } from "./types";
+import { typeToCategory } from "./types";
 
 type ApiNotification = {
   id: string;
+  type: import("@prisma/client").NotificationType;
   title: string;
-  body: string;
-  type: string;
+  message: string;
+  actionUrl?: string | null;
+  metadata?: Record<string, unknown> | null;
+  priority: import("@prisma/client").NotificationPriority;
   read: boolean;
+  readAt?: string | null;
   createdAt: string;
-  link?: string | null;
 };
 
+type ApiListResponse = {
+  notifications: ApiNotification[];
+  nextCursor: string | null;
+};
+
+async function notificationsFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(path, {
+    credentials: "include",
+    ...init,
+    headers: { "Content-Type": "application/json", ...init?.headers },
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok || body.success === false) {
+    throw new Error(body.error?.message ?? `Erro ${res.status}`);
+  }
+  return body.data as T;
+}
+
 function mapNotification(n: ApiNotification): Notification {
+  const actionUrl = n.actionUrl ?? (typeof n.metadata?.link === "string" ? n.metadata.link : undefined);
   return {
     id: n.id,
+    type: n.type,
+    category: typeToCategory(n.type),
     title: n.title,
-    description: n.body,
-    category: (n.type?.toLowerCase() as Notification["category"]) || "system",
-    read: n.read,
+    description: n.message,
     createdAt: n.createdAt,
-    action: n.link ? { label: "Ver detalhes", href: n.link } : undefined,
+    read: n.read,
+    priority: n.priority,
+    actionUrl,
+    action: actionUrl ? { label: "notifications.actions.viewDetails", href: actionUrl } : undefined,
+    meta: n.metadata ?? undefined,
   };
 }
 
-export async function fetchNotifications(token?: string): Promise<{ items: Notification[]; isDemo: boolean }> {
-  if (token) {
-    try {
-      const rows = await api<ApiNotification[]>("/api/notifications", { token });
-      return { items: rows.map(mapNotification), isDemo: false };
-    } catch {
-      /* fallback empty for new users */
-      return { items: [], isDemo: false };
-    }
-  }
-  await new Promise((r) => setTimeout(r, LOAD_DELAY_MS));
-  return { items: [], isDemo: false };
+export async function fetchNotifications(params?: {
+  cursor?: string;
+  read?: "read" | "unread";
+  type?: string;
+}): Promise<{ items: Notification[]; nextCursor: string | null; isDemo: boolean }> {
+  const q = new URLSearchParams();
+  if (params?.cursor) q.set("cursor", params.cursor);
+  if (params?.read) q.set("read", params.read);
+  if (params?.type) q.set("type", params.type);
+  const suffix = q.toString() ? `?${q}` : "";
+  const data = await notificationsFetch<ApiListResponse>(`/api/notifications${suffix}`);
+  return {
+    items: data.notifications.map(mapNotification),
+    nextCursor: data.nextCursor,
+    isDemo: false,
+  };
 }
 
-export async function fetchAiSummary(_token?: string): Promise<AiSummary | null> {
+export async function fetchUnreadCount(): Promise<number> {
+  const data = await notificationsFetch<{ count: number }>("/api/notifications/unread-count");
+  return data.count;
+}
+
+export async function markNotificationReadApi(id: string): Promise<void> {
+  await notificationsFetch(`/api/notifications/${id}/read`, { method: "PATCH", body: "{}" });
+}
+
+export async function markAllNotificationsReadApi(): Promise<void> {
+  await notificationsFetch("/api/notifications/read-all", { method: "PATCH", body: "{}" });
+}
+
+export async function deleteNotificationApi(id: string): Promise<void> {
+  await notificationsFetch(`/api/notifications/${id}`, { method: "DELETE" });
+}
+
+export async function fetchNotificationPreferences(): Promise<{
+  preferences: NotificationPreferences;
+  channels: ChannelStatus;
+}> {
+  return notificationsFetch("/api/notifications/preferences");
+}
+
+export async function updateNotificationPreferences(
+  prefs: Partial<NotificationPreferences>
+): Promise<{ preferences: NotificationPreferences; channels: ChannelStatus }> {
+  return notificationsFetch("/api/notifications/preferences", {
+    method: "PUT",
+    body: JSON.stringify(prefs),
+  });
+}
+
+export async function fetchAiSummary(): Promise<null> {
   return null;
-}
-
-export async function markNotificationReadApi(id: string, token?: string): Promise<void> {
-  if (!token) return;
-  await api(`/api/notifications/${id}/read`, { method: "PATCH", token, body: "{}" }).catch(() => {});
-}
-
-export async function markAllNotificationsReadApi(_token?: string): Promise<void> {
-  /* reservado */
 }

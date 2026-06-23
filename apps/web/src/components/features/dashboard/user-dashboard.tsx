@@ -23,10 +23,10 @@ import { useNotificationsStore } from "@/store/notifications-store";
 export function UserDashboard() {
   const { user, token, loading } = useCurrentUser();
   const cartCount = useMarketplaceStore((s) => s.cartCount());
-  const unread = useNotificationsStore((s) => s.unreadCount());
+  const unread = useNotificationsStore((s) => s.unreadCount);
 
   useEffect(() => {
-    if (token) useNotificationsStore.getState().load(token);
+    useNotificationsStore.getState().load();
   }, [token]);
 
   if (loading) {

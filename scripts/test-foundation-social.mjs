@@ -347,7 +347,7 @@ async function main() {
 
   // 33 notification social
   const notif = await prisma.notification.findFirst({
-    where: { userId: client.id, type: { startsWith: "social_" } },
+    where: { userId: client.id, type: "SOCIAL" },
     orderBy: { createdAt: "desc" },
   });
   assert(notif, "33 notification social");
@@ -370,7 +370,94 @@ async function main() {
   const seed = readFileSync(path.join(__dirname, "../packages/database/prisma/seed.ts"), "utf8");
   assert(!seed.includes("socialPost.create"), "35 seed sem posts fake");
 
-  console.log("\n✅ Todos os 35 cenários foundation social passaram");
+  // 36 visitante vê feed público
+  const guestFeed = await reqAs("guest", "/api/social/feed");
+  assert(guestFeed.status === 200, "36 visitante vê feed");
+  assert(Array.isArray(guestFeed.data.data?.posts), "36 feed posts array");
+
+  // 37 visitante não curte (401)
+  const guestLike = await reqAs("guest", `/api/social/posts/${postId}/like`, { method: "POST" });
+  assert(guestLike.status === 401, "37 visitante não curte");
+
+  // 38 visitante não comenta (401)
+  const guestComment = await reqAs("guest", `/api/social/posts/${postId}/comments`, {
+    method: "POST",
+    body: JSON.stringify({ content: "guest" }),
+  });
+  assert(guestComment.status === 401, "38 visitante não comenta");
+
+  // 39 ONG cria post de adoção
+  const ong = await registerAndLogin("ong", "ONG", `social.ong.${ts}@test.ecopet.local`);
+  await activateUser(ong.id);
+  const adoptionPost = await reqAs("ong", "/api/social/posts", {
+    method: "POST",
+    body: JSON.stringify({
+      type: "ADOPTION",
+      content: "Luna procura lar #adocao",
+      adoptionMeta: {
+        animalName: "Luna",
+        species: "Cão",
+        approximateAge: "2 anos",
+        sex: "Fêmea",
+        size: "Médio",
+        city: "São Paulo",
+        state: "SP",
+        status: "AVAILABLE",
+      },
+    }),
+  });
+  assert(adoptionPost.status === 201, "39 ONG cria adoção");
+  assert(adoptionPost.data.data?.post?.type === "ADOPTION", "39 tipo ADOPTION");
+
+  // 40 parceiro cria post de produto (sem produto vinculado — tipo permitido)
+  const productPost = await reqAs("partner", "/api/social/posts", {
+    method: "POST",
+    body: JSON.stringify({ type: "PRODUCT", content: "Novidade na loja!" }),
+  });
+  assert(productPost.status === 201, "40 parceiro post produto");
+
+  // 41 parceiro cria post de serviço
+  const servicePost = await reqAs("partner", "/api/social/posts", {
+    method: "POST",
+    body: JSON.stringify({ type: "SERVICE", content: "Banho e tosa com desconto" }),
+  });
+  assert(servicePost.status === 201, "41 parceiro post serviço");
+
+  // 42 cliente não cria post de produto
+  const clientProduct = await reqAs("client", "/api/social/posts", {
+    method: "POST",
+    body: JSON.stringify({ type: "PRODUCT", content: "hack produto" }),
+  });
+  assert(clientProduct.status === 403, "42 cliente bloqueado produto");
+
+  // 43 ONG cria campanha
+  const campaignPost = await reqAs("ong", "/api/social/posts", {
+    method: "POST",
+    body: JSON.stringify({ type: "CAMPAIGN", content: "Campanha de castração" }),
+  });
+  assert(campaignPost.status === 201, "43 ONG campanha");
+
+  // 44 admin modera denúncia
+  const reportsList = await reqAs("admin", "/api/admin/social/reports");
+  assert(reportsList.status === 200, "44 admin lista denúncias");
+  const reportId = reportsList.data.data?.reports?.[0]?.id;
+  if (reportId) {
+    const resolveReport = await reqAs("admin", `/api/admin/social/reports/${reportId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status: "RESOLVED", resolution: "teste" }),
+    });
+    assert(resolveReport.status === 200, "44 admin modera denúncia");
+  }
+
+  // 45 i18n socialFeed keys existem
+  const ptBR = JSON.parse(readFileSync(path.join(__dirname, "../apps/web/src/i18n/locales/pt-BR.json"), "utf8"));
+  const en = JSON.parse(readFileSync(path.join(__dirname, "../apps/web/src/i18n/locales/en.json"), "utf8"));
+  const es = JSON.parse(readFileSync(path.join(__dirname, "../apps/web/src/i18n/locales/es.json"), "utf8"));
+  assert(ptBR.socialFeed?.authModal?.title, "45 pt-BR social i18n");
+  assert(en.socialFeed?.authModal?.title, "45 en social i18n");
+  assert(es.socialFeed?.authModal?.title, "45 es social i18n");
+
+  console.log("\n✅ Todos os 45 cenários foundation social passaram");
 }
 
 main()

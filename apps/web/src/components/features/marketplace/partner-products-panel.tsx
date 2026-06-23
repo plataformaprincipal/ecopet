@@ -54,7 +54,7 @@ const defaultForm = (): ProductForm => ({
   sku: "",
   price: "",
   comparePrice: "",
-  stock: "0",
+  stock: "1",
   minStock: "0",
   unit: "",
   weightGrams: "",
@@ -197,7 +197,7 @@ export function PartnerProductsPanel({ mode = "list", productId }: { mode?: "lis
     });
     const data = await res.json();
     if (!data.success) { setError(data.error?.message ?? "Erro"); return; }
-    window.location.href = `/dashboard/partner/products/${data.data.product.id}`;
+    window.location.href = `/dashboard/partner/products/${data.data.product.id}?created=1`;
   }
 
   async function toggleStatus(id: string, current: string) {

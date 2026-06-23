@@ -57,16 +57,43 @@ export async function PATCH(request: Request, context: RouteContext) {
     );
   }
 
-  const updated = await prisma.order.update({
-    where: { id: orderId },
-    data: {
-      status: nextStatus,
-      fulfillmentStatus: nextStatus,
-      statusHistory: {
-        create: { status: nextStatus, note: parsed.data.note ?? `Status atualizado para ${nextStatus}` },
+  const updated = await prisma.$transaction(async (tx) => {
+    if (nextStatus === OrderStatus.CANCELLED) {
+      const items = await tx.orderItem.findMany({ where: { orderId } });
+      for (const item of items) {
+        if (!item.productId) continue;
+        const product = await tx.product.findUnique({ where: { id: item.productId } });
+        if (!product) continue;
+
+        await tx.product.update({
+          where: { id: item.productId },
+          data: { stock: { increment: item.quantity } },
+        });
+
+        await tx.inventoryLog.create({
+          data: {
+            productId: item.productId,
+            partnerId: product.sellerId,
+            delta: item.quantity,
+            stockAfter: product.stock + item.quantity,
+            reason: "ORDER_CANCELLED",
+            actorId: user!.id,
+          },
+        });
+      }
+    }
+
+    return tx.order.update({
+      where: { id: orderId },
+      data: {
+        status: nextStatus,
+        fulfillmentStatus: nextStatus,
+        statusHistory: {
+          create: { status: nextStatus, note: parsed.data.note ?? `Status atualizado para ${nextStatus}` },
+        },
       },
-    },
-    include: { items: true, statusHistory: { orderBy: { createdAt: "asc" } } },
+      include: { items: true, statusHistory: { orderBy: { createdAt: "asc" } } },
+    });
   });
 
   await createInternalNotification({
@@ -74,6 +101,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     title: "Atualização de pedido",
     body: `Seu pedido #${order.orderNumber} está ${nextStatus}.`,
     type: "ORDER_STATUS_UPDATED",
+    actionUrl: `/dashboard/client/orders/${orderId}`,
     data: { orderId, status: nextStatus },
   });
 

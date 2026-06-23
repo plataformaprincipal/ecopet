@@ -56,6 +56,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     title: "Atualização de agendamento",
     body: `Status do agendamento: ${parsed.data.status}`,
     type: typeMap[parsed.data.status] ?? "APPOINTMENT_UPDATED",
+    actionUrl: `/dashboard/client/appointments`,
     data: { appointmentId },
   });
 

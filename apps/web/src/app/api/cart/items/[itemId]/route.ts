@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { apiSuccess, apiFailure } from "@/lib/api-response";
+import { requireClient } from "@/lib/auth/require-auth";
 import {
   serializeCart,
   resolveCartForRequest,
@@ -14,6 +15,9 @@ const patchSchema = z.object({
 type RouteContext = { params: Promise<{ itemId: string }> };
 
 export async function PATCH(request: Request, context: RouteContext) {
+  const { error } = await requireClient();
+  if (error) return error;
+
   const { cart, newSessionId } = await resolveCartForRequest();
   const { itemId } = await context.params;
 
@@ -39,6 +43,9 @@ export async function PATCH(request: Request, context: RouteContext) {
 }
 
 export async function DELETE(_req: Request, context: RouteContext) {
+  const { error } = await requireClient();
+  if (error) return error;
+
   const { cart, newSessionId } = await resolveCartForRequest();
   const { itemId } = await context.params;
 

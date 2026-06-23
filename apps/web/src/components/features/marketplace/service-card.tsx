@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { useTranslation } from "@/providers/i18n-provider";
 import { useAriaAnnounce } from "@/components/shared/accessibility/aria-live-region";
 import { serviceImageAlt } from "@/lib/accessibility/image-alt";
+import { useMarketplaceActions } from "@/hooks/use-marketplace-actions";
 
 interface ServiceCardProps {
   service: MarketplaceService;
@@ -22,26 +23,25 @@ interface ServiceCardProps {
 export function ServiceCard({ service, compact }: ServiceCardProps) {
   const { t } = useTranslation();
   const announce = useAriaAnnounce();
-  const { addToCart, toggleFavoriteService, toggleCompare, isFavoriteService, isInCompare } =
-    useMarketplaceStore();
+  const { AuthModal, requireAuth, toggleServiceFavorite, isFavoriteService } = useMarketplaceActions();
+  const { toggleCompare, isInCompare } = useMarketplaceStore();
   const fav = isFavoriteService(service.id);
   const comparing = isInCompare("service", service.id);
 
-  function handleAddToCart() {
-    addToCart({
-      type: "service",
-      itemId: service.id,
-      name: service.name,
-      image: service.image,
-      price: service.price,
-      quantity: 1,
-      partnerId: service.partnerId,
-      partnerName: service.partner.name,
+  function handleSchedule() {
+    requireAuth(() => {
+      window.location.href = `/agenda?servico=${service.id}`;
     });
     announce(t("marketplace.addedToCart", { name: service.name }));
   }
 
+  function handleFavorite() {
+    toggleServiceFavorite(service);
+    announce(fav ? t("marketplace.removedFromFavorites") : t("marketplace.addedToFavorites"));
+  }
+
   return (
+    <>
     <article className="group flex flex-col overflow-hidden rounded-2xl border border-ecopet-gray/10 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg dark:bg-white/5">
       <Link href={`/marketplace/servico/${service.id}`} className="relative block aspect-video overflow-hidden bg-gray-100">
         <Image src={service.image} alt={serviceImageAlt(service.name)} fill className="object-cover transition-transform group-hover:scale-105" sizes="(max-width:768px) 100vw, 33vw" />
@@ -88,7 +88,7 @@ export function ServiceCard({ service, compact }: ServiceCardProps) {
 
         {!compact && (
           <div className="mt-auto flex gap-1.5 pt-3">
-            <Button size="sm" className="flex-1" onClick={handleAddToCart}>
+            <Button size="sm" className="flex-1" onClick={handleSchedule}>
               <Calendar className="h-4 w-4" />
               {t("marketplace.schedule")}
             </Button>
@@ -101,10 +101,7 @@ export function ServiceCard({ service, compact }: ServiceCardProps) {
               size="sm"
               variant="outline"
               className={cn("px-2.5", fav && "border-red-300 text-red-500")}
-              onClick={() => {
-                toggleFavoriteService(service.id, service);
-                announce(fav ? t("marketplace.removedFromFavorites") : t("marketplace.addedToFavorites"));
-              }}
+              onClick={handleFavorite}
               aria-label={t("marketplace.favorite")}
             >
               <Heart className={cn("h-4 w-4", fav && "fill-red-500")} />
@@ -125,5 +122,7 @@ export function ServiceCard({ service, compact }: ServiceCardProps) {
         )}
       </div>
     </article>
+    {AuthModal}
+    </>
   );
 }

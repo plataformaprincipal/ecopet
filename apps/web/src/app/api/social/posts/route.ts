@@ -24,10 +24,15 @@ export async function POST(req: Request) {
 
     const post = await createPost({
       authorId: user!.id,
+      type: body.type,
       content: body.content,
       visibility: body.visibility,
       petId: body.petId,
       locationText: body.locationText,
+      linkedProductId: body.linkedProductId,
+      linkedServiceId: body.linkedServiceId,
+      linkedCampaignId: body.linkedCampaignId,
+      adoptionMeta: body.adoptionMeta,
       media,
     });
     return apiSuccess({ post }, 201);

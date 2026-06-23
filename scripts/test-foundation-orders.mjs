@@ -1,7 +1,7 @@
 /**
- * Testes Etapa 8 — Pedidos
+ * Testes Etapa 8 — Pedidos (cliente + parceiro + isolamento)
  */
-import { PrismaClient, AccountStatus, ProductCatalogStatus } from "@prisma/client";
+import { PrismaClient, ProductCatalogStatus } from "@prisma/client";
 
 const WEB = process.env.WEB_URL || "http://localhost:3000";
 const prisma = new PrismaClient();
@@ -10,6 +10,7 @@ const pwd = "Ecopet@Forte2026";
 
 function assert(c, m) { if (!c) throw new Error(m); }
 function phone(s) { return `119${String(s).padStart(8, "0").slice(-8)}`; }
+function cnpj() { return String(Date.now()).slice(-10).padEnd(14, "0").slice(0, 14); }
 
 async function req(path, opts = {}) {
   const headers = { "Content-Type": "application/json", ...(opts.headers || {}) };
@@ -20,45 +21,96 @@ async function req(path, opts = {}) {
   return { status: res.status, data: await res.json().catch(() => ({})) };
 }
 
+async function registerPartner(email, suffix) {
+  jar.clear();
+  const reg = await req("/api/auth/register", {
+    method: "POST",
+    body: JSON.stringify({
+      role: "PARTNER", name: "Loja Pedido", email, password: pwd, confirmPassword: pwd,
+      phone: phone(suffix), businessName: "Loja", legalName: "Loja LTDA", cnpj: cnpj(),
+      category: "Pet Shop", address: "Rua A", city: "SP", state: "SP",
+    }),
+  });
+  assert(reg.status === 201, "register partner");
+}
+
+async function login(email) {
+  jar.clear();
+  const r = await req("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password: pwd }) });
+  assert(r.status === 200, `login ${email}`);
+}
+
 async function main() {
   const ts = Date.now();
+  const partnerEmail = `partner.order.${ts}@test.ecopet.local`;
   const clientEmail = `client.order.${ts}@test.ecopet.local`;
+  const otherPartnerEmail = `other.order.${ts}@test.ecopet.local`;
+
+  await registerPartner(partnerEmail, ts);
+  const create = await req("/api/partner/products", {
+    method: "POST",
+    body: JSON.stringify({
+      name: `Pedido Flow ${ts}`, description: "Produto E2E", shortDescription: "E2E",
+      catalogCategory: "FOOD", price: 55, stock: 10, status: "ACTIVE",
+    }),
+  });
+  assert(create.status === 201, "parceiro cria produto");
+  const productId = create.data.data.product.id;
+  const partnerId = create.data.data.product.sellerId;
+
   jar.clear();
   await req("/api/auth/register", {
     method: "POST",
     body: JSON.stringify({
       role: "CLIENT", name: "Cliente Teste", email: clientEmail, password: pwd, confirmPassword: pwd,
-      phone: phone(ts), birthDate: "1990-01-01", username: `ord${ts}`, gender: "MASCULINO", acceptTerms: true, acceptPrivacy: true,
+      phone: phone(ts + 1), birthDate: "1990-01-01", username: `ord${ts}`, gender: "MASCULINO", acceptTerms: true, acceptPrivacy: true,
     }),
   });
 
-  const product = await prisma.product.findFirst({
-    where: { status: ProductCatalogStatus.ACTIVE, approvalStatus: "APPROVED", stock: { gt: 1 }, deletedAt: null },
-  });
-  assert(product, "produto com estoque");
+  await req("/api/cart/items", { method: "POST", body: JSON.stringify({ productId, quantity: 1 }) });
 
-  await req("/api/cart/items", { method: "POST", body: JSON.stringify({ productId: product.id, quantity: 1 }) });
-
-  const stockBefore = product.stock;
+  const stockBefore = create.data.data.product.stock;
   const checkout = await req("/api/checkout", {
     method: "POST",
     body: JSON.stringify({
       deliveryMethod: "PICKUP_LOCAL",
-      phone: phone(ts + 1),
+      paymentMethod: "PIX",
+      phone: phone(ts + 2),
       address: { street: "Rua A", city: "São Paulo", state: "SP" },
     }),
   });
   assert(checkout.status === 201 || checkout.status === 200, "checkout creates order");
+  const orderId = checkout.data.data?.order?.id;
+  assert(orderId, "order id returned");
 
-  const after = await prisma.product.findUnique({ where: { id: product.id } });
+  const after = await prisma.product.findUnique({ where: { id: productId } });
   assert(after && after.stock < stockBefore, "stock reduced");
 
   const orders = await req("/api/client/orders");
-  assert(orders.data.data.orders?.length >= 1, "client sees orders");
+  assert(orders.data.data.orders?.some((o) => o.id === orderId), "client sees order");
 
-  const orderId = orders.data.data.orders[0].id;
+  await login(partnerEmail);
+  const partnerOrders = await req("/api/partner/orders");
+  assert(partnerOrders.data.data.orders?.some((o) => o.id === orderId), "parceiro vê pedido");
+
+  const confirm = await req(`/api/partner/orders/${orderId}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status: "CONFIRMED" }),
+  });
+  assert(confirm.status === 200, "parceiro confirma pedido");
+
+  await login(clientEmail);
+  const clientDetail = await req("/api/client/orders");
+  const updated = clientDetail.data.data.orders.find((o) => o.id === orderId);
+  assert(updated?.status === "CONFIRMED", "cliente vê status atualizado");
+
+  await registerPartner(otherPartnerEmail, ts + 9);
+  const foreign = await req(`/api/partner/orders/${orderId}`);
+  assert(foreign.status === 404, "outro parceiro não vê pedido");
+
+  await login(clientEmail);
   const cancel = await req(`/api/client/orders/${orderId}/cancel`, { method: "PATCH" });
-  assert(cancel.status === 200, "client cancels pending order");
+  assert(cancel.status === 400, "cliente não cancela após confirmação");
 
   console.log("✓ test:foundation:orders passou");
 }

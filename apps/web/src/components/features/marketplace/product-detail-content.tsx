@@ -16,12 +16,15 @@ import { formatMpPrice, discountPct, AI_TAG_LABELS } from "@/lib/marketplace/con
 import type { MarketplaceProduct, MarketplaceReview } from "@/lib/marketplace/types";
 import { cn } from "@/lib/utils";
 import { productImageAlt, avatarAlt } from "@/lib/accessibility/image-alt";
+import { StartConversationButton } from "@/components/messages/StartConversationButton";
+import { useTranslation } from "@/providers/i18n-provider";
 
 interface ProductDetailContentProps {
   id: string;
 }
 
 export function ProductDetailContent({ id }: ProductDetailContentProps) {
+  const { t } = useTranslation();
   const { addToCart, toggleFavoriteProduct, isFavoriteProduct } = useMarketplaceStore();
   const [product, setProduct] = useState<MarketplaceProduct | undefined>();
   const [reviews, setReviews] = useState<MarketplaceReview[]>([]);
@@ -112,7 +115,7 @@ export function ProductDetailContent({ id }: ProductDetailContentProps) {
             {product.inStock && <span>Entrega em ~{product.deliveryDays} dias</span>}
           </div>
 
-          <div className="mt-6 flex items-center gap-3">
+          <div className="mt-6 flex flex-wrap items-center gap-3">
             <div className="flex items-center rounded-xl border">
               <button type="button" className="px-3 py-2" onClick={() => setQty(Math.max(1, qty - 1))}>−</button>
               <span className="w-10 text-center font-semibold">{qty}</span>
@@ -133,6 +136,18 @@ export function ProductDetailContent({ id }: ProductDetailContentProps) {
               <Heart className={cn("h-5 w-5", fav && "fill-red-500")} />
             </Button>
           </div>
+
+          <StartConversationButton
+            className="mt-3 w-full"
+            variant="outline"
+            size="lg"
+            participantUserId={product.partnerId}
+            contextType="PRODUCT"
+            contextId={product.id}
+            title={product.name}
+            label={t("messagesModule.askAboutProduct")}
+            ariaLabel={t("messagesModule.askAboutProduct")}
+          />
 
           <Link href="/marketplace/checkout" className="mt-3 block">
             <Button variant="secondary" className="w-full" size="lg" disabled={!product.inStock}>Comprar agora</Button>

@@ -45,6 +45,8 @@ export interface MarketplacePartner {
     warranty?: string;
   };
   portfolio: { id: string; type: "image" | "video"; url: string; caption?: string }[];
+  productCount?: number;
+  serviceCount?: number;
   certifications?: string[];
   qualityIndex?: number;
   completionRate?: number;
@@ -196,6 +198,12 @@ export interface MarketplaceFilters {
   urgency: string;
   sort: SortOption;
   query: string;
+  partnerId?: string;
+  city?: string;
+  state?: string;
+  telehealth?: boolean;
+  emergency24h?: boolean;
+  inStock?: boolean;
   onlineOnly?: boolean;
   inPersonOnly?: boolean;
   homeServiceOnly?: boolean;

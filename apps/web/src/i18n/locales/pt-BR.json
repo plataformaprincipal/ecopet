@@ -1038,7 +1038,21 @@
       "noPartnersDesc": "Siga parceiros de confiança.",
       "noSearchesTitle": "Nenhuma busca salva",
       "noSearchesDesc": "Suas buscas recentes aparecerão aqui."
-    }
+    },
+    "authModal": {
+      "title": "Entre ou crie sua conta",
+      "description": "Para utilizar esta funcionalidade, entre na sua conta ou cadastre-se gratuitamente.",
+      "signIn": "Entrar",
+      "createAccount": "Criar Conta"
+    },
+    "loading": "Carregando...",
+    "emptyPartners": "Nenhum parceiro encontrado.",
+    "partnerNotFound": "Parceiro não encontrado.",
+    "backToPartners": "Voltar aos parceiros",
+    "viewPartner": "Ver parceiro",
+    "viewProducts": "Ver produtos",
+    "viewServices": "Ver serviços",
+    "reviews": "avaliações"
   },
   "a11y": {
     "title": "Acessibilidade ECOPET",
@@ -1232,6 +1246,189 @@
       "description": "Nenhum item encontrado."
     }
   },
+  "socialFeed": {
+    "title": "Feed ECOPET",
+    "authModal": {
+      "title": "Entre ou crie sua conta",
+      "description": "Para interagir na EcoPet, entre na sua conta ou cadastre-se gratuitamente.",
+      "signIn": "Entrar",
+      "createAccount": "Criar conta"
+    },
+    "composer": {
+      "placeholder": "O que seu pet está aprontando hoje? Use #hashtags",
+      "media": "Mídia",
+      "publish": "Publicar",
+      "loginToPost": "Entre para publicar na comunidade",
+      "typeLabel": "Tipo de publicação",
+      "validationEmpty": "Informe texto ou mídia."
+    },
+    "actions": {
+      "like": "Curtir",
+      "unlike": "Descurtir",
+      "comment": "Comentar",
+      "save": "Salvar",
+      "unsave": "Remover dos salvos",
+      "share": "Compartilhar",
+      "shared": "Link copiado!",
+      "report": "Denunciar",
+      "follow": "Seguir",
+      "unfollow": "Deixar de seguir"
+    },
+    "stats": {
+      "likes": "{count} curtidas",
+      "comments": "{count} comentários",
+      "shares": "{count} compartilhamentos"
+    },
+    "empty": {
+      "title": "Feed vazio",
+      "description": "Nenhuma publicação ainda. Seja o primeiro a compartilhar!"
+    },
+    "error": {
+      "load": "Erro ao carregar feed",
+      "retry": "Tentar novamente"
+    },
+    "loadMore": "Carregar mais",
+    "comments": {
+      "placeholder": "Escreva um comentário...",
+      "send": "Enviar",
+      "empty": "Nenhum comentário ainda."
+    },
+    "filters": {
+      "all": "Todos",
+      "label": "Filtrar por tipo"
+    },
+    "postTypes": {
+      "PET_UPDATE": "Atualização do pet",
+      "GENERAL": "Geral",
+      "PRODUCT": "Produto",
+      "SERVICE": "Serviço",
+      "ADOPTION": "Adoção",
+      "CAMPAIGN": "Campanha",
+      "DONATION": "Doação",
+      "EVENT": "Evento",
+      "RESCUE": "Resgate",
+      "EDUCATIONAL": "Conscientização",
+      "URGENT": "Urgente"
+    },
+    "badges": {
+      "CLIENT": "Cliente",
+      "PARTNER": "Parceiro",
+      "ONG": "ONG",
+      "PROTETOR": "Protetor",
+      "ADMIN": "Admin",
+      "verified": "Verificado"
+    },
+    "cta": {
+      "viewProduct": "Ver produto",
+      "viewService": "Ver serviço",
+      "schedule": "Agendar",
+      "buy": "Comprar",
+      "contactPartner": "Falar com parceiro",
+      "wantAdopt": "Quero adotar",
+      "helpCampaign": "Ajudar campanha",
+      "contactOng": "Falar com ONG"
+    },
+    "adoption": {
+      "species": "Espécie",
+      "age": "Idade",
+      "sex": "Sexo",
+      "size": "Porte",
+      "location": "Localização",
+      "statusAvailable": "Disponível",
+      "statusInReview": "Em análise",
+      "statusAdopted": "Adotado"
+    },
+    "post": {
+      "removed": "Publicação removida",
+      "hidden": "Publicação oculta pela moderação",
+      "edited": "editado"
+    },
+    "report": {
+      "title": "Denunciar publicação",
+      "submit": "Enviar denúncia"
+    }
+  },
+  "notifications": {
+    "title": "Notificações",
+    "bellLabel": "Notificações",
+    "unreadCount": "{count} não lidas",
+    "unread": "Não lida",
+    "markRead": "Marcar como lida",
+    "markAllRead": "Marcar todas como lidas",
+    "viewAll": "Ver todas",
+    "delete": "Excluir notificação",
+    "searchPlaceholder": "Buscar notificações...",
+    "loadMore": "Carregar mais",
+    "filters": {
+      "label": "Filtrar notificações",
+      "all": "Todas"
+    },
+    "empty": {
+      "title": "Sem notificações",
+      "description": "Você está em dia! Novas atualizações aparecerão aqui."
+    },
+    "actions": {
+      "viewDetails": "Ver detalhes"
+    },
+    "priority": {
+      "LOW": "Baixa",
+      "NORMAL": "Normal",
+      "HIGH": "Alta",
+      "URGENT": "Urgente"
+    },
+    "types": {
+      "SYSTEM": "Sistema",
+      "SECURITY": "Segurança",
+      "ORDER": "Pedido",
+      "APPOINTMENT": "Agendamento",
+      "PRODUCT": "Produto",
+      "SERVICE": "Serviço",
+      "SOCIAL": "Social",
+      "MESSAGE": "Mensagem",
+      "ADOPTION": "Adoção",
+      "CAMPAIGN": "Campanha",
+      "DOCUMENT": "Documento",
+      "PAYMENT": "Pagamento",
+      "REVIEW": "Avaliação",
+      "SUPPORT": "Suporte"
+    },
+    "categories": {
+      "orders": "Pedidos",
+      "appointments": "Agendamentos",
+      "social": "Social",
+      "messages": "Mensagens",
+      "adoption": "Adoções",
+      "campaigns": "Campanhas",
+      "products": "Produtos",
+      "services": "Serviços",
+      "security": "Segurança",
+      "system": "Sistema"
+    },
+    "preferences": {
+      "title": "Preferências de notificação",
+      "subtitle": "Escolha como e quando deseja ser avisado.",
+      "channels": "Canais",
+      "topics": "Assuntos",
+      "inApp": "Notificações no sistema",
+      "email": "E-mail",
+      "sms": "SMS",
+      "whatsapp": "WhatsApp",
+      "marketing": "Marketing e novidades",
+      "orders": "Pedidos",
+      "appointments": "Agendamentos",
+      "social": "Rede social",
+      "adoptions": "Adoções",
+      "campaigns": "Campanhas",
+      "products": "Produtos",
+      "services": "Serviços",
+      "security": "Segurança",
+      "securityHint": "Alertas de segurança não podem ser desativados.",
+      "channelNotConfigured": "Canal ainda não configurado.",
+      "saved": "Preferências salvas.",
+      "loadError": "Não foi possível carregar preferências.",
+      "saveError": "Não foi possível salvar preferências."
+    }
+  },
   "gestor": {
     "title": "Gestor ECOPET",
     "loading": "Carregando Gestor ECOPET...",
@@ -1239,6 +1436,29 @@
       "title": "Acesso restrito",
       "description": "Esta área é exclusiva para administradores ECOPET.",
       "back": "Voltar ao dashboard"
+    }
+  },
+  "messagesModule": {
+    "title": "Mensagens",
+    "loading": "Carregando conversas...",
+    "empty": "Você ainda não possui conversas.",
+    "selectConversation": "Selecione uma conversa para começar",
+    "configError": "Mensagens temporariamente indisponíveis. Verifique a configuração do TalkJS.",
+    "error": "Não foi possível iniciar a conversa.",
+    "retry": "Tentar novamente",
+    "backToList": "Voltar para conversas",
+    "openSupport": "Abrir suporte",
+    "contactPartner": "Falar com parceiro",
+    "contactOng": "Falar com ONG",
+    "askAboutProduct": "Perguntar sobre produto",
+    "askAboutService": "Perguntar sobre serviço",
+    "talkAboutAdoption": "Falar sobre adoção",
+    "talkAboutCampaign": "Falar sobre campanha",
+    "authModal": {
+      "title": "Entre ou crie sua conta",
+      "description": "Para enviar mensagens na EcoPet, entre na sua conta ou cadastre-se gratuitamente.",
+      "signIn": "Entrar",
+      "createAccount": "Criar conta"
     }
   }
 }

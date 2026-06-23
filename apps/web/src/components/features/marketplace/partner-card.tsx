@@ -2,105 +2,69 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, MessageCircle, MapPin, BadgeCheck, Clock } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { MapPin, Star, Package, Scissors } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { RatingStars } from "./rating-stars";
-import { useMarketplaceStore } from "@/store/marketplace-store";
+import { Card, CardContent } from "@/components/ui/card";
+import { StartConversationButton } from "@/components/messages/StartConversationButton";
 import type { MarketplacePartner } from "@/lib/marketplace/types";
-import { avatarAlt } from "@/lib/accessibility/image-alt";
-import { cn } from "@/lib/utils";
+import { useTranslation } from "@/providers/i18n-provider";
 
-const PARTNER_TYPE_LABELS: Record<string, string> = {
-  petshop: "Pet Shop",
-  clinic: "Clínica Veterinária",
-  veterinarian: "Veterinário",
-  provider: "Prestador de Serviço",
-  ong: "ONG",
-  seller: "Seller",
-  store: "Loja Parceira",
-};
-
-interface PartnerCardProps {
-  partner: MarketplacePartner;
-  horizontal?: boolean;
-}
-
-export function PartnerCard({ partner, horizontal }: PartnerCardProps) {
-  const { toggleFavoritePartner, isFavoritePartner } = useMarketplaceStore();
-  const fav = isFavoritePartner(partner.id);
-
-  if (horizontal) {
-    return (
-      <Link
-        href={`/marketplace/parceiro/${partner.id}`}
-        className="flex items-center gap-4 rounded-2xl border border-ecopet-gray/10 bg-white p-4 transition-all hover:shadow-md dark:bg-white/5"
-      >
-        <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl">
-          <Image src={partner.avatar} alt={avatarAlt(partner.tradeName || partner.name)} fill className="object-cover" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1">
-            <h3 className="truncate font-semibold">{partner.tradeName}</h3>
-            {partner.isVerified && <BadgeCheck className="h-4 w-4 shrink-0 text-blue-500" />}
-          </div>
-          <p className="text-xs text-ecopet-gray">{PARTNER_TYPE_LABELS[partner.type]}</p>
-          <div className="mt-1 flex items-center gap-2 text-xs">
-            <RatingStars rating={partner.rating} />
-            <span className="text-ecopet-gray">· {partner.distanceKm} km</span>
-          </div>
-        </div>
-      </Link>
-    );
-  }
+export function PartnerCard({ partner }: { partner: MarketplacePartner }) {
+  const { t } = useTranslation();
 
   return (
-    <article className="overflow-hidden rounded-2xl border border-ecopet-gray/10 bg-white shadow-sm transition-all hover:shadow-lg dark:bg-white/5">
-      <Link href={`/marketplace/parceiro/${partner.id}`} className="relative block h-24 overflow-hidden">
-        <Image src={partner.cover} alt="" fill className="object-cover" aria-hidden />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-      </Link>
-      <div className="relative px-4 pb-4">
-        <div className="relative -mt-8 mb-2">
-          <div className="relative h-16 w-16 overflow-hidden rounded-xl border-4 border-white shadow-md dark:border-[#0f1419]">
-            <Image src={partner.avatar} alt={avatarAlt(partner.tradeName || partner.name)} fill className="object-cover" />
+    <Card className="overflow-hidden">
+      <CardContent className="p-4">
+        <div className="flex items-start gap-3">
+          <div className="relative h-14 w-14 overflow-hidden rounded-full bg-muted">
+            {partner.avatar ? (
+              <Image src={partner.avatar} alt="" fill className="object-cover" />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-lg font-bold text-ecopet-green">
+                {partner.name.charAt(0)}
+              </div>
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <Link href={`/parceiros/${partner.id}`} className="font-semibold hover:text-ecopet-green">
+              {partner.name}
+            </Link>
+            {partner.location && (
+              <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+                <MapPin className="h-3 w-3" aria-hidden />
+                {partner.location}
+              </p>
+            )}
+            <p className="mt-1 flex items-center gap-1 text-xs">
+              <Star className="h-3 w-3 fill-amber-400 text-amber-400" aria-hidden />
+              {partner.rating.toFixed(1)} ({partner.reviewCount})
+            </p>
           </div>
         </div>
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <div className="flex items-center gap-1">
-              <Link href={`/marketplace/parceiro/${partner.id}`}>
-                <h3 className="font-semibold hover:text-ecopet-green">{partner.tradeName}</h3>
-              </Link>
-              {partner.isVerified && <Badge variant="verified">Verificado</Badge>}
-            </div>
-            <p className="text-xs text-ecopet-gray">{PARTNER_TYPE_LABELS[partner.type]}</p>
-          </div>
-          <Button
-            size="icon"
-            variant="ghost"
-            className={cn("h-8 w-8 shrink-0", fav && "text-red-500")}
-            onClick={() => toggleFavoritePartner(partner.id, partner)}
-          >
-            <Heart className={cn("h-4 w-4", fav && "fill-red-500")} />
+        {partner.description && (
+          <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">{partner.description}</p>
+        )}
+        <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
+          {(partner.productCount ?? partner.salesCount) > 0 && (
+            <span className="flex items-center gap-1"><Package className="h-3 w-3" /> {partner.productCount ?? 0} produtos</span>
+          )}
+          {(partner.serviceCount ?? 0) > 0 && (
+            <span className="flex items-center gap-1"><Scissors className="h-3 w-3" /> {partner.serviceCount} serviços</span>
+          )}
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button asChild size="sm" variant="outline">
+            <Link href={`/parceiros/${partner.id}`}>{t("marketplace.viewPartner")}</Link>
           </Button>
+          <StartConversationButton
+            size="sm"
+            participantUserId={partner.id}
+            contextType="GENERAL"
+            label={t("messagesModule.contactPartner")}
+            ariaLabel={t("messagesModule.contactPartner")}
+          />
         </div>
-        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-ecopet-gray">
-          <RatingStars rating={partner.rating} />
-          <span>({partner.reviewCount})</span>
-          <span className="flex items-center gap-0.5"><MapPin className="h-3 w-3" /> {partner.distanceKm} km</span>
-          <span className="flex items-center gap-0.5"><Clock className="h-3 w-3" /> {partner.responseTime}</span>
-        </div>
-        <p className="mt-2 line-clamp-2 text-xs text-ecopet-gray">{partner.description}</p>
-        <div className="mt-3 flex gap-2">
-          <Link href={`/marketplace/parceiro/${partner.id}`} className="flex-1">
-            <Button size="sm" className="w-full">Ver perfil</Button>
-          </Link>
-          <Button size="sm" variant="outline" className="px-2.5">
-            <MessageCircle className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-    </article>
+      </CardContent>
+    </Card>
   );
 }

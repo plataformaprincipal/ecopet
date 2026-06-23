@@ -66,6 +66,7 @@ export async function POST(request: Request) {
       id: serviceId,
       deletedAt: null,
       status: PartnerServiceStatus.ACTIVE,
+      approvalStatus: "APPROVED",
       provider: { accountStatus: AccountStatus.ACTIVE, role: "PARTNER" },
     },
     include: { provider: true },
@@ -164,6 +165,7 @@ export async function POST(request: Request) {
       title: "Agendamento solicitado",
       body: `Seu agendamento para ${service.name} foi registrado.`,
       type: "APPOINTMENT_CREATED",
+      actionUrl: `/dashboard/client/appointments`,
       data: { appointmentId: appointment.id },
     }),
     createInternalNotification({
@@ -171,6 +173,7 @@ export async function POST(request: Request) {
       title: "Novo agendamento",
       body: `Você recebeu um novo agendamento para ${service.name}.`,
       type: "APPOINTMENT_RECEIVED",
+      actionUrl: `/dashboard/partner/appointments`,
       data: { appointmentId: appointment.id },
     }),
   ]);

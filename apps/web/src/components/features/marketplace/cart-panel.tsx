@@ -7,9 +7,11 @@ import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { firstProductImageUrl, resolveProductAlt } from "@/lib/catalog/images";
+import { useMarketplaceAuthGate } from "@/hooks/use-marketplace-auth-gate";
 
 export function CartPanel() {
   const [cart, setCart] = useState<Record<string, unknown> | null>(null);
+  const [error, setError] = useState("");
 
   const load = () =>
     fetch("/api/cart", { credentials: "include" })
@@ -21,6 +23,22 @@ export function CartPanel() {
   useEffect(() => {
     load();
   }, []);
+
+  async function updateQuantity(itemId: string, quantity: number) {
+    setError("");
+    const res = await fetch(`/api/cart/items/${itemId}`, {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ quantity }),
+    });
+    const data = await res.json();
+    if (!data.success) {
+      setError(data.error?.message ?? "Erro ao atualizar quantidade.");
+      return;
+    }
+    setCart(data.data.cart);
+  }
 
   async function remove(itemId: string) {
     await fetch(`/api/cart/items/${itemId}`, { method: "DELETE", credentials: "include" });
@@ -43,6 +61,8 @@ export function CartPanel() {
         const images = item.images as string[] | undefined;
         const imageUrl = firstProductImageUrl(images);
         const alt = resolveProductAlt(String(item.name));
+        const stock = Number(item.stock);
+        const quantity = Number(item.quantity);
         return (
           <Card key={String(item.id)}>
             <CardContent className="flex gap-3 p-4 text-sm">
@@ -53,9 +73,28 @@ export function CartPanel() {
               )}
               <div className="min-w-0 flex-1">
                 <p className="font-medium">{String(item.name)}</p>
-                <p>
-                  Qtd: {Number(item.quantity)} · R$ {Number(item.unitPrice).toFixed(2)}
-                </p>
+                <p>R$ {Number(item.unitPrice).toFixed(2)}</p>
+                <div className="mt-2 flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    aria-label="Diminuir quantidade"
+                    disabled={quantity <= 1}
+                    onClick={() => updateQuantity(String(item.id), quantity - 1)}
+                  >
+                    −
+                  </Button>
+                  <span aria-live="polite">Qtd: {quantity}</span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    aria-label="Aumentar quantidade"
+                    disabled={quantity >= stock}
+                    onClick={() => updateQuantity(String(item.id), quantity + 1)}
+                  >
+                    +
+                  </Button>
+                </div>
               </div>
               <Button size="sm" variant="outline" onClick={() => remove(String(item.id))}>
                 Remover
@@ -64,6 +103,11 @@ export function CartPanel() {
           </Card>
         );
       })}
+      {error && (
+        <p className="text-sm text-red-600" role="alert">
+          {error}
+        </p>
+      )}
       <p className="font-medium">Subtotal: R$ {Number(cart.subtotal).toFixed(2)}</p>
       {Boolean(cart.multiPartner) && (
         <p className="text-sm text-red-600">Remova itens de outras lojas — apenas um parceiro por pedido.</p>
@@ -80,6 +124,7 @@ export function PublicProductDetail() {
   const id = String(params.productId);
   const [product, setProduct] = useState<Record<string, unknown> | null>(null);
   const [msg, setMsg] = useState("");
+  const { requireAuth, AuthModal } = useMarketplaceAuthGate();
 
   useEffect(() => {
     fetch(`/api/public/products/${id}`)
@@ -90,14 +135,17 @@ export function PublicProductDetail() {
   }, [id]);
 
   async function addToCart() {
-    const res = await fetch("/api/cart/items", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ productId: id, quantity: 1 }),
+    requireAuth(async () => {
+      setMsg("");
+      const res = await fetch("/api/cart/items", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId: id, quantity: 1 }),
+      });
+      const data = await res.json();
+      setMsg(data.success ? "Adicionado ao carrinho." : data.error?.message ?? "Erro");
     });
-    const data = await res.json();
-    setMsg(data.success ? "Adicionado ao carrinho." : data.error?.message ?? "Erro");
   }
 
   if (!product) return <p>Carregando...</p>;
@@ -113,25 +161,28 @@ export function PublicProductDetail() {
   );
 
   return (
-    <Card>
-      <CardContent className="space-y-4 p-6">
-        {imageUrl && (
-          <div className="relative mx-auto aspect-square max-w-sm overflow-hidden rounded-xl border bg-muted/20">
-            <Image src={imageUrl} alt={alt} fill className="object-contain p-4" priority unoptimized />
-          </div>
-        )}
-        <h1 className="text-2xl font-semibold">{String(product.name)}</h1>
-        <p>{String(product.description)}</p>
-        <p className="font-medium">R$ {Number(product.price).toFixed(2)}</p>
-        <p className="text-sm">Estoque: {Number(product.stock)}</p>
-        <Button onClick={addToCart} disabled={Number(product.stock) <= 0}>
-          Adicionar ao carrinho
-        </Button>
-        {msg && <p className="text-sm">{msg}</p>}
-        <Button asChild variant="ghost">
-          <Link href="/produtos">Voltar</Link>
-        </Button>
-      </CardContent>
-    </Card>
+    <>
+      {AuthModal}
+      <Card>
+        <CardContent className="space-y-4 p-6">
+          {imageUrl && (
+            <div className="relative mx-auto aspect-square max-w-sm overflow-hidden rounded-xl border bg-muted/20">
+              <Image src={imageUrl} alt={alt} fill className="object-contain p-4" priority unoptimized />
+            </div>
+          )}
+          <h1 className="text-2xl font-semibold">{String(product.name)}</h1>
+          <p>{String(product.description)}</p>
+          <p className="font-medium">R$ {Number(product.price).toFixed(2)}</p>
+          <p className="text-sm">Estoque: {Number(product.stock)}</p>
+          <Button onClick={addToCart} disabled={Number(product.stock) <= 0}>
+            Adicionar ao carrinho
+          </Button>
+          {msg && <p className="text-sm">{msg}</p>}
+          <Button asChild variant="ghost">
+            <Link href="/produtos">Voltar</Link>
+          </Button>
+        </CardContent>
+      </Card>
+    </>
   );
 }

@@ -3,6 +3,7 @@ import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "@/styles/globals.css";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { AuthSessionProvider } from "@/providers/session-provider";
+import { AuthGateProvider } from "@/providers/auth-gate-provider";
 import { AuthTokenSync } from "@/providers/auth-token-sync";
 import { AccessibilityProvider } from "@/providers/accessibility-provider";
 import { SkipLink } from "@/components/shared/accessibility/skip-link";
@@ -77,6 +78,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <I18nProvider>
               <AriaLiveProvider>
                 <AuthSessionProvider>
+                  <AuthGateProvider>
                   <AuthTokenSync />
                   <PreferencesSync />
                   <SupportChatProvider>
@@ -90,6 +92,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     <SupportChatPanel />
                     <AccessibilityToolbarLazy />
                   </SupportChatProvider>
+                  </AuthGateProvider>
                 </AuthSessionProvider>
               </AriaLiveProvider>
             </I18nProvider>

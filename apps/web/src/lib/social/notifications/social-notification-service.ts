@@ -2,6 +2,10 @@ import { createInternalNotification } from "@/lib/notifications/internal";
 import { prisma } from "@/lib/prisma";
 import { buildPostShareLink } from "@/lib/social/utils";
 
+function postActionUrl(postId: string) {
+  return `/feed/post/${postId}`;
+}
+
 async function getActorName(userId: string) {
   const profile = await prisma.publicProfile.findUnique({
     where: { userId },
@@ -23,8 +27,9 @@ export async function notifyPostLiked(params: {
     userId: params.postAuthorId,
     title: "Nova curtida",
     body: `${name} curtiu sua publicação.`,
-    type: "social_post_liked",
-    data: { postId: params.postId, likerId: params.likerId, category: "social" },
+    type: "SOCIAL",
+    actionUrl: postActionUrl(params.postId),
+    data: { postId: params.postId, likerId: params.likerId, category: "social", event: "post_liked" },
   });
 }
 
@@ -39,8 +44,9 @@ export async function notifyPostCommented(params: {
     userId: params.postAuthorId,
     title: "Novo comentário",
     body: `${name} comentou sua publicação.`,
-    type: "social_post_commented",
-    data: { postId: params.postId, commenterId: params.commenterId, category: "social" },
+    type: "SOCIAL",
+    actionUrl: postActionUrl(params.postId),
+    data: { postId: params.postId, commenterId: params.commenterId, category: "social", event: "post_commented" },
   });
 }
 
@@ -56,8 +62,9 @@ export async function notifyCommentReplied(params: {
     userId: params.parentAuthorId,
     title: "Nova resposta",
     body: `${name} respondeu seu comentário.`,
-    type: "social_comment_replied",
-    data: { postId: params.postId, commentId: params.commentId, replierId: params.replierId, category: "social" },
+    type: "SOCIAL",
+    actionUrl: postActionUrl(params.postId),
+    data: { postId: params.postId, commentId: params.commentId, replierId: params.replierId, category: "social", event: "comment_replied" },
   });
 }
 
@@ -72,8 +79,9 @@ export async function notifyPostShared(params: {
     userId: params.postAuthorId,
     title: "Publicação compartilhada",
     body: `${name} compartilhou sua publicação.`,
-    type: "social_post_shared",
-    data: { postId: params.postId, sharerId: params.sharerId, link: buildPostShareLink(params.postId), category: "social" },
+    type: "SOCIAL",
+    actionUrl: buildPostShareLink(params.postId),
+    data: { postId: params.postId, sharerId: params.sharerId, link: buildPostShareLink(params.postId), category: "social", event: "post_shared" },
   });
 }
 
@@ -83,8 +91,9 @@ export async function notifyNewFollower(params: { followerId: string; followingI
     userId: params.followingId,
     title: "Novo seguidor",
     body: `${name} começou a seguir você.`,
-    type: "social_new_follower",
-    data: { followerId: params.followerId, category: "social" },
+    type: "SOCIAL",
+    actionUrl: `/feed/profile/${params.followerId}`,
+    data: { followerId: params.followerId, category: "social", event: "new_follower" },
   });
 }
 
@@ -93,8 +102,9 @@ export async function notifyReportReceived(params: { adminId: string; reportId: 
     userId: params.adminId,
     title: "Nova denúncia social",
     body: "Uma denúncia aguarda revisão na moderação social.",
-    type: "social_report_received",
-    data: { reportId: params.reportId, category: "social" },
+    type: "SOCIAL",
+    actionUrl: "/dashboard/admin/social/reports",
+    data: { reportId: params.reportId, category: "social", event: "report_received" },
   });
 }
 
@@ -108,7 +118,7 @@ export async function notifyModerationApplied(params: {
     userId: params.userId,
     title: "Moderação aplicada",
     body: `Sua ${params.targetType === "post" ? "publicação" : "comentário"} foi ${params.action === "RESTORE" ? "restaurada" : "moderada"}.`,
-    type: "social_moderation_applied",
-    data: { targetType: params.targetType, targetId: params.targetId, action: params.action, category: "social" },
+    type: "SOCIAL",
+    data: { targetType: params.targetType, targetId: params.targetId, action: params.action, category: "social", event: "moderation_applied" },
   });
 }

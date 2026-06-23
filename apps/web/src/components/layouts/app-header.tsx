@@ -10,16 +10,19 @@ import { NotificationBell } from "@/components/features/notifications/notificati
 import { useFoundationSession } from "@/hooks/use-foundation-session";
 import { LogoutButton } from "@/components/shared/auth/logout-button";
 
-export function AppHeader({ title }: { title?: string }) {
+import type { TranslationKey } from "@/lib/i18n/types";
+
+export function AppHeader({ title, titleKey }: { title?: string; titleKey?: TranslationKey }) {
   const { theme, setTheme } = useTheme();
   const { t } = useTranslation();
   const { isAuthenticated, loading } = useFoundationSession();
+  const heading = titleKey ? t(titleKey) : title;
 
   return (
     <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-ecopet-gray/10 bg-white/90 px-4 backdrop-blur-xl dark:border-white/10 dark:bg-[#0a0d10]/90 lg:px-8">
-      {title && (
+      {heading && (
         <h1 className="font-display text-lg font-bold text-ecopet-dark dark:text-white lg:text-xl">
-          {title}
+          {heading}
         </h1>
       )}
       <div className="ml-auto flex items-center gap-1">

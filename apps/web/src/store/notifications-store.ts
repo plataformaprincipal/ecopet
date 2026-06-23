@@ -1,45 +1,80 @@
 import { create } from "zustand";
-import type { Notification, NotificationFilter, AiSummary } from "@/lib/notifications/types";
-import { fetchNotifications, fetchAiSummary } from "@/lib/notifications/api";
+import type { Notification, NotificationFilter } from "@/lib/notifications/types";
+import {
+  fetchNotifications,
+  fetchUnreadCount,
+  markNotificationReadApi,
+  markAllNotificationsReadApi,
+  deleteNotificationApi,
+} from "@/lib/notifications/api";
 
 interface NotificationsState {
   notifications: Notification[];
-  aiSummary: AiSummary | null;
+  unreadCount: number;
+  nextCursor: string | null;
   loading: boolean;
   loaded: boolean;
-  isDemo: boolean;
   filter: NotificationFilter;
   searchQuery: string;
   resetForUser: () => void;
-  load: (token?: string) => Promise<void>;
+  load: () => Promise<void>;
+  loadMore: () => Promise<void>;
+  refreshUnreadCount: () => Promise<void>;
   setFilter: (filter: NotificationFilter) => void;
   setSearchQuery: (query: string) => void;
-  markAsRead: (id: string) => void;
-  markAllAsRead: () => void;
-  unreadCount: () => number;
+  markAsRead: (id: string) => Promise<void>;
+  markAllAsRead: () => Promise<void>;
+  remove: (id: string) => Promise<void>;
   filteredNotifications: () => Notification[];
 }
 
 export const useNotificationsStore = create<NotificationsState>((set, get) => ({
   notifications: [],
-  aiSummary: null,
+  unreadCount: 0,
+  nextCursor: null,
   loading: false,
   loaded: false,
-  isDemo: false,
   filter: "all",
   searchQuery: "",
 
-  resetForUser: () => set({ notifications: [], aiSummary: null, loaded: false, isDemo: false }),
+  resetForUser: () =>
+    set({ notifications: [], unreadCount: 0, nextCursor: null, loaded: false }),
 
-  load: async (token) => {
+  refreshUnreadCount: async () => {
+    try {
+      const count = await fetchUnreadCount();
+      set({ unreadCount: count });
+    } catch {
+      set({ unreadCount: 0 });
+    }
+  },
+
+  load: async () => {
     if (get().loading) return;
     set({ loading: true });
     try {
-      const [{ items, isDemo }, aiSummary] = await Promise.all([
-        fetchNotifications(token),
-        fetchAiSummary(token),
+      const [{ items, nextCursor }, count] = await Promise.all([
+        fetchNotifications(),
+        fetchUnreadCount(),
       ]);
-      set({ notifications: items, aiSummary, loaded: true, isDemo });
+      set({ notifications: items, nextCursor, unreadCount: count, loaded: true });
+    } catch {
+      set({ notifications: [], nextCursor: null, unreadCount: 0, loaded: true });
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  loadMore: async () => {
+    const cursor = get().nextCursor;
+    if (!cursor || get().loading) return;
+    set({ loading: true });
+    try {
+      const { items, nextCursor } = await fetchNotifications({ cursor });
+      set((state) => ({
+        notifications: [...state.notifications, ...items],
+        nextCursor,
+      }));
     } finally {
       set({ loading: false });
     }
@@ -48,26 +83,43 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
   setFilter: (filter) => set({ filter }),
   setSearchQuery: (searchQuery) => set({ searchQuery }),
 
-  markAsRead: (id) =>
+  markAsRead: async (id) => {
+    await markNotificationReadApi(id);
     set((state) => ({
-      notifications: state.notifications.map((n) =>
-        n.id === id ? { ...n, read: true } : n
-      ),
-    })),
+      notifications: state.notifications.map((n) => (n.id === id ? { ...n, read: true } : n)),
+      unreadCount: Math.max(0, state.unreadCount - 1),
+    }));
+  },
 
-  markAllAsRead: () =>
+  markAllAsRead: async () => {
+    await markAllNotificationsReadApi();
     set((state) => ({
       notifications: state.notifications.map((n) => ({ ...n, read: true })),
-    })),
+      unreadCount: 0,
+    }));
+  },
 
-  unreadCount: () => get().notifications.filter((n) => !n.read).length,
+  remove: async (id) => {
+    await deleteNotificationApi(id);
+    set((state) => {
+      const removed = state.notifications.find((n) => n.id === id);
+      return {
+        notifications: state.notifications.filter((n) => n.id !== id),
+        unreadCount: removed && !removed.read ? Math.max(0, state.unreadCount - 1) : state.unreadCount,
+      };
+    });
+  },
 
   filteredNotifications: () => {
     const { notifications, filter, searchQuery } = get();
     const q = searchQuery.trim().toLowerCase();
 
     return notifications
-      .filter((n) => filter === "all" || n.category === filter)
+      .filter((n) => {
+        if (filter === "all") return true;
+        if (filter === n.category) return true;
+        return filter === n.type;
+      })
       .filter(
         (n) =>
           !q ||

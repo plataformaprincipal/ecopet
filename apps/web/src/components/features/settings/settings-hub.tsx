@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { SeusDadosPanel } from "@/components/features/profile/seus-dados-panel";
 import { EcopetWatermark } from "@/components/shared/brand/ecopet-symbol";
 import { PersonaTabs } from "@/components/features/profile/shared/persona-tabs";
+import { NotificationPreferencesPanel } from "@/components/features/notifications/notification-preferences-panel";
 import { LogoutButton } from "@/components/shared/auth/logout-button";
 import type { ProfileModule } from "@/lib/profile/types";
 
@@ -93,20 +94,7 @@ export function SettingsHub() {
               </Card>
             )}
 
-            {active === "notificacoes" && (
-              <Card className="card-premium">
-                <CardContent className="p-6">
-                  <h2 className="heading-3 mb-4">Notificações</h2>
-                  <SettingRow label="Push" action={<Toggle defaultChecked />} />
-                  <SettingRow label="E-mail" action={<Toggle defaultChecked />} />
-                  <SettingRow label="SMS" action={<Toggle />} />
-                  <SettingRow label="WhatsApp" action={<Toggle defaultChecked />} />
-                  <SettingRow label="Vacinas e saúde" action={<Toggle defaultChecked />} />
-                  <SettingRow label="Social e mensagens" action={<Toggle defaultChecked />} />
-                  <SettingRow label="Promoções marketplace" action={<Toggle />} />
-                </CardContent>
-              </Card>
-            )}
+            {active === "notificacoes" && <NotificationPreferencesPanel />}
 
             {active === "acessibilidade" && (
               <Card className="card-premium">

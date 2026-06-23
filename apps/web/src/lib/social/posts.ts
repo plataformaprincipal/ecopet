@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import type { Prisma, SocialPostStatus, SocialPostVisibility } from "@prisma/client";
+import type { Prisma, SocialPostStatus, SocialPostType, SocialPostVisibility } from "@prisma/client";
 import { SocialError } from "@/lib/social/errors";
 import {
   requireActiveSocialUser,
@@ -16,6 +16,20 @@ import {
 import { checkSocialRateLimit } from "@/lib/social/rate-limit";
 import { extractHashtags, slugifyHashtag } from "@/lib/social/utils";
 import { writeAuditLog } from "@/lib/audit-log";
+import { canCreateSocialPost } from "@/lib/social/persona-permissions";
+import type { SocialUser } from "@/lib/social/permissions";
+
+export type AdoptionMetaInput = {
+  animalName?: string;
+  species?: string;
+  approximateAge?: string;
+  sex?: string;
+  size?: string;
+  city?: string;
+  state?: string;
+  description?: string;
+  status?: "AVAILABLE" | "IN_REVIEW" | "ADOPTED";
+};
 
 export type PostMediaInput = {
   fileUrl: string;
@@ -62,6 +76,8 @@ export async function serializePost(post: Awaited<ReturnType<typeof fetchPostRec
   return {
     id: post.id,
     authorId: post.authorId,
+    authorRole: post.authorRole,
+    type: post.type,
     author: {
       id: post.author.id,
       name: profile?.displayName ?? post.author.name,
@@ -73,6 +89,13 @@ export async function serializePost(post: Awaited<ReturnType<typeof fetchPostRec
     visibility: post.visibility,
     status: post.status,
     locationText: post.locationText,
+    linkedProductId: post.linkedProductId,
+    linkedServiceId: post.linkedServiceId,
+    linkedCampaignId: post.linkedCampaignId,
+    linkedPetId: post.petId,
+    adoptionMeta: post.adoptionMeta,
+    isPinned: post.isPinned,
+    isFeatured: post.isFeatured,
     media: post.media,
     hashtags: post.hashtags.map((h) => ({ id: h.hashtag.id, name: h.hashtag.name, slug: h.hashtag.slug })),
     counts: {
@@ -118,13 +141,23 @@ async function syncHashtags(postId: string, content: string) {
 
 export async function createPost(params: {
   authorId: string;
+  type?: SocialPostType;
   content?: string;
   visibility?: SocialPostVisibility;
   petId?: string;
   locationText?: string;
+  linkedProductId?: string;
+  linkedServiceId?: string;
+  linkedCampaignId?: string;
+  adoptionMeta?: AdoptionMetaInput;
   media?: PostMediaInput[];
 }) {
-  await requireSocialPoster(params.authorId);
+  const author = await requireSocialPoster(params.authorId);
+  const postType = params.type ?? "GENERAL";
+
+  if (!canCreateSocialPost(author as SocialUser, postType)) {
+    throw new SocialError(`Seu perfil não pode publicar conteúdo do tipo ${postType}.`, "FORBIDDEN", 403);
+  }
 
   if (!checkSocialRateLimit(`post:${params.authorId}`, SOCIAL_RATE_LIMITS.createPost.limit, SOCIAL_RATE_LIMITS.createPost.windowMs)) {
     throw new SocialError("Muitas publicações em pouco tempo. Aguarde.", "RATE_LIMIT", 429);
@@ -150,13 +183,33 @@ export async function createPost(params: {
     if (!pet) throw new SocialError("Pet inválido.", "VALIDATION", 400);
   }
 
+  if (params.linkedProductId) {
+    const product = await prisma.product.findFirst({
+      where: { id: params.linkedProductId, sellerId: params.authorId, deletedAt: null },
+    });
+    if (!product) throw new SocialError("Produto inválido ou não pertence ao parceiro.", "VALIDATION", 400);
+  }
+
+  if (params.linkedServiceId) {
+    const service = await prisma.service.findFirst({
+      where: { id: params.linkedServiceId, providerId: params.authorId, deletedAt: null },
+    });
+    if (!service) throw new SocialError("Serviço inválido ou não pertence ao parceiro.", "VALIDATION", 400);
+  }
+
   const post = await prisma.socialPost.create({
     data: {
       authorId: params.authorId,
+      authorRole: author.role,
+      type: postType,
       content: content || " ",
       visibility: params.visibility ?? "PUBLIC",
       petId: params.petId,
       locationText: params.locationText,
+      linkedProductId: params.linkedProductId,
+      linkedServiceId: params.linkedServiceId,
+      linkedCampaignId: params.linkedCampaignId,
+      adoptionMeta: params.adoptionMeta ? (params.adoptionMeta as Prisma.InputJsonValue) : undefined,
       media: {
         create: media.map((m, i) => ({
           fileUrl: m.fileUrl,
@@ -284,6 +337,7 @@ export async function listFeed(params: {
   authorId?: string;
   petId?: string;
   mediaType?: string;
+  type?: SocialPostType;
 }) {
   const limit = Math.min(params.limit ?? SOCIAL_FEED_DEFAULT_LIMIT, 50);
   const blockedIds = params.viewerId ? await getBlockedUserIds(params.viewerId) : [];
@@ -301,6 +355,9 @@ export async function listFeed(params: {
   }
   if (params.mediaType) {
     where.media = { some: { mediaType: params.mediaType as "IMAGE" | "VIDEO" | "DOCUMENT" } };
+  }
+  if (params.type) {
+    where.type = params.type;
   }
 
   if (!params.viewerId) {

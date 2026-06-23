@@ -15,6 +15,7 @@ export async function GET(req: Request) {
       authorId: url.searchParams.get("authorId") ?? undefined,
       petId: url.searchParams.get("petId") ?? undefined,
       mediaType: url.searchParams.get("mediaType") ?? undefined,
+      type: (url.searchParams.get("type") as import("@prisma/client").SocialPostType | null) ?? undefined,
     });
     return apiSuccess(data);
   } catch (e) {

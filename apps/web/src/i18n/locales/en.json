@@ -1228,6 +1228,144 @@
       "description": "No items found."
     }
   },
+  "socialFeed": {
+    "title": "ECOPET Feed",
+    "authModal": {
+      "title": "Sign in or create your account",
+      "description": "To interact on EcoPet, sign in or register for free.",
+      "signIn": "Sign in",
+      "createAccount": "Create account"
+    },
+    "composer": {
+      "placeholder": "What is your pet up to today? Use #hashtags",
+      "media": "Media",
+      "publish": "Publish",
+      "loginToPost": "Sign in to post in the community",
+      "typeLabel": "Post type",
+      "validationEmpty": "Add text or media."
+    },
+    "actions": {
+      "like": "Like",
+      "unlike": "Unlike",
+      "comment": "Comment",
+      "save": "Save",
+      "unsave": "Remove from saved",
+      "share": "Share",
+      "shared": "Link copied!",
+      "report": "Report",
+      "follow": "Follow",
+      "unfollow": "Unfollow"
+    },
+    "stats": {
+      "likes": "{count} likes",
+      "comments": "{count} comments",
+      "shares": "{count} shares"
+    },
+    "empty": {
+      "title": "Empty feed",
+      "description": "No posts yet. Be the first to share!"
+    },
+    "error": {
+      "load": "Failed to load feed",
+      "retry": "Try again"
+    },
+    "loadMore": "Load more",
+    "comments": {
+      "placeholder": "Write a comment...",
+      "send": "Send",
+      "empty": "No comments yet."
+    },
+    "filters": {
+      "all": "All",
+      "label": "Filter by type"
+    },
+    "postTypes": {
+      "PET_UPDATE": "Pet update",
+      "GENERAL": "General",
+      "PRODUCT": "Product",
+      "SERVICE": "Service",
+      "ADOPTION": "Adoption",
+      "CAMPAIGN": "Campaign",
+      "DONATION": "Donation",
+      "EVENT": "Event",
+      "RESCUE": "Rescue",
+      "EDUCATIONAL": "Educational",
+      "URGENT": "Urgent"
+    },
+    "badges": {
+      "CLIENT": "Client",
+      "PARTNER": "Partner",
+      "ONG": "NGO",
+      "PROTETOR": "Caretaker",
+      "ADMIN": "Admin",
+      "verified": "Verified"
+    },
+    "cta": {
+      "viewProduct": "View product",
+      "viewService": "View service",
+      "schedule": "Schedule",
+      "buy": "Buy",
+      "contactPartner": "Contact partner",
+      "wantAdopt": "I want to adopt",
+      "helpCampaign": "Support campaign",
+      "contactOng": "Contact NGO"
+    },
+    "adoption": {
+      "species": "Species",
+      "age": "Age",
+      "sex": "Sex",
+      "size": "Size",
+      "location": "Location",
+      "statusAvailable": "Available",
+      "statusInReview": "Under review",
+      "statusAdopted": "Adopted"
+    },
+    "post": {
+      "removed": "Post removed",
+      "hidden": "Post hidden by moderation",
+      "edited": "edited"
+    },
+    "report": {
+      "title": "Report post",
+      "submit": "Submit report"
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "bellLabel": "Notifications",
+    "unreadCount": "{count} unread",
+    "unread": "Unread",
+    "markRead": "Mark as read",
+    "markAllRead": "Mark all as read",
+    "viewAll": "View all",
+    "delete": "Delete notification",
+    "searchPlaceholder": "Search notifications...",
+    "loadMore": "Load more",
+    "filters": { "label": "Filter notifications", "all": "All" },
+    "empty": { "title": "No notifications", "description": "You're all caught up! New updates will appear here." },
+    "actions": { "viewDetails": "View details" },
+    "priority": { "LOW": "Low", "NORMAL": "Normal", "HIGH": "High", "URGENT": "Urgent" },
+    "types": {
+      "SYSTEM": "System", "SECURITY": "Security", "ORDER": "Order", "APPOINTMENT": "Appointment",
+      "PRODUCT": "Product", "SERVICE": "Service", "SOCIAL": "Social", "MESSAGE": "Message",
+      "ADOPTION": "Adoption", "CAMPAIGN": "Campaign", "DOCUMENT": "Document", "PAYMENT": "Payment",
+      "REVIEW": "Review", "SUPPORT": "Support"
+    },
+    "categories": {
+      "orders": "Orders", "appointments": "Appointments", "social": "Social", "messages": "Messages",
+      "adoption": "Adoptions", "campaigns": "Campaigns", "products": "Products", "services": "Services",
+      "security": "Security", "system": "System"
+    },
+    "preferences": {
+      "title": "Notification preferences", "subtitle": "Choose how and when you want to be notified.",
+      "channels": "Channels", "topics": "Topics", "inApp": "In-app notifications", "email": "Email",
+      "sms": "SMS", "whatsapp": "WhatsApp", "marketing": "Marketing & news", "orders": "Orders",
+      "appointments": "Appointments", "social": "Social network", "adoptions": "Adoptions",
+      "campaigns": "Campaigns", "products": "Products", "services": "Services", "security": "Security",
+      "securityHint": "Security alerts cannot be disabled.", "channelNotConfigured": "Channel not configured yet.",
+      "saved": "Preferences saved.", "loadError": "Could not load preferences.", "saveError": "Could not save preferences."
+    }
+  },
   "gestor": {
     "title": "ECOPET Manager",
     "loading": "Loading ECOPET Manager...",
@@ -1235,6 +1373,29 @@
       "title": "Restricted access",
       "description": "This area is exclusive to ECOPET administrators.",
       "back": "Back to dashboard"
+    }
+  },
+  "messagesModule": {
+    "title": "Messages",
+    "loading": "Loading conversations...",
+    "empty": "You don't have any conversations yet.",
+    "selectConversation": "Select a conversation to start",
+    "configError": "Messages temporarily unavailable. Check TalkJS configuration.",
+    "error": "Could not start the conversation.",
+    "retry": "Try again",
+    "backToList": "Back to conversations",
+    "openSupport": "Open support",
+    "contactPartner": "Contact partner",
+    "contactOng": "Contact NGO",
+    "askAboutProduct": "Ask about product",
+    "askAboutService": "Ask about service",
+    "talkAboutAdoption": "Talk about adoption",
+    "talkAboutCampaign": "Talk about campaign",
+    "authModal": {
+      "title": "Sign in or create your account",
+      "description": "To send messages on EcoPet, sign in to your account or register for free.",
+      "signIn": "Sign in",
+      "createAccount": "Create account"
     }
   }
 }

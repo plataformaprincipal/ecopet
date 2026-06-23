@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Calendar, Heart, Home, MessageCircle, ChevronLeft, Clock, MapPin } from "lucide-react";
+import { Calendar, Heart, Home, ChevronLeft, Clock, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,12 +15,15 @@ import { formatMpPrice, AI_TAG_LABELS } from "@/lib/marketplace/config";
 import type { MarketplaceService, MarketplaceReview } from "@/lib/marketplace/types";
 import { cn } from "@/lib/utils";
 import { serviceImageAlt, avatarAlt } from "@/lib/accessibility/image-alt";
+import { StartConversationButton } from "@/components/messages/StartConversationButton";
+import { useTranslation } from "@/providers/i18n-provider";
 
 interface ServiceDetailContentProps {
   id: string;
 }
 
 export function ServiceDetailContent({ id }: ServiceDetailContentProps) {
+  const { t } = useTranslation();
   const { addToCart, toggleFavoriteService, isFavoriteService } = useMarketplaceStore();
   const [service, setService] = useState<MarketplaceService | undefined>();
   const [reviews, setReviews] = useState<MarketplaceReview[]>([]);
@@ -122,7 +125,17 @@ export function ServiceDetailContent({ id }: ServiceDetailContentProps) {
             >
               <Calendar className="h-5 w-5" /> Agendar
             </Button>
-            <Button size="lg" variant="outline"><MessageCircle className="h-5 w-5" /></Button>
+            <StartConversationButton
+              variant="outline"
+              size="lg"
+              className="shrink-0"
+              participantUserId={service.partnerId}
+              contextType="SERVICE"
+              contextId={service.id}
+              title={service.name}
+              label={t("messagesModule.askAboutService")}
+              ariaLabel={t("messagesModule.askAboutService")}
+            />
             <Button size="lg" variant="outline" className={cn(fav && "text-red-500")} onClick={() => toggleFavoriteService(service.id)}>
               <Heart className={cn("h-5 w-5", fav && "fill-red-500")} />
             </Button>

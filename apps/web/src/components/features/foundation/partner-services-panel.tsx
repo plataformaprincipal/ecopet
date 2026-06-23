@@ -178,7 +178,7 @@ export function PartnerServicesPanel({ mode = "list", serviceId }: { mode?: "lis
     const data = await res.json();
     setSaving(false);
     if (!data.success) { setError(data.error?.message ?? "Erro"); return; }
-    window.location.href = `/dashboard/partner/services/${data.data.service.id}`;
+    window.location.href = `/dashboard/partner/services/${data.data.service.id}?created=1`;
   }
 
   async function toggleStatus(id: string, current: string) {

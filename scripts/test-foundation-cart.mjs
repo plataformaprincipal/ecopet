@@ -1,5 +1,5 @@
 /**
- * Testes Etapa 8 — Carrinho
+ * Testes Etapa 8 — Carrinho (cliente autenticado; visitante bloqueado)
  */
 import { PrismaClient, AccountStatus, ProductCatalogStatus } from "@prisma/client";
 
@@ -9,6 +9,7 @@ const jar = new Map();
 const pwd = "Ecopet@Forte2026";
 
 function assert(c, m) { if (!c) throw new Error(m); }
+function phone(s) { return `119${String(s).padStart(8, "0").slice(-8)}`; }
 
 async function req(path, opts = {}) {
   const headers = { "Content-Type": "application/json", ...(opts.headers || {}) };
@@ -23,6 +24,20 @@ async function req(path, opts = {}) {
   return { status: res.status, data: await res.json().catch(() => ({})) };
 }
 
+async function loginClient(ts) {
+  const email = `client.cart.${ts}@test.ecopet.local`;
+  jar.clear();
+  const reg = await req("/api/auth/register", {
+    method: "POST",
+    body: JSON.stringify({
+      role: "CLIENT", name: "Cliente Cart", email, password: pwd, confirmPassword: pwd,
+      phone: phone(ts), birthDate: "1990-01-01", username: `crt${ts}`, gender: "MASCULINO", acceptTerms: true, acceptPrivacy: true,
+    }),
+  });
+  assert(reg.status === 201, "register client");
+  return email;
+}
+
 async function main() {
   const product = await prisma.product.findFirst({
     where: { status: ProductCatalogStatus.ACTIVE, approvalStatus: "APPROVED", stock: { gt: 2 }, deletedAt: null },
@@ -30,11 +45,29 @@ async function main() {
   assert(product, "precisa de produto ACTIVE com estoque");
 
   jar.clear();
+  const visitorAdd = await req("/api/cart/items", {
+    method: "POST",
+    body: JSON.stringify({ productId: product.id, quantity: 1 }),
+  });
+  assert(visitorAdd.status === 401, "visitante não adiciona ao carrinho");
+
+  const ts = Date.now();
+  await loginClient(ts);
+
   const add = await req("/api/cart/items", {
     method: "POST",
     body: JSON.stringify({ productId: product.id, quantity: 1 }),
   });
-  assert(add.status === 200 || add.status === 201, "add to cart");
+  assert(add.status === 200 || add.status === 201, "cliente adiciona ao carrinho");
+
+  const itemId = add.data.data?.cart?.items?.[0]?.id;
+  assert(itemId, "item no carrinho");
+
+  const patch = await req(`/api/cart/items/${itemId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ quantity: 2 }),
+  });
+  assert(patch.status === 200, "cliente altera quantidade");
 
   const over = await req("/api/cart/items", {
     method: "POST",

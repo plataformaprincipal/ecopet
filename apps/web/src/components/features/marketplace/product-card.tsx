@@ -7,12 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { RatingStars } from "./rating-stars";
 import { formatMpPrice, discountPct, AI_TAG_LABELS } from "@/lib/marketplace/config";
-import { useMarketplaceStore } from "@/store/marketplace-store";
 import type { MarketplaceProduct } from "@/lib/marketplace/types";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/providers/i18n-provider";
 import { useAriaAnnounce } from "@/components/shared/accessibility/aria-live-region";
 import { productImageAlt } from "@/lib/accessibility/image-alt";
+import { useMarketplaceActions } from "@/hooks/use-marketplace-actions";
+import { useMarketplaceStore } from "@/store/marketplace-store";
 
 interface ProductCardProps {
   product: MarketplaceProduct;
@@ -22,28 +23,19 @@ interface ProductCardProps {
 export function ProductCard({ product, compact }: ProductCardProps) {
   const { t } = useTranslation();
   const announce = useAriaAnnounce();
-  const { addToCart, toggleFavoriteProduct, toggleCompare, isFavoriteProduct, isInCompare } =
-    useMarketplaceStore();
+  const { AuthModal, addProductToCart, toggleProductFavorite, isFavoriteProduct } = useMarketplaceActions();
+  const { toggleCompare, isInCompare } = useMarketplaceStore();
   const discount = discountPct(product.price, product.comparePrice);
   const fav = isFavoriteProduct(product.id);
   const comparing = isInCompare("product", product.id);
 
   function handleAddToCart() {
-    addToCart({
-      type: "product",
-      itemId: product.id,
-      name: product.name,
-      image: product.images[0],
-      price: product.price,
-      quantity: 1,
-      partnerId: product.partnerId,
-      partnerName: product.partner.name,
-    });
+    addProductToCart(product);
     announce(t("marketplace.addedToCart", { name: product.name }));
   }
 
   function handleFavorite() {
-    toggleFavoriteProduct(product.id, product);
+    toggleProductFavorite(product);
     announce(fav ? t("marketplace.removedFromFavorites") : t("marketplace.addedToFavorites"));
   }
 
@@ -53,6 +45,7 @@ export function ProductCard({ product, compact }: ProductCardProps) {
   }
 
   return (
+    <>
     <article className="group relative flex flex-col overflow-hidden rounded-[20px] border border-ecopet-gray/10 bg-white shadow-[var(--shadow-premium)] transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-premium-lg)] dark:bg-white/5">
       <Link href={`/marketplace/produto/${product.id}`} className="relative block aspect-square overflow-hidden bg-gray-100">
         <Image src={product.images[0]} alt={productImageAlt(product.name, { shortDescription: product.description })} fill className="object-cover transition-transform group-hover:scale-105" sizes="(max-width:768px) 50vw, 25vw" />
@@ -139,5 +132,7 @@ export function ProductCard({ product, compact }: ProductCardProps) {
         )}
       </div>
     </article>
+    {AuthModal}
+    </>
   );
 }

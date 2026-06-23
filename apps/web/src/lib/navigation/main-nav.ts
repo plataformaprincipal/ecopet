@@ -65,9 +65,7 @@ export const MARKETPLACE_NAV_KEYS = [
   { href: "/marketplace", labelKey: "nav.home" as TranslationKey },
   { href: "/marketplace/produtos", labelKey: "nav.products" as TranslationKey },
   { href: "/marketplace/servicos", labelKey: "nav.services" as TranslationKey },
-  { href: "/marketplace/personalizados", labelKey: "nav.custom" as TranslationKey },
-  { href: "/marketplace/orcamentos", labelKey: "nav.quotes" as TranslationKey },
-  { href: "/marketplace/chat", labelKey: "nav.chat" as TranslationKey },
+  { href: "/marketplace/parceiros", labelKey: "nav.partners" as TranslationKey },
   { href: "/marketplace/favoritos", labelKey: "nav.favorites" as TranslationKey },
   { href: "/marketplace/busca", labelKey: "nav.search" as TranslationKey },
 ] as const;

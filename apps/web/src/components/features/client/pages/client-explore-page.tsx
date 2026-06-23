@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Heart, MessageCircle, Star } from "lucide-react";
+import { Heart, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { StartConversationButton } from "@/components/messages/StartConversationButton";
+import { useTranslation } from "@/providers/i18n-provider";
 import { ClientPageHeader } from "../client-page-header";
 import { PublicSearchBar } from "@/components/features/public-client/public-search-bar";
 import { PublicCategoryGrid, type PublicCategoryItem } from "@/components/features/public-client/public-category-grid";
@@ -31,6 +33,7 @@ function formatPrice(v: number) {
 }
 
 export function ClientExplorePage() {
+  const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
   const [data, setData] = useState<ExploreData | null>(null);
@@ -140,12 +143,13 @@ export function ClientExplorePage() {
                       <Button asChild size="sm" variant="outline">
                         <Link href={`/parceiros/${p.id}`}>Ver loja</Link>
                       </Button>
-                      <Button asChild size="sm">
-                        <Link href={`/dashboard/messages?partner=${p.id}`}>
-                          <MessageCircle className="mr-1 h-4 w-4" />
-                          Mensagem
-                        </Link>
-                      </Button>
+                      <StartConversationButton
+                        size="sm"
+                        participantUserId={p.id}
+                        contextType="GENERAL"
+                        label={t("messagesModule.contactPartner")}
+                        ariaLabel={t("messagesModule.contactPartner")}
+                      />
                     </div>
                   </div>
                 ))}

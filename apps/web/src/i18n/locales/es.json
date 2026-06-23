@@ -1228,6 +1228,144 @@
       "description": "No se encontraron elementos."
     }
   },
+  "socialFeed": {
+    "title": "Feed ECOPET",
+    "authModal": {
+      "title": "Inicia sesión o crea tu cuenta",
+      "description": "Para interactuar en EcoPet, inicia sesión o regístrate gratis.",
+      "signIn": "Entrar",
+      "createAccount": "Crear cuenta"
+    },
+    "composer": {
+      "placeholder": "¿Qué está haciendo tu mascota hoy? Usa #hashtags",
+      "media": "Medios",
+      "publish": "Publicar",
+      "loginToPost": "Inicia sesión para publicar en la comunidad",
+      "typeLabel": "Tipo de publicación",
+      "validationEmpty": "Añade texto o medios."
+    },
+    "actions": {
+      "like": "Me gusta",
+      "unlike": "Quitar me gusta",
+      "comment": "Comentar",
+      "save": "Guardar",
+      "unsave": "Quitar de guardados",
+      "share": "Compartir",
+      "shared": "¡Enlace copiado!",
+      "report": "Denunciar",
+      "follow": "Seguir",
+      "unfollow": "Dejar de seguir"
+    },
+    "stats": {
+      "likes": "{count} me gusta",
+      "comments": "{count} comentarios",
+      "shares": "{count} compartidos"
+    },
+    "empty": {
+      "title": "Feed vacío",
+      "description": "Aún no hay publicaciones. ¡Sé el primero en compartir!"
+    },
+    "error": {
+      "load": "Error al cargar el feed",
+      "retry": "Intentar de nuevo"
+    },
+    "loadMore": "Cargar más",
+    "comments": {
+      "placeholder": "Escribe un comentario...",
+      "send": "Enviar",
+      "empty": "Aún no hay comentarios."
+    },
+    "filters": {
+      "all": "Todos",
+      "label": "Filtrar por tipo"
+    },
+    "postTypes": {
+      "PET_UPDATE": "Actualización del pet",
+      "GENERAL": "General",
+      "PRODUCT": "Producto",
+      "SERVICE": "Servicio",
+      "ADOPTION": "Adopción",
+      "CAMPAIGN": "Campaña",
+      "DONATION": "Donación",
+      "EVENT": "Evento",
+      "RESCUE": "Rescate",
+      "EDUCATIONAL": "Concienciación",
+      "URGENT": "Urgente"
+    },
+    "badges": {
+      "CLIENT": "Cliente",
+      "PARTNER": "Socio",
+      "ONG": "ONG",
+      "PROTETOR": "Protector",
+      "ADMIN": "Admin",
+      "verified": "Verificado"
+    },
+    "cta": {
+      "viewProduct": "Ver producto",
+      "viewService": "Ver servicio",
+      "schedule": "Agendar",
+      "buy": "Comprar",
+      "contactPartner": "Hablar con socio",
+      "wantAdopt": "Quiero adoptar",
+      "helpCampaign": "Ayudar campaña",
+      "contactOng": "Hablar con ONG"
+    },
+    "adoption": {
+      "species": "Especie",
+      "age": "Edad",
+      "sex": "Sexo",
+      "size": "Tamaño",
+      "location": "Ubicación",
+      "statusAvailable": "Disponible",
+      "statusInReview": "En análisis",
+      "statusAdopted": "Adoptado"
+    },
+    "post": {
+      "removed": "Publicación eliminada",
+      "hidden": "Publicación oculta por moderación",
+      "edited": "editado"
+    },
+    "report": {
+      "title": "Denunciar publicación",
+      "submit": "Enviar denuncia"
+    }
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "bellLabel": "Notificaciones",
+    "unreadCount": "{count} sin leer",
+    "unread": "No leída",
+    "markRead": "Marcar como leída",
+    "markAllRead": "Marcar todas como leídas",
+    "viewAll": "Ver todas",
+    "delete": "Eliminar notificación",
+    "searchPlaceholder": "Buscar notificaciones...",
+    "loadMore": "Cargar más",
+    "filters": { "label": "Filtrar notificaciones", "all": "Todas" },
+    "empty": { "title": "Sin notificaciones", "description": "¡Estás al día! Las novedades aparecerán aquí." },
+    "actions": { "viewDetails": "Ver detalles" },
+    "priority": { "LOW": "Baja", "NORMAL": "Normal", "HIGH": "Alta", "URGENT": "Urgente" },
+    "types": {
+      "SYSTEM": "Sistema", "SECURITY": "Seguridad", "ORDER": "Pedido", "APPOINTMENT": "Cita",
+      "PRODUCT": "Producto", "SERVICE": "Servicio", "SOCIAL": "Social", "MESSAGE": "Mensaje",
+      "ADOPTION": "Adopción", "CAMPAIGN": "Campaña", "DOCUMENT": "Documento", "PAYMENT": "Pago",
+      "REVIEW": "Reseña", "SUPPORT": "Soporte"
+    },
+    "categories": {
+      "orders": "Pedidos", "appointments": "Citas", "social": "Social", "messages": "Mensajes",
+      "adoption": "Adopciones", "campaigns": "Campañas", "products": "Productos", "services": "Servicios",
+      "security": "Seguridad", "system": "Sistema"
+    },
+    "preferences": {
+      "title": "Preferencias de notificación", "subtitle": "Elige cómo y cuándo quieres recibir avisos.",
+      "channels": "Canales", "topics": "Temas", "inApp": "Notificaciones en el sistema", "email": "Correo",
+      "sms": "SMS", "whatsapp": "WhatsApp", "marketing": "Marketing y novedades", "orders": "Pedidos",
+      "appointments": "Citas", "social": "Red social", "adoptions": "Adopciones",
+      "campaigns": "Campañas", "products": "Productos", "services": "Servicios", "security": "Seguridad",
+      "securityHint": "Las alertas de seguridad no se pueden desactivar.", "channelNotConfigured": "Canal aún no configurado.",
+      "saved": "Preferencias guardadas.", "loadError": "No se pudieron cargar las preferencias.", "saveError": "No se pudieron guardar las preferencias."
+    }
+  },
   "gestor": {
     "title": "Gestor ECOPET",
     "loading": "Cargando Gestor ECOPET...",
@@ -1235,6 +1373,29 @@
       "title": "Acceso restringido",
       "description": "Esta área es exclusiva para administradores ECOPET.",
       "back": "Volver al dashboard"
+    }
+  },
+  "messagesModule": {
+    "title": "Mensajes",
+    "loading": "Cargando conversaciones...",
+    "empty": "Aún no tienes conversaciones.",
+    "selectConversation": "Selecciona una conversación para comenzar",
+    "configError": "Mensajes temporalmente no disponibles. Verifica la configuración de TalkJS.",
+    "error": "No se pudo iniciar la conversación.",
+    "retry": "Intentar de nuevo",
+    "backToList": "Volver a conversaciones",
+    "openSupport": "Abrir soporte",
+    "contactPartner": "Hablar con socio",
+    "contactOng": "Hablar con ONG",
+    "askAboutProduct": "Preguntar sobre producto",
+    "askAboutService": "Preguntar sobre servicio",
+    "talkAboutAdoption": "Hablar sobre adopción",
+    "talkAboutCampaign": "Hablar sobre campaña",
+    "authModal": {
+      "title": "Inicia sesión o crea tu cuenta",
+      "description": "Para enviar mensajes en EcoPet, inicia sesión o regístrate gratis.",
+      "signIn": "Entrar",
+      "createAccount": "Crear cuenta"
     }
   }
 }

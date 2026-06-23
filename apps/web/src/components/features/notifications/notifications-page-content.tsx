@@ -1,42 +1,42 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
-import { Search, CheckCheck } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Search, CheckCheck, RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
 import { AppHeader } from "@/components/layouts/app-header";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useNotificationsStore } from "@/store/notifications-store";
-import { AiSummaryBlock } from "@/components/features/notifications/ai-summary-block";
 import { NotificationFilters } from "@/components/features/notifications/notification-filters";
 import { NotificationCard } from "@/components/features/notifications/notification-card";
 import { NotificationsEmpty } from "@/components/features/notifications/notifications-empty";
 import { NotificationsSkeleton } from "@/components/features/notifications/notifications-skeleton";
 import type { NotificationFilter } from "@/lib/notifications/types";
-import { useAppStore } from "@/store/app-store";
+import { useTranslation } from "@/providers/i18n-provider";
 
 export function NotificationsPageContent() {
-  const token = useAppStore((s) => s.apiToken);
+  const { t } = useTranslation();
   const loading = useNotificationsStore((s) => s.loading);
   const loaded = useNotificationsStore((s) => s.loaded);
   const filter = useNotificationsStore((s) => s.filter);
   const searchQuery = useNotificationsStore((s) => s.searchQuery);
-  const aiSummary = useNotificationsStore((s) => s.aiSummary);
   const notifications = useNotificationsStore((s) => s.notifications);
+  const nextCursor = useNotificationsStore((s) => s.nextCursor);
+  const unreadCount = useNotificationsStore((s) => s.unreadCount);
   const load = useNotificationsStore((s) => s.load);
+  const loadMore = useNotificationsStore((s) => s.loadMore);
   const setFilter = useNotificationsStore((s) => s.setFilter);
   const setSearchQuery = useNotificationsStore((s) => s.setSearchQuery);
   const markAsRead = useNotificationsStore((s) => s.markAsRead);
   const markAllAsRead = useNotificationsStore((s) => s.markAllAsRead);
+  const remove = useNotificationsStore((s) => s.remove);
   const filteredNotifications = useNotificationsStore((s) => s.filteredNotifications);
-  const unreadCount = useNotificationsStore((s) => s.unreadCount);
 
   useEffect(() => {
-    if (!loaded && !loading) load(token ?? undefined);
-  }, [loaded, loading, load, token]);
+    if (!loaded && !loading) load();
+  }, [loaded, loading, load]);
 
   const list = filteredNotifications();
-  const unread = unreadCount();
 
   const filterCounts = useMemo(() => {
     const counts: Partial<Record<NotificationFilter, number>> = { all: notifications.length };
@@ -48,36 +48,30 @@ export function NotificationsPageContent() {
 
   return (
     <>
-      <AppHeader title="Notificações" />
+      <AppHeader titleKey="notifications.title" />
       <main className="mx-auto max-w-2xl flex-1 p-4 pb-8 lg:p-6">
-        {/* Toolbar */}
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ecopet-gray" aria-hidden />
             <Input
-              placeholder="Buscar notificações..."
+              placeholder={t("notifications.searchPlaceholder")}
               className="pl-10"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              aria-label="Buscar notificações"
+              aria-label={t("notifications.searchPlaceholder")}
             />
           </div>
-          {unread > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="shrink-0 gap-2"
-              onClick={() => markAllAsRead()}
-            >
-              <CheckCheck className="h-4 w-4" />
-              Marcar todas como lidas
+          {unreadCount > 0 && (
+            <Button variant="outline" size="sm" className="shrink-0 gap-2" onClick={() => markAllAsRead()}>
+              <CheckCheck className="h-4 w-4" aria-hidden />
+              {t("notifications.markAllRead")}
             </Button>
           )}
         </div>
 
-        {!loading && unread > 0 && (
-          <p className="mb-3 text-xs font-medium text-ecopet-green">
-            {unread} não {unread === 1 ? "lida" : "lidas"}
+        {unreadCount > 0 && (
+          <p className="mb-3 text-xs font-medium text-ecopet-green" aria-live="polite">
+            {t("notifications.unreadCount", { count: String(unreadCount) })}
           </p>
         )}
 
@@ -85,16 +79,10 @@ export function NotificationsPageContent() {
           <NotificationFilters active={filter} onChange={setFilter} counts={filterCounts} />
         </div>
 
-        {loading ? (
+        {loading && notifications.length === 0 ? (
           <NotificationsSkeleton />
         ) : (
           <div className="space-y-4">
-            {aiSummary && filter === "all" && !searchQuery && (
-              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-                <AiSummaryBlock summary={aiSummary} />
-              </motion.div>
-            )}
-
             {list.length === 0 ? (
               <NotificationsEmpty hasSearch={Boolean(searchQuery.trim()) || filter !== "all"} />
             ) : (
@@ -105,13 +93,28 @@ export function NotificationsPageContent() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.03 }}
                 >
-                  <NotificationCard notification={notification} onMarkRead={markAsRead} />
+                  <NotificationCard
+                    notification={notification}
+                    onMarkRead={(id) => void markAsRead(id)}
+                    onDelete={(id) => void remove(id)}
+                  />
                 </motion.div>
               ))
+            )}
+
+            {nextCursor && (
+              <Button variant="outline" className="w-full" onClick={() => loadMore()} disabled={loading}>
+                <RefreshCw className={cnIcon(loading)} aria-hidden />
+                {t("notifications.loadMore")}
+              </Button>
             )}
           </div>
         )}
       </main>
     </>
   );
+}
+
+function cnIcon(loading: boolean) {
+  return `mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`;
 }

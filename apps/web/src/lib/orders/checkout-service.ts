@@ -63,7 +63,7 @@ export async function checkoutFromCart(params: {
         status: OrderStatus.PENDING_CONFIRMATION,
         fulfillmentStatus: OrderStatus.PENDING_CONFIRMATION,
         total: serialized.subtotal,
-        shippingAddress: params.address,
+        shippingAddress: { ...(params.address as Record<string, unknown>), phone: params.phone },
         deliveryMethod: params.deliveryMethod,
         paymentMethod,
         deliveryNotes: params.notes ?? null,
@@ -97,6 +97,7 @@ export async function checkoutFromCart(params: {
       title: "Pedido criado",
       body: `Seu pedido #${order.orderNumber} foi registrado.`,
       type: "ORDER_CREATED",
+      actionUrl: `/dashboard/client/orders/${order.id}`,
       data: { orderId: order.id },
     }),
     createInternalNotification({
@@ -104,6 +105,7 @@ export async function checkoutFromCart(params: {
       title: "Novo pedido",
       body: `Você recebeu o pedido #${order.orderNumber}.`,
       type: "ORDER_RECEIVED",
+      actionUrl: `/dashboard/partner/orders/${order.id}`,
       data: { orderId: order.id },
     }),
   ]);

@@ -10,6 +10,9 @@ export type PublicServiceFilters = {
   partnerId?: string;
   minPrice?: number;
   maxPrice?: number;
+  minRating?: number;
+  telehealth?: boolean;
+  emergency24h?: boolean;
   page?: number;
   pageSize?: number;
 };
@@ -23,6 +26,7 @@ export async function queryPublicServices(filters: PublicServiceFilters) {
     deletedAt: null,
     status: PartnerServiceStatus.ACTIVE,
     isActive: true,
+    approvalStatus: "APPROVED",
     provider: {
       accountStatus: AccountStatus.ACTIVE,
       role: "PARTNER" as const,
@@ -40,6 +44,9 @@ export async function queryPublicServices(filters: PublicServiceFilters) {
           },
         }
       : {}),
+    ...(filters.minRating ? { rating: { gte: filters.minRating } } : {}),
+    ...(filters.telehealth ? { modality: "ONLINE" as const } : {}),
+    ...(filters.emergency24h ? { category: "EMERGENCY_24H" as never } : {}),
     ...(filters.q
       ? {
           OR: [
@@ -99,6 +106,7 @@ export type PublicProductFilters = {
   partnerId?: string;
   minPrice?: number;
   maxPrice?: number;
+  minRating?: number;
   inStock?: boolean;
   page?: number;
   pageSize?: number;
@@ -132,6 +140,7 @@ export async function queryPublicProducts(filters: PublicProductFilters) {
           },
         }
       : {}),
+    ...(filters.minRating ? { rating: { gte: filters.minRating } } : {}),
     ...(filters.q
       ? {
           OR: [
@@ -196,7 +205,7 @@ export async function getPublicPartner(partnerId: string) {
         },
       },
       services: {
-        where: { deletedAt: null, status: PartnerServiceStatus.ACTIVE, isActive: true },
+        where: { deletedAt: null, status: PartnerServiceStatus.ACTIVE, isActive: true, approvalStatus: "APPROVED" },
         select: { id: true, name: true, description: true, price: true, category: true, rating: true, reviewCount: true, image: true },
       },
       products: {
@@ -297,6 +306,7 @@ export async function queryPublicPartners(filters: PublicPartnerFilters) {
                 deletedAt: null,
                 status: PartnerServiceStatus.ACTIVE,
                 isActive: true,
+                approvalStatus: "APPROVED",
               },
             },
           },

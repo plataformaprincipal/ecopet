@@ -6,7 +6,10 @@ import { CommentComposer } from "./comment-composer";
 import { fetchComments, type ApiSocialComment } from "@/lib/social/client-api";
 import { Skeleton } from "@/components/ui/skeleton";
 
+import { useTranslation } from "@/providers/i18n-provider";
+
 export function CommentList({ postId }: { postId: string }) {
+  const { t } = useTranslation();
   const [comments, setComments] = useState<ApiSocialComment[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -30,7 +33,7 @@ export function CommentList({ postId }: { postId: string }) {
       {loading ? (
         <Skeleton className="mt-3 h-12 w-full" />
       ) : comments.length === 0 ? (
-        <p className="mt-3 text-sm text-muted-foreground">Nenhum comentário ainda.</p>
+        <p className="mt-3 text-sm text-muted-foreground">{t("socialFeed.comments.empty")}</p>
       ) : (
         <div className="mt-3 space-y-3">
           {comments.map((c) => (

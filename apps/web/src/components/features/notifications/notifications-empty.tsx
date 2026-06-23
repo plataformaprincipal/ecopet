@@ -18,10 +18,10 @@ export function NotificationsEmpty({ hasSearch }: NotificationsEmptyProps) {
           <BellOff className="h-8 w-8 text-ecopet-green" />
         </div>
         <h3 className="font-display text-lg font-bold text-ecopet-dark dark:text-white">
-          {hasSearch ? t("empty.noResults") : t("empty.notifications.title")}
+          {hasSearch ? t("empty.noResults") : t("notifications.empty.title")}
         </h3>
         <p className="mt-2 max-w-xs text-sm text-ecopet-gray">
-          {hasSearch ? t("empty.noResultsHint") : t("empty.notifications.description")}
+          {hasSearch ? t("empty.noResultsHint") : t("notifications.empty.description")}
         </p>
       </CardContent>
     </Card>

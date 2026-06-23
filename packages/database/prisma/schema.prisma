@@ -148,6 +148,20 @@ enum ReadyServiceCategory {
   TRAINING
   BOARDING
   PET_TRANSPORT
+  VETERINARY
+  BATH
+  GROOMING
+  DAYCARE
+  EXAMS
+  SURGERY
+  CONSULTING
+  REPRODUCTION
+  AQUARIUM
+  EQUINE
+  CATTLE
+  EXOTIC
+  EMERGENCY_24H
+  OTHER
 }
 
 enum CustomRequestUrgency {
@@ -199,6 +213,17 @@ enum ProductCatalogCategory {
   HEALTH
   BEDDING
   TRANSPORT
+  COLLARS
+  HARNESSES
+  LEASHES
+  HOUSING
+  AQUARIUM
+  EQUINE
+  CATTLE
+  BIRDS
+  EXOTIC
+  TECHNOLOGY
+  TRAINING
   OTHER
 }
 
@@ -259,6 +284,17 @@ enum MessageReportStatus {
   REVIEWING
   RESOLVED
   REJECTED
+}
+
+enum ConversationContextType {
+  GENERAL
+  PRODUCT
+  SERVICE
+  ORDER
+  APPOINTMENT
+  ADOPTION
+  CAMPAIGN
+  SUPPORT
 }
 
 enum ConversationType {
@@ -489,6 +525,7 @@ model User {
   followers     Follow[]  @relation("Following")
   following     Follow[]  @relation("Follower")
   notifications Notification[]
+  notificationPreference NotificationPreference?
   sentMessages  Message[] @relation("Sender")
   conversations ConversationParticipant[]
   createdConversations Conversation[] @relation("ConversationCreator")
@@ -505,6 +542,7 @@ model User {
   partnerLogistics PartnerLogisticsConfig? @relation("PartnerLogistics")
   cart          Cart?
   favorites     Favorite[]
+  partnerFavoritedBy Favorite[] @relation("PartnerFavorites")
   subscriptions Subscription[]
   veterinarianProfile VeterinarianProfile?
   clinicProfile       ClinicProfile?
@@ -1014,6 +1052,7 @@ model PartnerProfile {
   userId             String             @unique
   partnerType        String?
   businessName       String
+  slug               String?            @unique
   legalName          String
   cnpj               String?            @unique
   corporateType      String?
@@ -1345,6 +1384,7 @@ model Review {
   userId             String
   rating             Int
   comment            String?
+  partnerReply       String?
   moderationStatus   ReviewModerationStatus @default(VISIBLE)
   hiddenAt           DateTime?
   hiddenBy           String?
@@ -1403,10 +1443,19 @@ model Favorite {
   id        String   @id @default(cuid())
   userId    String
   productId String?
+  serviceId String?
+  partnerId String?
   postId    String?
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   product   Product? @relation(fields: [productId], references: [id])
+  service   Service? @relation(fields: [serviceId], references: [id])
+  partner   User?    @relation("PartnerFavorites", fields: [partnerId], references: [id])
+
+  @@unique([userId, productId])
+  @@unique([userId, serviceId])
+  @@unique([userId, partnerId])
+  @@index([userId])
 }
 
 model Subscription {
@@ -1421,35 +1470,102 @@ model Subscription {
   user             User             @relation(fields: [userId], references: [id])
 }
 
-model Notification {
-  id        String   @id @default(cuid())
-  userId    String
-  title     String
-  body      String
-  type      String
-  read      Boolean  @default(false)
-  data      Json?
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+// ─── Notificações (Central EcoPet) ─────────────────────────────────────────
 
+enum NotificationType {
+  SYSTEM
+  SECURITY
+  ORDER
+  APPOINTMENT
+  PRODUCT
+  SERVICE
+  SOCIAL
+  MESSAGE
+  ADOPTION
+  CAMPAIGN
+  DOCUMENT
+  PAYMENT
+  REVIEW
+  SUPPORT
+}
+
+enum NotificationPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+model Notification {
+  id        String               @id @default(cuid())
+  userId    String
+  role      UserRole?
+  type      NotificationType     @default(SYSTEM)
+  title     String
+  message   String
+  body      String?
+  actionUrl String?
+  metadata  Json?
+  data      Json?
+  priority  NotificationPriority @default(NORMAL)
+  read      Boolean              @default(false)
+  readAt    DateTime?
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+  deletedAt DateTime?
+
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, readAt])
   @@index([userId, read])
+  @@index([readAt])
+  @@index([createdAt])
+  @@index([type])
+}
+
+model NotificationPreference {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  inAppEnabled       Boolean  @default(true)
+  emailEnabled       Boolean  @default(false)
+  smsEnabled         Boolean  @default(false)
+  whatsappEnabled    Boolean  @default(false)
+  marketingEnabled   Boolean  @default(false)
+  orderUpdates       Boolean  @default(true)
+  appointmentUpdates Boolean  @default(true)
+  socialUpdates      Boolean  @default(true)
+  adoptionUpdates    Boolean  @default(true)
+  campaignUpdates    Boolean  @default(true)
+  productUpdates     Boolean  @default(true)
+  serviceUpdates     Boolean  @default(true)
+  securityUpdates    Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Conversation {
-  id            String                    @id @default(cuid())
-  type          ConversationType          @default(CLIENT_ECOPET)
-  status        ConversationStatus        @default(OPEN)
-  title         String?
-  metadata      Json?
-  createdById   String?
-  lastMessageAt DateTime?
-  archivedAt    DateTime?
-  blockedAt     DateTime?
-  closedAt      DateTime?
-  ticketId      String?                   @unique
-  directKey     String?                   @unique
-  createdAt     DateTime                  @default(now())
-  updatedAt     DateTime                  @updatedAt
+  id                   String                   @id @default(cuid())
+  type                 ConversationType         @default(CLIENT_ECOPET)
+  status               ConversationStatus       @default(OPEN)
+  title                String?
+  metadata             Json?
+  createdById          String?
+  lastMessageAt        DateTime?
+  archivedAt           DateTime?
+  blockedAt            DateTime?
+  closedAt             DateTime?
+  ticketId             String?                  @unique
+  directKey            String?                  @unique
+  talkjsConversationId String?                  @unique
+  contextType          ConversationContextType?
+  contextId            String?
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt
   createdBy     User?                     @relation("ConversationCreator", fields: [createdById], references: [id])
   participants  ConversationParticipant[]
   messages      Message[]
@@ -1463,6 +1579,7 @@ model Conversation {
   @@index([status])
   @@index([lastMessageAt])
   @@index([createdById])
+  @@index([contextType, contextId])
 }
 
 model ConversationParticipant {
@@ -1640,6 +1757,7 @@ model Service {
   provider       User                 @relation("ProviderServices", fields: [providerId], references: [id])
   appointments   Appointment[]
   serviceReviews ServiceReview[]
+  favorites      Favorite[]
 
   @@index([type])
   @@index([category])
@@ -2981,6 +3099,20 @@ model AIChatLog {
 
 // ─── Feed Social (Etapa 11) ───────────────────────────────────────────────
 
+enum SocialPostType {
+  PET_UPDATE
+  GENERAL
+  PRODUCT
+  SERVICE
+  ADOPTION
+  CAMPAIGN
+  DONATION
+  EVENT
+  RESCUE
+  EDUCATIONAL
+  URGENT
+}
+
 enum SocialPostVisibility {
   PUBLIC
   FOLLOWERS
@@ -3034,11 +3166,19 @@ enum PublicProfileVisibility {
 model SocialPost {
   id                String               @id @default(cuid())
   authorId          String
+  authorRole        UserRole?
+  type              SocialPostType       @default(GENERAL)
   petId             String?
   content           String
   visibility        SocialPostVisibility @default(PUBLIC)
   status            SocialPostStatus     @default(PUBLISHED)
   locationText      String?
+  linkedProductId   String?
+  linkedServiceId   String?
+  linkedCampaignId  String?
+  adoptionMeta      Json?
+  isPinned          Boolean              @default(false)
+  isFeatured        Boolean              @default(false)
   createdAt         DateTime             @default(now())
   updatedAt         DateTime             @updatedAt
   editedAt          DateTime?
@@ -3063,6 +3203,8 @@ model SocialPost {
   @@index([status])
   @@index([visibility])
   @@index([petId])
+  @@index([type])
+  @@index([authorRole])
 }
 
 model SocialPostMedia {

@@ -5,12 +5,21 @@ type ApiBody<T> = { success: boolean; data?: T; error?: { code: string; message:
 export type ApiSocialPost = {
   id: string;
   authorId: string;
+  authorRole?: string | null;
+  type?: string;
   author: { id: string; name: string; avatarUrl: string | null; role: string };
   pet?: { id: string; name: string; photo: string | null; species: string } | null;
   content: string | null;
   visibility: string;
   status: string;
   locationText: string | null;
+  linkedProductId?: string | null;
+  linkedServiceId?: string | null;
+  linkedCampaignId?: string | null;
+  linkedPetId?: string | null;
+  adoptionMeta?: Record<string, unknown> | null;
+  isPinned?: boolean;
+  isFeatured?: boolean;
   media: { id: string; fileUrl: string; fileName: string; mimeType: string; mediaType: string; sortOrder: number }[];
   hashtags: { id: string; name: string; slug: string }[];
   counts: { likes: number; comments: number; shares: number; saves: number };
@@ -58,15 +67,27 @@ async function socialFetch<T>(path: string, init?: RequestInit): Promise<T> {
   return body.data as T;
 }
 
-export async function fetchFeed(params?: { cursor?: string; hashtag?: string; authorId?: string }) {
+export async function fetchFeed(params?: { cursor?: string; hashtag?: string; authorId?: string; type?: string }) {
   const q = new URLSearchParams();
   if (params?.cursor) q.set("cursor", params.cursor);
   if (params?.hashtag) q.set("hashtag", params.hashtag);
   if (params?.authorId) q.set("authorId", params.authorId);
+  if (params?.type) q.set("type", params.type);
   return socialFetch<{ posts: ApiSocialPost[]; nextCursor: string | null }>(`/api/social/feed?${q}`);
 }
 
-export async function createPost(data: { content?: string; visibility?: string; petId?: string; locationText?: string; media?: unknown[] }) {
+export async function createPost(data: {
+  content?: string;
+  type?: string;
+  visibility?: string;
+  petId?: string;
+  locationText?: string;
+  linkedProductId?: string;
+  linkedServiceId?: string;
+  linkedCampaignId?: string;
+  adoptionMeta?: Record<string, unknown>;
+  media?: unknown[];
+}) {
   return socialFetch<{ post: ApiSocialPost }>("/api/social/posts", { method: "POST", body: JSON.stringify(data) });
 }
 

@@ -75,11 +75,22 @@ export function isPublicClientPath(pathname: string): boolean {
   return false;
 }
 
+/** Rotas públicas da rede social (visitante / pré-cadastro) */
+export function isPublicSocialPath(pathname: string): boolean {
+  if (pathname === "/feed") return true;
+  if (pathname.startsWith("/feed/post/")) return true;
+  if (/^\/feed\/profile\/[^/]+$/.test(pathname)) return true;
+  if (pathname.startsWith("/feed/hashtag/")) return true;
+  if (pathname === "/feed/search") return true;
+  return false;
+}
+
 export function isPublicPath(pathname: string): boolean {
   if (PUBLIC_EXACT.has(pathname)) return true;
   if (PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))) return true;
   if (isPublicMarketplacePath(pathname)) return true;
   if (isPublicClientPath(pathname)) return true;
+  if (isPublicSocialPath(pathname)) return true;
   return false;
 }
 
