@@ -29,6 +29,7 @@ export function contentSecurityPolicy(): string {
     "font-src 'self' data: https:",
     "connect-src 'self' https: wss: https://vlibras.gov.br https://www.vlibras.gov.br https://*.vlibras.gov.br",
     "frame-src 'self' https://vlibras.gov.br https://www.vlibras.gov.br https://*.vlibras.gov.br",
+    "worker-src 'self' blob: https://vlibras.gov.br https://www.vlibras.gov.br https://*.vlibras.gov.br",
     "frame-ancestors 'self'",
     "base-uri 'self'",
     "form-action 'self'",

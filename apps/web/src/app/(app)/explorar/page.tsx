@@ -8,8 +8,8 @@ export default async function ExplorarPage() {
     redirect("/cliente/explorar");
   }
 
-  const { PublicExplorePage } = await import(
-    "@/components/features/public-client/pages/public-explore-page"
+  const { PublicExplorePagePremium } = await import(
+    "@/components/features/public/pages/public-explore-page-premium"
   );
-  return <PublicExplorePage />;
+  return <PublicExplorePagePremium />;
 }

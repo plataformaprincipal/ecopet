@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiFailure } from "@/lib/api-response";
 import { requireActivePartner } from "@/lib/auth/require-auth";
 import { productUpdateSchema } from "@/schemas/product";
+import { getProductDeleteBlockReason } from "@/lib/catalog/delete-guards";
 import { ContentApprovalStatus, Prisma, ProductCatalogStatus } from "@prisma/client";
 
 type RouteContext = { params: Promise<{ productId: string }> };
@@ -77,6 +78,15 @@ export async function DELETE(_req: Request, context: RouteContext) {
     where: { id: productId, sellerId: user!.id, deletedAt: null },
   });
   if (!existing) return apiFailure("NOT_FOUND", "Produto não encontrado.", 404);
+
+  const blockReason = await getProductDeleteBlockReason(prisma, productId);
+  if (blockReason === "HAS_ORDERS") {
+    return apiFailure(
+      "CONFLICT",
+      "Não é possível excluir produto com pedidos vinculados. Desative-o em vez disso.",
+      409
+    );
+  }
 
   await prisma.product.update({
     where: { id: productId },

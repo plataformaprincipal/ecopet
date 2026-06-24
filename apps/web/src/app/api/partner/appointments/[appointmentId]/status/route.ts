@@ -7,7 +7,7 @@ import { getUserEmailLocale } from "@/lib/email/templates";
 import { z } from "zod";
 
 const statusSchema = z.object({
-  status: z.enum(["CONFIRMED", "CANCELLED", "COMPLETED", "NO_SHOW"]),
+  status: z.enum(["CONFIRMED", "CANCELLED", "COMPLETED", "NO_SHOW", "REJECTED"]),
   reason: z.string().optional(),
 });
 
@@ -37,8 +37,8 @@ export async function PATCH(request: Request, context: RouteContext) {
     where: { id: appointmentId },
     data: {
       status: parsed.data.status,
-      ...(parsed.data.status === "CANCELLED"
-        ? { cancelledAt: now, cancelReason: parsed.data.reason ?? "Cancelado pelo parceiro" }
+      ...(parsed.data.status === "CANCELLED" || parsed.data.status === "REJECTED"
+        ? { cancelledAt: now, cancelReason: parsed.data.reason ?? (parsed.data.status === "REJECTED" ? "Recusado pelo parceiro" : "Cancelado pelo parceiro") }
         : {}),
       ...(parsed.data.status === "COMPLETED" ? { completedAt: now } : {}),
     },
@@ -47,6 +47,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   const typeMap: Record<string, string> = {
     CONFIRMED: "APPOINTMENT_CONFIRMED",
     CANCELLED: "APPOINTMENT_CANCELLED_BY_PARTNER",
+    REJECTED: "APPOINTMENT_REJECTED",
     COMPLETED: "APPOINTMENT_COMPLETED",
     NO_SHOW: "APPOINTMENT_NO_SHOW",
   };
@@ -68,6 +69,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     const eventMap: Partial<Record<string, "APPOINTMENT_CONFIRMED" | "APPOINTMENT_CANCELLED" | "APPOINTMENT_COMPLETED">> = {
       CONFIRMED: "APPOINTMENT_CONFIRMED",
       CANCELLED: "APPOINTMENT_CANCELLED",
+      REJECTED: "APPOINTMENT_CANCELLED",
       COMPLETED: "APPOINTMENT_COMPLETED",
     };
     const mailEvent = eventMap[parsed.data.status];
@@ -83,4 +85,8 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   return apiSuccess({ appointment: updated });
+}
+
+export async function PUT(request: Request, context: RouteContext) {
+  return PATCH(request, context);
 }

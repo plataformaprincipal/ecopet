@@ -41,6 +41,7 @@
     "test:foundation:appointments": "node scripts/test-foundation-appointments.mjs",
     "test:foundation:marketplace": "node scripts/test-foundation-marketplace.mjs",
     "test:marketplace": "node scripts/test-marketplace.mjs",
+    "test:marketplace-flow": "node scripts/test-marketplace-flow.mjs",
     "test:foundation:products": "node scripts/test-foundation-products.mjs",
     "test:foundation:services": "node scripts/test-foundation-services.mjs",
     "test:foundation:cart": "node scripts/test-foundation-cart.mjs",

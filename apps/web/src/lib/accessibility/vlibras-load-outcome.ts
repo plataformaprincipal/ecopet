@@ -19,7 +19,7 @@ export function vlibrasFromScriptEvent(
     case "button-missing":
       return { status: "unavailable" };
     case "init-failed":
-      return { status: "failed" };
+      return { status: "unavailable" };
   }
 }
 

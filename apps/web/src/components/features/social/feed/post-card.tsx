@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { Sparkles } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PostMediaGrid } from "./post-media-grid";
 import { PostActions } from "./post-actions";
@@ -13,7 +14,15 @@ import { PostCtaBar } from "./post-cta-bar";
 import type { ApiSocialPost } from "@/lib/social/client-api";
 import { useTranslation } from "@/providers/i18n-provider";
 
-export function PostCard({ post, onUpdate }: { post: ApiSocialPost; onUpdate?: () => void }) {
+export function PostCard({
+  post,
+  onUpdate,
+  onAskAi,
+}: {
+  post: ApiSocialPost;
+  onUpdate?: () => void;
+  onAskAi?: (post: ApiSocialPost) => void;
+}) {
   const { t } = useTranslation();
   const [showComments, setShowComments] = useState(false);
   const removed = post.status === "REMOVED" || post.deletedAt;
@@ -58,6 +67,18 @@ export function PostCard({ post, onUpdate }: { post: ApiSocialPost; onUpdate?: (
             </div>
           )}
           <PostMediaGrid media={post.media} />
+          {onAskAi ? (
+            <div className="px-4 pb-1">
+              <button
+                type="button"
+                onClick={() => onAskAi(post)}
+                className="inline-flex items-center gap-1.5 rounded-full border border-ecopet-green/30 bg-ecopet-green/5 px-3 py-1 text-xs font-medium text-ecopet-green transition hover:bg-ecopet-green/10"
+              >
+                <Sparkles className="h-3.5 w-3.5" aria-hidden />
+                Perguntar à EccoPet
+              </button>
+            </div>
+          ) : null}
           <PostCtaBar post={post} />
           <PostActions post={post} onToggleComments={() => setShowComments((v) => !v)} onUpdate={onUpdate} />
           {showComments && <CommentList postId={post.id} />}

@@ -32,6 +32,18 @@
   "ecopetAi": {
     "disclaimer": "A IA EcoPet não substitui médicos-veterinários, zootecnistas, adestradores, especialistas ou outros profissionais qualificados. As informações fornecidas possuem caráter informativo e de apoio à tomada de decisão."
   },
+  "public": {
+    "authModal": {
+      "title": "Entre para continuar",
+      "description": "Crie sua conta gratuita para interagir, comprar, agendar serviços e cuidar melhor do seu pet.",
+      "signIn": "Entrar",
+      "createAccount": "Criar conta",
+      "buyTitle": "Entre para comprar",
+      "buyDescription": "Crie sua conta gratuita para finalizar compras e acompanhar pedidos no EcoPet.",
+      "bookTitle": "Entre para agendar",
+      "bookDescription": "Crie sua conta gratuita para agendar serviços com parceiros verificados."
+    }
+  },
   "nav": {
     "home": "Início",
     "feed": "Feed",

@@ -1,10 +1,10 @@
 import { PublicClientShell } from "@/components/features/public-client/public-client-shell";
-import { PublicHomePage } from "@/components/features/public-client/pages/public-home-page";
+import { PremiumPublicHome } from "@/components/features/public-premium/premium-public-home";
 
 export default function HomePage() {
   return (
     <PublicClientShell>
-      <PublicHomePage />
+      <PremiumPublicHome />
     </PublicClientShell>
   );
 }

@@ -1,13 +1,12 @@
-import { AppHeader } from "@/components/layouts/app-header";
-import { SocialFeed } from "@/components/features/social/feed/social-feed";
+import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth";
+import { SocialHub } from "@/components/features/social/hub/social-hub";
 
-export default function FeedPage() {
-  return (
-    <>
-      <AppHeader titleKey="socialFeed.title" />
-      <main className="mx-auto max-w-2xl flex-1 p-4">
-        <SocialFeed />
-      </main>
-    </>
-  );
+export default async function FeedPage() {
+  const user = await getCurrentUser();
+  if (!user) {
+    redirect("/social");
+  }
+
+  return <SocialHub />;
 }

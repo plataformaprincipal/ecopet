@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { Home, Compass, ShoppingBag, PawPrint, User } from "lucide-react";
+import { Home, Compass, ShoppingBag, Scissors, Heart, Users } from "lucide-react";
 
 export type PublicClientNavItem = {
   href: string;
@@ -7,13 +7,14 @@ export type PublicClientNavItem = {
   icon: LucideIcon;
 };
 
-/** Navegação das 5 telas públicas pré-cadastro */
+/** Navegação pública premium (reexport para compatibilidade) */
 export const PUBLIC_CLIENT_NAV: PublicClientNavItem[] = [
   { href: "/", label: "Início", icon: Home },
   { href: "/explorar", label: "Explorar", icon: Compass },
   { href: "/marketplace", label: "Marketplace", icon: ShoppingBag },
-  { href: "/meu-pet", label: "Meu Pet", icon: PawPrint },
-  { href: "/perfil", label: "Perfil", icon: User },
+  { href: "/servicos", label: "Serviços", icon: Scissors },
+  { href: "/adocao", label: "Adoção", icon: Heart },
+  { href: "/feed", label: "Comunidade", icon: Users },
 ];
 
 export function isPublicClientNavActive(pathname: string, href: string): boolean {
@@ -23,9 +24,14 @@ export function isPublicClientNavActive(pathname: string, href: string): boolean
       pathname === "/marketplace" ||
       pathname.startsWith("/marketplace/") ||
       pathname.startsWith("/produtos") ||
-      pathname.startsWith("/servicos") ||
-      pathname.startsWith("/parceiros/")
+      pathname.startsWith("/carrinho")
     );
+  }
+  if (href === "/feed") {
+    return pathname === "/feed" || pathname.startsWith("/feed/") || pathname.startsWith("/social/");
+  }
+  if (href === "/servicos") {
+    return pathname === "/servicos" || pathname.startsWith("/servicos/");
   }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
@@ -33,9 +39,13 @@ export function isPublicClientNavActive(pathname: string, href: string): boolean
 /** Rotas que usam o shell público do cliente (visitantes) */
 export function isPublicClientShellPath(pathname: string): boolean {
   if (pathname === "/") return true;
-  if (pathname === "/explorar") return true;
+  if (pathname === "/explorar" || pathname === "/explore") return true;
+  if (pathname === "/social" || pathname.startsWith("/social/")) return true;
+  if (pathname === "/eccopet" || pathname === "/ia") return true;
+  if (pathname === "/adocao" || pathname.startsWith("/adocao/")) return true;
+  if (pathname === "/feed" || pathname.startsWith("/feed/")) return true;
   if (pathname === "/meu-pet") return true;
-  if (pathname === "/perfil") return true;
+  if (pathname === "/perfil" || pathname === "/profile") return true;
   if (pathname === "/marketplace") return true;
   if (pathname.startsWith("/marketplace/produto/")) return true;
   if (pathname.startsWith("/marketplace/servico/")) return true;

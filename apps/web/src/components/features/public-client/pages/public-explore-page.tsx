@@ -16,7 +16,7 @@ import { PublicSearchBar } from "../public-search-bar";
 import { PublicCategoryGrid, type PublicCategoryItem } from "../public-category-grid";
 import { PublicEmptyState } from "../public-empty-state";
 import { PublicGridSkeleton } from "../public-skeleton";
-import { Button } from "@/components/ui/button";
+import { PremiumExploreMasonry } from "@/components/features/public-premium/premium-explore-masonry";
 
 type ExploreData = {
   counts: { products: number; services: number; partners: number; adoptions: number };
@@ -117,7 +117,7 @@ export function PublicExplorePage() {
     <div className="space-y-8">
       <PublicPageHeader
         title="Explorar"
-        description="Descubra pet shops, serviços, produtos e parceiros verificados do ecossistema EcoPet."
+        description="Descubra pets, eventos, parceiros e conteúdos — experiência inspirada em descoberta visual."
       />
 
       <PublicSearchBar
@@ -144,86 +144,12 @@ export function PublicExplorePage() {
           actionHref="/marketplace"
         />
       ) : (
-        <div className="space-y-10">
-          {(data?.partners.length ?? 0) > 0 ? (
-            <section aria-labelledby="parceiros-heading">
-              <h2 id="parceiros-heading" className="text-lg font-semibold text-zinc-900 dark:text-white">
-                Parceiros
-              </h2>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                {data!.partners.map((p) => (
-                  <Link
-                    key={p.id}
-                    href={`/parceiros/${p.id}`}
-                    className="rounded-2xl border border-zinc-200/80 bg-white p-4 transition hover:shadow-md dark:border-white/10 dark:bg-zinc-900/60"
-                  >
-                    <p className="font-medium text-zinc-900 dark:text-white">{p.name}</p>
-                    <p className="text-sm text-zinc-500">
-                      {p.category ?? "Parceiro"}
-                      {p.city ? ` · ${p.city}` : ""}
-                    </p>
-                    <p className="mt-1 text-xs text-zinc-400">
-                      {p.productCount} produtos · {p.serviceCount} serviços
-                    </p>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          ) : null}
-
-          {(data?.services.length ?? 0) > 0 ? (
-            <section aria-labelledby="servicos-heading">
-              <div className="flex items-center justify-between gap-3">
-                <h2 id="servicos-heading" className="text-lg font-semibold text-zinc-900 dark:text-white">
-                  Serviços
-                </h2>
-                <Button asChild variant="ghost" size="sm">
-                  <Link href="/servicos">Ver todos</Link>
-                </Button>
-              </div>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {data!.services.map((s) => (
-                  <Link
-                    key={s.id}
-                    href={`/marketplace/servico/${s.id}`}
-                    className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60"
-                  >
-                    <p className="font-medium text-zinc-900 dark:text-white">{s.name}</p>
-                    <p className="text-sm text-emerald-700 dark:text-emerald-400">{formatPrice(s.price)}</p>
-                    <p className="text-xs text-zinc-500">
-                      {s.provider?.partnerProfile?.businessName ?? s.category}
-                    </p>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          ) : null}
-
-          {(data?.products.length ?? 0) > 0 ? (
-            <section aria-labelledby="produtos-heading">
-              <div className="flex items-center justify-between gap-3">
-                <h2 id="produtos-heading" className="text-lg font-semibold text-zinc-900 dark:text-white">
-                  Produtos
-                </h2>
-                <Button asChild variant="ghost" size="sm">
-                  <Link href="/marketplace">Ver todos</Link>
-                </Button>
-              </div>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {data!.products.map((p) => (
-                  <Link
-                    key={p.id}
-                    href={`/marketplace/produto/${p.id}`}
-                    className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60"
-                  >
-                    <p className="font-medium text-zinc-900 dark:text-white">{p.name}</p>
-                    <p className="text-sm text-emerald-700 dark:text-emerald-400">{formatPrice(p.price)}</p>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          ) : null}
-        </div>
+        <PremiumExploreMasonry
+          partners={data?.partners ?? []}
+          services={data?.services ?? []}
+          products={data?.products ?? []}
+          formatPrice={formatPrice}
+        />
       )}
     </div>
   );

@@ -55,10 +55,22 @@ function FoundationAppShell({
   const isPartnerArea = pathname.startsWith("/parceiro");
   const isClientArea = isClientAreaPath(pathname);
   const isOngArea = isOngAreaPath(pathname);
+  const isSocialHub = pathname === "/feed" || pathname === "/social";
   const showAi = role === "CLIENT";
 
   if (isPartnerArea || isClientArea || isOngArea) {
     return <div className="min-h-screen">{children}</div>;
+  }
+
+  // Social Hub: full-width 3-column experience owns its own left navigation.
+  if (isSocialHub) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-ecopet-dark-bg">
+        <div className="pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:pb-0">{children}</div>
+        <BottomNav />
+        {showAi && <EcopetAIAssistant />}
+      </div>
+    );
   }
 
   return (

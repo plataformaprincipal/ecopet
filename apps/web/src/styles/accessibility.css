@@ -280,17 +280,26 @@ html[dir="rtl"] .a11y-toolbar-root {
 
 /* VLibras — visível, clicável e acima de overlays EcoPet (toolbar, chat, modais) */
 [vw],
-#ecopet-vlibras-root,
+#ecopet-vlibras-root {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  direction: ltr !important;
+  unicode-bidi: isolate;
+  z-index: 2147483646 !important;
+  overflow: visible !important;
+}
+
 [vw-access-button],
 [vw-plugin-wrapper] {
   direction: ltr !important;
   unicode-bidi: isolate;
-  z-index: 2147483646 !important;
+  z-index: 2147483647 !important;
 }
 
+/* Ocultar visualmente sem destruir instância (alavanca OFF) */
 [vw].ecopet-vlibras-hidden,
 #ecopet-vlibras-root.ecopet-vlibras-hidden {
-  display: none !important;
   visibility: hidden !important;
   opacity: 0 !important;
   pointer-events: none !important;
@@ -298,7 +307,6 @@ html[dir="rtl"] .a11y-toolbar-root {
 
 [vw]:not(.ecopet-vlibras-hidden),
 #ecopet-vlibras-root:not(.ecopet-vlibras-hidden) {
-  display: block !important;
   visibility: visible !important;
   opacity: 1 !important;
   overflow: visible !important;
@@ -308,10 +316,13 @@ html[dir="rtl"] .a11y-toolbar-root {
 [vw-access-button] {
   pointer-events: auto !important;
   cursor: pointer !important;
+  position: relative !important;
 }
 
 [vw-plugin-wrapper] {
   pointer-events: auto !important;
+  position: fixed !important;
+  z-index: 2147483647 !important;
 }
 
 [vw] .vp-access-button,
@@ -321,6 +332,8 @@ html[dir="rtl"] .a11y-toolbar-root {
   opacity: 1 !important;
   pointer-events: auto !important;
   cursor: pointer !important;
+  position: relative !important;
+  z-index: 2147483647 !important;
 }
 
 /* Espaço acima da FAB de acessibilidade EcoPet (canto inferior esquerdo) */

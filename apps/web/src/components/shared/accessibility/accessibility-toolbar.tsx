@@ -202,8 +202,8 @@ export function AccessibilityToolbar() {
               )}
               {(vlibrasStatus === "unavailable" || vlibrasStatus === "error") && (
                 <>
-                  <p className="px-3 text-[11px] text-amber-700 dark:text-amber-400" role="alert">
-                    {t("a11y.vlibrasAvatarFailed")}
+                  <p className="px-3 text-[11px] text-amber-700 dark:text-amber-400" role="status">
+                    {t("a11y.vlibrasUnavailable")}
                   </p>
                   <button
                     type="button"

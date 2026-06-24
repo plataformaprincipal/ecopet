@@ -11,12 +11,39 @@ import {
 } from "@/components/features/foundation/register-role-selector";
 import { useAuthMessages } from "@/lib/i18n/use-auth-messages";
 
-export function FoundationRegisterForm() {
+type FoundationRegisterFormProps = {
+  initialRole?: RegisterRole | null;
+  embedded?: boolean;
+};
+
+export function FoundationRegisterForm({ initialRole = null, embedded = false }: FoundationRegisterFormProps) {
   const { t } = useAuthMessages();
-  const [role, setRole] = useState<RegisterRole | null>(null);
+  const [role, setRole] = useState<RegisterRole | null>(initialRole);
 
   function handleRoleChange(next: RegisterRole) {
     setRole(next);
+  }
+
+  const inner = (
+    <>
+      {!initialRole && <RegisterRoleSelector value={role} onChange={handleRoleChange} />}
+
+      {role === "CLIENT" && <ClientRegisterForm embedded />}
+
+      {role === "PARTNER" && <PartnerRegisterForm embedded />}
+
+      {role === "ONG" && <OngRegisterForm embedded />}
+
+      {!role && (
+        <p className="text-center text-sm text-muted-foreground" aria-live="polite">
+          {t("auth.registerFoundation.selectRoleHint")}
+        </p>
+      )}
+    </>
+  );
+
+  if (embedded) {
+    return <div className="min-w-0 space-y-6">{inner}</div>;
   }
 
   return (
@@ -25,21 +52,7 @@ export function FoundationRegisterForm() {
         <CardTitle>{t("auth.registerFoundation.title")}</CardTitle>
         <CardDescription>{t("auth.registerFoundation.description")}</CardDescription>
       </CardHeader>
-      <CardContent className="min-w-0 space-y-6">
-        <RegisterRoleSelector value={role} onChange={handleRoleChange} />
-
-        {role === "CLIENT" && <ClientRegisterForm embedded />}
-
-        {role === "PARTNER" && <PartnerRegisterForm embedded />}
-
-        {role === "ONG" && <OngRegisterForm embedded />}
-
-        {!role && (
-          <p className="text-center text-sm text-muted-foreground" aria-live="polite">
-            {t("auth.registerFoundation.selectRoleHint")}
-          </p>
-        )}
-      </CardContent>
+      <CardContent className="min-w-0 space-y-6">{inner}</CardContent>
     </Card>
   );
 }

@@ -12,6 +12,7 @@ const steps = [
   { name: "test:empty-states", cmd: "node", args: ["--import", "tsx", "scripts/test-empty-states.mjs"] },
   { name: "test:i18n", cmd: "node", args: ["scripts/test-i18n.mjs"] },
   { name: "test:permissions:unit", cmd: "node", args: ["--import", "tsx", "scripts/test-permissions.mjs"] },
+  { name: "test:catalog-delete-guards", cmd: "node", args: ["--import", "tsx", "scripts/test-catalog-delete-guards.mjs"] },
 ];
 
 let failed = 0;

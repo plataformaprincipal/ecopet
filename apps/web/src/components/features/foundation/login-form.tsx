@@ -21,7 +21,11 @@ function parseApiError(data: {
   return { message: "" };
 }
 
-export function FoundationLoginForm() {
+type FoundationLoginFormProps = {
+  variant?: "default" | "premium";
+};
+
+export function FoundationLoginForm({ variant = "default" }: FoundationLoginFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t, tApi } = useAuthMessages();
@@ -70,78 +74,94 @@ export function FoundationLoginForm() {
     }
   }
 
-  return (
-    <Card className="mx-auto w-full max-w-md">
-      <CardHeader>
-        <CardTitle>{t("auth.login.pageTitle")}</CardTitle>
-        <CardDescription>{t("auth.login.pageDescription")}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-4"
-          noValidate
-          aria-describedby={error ? "login-error" : undefined}
-        >
-          <div>
-            <label htmlFor="login-identifier" className="text-sm font-medium">
-              {t("auth.login.identifier")}
+  const formContent = (
+    <>
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-4"
+        noValidate
+        aria-describedby={error ? "login-error" : undefined}
+      >
+        <div>
+          <label htmlFor="login-identifier" className="text-sm font-medium text-ecopet-dark dark:text-white">
+            {t("auth.login.identifier")}
+          </label>
+          <Input
+            id="login-identifier"
+            type="text"
+            placeholder={t("auth.login.identifierPlaceholder")}
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
+            required
+            className="mt-1 rounded-xl"
+            autoComplete="username"
+            aria-label={t("auth.login.identifier")}
+            aria-invalid={!!error}
+            aria-describedby={error ? "login-error" : undefined}
+          />
+        </div>
+        <div>
+          <div className="flex items-center justify-between gap-2">
+            <label htmlFor="login-password" className="text-sm font-medium text-ecopet-dark dark:text-white">
+              Senha
             </label>
-            <Input
-              id="login-identifier"
-              type="text"
-              placeholder={t("auth.login.identifierPlaceholder")}
-              value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
-              required
-              className="mt-1"
-              autoComplete="username"
-              aria-label={t("auth.login.identifier")}
-              aria-invalid={!!error}
-              aria-describedby={error ? "login-error" : undefined}
-            />
-          </div>
-          <div>
-            <label htmlFor="login-password" className="text-sm font-medium">
-              {t("auth.login.password")}
+            <label className="flex items-center gap-2 text-xs text-ecopet-gray dark:text-white/60">
+              <input type="checkbox" className="rounded border-ecopet-gray/30" />
+              Lembrar acesso
             </label>
-            <Input
-              id="login-password"
-              type="password"
-              placeholder={t("auth.login.passwordPlaceholder")}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="mt-1"
-              autoComplete="current-password"
-              aria-label={t("auth.login.password")}
-            />
           </div>
-          <p className="text-right text-sm">
-            <Link
-              href="/recuperar-senha"
-              className="inline-block rounded-sm font-medium text-ecopet-green underline-offset-2 transition-colors hover:text-emerald-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ecopet-green/40 focus-visible:ring-offset-2 dark:text-emerald-400 dark:hover:text-emerald-300"
-              aria-label={t("auth.login.forgotLinkAria")}
-            >
-              {t("auth.login.forgot")}
-            </Link>
+          <Input
+            id="login-password"
+            type="password"
+            placeholder={t("auth.login.passwordPlaceholder")}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="mt-1 rounded-xl"
+            autoComplete="current-password"
+            aria-label={t("auth.login.password")}
+          />
+        </div>
+        <p className="text-right text-sm">
+          <Link
+            href="/recuperar-senha"
+            className="inline-block rounded-sm font-medium text-ecopet-green underline-offset-2 transition-colors hover:text-emerald-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ecopet-green/40 focus-visible:ring-offset-2 dark:text-emerald-400 dark:hover:text-emerald-300"
+            aria-label={t("auth.login.forgotLinkAria")}
+          >
+            Esqueci minha senha
+          </Link>
+        </p>
+        {error && (
+          <p id="login-error" className="text-sm text-red-600" role="alert" aria-live="polite">
+            {error}
           </p>
-          {error && (
-            <p id="login-error" className="text-sm text-red-600" role="alert" aria-live="polite">
-              {error}
-            </p>
-          )}
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? t("auth.login.entering") : t("auth.login.submit")}
-          </Button>
-        </form>
+        )}
+        <Button type="submit" className="w-full rounded-2xl" size="lg" disabled={loading}>
+          {loading ? t("auth.login.entering") : "Entrar"}
+        </Button>
+      </form>
+      {variant === "default" && (
         <p className="mt-4 text-center text-sm text-gray-600">
           {t("auth.login.noAccount")}{" "}
           <Link href="/cadastro" className="font-semibold text-green-700 hover:underline">
             {t("auth.login.signUpLink")}
           </Link>
         </p>
-      </CardContent>
+      )}
+    </>
+  );
+
+  if (variant === "premium") {
+    return <div className="w-full">{formContent}</div>;
+  }
+
+  return (
+    <Card className="mx-auto w-full max-w-md">
+      <CardHeader>
+        <CardTitle>{t("auth.login.pageTitle")}</CardTitle>
+        <CardDescription>{t("auth.login.pageDescription")}</CardDescription>
+      </CardHeader>
+      <CardContent>{formContent}</CardContent>
     </Card>
   );
 }

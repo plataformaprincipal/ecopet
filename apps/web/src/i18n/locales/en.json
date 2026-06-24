@@ -32,6 +32,18 @@
   "ecopetAi": {
     "disclaimer": "EcoPet AI does not replace veterinarians, animal scientists, trainers, specialists, or other qualified professionals. The information provided is for informational and decision-support purposes only."
   },
+  "public": {
+    "authModal": {
+      "title": "Sign in to continue",
+      "description": "Create your free account to interact, shop, book services, and take better care of your pet.",
+      "signIn": "Sign in",
+      "createAccount": "Create account",
+      "buyTitle": "Sign in to buy",
+      "buyDescription": "Create your free account to complete purchases and track orders on EcoPet.",
+      "bookTitle": "Sign in to book",
+      "bookDescription": "Create your free account to book services with verified partners."
+    }
+  },
   "nav": {
     "home": "Home",
     "feed": "Feed",

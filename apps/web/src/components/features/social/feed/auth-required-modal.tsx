@@ -25,10 +25,10 @@ type AuthRequiredModalProps = {
 export function AuthRequiredModal({
   open,
   onOpenChange,
-  titleKey = "socialFeed.authModal.title",
-  descriptionKey = "socialFeed.authModal.description",
-  signInKey = "socialFeed.authModal.signIn",
-  createAccountKey = "socialFeed.authModal.createAccount",
+  titleKey = "public.authModal.title",
+  descriptionKey = "public.authModal.description",
+  signInKey = "public.authModal.signIn",
+  createAccountKey = "public.authModal.createAccount",
 }: AuthRequiredModalProps) {
   const pathname = usePathname();
   const { t } = useTranslation();

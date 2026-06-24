@@ -124,3 +124,7 @@ export async function PATCH(request: Request, context: RouteContext) {
 
   return apiSuccess({ order: updated });
 }
+
+export async function PUT(request: Request, context: RouteContext) {
+  return PATCH(request, context);
+}

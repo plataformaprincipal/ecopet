@@ -10,8 +10,8 @@ export default async function PerfilPage() {
     redirect(profilePathForRole(user.role));
   }
 
-  const { PublicProfileGate } = await import(
-    "@/components/features/public-client/public-profile-gate"
+  const { PublicProfilePagePremium } = await import(
+    "@/components/features/public/pages/public-profile-page-premium"
   );
-  return <PublicProfileGate />;
+  return <PublicProfilePagePremium />;
 }

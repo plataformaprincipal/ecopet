@@ -12,6 +12,7 @@ export async function GET(_req: Request, { params }: RouteContext) {
       deletedAt: null,
       status: PartnerServiceStatus.ACTIVE,
       isActive: true,
+      approvalStatus: "APPROVED",
       provider: { accountStatus: AccountStatus.ACTIVE, role: "PARTNER" },
     },
     include: {

@@ -1,12 +1,10 @@
 import { Suspense } from "react";
-import { FoundationLoginForm } from "@/components/features/foundation/login-form";
+import { PremiumLoginExperience } from "@/components/features/auth/premium-login-experience";
 
 export default function LoginPage() {
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-10">
-      <Suspense>
-        <FoundationLoginForm />
-      </Suspense>
-    </main>
+    <Suspense>
+      <PremiumLoginExperience />
+    </Suspense>
   );
 }

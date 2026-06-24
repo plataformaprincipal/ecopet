@@ -1,133 +1,250 @@
 "use client";
 
+
+
 import { useEffect, useRef, useState } from "react";
+
 import { createPortal } from "react-dom";
+
+import { usePathname } from "next/navigation";
+
 import { cn } from "@/lib/utils";
+
 import { useAccessibilityStore } from "@/store/accessibility-store";
+
 import {
+
   ensureVLibras,
+
   hideVLibras,
+
   isVLibrasAvatarVisible,
+
   isVLibrasLoadReady,
+
+  notifyVLibrasRouteChange,
+
   setVLibrasVisible,
-  VW_ACTIVE_CLASS,
+
+  VW_HIDDEN_CLASS,
+
   VW_ROOT_ID,
+
 } from "@/lib/accessibility/vlibras-loader";
+
 import { VLIBRAS_TOTAL_LOAD_TIMEOUT_MS } from "@/lib/accessibility/constants";
 
-function ensureOfficialDom(root: HTMLElement): void {
-  if (root.dataset.vlibrasBuilt === "1") return;
 
-  root.id = VW_ROOT_ID;
-  root.setAttribute("vw", "");
-  root.classList.add("enabled", "vlibras-widget");
-  root.replaceChildren();
 
-  const accessBtn = document.createElement("div");
-  accessBtn.setAttribute("vw-access-button", "");
-  accessBtn.classList.add("active");
+const IS_DEV = process.env.NODE_ENV === "development";
 
-  const pluginWrapper = document.createElement("div");
-  pluginWrapper.setAttribute("vw-plugin-wrapper", "");
 
-  const topWrapper = document.createElement("div");
-  topWrapper.classList.add("vw-plugin-top-wrapper");
-  pluginWrapper.appendChild(topWrapper);
 
-  root.append(accessBtn, pluginWrapper);
-  root.dataset.vlibrasBuilt = "1";
+function VLibrasOfficialDom({ visible }: { visible: boolean }) {
+
+  return (
+
+    <div
+
+      id={VW_ROOT_ID}
+
+      vw=""
+
+      className={cn("enabled", !visible && VW_HIDDEN_CLASS)}
+
+      aria-hidden={visible ? "false" : "true"}
+
+      suppressHydrationWarning
+
+    >
+
+      <div vw-access-button="" className="active" />
+
+      <div vw-plugin-wrapper="">
+
+        <div className="vw-plugin-top-wrapper" />
+
+      </div>
+
+    </div>
+
+  );
+
 }
 
+
+
 export function VLibrasWidget() {
+
   const librasEnabled = useAccessibilityStore((s) => s.librasEnabled);
+
+  const vlibrasStatus = useAccessibilityStore((s) => s.vlibrasStatus);
+
   const setStatus = useAccessibilityStore((s) => s.setVlibrasStatus);
-  const rootRef = useRef<HTMLDivElement>(null);
+
+  const pathname = usePathname();
+
   const [mounted, setMounted] = useState(false);
+
   const loadGeneration = useRef(0);
+
+
 
   useEffect(() => setMounted(true), []);
 
-  useEffect(() => {
-    if (!mounted || !rootRef.current) return;
-    ensureOfficialDom(rootRef.current);
-  }, [mounted]);
+
 
   useEffect(() => {
+
     if (!mounted || typeof window === "undefined") return;
 
+
+
     if (!librasEnabled) {
+
       hideVLibras();
+
       setStatus("idle");
+
       return;
+
     }
+
+
 
     const generation = ++loadGeneration.current;
 
-    if (rootRef.current) {
-      ensureOfficialDom(rootRef.current);
-    }
-
-    setVLibrasVisible(true);
     setStatus("loading");
 
+
+
     const watchdog = setTimeout(() => {
+
       if (loadGeneration.current !== generation) return;
-      const status = useAccessibilityStore.getState().vlibrasStatus;
-      if (status !== "loading") return;
-      console.log("[VLIBRAS] Timeout", "watchdog UI — forçando unavailable");
+
+      if (useAccessibilityStore.getState().vlibrasStatus !== "loading") return;
+
+      if (IS_DEV) {
+
+        console.warn("[VLIBRAS] Timeout — serviço externo indisponível");
+
+      }
+
       hideVLibras();
+
       setStatus("unavailable");
+
     }, VLIBRAS_TOTAL_LOAD_TIMEOUT_MS + 500);
 
+
+
     const run = async () => {
+
       try {
+
         if (isVLibrasAvatarVisible()) {
+
           if (loadGeneration.current === generation) {
+
+            setVLibrasVisible(true);
+
             setStatus("ready");
+
           }
+
           return;
+
         }
+
+
 
         const outcome = await ensureVLibras();
 
         if (loadGeneration.current !== generation) return;
 
+
+
         if (isVLibrasLoadReady(outcome) && isVLibrasAvatarVisible()) {
+
+          setVLibrasVisible(true);
+
           setStatus("ready");
+
           return;
+
         }
 
+
+
         hideVLibras();
+
         setStatus("unavailable");
-      } catch (err) {
-        console.log("[VLIBRAS] Erro de carregamento", err);
+
+        if (IS_DEV) {
+
+          console.warn("[VLIBRAS] Indisponível — script ou avatar não carregou", outcome);
+
+        }
+
+      } catch {
+
+        hideVLibras();
+
         if (loadGeneration.current === generation) {
-          hideVLibras();
+
           setStatus("unavailable");
+
         }
+
+        if (IS_DEV) {
+
+          console.warn("[VLIBRAS] Falha inesperada capturada — app continua normalmente");
+
+        }
+
       } finally {
+
         if (loadGeneration.current === generation) {
+
           clearTimeout(watchdog);
+
         }
+
       }
+
     };
+
+
 
     void run();
 
+
+
     return () => {
+
       clearTimeout(watchdog);
+
     };
+
   }, [librasEnabled, mounted, setStatus]);
+
+
+
+  useEffect(() => {
+
+    if (!mounted || !librasEnabled || vlibrasStatus !== "ready") return;
+
+    notifyVLibrasRouteChange();
+
+  }, [pathname, mounted, librasEnabled, vlibrasStatus]);
+
+
 
   if (!mounted) return null;
 
-  return createPortal(
-    <div
-      ref={rootRef}
-      className={cn("enabled", "vlibras-widget", librasEnabled && VW_ACTIVE_CLASS)}
-      aria-hidden={!librasEnabled}
-      suppressHydrationWarning
-    />,
-    document.body
-  );
+  const domVisible = librasEnabled && vlibrasStatus !== "unavailable";
+
+  return createPortal(<VLibrasOfficialDom visible={domVisible} />, document.body);
 }
+
+

@@ -86,6 +86,7 @@ enum AppointmentStatus {
   SCHEDULED
   COMPLETED
   CANCELLED
+  REJECTED
   NO_SHOW
 }
 
@@ -1264,6 +1265,8 @@ model Product {
   @@index([sellerId])
   @@index([categoryId])
   @@index([status])
+  @@index([approvalStatus])
+  @@index([sellerId, status])
   @@index([deletedAt])
   @@index([catalogCategory])
 }
@@ -1762,6 +1765,7 @@ model Service {
   @@index([type])
   @@index([category])
   @@index([providerId, status])
+  @@index([approvalStatus])
   @@index([deletedAt])
 }
 

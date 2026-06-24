@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "@/styles/globals.css";
 import { ThemeProvider } from "@/providers/theme-provider";
@@ -98,7 +99,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </I18nProvider>
           </AccessibilityProvider>
         </ThemeProvider>
-        <VLibrasWidget />
+        <Suspense fallback={null}>
+          <VLibrasWidget />
+        </Suspense>
       </body>
     </html>
   );

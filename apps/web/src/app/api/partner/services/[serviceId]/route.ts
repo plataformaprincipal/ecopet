@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiFailure } from "@/lib/api-response";
 import { requireActivePartner } from "@/lib/auth/require-auth";
 import { partnerServiceUpdateSchema } from "@/schemas/partner-service";
+import { getServiceDeleteBlockReason } from "@/lib/catalog/delete-guards";
 import { ContentApprovalStatus } from "@prisma/client";
 
 type RouteContext = { params: Promise<{ serviceId: string }> };
@@ -73,6 +74,15 @@ export async function DELETE(_req: Request, context: RouteContext) {
     where: { id: serviceId, providerId: user!.id, deletedAt: null },
   });
   if (!existing) return apiFailure("NOT_FOUND", "Serviço não encontrado.", 404);
+
+  const blockReason = await getServiceDeleteBlockReason(prisma, serviceId);
+  if (blockReason === "HAS_APPOINTMENTS") {
+    return apiFailure(
+      "CONFLICT",
+      "Não é possível excluir serviço com agendamentos ativos. Desative-o em vez disso.",
+      409
+    );
+  }
 
   await prisma.service.update({
     where: { id: serviceId },

@@ -69,14 +69,19 @@ export function isPrivateMarketplacePath(pathname: string): boolean {
 
 /** Rotas públicas do fluxo pré-cadastro cliente */
 export function isPublicClientPath(pathname: string): boolean {
-  if (pathname === "/explorar") return true;
+  if (pathname === "/explorar" || pathname === "/explore") return true;
+  if (pathname === "/social") return true;
+  if (pathname === "/eccopet") return true;
+  if (pathname === "/ia") return true;
   if (pathname === "/meu-pet") return true;
-  if (pathname === "/perfil") return true;
+  if (pathname === "/perfil" || pathname === "/profile") return true;
+  if (pathname === "/adocao" || pathname.startsWith("/adocao/")) return true;
   return false;
 }
 
 /** Rotas públicas da rede social (visitante / pré-cadastro) */
 export function isPublicSocialPath(pathname: string): boolean {
+  if (pathname === "/social") return true;
   if (pathname === "/feed") return true;
   if (pathname.startsWith("/feed/post/")) return true;
   if (/^\/feed\/profile\/[^/]+$/.test(pathname)) return true;
