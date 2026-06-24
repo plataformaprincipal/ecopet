@@ -203,7 +203,10 @@ router.post("/bootstrap/create-master", authMiddleware, async (req: AuthRequest,
     const body = z.object({
       name: z.string().min(2),
       email: z.string().email(),
-      username: z.string().min(3).max(30).regex(/^[a-z0-9._-]+$/i),
+      username: z
+        .string()
+        .transform((v) => v.trim().toLowerCase())
+        .refine((v) => /^[a-z0-9._-]{3,30}$/.test(v), "Use de 3 a 30 caracteres contendo letras, números, ponto, underline ou hífen."),
       password: z.string(),
       confirmPassword: z.string(),
       phone: z.string().min(10),

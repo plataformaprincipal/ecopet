@@ -3,10 +3,10 @@ import { UserRole } from "@prisma/client";
 import {
   emailSchema,
   fullNameSchema,
-  usernameSchema,
   phoneSchema,
   cpfSchema,
 } from "@/schemas/auth";
+import { usernameSchema } from "@/lib/validation/username";
 import { PASSWORD_MISMATCH_MESSAGE, validateStrongPassword } from "@/lib/password/validate-strong-password";
 import { validateActivityStartDate } from "@/lib/validation/activity-start-date";
 import { onlyDigits, validateCnpjChecksum } from "@/schemas/validation/documents-shared";

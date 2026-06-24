@@ -292,7 +292,7 @@
         },
         "validation": {
           "partnerTypeRequired": "Selecione o tipo de parceiro para continuar.",
-          "usernameInvalid": "Nome de usuário inválido (4–30 caracteres).",
+          "usernameInvalid": "Use de 3 a 30 caracteres contendo letras, números, ponto, underline ou hífen.",
           "businessNameRequired": "Nome comercial obrigatório.",
           "legalNameRequired": "Razão social obrigatória.",
           "corporateTypeRequired": "Selecione o tipo corporativo.",
@@ -716,7 +716,7 @@
       "userAlreadyRegistered": "Usuário já cadastrado.",
       "genderRequired": "Informe o gênero ou selecione uma das opções disponíveis.",
       "nameTooLong": "Nome deve ter no máximo 120 caracteres.",
-      "usernameFormat": "Use 4–30 caracteres: letras, números, _ e .",
+      "usernameFormat": "Use de 3 a 30 caracteres contendo letras, números, ponto, underline ou hífen.",
       "activityStartFuture": "A data de início das atividades não pode ser futura.",
       "activityStartInvalid": "Informe uma data de início válida.",
       "activityStartTooOld": "Informe uma data de início válida."
@@ -863,7 +863,7 @@
       "dashboard": "Painel do cliente",
       "usernameChecking": "Verificando disponibilidade...",
       "usernameAvailable": "Disponível",
-      "usernameInvalid": "Formato inválido",
+      "usernameInvalid": "Use de 3 a 30 caracteres contendo letras, números, ponto, underline ou hífen.",
       "usernameCheckingWait": "Aguarde a verificação do nome de usuário.",
       "sessionError": "Conta criada, mas a sessão não foi iniciada. Tente entrar com seu e-mail e senha.",
       "registerError": "Erro ao cadastrar"

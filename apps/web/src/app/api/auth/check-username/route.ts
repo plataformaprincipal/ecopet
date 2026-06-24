@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { usernameSchema } from "@/schemas/auth";
+import { usernameSchema, USERNAME_INVALID_MESSAGE } from "@/lib/validation/username";
 import { apiSuccess, apiFailure } from "@/lib/api-response";
 
 export async function GET(request: Request) {
@@ -9,7 +9,7 @@ export async function GET(request: Request) {
     const parsed = usernameSchema.safeParse(raw);
 
     if (!parsed.success) {
-      return apiFailure("VALIDATION", "Nome de usuário inválido", 400);
+      return apiFailure("VALIDATION", USERNAME_INVALID_MESSAGE, 400);
     }
 
     const username = parsed.data;

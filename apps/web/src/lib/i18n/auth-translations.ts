@@ -46,6 +46,7 @@ import {
   VERIFY_CODE_EXPIRED_MESSAGE,
   VERIFY_CODE_INVALID_MESSAGE,
 } from "@/lib/constants/auth-messages";
+import { USERNAME_INVALID_MESSAGE } from "@/lib/validation/username";
 
 export type AuthTranslator = (key: TranslationKey, params?: Record<string, string>) => string;
 
@@ -75,6 +76,7 @@ const VALIDATION_MESSAGE_KEYS: Record<string, TranslationKey> = {
   "Data de nascimento obrigatória.": "auth.validation.birthDateRequired",
   "Informe seu gênero.": "auth.gender.specify",
   "Nome deve ter no máximo 120 caracteres.": "auth.validation.nameTooLong",
+  [USERNAME_INVALID_MESSAGE]: "auth.validation.usernameFormat",
   "Use 4–30 caracteres: letras, números, _ e .": "auth.validation.usernameFormat",
   "Senha não atende aos requisitos de segurança.": "auth.validation.passwordWeak",
   "Você precisa aceitar os termos para continuar.": "auth.terms.acceptanceRequired",

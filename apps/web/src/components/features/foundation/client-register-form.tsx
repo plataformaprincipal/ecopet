@@ -57,7 +57,11 @@ type Step = "personal" | "security" | "conclusion";
 
 type FieldErrors = Record<string, string>;
 
-const USERNAME_PATTERN = /^[a-zA-Z0-9_.]{4,30}$/;
+import {
+  isValidUsername,
+  normalizeUsername,
+  sanitizeUsernameInput,
+} from "@/lib/validation/username";
 
 export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
   const router = useRouter();
@@ -108,14 +112,14 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
   );
 
   const checkUsername = useCallback(async (username: string) => {
-    const trimmed = username.trim();
-    if (!USERNAME_PATTERN.test(trimmed)) {
-      setUsernameStatus(trimmed.length > 0 ? "invalid" : "idle");
+    const normalized = normalizeUsername(username);
+    if (!isValidUsername(normalized)) {
+      setUsernameStatus(normalized.length > 0 ? "invalid" : "idle");
       return;
     }
     setUsernameStatus("checking");
     try {
-      const res = await fetch(`/api/auth/check-username?username=${encodeURIComponent(trimmed)}`);
+      const res = await fetch(`/api/auth/check-username?username=${encodeURIComponent(normalized)}`);
       const data = await res.json();
       if (!res.ok || data.success === false) {
         setUsernameStatus("invalid");
@@ -129,7 +133,7 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (form.username.trim().length >= 4) {
+      if (form.username.trim().length >= 3) {
         void checkUsername(form.username);
       } else {
         setUsernameStatus("idle");
@@ -197,8 +201,8 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
       errors.genderOther = v.genderSpecify;
     }
 
-    const username = form.username.trim();
-    if (!USERNAME_PATTERN.test(username)) {
+    const username = normalizeUsername(form.username);
+    if (!isValidUsername(username)) {
       errors.username = v.usernameFormat;
     } else if (usernameStatus === "taken") {
       Object.assign(errors, duplicateRegistrationError());
@@ -398,7 +402,7 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
                 id="client-username"
                 type="text"
                 value={form.username}
-                onChange={(e) => setField("username", e.target.value.replace(/[^a-zA-Z0-9_.]/g, ""))}
+                onChange={(e) => setField("username", sanitizeUsernameInput(e.target.value))}
                 placeholder={t("auth.client.usernamePlaceholder")}
                 required
                 maxLength={30}
@@ -407,7 +411,7 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
                 aria-describedby="client-username-status"
                 aria-invalid={!!fieldErrors.username || usernameStatus === "taken" || usernameStatus === "invalid"}
               />
-              {form.username.trim().length >= 4 && (
+              {form.username.trim().length >= 3 && (
                 <p
                   id="client-username-status"
                   className={cn(
@@ -426,7 +430,7 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
                       <Check className="h-3 w-3" aria-hidden /> {t("auth.client.usernameAvailable")}
                     </>
                   )}
-                  {usernameStatus === "invalid" && t("auth.client.usernameInvalid")}
+                  {usernameStatus === "invalid" && v.usernameFormat}
                 </p>
               )}
               {fieldErrors.username && (

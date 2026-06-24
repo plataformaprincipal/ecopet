@@ -78,6 +78,7 @@ import { StepValidationFeedback } from "@/components/features/foundation/step-va
 import { collectUniqueErrorMessages, duplicateRegistrationError } from "@/lib/registration/collect-step-errors";
 import { useDocumentAvailability } from "@/lib/registration/use-document-availability";
 import { usePartnerRegisterCopy } from "@/lib/i18n/use-register-copy";
+import { isValidUsername, normalizeUsername, sanitizeUsernameInput } from "@/lib/validation/username";
 
 type StepId =
   | "type"
@@ -89,8 +90,6 @@ type StepId =
   | "financial"
   | "security"
   | "success";
-
-const USERNAME_PATTERN = /^[a-zA-Z0-9_.]{4,30}$/;
 
 function stepLabels(
   partnerType: PartnerType | null,
@@ -192,14 +191,14 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
   }
 
   const checkUsername = useCallback(async (username: string) => {
-    const trimmed = username.trim();
-    if (!USERNAME_PATTERN.test(trimmed)) {
-      setUsernameStatus(trimmed.length > 0 ? "invalid" : "idle");
+    const normalized = normalizeUsername(username);
+    if (!isValidUsername(normalized)) {
+      setUsernameStatus(normalized.length > 0 ? "invalid" : "idle");
       return;
     }
     setUsernameStatus("checking");
     try {
-      const res = await fetch(`/api/auth/check-username?username=${encodeURIComponent(trimmed)}`);
+      const res = await fetch(`/api/auth/check-username?username=${encodeURIComponent(normalized)}`);
       const data = await res.json();
       setUsernameStatus(data.data?.available ? "available" : "taken");
     } catch {
@@ -314,7 +313,7 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
       if (!getEmailLiveFeedback(form.email).valid) errors.email = v.emailInvalid;
       const phoneFb = getPhoneLiveFeedback(form.phone, phoneCountry, phoneCountry === "BR" ? brazilDdd : undefined);
       if (!phoneFb.valid) errors.phone = phoneFb.message ?? v.phoneInvalid;
-      if (!USERNAME_PATTERN.test(form.username)) errors.username = p.validation.usernameInvalid;
+      if (!isValidUsername(form.username)) errors.username = p.validation.usernameInvalid;
       if (usernameStatus === "taken") Object.assign(errors, duplicateRegistrationError());
       const dateErr = validateActivityStartDate(form.activityStartDate);
       if (dateErr) errors.activityStartDate = tv(dateErr) ?? dateErr;
@@ -564,7 +563,7 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
             error={fieldErrors.phone}
           />
           <div>
-            <Field label={p.fields.username} id="partner-username" value={form.username} onChange={(v) => patch({ username: v })} error={fieldErrors.username} required autoComplete="username" tv={tv} />
+            <Field label={p.fields.username} id="partner-username" value={form.username} onChange={(v) => patch({ username: sanitizeUsernameInput(v) })} error={fieldErrors.username} required autoComplete="username" tv={tv} />
             {usernameStatus === "available" && <p className="mt-1 text-xs text-green-700">{p.hints.usernameAvailable}</p>}
           </div>
           <Field label={p.fields.activityStart} id="partner-activity-start" type="date" value={form.activityStartDate} onChange={(v) => patch({ activityStartDate: v })} error={fieldErrors.activityStartDate} required min={activityBounds.min} max={activityBounds.max} tv={tv} />

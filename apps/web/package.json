@@ -14,6 +14,7 @@
     "test:cep": "node --import tsx --test src/lib/address/cep-service.test.ts",
     "test:cnpj": "node --import tsx --test src/lib/integrations/cnpj/cnpj-service.test.ts",
     "test:password": "node --import tsx --test src/lib/password/validate-strong-password.test.ts",
+    "test:username": "node --import tsx --test src/lib/validation/username.test.ts",
     "test:partner:rules": "node --import tsx --test src/lib/partner/operation-rules.test.ts src/lib/partner/document-validation.test.ts",
     "test:registration:rules": "node --import tsx --test src/lib/registration/collect-step-errors.test.ts",
     "test:vlibras": "node --import tsx --test src/lib/accessibility/vlibras-load-outcome.test.ts",

@@ -55,9 +55,8 @@ const baseRegisterObject = z.object({
   email: z.string().email("E-mail inválido").transform((v) => v.trim().toLowerCase()),
   username: z
     .string()
-    .min(3, "Usuário deve ter no mínimo 3 caracteres")
-    .max(30)
-    .regex(/^[a-z0-9._-]+$/i, "Usuário inválido")
+    .transform((v) => v.trim().toLowerCase())
+    .refine((v) => /^[a-z0-9._-]{3,30}$/.test(v), "Use de 3 a 30 caracteres contendo letras, números, ponto, underline ou hífen.")
     .optional(),
   password: z.string().min(8, "Senha deve ter no mínimo 8 caracteres"),
   passwordConfirm: z.string().optional(),

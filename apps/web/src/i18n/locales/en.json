@@ -288,7 +288,7 @@
         },
         "validation": {
           "partnerTypeRequired": "Select a partner type to continue.",
-          "usernameInvalid": "Invalid username (4–30 characters).",
+          "usernameInvalid": "Use 3 to 30 characters with letters, numbers, period, underscore, or hyphen.",
           "businessNameRequired": "Trade name is required.",
           "legalNameRequired": "Legal name is required.",
           "corporateTypeRequired": "Select a corporate type.",
@@ -712,7 +712,7 @@
       "userAlreadyRegistered": "User already registered.",
       "genderRequired": "Select your gender or choose one of the available options.",
       "nameTooLong": "Name must be at most 120 characters.",
-      "usernameFormat": "Use 4–30 characters: letters, numbers, _ and .",
+      "usernameFormat": "Use 3 to 30 characters with letters, numbers, period, underscore, or hyphen.",
       "activityStartFuture": "Activity start date cannot be in the future.",
       "activityStartInvalid": "Enter a valid start date.",
       "activityStartTooOld": "Enter a valid start date."
@@ -859,7 +859,7 @@
       "dashboard": "Customer dashboard",
       "usernameChecking": "Checking availability...",
       "usernameAvailable": "Available",
-      "usernameInvalid": "Invalid format",
+      "usernameInvalid": "Use 3 to 30 characters with letters, numbers, period, underscore, or hyphen.",
       "usernameCheckingWait": "Please wait while we verify your username.",
       "sessionError": "Account created, but sign-in failed. Please sign in with your email and password.",
       "registerError": "Registration failed"

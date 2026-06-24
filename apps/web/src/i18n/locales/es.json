@@ -288,7 +288,7 @@
         },
         "validation": {
           "partnerTypeRequired": "Seleccione el tipo de socio para continuar.",
-          "usernameInvalid": "Invalid username (4–30 characters).",
+          "usernameInvalid": "Use de 3 a 30 caracteres con letras, números, punto, guion bajo o guion.",
           "businessNameRequired": "Trade name is required.",
           "legalNameRequired": "Legal name is required.",
           "corporateTypeRequired": "Select a corporate type.",
@@ -712,7 +712,7 @@
       "userAlreadyRegistered": "Usuario ya registrado.",
       "genderRequired": "Indica tu género o selecciona una de las opciones disponibles.",
       "nameTooLong": "El nombre debe tener como máximo 120 caracteres.",
-      "usernameFormat": "Usa 4–30 caracteres: letras, números, _ y .",
+      "usernameFormat": "Use de 3 a 30 caracteres con letras, números, punto, guion bajo o guion.",
       "activityStartFuture": "La fecha de inicio de actividades no puede ser futura.",
       "activityStartInvalid": "Ingresa una fecha de inicio válida.",
       "activityStartTooOld": "Ingresa una fecha de inicio válida."
@@ -859,7 +859,7 @@
       "dashboard": "Panel del cliente",
       "usernameChecking": "Verificando disponibilidad...",
       "usernameAvailable": "Disponible",
-      "usernameInvalid": "Formato inválido",
+      "usernameInvalid": "Use de 3 a 30 caracteres con letras, números, punto, guion bajo o guion.",
       "usernameCheckingWait": "Espera mientras verificamos tu nombre de usuario.",
       "sessionError": "Cuenta creada, pero no se pudo iniciar sesión. Entra con tu correo y contraseña.",
       "registerError": "Error al registrarse"

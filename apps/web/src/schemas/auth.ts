@@ -22,6 +22,9 @@ import {
 import {
   validateBirthDate,
 } from "@/lib/validation/birth-date";
+import { usernameSchema } from "@/lib/validation/username";
+
+export { usernameSchema } from "@/lib/validation/username";
 
 import { onlyDigits, validateCpfChecksum, validateCnpjChecksum } from "./validation/documents-shared";
 
@@ -87,13 +90,6 @@ export const fullNameSchema = z
   .transform(normalizeFullName)
   .refine(isValidFullName, FULL_NAME_INCOMPLETE_MESSAGE)
   .refine((v) => v.length <= 120, "Nome deve ter no máximo 120 caracteres");
-
-export const usernameSchema = z
-  .string()
-  .min(4, "Nome de usuário deve ter no mínimo 4 caracteres")
-  .max(30, "Nome de usuário deve ter no máximo 30 caracteres")
-  .regex(/^[a-zA-Z0-9_.]+$/, "Use apenas letras, números, _ e .")
-  .transform((v) => v.toLowerCase());
 
 export const clientGenderSchema = z.enum(
   ["MASCULINO", "FEMININO", "NAO_BINARIO", "NAO_DECLARAR", "OUTRO"],

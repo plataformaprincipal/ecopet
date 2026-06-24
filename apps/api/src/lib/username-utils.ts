@@ -1,6 +1,6 @@
 import { prisma } from "@ecopet/database";
 
-const USERNAME_REGEX = /^[a-z0-9._-]+$/;
+const USERNAME_REGEX = /^[a-z0-9._-]{3,30}$/;
 
 function slugify(value: string): string {
   return value

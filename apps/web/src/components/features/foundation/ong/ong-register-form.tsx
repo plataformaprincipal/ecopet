@@ -60,6 +60,7 @@ import { StepValidationFeedback } from "@/components/features/foundation/step-va
 import { collectUniqueErrorMessages, duplicateRegistrationError } from "@/lib/registration/collect-step-errors";
 import { useDocumentAvailability } from "@/lib/registration/use-document-availability";
 import { useOngRegisterCopy } from "@/lib/i18n/use-register-copy";
+import { isValidUsername, normalizeUsername, sanitizeUsernameInput } from "@/lib/validation/username";
 
 const BRAZIL_STATES = [
   "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG",
@@ -75,8 +76,6 @@ type StepId =
   | "documentation"
   | "security"
   | "success";
-
-const USERNAME_PATTERN = /^[a-zA-Z0-9_.]{4,30}$/;
 
 function stepLabels(
   ongType: OngType | null,
@@ -272,14 +271,14 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
   }
 
   const checkUsername = useCallback(async (username: string) => {
-    const trimmed = username.trim();
-    if (!USERNAME_PATTERN.test(trimmed)) {
-      setUsernameStatus(trimmed.length > 0 ? "invalid" : "idle");
+    const normalized = normalizeUsername(username);
+    if (!isValidUsername(normalized)) {
+      setUsernameStatus(normalized.length > 0 ? "invalid" : "idle");
       return;
     }
     setUsernameStatus("checking");
     try {
-      const res = await fetch(`/api/auth/check-username?username=${encodeURIComponent(trimmed)}`);
+      const res = await fetch(`/api/auth/check-username?username=${encodeURIComponent(normalized)}`);
       const data = await res.json();
       setUsernameStatus(data.data?.available ? "available" : "taken");
     } catch {
@@ -307,7 +306,7 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
       if (!getEmailLiveFeedback(form.email).valid) errors.email = v.emailInvalid;
       const phoneFb = getPhoneLiveFeedback(form.phone, phoneCountry, phoneCountry === "BR" ? brazilDdd : undefined);
       if (!phoneFb.valid) errors.phone = phoneFb.message ?? v.phoneInvalid;
-      if (!USERNAME_PATTERN.test(form.username)) errors.username = o.validation.usernameInvalid;
+      if (!isValidUsername(form.username)) errors.username = o.validation.usernameInvalid;
       if (usernameStatus === "taken") Object.assign(errors, duplicateRegistrationError());
       if (form.ongType === "INDIVIDUAL") {
         const dateErr = validateActivityStartDate(form.activityStartDate);
@@ -549,7 +548,7 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
               id="ong-username"
               label={o.fields.username}
               value={form.username}
-              onChange={(v) => patch({ username: v.toLowerCase() })}
+              onChange={(v) => patch({ username: sanitizeUsernameInput(v) })}
               required
               error={fieldErrors.username}
               tv={tv}
