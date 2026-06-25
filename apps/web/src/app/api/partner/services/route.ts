@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiFailure } from "@/lib/api-response";
-import { requireActivePartner } from "@/lib/auth/require-auth";
+import { requireActivePartner, requireApprovedPartner } from "@/lib/auth/require-auth";
 import { partnerServiceSchema } from "@/schemas/partner-service";
 import { ContentApprovalStatus, PartnerServiceStatus } from "@prisma/client";
 
@@ -17,7 +17,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const { user, error } = await requireActivePartner();
+  const { user, error } = await requireApprovedPartner();
   if (error) return error;
 
   const parsed = partnerServiceSchema.safeParse(await request.json());

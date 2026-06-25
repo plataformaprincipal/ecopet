@@ -100,7 +100,7 @@ export async function middleware(request: NextRequest) {
     }
     return applyRefreshedCookie(
       NextResponse.redirect(
-        new URL(role === "CLIENT" ? "/cliente" : "/feed", request.url)
+        new URL(role === "CLIENT" ? "/client" : "/feed", request.url)
       ),
       refreshedCookie
     );

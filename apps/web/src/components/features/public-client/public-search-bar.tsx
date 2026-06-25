@@ -2,6 +2,7 @@
 
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { useTranslation } from "@/providers/i18n-provider";
 import { cn } from "@/lib/utils";
 
 type PublicSearchBarProps = {
@@ -16,11 +17,12 @@ type PublicSearchBarProps = {
 export function PublicSearchBar({
   value,
   onChange,
-  placeholder = "Buscar no EcoPet...",
+  placeholder,
   className,
   id = "public-search",
-  "aria-label": ariaLabel = "Buscar",
+  "aria-label": ariaLabel,
 }: PublicSearchBarProps) {
+  const { t } = useTranslation();
   return (
     <div className={cn("relative", className)}>
       <Search
@@ -32,8 +34,8 @@ export function PublicSearchBar({
         type="search"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        aria-label={ariaLabel}
+        placeholder={placeholder ?? t("pub.search.default")}
+        aria-label={ariaLabel ?? t("common.search")}
         className="h-12 rounded-xl border-zinc-200 bg-white pl-11 text-base shadow-sm dark:border-white/10 dark:bg-zinc-900/60"
       />
     </div>

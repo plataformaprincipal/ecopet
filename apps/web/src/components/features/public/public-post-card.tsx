@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import type { ApiSocialPost } from "@/lib/social/client-api";
 import { useAuthGate } from "@/providers/auth-gate-provider";
+import { useTranslation } from "@/providers/i18n-provider";
 import { HashtagLink } from "@/components/features/social/feed/hashtag-link";
 
 function timeAgo(date: string) {
@@ -25,6 +26,7 @@ type PublicPostCardProps = {
 
 export function PublicPostCard({ post }: PublicPostCardProps) {
   const { requireAuth } = useAuthGate();
+  const { t } = useTranslation();
   const mainImage = post.media.find((m) => m.mediaType === "IMAGE")?.fileUrl;
 
   return (
@@ -54,7 +56,7 @@ export function PublicPostCard({ post }: PublicPostCardProps) {
           onClick={() => requireAuth()}
         >
           <UserPlus className="mr-1 h-3.5 w-3.5" aria-hidden />
-          Seguir
+          {t("pub.card.follow")}
         </Button>
       </header>
 
@@ -80,21 +82,21 @@ export function PublicPostCard({ post }: PublicPostCardProps) {
 
       <div className="flex items-center justify-between border-t border-zinc-100 px-4 py-3 dark:border-white/5">
         <div className="flex gap-1">
-          <Button variant="ghost" size="sm" className="rounded-xl" onClick={() => requireAuth()} aria-label="Curtir">
+          <Button variant="ghost" size="sm" className="rounded-xl" onClick={() => requireAuth()} aria-label={t("pub.card.like")}>
             <Heart className="mr-1 h-4 w-4" aria-hidden />
             {post.counts.likes}
           </Button>
-          <Button variant="ghost" size="sm" className="rounded-xl" onClick={() => requireAuth()} aria-label="Comentar">
+          <Button variant="ghost" size="sm" className="rounded-xl" onClick={() => requireAuth()} aria-label={t("pub.card.comment")}>
             <MessageCircle className="mr-1 h-4 w-4" aria-hidden />
             {post.counts.comments}
           </Button>
-          <Button variant="ghost" size="sm" className="rounded-xl" onClick={() => requireAuth()} aria-label="Compartilhar">
+          <Button variant="ghost" size="sm" className="rounded-xl" onClick={() => requireAuth()} aria-label={t("pub.card.share")}>
             <Share2 className="mr-1 h-4 w-4" aria-hidden />
             {post.counts.shares}
           </Button>
         </div>
         <Button asChild variant="ghost" size="sm" className="rounded-xl">
-          <Link href={`/feed/post/${post.id}`}>Ver post</Link>
+          <Link href={`/feed/post/${post.id}`}>{t("pub.card.viewPost")}</Link>
         </Button>
       </div>
     </article>

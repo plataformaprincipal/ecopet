@@ -30,7 +30,155 @@
     "emptyCart": "Seu carrinho está vazio"
   },
   "ecopetAi": {
-    "disclaimer": "A IA EcoPet não substitui médicos-veterinários, zootecnistas, adestradores, especialistas ou outros profissionais qualificados. As informações fornecidas possuem caráter informativo e de apoio à tomada de decisão."
+    "disclaimer": "A IA EcoPet não substitui médicos-veterinários, zootecnistas, adestradores, especialistas ou outros profissionais qualificados. As informações fornecidas possuem caráter informativo e de apoio à tomada de decisão.",
+    "fullDisclaimer": "A EccoPet AI auxilia na organização de informações e recomendações gerais, mas não substitui avaliação veterinária.",
+    "topbar": {
+      "save": "Salvar conversa",
+      "signIn": "Entrar",
+      "createAccount": "Criar conta"
+    },
+    "mobile": {
+      "conversations": "Conversas",
+      "chat": "Chat",
+      "context": "Contexto"
+    },
+    "greeting": "Como posso ajudar a cuidar melhor do seu pet hoje?",
+    "greetingSub": "Pergunte sobre alimentação, rotina, saúde, produtos, serviços ou adoção. A EccoPet AI organiza tudo para você.",
+    "suggestions": {
+      "s1": "Meu pet está com comportamento estranho",
+      "s2": "Qual ração combina melhor?",
+      "s3": "Monte uma rotina para meu cachorro",
+      "s4": "Quero preparar uma consulta veterinária",
+      "s5": "Compare produtos do marketplace",
+      "s6": "Quero adotar um pet com segurança"
+    },
+    "promptPlaceholder": "Pergunte algo sobre o seu pet...",
+    "attachImage": "Anexar imagem",
+    "attachFile": "Anexar arquivo",
+    "attachImageTitle": "Anexar imagem (em breve)",
+    "attachFileTitle": "Anexar arquivo (em breve)",
+    "send": "Enviar mensagem",
+    "thinking": "Pensando...",
+    "toolsTitle": "Ferramentas de IA",
+    "toolStatus": {
+      "comingSoon": "Em breve",
+      "ai": "IA"
+    },
+    "tools": {
+      "assistant": {
+        "title": "Assistente Pet",
+        "description": "Tire dúvidas sobre rotina, comportamento e bem-estar do seu pet."
+      },
+      "nutrition": {
+        "title": "Guia de Alimentação",
+        "description": "Orientações gerais sobre porções, frequência e tipos de alimento."
+      },
+      "reminders": {
+        "title": "Lembretes Inteligentes",
+        "description": "Organize vacinas, banho, consultas e medicamentos."
+      },
+      "compare": {
+        "title": "Comparador de Produtos",
+        "description": "Compare rações, acessórios e itens do marketplace."
+      },
+      "routine": {
+        "title": "Sugestão de Rotina",
+        "description": "Monte uma rotina equilibrada de passeios, descanso e estímulo."
+      },
+      "needs": {
+        "title": "Detector de Necessidades",
+        "description": "Identifique sinais de atenção em comportamento e rotina."
+      },
+      "vet-prep": {
+        "title": "Preparador de Consulta Veterinária",
+        "description": "Organize sintomas, histórico e perguntas antes da consulta."
+      },
+      "profile": {
+        "title": "Analisador de Perfil do Pet",
+        "description": "Resumo inteligente do perfil, preferências e histórico."
+      },
+      "adoption": {
+        "title": "Planejador de Adoção",
+        "description": "Prepare sua casa e rotina para receber um novo pet."
+      },
+      "vaccines": {
+        "title": "Organizador de Vacinas",
+        "description": "Acompanhe calendário vacinal e reforços importantes."
+      }
+    },
+    "sidebar": {
+      "newConversation": "Nova conversa",
+      "shortcuts": "Atalhos",
+      "history": "Histórico",
+      "historyEmpty": "Suas conversas aparecerão aqui."
+    },
+    "presets": {
+      "assistant": {
+        "title": "Assistente Pet",
+        "prompt": "Quero conversar sobre os cuidados gerais do meu pet."
+      },
+      "food": {
+        "title": "Alimentação",
+        "prompt": "Me ajude com a alimentação ideal do meu pet."
+      },
+      "routine": {
+        "title": "Rotina",
+        "prompt": "Monte uma rotina equilibrada para o meu pet."
+      },
+      "vaccines": {
+        "title": "Vacinas",
+        "prompt": "Quais vacinas e reforços meu pet precisa acompanhar?"
+      },
+      "products": {
+        "title": "Produtos",
+        "prompt": "Recomende produtos do marketplace para o meu pet."
+      },
+      "adoption": {
+        "title": "Adoção",
+        "prompt": "Quero adotar um pet com segurança. Por onde começar?"
+      },
+      "services": {
+        "title": "Serviços",
+        "prompt": "Encontre serviços próximos como banho, tosa e veterinário."
+      },
+      "consultations": {
+        "title": "Consultas",
+        "prompt": "Me ajude a preparar uma consulta veterinária."
+      }
+    },
+    "context": {
+      "myPets": "Meus pets",
+      "registerPet": "Cadastrar um pet",
+      "upcomingAppointments": "Próximos agendamentos",
+      "noAppointments": "Nenhum agendamento próximo.",
+      "recentPurchases": "Últimas compras",
+      "noPurchases": "Você ainda não fez compras.",
+      "recommended": "Recomendados para você",
+      "noRecommended": "Recomendações aparecerão conforme você usa a plataforma.",
+      "service": "Serviço",
+      "order": "Pedido",
+      "guestTitle": "Contexto inteligente",
+      "guestDesc": "Entre para a EccoPet AI conhecer seus pets, compras e agendamentos e oferecer recomendações personalizadas.",
+      "signIn": "Entrar",
+      "createAccount": "Criar conta",
+      "blockPets": "Pets cadastrados",
+      "blockPurchases": "Últimas compras",
+      "blockAppointments": "Próximos agendamentos",
+      "blockReminders": "Lembretes",
+      "blockRecommendations": "Recomendações personalizadas"
+    },
+    "rec": {
+      "products": "Ver produtos",
+      "services": "Ver serviços",
+      "adoptions": "Ver adoções"
+    },
+    "gate": {
+      "title": "Crie sua conta para usar a EccoPet AI completa",
+      "description": "Salve conversas, acesse os dados dos seus pets e receba recomendações personalizadas com a EccoPet AI.",
+      "signIn": "Entrar",
+      "createAccount": "Criar conta grátis"
+    },
+    "demoReply": "Estou no modo demonstração da EccoPet AI. Posso dar orientações gerais sobre cuidados, alimentação, rotina e organização da saúde do seu pet, além de indicar produtos e serviços. Crie sua conta para respostas personalizadas com base nos seus pets.\n\nA EccoPet AI auxilia na organização de informações e recomendações gerais, mas não substitui avaliação veterinária."
   },
   "public": {
     "authModal": {
@@ -1471,6 +1619,728 @@
       "description": "Para enviar mensagens na EcoPet, entre na sua conta ou cadastre-se gratuitamente.",
       "signIn": "Entrar",
       "createAccount": "Criar conta"
+    }
+  },
+  "social": {
+    "topbar": {
+      "filters": "Filtros",
+      "signIn": "Entrar",
+      "createAccount": "Criar conta"
+    },
+    "sidebar": {
+      "viewProfile": "Ver perfil",
+      "joinTitle": "Participe da comunidade",
+      "joinDesc": "Entre para curtir, comentar e seguir tutores.",
+      "shortcuts": "Atalhos",
+      "cart": "Carrinho",
+      "notifications": "Notificações",
+      "messages": "Mensagens"
+    },
+    "filters": {
+      "myFeed": "Meu Feed",
+      "forYou": "Para Você",
+      "following": "Seguindo",
+      "adoption": "Adoção",
+      "health": "Saúde",
+      "food": "Alimentação",
+      "lost": "Perdidos",
+      "marketplace": "Marketplace",
+      "services": "Serviços",
+      "ongs": "ONGs",
+      "events": "Eventos"
+    },
+    "stories": {
+      "yourStory": "Seu story",
+      "empty": "Os stories da comunidade aparecerão aqui."
+    },
+    "feed": {
+      "pinnedBadge": "Campanha fixada",
+      "pinnedTitle": "Adote com responsabilidade",
+      "pinnedDesc": "Centenas de pets esperam por um lar. Conheça ONGs verificadas e transforme uma vida.",
+      "pinnedCta": "Ver animais para adoção",
+      "endOfFeed": "Você chegou ao fim do feed.",
+      "emptyTitle": "Nada por aqui ainda",
+      "emptyDesc": "Seja o primeiro a compartilhar um momento do seu pet com a comunidade EcoPet.",
+      "explore": "Explorar",
+      "error": "Erro ao carregar o feed.",
+      "askAi": "Resuma e comente de forma útil este post da comunidade pet: \"{snippet}\""
+    },
+    "panels": {
+      "suggestedPartners": "Perfis sugeridos",
+      "noSuggestions": "Sem sugestões no momento.",
+      "featuredNgos": "ONGs em destaque",
+      "noNgos": "Nenhuma ONG em destaque ainda.",
+      "viewAdoptions": "Ver adoções",
+      "partner": "Parceiro",
+      "notificationsGuestTitle": "Notificações",
+      "notificationsGuestDesc": "Entre para acompanhar curtidas, comentários e novidades.",
+      "messagesGuestTitle": "Mensagens",
+      "messagesGuestDesc": "Entre para conversar com tutores, parceiros e ONGs.",
+      "guestSignIn": "Entrar"
+    },
+    "tabs": {
+      "feed": "Feed",
+      "ai": "IA",
+      "alerts": "Alertas",
+      "chat": "Chat"
+    },
+    "fab": {
+      "newPost": "Criar nova publicação",
+      "assistant": "Abrir EccoPet Assistant"
+    },
+    "assistant": {
+      "title": "EccoPet Assistant",
+      "subtitle": "IA · sempre disponível",
+      "greeting": "Olá! Sou o EccoPet Assistant. Como posso ajudar você e seu pet hoje?",
+      "placeholder": "Pergunte algo sobre seu pet...",
+      "thinking": "Pensando...",
+      "openFull": "Abrir EccoPet AI",
+      "s1": "Quais cuidados meu pet precisa nesta estação?",
+      "s2": "Indique produtos para filhotes",
+      "s3": "Sugira serviços de banho e tosa",
+      "s4": "Como funciona a adoção responsável?",
+      "demoReply": "Estou em modo demonstração. Posso ajudar a encontrar produtos, serviços, parceiros e ONGs, além de tirar dúvidas sobre cuidados com o seu pet. Conecte a IA completa para respostas personalizadas. As ferramentas de IA não substituem avaliação veterinária."
+    },
+    "sidebarNav": "Navegação da rede social",
+    "trending": {
+      "title": "Tendências de Hoje",
+      "hashtags": "Hashtags em alta",
+      "products": "Produtos populares",
+      "services": "Serviços buscados",
+      "ngos": "ONGs em destaque",
+      "empty": "Ainda não há tendências para mostrar."
+    }
+  },
+  "enums": {
+    "orderStatus": {
+      "PENDING": "Pendente",
+      "CONFIRMED": "Confirmado",
+      "PROCESSING": "Em processamento",
+      "SHIPPED": "Enviado",
+      "DELIVERED": "Entregue",
+      "CANCELLED": "Cancelado",
+      "REFUNDED": "Reembolsado",
+      "PAID": "Pago",
+      "AWAITING_PAYMENT": "Aguardando pagamento",
+      "COMPLETED": "Concluído"
+    },
+    "appointmentStatus": {
+      "PENDING": "Pendente",
+      "CONFIRMED": "Confirmado",
+      "IN_PROGRESS": "Em andamento",
+      "COMPLETED": "Concluído",
+      "CANCELLED": "Cancelado",
+      "REJECTED": "Recusado",
+      "NO_SHOW": "Não compareceu"
+    },
+    "generic": {
+      "ACTIVE": "Ativo",
+      "INACTIVE": "Inativo",
+      "DRAFT": "Rascunho",
+      "ARCHIVED": "Arquivado",
+      "PUBLISHED": "Publicado"
+    }
+  },
+  "pub": {
+    "nav": {
+      "socialShort": "Social",
+      "exploreShort": "Explorar",
+      "marketShort": "Mercado",
+      "eccopet": "EccoPet",
+      "profileShort": "Perfil",
+      "accessibility": "Acessibilidade"
+    },
+    "card": {
+      "featured": "Destaque",
+      "unavailable": "Indisponível",
+      "viewDetails": "Ver detalhes",
+      "buy": "Comprar",
+      "book": "Agendar",
+      "follow": "Seguir",
+      "viewPost": "Ver post",
+      "like": "Curtir",
+      "comment": "Comentar",
+      "share": "Compartilhar"
+    },
+    "home": {
+      "heroBadge": "Feito para quem ama animais",
+      "heroTitle": "Uma nova forma de cuidar, comprar, adotar e se conectar no universo pet.",
+      "heroSubtitle": "Comunidade, marketplace, serviços, adoção e inteligência artificial em um só ecossistema.",
+      "createAccount": "Criar Conta",
+      "signIn": "Entrar",
+      "exploreNow": "Explorar agora",
+      "areasTitle": "Conheça o EcoPet",
+      "areasSubtitle": "Cinco áreas para explorar antes mesmo de criar sua conta.",
+      "areaSocial": "Rede Social",
+      "areaSocialDesc": "Comunidade Pet",
+      "areaExplore": "Explorar",
+      "areaExploreDesc": "Descoberta visual",
+      "areaMarketplace": "Marketplace",
+      "areaMarketplaceDesc": "Produtos e serviços",
+      "areaEccopet": "EccoPet",
+      "areaEccopetDesc": "Ferramentas de IA",
+      "areaProfile": "Perfil",
+      "areaProfileDesc": "Entrar ou criar conta",
+      "howTitle": "Como funciona",
+      "howSubtitle": "Três passos para transformar a rotina do seu pet.",
+      "how1Title": "Crie seu perfil",
+      "how1Text": "Cadastre-se e adicione seu primeiro pet com foto e preferências.",
+      "how2Title": "Descubra",
+      "how2Text": "Explore serviços, produtos e ONGs perto de você.",
+      "how3Title": "Cuide com carinho",
+      "how3Text": "Agende, compre e acompanhe tudo em um só lugar.",
+      "marketTitle": "Marketplace",
+      "marketSubtitle": "Produtos selecionados com carinho — como Chewy, com alma brasileira.",
+      "marketCat1": "Ração premium",
+      "marketCat2": "Higiene & banho",
+      "marketCat3": "Brinquedos",
+      "marketCat4": "Acessórios",
+      "marketCta": "Explorar marketplace",
+      "servicesTitle": "Serviços",
+      "servicesSubtitle": "Banho, tosa, veterinário e muito mais — agende com parceiros de confiança.",
+      "servicesCta": "Ver serviços disponíveis",
+      "communityTitle": "Comunidade",
+      "communitySubtitle": "Compartilhe momentos, siga outros tutores e encontre inspiração.",
+      "communityText": "Feed social com histórias reais, adoções e dicas — porque pet também é vida social.",
+      "communityCta": "Ver comunidade",
+      "ngosTitle": "ONGs",
+      "ngosSubtitle": "Histórias de adoção, voluntariado e doações que mudam vidas.",
+      "ngosCta": "Conhecer animais para adoção",
+      "aiTitle": "EcoPet AI",
+      "aiSubtitle": "Seu assistente inteligente para rotina, alimentação e bem-estar — em breve, com a mesma experiência premium.",
+      "aiText": "Dúvidas veterinárias, recomendações personalizadas e lembretes inteligentes — tudo pensado para o vínculo com seu pet.",
+      "aiCta": "Conhecer EccoPet",
+      "testimonialsTitle": "Depoimentos",
+      "testimonialsSubtitle": "Quem usa, recomenda.",
+      "t1Text": "Encontrei banho e tosa perto de casa e acompanho tudo pelo app.",
+      "t1Pet": "Luna, golden",
+      "t2Text": "Adotamos o Thor pela plataforma. A experiência foi emocionante.",
+      "t2Pet": "Thor, vira-lata",
+      "t3Text": "Marketplace confiável e comunidade que realmente ajuda.",
+      "t3Pet": "Mimi, gata",
+      "finalTitle": "Comece hoje. Seu pet merece.",
+      "finalSubtitle": "Junte-se a milhares de tutores que já transformaram a forma de cuidar dos seus animais.",
+      "finalCta": "Criar conta gratuita"
+    },
+    "explore": {
+      "title": "Explorar",
+      "subtitle": "Descubra o que está acontecendo no ecossistema pet — tendências, parceiros, produtos e adoção.",
+      "searchPlaceholder": "Buscar produtos, serviços, ONGs, hashtags...",
+      "searchAria": "Buscar no ecossistema EcoPet",
+      "trending": "Tendências",
+      "emptyTitle": "Nenhum resultado encontrado",
+      "emptyDesc": "Não há itens públicos para os filtros selecionados. Tente outra busca ou explore o marketplace.",
+      "viewMarketplace": "Ver marketplace",
+      "catPetShops": "Pet shops",
+      "catGrooming": "Banho e tosa",
+      "catVets": "Veterinários",
+      "catAdoption": "Adoção",
+      "catProducts": "Produtos",
+      "catServices": "Serviços"
+    },
+    "marketplace": {
+      "title": "Marketplace EcoPet",
+      "subtitle": "Navegue, compare e descubra produtos e serviços de parceiros verificados — sem precisar de conta para explorar.",
+      "searchPlaceholder": "Buscar produtos e serviços...",
+      "searchAria": "Buscar no marketplace",
+      "filters": "Filtros",
+      "category": "Categoria",
+      "filterByCategory": "Filtrar por categoria",
+      "minPrice": "Preço mínimo",
+      "maxPrice": "Preço máximo",
+      "inStockOnly": "Somente em estoque",
+      "tabAll": "Todos",
+      "tabProducts": "Produtos",
+      "tabServices": "Serviços",
+      "products": "Produtos",
+      "services": "Serviços",
+      "emptyTitle": "Nenhum item encontrado",
+      "emptyDesc": "Ajuste os filtros ou explore outras categorias do ecossistema EcoPet.",
+      "explore": "Explorar",
+      "loading": "Carregando...",
+      "results": "{count} resultado(s)",
+      "catAll": "Todas",
+      "catFood": "Rações",
+      "catHygiene": "Higiene",
+      "catToys": "Brinquedos",
+      "catAccessories": "Acessórios",
+      "catHealth": "Saúde"
+    },
+    "profile": {
+      "heroTitle": "Seu mundo pet começa aqui.",
+      "heroSubtitle": "Entre na sua conta ou crie uma gratuitamente para desbloquear todo o ecossistema EcoPet.",
+      "signIn": "Entrar",
+      "createAccount": "Criar conta",
+      "createAccountFor": "Criar conta de {type}",
+      "tutor": "tutor",
+      "partner": "parceiro",
+      "ngo": "ONG",
+      "tutorTitle": "Tutor",
+      "partnerTitle": "Parceiro",
+      "ngoTitle": "ONG",
+      "tutorB1": "Cadastrar pets",
+      "tutorB2": "Comprar produtos",
+      "tutorB3": "Agendar serviços",
+      "tutorB4": "Participar da comunidade",
+      "partnerB1": "Vender produtos",
+      "partnerB2": "Oferecer serviços",
+      "partnerB3": "Receber pedidos",
+      "partnerB4": "Acompanhar clientes",
+      "ngoB1": "Divulgar animais",
+      "ngoB2": "Receber apoio",
+      "ngoB3": "Publicar campanhas",
+      "ngoB4": "Organizar adoções"
+    },
+    "search": {
+      "default": "Buscar no EcoPet..."
+    }
+  },
+  "hub": {
+    "notifications": {
+      "title": "Notificações",
+      "viewAll": "Ver tudo",
+      "empty": "Nenhuma notificação por enquanto.",
+      "unread": "Não lida",
+      "cat": {
+        "orders": "Pedidos",
+        "appointments": "Agendamentos",
+        "social": "Social",
+        "messages": "Mensagens",
+        "adoption": "Adoção",
+        "campaigns": "Campanhas",
+        "products": "Produtos",
+        "services": "Serviços",
+        "security": "Segurança",
+        "system": "Sistema"
+      }
+    },
+    "messages": {
+      "title": "Mensagens",
+      "openAll": "Abrir tudo",
+      "empty": "Nenhuma conversa ainda.",
+      "conversation": "Conversa",
+      "noMessages": "Sem mensagens",
+      "online": "Online"
+    }
+  },
+  "authPremium": {
+    "login": {
+      "title": "Bem-vindo de volta",
+      "subtitle": "Entre para continuar cuidando do seu pet com carinho.",
+      "google": "Continuar com Google",
+      "apple": "Continuar com Apple",
+      "facebook": "Continuar com Facebook",
+      "orEmail": "ou continue com e-mail",
+      "comingSoon": "Em breve",
+      "socialGroup": "Login social (em breve)",
+      "noAccount": "Não tem conta?",
+      "createAccount": "Criar conta"
+    },
+    "onboarding": {
+      "createAccount": "Criar conta",
+      "subtitle": "Onboarding rápido em poucos passos — sem formulários gigantes.",
+      "progress": "Progresso do cadastro",
+      "step1": "Quem é você?",
+      "step2": "Informações",
+      "step3": "Seu pet",
+      "step4": "Preferências",
+      "who": "Quem é você?",
+      "continue": "Continuar",
+      "back": "Voltar",
+      "welcomeTitle": "Bem-vindo ao EcoPet!",
+      "welcomeDesc": "Sua conta foi criada. Agora você pode explorar tudo que a plataforma oferece para o seu pet.",
+      "goDashboard": "Ir para o painel",
+      "firstPet": "Seu primeiro pet",
+      "firstPetDesc": "Após o login, você poderá adicionar nome, espécie e foto em Meu Pet. Por agora, continue para personalizar sua experiência.",
+      "inPanel": "No painel",
+      "petName": "Nome",
+      "petSpecies": "Espécie",
+      "petPhoto": "Foto",
+      "prefsTitle": "Preferências",
+      "prefsDesc": "O que mais te interessa na plataforma?",
+      "finish": "Finalizar",
+      "prefProducts": "Produtos",
+      "prefServices": "Serviços",
+      "prefAdoption": "Adoção",
+      "prefCommunity": "Comunidade"
+    }
+  },
+  "account": {
+    "pending": {
+      "title": "Conta em análise",
+      "desc": "Recebemos seu cadastro. Nossa equipe está revisando suas informações e você poderá usar todos os recursos assim que a conta for aprovada.",
+      "hint": "Você receberá um e-mail quando a análise for concluída."
+    },
+    "rejected": {
+      "title": "Conta não aprovada",
+      "desc": "Infelizmente seu cadastro não foi aprovado. Se acredita que houve um engano, entre em contato com o suporte."
+    },
+    "suspended": {
+      "title": "Conta suspensa",
+      "desc": "Sua conta foi suspensa. Entre em contato com o suporte para mais informações."
+    },
+    "backHome": "Voltar ao início",
+    "logout": "Sair"
+  },
+  "clientArea": {
+    "area": "Área do cliente",
+    "nav": {
+      "home": "Início",
+      "social": "Rede Social",
+      "explore": "Explorar",
+      "marketplace": "Marketplace",
+      "services": "Serviços",
+      "ai": "EccoPet AI",
+      "myPet": "Meu Pet",
+      "cart": "Carrinho",
+      "orders": "Pedidos",
+      "appointments": "Agendamentos",
+      "messages": "Mensagens",
+      "notifications": "Notificações",
+      "profile": "Perfil"
+    },
+    "home": {
+      "title": "Hoje no EcoPet",
+      "greeting": "Olá, {name}",
+      "subtitle": "Tudo sobre seus pets, compras, serviços e comunidade em um só lugar.",
+      "registerPet": "Cadastrar pet",
+      "bookService": "Agendar serviço",
+      "exploreMarket": "Explorar marketplace",
+      "viewOrders": "Ver pedidos",
+      "openAi": "Abrir EccoPet AI",
+      "stats": {
+        "pets": "Pets",
+        "appointments": "Agendamentos",
+        "messages": "Mensagens",
+        "cart": "Carrinho"
+      },
+      "reminders": "Próximos lembretes",
+      "noReminders": "Nenhum lembrete pendente.",
+      "appointments": "Próximos agendamentos",
+      "noAppointments": "Nenhum agendamento. Explore serviços e marque o próximo cuidado.",
+      "orders": "Pedidos recentes",
+      "noOrders": "Suas compras aparecerão aqui.",
+      "recommendations": "Para você",
+      "trending": "Em alta na comunidade",
+      "petCard": "Seu pet",
+      "noPet": "Cadastre seu primeiro pet para organizar cuidados e lembretes.",
+      "unread": "não lidas",
+      "openMessages": "Abrir mensagens"
+    },
+    "right": {
+      "assistant": "Assistente EccoPet",
+      "assistantCta": "Tire dúvidas gerais sobre cuidados do seu pet.",
+      "openAssistant": "Abrir assistente",
+      "cart": "Carrinho",
+      "cartEmpty": "Seu carrinho está vazio.",
+      "cartItems": "{count} item(ns)",
+      "goToCart": "Ir ao carrinho",
+      "appointments": "Próximos agendamentos",
+      "noAppointments": "Sem agendamentos."
+    },
+    "shell": {
+      "menu": "Menu",
+      "newPost": "Novo post",
+      "assistant": "Assistente IA",
+      "cart": "Carrinho"
+    },
+    "sections": {
+      "social": "Rede Social",
+      "explore": "Explorar",
+      "marketplace": "Marketplace",
+      "services": "Serviços",
+      "ai": "EccoPet AI",
+      "myPet": "Meu Pet",
+      "cart": "Carrinho",
+      "orders": "Meus pedidos",
+      "appointments": "Meus agendamentos",
+      "messages": "Mensagens",
+      "notifications": "Notificações",
+      "profile": "Perfil"
+    },
+    "orders": {
+      "empty": "Você ainda não fez pedidos.",
+      "goShopping": "Ir ao marketplace",
+      "total": "Total",
+      "placedOn": "Pedido em",
+      "items": "itens",
+      "viewDetails": "Ver detalhes"
+    },
+    "social": {
+      "newPost": "Compartilhe algo sobre seu pet"
+    }
+  },
+  "partnerArea": {
+    "area": "Parceiro EcoPet",
+    "status": {
+      "pending": "Pendente",
+      "approved": "Aprovado",
+      "suspended": "Suspenso",
+      "rejected": "Recusado"
+    },
+    "nav": {
+      "overview": "Visão Geral",
+      "social": "Rede Social",
+      "marketplace": "Marketplace",
+      "products": "Produtos",
+      "services": "Serviços",
+      "orders": "Pedidos",
+      "appointments": "Agendamentos",
+      "customers": "Clientes",
+      "messages": "Mensagens",
+      "notifications": "Notificações",
+      "ai": "EccoPet AI",
+      "profile": "Perfil Comercial",
+      "settings": "Configurações"
+    },
+    "home": {
+      "title": "Central do Parceiro",
+      "greeting": "Olá, {name}",
+      "subtitle": "Acompanhe vendas, pedidos, agenda e desempenho da sua loja.",
+      "openAi": "Abrir EccoPet Business AI",
+      "manageProducts": "Gerenciar produtos",
+      "stats": {
+        "recentOrders": "Pedidos recentes",
+        "ordersPending": "Pedidos pendentes",
+        "appointmentsPending": "Agendamentos pendentes",
+        "productsActive": "Produtos ativos",
+        "servicesActive": "Serviços ativos",
+        "avgRating": "Avaliação média",
+        "revenue": "Receita (recentes)",
+        "unreadMessages": "Mensagens não lidas",
+        "lowStock": "Estoque baixo"
+      },
+      "nextActions": "Próximas ações",
+      "noActions": "Tudo em dia! Nenhuma ação pendente.",
+      "recentOrders": "Pedidos recentes",
+      "noOrders": "Nenhum pedido ainda.",
+      "recentAppointments": "Próximos agendamentos",
+      "noAppointments": "Nenhum agendamento.",
+      "lowStock": "Alertas de estoque",
+      "noLowStock": "Estoque saudável."
+    },
+    "pending": {
+      "title": "Conta em análise",
+      "description": "Enquanto aguarda aprovação, complete seu perfil comercial e acompanhe a comunidade. Marketplace, produtos, serviços, pedidos e agenda serão liberados após a aprovação.",
+      "cta": "Completar cadastro"
+    },
+    "locked": {
+      "title": "Recurso disponível após aprovação",
+      "description": "Complete seu cadastro e aguarde a análise da equipe EcoPet para acessar esta área.",
+      "cta": "Ir para Perfil Comercial"
+    },
+    "right": {
+      "assistant": "EccoPet Business AI",
+      "assistantCta": "Peça ajuda para gerir vendas, estoque e respostas.",
+      "openAssistant": "Abrir assistente",
+      "recentOrders": "Pedidos recentes",
+      "noOrders": "Sem pedidos.",
+      "upcomingAppointments": "Próximos agendamentos",
+      "noAppointments": "Sem agendamentos.",
+      "lowStock": "Estoque baixo",
+      "noLowStock": "Estoque saudável.",
+      "growthTip": "Dica de crescimento",
+      "growthTipText": "Complete o perfil comercial e responda mensagens rápido para converter mais."
+    },
+    "shell": {
+      "menu": "Menu",
+      "newProduct": "Novo produto",
+      "ai": "Assistente IA"
+    },
+    "sections": {
+      "social": "Rede Social",
+      "marketplace": "Marketplace",
+      "products": "Produtos",
+      "services": "Serviços",
+      "orders": "Pedidos",
+      "appointments": "Agendamentos",
+      "customers": "Clientes",
+      "messages": "Mensagens",
+      "notifications": "Notificações",
+      "ai": "EccoPet Business AI",
+      "profile": "Perfil Comercial",
+      "settings": "Configurações"
+    },
+    "customers": {
+      "title": "Meus clientes",
+      "empty": "Ainda sem clientes. Eles aparecem aqui após o primeiro pedido, agendamento ou mensagem.",
+      "orders": "pedidos",
+      "appointments": "agendamentos",
+      "lastInteraction": "Última interação",
+      "since": "Cliente desde",
+      "messageCta": "Conversar"
+    }
+  },
+  "ngoArea": {
+    "area": "ONG EcoPet",
+    "status": {
+      "pending": "Pendente",
+      "approved": "Aprovada",
+      "suspended": "Suspensa",
+      "rejected": "Recusada"
+    },
+    "nav": {
+      "overview": "Visão Geral",
+      "social": "Rede Social",
+      "animals": "Animais",
+      "adoptions": "Adoções",
+      "campaigns": "Campanhas",
+      "supporters": "Apoiadores",
+      "messages": "Mensagens",
+      "notifications": "Notificações",
+      "ai": "EccoPet AI",
+      "profile": "Perfil da ONG",
+      "settings": "Configurações"
+    },
+    "home": {
+      "title": "Central da ONG",
+      "greeting": "Olá, {name}",
+      "subtitle": "Acompanhe adoções, animais, campanhas e o impacto da sua ONG.",
+      "openAi": "Abrir EccoPet Impact AI",
+      "manageAnimals": "Gerenciar animais",
+      "stats": {
+        "availableAnimals": "Animais disponíveis",
+        "adoptionsPending": "Adoções pendentes",
+        "adoptionsCompleted": "Adoções concluídas",
+        "campaignsActive": "Campanhas ativas",
+        "unreadMessages": "Mensagens não lidas",
+        "posts": "Publicações (30 dias)",
+        "animals": "Animais cadastrados"
+      },
+      "nextActions": "Próximas ações",
+      "noActions": "Tudo em dia! Nenhuma ação pendente.",
+      "recentRequests": "Pedidos de adoção recentes",
+      "noRequests": "Nenhum pedido ainda.",
+      "recentAnimals": "Animais recentes",
+      "noAnimals": "Nenhum animal cadastrado."
+    },
+    "pending": {
+      "title": "ONG em análise",
+      "description": "Enquanto aguarda aprovação, complete o perfil da ONG. Animais, adoções, campanhas e rede social serão liberados após a aprovação.",
+      "cta": "Completar cadastro"
+    },
+    "locked": {
+      "title": "Recurso disponível após aprovação",
+      "description": "Complete o cadastro e aguarde a análise da equipe EcoPet para acessar esta área.",
+      "cta": "Ir para Perfil da ONG"
+    },
+    "blocked": {
+      "title": "Conta indisponível",
+      "description": "Sua conta está suspensa ou recusada. Acesse o perfil para mais informações."
+    },
+    "right": {
+      "assistant": "EccoPet Impact AI",
+      "assistantCta": "Peça ajuda com textos de adoção, campanhas e triagem.",
+      "openAssistant": "Abrir assistente",
+      "pendingAdoptions": "Adoções pendentes",
+      "noAdoptions": "Sem pedidos.",
+      "urgentCampaigns": "Campanhas urgentes",
+      "noCampaigns": "Sem campanhas urgentes.",
+      "tip": "Dica para mais adoções",
+      "tipText": "Fotos boas e histórias reais aumentam muito as chances de adoção."
+    },
+    "shell": {
+      "menu": "Menu",
+      "newAnimal": "Novo animal",
+      "ai": "Assistente IA"
+    },
+    "animalStatus": {
+      "DRAFT": "Rascunho",
+      "AVAILABLE": "Disponível",
+      "IN_ADOPTION_PROCESS": "Em processo",
+      "ADOPTED": "Adotado",
+      "UNAVAILABLE": "Indisponível",
+      "disponivel": "Disponível",
+      "em_analise": "Em análise",
+      "adotado": "Adotado",
+      "indisponivel": "Indisponível"
+    },
+    "requestStatus": {
+      "PENDING": "Pendente",
+      "UNDER_REVIEW": "Em análise",
+      "APPROVED": "Aprovada",
+      "REJECTED": "Recusada",
+      "COMPLETED": "Concluída",
+      "CANCELLED": "Cancelada"
+    },
+    "adoptions": {
+      "title": "Pedidos de adoção",
+      "empty": "Nenhum pedido de adoção ainda.",
+      "interestedIn": "interessado em",
+      "initialMessage": "Mensagem inicial",
+      "contactAuthorized": "Contato autorizado",
+      "actions": "Ações",
+      "review": "Em análise",
+      "approve": "Aprovar",
+      "reject": "Recusar",
+      "complete": "Concluir adoção",
+      "cancel": "Cancelar",
+      "talk": "Falar com interessado"
+    },
+    "campaigns": {
+      "title": "Campanhas",
+      "empty": "Nenhuma campanha criada.",
+      "create": "Criar campanha",
+      "save": "Salvar campanha",
+      "titleField": "Título",
+      "descriptionField": "Descrição",
+      "goal": "Meta financeira (opcional)",
+      "neededItems": "Itens necessários",
+      "deadline": "Prazo (opcional)",
+      "urgency": "Urgência",
+      "category": "Categoria",
+      "status": "Status",
+      "raised": "arrecadado",
+      "of": "de",
+      "cat": {
+        "FOOD": "Alimentação",
+        "MEDICINE": "Medicamento",
+        "NEUTERING": "Castração",
+        "FOSTER": "Lar temporário",
+        "RESCUE": "Resgate",
+        "TRANSPORT": "Transporte",
+        "EVENT": "Evento",
+        "MAINTENANCE": "Manutenção"
+      },
+      "urg": {
+        "LOW": "Baixa",
+        "NORMAL": "Normal",
+        "HIGH": "Alta",
+        "URGENT": "Urgente"
+      },
+      "st": {
+        "DRAFT": "Rascunho",
+        "ACTIVE": "Ativa",
+        "COMPLETED": "Concluída",
+        "CANCELLED": "Cancelada"
+      }
+    },
+    "supporters": {
+      "title": "Apoiadores",
+      "empty": "Ainda sem apoiadores. Eles aparecem após interagir com a ONG.",
+      "follows": "Segue a ONG",
+      "requests": "pedido(s) de adoção",
+      "lastInteraction": "Última interação"
+    },
+    "public": {
+      "adoptionTitle": "Adote um amigo",
+      "adoptionSubtitle": "Animais disponíveis para adoção nas ONGs do EcoPet.",
+      "campaignsTitle": "Campanhas",
+      "campaignsSubtitle": "Ajude ONGs a cuidar de quem mais precisa.",
+      "adopt": "Quero adotar",
+      "requestSent": "Solicitação enviada!",
+      "loginToAdopt": "Entre para solicitar adoção",
+      "adopted": "Adotado",
+      "by": "por",
+      "emptyAnimals": "Nenhum animal disponível no momento.",
+      "emptyCampaigns": "Nenhuma campanha ativa no momento.",
+      "aboutAnimal": "Sobre o animal",
+      "requirements": "Requisitos",
+      "sendRequest": "Enviar solicitação",
+      "messagePlaceholder": "Conte por que você quer adotar...",
+      "viewNgo": "Ver ONG",
+      "animalsForAdoption": "Animais para adoção",
+      "activeCampaigns": "Campanhas ativas"
     }
   }
 }

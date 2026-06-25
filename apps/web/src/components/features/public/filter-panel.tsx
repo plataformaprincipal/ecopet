@@ -1,17 +1,20 @@
 "use client";
 
+import { useTranslation } from "@/providers/i18n-provider";
+
 type FilterPanelProps = {
   children: React.ReactNode;
   className?: string;
 };
 
 export function FilterPanel({ children, className = "" }: FilterPanelProps) {
+  const { t } = useTranslation();
   return (
     <aside
       className={`hidden rounded-[20px] border border-zinc-200/80 bg-white/80 p-5 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-zinc-900/60 lg:block ${className}`}
-      aria-label="Filtros"
+      aria-label={t("pub.marketplace.filters")}
     >
-      <h2 className="mb-4 font-semibold text-zinc-900 dark:text-white">Filtros</h2>
+      <h2 className="mb-4 font-semibold text-zinc-900 dark:text-white">{t("pub.marketplace.filters")}</h2>
       {children}
     </aside>
   );

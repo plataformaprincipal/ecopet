@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FadeIn, StaggerChildren, StaggerItem } from "@/components/design-system/motion";
+import { useTranslation } from "@/providers/i18n-provider";
 
 const HERO_IMAGE =
   "https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=1920&q=80";
@@ -55,13 +56,14 @@ function Section({
 }
 
 export function PremiumPublicHome() {
+  const { t } = useTranslation();
   return (
     <div className="pb-8">
       {/* Hero fullscreen */}
       <FullBleed className="relative min-h-[88vh] overflow-hidden">
         <Image
           src={HERO_IMAGE}
-          alt="Tutor abraçando seu cão em ambiente acolhedor"
+          alt={t("pub.home.heroBadge")}
           fill
           priority
           className="object-cover"
@@ -72,17 +74,17 @@ export function PremiumPublicHome() {
           <FadeIn>
             <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm text-white/90 backdrop-blur-md">
               <Heart className="h-4 w-4 text-ecopet-yellow" aria-hidden />
-              Feito para quem ama animais
+              {t("pub.home.heroBadge")}
             </p>
             <h1 className="max-w-3xl font-display text-4xl font-bold leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-6xl">
-              Uma nova forma de cuidar, comprar, adotar e se conectar no universo pet.
+              {t("pub.home.heroTitle")}
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-relaxed text-white/85 sm:text-xl">
-              Comunidade, marketplace, serviços, adoção e inteligência artificial em um só ecossistema.
+              {t("pub.home.heroSubtitle")}
             </p>
             <div className="mt-10 flex flex-wrap gap-3">
               <Button asChild size="lg" className="rounded-2xl bg-white px-8 text-ecopet-dark hover:bg-ecopet-cream">
-                <Link href="/cadastro">Criar Conta</Link>
+                <Link href="/cadastro">{t("pub.home.createAccount")}</Link>
               </Button>
               <Button
                 asChild
@@ -90,7 +92,7 @@ export function PremiumPublicHome() {
                 variant="outline"
                 className="rounded-2xl border-white/40 bg-white/10 px-8 text-white backdrop-blur-sm hover:bg-white/20"
               >
-                <Link href="/login">Entrar</Link>
+                <Link href="/login">{t("pub.home.signIn")}</Link>
               </Button>
               <Button
                 asChild
@@ -98,21 +100,21 @@ export function PremiumPublicHome() {
                 variant="outline"
                 className="rounded-2xl border-white/40 bg-white/10 px-8 text-white backdrop-blur-sm hover:bg-white/20"
               >
-                <Link href="/explorar">Explorar agora</Link>
+                <Link href="/explorar">{t("pub.home.exploreNow")}</Link>
               </Button>
             </div>
           </FadeIn>
         </div>
       </FullBleed>
 
-      <Section id="conheca" title="Conheça o EcoPet" subtitle="Cinco áreas para explorar antes mesmo de criar sua conta.">
+      <Section id="conheca" title={t("pub.home.areasTitle")} subtitle={t("pub.home.areasSubtitle")}>
         <StaggerChildren className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {[
-            { label: "Rede Social", href: "/social", icon: Users, desc: "Comunidade Pet" },
-            { label: "Explorar", href: "/explorar", icon: Compass, desc: "Descoberta visual" },
-            { label: "Marketplace", href: "/marketplace", icon: ShoppingBag, desc: "Produtos e serviços" },
-            { label: "EccoPet", href: "/eccopet", icon: Sparkles, desc: "Ferramentas de IA" },
-            { label: "Perfil", href: "/perfil", icon: Heart, desc: "Entrar ou criar conta" },
+            { label: t("pub.home.areaSocial"), href: "/social", icon: Users, desc: t("pub.home.areaSocialDesc") },
+            { label: t("pub.home.areaExplore"), href: "/explorar", icon: Compass, desc: t("pub.home.areaExploreDesc") },
+            { label: t("pub.home.areaMarketplace"), href: "/marketplace", icon: ShoppingBag, desc: t("pub.home.areaMarketplaceDesc") },
+            { label: t("pub.home.areaEccopet"), href: "/eccopet", icon: Sparkles, desc: t("pub.home.areaEccopetDesc") },
+            { label: t("pub.home.areaProfile"), href: "/perfil", icon: Heart, desc: t("pub.home.areaProfileDesc") },
           ].map((area) => (
             <StaggerItem key={area.href}>
               <Link
@@ -129,12 +131,12 @@ export function PremiumPublicHome() {
       </Section>
 
       <FullBleed className="bg-ecopet-cream/60 dark:bg-ecopet-dark-card/40">
-        <Section id="como-funciona" title="Como funciona" subtitle="Três passos para transformar a rotina do seu pet.">
+        <Section id="como-funciona" title={t("pub.home.howTitle")} subtitle={t("pub.home.howSubtitle")}>
           <div className="grid gap-8 md:grid-cols-3">
             {[
-              { step: "01", title: "Crie seu perfil", text: "Cadastre-se e adicione seu primeiro pet com foto e preferências." },
-              { step: "02", title: "Descubra", text: "Explore serviços, produtos e ONGs perto de você." },
-              { step: "03", title: "Cuide com carinho", text: "Agende, compre e acompanhe tudo em um só lugar." },
+              { step: "01", title: t("pub.home.how1Title"), text: t("pub.home.how1Text") },
+              { step: "02", title: t("pub.home.how2Title"), text: t("pub.home.how2Text") },
+              { step: "03", title: t("pub.home.how3Title"), text: t("pub.home.how3Text") },
             ].map((item, i) => (
               <FadeIn key={item.step} delay={i * 0.1}>
                 <div className="relative rounded-2xl border border-ecopet-gray/10 bg-white p-8 dark:bg-ecopet-dark-card">
@@ -148,9 +150,9 @@ export function PremiumPublicHome() {
         </Section>
       </FullBleed>
 
-      <Section id="marketplace" title="Marketplace" subtitle="Produtos selecionados com carinho — como Chewy, com alma brasileira.">
+      <Section id="marketplace" title={t("pub.home.marketTitle")} subtitle={t("pub.home.marketSubtitle")}>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {["Ração premium", "Higiene & banho", "Brinquedos", "Acessórios"].map((cat) => (
+          {[t("pub.home.marketCat1"), t("pub.home.marketCat2"), t("pub.home.marketCat3"), t("pub.home.marketCat4")].map((cat) => (
             <Link
               key={cat}
               href="/marketplace/produtos"
@@ -164,73 +166,73 @@ export function PremiumPublicHome() {
         <div className="mt-8 text-center">
           <Button asChild className="rounded-2xl">
             <Link href="/marketplace">
-              Explorar marketplace <ArrowRight className="ml-2 h-4 w-4" />
+              {t("pub.home.marketCta")} <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
         </div>
       </Section>
 
-      <Section id="servicos" title="Serviços" subtitle="Banho, tosa, veterinário e muito mais — agende com parceiros de confiança.">
+      <Section id="servicos" title={t("pub.home.servicesTitle")} subtitle={t("pub.home.servicesSubtitle")}>
         <Button asChild size="lg" variant="outline" className="rounded-2xl">
-          <Link href="/servicos">Ver serviços disponíveis</Link>
+          <Link href="/servicos">{t("pub.home.servicesCta")}</Link>
         </Button>
       </Section>
 
       <FullBleed className="gradient-ecopet">
-        <Section id="comunidade" title="Comunidade" subtitle="Compartilhe momentos, siga outros tutores e encontre inspiração." className="text-white">
+        <Section id="comunidade" title={t("pub.home.communityTitle")} subtitle={t("pub.home.communitySubtitle")} className="text-white">
           <div className="flex flex-wrap items-center gap-4">
             <MessageCircle className="h-10 w-10 text-ecopet-yellow" aria-hidden />
             <p className="max-w-xl text-lg text-white/90">
-              Feed social com histórias reais, adoções e dicas — porque pet também é vida social.
+              {t("pub.home.communityText")}
             </p>
           </div>
           <Button asChild size="lg" className="mt-8 rounded-2xl bg-white text-ecopet-dark hover:bg-ecopet-cream">
-            <Link href="/social">Ver comunidade</Link>
+            <Link href="/social">{t("pub.home.communityCta")}</Link>
           </Button>
         </Section>
       </FullBleed>
 
-      <Section id="ongs" title="ONGs" subtitle="Histórias de adoção, voluntariado e doações que mudam vidas.">
+      <Section id="ongs" title={t("pub.home.ngosTitle")} subtitle={t("pub.home.ngosSubtitle")}>
         <Button asChild className="rounded-2xl">
-          <Link href="/adocao">Conhecer animais para adoção</Link>
+          <Link href="/adocao">{t("pub.home.ngosCta")}</Link>
         </Button>
       </Section>
 
       <FullBleed className="border-y border-ecopet-gray/10 bg-white dark:bg-ecopet-dark-card/30">
-        <Section id="ia" title="EcoPet AI" subtitle="Seu assistente inteligente para rotina, alimentação e bem-estar — em breve, com a mesma experiência premium.">
+        <Section id="ia" title={t("pub.home.aiTitle")} subtitle={t("pub.home.aiSubtitle")}>
           <div className="card-premium flex flex-col gap-6 rounded-2xl p-8 sm:flex-row sm:items-center">
             <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-ecopet-green/10">
               <Sparkles className="h-8 w-8 text-ecopet-green" aria-hidden />
             </div>
             <div className="flex-1">
               <p className="text-ecopet-gray dark:text-white/70">
-                Dúvidas veterinárias, recomendações personalizadas e lembretes inteligentes — tudo pensado para o vínculo com seu pet.
+                {t("pub.home.aiText")}
               </p>
             </div>
             <Button asChild variant="outline" className="shrink-0 rounded-2xl">
-              <Link href="/eccopet">Conhecer EccoPet</Link>
+              <Link href="/eccopet">{t("pub.home.aiCta")}</Link>
             </Button>
           </div>
         </Section>
       </FullBleed>
 
-      <Section id="depoimentos" title="Depoimentos" subtitle="Quem usa, recomenda.">
+      <Section id="depoimentos" title={t("pub.home.testimonialsTitle")} subtitle={t("pub.home.testimonialsSubtitle")}>
         <StaggerChildren className="grid gap-6 md:grid-cols-3">
           {[
-            { name: "Marina", text: "Encontrei banho e tosa perto de casa e acompanho tudo pelo app.", pet: "Luna, golden" },
-            { name: "Ricardo", text: "Adotamos o Thor pela plataforma. A experiência foi emocionante.", pet: "Thor, vira-lata" },
-            { name: "Ana", text: "Marketplace confiável e comunidade que realmente ajuda.", pet: "Mimi, gata" },
-          ].map((t) => (
-            <StaggerItem key={t.name}>
+            { name: "Marina", text: t("pub.home.t1Text"), pet: t("pub.home.t1Pet") },
+            { name: "Ricardo", text: t("pub.home.t2Text"), pet: t("pub.home.t2Pet") },
+            { name: "Ana", text: t("pub.home.t3Text"), pet: t("pub.home.t3Pet") },
+          ].map((item) => (
+            <StaggerItem key={item.name}>
               <blockquote className="card-premium rounded-2xl p-6">
                 <div className="flex gap-1 text-ecopet-yellow" aria-hidden>
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Star key={i} className="h-4 w-4 fill-current" />
                   ))}
                 </div>
-                <p className="mt-4 text-sm leading-relaxed text-ecopet-gray dark:text-white/80">&ldquo;{t.text}&rdquo;</p>
+                <p className="mt-4 text-sm leading-relaxed text-ecopet-gray dark:text-white/80">&ldquo;{item.text}&rdquo;</p>
                 <footer className="mt-4 text-sm font-medium text-ecopet-dark dark:text-white">
-                  {t.name} · <span className="font-normal text-ecopet-gray">{t.pet}</span>
+                  {item.name} · <span className="font-normal text-ecopet-gray">{item.pet}</span>
                 </footer>
               </blockquote>
             </StaggerItem>
@@ -243,13 +245,13 @@ export function PremiumPublicHome() {
           <FadeIn>
             <Users className="mx-auto h-12 w-12 text-ecopet-yellow" aria-hidden />
             <h2 className="mt-6 font-display text-3xl font-bold text-white sm:text-4xl">
-              Comece hoje. Seu pet merece.
+              {t("pub.home.finalTitle")}
             </h2>
             <p className="mx-auto mt-4 max-w-lg text-white/70">
-              Junte-se a milhares de tutores que já transformaram a forma de cuidar dos seus animais.
+              {t("pub.home.finalSubtitle")}
             </p>
             <Button asChild size="lg" className="mt-10 rounded-2xl bg-ecopet-yellow px-10 text-ecopet-dark hover:bg-ecopet-yellow/90">
-              <Link href="/cadastro">Criar conta gratuita</Link>
+              <Link href="/cadastro">{t("pub.home.finalCta")}</Link>
             </Button>
           </FadeIn>
         </section>

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { UserRole, AccountStatus, VerificationStatus, Prisma } from "@prisma/client";
+import { UserRole, AccountStatus, VerificationStatus, ApprovalStatus, ApprovalType, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
   hashPassword,
@@ -73,7 +73,7 @@ async function createPartnerUser(data: PartnerRegisterInput) {
     logoAlt: data.logoAlt ?? undefined,
     responsibleName: data.name.trim(),
     commercialEmail: data.email,
-    verificationStatus: VerificationStatus.APPROVED,
+    verificationStatus: VerificationStatus.PENDING,
   } as Prisma.PartnerProfileUncheckedCreateWithoutUserInput;
 
   return prisma.$transaction(async (tx) => {
@@ -88,7 +88,7 @@ async function createPartnerUser(data: PartnerRegisterInput) {
         cpf: isAutonomous ? data.cpf : null,
         cnpj: isAutonomous ? null : data.cnpj,
         avatarUrl: data.logoUrl ?? undefined,
-        accountStatus: AccountStatus.ACTIVE,
+        accountStatus: AccountStatus.PENDING,
         termsAcceptedAt: new Date(),
         lgpdAcceptedAt: new Date(),
         zipCode: data.addressDetails.zipCode.replace(/\D/g, ""),
@@ -100,6 +100,15 @@ async function createPartnerUser(data: PartnerRegisterInput) {
         },
       },
       select: { id: true, name: true, email: true, role: true, accountStatus: true },
+    });
+    await tx.approvalRequest.create({
+      data: {
+        type: ApprovalType.PARTNER,
+        entityType: "User",
+        entityId: created.id,
+        requesterId: created.id,
+        status: ApprovalStatus.PENDING,
+      },
     });
     return created;
   });
@@ -121,7 +130,7 @@ async function createLegacyPartnerUser(data: {
 }) {
   const passwordHash = await hashPassword(data.password);
   return prisma.$transaction(async (tx) => {
-    return tx.user.create({
+    const created = await tx.user.create({
       data: {
         name: data.name.trim(),
         email: data.email,
@@ -130,7 +139,7 @@ async function createLegacyPartnerUser(data: {
         role: UserRole.PARTNER,
         phone: data.phone,
         cnpj: data.cnpj,
-        accountStatus: AccountStatus.ACTIVE,
+        accountStatus: AccountStatus.PENDING,
         termsAcceptedAt: new Date(),
         lgpdAcceptedAt: new Date(),
         partnerProfile: {
@@ -145,12 +154,22 @@ async function createLegacyPartnerUser(data: {
             state: data.state,
             responsibleName: data.name.trim(),
             commercialEmail: data.email,
-            verificationStatus: VerificationStatus.APPROVED,
+            verificationStatus: VerificationStatus.PENDING,
           },
         },
       },
       select: { id: true, name: true, email: true, role: true, accountStatus: true },
     });
+    await tx.approvalRequest.create({
+      data: {
+        type: ApprovalType.PARTNER,
+        entityType: "User",
+        entityId: created.id,
+        requesterId: created.id,
+        status: ApprovalStatus.PENDING,
+      },
+    });
+    return created;
   });
 }
 
@@ -168,7 +187,7 @@ async function createLegacyOngUser(data: {
 }) {
   const passwordHash = await hashPassword(data.password);
   return prisma.$transaction(async (tx) => {
-    return tx.user.create({
+    const created = await tx.user.create({
       data: {
         name: data.name.trim(),
         email: data.email,
@@ -176,7 +195,7 @@ async function createLegacyOngUser(data: {
         role: UserRole.ONG,
         phone: data.phone,
         cnpj: data.cnpj,
-        accountStatus: AccountStatus.ACTIVE,
+        accountStatus: AccountStatus.PENDING,
         ongProfile: {
           create: {
             ongName: data.ongName.trim(),
@@ -189,12 +208,22 @@ async function createLegacyOngUser(data: {
             city: data.city.trim(),
             state: data.state,
             institutionalEmail: data.email,
-            verificationStatus: VerificationStatus.APPROVED,
+            verificationStatus: VerificationStatus.PENDING,
           },
         },
       },
       select: { id: true, name: true, email: true, role: true, accountStatus: true },
     });
+    await tx.approvalRequest.create({
+      data: {
+        type: ApprovalType.ONG,
+        entityType: "User",
+        entityId: created.id,
+        requesterId: created.id,
+        status: ApprovalStatus.PENDING,
+      },
+    });
+    return created;
   });
 }
 
@@ -217,7 +246,7 @@ async function createOngUser(data: OngRegisterInput) {
   };
 
   return prisma.$transaction(async (tx) => {
-    return tx.user.create({
+    const created = await tx.user.create({
       data: {
         name: data.name.trim(),
         email: data.email,
@@ -230,7 +259,7 @@ async function createOngUser(data: OngRegisterInput) {
         city: data.city.trim(),
         state: data.state,
         address: data.address?.trim() || null,
-        accountStatus: AccountStatus.ACTIVE,
+        accountStatus: AccountStatus.PENDING,
         termsAcceptedAt: new Date(),
         lgpdAcceptedAt: new Date(),
         ongProfile: {
@@ -252,12 +281,22 @@ async function createOngUser(data: OngRegisterInput) {
             animalCapacity: data.animalCapacity ?? null,
             photos: photos as Prisma.InputJsonValue,
             documents: data.verificationDocuments ?? undefined,
-            verificationStatus: VerificationStatus.APPROVED,
+            verificationStatus: VerificationStatus.PENDING,
           } as Prisma.OngProfileUncheckedCreateWithoutUserInput,
         },
       },
       select: { id: true, name: true, email: true, role: true, accountStatus: true },
     });
+    await tx.approvalRequest.create({
+      data: {
+        type: ApprovalType.ONG,
+        entityType: "User",
+        entityId: created.id,
+        requesterId: created.id,
+        status: ApprovalStatus.PENDING,
+      },
+    });
+    return created;
   });
 }
 
@@ -408,7 +447,7 @@ export async function POST(request: Request) {
       const token = await createSessionToken(user.id, user.role, user.accountStatus ?? AccountStatus.ACTIVE);
       const fullUser = await prisma.user.findUnique({ where: { id: user.id }, select: safeUserSelect });
       const response = apiSuccess(
-        { message: "Cadastro de parceiro concluído com sucesso.", user: fullUser ? sanitizeUser(fullUser) : user, redirectTo: dashboardPathForRole(user.role) },
+        { message: "Cadastro de parceiro recebido. Sua conta está em análise e você será avisado após a aprovação.", user: fullUser ? sanitizeUser(fullUser) : user, redirectTo: dashboardPathForRole(user.role) },
         201
       );
       response.cookies.set(SESSION_COOKIE, token, sessionCookieOptions());
@@ -443,7 +482,7 @@ export async function POST(request: Request) {
       const token = await createSessionToken(user.id, user.role, user.accountStatus ?? AccountStatus.ACTIVE);
       const fullUser = await prisma.user.findUnique({ where: { id: user.id }, select: safeUserSelect });
       const response = apiSuccess(
-        { message: "Cadastro de ONG concluído com sucesso.", user: fullUser ? sanitizeUser(fullUser) : user, redirectTo: dashboardPathForRole(user.role) },
+        { message: "Cadastro de ONG recebido. Sua conta está em análise e você será avisado após a aprovação.", user: fullUser ? sanitizeUser(fullUser) : user, redirectTo: dashboardPathForRole(user.role) },
         201
       );
       response.cookies.set(SESSION_COOKIE, token, sessionCookieOptions());

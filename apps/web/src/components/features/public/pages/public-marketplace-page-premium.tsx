@@ -18,23 +18,11 @@ import { PublicServiceCard } from "../public-service-card";
 import { SkeletonGrid } from "../skeleton-card";
 import { EmptyStatePremium } from "../empty-state-premium";
 import { fetchPublicMarketplace } from "@/lib/public/client-api";
-
-const MARKETPLACE_TABS = [
-  { id: "all", label: "Todos" },
-  { id: "products", label: "Produtos" },
-  { id: "services", label: "Serviços" },
-];
-
-const PRODUCT_CATEGORIES = [
-  { id: "", label: "Todas" },
-  { id: "FOOD", label: "Rações" },
-  { id: "HYGIENE", label: "Higiene" },
-  { id: "TOYS", label: "Brinquedos" },
-  { id: "ACCESSORIES", label: "Acessórios" },
-  { id: "HEALTH", label: "Saúde" },
-];
+import { useTranslation } from "@/providers/i18n-provider";
+import type { TranslateFn } from "@/lib/i18n";
 
 function MarketplaceFilters({
+  t,
   category,
   onCategoryChange,
   minPrice,
@@ -52,15 +40,24 @@ function MarketplaceFilters({
   onMaxPriceChange: (v: string) => void;
   inStock: boolean;
   onInStockChange: (v: boolean) => void;
+  t: TranslateFn;
 }) {
+  const PRODUCT_CATEGORIES = [
+    { id: "", label: t("pub.marketplace.catAll") },
+    { id: "FOOD", label: t("pub.marketplace.catFood") },
+    { id: "HYGIENE", label: t("pub.marketplace.catHygiene") },
+    { id: "TOYS", label: t("pub.marketplace.catToys") },
+    { id: "ACCESSORIES", label: t("pub.marketplace.catAccessories") },
+    { id: "HEALTH", label: t("pub.marketplace.catHealth") },
+  ];
   return (
     <>
-      <FilterField label="Categoria">
+      <FilterField label={t("pub.marketplace.category")}>
         <select
           value={category}
           onChange={(e) => onCategoryChange(e.target.value)}
           className={filterInputClass}
-          aria-label="Filtrar por categoria"
+          aria-label={t("pub.marketplace.filterByCategory")}
         >
           {PRODUCT_CATEGORIES.map((c) => (
             <option key={c.id || "all"} value={c.id}>
@@ -69,24 +66,24 @@ function MarketplaceFilters({
           ))}
         </select>
       </FilterField>
-      <FilterField label="Preço mínimo">
+      <FilterField label={t("pub.marketplace.minPrice")}>
         <input
           type="number"
           min={0}
           value={minPrice}
           onChange={(e) => onMinPriceChange(e.target.value)}
           className={filterInputClass}
-          aria-label="Preço mínimo"
+          aria-label={t("pub.marketplace.minPrice")}
         />
       </FilterField>
-      <FilterField label="Preço máximo">
+      <FilterField label={t("pub.marketplace.maxPrice")}>
         <input
           type="number"
           min={0}
           value={maxPrice}
           onChange={(e) => onMaxPriceChange(e.target.value)}
           className={filterInputClass}
-          aria-label="Preço máximo"
+          aria-label={t("pub.marketplace.maxPrice")}
         />
       </FilterField>
       <label className="flex items-center gap-2 text-sm">
@@ -96,13 +93,19 @@ function MarketplaceFilters({
           onChange={(e) => onInStockChange(e.target.checked)}
           className="h-4 w-4 rounded"
         />
-        Somente em estoque
+        {t("pub.marketplace.inStockOnly")}
       </label>
     </>
   );
 }
 
 export function PublicMarketplacePagePremium() {
+  const { t } = useTranslation();
+  const MARKETPLACE_TABS = [
+    { id: "all", label: t("pub.marketplace.tabAll") },
+    { id: "products", label: t("pub.marketplace.tabProducts") },
+    { id: "services", label: t("pub.marketplace.tabServices") },
+  ];
   const [tab, setTab] = useState("all");
   const [q, setQ] = useState("");
   const [category, setCategory] = useState("");
@@ -144,18 +147,18 @@ export function PublicMarketplacePagePremium() {
       <header className="relative overflow-hidden rounded-[20px] bg-gradient-to-br from-ecopet-green/10 via-white to-ecopet-yellow/10 p-8 dark:from-ecopet-green/20 dark:via-zinc-900 dark:to-ecopet-dark-card">
         <Sparkles className="h-8 w-8 text-ecopet-green" aria-hidden />
         <h1 className="mt-3 font-display text-3xl font-bold text-zinc-900 dark:text-white sm:text-4xl">
-          Marketplace EcoPet
+          {t("pub.marketplace.title")}
         </h1>
         <p className="mt-2 max-w-2xl text-zinc-600 dark:text-zinc-300">
-          Navegue, compare e descubra produtos e serviços de parceiros verificados — sem precisar de conta para explorar.
+          {t("pub.marketplace.subtitle")}
         </p>
       </header>
 
       <SearchBar
         value={q}
         onChange={setQ}
-        placeholder="Buscar produtos e serviços..."
-        aria-label="Buscar no marketplace"
+        placeholder={t("pub.marketplace.searchPlaceholder")}
+        aria-label={t("pub.marketplace.searchAria")}
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -164,14 +167,15 @@ export function PublicMarketplacePagePremium() {
           <DialogTrigger asChild>
             <Button variant="outline" size="sm" className="rounded-xl lg:hidden">
               <Filter className="mr-2 h-4 w-4" aria-hidden />
-              Filtros
+              {t("pub.marketplace.filters")}
             </Button>
           </DialogTrigger>
           <DialogContent className="rounded-[20px]">
             <DialogHeader>
-              <DialogTitle>Filtros</DialogTitle>
+              <DialogTitle>{t("pub.marketplace.filters")}</DialogTitle>
             </DialogHeader>
             <MarketplaceFilters
+              t={t}
               category={category}
               onCategoryChange={setCategory}
               minPrice={minPrice}
@@ -188,6 +192,7 @@ export function PublicMarketplacePagePremium() {
       <div className="grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
         <FilterPanel>
           <MarketplaceFilters
+            t={t}
             category={category}
             onCategoryChange={setCategory}
             minPrice={minPrice}
@@ -201,7 +206,7 @@ export function PublicMarketplacePagePremium() {
 
         <div className="space-y-6">
           <p className="text-sm text-zinc-500" aria-live="polite">
-            {loading ? "Carregando..." : `${total} resultado(s)`}
+            {loading ? t("pub.marketplace.loading") : t("pub.marketplace.results", { count: String(total) })}
           </p>
 
           {loading ? (
@@ -209,9 +214,9 @@ export function PublicMarketplacePagePremium() {
           ) : !hasItems ? (
             <EmptyStatePremium
               icon={ShoppingBag}
-              title="Nenhum item encontrado"
-              description="Ajuste os filtros ou explore outras categorias do ecossistema EcoPet."
-              actionLabel="Explorar"
+              title={t("pub.marketplace.emptyTitle")}
+              description={t("pub.marketplace.emptyDesc")}
+              actionLabel={t("pub.marketplace.explore")}
               actionHref="/explorar"
             />
           ) : (
@@ -219,7 +224,7 @@ export function PublicMarketplacePagePremium() {
               {(tab === "all" || tab === "products") && (data?.products.length ?? 0) > 0 ? (
                 <section aria-labelledby="products-heading">
                   <h2 id="products-heading" className="mb-4 text-lg font-semibold">
-                    Produtos
+                    {t("pub.marketplace.products")}
                   </h2>
                   <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
                     {data?.products.map((p, i) => (
@@ -232,7 +237,7 @@ export function PublicMarketplacePagePremium() {
               {(tab === "all" || tab === "services") && (data?.services.length ?? 0) > 0 ? (
                 <section aria-labelledby="services-heading">
                   <h2 id="services-heading" className="mb-4 text-lg font-semibold">
-                    Serviços
+                    {t("pub.marketplace.services")}
                   </h2>
                   <div className="grid gap-5 sm:grid-cols-2">
                     {data?.services.map((s, i) => (

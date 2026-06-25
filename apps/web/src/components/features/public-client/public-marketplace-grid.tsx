@@ -5,6 +5,8 @@ import { Package, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { firstProductImageUrl } from "@/lib/catalog/images";
 import { loginUrl } from "@/lib/public-client/nav";
+import { useTranslation } from "@/providers/i18n-provider";
+import { formatCurrency } from "@/lib/i18n/format";
 import { PublicEmptyState } from "./public-empty-state";
 
 export type PublicMarketplaceItem = {
@@ -27,21 +29,18 @@ type PublicMarketplaceGridProps = {
   loading?: boolean;
 };
 
-function formatPrice(value: number) {
-  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
 export function PublicMarketplaceGrid({
   products,
   detailBase = "/marketplace/produto",
 }: PublicMarketplaceGridProps) {
+  const { t, locale } = useTranslation();
   if (products.length === 0) {
     return (
       <PublicEmptyState
         icon={ShoppingBag}
-        title="Nenhum produto disponível"
-        description="Ainda não há produtos aprovados no catálogo público. Volte em breve ou explore serviços e parceiros."
-        actionLabel="Explorar EcoPet"
+        title={t("pub.marketplace.emptyTitle")}
+        description={t("pub.marketplace.emptyDesc")}
+        actionLabel={t("pub.marketplace.explore")}
         actionHref="/explorar"
       />
     );
@@ -70,25 +69,25 @@ export function PublicMarketplaceGrid({
               )}
               {!inStock ? (
                 <span className="absolute left-3 top-3 rounded-md bg-red-500/90 px-2 py-0.5 text-[11px] font-semibold uppercase text-white">
-                  Indisponível
+                  {t("pub.card.unavailable")}
                 </span>
               ) : null}
             </div>
             <div className="flex flex-1 flex-col p-4">
               <h3 className="line-clamp-2 font-medium text-zinc-900 dark:text-white">{product.name}</h3>
               <p className="mt-1 text-lg font-semibold text-zinc-900 dark:text-white">
-                {formatPrice(product.price)}
+                {formatCurrency(product.price, locale)}
               </p>
               <p className="mt-1 text-xs text-zinc-500">
-                {product.catalogCategory ?? "Produto"}
+                {product.catalogCategory ?? t("pub.marketplace.products")}
                 {partnerName ? ` · ${partnerName}` : ""}
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <Button asChild variant="outline" size="sm" className="flex-1">
-                  <Link href={`${detailBase}/${product.id}`}>Ver produto</Link>
+                  <Link href={`${detailBase}/${product.id}`}>{t("pub.card.viewDetails")}</Link>
                 </Button>
                 <Button asChild size="sm" className="flex-1">
-                  <Link href={loginUrl(`/marketplace/produto/${product.id}`)}>Entrar para comprar</Link>
+                  <Link href={loginUrl(`/marketplace/produto/${product.id}`)}>{t("public.authModal.buyTitle")}</Link>
                 </Button>
               </div>
             </div>
@@ -118,44 +117,45 @@ export function PublicMarketplaceFilters({
   inStock: boolean;
   onInStockChange: (v: boolean) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="grid gap-3 rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60 sm:grid-cols-2 lg:grid-cols-4">
       <label className="block text-sm">
-        <span className="mb-1 block font-medium text-zinc-700 dark:text-zinc-300">Categoria</span>
+        <span className="mb-1 block font-medium text-zinc-700 dark:text-zinc-300">{t("pub.marketplace.category")}</span>
         <select
           value={category}
           onChange={(e) => onCategoryChange(e.target.value)}
           className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-zinc-950"
-          aria-label="Filtrar por categoria"
+          aria-label={t("pub.marketplace.filterByCategory")}
         >
-          <option value="">Todas</option>
-          <option value="FOOD">Rações</option>
-          <option value="HYGIENE">Higiene</option>
-          <option value="TOYS">Brinquedos</option>
-          <option value="ACCESSORIES">Acessórios</option>
-          <option value="HEALTH">Saúde</option>
+          <option value="">{t("pub.marketplace.catAll")}</option>
+          <option value="FOOD">{t("pub.marketplace.catFood")}</option>
+          <option value="HYGIENE">{t("pub.marketplace.catHygiene")}</option>
+          <option value="TOYS">{t("pub.marketplace.catToys")}</option>
+          <option value="ACCESSORIES">{t("pub.marketplace.catAccessories")}</option>
+          <option value="HEALTH">{t("pub.marketplace.catHealth")}</option>
         </select>
       </label>
       <label className="block text-sm">
-        <span className="mb-1 block font-medium text-zinc-700 dark:text-zinc-300">Preço mín.</span>
+        <span className="mb-1 block font-medium text-zinc-700 dark:text-zinc-300">{t("pub.marketplace.minPrice")}</span>
         <input
           type="number"
           min={0}
           value={minPrice}
           onChange={(e) => onMinPriceChange(e.target.value)}
           className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-zinc-950"
-          aria-label="Preço mínimo"
+          aria-label={t("pub.marketplace.minPrice")}
         />
       </label>
       <label className="block text-sm">
-        <span className="mb-1 block font-medium text-zinc-700 dark:text-zinc-300">Preço máx.</span>
+        <span className="mb-1 block font-medium text-zinc-700 dark:text-zinc-300">{t("pub.marketplace.maxPrice")}</span>
         <input
           type="number"
           min={0}
           value={maxPrice}
           onChange={(e) => onMaxPriceChange(e.target.value)}
           className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-zinc-950"
-          aria-label="Preço máximo"
+          aria-label={t("pub.marketplace.maxPrice")}
         />
       </label>
       <label className="flex items-end gap-2 text-sm">
@@ -166,7 +166,7 @@ export function PublicMarketplaceFilters({
           onChange={(e) => onInStockChange(e.target.checked)}
           className="h-4 w-4 rounded border-zinc-300"
         />
-        <span className="pb-2 font-medium text-zinc-700 dark:text-zinc-300">Somente em estoque</span>
+        <span className="pb-2 font-medium text-zinc-700 dark:text-zinc-300">{t("pub.marketplace.inStockOnly")}</span>
       </label>
     </div>
   );

@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiFailure } from "@/lib/api-response";
-import { requireActivePartner } from "@/lib/auth/require-auth";
+import { requireActivePartner, requireApprovedPartner } from "@/lib/auth/require-auth";
 import { partnerServiceUpdateSchema } from "@/schemas/partner-service";
 import { getServiceDeleteBlockReason } from "@/lib/catalog/delete-guards";
 import { ContentApprovalStatus } from "@prisma/client";
@@ -20,7 +20,7 @@ export async function GET(_req: Request, context: RouteContext) {
 }
 
 export async function PUT(request: Request, context: RouteContext) {
-  const { user, error } = await requireActivePartner();
+  const { user, error } = await requireApprovedPartner();
   if (error) return error;
   const { serviceId } = await context.params;
 

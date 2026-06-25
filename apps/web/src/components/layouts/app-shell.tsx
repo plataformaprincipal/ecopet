@@ -13,16 +13,24 @@ import { isClientAreaPath } from "@/lib/client/nav";
 import { isOngAreaPath } from "@/lib/ong/nav";
 import { PublicClientShell } from "@/components/features/public-client/public-client-shell";
 
+const IMMERSIVE_PATHS = ["/feed", "/social", "/eccopet"];
+function isImmersivePath(pathname: string) {
+  return IMMERSIVE_PATHS.includes(pathname);
+}
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { role, loading } = useFoundationSession();
   const mode = getNavigationMode(loading, role);
 
+  const immersive = isImmersivePath(pathname);
+
   const usePublicShell =
-    isPublicMarketplacePath(pathname) && mode === "unauthenticated";
+    isPublicMarketplacePath(pathname) && mode === "unauthenticated" && !immersive;
 
   const usePublicClientShell =
     mode === "unauthenticated" &&
+    !immersive &&
     (isPublicClientShellPath(pathname) || isPublicClientPath(pathname)) &&
     pathname !== "/";
 
@@ -52,18 +60,19 @@ function FoundationAppShell({
   role: ReturnType<typeof useFoundationSession>["role"];
 }) {
   const pathname = usePathname();
-  const isPartnerArea = pathname.startsWith("/parceiro");
+  const isPartnerArea = pathname.startsWith("/parceiro") || pathname.startsWith("/partner");
   const isClientArea = isClientAreaPath(pathname);
-  const isOngArea = isOngAreaPath(pathname);
-  const isSocialHub = pathname === "/feed" || pathname === "/social";
-  const showAi = role === "CLIENT";
+  const isOngArea =
+    isOngAreaPath(pathname) || pathname === "/ngo" || pathname.startsWith("/ngo/");
+  const isImmersive = isImmersivePath(pathname);
+  const showAi = role === "CLIENT" && pathname !== "/eccopet";
 
   if (isPartnerArea || isClientArea || isOngArea) {
     return <div className="min-h-screen">{children}</div>;
   }
 
-  // Social Hub: full-width 3-column experience owns its own left navigation.
-  if (isSocialHub) {
+  // Immersive experiences (Social / EccoPet AI) own their full-width layout.
+  if (isImmersive) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-ecopet-dark-bg">
         <div className="pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:pb-0">{children}</div>

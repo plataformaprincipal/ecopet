@@ -5,6 +5,7 @@ import { MessageSquare } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useConversationsPolling } from "@/hooks/use-message-polling";
 import type { ConversationItem } from "@/lib/messages/client-api";
+import { useTranslation } from "@/providers/i18n-provider";
 import { cn } from "@/lib/utils";
 
 function timeAgo(date: string) {
@@ -28,6 +29,7 @@ export function HubMessagesPanel({
   onOpenConversation: (c: ConversationItem) => void;
   className?: string;
 }) {
+  const { t } = useTranslation();
   const { items, loading } = useConversationsPolling(true);
   const recent = items.slice(0, 6);
 
@@ -37,15 +39,15 @@ export function HubMessagesPanel({
         "rounded-[20px] border border-zinc-200/80 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900/60",
         className
       )}
-      aria-label="Mensagens rápidas"
+      aria-label={t("hub.messages.title")}
     >
       <header className="mb-3 flex items-center justify-between">
         <h2 className="flex items-center gap-2 font-semibold text-zinc-900 dark:text-white">
           <MessageSquare className="h-5 w-5 text-ecopet-green" aria-hidden />
-          Mensagens
+          {t("hub.messages.title")}
         </h2>
         <Link href="/dashboard/messages" className="text-xs font-medium text-ecopet-green hover:underline">
-          Abrir tudo
+          {t("hub.messages.openAll")}
         </Link>
       </header>
 
@@ -56,12 +58,12 @@ export function HubMessagesPanel({
           ))}
         </div>
       ) : recent.length === 0 ? (
-        <p className="py-6 text-center text-sm text-zinc-500">Nenhuma conversa ainda.</p>
+        <p className="py-6 text-center text-sm text-zinc-500">{t("hub.messages.empty")}</p>
       ) : (
         <ul className="space-y-1">
           {recent.map((c) => {
             const other = otherParticipant(c);
-            const name = c.title ?? other?.name ?? "Conversa";
+            const name = c.title ?? other?.name ?? t("hub.messages.conversation");
             return (
               <li key={c.id}>
                 <button
@@ -76,7 +78,7 @@ export function HubMessagesPanel({
                     </Avatar>
                     <span
                       className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white bg-emerald-500 dark:border-zinc-900"
-                      aria-label="Online"
+                      aria-label={t("hub.messages.online")}
                     />
                   </div>
                   <span className="min-w-0 flex-1">
@@ -87,7 +89,7 @@ export function HubMessagesPanel({
                       ) : null}
                     </span>
                     <span className="truncate text-xs text-zinc-500">
-                      {c.lastMessage?.content ?? "Sem mensagens"}
+                      {c.lastMessage?.content ?? t("hub.messages.noMessages")}
                     </span>
                   </span>
                   {c.unreadCount > 0 ? (

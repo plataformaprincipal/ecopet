@@ -9,23 +9,25 @@ import {
 } from "@/components/features/foundation/register-role-selector";
 import { Button } from "@/components/ui/button";
 import { FadeIn } from "@/components/design-system/motion";
+import { useTranslation } from "@/providers/i18n-provider";
 import { cn } from "@/lib/utils";
 
-const STEPS = [
-  { id: 1, label: "Quem é você?" },
-  { id: 2, label: "Informações" },
-  { id: 3, label: "Seu pet" },
-  { id: 4, label: "Preferências" },
-] as const;
-
-const PREFERENCES = [
-  { id: "produtos", label: "Produtos", icon: Store },
-  { id: "servicos", label: "Serviços", icon: PawPrint },
-  { id: "adocao", label: "Adoção", icon: Heart },
-  { id: "comunidade", label: "Comunidade", icon: Heart },
-];
-
 export function PremiumOnboardingWizard() {
+  const { t } = useTranslation();
+  const STEPS = [
+    { id: 1, label: t("authPremium.onboarding.step1") },
+    { id: 2, label: t("authPremium.onboarding.step2") },
+    { id: 3, label: t("authPremium.onboarding.step3") },
+    { id: 4, label: t("authPremium.onboarding.step4") },
+  ] as const;
+
+  const PREFERENCES = [
+    { id: "produtos", label: t("authPremium.onboarding.prefProducts"), icon: Store },
+    { id: "servicos", label: t("authPremium.onboarding.prefServices"), icon: PawPrint },
+    { id: "adocao", label: t("authPremium.onboarding.prefAdoption"), icon: Heart },
+    { id: "comunidade", label: t("authPremium.onboarding.prefCommunity"), icon: Heart },
+  ];
+
   const [step, setStep] = useState(1);
   const [role, setRole] = useState<RegisterRole | null>(null);
   const [prefs, setPrefs] = useState<string[]>([]);
@@ -39,13 +41,13 @@ export function PremiumOnboardingWizard() {
             <Check className="h-8 w-8 text-ecopet-green" aria-hidden />
           </div>
           <h1 className="mt-6 font-display text-3xl font-bold text-ecopet-dark dark:text-white">
-            Bem-vindo ao EcoPet!
+            {t("authPremium.onboarding.welcomeTitle")}
           </h1>
           <p className="mt-3 text-ecopet-gray dark:text-white/70">
-            Sua conta foi criada. Agora você pode explorar tudo que a plataforma oferece para o seu pet.
+            {t("authPremium.onboarding.welcomeDesc")}
           </p>
           <Button asChild className="mt-8 rounded-2xl" size="lg">
-            <a href="/dashboard">Ir para o painel</a>
+            <a href="/dashboard">{t("authPremium.onboarding.goDashboard")}</a>
           </Button>
         </div>
       </FadeIn>
@@ -56,14 +58,14 @@ export function PremiumOnboardingWizard() {
     <div className="mx-auto w-full max-w-2xl space-y-8 py-6">
       <div className="text-center">
         <h1 className="font-display text-3xl font-bold text-ecopet-dark dark:text-white">
-          Criar conta
+          {t("authPremium.onboarding.createAccount")}
         </h1>
         <p className="mt-2 text-sm text-ecopet-gray dark:text-white/70">
-          Onboarding rápido em poucos passos — sem formulários gigantes.
+          {t("authPremium.onboarding.subtitle")}
         </p>
       </div>
 
-      <nav aria-label="Progresso do cadastro" className="flex justify-between gap-2">
+      <nav aria-label={t("authPremium.onboarding.progress")} className="flex justify-between gap-2">
         {STEPS.map((s) => (
           <div
             key={s.id}
@@ -87,7 +89,7 @@ export function PremiumOnboardingWizard() {
 
       {step === 1 && (
         <FadeIn className="card-premium space-y-6 rounded-2xl p-6 sm:p-8">
-          <h2 className="text-xl font-semibold text-ecopet-dark dark:text-white">Quem é você?</h2>
+          <h2 className="text-xl font-semibold text-ecopet-dark dark:text-white">{t("authPremium.onboarding.who")}</h2>
           <RegisterRoleSelector value={role} onChange={setRole} />
           <Button
             className="w-full rounded-2xl"
@@ -95,7 +97,7 @@ export function PremiumOnboardingWizard() {
             disabled={!role}
             onClick={() => setStep(2)}
           >
-            Continuar
+            {t("authPremium.onboarding.continue")}
           </Button>
         </FadeIn>
       )}
@@ -106,39 +108,39 @@ export function PremiumOnboardingWizard() {
             <FoundationRegisterForm initialRole={role} embedded />
           </div>
           <Button variant="ghost" className="w-full" onClick={() => setStep(1)}>
-            Voltar
+            {t("authPremium.onboarding.back")}
           </Button>
         </FadeIn>
       )}
 
       {step === 3 && (
         <FadeIn className="card-premium space-y-6 rounded-2xl p-6 sm:p-8">
-          <h2 className="text-xl font-semibold text-ecopet-dark dark:text-white">Seu primeiro pet</h2>
+          <h2 className="text-xl font-semibold text-ecopet-dark dark:text-white">{t("authPremium.onboarding.firstPet")}</h2>
           <p className="text-sm text-ecopet-gray dark:text-white/70">
-            Após o login, você poderá adicionar nome, espécie e foto em Meu Pet. Por agora, continue para personalizar sua experiência.
+            {t("authPremium.onboarding.firstPetDesc")}
           </p>
           <div className="grid gap-4 sm:grid-cols-3">
-            {["Nome", "Espécie", "Foto"].map((field) => (
+            {[t("authPremium.onboarding.petName"), t("authPremium.onboarding.petSpecies"), t("authPremium.onboarding.petPhoto")].map((field) => (
               <div
                 key={field}
                 className="rounded-2xl border border-dashed border-ecopet-gray/20 p-4 text-center text-sm text-ecopet-gray dark:border-white/10"
               >
                 {field}
-                <p className="mt-1 text-xs opacity-60">No painel</p>
+                <p className="mt-1 text-xs opacity-60">{t("authPremium.onboarding.inPanel")}</p>
               </div>
             ))}
           </div>
           <Button className="w-full rounded-2xl" size="lg" onClick={() => setStep(4)}>
-            Continuar
+            {t("authPremium.onboarding.continue")}
           </Button>
         </FadeIn>
       )}
 
       {step === 4 && (
         <FadeIn className="card-premium space-y-6 rounded-2xl p-6 sm:p-8">
-          <h2 className="text-xl font-semibold text-ecopet-dark dark:text-white">Preferências</h2>
+          <h2 className="text-xl font-semibold text-ecopet-dark dark:text-white">{t("authPremium.onboarding.prefsTitle")}</h2>
           <p className="text-sm text-ecopet-gray dark:text-white/70">
-            O que mais te interessa na plataforma?
+            {t("authPremium.onboarding.prefsDesc")}
           </p>
           <div className="grid gap-3 sm:grid-cols-2">
             {PREFERENCES.map(({ id, label, icon: Icon }) => {
@@ -164,7 +166,7 @@ export function PremiumOnboardingWizard() {
             })}
           </div>
           <Button className="w-full rounded-2xl" size="lg" onClick={() => setDone(true)}>
-            Finalizar
+            {t("authPremium.onboarding.finish")}
           </Button>
         </FadeIn>
       )}

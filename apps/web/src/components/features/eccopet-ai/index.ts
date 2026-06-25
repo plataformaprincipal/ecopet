@@ -1,0 +1,11 @@
+export { EccoPetAIShell } from "./eccopet-ai-shell";
+export { AIChatWindow } from "./ai-chat-window";
+export { AIConversationSidebar } from "./ai-conversation-sidebar";
+export { AIContextPanel } from "./ai-context-panel";
+export { AIMessageBubble } from "./ai-message-bubble";
+export { AIPromptBox } from "./ai-prompt-box";
+export { AISuggestionChips } from "./ai-suggestion-chips";
+export { AIToolGrid } from "./ai-tool-grid";
+export { AIEmptyState } from "./ai-empty-state";
+export { AIDisclaimer } from "./ai-disclaimer";
+export type { AIConversation, AIMessage, AIRecommendation } from "./types";

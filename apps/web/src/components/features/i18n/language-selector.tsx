@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Globe } from "lucide-react";
 import type { LocaleCode } from "@/i18n/locales/registry";
 import { normalizeLocale } from "@/i18n/detect";
 import { useTranslation } from "@/providers/i18n-provider";
@@ -112,6 +112,7 @@ export function LanguageSelector({ className, compact }: LanguageSelectorProps) 
           compact ? "px-2.5 py-1.5 text-xs" : "px-3 py-2 text-sm"
         )}
       >
+        <Globe className={cn("shrink-0 text-ecopet-green", compact ? "h-3.5 w-3.5" : "h-4 w-4")} aria-hidden />
         <span className="whitespace-nowrap">{active.label}</span>
         <ChevronDown
           className={cn(

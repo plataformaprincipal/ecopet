@@ -14,6 +14,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { useNotificationsStore } from "@/store/notifications-store";
 import type { NotificationCategory } from "@/lib/notifications/types";
+import { useTranslation } from "@/providers/i18n-provider";
 import { cn } from "@/lib/utils";
 
 const CATEGORY_ICON: Record<NotificationCategory, LucideIcon> = {
@@ -29,19 +30,6 @@ const CATEGORY_ICON: Record<NotificationCategory, LucideIcon> = {
   system: Bell,
 };
 
-const CATEGORY_LABEL: Record<NotificationCategory, string> = {
-  orders: "Pedidos",
-  appointments: "Agendamentos",
-  social: "Social",
-  messages: "Mensagens",
-  adoption: "Adoção",
-  campaigns: "Campanhas",
-  products: "Produtos",
-  services: "Serviços",
-  security: "Segurança",
-  system: "Sistema",
-};
-
 function timeAgo(date: string) {
   const diff = Date.now() - new Date(date).getTime();
   const mins = Math.floor(diff / 60000);
@@ -53,6 +41,7 @@ function timeAgo(date: string) {
 }
 
 export function HubNotificationsPanel({ className }: { className?: string }) {
+  const { t } = useTranslation();
   const { notifications, unreadCount, loaded, loading, load, markAsRead } = useNotificationsStore();
 
   useEffect(() => {
@@ -72,12 +61,12 @@ export function HubNotificationsPanel({ className }: { className?: string }) {
         "rounded-[20px] border border-zinc-200/80 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900/60",
         className
       )}
-      aria-label="Central de notificações"
+      aria-label={t("hub.notifications.title")}
     >
       <header className="mb-3 flex items-center justify-between">
         <h2 className="flex items-center gap-2 font-semibold text-zinc-900 dark:text-white">
           <Bell className="h-5 w-5 text-ecopet-green" aria-hidden />
-          Notificações
+          {t("hub.notifications.title")}
           {unreadCount > 0 ? (
             <span className="rounded-full bg-ecopet-green px-2 py-0.5 text-[11px] font-semibold text-white">
               {unreadCount}
@@ -85,7 +74,7 @@ export function HubNotificationsPanel({ className }: { className?: string }) {
           ) : null}
         </h2>
         <Link href="/notificacoes" className="text-xs font-medium text-ecopet-green hover:underline">
-          Ver tudo
+          {t("hub.notifications.viewAll")}
         </Link>
       </header>
 
@@ -96,7 +85,7 @@ export function HubNotificationsPanel({ className }: { className?: string }) {
           ))}
         </div>
       ) : grouped.length === 0 ? (
-        <p className="py-6 text-center text-sm text-zinc-500">Nenhuma notificação por enquanto.</p>
+        <p className="py-6 text-center text-sm text-zinc-500">{t("hub.notifications.empty")}</p>
       ) : (
         <ul className="space-y-2">
           {grouped.map((n) => {
@@ -120,10 +109,10 @@ export function HubNotificationsPanel({ className }: { className?: string }) {
                   </span>
                   <span className="mt-0.5 line-clamp-2 block text-xs text-zinc-500">{n.description}</span>
                   <span className="mt-1 inline-block rounded-full bg-zinc-100 px-2 py-0.5 text-[9px] font-medium uppercase tracking-wide text-zinc-500 dark:bg-white/10">
-                    {CATEGORY_LABEL[n.category]}
+                    {t(`hub.notifications.cat.${n.category}`)}
                   </span>
                 </span>
-                {!n.read ? <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-ecopet-green" aria-label="Não lida" /> : null}
+                {!n.read ? <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-ecopet-green" aria-label={t("hub.notifications.unread")} /> : null}
               </>
             );
             return (

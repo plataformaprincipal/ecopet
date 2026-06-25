@@ -1,12 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiFailure } from "@/lib/api-response";
-import { requireActivePartner } from "@/lib/auth/require-auth";
+import { requireApprovedPartner } from "@/lib/auth/require-auth";
 import { stockPatchSchema } from "@/schemas/product";
 
 type RouteContext = { params: Promise<{ productId: string }> };
 
 export async function PATCH(request: Request, context: RouteContext) {
-  const { user, error } = await requireActivePartner();
+  const { user, error } = await requireApprovedPartner();
   if (error) return error;
   const { productId } = await context.params;
 

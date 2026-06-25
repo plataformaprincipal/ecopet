@@ -36,7 +36,7 @@ export const PUBLIC_EXACT = new Set([
   "/legal/exclusao-de-conta",
 ]);
 
-export const PUBLIC_PREFIXES = ["/petshop-web", "/pet/"] as const;
+export const PUBLIC_PREFIXES = ["/petshop-web", "/pet/", "/conta/"] as const;
 
 /** Marketplace público Etapa 7/8 */
 export function isPublicMarketplacePath(pathname: string): boolean {
@@ -76,6 +76,9 @@ export function isPublicClientPath(pathname: string): boolean {
   if (pathname === "/meu-pet") return true;
   if (pathname === "/perfil" || pathname === "/profile") return true;
   if (pathname === "/adocao" || pathname.startsWith("/adocao/")) return true;
+  if (pathname === "/adoption" || pathname.startsWith("/adoption/")) return true;
+  if (pathname === "/campaigns" || pathname.startsWith("/campaigns/")) return true;
+  if (pathname.startsWith("/ngos/")) return true;
   return false;
 }
 

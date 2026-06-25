@@ -7,20 +7,19 @@ import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useAssistantStore } from "@/store/assistant-store";
+import { useTranslation } from "@/providers/i18n-provider";
 
 type ChatTurn = { role: "user" | "assistant"; content: string };
 
-const SUGGESTIONS = [
-  "Quais cuidados meu pet precisa nesta estação?",
-  "Indique produtos para filhotes",
-  "Sugira serviços de banho e tosa",
-  "Como funciona a adoção responsável?",
-];
-
-const DEMO_REPLY =
-  "Estou em modo demonstração. Posso ajudar a encontrar produtos, serviços, parceiros e ONGs, além de tirar dúvidas sobre cuidados com o seu pet. Conecte a IA completa para respostas personalizadas. As ferramentas de IA não substituem avaliação veterinária.";
-
 export function HubAssistantPanel({ className }: { className?: string }) {
+  const { t } = useTranslation();
+  const SUGGESTIONS = [
+    t("social.assistant.s1"),
+    t("social.assistant.s2"),
+    t("social.assistant.s3"),
+    t("social.assistant.s4"),
+  ];
+  const DEMO_REPLY = t("social.assistant.demoReply");
   const [messages, setMessages] = useState<ChatTurn[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -47,7 +46,7 @@ export function HubAssistantPanel({ className }: { className?: string }) {
         setLoading(false);
       }
     },
-    [input, loading]
+    [input, loading, DEMO_REPLY]
   );
 
   useEffect(() => {
@@ -76,11 +75,11 @@ export function HubAssistantPanel({ className }: { className?: string }) {
             <Sparkles className="h-4 w-4 text-ecopet-green" aria-hidden />
           </span>
           <div>
-            <p className="text-sm font-semibold text-zinc-900 dark:text-white">EccoPet Assistant</p>
-            <p className="text-[11px] text-zinc-500">IA · sempre disponível</p>
+            <p className="text-sm font-semibold text-zinc-900 dark:text-white">{t("social.assistant.title")}</p>
+            <p className="text-[11px] text-zinc-500">{t("social.assistant.subtitle")}</p>
           </div>
         </div>
-        <Link href="/eccopet" className="text-ecopet-green" aria-label="Abrir EccoPet AI">
+        <Link href="/eccopet" className="text-ecopet-green" aria-label={t("social.assistant.openFull")}>
           <ChevronRight className="h-5 w-5" aria-hidden />
         </Link>
       </header>
@@ -89,7 +88,7 @@ export function HubAssistantPanel({ className }: { className?: string }) {
         {messages.length === 0 ? (
           <div className="space-y-3">
             <p className="text-sm text-zinc-500">
-              Olá! Sou o EccoPet Assistant. Como posso ajudar você e seu pet hoje?
+              {t("social.assistant.greeting")}
             </p>
             <div className="flex flex-col gap-2">
               {SUGGESTIONS.map((s) => (
@@ -122,7 +121,7 @@ export function HubAssistantPanel({ className }: { className?: string }) {
         {loading ? (
           <div className="mr-auto flex items-center gap-2 rounded-2xl bg-zinc-50 px-3 py-2 text-sm text-zinc-500 dark:bg-white/5">
             <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-            Pensando...
+            {t("social.assistant.thinking")}
           </div>
         ) : null}
       </div>
@@ -130,14 +129,14 @@ export function HubAssistantPanel({ className }: { className?: string }) {
       <div className="border-t border-zinc-100 p-3 dark:border-white/5">
         <div className="flex gap-2">
           <label className="sr-only" htmlFor="hub-assistant-input">
-            Pergunte ao EccoPet Assistant
+            {t("social.assistant.title")}
           </label>
           <input
             id="hub-assistant-input"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && void send()}
-            placeholder="Pergunte algo sobre seu pet..."
+            placeholder={t("social.assistant.placeholder")}
             className="flex-1 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm focus:border-ecopet-green focus:outline-none dark:border-white/10 dark:bg-zinc-950"
           />
           <Button size="icon" className="rounded-xl" onClick={() => void send()} disabled={loading || !input.trim()}>

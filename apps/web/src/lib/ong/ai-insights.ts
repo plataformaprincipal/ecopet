@@ -16,8 +16,18 @@ export type OngDashboardSummary = {
   pendingMessages: number;
   recentPostsCount: number;
   availableAnimals: number;
+  adoptionRequestsPending: number;
+  adoptionRequestsCompleted: number;
+  campaignsActive: number;
   insights: OngAiInsight[];
   recentAnimals: Array<{ id: string; name: string; status: string; createdAt: string }>;
+  recentRequests: Array<{
+    id: string;
+    animalName: string | null;
+    requesterName: string | null;
+    status: string;
+    createdAt: string;
+  }>;
 };
 
 export async function buildOngDashboardSummary(
@@ -32,6 +42,10 @@ export async function buildOngDashboardSummary(
     recentPostsCount,
     openTickets,
     profile,
+    adoptionRequestsPending,
+    adoptionRequestsCompleted,
+    campaignsActive,
+    recentRequestsRows,
   ] = await Promise.all([
     prisma.adoptionListing.findMany({
       where: { ongId },
@@ -60,6 +74,27 @@ export async function buildOngDashboardSummary(
     prisma.ongProfile.findUnique({
       where: { userId: ongId },
       select: { description: true, photos: true, documents: true, verificationStatus: true },
+    }),
+    prisma.adoptionRequest.count({
+      where: { ongId, status: { in: ["PENDING", "UNDER_REVIEW"] } },
+    }),
+    prisma.adoptionRequest.count({
+      where: { ongId, status: "COMPLETED" },
+    }),
+    prisma.campaign.count({
+      where: { ongId, status: "ACTIVE" },
+    }),
+    prisma.adoptionRequest.findMany({
+      where: { ongId },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: {
+        id: true,
+        status: true,
+        createdAt: true,
+        listing: { select: { name: true } },
+        requester: { select: { name: true } },
+      },
     }),
   ]);
 
@@ -142,6 +177,16 @@ export async function buildOngDashboardSummary(
     });
   }
 
+  if (adoptionRequestsPending > 0) {
+    insights.push({
+      id: "answer-adoption-requests",
+      title: `${adoptionRequestsPending} pedido(s) de adoção aguardando`,
+      description: "Responda interessados rapidamente para concretizar adoções.",
+      href: "/ngo/adoptions",
+      priority: "high",
+    });
+  }
+
   return {
     animalsCount: listings.length,
     adoptionsInProgress,
@@ -149,12 +194,22 @@ export async function buildOngDashboardSummary(
     pendingMessages,
     recentPostsCount,
     availableAnimals,
+    adoptionRequestsPending,
+    adoptionRequestsCompleted,
+    campaignsActive,
     insights,
     recentAnimals: listings.slice(0, 5).map((l) => ({
       id: l.id,
       name: l.name,
       status: l.status,
       createdAt: l.createdAt.toISOString(),
+    })),
+    recentRequests: recentRequestsRows.map((r) => ({
+      id: r.id,
+      animalName: r.listing?.name ?? null,
+      requesterName: r.requester?.name ?? null,
+      status: r.status,
+      createdAt: r.createdAt.toISOString(),
     })),
   };
 }

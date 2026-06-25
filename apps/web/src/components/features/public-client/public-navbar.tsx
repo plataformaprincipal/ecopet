@@ -7,10 +7,12 @@ import { EcoPetLogo } from "@/components/shared/brand/ecopet-logo";
 import { Button } from "@/components/ui/button";
 import { LanguageSelector } from "@/components/features/i18n/language-selector";
 import { PREMIUM_PUBLIC_NAV, isPremiumNavActive } from "@/lib/public-client/premium-nav";
+import { useTranslation } from "@/providers/i18n-provider";
 import { cn } from "@/lib/utils";
 
 export function PublicNavbar() {
   const pathname = usePathname();
+  const { t } = useTranslation();
 
   return (
     <header className="sticky top-0 z-50 border-b border-ecopet-gray/10 bg-white/90 backdrop-blur-xl dark:border-white/10 dark:bg-ecopet-dark-bg/90">
@@ -19,7 +21,7 @@ export function PublicNavbar() {
 
         <nav
           className="hidden items-center gap-0.5 xl:flex"
-          aria-label="Navegação principal EcoPet"
+          aria-label={t("nav.home")}
         >
           {PREMIUM_PUBLIC_NAV.map((item) => {
             const active = isPremiumNavActive(pathname, item.href);
@@ -35,30 +37,30 @@ export function PublicNavbar() {
                     : "text-ecopet-gray hover:bg-ecopet-cream hover:text-ecopet-dark dark:text-white/70 dark:hover:bg-white/5 dark:hover:text-white"
                 )}
               >
-                {item.label}
+                {t(item.labelKey)}
               </Link>
             );
           })}
         </nav>
 
         <div className="flex items-center gap-1.5 sm:gap-2">
-          <LanguageSelector compact className="hidden shrink-0 sm:flex" />
+          <LanguageSelector compact className="shrink-0" />
           <Button
             asChild
             variant="ghost"
             size="icon"
             className="hidden rounded-xl sm:inline-flex"
-            aria-label="Acessibilidade"
+            aria-label={t("pub.nav.accessibility")}
           >
-            <a href="#ecopet-a11y-toolbar" title="Acessibilidade">
+            <a href="#ecopet-a11y-toolbar" title={t("pub.nav.accessibility")}>
               <Accessibility className="h-4 w-4" />
             </a>
           </Button>
           <Button asChild variant="ghost" size="sm" className="hidden rounded-xl sm:inline-flex">
-            <Link href="/login">Entrar</Link>
+            <Link href="/login">{t("common.signIn")}</Link>
           </Button>
           <Button asChild size="sm" className="rounded-xl">
-            <Link href="/cadastro">Criar conta</Link>
+            <Link href="/cadastro">{t("common.createAccount")}</Link>
           </Button>
         </div>
       </div>

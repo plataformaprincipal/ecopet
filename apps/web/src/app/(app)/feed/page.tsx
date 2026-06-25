@@ -7,6 +7,5 @@ export default async function FeedPage() {
   if (!user) {
     redirect("/social");
   }
-
   return <SocialHub />;
 }

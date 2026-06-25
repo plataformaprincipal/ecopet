@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiFailure } from "@/lib/api-response";
-import { requireActivePartner } from "@/lib/auth/require-auth";
+import { requireActivePartner, requireApprovedPartner } from "@/lib/auth/require-auth";
 import { productSchema } from "@/schemas/product";
 import { ContentApprovalStatus, Prisma, ProductCatalogStatus } from "@prisma/client";
 
@@ -49,7 +49,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const { user, error } = await requireActivePartner();
+  const { user, error } = await requireApprovedPartner();
   if (error) return error;
 
   const parsed = productSchema.safeParse(await request.json());

@@ -47,5 +47,10 @@ export function isClientNavActive(pathname: string, href: string): boolean {
 }
 
 export function isClientAreaPath(pathname: string): boolean {
-  return pathname === "/cliente" || pathname.startsWith("/cliente/");
+  return (
+    pathname === "/cliente" ||
+    pathname.startsWith("/cliente/") ||
+    pathname === "/client" ||
+    pathname.startsWith("/client/")
+  );
 }

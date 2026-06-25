@@ -6,6 +6,8 @@ import { Package, ShoppingCart, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { firstProductImageUrl } from "@/lib/catalog/images";
 import { useAuthGate } from "@/providers/auth-gate-provider";
+import { useTranslation } from "@/providers/i18n-provider";
+import { formatCurrency } from "@/lib/i18n/format";
 import { LoginRequiredModal } from "./login-required-modal";
 import { useState } from "react";
 
@@ -23,10 +25,6 @@ export type PublicProductCardData = {
   featured?: boolean;
 };
 
-function formatPrice(value: number) {
-  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
 type PublicProductCardProps = {
   product: PublicProductCardData;
   detailHref?: string;
@@ -34,6 +32,7 @@ type PublicProductCardProps = {
 
 export function PublicProductCard({ product, detailHref }: PublicProductCardProps) {
   const { isAuthenticated } = useAuthGate();
+  const { t, locale } = useTranslation();
   const router = useRouter();
   const [buyModal, setBuyModal] = useState(false);
   const img = firstProductImageUrl(product.images as string[] | undefined);
@@ -55,12 +54,12 @@ export function PublicProductCard({ product, detailHref }: PublicProductCardProp
           )}
           {product.featured ? (
             <span className="absolute left-3 top-3 rounded-full bg-ecopet-yellow px-3 py-1 text-xs font-semibold text-ecopet-dark">
-              Destaque
+              {t("pub.card.featured")}
             </span>
           ) : null}
           {!inStock ? (
             <span className="absolute right-3 top-3 rounded-full bg-red-500/90 px-3 py-1 text-xs font-semibold text-white">
-              Indisponível
+              {t("pub.card.unavailable")}
             </span>
           ) : null}
         </Link>
@@ -68,7 +67,7 @@ export function PublicProductCard({ product, detailHref }: PublicProductCardProp
           <Link href={href}>
             <h3 className="line-clamp-2 font-semibold text-zinc-900 dark:text-white">{product.name}</h3>
           </Link>
-          <p className="mt-2 text-xl font-bold text-ecopet-green">{formatPrice(product.price)}</p>
+          <p className="mt-2 text-xl font-bold text-ecopet-green">{formatCurrency(product.price, locale)}</p>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
             {product.rating ? (
               <span className="inline-flex items-center gap-1">
@@ -82,7 +81,7 @@ export function PublicProductCard({ product, detailHref }: PublicProductCardProp
           </div>
           <div className="mt-4 flex gap-2">
             <Button asChild variant="outline" size="sm" className="flex-1 rounded-xl">
-              <Link href={href}>Ver detalhes</Link>
+              <Link href={href}>{t("pub.card.viewDetails")}</Link>
             </Button>
             <Button
               size="sm"
@@ -97,7 +96,7 @@ export function PublicProductCard({ product, detailHref }: PublicProductCardProp
               }}
             >
               <ShoppingCart className="mr-1 h-4 w-4" aria-hidden />
-              Comprar
+              {t("pub.card.buy")}
             </Button>
           </div>
         </div>

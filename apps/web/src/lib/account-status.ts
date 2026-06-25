@@ -90,6 +90,26 @@ export function canAccessWithAccountStatus(
     };
   }
 
+  if (accountStatus === "PENDING") {
+    if (pathname === ACCOUNT_STATUS_PAGES.PENDING_REVIEW) return { allowed: true };
+
+    const blockedForRole =
+      (role === "PARTNER" &&
+        PARTNER_PENDING_BLOCKED_PREFIXES.some((p) => pathMatchesPrefix(pathname, p))) ||
+      (role === "ONG" &&
+        ONG_PENDING_BLOCKED_PREFIXES.some((p) => pathMatchesPrefix(pathname, p)));
+
+    if (blockedForRole) {
+      return {
+        allowed: false,
+        redirectTo: ACCOUNT_STATUS_PAGES.PENDING_REVIEW,
+        code: "PENDING_LIMITED",
+      };
+    }
+
+    return { allowed: true };
+  }
+
   return { allowed: true };
 }
 

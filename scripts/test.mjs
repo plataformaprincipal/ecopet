@@ -12,6 +12,20 @@ const steps = [
   { name: "test:empty-states", cmd: "node", args: ["--import", "tsx", "scripts/test-empty-states.mjs"] },
   { name: "test:i18n", cmd: "node", args: ["scripts/test-i18n.mjs"] },
   { name: "test:permissions:unit", cmd: "node", args: ["--import", "tsx", "scripts/test-permissions.mjs"] },
+  { name: "test:client-experience", cmd: "node", args: ["--import", "tsx", "scripts/test-client-experience.mjs"] },
+  {
+    name: "test:partner-experience",
+    cmd: "node",
+    args: ["--import", "tsx", "scripts/test-partner-experience.mjs"],
+    env: { TSX_TSCONFIG_PATH: "apps/web/tsconfig.json" },
+  },
+  {
+    name: "test:ngo-experience",
+    cmd: "node",
+    args: ["--import", "tsx", "scripts/test-ngo-experience.mjs"],
+    env: { TSX_TSCONFIG_PATH: "apps/web/tsconfig.json" },
+  },
+  { name: "test:ngo-flows", cmd: "node", args: ["scripts/test-ngo-flows.mjs"] },
   { name: "test:catalog-delete-guards", cmd: "node", args: ["--import", "tsx", "scripts/test-catalog-delete-guards.mjs"] },
 ];
 
@@ -21,7 +35,12 @@ console.log("=== EcoPet — npm run test ===\n");
 
 for (const step of steps) {
   console.log(`→ ${step.name}`);
-  const result = spawnSync(step.cmd, step.args, { cwd: root, stdio: "inherit", shell: process.platform === "win32" });
+  const result = spawnSync(step.cmd, step.args, {
+    cwd: root,
+    stdio: "inherit",
+    shell: process.platform === "win32",
+    env: step.env ? { ...process.env, ...step.env } : process.env,
+  });
   if (result.status !== 0) {
     failed++;
     console.error(`✗ ${step.name} falhou\n`);

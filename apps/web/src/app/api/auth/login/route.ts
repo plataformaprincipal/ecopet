@@ -55,7 +55,16 @@ export async function POST(request: Request) {
       return apiFailure("ACCOUNT_SUSPENDED", LOGIN_ACCOUNT_SUSPENDED_MESSAGE, 403);
     }
 
-    if (user.accountStatus !== AccountStatus.ACTIVE) {
+    if (user.accountStatus === AccountStatus.REJECTED) {
+      return apiFailure("ACCOUNT_INACTIVE", LOGIN_ACCOUNT_INACTIVE_MESSAGE, 403);
+    }
+
+    // PENDING (parceiro/ONG aguardando aprovação) pode autenticar e acessar o
+    // painel limitado / página de status. Demais estados não-ativos são bloqueados.
+    if (
+      user.accountStatus !== AccountStatus.ACTIVE &&
+      user.accountStatus !== AccountStatus.PENDING
+    ) {
       return apiFailure("ACCOUNT_INACTIVE", LOGIN_ACCOUNT_INACTIVE_MESSAGE, 403);
     }
 

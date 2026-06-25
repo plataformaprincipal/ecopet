@@ -20,7 +20,8 @@ import { ExploreMasonryGrid } from "../explore-masonry-grid";
 import { SkeletonGrid } from "../skeleton-card";
 import { fetchPublicExplore, fetchPublicTrending } from "@/lib/public/client-api";
 import type { PublicTrendingData } from "@/lib/public/client-api";
-import type { PublicCategoryItem } from "@/components/features/public-client/public-category-grid";
+import { useTranslation } from "@/providers/i18n-provider";
+import { formatCurrency } from "@/lib/i18n/format";
 
 type ExploreData = {
   counts: { products: number; services: number; partners: number; adoptions: number };
@@ -29,11 +30,8 @@ type ExploreData = {
   partners: Array<{ id: string; name: string; category?: string | null; city?: string | null; productCount?: number; serviceCount?: number }>;
 };
 
-function formatPrice(value: number) {
-  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
 export function PublicExplorePagePremium() {
+  const { t, locale } = useTranslation();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
   const [data, setData] = useState<ExploreData | null>(null);
@@ -61,14 +59,14 @@ export function PublicExplorePagePremium() {
 
   const categories = useMemo(
     () => [
-      { id: "pet-shops", label: "Pet shops", icon: Store },
-      { id: "banho-tosa", label: "Banho e tosa", icon: Scissors },
-      { id: "veterinarios", label: "Veterinários", icon: Stethoscope },
-      { id: "adocao", label: "Adoção", icon: Heart },
-      { id: "produtos", label: "Produtos", icon: Package },
-      { id: "servicos", label: "Serviços", icon: Wrench },
+      { id: "pet-shops", label: t("pub.explore.catPetShops"), icon: Store },
+      { id: "banho-tosa", label: t("pub.explore.catGrooming"), icon: Scissors },
+      { id: "veterinarios", label: t("pub.explore.catVets"), icon: Stethoscope },
+      { id: "adocao", label: t("pub.explore.catAdoption"), icon: Heart },
+      { id: "produtos", label: t("pub.explore.catProducts"), icon: Package },
+      { id: "servicos", label: t("pub.explore.catServices"), icon: Wrench },
     ],
-    []
+    [t]
   );
 
   const hasResults =
@@ -77,17 +75,17 @@ export function PublicExplorePagePremium() {
   return (
     <div className="space-y-8">
       <header className="space-y-3">
-        <h1 className="font-display text-3xl font-bold text-zinc-900 dark:text-white sm:text-4xl">Explorar</h1>
+        <h1 className="font-display text-3xl font-bold text-zinc-900 dark:text-white sm:text-4xl">{t("pub.explore.title")}</h1>
         <p className="max-w-2xl text-lg text-zinc-500 dark:text-zinc-400">
-          Descubra o que está acontecendo no ecossistema pet — tendências, parceiros, produtos e adoção.
+          {t("pub.explore.subtitle")}
         </p>
       </header>
 
       <SearchBar
         value={query}
         onChange={setQuery}
-        placeholder="Buscar produtos, serviços, ONGs, hashtags..."
-        aria-label="Buscar no ecossistema EcoPet"
+        placeholder={t("pub.explore.searchPlaceholder")}
+        aria-label={t("pub.explore.searchAria")}
       />
 
       <CategoryChips
@@ -100,7 +98,7 @@ export function PublicExplorePagePremium() {
         <section aria-labelledby="trending-title" className="space-y-4">
           <h2 id="trending-title" className="flex items-center gap-2 text-lg font-semibold">
             <TrendingUp className="h-5 w-5 text-ecopet-green" aria-hidden />
-            Tendências
+            {t("pub.explore.trending")}
           </h2>
           <div className="flex gap-3 overflow-x-auto pb-1">
             {trending.hashtags.slice(0, 8).map((h) => (
@@ -137,9 +135,9 @@ export function PublicExplorePagePremium() {
       ) : !hasResults ? (
         <EmptyStatePremium
           icon={ShoppingBag}
-          title="Nenhum resultado encontrado"
-          description="Não há itens públicos para os filtros selecionados. Tente outra busca ou explore o marketplace."
-          actionLabel="Ver marketplace"
+          title={t("pub.explore.emptyTitle")}
+          description={t("pub.explore.emptyDesc")}
+          actionLabel={t("pub.explore.viewMarketplace")}
           actionHref="/marketplace"
         />
       ) : (
@@ -147,7 +145,7 @@ export function PublicExplorePagePremium() {
           partners={data?.partners ?? []}
           services={data?.services ?? []}
           products={data?.products ?? []}
-          formatPrice={formatPrice}
+          formatPrice={(v) => formatCurrency(v, locale)}
         />
       )}
     </div>

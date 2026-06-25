@@ -9,21 +9,22 @@ import {
 
 export type PremiumNavItem = {
   href: string;
-  label: string;
+  /** Chave i18n do rótulo desktop */
+  labelKey: string;
+  /** Chave i18n do rótulo curto mobile */
+  mobileLabelKey: string;
   icon: LucideIcon;
-  /** Label curto na barra mobile */
-  mobileLabel?: string;
   /** Exibir na barra inferior mobile (máx. 5) */
   mobile?: boolean;
 };
 
 /** Menu público premium — desktop completo */
 export const PREMIUM_PUBLIC_NAV: PremiumNavItem[] = [
-  { href: "/social", label: "Rede Social", mobileLabel: "Social", icon: Users, mobile: true },
-  { href: "/explorar", label: "Explorar", mobileLabel: "Explorar", icon: Compass, mobile: true },
-  { href: "/marketplace", label: "Marketplace", mobileLabel: "Mercado", icon: ShoppingBag, mobile: true },
-  { href: "/eccopet", label: "EccoPet", mobileLabel: "EccoPet", icon: Sparkles, mobile: true },
-  { href: "/perfil", label: "Perfil", mobileLabel: "Perfil", icon: User, mobile: true },
+  { href: "/social", labelKey: "nav.socialNetwork", mobileLabelKey: "pub.nav.socialShort", icon: Users, mobile: true },
+  { href: "/explorar", labelKey: "nav.explore", mobileLabelKey: "pub.nav.exploreShort", icon: Compass, mobile: true },
+  { href: "/marketplace", labelKey: "nav.marketplace", mobileLabelKey: "pub.nav.marketShort", icon: ShoppingBag, mobile: true },
+  { href: "/eccopet", labelKey: "pub.nav.eccopet", mobileLabelKey: "pub.nav.eccopet", icon: Sparkles, mobile: true },
+  { href: "/perfil", labelKey: "nav.profile", mobileLabelKey: "pub.nav.profileShort", icon: User, mobile: true },
 ];
 
 export const PREMIUM_MOBILE_NAV = PREMIUM_PUBLIC_NAV.filter((i) => i.mobile);

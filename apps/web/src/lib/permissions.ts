@@ -10,6 +10,7 @@ export const ROLE_ROUTE_PREFIXES: Record<AppRole, readonly string[]> = {
   CLIENT: [
     "/dashboard",
     "/dashboard/client",
+    "/client",
     "/cliente",
     "/cliente/explorar",
     "/cliente/marketplace",
@@ -59,6 +60,7 @@ export const ROLE_ROUTE_PREFIXES: Record<AppRole, readonly string[]> = {
   ],
   PARTNER: [
     "/dashboard",
+    "/partner",
     "/dashboard/partner",
     "/dashboard/partner/profile",
     "/dashboard/partner/services",
@@ -97,6 +99,7 @@ export const ROLE_ROUTE_PREFIXES: Record<AppRole, readonly string[]> = {
     "/ong/adocoes",
     "/ong/atividades-ia",
     "/ong/perfil-gestao",
+    "/ngo",
     "/dashboard/messages",
     "/dashboard/support",
     "/dashboard/social",
@@ -132,10 +135,10 @@ export const ROLE_ROUTE_PREFIXES: Record<AppRole, readonly string[]> = {
 
 /** Prefixos bloqueados por role (além de admin-only) */
 export const ROLE_DENIED_PREFIXES: Record<AppRole, readonly string[]> = {
-  CLIENT: ["/agro", "/dashboard/clinica", "/dashboard/petshop", "/dashboard/prestador", "/dashboard/seller", "/dashboard/veterinario", "/dashboard/partner", "/dashboard/ong", "/dashboard/admin"],
-  PARTNER: ["/agro", "/meu-pet", "/pets", "/health", "/iot", "/ia", "/inicio", "/explorar", "/social/reels", "/social/stories", "/dashboard/ong", "/dashboard/client", "/dashboard/admin", "/ong", "/cliente"],
-  ONG: ["/agro", "/meu-pet", "/pets", "/marketplace", "/ia", "/health", "/iot", "/dashboard/prestador", "/dashboard/seller", "/dashboard/client", "/dashboard/partner", "/dashboard/admin", "/parceiro", "/cliente"],
-  ADMIN: ["/meu-pet", "/pets", "/marketplace", "/ia", "/inicio", "/feed", "/explorar", "/social", "/agro", "/dashboard/client", "/dashboard/partner", "/cliente"],
+  CLIENT: ["/agro", "/dashboard/clinica", "/dashboard/petshop", "/dashboard/prestador", "/dashboard/seller", "/dashboard/veterinario", "/dashboard/partner", "/dashboard/ong", "/dashboard/admin", "/partner", "/parceiro", "/ngo", "/ong"],
+  PARTNER: ["/agro", "/meu-pet", "/pets", "/health", "/iot", "/ia", "/inicio", "/explorar", "/social/reels", "/social/stories", "/dashboard/ong", "/dashboard/client", "/dashboard/admin", "/ong", "/ngo", "/cliente", "/client"],
+  ONG: ["/agro", "/meu-pet", "/pets", "/marketplace", "/ia", "/health", "/iot", "/dashboard/prestador", "/dashboard/seller", "/dashboard/client", "/dashboard/partner", "/dashboard/admin", "/parceiro", "/partner", "/cliente", "/client"],
+  ADMIN: ["/meu-pet", "/pets", "/marketplace", "/ia", "/inicio", "/feed", "/explorar", "/social", "/agro", "/dashboard/client", "/dashboard/partner", "/cliente", "/client", "/partner", "/parceiro", "/ngo", "/ong"],
 };
 
 export function isAdminOnlyPath(pathname: string): boolean {
@@ -165,11 +168,11 @@ export function getDefaultDashboardPath(role: AppRole): string {
     case "ADMIN":
       return "/dashboard/admin";
     case "PARTNER":
-      return "/parceiro/comunidade";
+      return "/partner";
     case "ONG":
-      return "/ong";
+      return "/ngo";
     case "CLIENT":
-      return "/cliente";
+      return "/client";
     default:
       return "/dashboard";
   }
