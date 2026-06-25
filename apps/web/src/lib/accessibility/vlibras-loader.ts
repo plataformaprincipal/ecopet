@@ -248,7 +248,37 @@ export function isVLibrasAvatarVisible(): boolean {
 
   if (typeof document === "undefined") return false;
 
-  return Boolean(document.querySelector("[vw-access-button] .vp-access-button"));
+  const accessButton = document.querySelector("[vw-access-button]");
+
+  if (!accessButton) return false;
+
+  // 1) Marcações conhecidas do botão de acesso (variam entre versões do plugin gov.br)
+
+  if (
+    accessButton.querySelector(
+      ".vp-access-button, .vpw-access-button, .access-button, img, button, svg, [class*='access']"
+    )
+  ) {
+    return true;
+  }
+
+  // 2) Plugin injetou qualquer conteúdo dentro do botão de acesso
+
+  if (accessButton.childElementCount > 0) return true;
+
+  if (typeof window !== "undefined") {
+    // 3) Ícone azul renderizado via background-image (CSS oficial gov.br), sem filhos
+
+    const bg = window.getComputedStyle(accessButton).backgroundImage;
+
+    if (bg && bg !== "none") return true;
+
+    // 4) Plugin global carregado e instanciado — o ícone é pintado pelo gov.br
+
+    if (window.VLibras) return true;
+  }
+
+  return false;
 
 }
 
@@ -677,15 +707,19 @@ async function loadVLibrasPipeline(): Promise<VLibrasLoadOutcome> {
 
 
 
-  const avatarOk = await ensureAvatarInjected();
+  // Widget instanciado com sucesso: o ícone azul é renderizado pelo próprio plugin gov.br.
 
-  if (!avatarOk) {
+  // Disparamos o "nudge" do avatar em segundo plano e NÃO escondemos o botão caso a
 
-    setVLibrasVisible(false);
+  // marcação interna do gov.br mude entre versões (evita falso "indisponível").
 
-    return vlibrasFromScriptEvent("button-missing");
+  void ensureAvatarInjected().then((ok) => {
 
-  }
+    if (ok) vlogInfo("Avatar confirmado após init");
+
+    else vlogUnavailable("Avatar não confirmado por seletor — ícone segue visível (render gov.br)");
+
+  });
 
 
 

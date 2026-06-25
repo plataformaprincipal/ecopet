@@ -164,7 +164,7 @@ export function VLibrasWidget() {
 
 
 
-        if (isVLibrasLoadReady(outcome) && isVLibrasAvatarVisible()) {
+        if (isVLibrasLoadReady(outcome)) {
 
           setVLibrasVisible(true);
 
@@ -242,7 +242,8 @@ export function VLibrasWidget() {
 
   if (!mounted) return null;
 
-  const domVisible = librasEnabled && vlibrasStatus !== "unavailable";
+  const domVisible =
+    librasEnabled && vlibrasStatus !== "unavailable" && vlibrasStatus !== "error";
 
   return createPortal(<VLibrasOfficialDom visible={domVisible} />, document.body);
 }
