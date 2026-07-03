@@ -18,19 +18,26 @@ export function productionOnlyHeaders(): { key: string; value: string }[] {
 /**
  * CSP compatível com Next.js e VLibras.
  * VLibras carrega scripts de vlibras.gov.br — exceção documentada em docs/security/web-security.md
+ * O plugin oficial redireciona (302) para o espelho CDN gov.br em cdn.jsdelivr.net.
  */
+const VLIBRAS_HOSTS =
+  "https://vlibras.gov.br https://www.vlibras.gov.br https://*.vlibras.gov.br";
+/** Espelho oficial do portal VLibras (redirect 302 de vlibras.gov.br/app/*). */
+const VLIBRAS_CDN = "https://cdn.jsdelivr.net";
+
 export function contentSecurityPolicy(): string {
   const isProd = process.env.NODE_ENV === "production";
+  const vlibrasSources = `${VLIBRAS_HOSTS} ${VLIBRAS_CDN}`;
   const directives = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vlibras.gov.br https://www.vlibras.gov.br https://*.vlibras.gov.br https://cdn.talkjs.com",
-    "style-src 'self' 'unsafe-inline' https://vlibras.gov.br https://www.vlibras.gov.br https://*.vlibras.gov.br",
-    "img-src 'self' data: blob: https: http: https://vlibras.gov.br https://www.vlibras.gov.br https://*.vlibras.gov.br",
+    `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${vlibrasSources} https://cdn.talkjs.com`,
+    `style-src 'self' 'unsafe-inline' ${vlibrasSources}`,
+    `img-src 'self' data: blob: https: http: ${VLIBRAS_HOSTS}`,
     "font-src 'self' data: https:",
-    "connect-src 'self' https: wss: https://vlibras.gov.br https://www.vlibras.gov.br https://*.vlibras.gov.br https://cdn.talkjs.com https://api.talkjs.com wss://*.talkjs.com",
-    "frame-src 'self' https://vlibras.gov.br https://www.vlibras.gov.br https://*.vlibras.gov.br https://cdn.talkjs.com",
-    "worker-src 'self' blob: https://vlibras.gov.br https://www.vlibras.gov.br https://*.vlibras.gov.br",
-    "child-src 'self' blob: https://vlibras.gov.br https://www.vlibras.gov.br https://*.vlibras.gov.br",
+    `connect-src 'self' https: wss: ${vlibrasSources} https://cdn.talkjs.com https://api.talkjs.com wss://*.talkjs.com`,
+    `frame-src 'self' ${vlibrasSources} https://cdn.talkjs.com`,
+    `worker-src 'self' blob: ${vlibrasSources}`,
+    `child-src 'self' blob: ${vlibrasSources}`,
     "frame-ancestors 'self'",
     "base-uri 'self'",
     "form-action 'self'",
