@@ -53,26 +53,12 @@ function postInclude() {
   } satisfies Prisma.SocialPostInclude;
 }
 
-export async function serializePost(post: Awaited<ReturnType<typeof fetchPostRecord>>, viewerId?: string) {
-  const [liked, saved, followingAuthor] = viewerId
-    ? await Promise.all([
-        prisma.socialPostLike.findUnique({
-          where: { postId_userId: { postId: post.id, userId: viewerId } },
-        }),
-        prisma.socialPostSave.findUnique({
-          where: { postId_userId: { postId: post.id, userId: viewerId } },
-        }),
-        prisma.userFollow.findUnique({
-          where: { followerId_followingId: { followerId: viewerId, followingId: post.authorId } },
-        }),
-      ])
-    : [null, null, null];
+type PostRecord = Awaited<ReturnType<typeof fetchPostRecord>>;
+type ViewerState = { liked: boolean; saved: boolean; followingAuthor: boolean };
+type AuthorProfile = { displayName: string | null; avatarUrl: string | null } | null;
 
-  const profile = await prisma.publicProfile.findUnique({
-    where: { userId: post.authorId },
-    select: { displayName: true, avatarUrl: true },
-  });
-
+/** Mapeamento puro (sem I/O) do registro do post para o DTO da API. */
+function mapPost(post: PostRecord, profile: AuthorProfile, viewerState?: ViewerState) {
   return {
     id: post.id,
     authorId: post.authorId,
@@ -107,10 +93,90 @@ export async function serializePost(post: Awaited<ReturnType<typeof fetchPostRec
     editedAt: post.editedAt,
     deletedAt: post.deletedAt,
     createdAt: post.createdAt,
-    viewerState: viewerId
-      ? { liked: Boolean(liked), saved: Boolean(saved), followingAuthor: Boolean(followingAuthor) }
-      : undefined,
+    viewerState,
   };
+}
+
+export async function serializePost(post: PostRecord, viewerId?: string) {
+  const [liked, saved, followingAuthor] = viewerId
+    ? await Promise.all([
+        prisma.socialPostLike.findUnique({
+          where: { postId_userId: { postId: post.id, userId: viewerId } },
+        }),
+        prisma.socialPostSave.findUnique({
+          where: { postId_userId: { postId: post.id, userId: viewerId } },
+        }),
+        prisma.userFollow.findUnique({
+          where: { followerId_followingId: { followerId: viewerId, followingId: post.authorId } },
+        }),
+      ])
+    : [null, null, null];
+
+  const profile = await prisma.publicProfile.findUnique({
+    where: { userId: post.authorId },
+    select: { displayName: true, avatarUrl: true },
+  });
+
+  const viewerState = viewerId
+    ? { liked: Boolean(liked), saved: Boolean(saved), followingAuthor: Boolean(followingAuthor) }
+    : undefined;
+
+  return mapPost(post, profile, viewerState);
+}
+
+/**
+ * Serialização EM LOTE para listas (feed/trending): evita N+1 buscando
+ * perfis e estado-do-viewer de todos os posts em poucas consultas.
+ */
+export async function serializePosts(posts: PostRecord[], viewerId?: string) {
+  if (posts.length === 0) return [];
+
+  const postIds = posts.map((p) => p.id);
+  const authorIds = [...new Set(posts.map((p) => p.authorId))];
+
+  const profiles = await prisma.publicProfile.findMany({
+    where: { userId: { in: authorIds } },
+    select: { userId: true, displayName: true, avatarUrl: true },
+  });
+  const profileMap = new Map(profiles.map((p) => [p.userId, p]));
+
+  let likedSet = new Set<string>();
+  let savedSet = new Set<string>();
+  let followSet = new Set<string>();
+
+  if (viewerId) {
+    const [likes, saves, follows] = await Promise.all([
+      prisma.socialPostLike.findMany({
+        where: { userId: viewerId, postId: { in: postIds } },
+        select: { postId: true },
+      }),
+      prisma.socialPostSave.findMany({
+        where: { userId: viewerId, postId: { in: postIds } },
+        select: { postId: true },
+      }),
+      prisma.userFollow.findMany({
+        where: { followerId: viewerId, followingId: { in: authorIds } },
+        select: { followingId: true },
+      }),
+    ]);
+    likedSet = new Set(likes.map((l) => l.postId));
+    savedSet = new Set(saves.map((s) => s.postId));
+    followSet = new Set(follows.map((f) => f.followingId));
+  }
+
+  return posts.map((post) =>
+    mapPost(
+      post,
+      profileMap.get(post.authorId) ?? null,
+      viewerId
+        ? {
+            liked: likedSet.has(post.id),
+            saved: savedSet.has(post.id),
+            followingAuthor: followSet.has(post.authorId),
+          }
+        : undefined
+    )
+  );
 }
 
 async function fetchPostRecord(postId: string) {
@@ -385,7 +451,7 @@ export async function listFeed(params: {
 
   const hasMore = posts.length > limit;
   const slice = hasMore ? posts.slice(0, limit) : posts;
-  const items = await Promise.all(slice.map((p) => serializePost(p, params.viewerId)));
+  const items = await serializePosts(slice, params.viewerId);
 
   return {
     posts: items,

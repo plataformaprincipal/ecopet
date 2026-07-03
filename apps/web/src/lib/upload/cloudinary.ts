@@ -1,45 +1,12 @@
 import { v2 as cloudinary } from "cloudinary";
+import {
+  PURPOSE_FOLDER,
+  resourceTypeForMime,
+  validateUploadCandidate,
+  type UploadPurpose,
+} from "@/lib/storage/upload-constraints";
 
-export type UploadPurpose =
-  | "pet_avatar"
-  | "pet_document"
-  | "user_avatar"
-  | "service_image"
-  | "product_image"
-  | "partner_logo"
-  | "partner_document"
-  | "chat_attachment"
-  | "social_post_media"
-  | "social_profile_avatar"
-  | "social_profile_cover";
-
-const ALLOWED_MIME: Record<UploadPurpose, string[]> = {
-  pet_avatar: ["image/jpeg", "image/png", "image/webp"],
-  pet_document: ["image/jpeg", "image/png", "image/webp", "application/pdf"],
-  user_avatar: ["image/jpeg", "image/png", "image/webp"],
-  service_image: ["image/jpeg", "image/png", "image/webp"],
-  product_image: ["image/jpeg", "image/png", "image/webp"],
-  partner_logo: ["image/jpeg", "image/png", "image/webp", "image/svg+xml"],
-  partner_document: ["image/jpeg", "image/png", "image/webp", "application/pdf"],
-  chat_attachment: ["image/jpeg", "image/png", "image/webp", "application/pdf"],
-  social_post_media: ["image/jpeg", "image/png", "image/webp"],
-  social_profile_avatar: ["image/jpeg", "image/png", "image/webp"],
-  social_profile_cover: ["image/jpeg", "image/png", "image/webp"],
-};
-
-const MAX_BYTES: Record<UploadPurpose, number> = {
-  pet_avatar: 5 * 1024 * 1024,
-  pet_document: 10 * 1024 * 1024,
-  user_avatar: 5 * 1024 * 1024,
-  service_image: 5 * 1024 * 1024,
-  product_image: 5 * 1024 * 1024,
-  partner_logo: 10 * 1024 * 1024,
-  partner_document: 20 * 1024 * 1024,
-  chat_attachment: 10 * 1024 * 1024,
-  social_post_media: 10 * 1024 * 1024,
-  social_profile_avatar: 5 * 1024 * 1024,
-  social_profile_cover: 8 * 1024 * 1024,
-};
+export type { UploadPurpose } from "@/lib/storage/upload-constraints";
 
 export function isCloudinaryConfigured() {
   return Boolean(
@@ -65,15 +32,10 @@ function getCloudinary() {
 export function validateUploadFile(
   purpose: UploadPurpose,
   mimeType: string,
-  sizeBytes: number
+  sizeBytes: number,
+  fileName?: string
 ) {
-  if (!ALLOWED_MIME[purpose].includes(mimeType)) {
-    return { ok: false as const, message: "Tipo de arquivo não permitido." };
-  }
-  if (sizeBytes > MAX_BYTES[purpose]) {
-    return { ok: false as const, message: "Arquivo excede o tamanho máximo." };
-  }
-  return { ok: true as const };
+  return validateUploadCandidate({ purpose, mimeType, sizeBytes, fileName });
 }
 
 export async function uploadBuffer(params: {
@@ -83,21 +45,28 @@ export async function uploadBuffer(params: {
   fileName: string;
   ownerId: string;
 }) {
-  const check = validateUploadFile(params.purpose, params.mimeType, params.buffer.length);
+  const check = validateUploadFile(
+    params.purpose,
+    params.mimeType,
+    params.buffer.length,
+    params.fileName
+  );
   if (!check.ok) throw new Error(check.message);
 
   const cld = getCloudinary();
-  const folder = `ecopet/${params.purpose}/${params.ownerId}`;
+  const folder = `${PURPOSE_FOLDER[params.purpose]}/${params.ownerId}`;
   const result = await new Promise<{
     secure_url: string;
     public_id: string;
     bytes: number;
     format?: string;
+    resource_type?: string;
+    original_filename?: string;
   }>((resolve, reject) => {
     const stream = cld.uploader.upload_stream(
       {
         folder,
-        resource_type: params.mimeType === "application/pdf" ? "raw" : "image",
+        resource_type: resourceTypeForMime(params.mimeType),
         public_id: `${Date.now()}-${params.fileName.replace(/[^a-zA-Z0-9._-]/g, "_")}`,
       },
       (err, res) => {
@@ -113,5 +82,8 @@ export async function uploadBuffer(params: {
     publicId: result.public_id,
     sizeBytes: result.bytes,
     mimeType: params.mimeType,
+    resourceType: result.resource_type ?? resourceTypeForMime(params.mimeType),
+    format: result.format,
+    originalFilename: result.original_filename ?? params.fileName,
   };
 }

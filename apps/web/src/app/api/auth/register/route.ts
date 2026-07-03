@@ -19,6 +19,7 @@ import {
 } from "@/schemas/partner-register";
 import { validateStrongPassword, PASSWORD_MISMATCH_MESSAGE } from "@/lib/password/validate-strong-password";
 import { apiSuccess, apiFailure } from "@/lib/api-response";
+import { checkAuthRateLimit, clientIp } from "@/lib/rate-limit";
 import { emailRegisterCompleted } from "@/lib/mail/event-dispatch";
 import { localeFromAcceptLanguage } from "@/lib/email/templates";
 import {
@@ -302,6 +303,11 @@ async function createOngUser(data: OngRegisterInput) {
 
 export async function POST(request: Request) {
   try {
+    const ip = clientIp(request);
+    if (!checkAuthRateLimit(`register:${ip}`, 10, 60 * 60 * 1000)) {
+      return apiFailure("RATE_LIMITED", "Muitas tentativas de cadastro. Tente novamente mais tarde.", 429);
+    }
+
     const body = await request.json();
 
     let partnerData: PartnerRegisterInput | null = null;

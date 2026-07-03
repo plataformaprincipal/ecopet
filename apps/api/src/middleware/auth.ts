@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { readAccessToken } from "../lib/auth-cookies.js";
+import { apiEnv } from "../lib/env.js";
 
 export interface AuthRequest extends Request {
   userId?: string;
@@ -15,8 +16,7 @@ export function authMiddleware(req: AuthRequest, res: Response, next: NextFuncti
   }
 
   try {
-    const secret = process.env.JWT_SECRET || "ecopet-dev-secret";
-    const payload = jwt.verify(token, secret) as { userId: string; role: string };
+    const payload = jwt.verify(token, apiEnv.jwtSecret) as { userId: string; role: string };
     req.userId = payload.userId;
     req.userRole = payload.role;
     next();

@@ -1,5 +1,9 @@
 import type { AccountStatus, UserRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import {
+  AUTHORITATIVE_STATUS_PREFIXES,
+  requiresAuthoritativeStatus,
+} from "@/lib/edge/authoritative-status";
 
 export type AuthoritativeAccount = {
   userId: string;
@@ -22,22 +26,4 @@ export async function getAuthoritativeAccountStatus(
   };
 }
 
-/** Prefixos que exigem status autoritativo do banco no middleware. */
-export const AUTHORITATIVE_STATUS_PREFIXES = [
-  "/dashboard",
-  "/api/client",
-  "/api/partner",
-  "/api/admin",
-  "/meu-pet",
-  "/agenda",
-  "/marketplace",
-  "/pedidos",
-  "/adocao",
-  "/ong",
-] as const;
-
-export function requiresAuthoritativeStatus(pathname: string): boolean {
-  return AUTHORITATIVE_STATUS_PREFIXES.some(
-    (p) => pathname === p || pathname.startsWith(`${p}/`)
-  );
-}
+export { AUTHORITATIVE_STATUS_PREFIXES, requiresAuthoritativeStatus };

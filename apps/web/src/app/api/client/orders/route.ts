@@ -13,6 +13,7 @@ export async function GET() {
       statusHistory: { orderBy: { createdAt: "asc" } },
     },
     orderBy: { createdAt: "desc" },
+    take: 200,
   });
 
   return apiSuccess({ orders, total: orders.length });

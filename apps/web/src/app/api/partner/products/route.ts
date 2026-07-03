@@ -43,6 +43,7 @@ export async function GET() {
   const products = await prisma.product.findMany({
     where: { sellerId: user!.id, deletedAt: null },
     orderBy: { updatedAt: "desc" },
+    take: 200,
   });
 
   return apiSuccess({ products, total: products.length });

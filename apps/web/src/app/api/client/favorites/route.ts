@@ -25,6 +25,7 @@ export async function GET() {
       },
     },
     orderBy: { createdAt: "desc" },
+    take: 300,
   });
 
   const products = favorites

@@ -27,6 +27,12 @@ const steps = [
   },
   { name: "test:ngo-flows", cmd: "node", args: ["scripts/test-ngo-flows.mjs"] },
   { name: "test:catalog-delete-guards", cmd: "node", args: ["--import", "tsx", "scripts/test-catalog-delete-guards.mjs"] },
+  {
+    name: "test:cloudinary",
+    cmd: "node",
+    args: ["--import", "tsx", "scripts/test-cloudinary-upload.mjs"],
+    env: { TSX_TSCONFIG_PATH: "apps/web/tsconfig.json" },
+  },
 ];
 
 let failed = 0;

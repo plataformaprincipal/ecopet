@@ -30,6 +30,7 @@ export async function GET(request: Request) {
       },
     },
     orderBy: { createdAt: "desc" },
+    take: 100,
   });
 
   return apiSuccess({ services, total: services.length });

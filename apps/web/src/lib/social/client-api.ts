@@ -1,4 +1,5 @@
 import type { SocialReportReason } from "@prisma/client";
+import { uploadFile } from "@/lib/upload/client";
 
 type ApiBody<T> = { success: boolean; data?: T; error?: { code: string; message: string } };
 
@@ -190,11 +191,12 @@ export async function createReport(data: { postId?: string; commentId?: string; 
 }
 
 export async function uploadSocialMedia(file: File) {
-  const form = new FormData();
-  form.set("purpose", "social_post_media");
-  form.set("file", file);
-  const res = await fetch("/api/upload", { method: "POST", credentials: "include", body: form });
-  const body = await res.json();
-  if (!res.ok || body.success === false) throw new Error(body.error?.message ?? "Falha no upload");
-  return body.data.upload as { url: string; fileName: string; mimeType: string; sizeBytes: number; provider: string };
+  const result = await uploadFile(file, "social_post_media");
+  return {
+    url: result.url,
+    fileName: result.originalFilename ?? file.name,
+    mimeType: result.mimeType,
+    sizeBytes: result.sizeBytes,
+    provider: result.provider ?? "cloudinary",
+  };
 }

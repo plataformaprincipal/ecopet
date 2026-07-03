@@ -14,6 +14,7 @@ export async function GET() {
       user: { select: { id: true, name: true, email: true, phone: true } },
     },
     orderBy: { createdAt: "desc" },
+    take: 200,
   });
 
   return apiSuccess({ orders, total: orders.length });

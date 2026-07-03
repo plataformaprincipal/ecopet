@@ -10,6 +10,7 @@ export async function GET() {
   const favorites = await prisma.favorite.findMany({
     where: { userId: user!.id },
     orderBy: { createdAt: "desc" },
+    take: 300,
   });
 
   const productIds = favorites.map((f) => f.productId).filter(Boolean) as string[];

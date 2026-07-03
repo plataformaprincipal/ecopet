@@ -15,6 +15,7 @@ export async function GET() {
   const listings = await prisma.adoptionListing.findMany({
     where: { ongId: user!.id },
     orderBy: { createdAt: "desc" },
+    take: 200,
   });
 
   return apiSuccess({

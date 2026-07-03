@@ -770,6 +770,8 @@ model Vaccination {
   veterinarian String?
   notes        String?
   pet          Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@index([petId])
 }
 
 model Medication {
@@ -782,6 +784,8 @@ model Medication {
   endDate   DateTime?
   notes     String?
   pet       Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@index([petId])
 }
 
 model Allergy {
@@ -791,6 +795,8 @@ model Allergy {
   severity String?
   notes    String?
   pet      Pet     @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@index([petId])
 }
 
 model PetReminder {
@@ -867,6 +873,8 @@ model Exam {
   result    String?
   fileUrl   String?
   pet       Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@index([petId])
 }
 
 model Consultation {
@@ -878,6 +886,9 @@ model Consultation {
   notes         String?
   prescription  String?
   pet           Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@index([petId])
+  @@index([veterinarianId])
 }
 
 model Appointment {
@@ -931,6 +942,9 @@ model MedicalRecord {
   createdAt        DateTime @default(now())
   pet              Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
   author           User     @relation("RecordAuthor", fields: [authorId], references: [id])
+
+  @@index([petId])
+  @@index([authorId])
 }
 
 model TutorProfile {
@@ -1180,6 +1194,9 @@ model Comment {
   createdAt DateTime @default(now())
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([authorId])
 }
 
 model Like {
@@ -1293,8 +1310,9 @@ model CartItem {
   quantity          Int     @default(1)
   unitPriceSnapshot Float?
   cart              Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
-  product           Product @relation(fields: [productId], references: [id])
+  product           Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   @@unique([cartId, productId])
+  @@index([productId])
 }
 
 model Order {
@@ -1382,6 +1400,7 @@ model OrderItem {
   product   Product? @relation(fields: [productId], references: [id])
 
   @@index([orderId])
+  @@index([productId])
 }
 
 model Review {
@@ -1474,6 +1493,8 @@ model Subscription {
   expiresAt        DateTime?
   createdAt        DateTime         @default(now())
   user             User             @relation(fields: [userId], references: [id])
+
+  @@index([userId])
 }
 
 // ─── Notificações (Central EcoPet) ─────────────────────────────────────────
@@ -1797,6 +1818,9 @@ model AiSession {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([petId])
 }
 
 model GamificationProfile {
@@ -3503,4 +3527,27 @@ model DataPrivacyRequest {
   @@index([userId, status])
   @@index([status, requestedAt])
   @@index([type])
+}
+
+/// Registro de metadados de uploads enviados ao provedor de mídia (Cloudinary).
+/// Aditivo e desacoplado dos modelos de domínio: cada formulário continua
+/// salvando a secure_url no seu próprio campo; este ledger guarda o conjunto
+/// completo de metadados (public_id, resource_type, format, bytes, etc.).
+model UploadAsset {
+  id               String   @id @default(cuid())
+  ownerId          String
+  purpose          String
+  provider         String   @default("cloudinary")
+  secureUrl        String
+  publicId         String?
+  resourceType     String?
+  format           String?
+  bytes            Int?
+  originalFilename String?
+  folder           String?
+  createdAt        DateTime @default(now())
+
+  @@index([ownerId])
+  @@index([purpose])
+  @@index([publicId])
 }

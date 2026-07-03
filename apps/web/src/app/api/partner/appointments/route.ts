@@ -14,6 +14,7 @@ export async function GET() {
       service: { select: { id: true, name: true, price: true } },
     },
     orderBy: { scheduledAt: "desc" },
+    take: 200,
   });
 
   return apiSuccess({ appointments, total: appointments.length });

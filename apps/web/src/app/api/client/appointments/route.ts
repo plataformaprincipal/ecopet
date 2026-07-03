@@ -26,6 +26,7 @@ export async function GET() {
       partner: { select: { id: true, name: true, partnerProfile: { select: { businessName: true } } } },
     },
     orderBy: { scheduledAt: "desc" },
+    take: 200,
   });
 
   return apiSuccess({ appointments, total: appointments.length });

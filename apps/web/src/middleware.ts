@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth-session";
-import { requiresAuth } from "@/lib/auth/routes";
-import { canAccessWithAccountStatus } from "@/lib/account-status";
-import { requiresAuthoritativeStatus } from "@/lib/account-status-server";
+import { SESSION_COOKIE, verifySessionToken } from "@/lib/edge/session";
+import { requiresAuth } from "@/lib/edge/routes";
+import { canAccessWithAccountStatus } from "@/lib/edge/account-status";
+import { requiresAuthoritativeStatus } from "@/lib/edge/authoritative-status";
 import {
   canAccessRoute,
   getDefaultDashboardPath,
   type AppRole,
-} from "@/lib/permissions";
-import type { AccountStatus } from "@prisma/client";
+} from "@/lib/edge/permissions";
+import type { AccountStatus } from "@/lib/edge/types";
 
 function loginRedirect(request: NextRequest, pathname: string) {
   const loginUrl = new URL("/login", request.url);
@@ -75,7 +75,7 @@ export async function middleware(request: NextRequest) {
 
       if (!role || !accountStatus) {
         const jwt = await verifySessionToken(token);
-        role = jwt.role as AppRole;
+        role = jwt.role;
         accountStatus = jwt.accountStatus;
       }
 
@@ -123,6 +123,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.json|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map|txt|xml|woff|woff2|ttf|otf)$).*)",
   ],
 };

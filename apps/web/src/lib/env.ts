@@ -11,11 +11,25 @@ const IS_BUILD =
 function requireEnv(name: string, fallback?: string): string {
   const value = process.env[name]?.trim();
   if (value) return value;
-  if (fallback) return fallback;
+  if (fallback !== undefined) return fallback;
   if (IS_PROD && !IS_BUILD) {
     throw new Error(`[env] Variável obrigatória ausente em produção: ${name}`);
   }
-  return fallback ?? "";
+  return "";
+}
+
+/**
+ * Segredos: NUNCA usam o fallback de desenvolvimento em produção (runtime).
+ * Em produção o app falha alto e claro se o segredo estiver ausente — evita
+ * assinar sessões com um valor público commitado no repositório.
+ */
+function requireSecret(name: string, devFallback: string): string {
+  const value = process.env[name]?.trim();
+  if (value) return value;
+  if (IS_PROD && !IS_BUILD) {
+    throw new Error(`[env] Segredo obrigatório ausente em produção: ${name}`);
+  }
+  return devFallback;
 }
 
 export const env = {
@@ -23,9 +37,9 @@ export const env = {
   isProd: IS_PROD,
   isDev: !IS_PROD,
 
-  databaseUrl: process.env.DATABASE_URL?.trim() ?? "",
-  authSecret: requireEnv("AUTH_SECRET", "ecopet-dev-auth-secret-change-me"),
-  nextAuthSecret: requireEnv("NEXTAUTH_SECRET", "ecopet-dev-nextauth-secret"),
+  databaseUrl: requireEnv("DATABASE_URL"),
+  authSecret: requireSecret("AUTH_SECRET", "ecopet-dev-auth-secret-change-me"),
+  nextAuthSecret: requireSecret("NEXTAUTH_SECRET", "ecopet-dev-nextauth-secret"),
   nextAuthUrl: requireEnv("NEXTAUTH_URL", "http://localhost:3000"),
   appUrl: requireEnv("APP_URL", process.env.NEXTAUTH_URL ?? "http://localhost:3000"),
 

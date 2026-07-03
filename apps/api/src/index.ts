@@ -1,5 +1,5 @@
 import "./env.js";
-import { validateApiProductionEnv } from "./lib/env.js";
+import { apiEnv, validateApiProductionEnv } from "./lib/env.js";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -7,6 +7,7 @@ import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import jwt from "jsonwebtoken";
 import { prisma } from "@ecopet/database";
 import { resolveAvailablePort } from "./lib/resolve-port.js";
 import { writeRuntimePort } from "./lib/runtime-port.js";
@@ -147,28 +148,52 @@ app.use("/api/marketplace/partner", authMiddleware, marketplacePartnerRoutes);
 
 app.use(errorHandler);
 
+// Autenticação obrigatória do socket: verifica o JWT e deriva o usuário do token.
+// O cliente NUNCA define seu próprio userId/senderId.
 io.use((socket, next) => {
-  const token = socket.handshake.auth.token;
-  if (!token && process.env.NODE_ENV === "production") {
-    return next(new Error("Unauthorized"));
+  const token = socket.handshake.auth?.token as string | undefined;
+  if (!token) return next(new Error("Unauthorized"));
+  try {
+    const payload = jwt.verify(token, apiEnv.jwtSecret) as { userId: string; role?: string };
+    if (!payload?.userId) return next(new Error("Unauthorized"));
+    socket.data.userId = payload.userId;
+    next();
+  } catch {
+    next(new Error("Unauthorized"));
   }
-  next();
 });
 
-io.on("connection", (socket) => {
-  const userId = socket.handshake.auth.userId as string | undefined;
-  if (userId) socket.join(`user:${userId}`);
+async function isConversationMember(conversationId: string, userId: string): Promise<boolean> {
+  if (!conversationId || !userId) return false;
+  const participant = await prisma.conversationParticipant.findFirst({
+    where: { conversationId, userId, leftAt: null },
+    select: { id: true },
+  });
+  return Boolean(participant);
+}
 
-  socket.on("join:conversation", (conversationId: string) => {
-    socket.join(`conversation:${conversationId}`);
+io.on("connection", (socket) => {
+  const userId = socket.data.userId as string;
+  socket.join(`user:${userId}`);
+
+  socket.on("join:conversation", async (conversationId: string) => {
+    if (await isConversationMember(conversationId, userId)) {
+      socket.join(`conversation:${conversationId}`);
+    } else {
+      socket.emit("message:error", { error: "Forbidden" });
+    }
   });
 
-  socket.on("message:send", async (data: { conversationId: string; senderId: string; content: string }) => {
+  socket.on("message:send", async (data: { conversationId: string; content: string }) => {
     try {
+      if (!(await isConversationMember(data.conversationId, userId))) {
+        socket.emit("message:error", { error: "Forbidden" });
+        return;
+      }
       const message = await prisma.message.create({
         data: {
           conversationId: data.conversationId,
-          senderId: data.senderId,
+          senderId: userId,
           content: data.content,
         },
         include: { sender: { select: { id: true, name: true, avatar: true } } },

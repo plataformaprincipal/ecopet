@@ -77,17 +77,27 @@ export async function listUserConversations(params: {
     prisma.conversation.count({ where }),
   ]);
 
-  const items = await Promise.all(
-    rows.map(async (c) => {
-      const me = c.participants.find((p) => p.userId === params.userId);
-      const unreadCount = await prisma.message.count({
-        where: {
-          conversationId: c.id,
-          deletedAt: null,
-          senderId: { not: params.userId },
-          createdAt: me?.lastReadAt ? { gt: me.lastReadAt } : undefined,
-        },
-      });
+  // Unread por conversa em UMA consulta (evita N+1): groupBy com OR de cutoffs por conversa.
+  const unreadFilters: Prisma.MessageWhereInput[] = rows.map((c) => {
+    const me = c.participants.find((p) => p.userId === params.userId);
+    return {
+      conversationId: c.id,
+      deletedAt: null,
+      senderId: { not: params.userId },
+      ...(me?.lastReadAt ? { createdAt: { gt: me.lastReadAt } } : {}),
+    };
+  });
+  const grouped = unreadFilters.length
+    ? await prisma.message.groupBy({
+        by: ["conversationId"],
+        where: { OR: unreadFilters },
+        _count: { _all: true },
+      })
+    : [];
+  const unreadMap = new Map(grouped.map((g) => [g.conversationId, g._count._all]));
+
+  const items = rows.map((c) => {
+      const unreadCount = unreadMap.get(c.id) ?? 0;
       const last = c.messages[0];
       return {
         id: c.id,
@@ -118,8 +128,7 @@ export async function listUserConversations(params: {
           isArchived: p.isArchived,
         })),
       };
-    })
-  );
+  });
 
   return { items, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
 }

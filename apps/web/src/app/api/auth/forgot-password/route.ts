@@ -118,8 +118,10 @@ export async function POST(request: Request) {
     });
 
     if (channel === "email") {
-      console.log("[forgot-password] RESEND_API_KEY carregada:", Boolean(getResendApiKey()));
-      console.log("[forgot-password] EMAIL_FROM:", getResendFromAddress());
+      if (process.env.NODE_ENV !== "production") {
+        console.log("[forgot-password] RESEND_API_KEY carregada:", Boolean(getResendApiKey()));
+        console.log("[forgot-password] EMAIL_FROM:", getResendFromAddress());
+      }
 
       const emailResult = await sendPasswordRecoveryOtpEmail(user.email, otp, {
         name: user.name,

@@ -58,7 +58,7 @@ export async function uploadOngRegistrationAssets(params: {
   const verificationDocuments: OngVerificationDocument[] = [];
   for (const doc of params.documents) {
     try {
-      const uploaded = await uploadFile(doc.file, "partner_document");
+      const uploaded = await uploadFile(doc.file, "ngo_document");
       verificationDocuments.push({
         id: doc.id,
         type: doc.type,

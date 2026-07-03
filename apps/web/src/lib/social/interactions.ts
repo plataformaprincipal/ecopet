@@ -3,7 +3,7 @@ import { SocialError } from "@/lib/social/errors";
 import { requireActiveSocialUser, assertNotBlocked } from "@/lib/social/permissions";
 import { SOCIAL_RATE_LIMITS, SOCIAL_FEED_DEFAULT_LIMIT } from "@/lib/social/constants";
 import { checkSocialRateLimit } from "@/lib/social/rate-limit";
-import { serializePost } from "@/lib/social/posts";
+import { serializePosts } from "@/lib/social/posts";
 import { sharePostToConversation } from "@/lib/social/sharing/internal-share-service";
 import { notifyPostLiked, notifyPostShared } from "@/lib/social/notifications/social-notification-service";
 
@@ -128,9 +128,10 @@ export async function listSavedPosts(params: { userId: string; cursor?: string; 
 
   const hasMore = saves.length > limit;
   const slice = hasMore ? saves.slice(0, limit) : saves;
-  const posts = await Promise.all(
-    slice.filter((s) => s.post && !s.post.deletedAt && s.post.status !== "REMOVED").map((s) => serializePost(s.post, params.userId))
-  );
+  const visible = slice
+    .filter((s) => s.post && !s.post.deletedAt && s.post.status !== "REMOVED")
+    .map((s) => s.post);
+  const posts = await serializePosts(visible, params.userId);
 
   return { posts, nextCursor: hasMore ? slice[slice.length - 1]?.id : null };
 }

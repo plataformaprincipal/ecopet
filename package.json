@@ -74,6 +74,7 @@
     "test:client-experience": "node --import tsx scripts/test-client-experience.mjs",
     "test:partner-experience": "tsx --tsconfig apps/web/tsconfig.json scripts/test-partner-experience.mjs",
     "test:ngo-experience": "tsx --tsconfig apps/web/tsconfig.json scripts/test-ngo-experience.mjs",
+    "test:cloudinary": "tsx --tsconfig apps/web/tsconfig.json scripts/test-cloudinary-upload.mjs",
     "test:ngo-flows": "node scripts/test-ngo-flows.mjs",
     "test:empty-states": "node --import tsx scripts/test-empty-states.mjs",
     "test:no-mocks": "node scripts/test-no-mocks.mjs",

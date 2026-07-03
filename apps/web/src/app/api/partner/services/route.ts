@@ -11,6 +11,7 @@ export async function GET() {
   const services = await prisma.service.findMany({
     where: { providerId: user!.id, deletedAt: null },
     orderBy: { createdAt: "desc" },
+    take: 200,
   });
 
   return apiSuccess({ services, total: services.length });

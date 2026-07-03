@@ -12,6 +12,7 @@ export async function GET() {
   const requests = await prisma.adoptionRequest.findMany({
     where: { ongId: user!.id },
     orderBy: { createdAt: "desc" },
+    take: 200,
     include: {
       listing: { select: { id: true, name: true, species: true, photos: true } },
       requester: { select: { id: true, name: true, email: true } },

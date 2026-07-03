@@ -55,10 +55,19 @@ export function FoundationLoginForm({ variant = "default" }: FoundationLoginForm
         );
         return;
       }
+      // Aceita apenas caminhos internos absolutos; rejeita URLs externas e
+      // protocol-relative ("//host", "/\\host") para evitar open-redirect.
+      const safeCallback =
+        callbackUrl &&
+        callbackUrl.startsWith("/") &&
+        !callbackUrl.startsWith("//") &&
+        !callbackUrl.startsWith("/\\")
+          ? callbackUrl
+          : "/dashboard";
       const redirectTo =
         data.data?.redirectTo ??
         (data.user?.role ? dashboardPathForRole(data.user.role) : null) ??
-        (callbackUrl?.startsWith("/") ? callbackUrl : "/dashboard");
+        safeCallback;
       const sessionReady = await confirmSessionCookie();
       if (!sessionReady) {
         setError(t("auth.login.sessionError"));

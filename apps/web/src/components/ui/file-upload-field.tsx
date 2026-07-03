@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { UploadPurpose } from "@/lib/upload/cloudinary";
+import type { UploadPurpose } from "@/lib/storage/upload-constraints";
 import { uploadFile } from "@/lib/upload/client";
 
 type FileUploadFieldProps = {
@@ -36,6 +36,8 @@ export function FileUploadField({
 }: FileUploadFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
   const id = fieldId ?? `upload-${purpose}`;
   const errorId = `${id}-error`;
@@ -45,9 +47,14 @@ export function FileUploadField({
     if (!file) return;
     setUploading(true);
     setError("");
+    setSuccess(false);
+    setProgress(0);
     try {
-      const result = await uploadFile(file, purpose);
+      const result = await uploadFile(file, purpose, {
+        onProgress: (pct) => setProgress(pct),
+      });
       onChange(result.url, { mimeType: result.mimeType, sizeBytes: result.sizeBytes });
+      setSuccess(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro no upload.");
     } finally {
@@ -86,7 +93,23 @@ export function FileUploadField({
             Ver arquivo
           </a>
         )}
+        {success && !uploading && !error && (
+          <span className="text-xs font-medium text-green-600" role="status">
+            Enviado ✓
+          </span>
+        )}
       </div>
+      {uploading && (
+        <div className="space-y-1" role="status" aria-live="polite">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-ecopet-green transition-all duration-150"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">Enviando… {progress}%</p>
+        </div>
+      )}
       {value && isImageUrl(value) && (
         <div className="relative h-24 w-24 overflow-hidden rounded-lg border">
           <Image src={value} alt={imageAlt} fill className="object-cover" unoptimized />

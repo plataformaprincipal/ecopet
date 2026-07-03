@@ -30,7 +30,6 @@ import {
 import { resolveEmailProvider } from "./email-providers.js";
 import { createUserSessionTokens, revokeRefreshToken, refreshAccessToken as rotateAccessToken } from "../lib/session-tokens.js";
 
-const JWT_SECRET = process.env.JWT_SECRET || "ecopet-dev-secret";
 const MAX_ATTEMPTS = 5;
 const LOCK_MINUTES = 30;
 const BOOTSTRAP_PASSWORD = "AASSSVVV@1972";

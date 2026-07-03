@@ -27,21 +27,17 @@ function commentInclude() {
   } satisfies Prisma.SocialCommentInclude;
 }
 
-async function serializeComment(
-  comment: Prisma.SocialCommentGetPayload<{ include: ReturnType<typeof commentInclude> }>,
+type CommentRecord = Prisma.SocialCommentGetPayload<{ include: ReturnType<typeof commentInclude> }>;
+type CommentAuthorProfile = { displayName: string | null; avatarUrl: string | null } | undefined;
+
+/** Mapeamento puro (sem I/O), com o perfil correto por autor (inclusive de replies). */
+function mapComment(
+  comment: CommentRecord,
+  profileMap: Map<string, { displayName: string | null; avatarUrl: string | null }>,
+  likedSet: Set<string>,
   viewerId?: string
 ) {
-  const liked = viewerId
-    ? await prisma.socialCommentLike.findUnique({
-        where: { commentId_userId: { commentId: comment.id, userId: viewerId } },
-      })
-    : null;
-
-  const profile = await prisma.publicProfile.findUnique({
-    where: { userId: comment.authorId },
-    select: { displayName: true, avatarUrl: true },
-  });
-
+  const profile: CommentAuthorProfile = profileMap.get(comment.authorId);
   return {
     id: comment.id,
     postId: comment.postId,
@@ -59,26 +55,64 @@ async function serializeComment(
     editedAt: comment.editedAt,
     deletedAt: comment.deletedAt,
     createdAt: comment.createdAt,
-    replies: comment.replies?.map((r) => ({
-      id: r.id,
-      postId: r.postId,
-      authorId: r.authorId,
-      parentCommentId: r.parentCommentId,
-      content: r.deletedAt ? null : r.content,
-      status: r.status,
-      author: {
-        id: r.author.id,
-        name: profile?.displayName ?? r.author.name,
-        avatarUrl: profile?.avatarUrl ?? r.author.avatarUrl ?? r.author.avatar,
-        role: r.author.role,
-      },
-      counts: { likes: r._count.likes },
-      editedAt: r.editedAt,
-      deletedAt: r.deletedAt,
-      createdAt: r.createdAt,
-    })),
-    viewerState: viewerId ? { liked: Boolean(liked) } : undefined,
+    replies: comment.replies?.map((r) => {
+      const replyProfile: CommentAuthorProfile = profileMap.get(r.authorId);
+      return {
+        id: r.id,
+        postId: r.postId,
+        authorId: r.authorId,
+        parentCommentId: r.parentCommentId,
+        content: r.deletedAt ? null : r.content,
+        status: r.status,
+        author: {
+          id: r.author.id,
+          name: replyProfile?.displayName ?? r.author.name,
+          avatarUrl: replyProfile?.avatarUrl ?? r.author.avatarUrl ?? r.author.avatar,
+          role: r.author.role,
+        },
+        counts: { likes: r._count.likes },
+        editedAt: r.editedAt,
+        deletedAt: r.deletedAt,
+        createdAt: r.createdAt,
+      };
+    }),
+    viewerState: viewerId ? { liked: likedSet.has(comment.id) } : undefined,
   };
+}
+
+/** Serialização EM LOTE: busca perfis (autores e replies) e likes do viewer em poucas consultas. */
+async function serializeComments(comments: CommentRecord[], viewerId?: string) {
+  if (comments.length === 0) return [];
+
+  const authorIds = new Set<string>();
+  const commentIds: string[] = [];
+  for (const c of comments) {
+    authorIds.add(c.authorId);
+    commentIds.push(c.id);
+    for (const r of c.replies ?? []) authorIds.add(r.authorId);
+  }
+
+  const profiles = await prisma.publicProfile.findMany({
+    where: { userId: { in: [...authorIds] } },
+    select: { userId: true, displayName: true, avatarUrl: true },
+  });
+  const profileMap = new Map(profiles.map((p) => [p.userId, p]));
+
+  let likedSet = new Set<string>();
+  if (viewerId) {
+    const likes = await prisma.socialCommentLike.findMany({
+      where: { userId: viewerId, commentId: { in: commentIds } },
+      select: { commentId: true },
+    });
+    likedSet = new Set(likes.map((l) => l.commentId));
+  }
+
+  return comments.map((c) => mapComment(c, profileMap, likedSet, viewerId));
+}
+
+async function serializeComment(comment: CommentRecord, viewerId?: string) {
+  const [item] = await serializeComments([comment], viewerId);
+  return item;
 }
 
 async function assertPostCommentable(postId: string) {
@@ -114,7 +148,7 @@ export async function listComments(params: {
 
   const hasMore = comments.length > limit;
   const slice = hasMore ? comments.slice(0, limit) : comments;
-  const items = await Promise.all(slice.map((c) => serializeComment(c, params.viewerId)));
+  const items = await serializeComments(slice, params.viewerId);
 
   return { comments: items, nextCursor: hasMore ? slice[slice.length - 1]?.id : null };
 }

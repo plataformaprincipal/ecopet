@@ -19,6 +19,7 @@ export async function GET() {
   const campaigns = await prisma.campaign.findMany({
     where: { ongId: user!.id },
     orderBy: { createdAt: "desc" },
+    take: 200,
   });
 
   return apiSuccess({ campaigns: campaigns.map(serializeCampaign) });
