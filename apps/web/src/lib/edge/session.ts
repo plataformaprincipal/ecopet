@@ -3,18 +3,13 @@
  * Sem Prisma, server-only ou lib/env — apenas jose + process.env.
  */
 import { jwtVerify } from "jose";
+import { resolveAuthSecret } from "@/lib/auth-secret";
 import type { AccountStatus, AppRole } from "@/lib/edge/types";
 
 export const SESSION_COOKIE = "ecopet-session";
 
 function sessionSecret(): Uint8Array {
-  const raw =
-    process.env.AUTH_SECRET?.trim() ||
-    (process.env.NODE_ENV === "production" ? "" : "ecopet-dev-auth-secret-change-me");
-  if (!raw) {
-    throw new Error("[edge/session] AUTH_SECRET ausente");
-  }
-  return new TextEncoder().encode(raw);
+  return new TextEncoder().encode(resolveAuthSecret());
 }
 
 export async function verifySessionToken(token: string): Promise<{

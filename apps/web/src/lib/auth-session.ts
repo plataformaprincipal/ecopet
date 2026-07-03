@@ -1,11 +1,10 @@
 import { SignJWT, jwtVerify } from "jose";
 import type { AccountStatus, UserRole } from "@prisma/client";
+import { resolveAuthSecret } from "@/lib/auth-secret";
 
 export const SESSION_COOKIE = "ecopet-session";
 
-import { env } from "@/lib/env";
-
-const secret = () => new TextEncoder().encode(env.authSecret);
+const secret = () => new TextEncoder().encode(resolveAuthSecret());
 
 export async function createSessionToken(
   userId: string,

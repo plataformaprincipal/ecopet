@@ -47,7 +47,19 @@ export function FoundationLoginForm({ variant = "default" }: FoundationLoginForm
         body: JSON.stringify({ identifier, password }),
         credentials: "include",
       });
-      const data = await res.json();
+      const raw = await res.text();
+      let data: {
+        success?: boolean;
+        data?: { redirectTo?: string };
+        user?: { role?: string };
+        error?: string | { message?: string; code?: string };
+      };
+      try {
+        data = JSON.parse(raw) as typeof data;
+      } catch {
+        setError(t("auth.login.connectionError"));
+        return;
+      }
       if (!res.ok || data.success === false) {
         const parsed = parseApiError(data);
         setError(

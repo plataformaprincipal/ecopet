@@ -30,6 +30,7 @@ export function contentSecurityPolicy(): string {
     "connect-src 'self' https: wss: https://vlibras.gov.br https://www.vlibras.gov.br https://*.vlibras.gov.br https://cdn.talkjs.com https://api.talkjs.com wss://*.talkjs.com",
     "frame-src 'self' https://vlibras.gov.br https://www.vlibras.gov.br https://*.vlibras.gov.br https://cdn.talkjs.com",
     "worker-src 'self' blob: https://vlibras.gov.br https://www.vlibras.gov.br https://*.vlibras.gov.br",
+    "child-src 'self' blob: https://vlibras.gov.br https://www.vlibras.gov.br https://*.vlibras.gov.br",
     "frame-ancestors 'self'",
     "base-uri 'self'",
     "form-action 'self'",

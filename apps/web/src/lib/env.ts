@@ -2,6 +2,7 @@
  * Validação centralizada de variáveis de ambiente.
  * Falha em runtime de produção quando segredos obrigatórios estão ausentes.
  */
+import { resolveAuthSecret } from "@/lib/auth-secret";
 
 const IS_PROD = process.env.NODE_ENV === "production";
 const IS_BUILD =
@@ -18,18 +19,17 @@ function requireEnv(name: string, fallback?: string): string {
   return "";
 }
 
-/**
- * Segredos: NUNCA usam o fallback de desenvolvimento em produção (runtime).
- * Em produção o app falha alto e claro se o segredo estiver ausente — evita
- * assinar sessões com um valor público commitado no repositório.
- */
-function requireSecret(name: string, devFallback: string): string {
-  const value = process.env[name]?.trim();
-  if (value) return value;
+function resolveNextAuthSecret(): string {
+  const next = process.env.NEXTAUTH_SECRET?.trim();
+  if (next) return next;
+  const auth = process.env.AUTH_SECRET?.trim();
+  if (auth) return auth;
   if (IS_PROD && !IS_BUILD) {
-    throw new Error(`[env] Segredo obrigatório ausente em produção: ${name}`);
+    throw new Error(
+      "[env] Segredo NextAuth ausente em produção: defina NEXTAUTH_SECRET ou AUTH_SECRET"
+    );
   }
-  return devFallback;
+  return "ecopet-dev-nextauth-secret";
 }
 
 export const env = {
@@ -38,8 +38,8 @@ export const env = {
   isDev: !IS_PROD,
 
   databaseUrl: requireEnv("DATABASE_URL"),
-  authSecret: requireSecret("AUTH_SECRET", "ecopet-dev-auth-secret-change-me"),
-  nextAuthSecret: requireSecret("NEXTAUTH_SECRET", "ecopet-dev-nextauth-secret"),
+  authSecret: resolveAuthSecret(),
+  nextAuthSecret: resolveNextAuthSecret(),
   nextAuthUrl: requireEnv("NEXTAUTH_URL", "http://localhost:3000"),
   appUrl: requireEnv("APP_URL", process.env.NEXTAUTH_URL ?? "http://localhost:3000"),
 
