@@ -14,7 +14,7 @@ import { PreferencesSync } from "@/hooks/use-preferences-sync";
 import { AriaLiveProvider } from "@/components/shared/accessibility/aria-live-region";
 import { EcopetFooter } from "@/components/layouts/ecopet-footer";
 import { SupportChatProvider } from "@/providers/support-chat-provider";
-import { SupportChatPanel } from "@/components/features/support/support-chat-panel";
+import { SupportChatPanelLazy } from "@/components/features/support/support-chat-panel-lazy";
 import { VLibrasWidget } from "@/components/accessibility/VLibrasWidget";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -90,7 +90,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                       </div>
                       <EcopetFooter />
                     </div>
-                    <SupportChatPanel />
+                    <SupportChatPanelLazy />
                     <AccessibilityToolbarLazy />
                   </SupportChatProvider>
                   </AuthGateProvider>

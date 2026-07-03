@@ -1,0 +1,1979 @@
+{
+  "baseUrl": "http://localhost:3008",
+  "unityReady": true,
+  "waitMs": 7703,
+  "diagnostics": {
+    "windowPlugin": true,
+    "windowVLibras": true,
+    "windowUnityLoader": true,
+    "windowCreateUnityInstance": false,
+    "gameContainerExists": true,
+    "gameContainerChildren": 3,
+    "canvasExists": true,
+    "canvasWidth": 300,
+    "canvasHeight": 370,
+    "canvasHasWebGL": true,
+    "pluginPlayerLoaded": true,
+    "wrapperActive": true,
+    "cspViolations": []
+  },
+  "requestCount": 91,
+  "requestsAfterClickCount": 91,
+  "requestsAfterClick": [
+    {
+      "url": "https://vlibras.gov.br/app//assets/access_popup.jpg?v=20260510",
+      "status": 200,
+      "contentType": "image/jpeg",
+      "size": "6945",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/access_icon.svg?v=20260510",
+      "status": 200,
+      "contentType": "image/svg+xml",
+      "size": "1660",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://www.vlibras.gov.br/app/vlibras-plugin.chunk.js",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "script",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/vlibras-plugin.chunk.js",
+      "status": 200,
+      "contentType": "application/javascript; charset=utf-8",
+      "size": "72805",
+      "resourceType": "script",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app/target/UnityLoader.js",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "script",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/fonts/rawline-700.woff",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/fonts/rawline-400.woff",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/fonts/rawline-600.woff",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/fonts/rawline-500.woff",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/fonts/rawline-400i.woff",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/target/UnityLoader.js",
+      "status": 200,
+      "contentType": "application/javascript; charset=utf-8",
+      "size": "84418",
+      "resourceType": "script",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app/target/playerweb.json",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "xhr",
+      "failed": false
+    },
+    {
+      "url": "https://dicionario2.vlibras.gov.br/bundles",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "size": "313429",
+      "resourceType": "xhr",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app//assets/fonts/rawline-700.woff",
+      "status": 200,
+      "contentType": "font/woff",
+      "size": "117076",
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app//assets/fonts/rawline-400.woff",
+      "status": 200,
+      "contentType": "font/woff",
+      "size": "115080",
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app//assets/fonts/rawline-600.woff",
+      "status": 200,
+      "contentType": "font/woff",
+      "size": "118036",
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app//assets/fonts/rawline-400i.woff",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": "108",
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/target/playerweb.json",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "size": "248",
+      "resourceType": "xhr",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app//assets/fonts/rawline-500.woff",
+      "status": 200,
+      "contentType": "font/woff",
+      "size": "113736",
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": "108",
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": "108",
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": "108",
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": "108",
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": "108",
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": "108",
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": "108",
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": "108",
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": "108",
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": "108",
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": "108",
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": "108",
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": "108",
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": "108",
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": "108",
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": "108",
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": "108",
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": "108",
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "failed": true,
+      "failure": "net::ERR_TOO_MANY_REDIRECTS",
+      "resourceType": "font"
+    },
+    {
+      "url": "https://vlibras.gov.br/app/target/playerweb.wasm.code.unityweb",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "xhr",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app/target/playerweb.data.unityweb",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "xhr",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app/target/playerweb.wasm.framework.unityweb",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "xhr",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/target/playerweb.wasm.code.unityweb",
+      "status": 200,
+      "contentType": "application/vnd.unity",
+      "size": "3200645",
+      "resourceType": "xhr",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/target/playerweb.wasm.framework.unityweb",
+      "status": 200,
+      "contentType": "application/vnd.unity",
+      "size": "77267",
+      "resourceType": "xhr",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/target/playerweb.data.unityweb",
+      "status": 200,
+      "contentType": "application/vnd.unity",
+      "size": "10376767",
+      "resourceType": "xhr",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/brazil.png",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/3AP.png",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/4AM.png",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/5BA.png",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/2AL.png",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/8ES.png",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/1AC.png",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/6CE.png",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/10MA.png",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/15PB.png",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/9GO.png",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/14PA.png",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/18PI.png",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/7DF.png",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/20RN.png",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/23RR.png",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/13MG.png",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/24SC.png",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/11MT.png",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/16PR.png",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/21RS.png",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/22RO.png",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/lavid.svg",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/ministerioDireitosHumanos.svg",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/12MS.png",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/27TO.png",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/26SE.png",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/17PE.png",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/19RJ.png",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/25SP.png",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/rnp.svg",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/ministerioGestao.svg",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/camDeputados.svg",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/fonts/rawline-400i.woff",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": "4",
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app//assets/fonts/rawline-400i.woff",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": "108",
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app//assets/4AM.png",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": "92",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app//assets/5BA.png",
+      "status": 200,
+      "contentType": "image/png",
+      "size": "406",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app//assets/3AP.png",
+      "status": 200,
+      "contentType": "image/png",
+      "size": "709",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app//assets/brazil.png",
+      "status": 200,
+      "contentType": "image/png",
+      "size": "1167",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app//assets/2AL.png",
+      "status": 200,
+      "contentType": "image/png",
+      "size": "810",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app//assets/8ES.png",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": "92",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app//assets/1AC.png",
+      "status": 200,
+      "contentType": "image/png",
+      "size": "853",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app//assets/10MA.png",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": "93",
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": "108",
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": "108",
+      "resourceType": "font",
+      "failed": false
+    }
+  ],
+  "requests": [
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app//assets/10MA.png",
+      "method": "GET",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": 93,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app//assets/1AC.png",
+      "method": "GET",
+      "status": 200,
+      "contentType": "image/png",
+      "size": 853,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app//assets/2AL.png",
+      "method": "GET",
+      "status": 200,
+      "contentType": "image/png",
+      "size": 810,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app//assets/3AP.png",
+      "method": "GET",
+      "status": 200,
+      "contentType": "image/png",
+      "size": 709,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app//assets/4AM.png",
+      "method": "GET",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": 92,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app//assets/5BA.png",
+      "method": "GET",
+      "status": 200,
+      "contentType": "image/png",
+      "size": 406,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app//assets/8ES.png",
+      "method": "GET",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": 92,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app//assets/brazil.png",
+      "method": "GET",
+      "status": 200,
+      "contentType": "image/png",
+      "size": 1167,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app//assets/fonts/rawline-400.woff",
+      "method": "GET",
+      "status": 200,
+      "contentType": "font/woff",
+      "size": 115080,
+      "durationMs": null,
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app//assets/fonts/rawline-400i.woff",
+      "method": "GET",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": 108,
+      "durationMs": null,
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app//assets/fonts/rawline-400i.woff",
+      "method": "GET",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": 108,
+      "durationMs": null,
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app//assets/fonts/rawline-500.woff",
+      "method": "GET",
+      "status": 200,
+      "contentType": "font/woff",
+      "size": 113736,
+      "durationMs": null,
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app//assets/fonts/rawline-600.woff",
+      "method": "GET",
+      "status": 200,
+      "contentType": "font/woff",
+      "size": 118036,
+      "durationMs": null,
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app//assets/fonts/rawline-700.woff",
+      "method": "GET",
+      "status": 200,
+      "contentType": "font/woff",
+      "size": 117076,
+      "durationMs": null,
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "method": "GET",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": 108,
+      "durationMs": null,
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "method": "GET",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": 108,
+      "durationMs": null,
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "method": "GET",
+      "failed": true,
+      "failure": "net::ERR_TOO_MANY_REDIRECTS",
+      "resourceType": "font"
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "method": "GET",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": 108,
+      "durationMs": null,
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "method": "GET",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": 108,
+      "durationMs": null,
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "method": "GET",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": 108,
+      "durationMs": null,
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "method": "GET",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": 108,
+      "durationMs": null,
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "method": "GET",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": 108,
+      "durationMs": null,
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "method": "GET",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": 108,
+      "durationMs": null,
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "method": "GET",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": 108,
+      "durationMs": null,
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "method": "GET",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": 108,
+      "durationMs": null,
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "method": "GET",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": 108,
+      "durationMs": null,
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "method": "GET",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": 108,
+      "durationMs": null,
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "method": "GET",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": 108,
+      "durationMs": null,
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "method": "GET",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": 108,
+      "durationMs": null,
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "method": "GET",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": 108,
+      "durationMs": null,
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "method": "GET",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": 108,
+      "durationMs": null,
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "method": "GET",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": 108,
+      "durationMs": null,
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "method": "GET",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": 108,
+      "durationMs": null,
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "method": "GET",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": 108,
+      "durationMs": null,
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+      "method": "GET",
+      "status": 301,
+      "contentType": "text/plain; charset=utf-8",
+      "size": 108,
+      "durationMs": null,
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/target/UnityLoader.js",
+      "method": "GET",
+      "status": 200,
+      "contentType": "application/javascript; charset=utf-8",
+      "size": 84418,
+      "durationMs": null,
+      "resourceType": "script",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/target/playerweb.data.unityweb",
+      "method": "GET",
+      "status": 200,
+      "contentType": "application/vnd.unity",
+      "size": 10376767,
+      "durationMs": null,
+      "resourceType": "xhr",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/target/playerweb.json",
+      "method": "GET",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "size": 248,
+      "durationMs": null,
+      "resourceType": "xhr",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/target/playerweb.wasm.code.unityweb",
+      "method": "GET",
+      "status": 200,
+      "contentType": "application/vnd.unity",
+      "size": 3200645,
+      "durationMs": null,
+      "resourceType": "xhr",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/target/playerweb.wasm.framework.unityweb",
+      "method": "GET",
+      "status": 200,
+      "contentType": "application/vnd.unity",
+      "size": 77267,
+      "durationMs": null,
+      "resourceType": "xhr",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/vlibras-plugin.chunk.js",
+      "method": "GET",
+      "status": 200,
+      "contentType": "application/javascript; charset=utf-8",
+      "size": 72805,
+      "durationMs": null,
+      "resourceType": "script",
+      "failed": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/vlibras-plugin.js?v=20260510",
+      "method": "GET",
+      "status": 200,
+      "contentType": "application/javascript; charset=utf-8",
+      "size": 6059,
+      "durationMs": null,
+      "resourceType": "script",
+      "failed": false
+    },
+    {
+      "url": "https://dicionario2.vlibras.gov.br/bundles",
+      "method": "GET",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "size": 313429,
+      "durationMs": null,
+      "resourceType": "xhr",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/10MA.png",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/11MT.png",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/12MS.png",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/13MG.png",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/14PA.png",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/15PB.png",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/16PR.png",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/17PE.png",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/18PI.png",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/19RJ.png",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/1AC.png",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/20RN.png",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/21RS.png",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/22RO.png",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/23RR.png",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/24SC.png",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/25SP.png",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/26SE.png",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/27TO.png",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/2AL.png",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/3AP.png",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/4AM.png",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/5BA.png",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/6CE.png",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/7DF.png",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/8ES.png",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/9GO.png",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/access_icon.svg?v=20260510",
+      "method": "GET",
+      "status": 200,
+      "contentType": "image/svg+xml",
+      "size": 1660,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/access_popup.jpg?v=20260510",
+      "method": "GET",
+      "status": 200,
+      "contentType": "image/jpeg",
+      "size": 6945,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/brazil.png",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/camDeputados.svg",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/fonts/rawline-400.woff",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/fonts/rawline-400i.woff",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/fonts/rawline-400i.woff",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/fonts/rawline-500.woff",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/fonts/rawline-600.woff",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/fonts/rawline-700.woff",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "font",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/lavid.svg",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/ministerioDireitosHumanos.svg",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/ministerioGestao.svg",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app//assets/rnp.svg",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "image",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app/target/UnityLoader.js",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "script",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app/target/playerweb.data.unityweb",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "xhr",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app/target/playerweb.json",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "xhr",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app/target/playerweb.wasm.code.unityweb",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "xhr",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app/target/playerweb.wasm.framework.unityweb",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "xhr",
+      "failed": false
+    },
+    {
+      "url": "https://vlibras.gov.br/app/vlibras-plugin.js",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "script",
+      "failed": false
+    },
+    {
+      "url": "https://www.vlibras.gov.br/app/vlibras-plugin.chunk.js",
+      "method": "GET",
+      "status": 302,
+      "contentType": "text/plain",
+      "size": 4,
+      "durationMs": null,
+      "resourceType": "script",
+      "failed": false
+    }
+  ],
+  "consoleLogs": [
+    {
+      "type": "log",
+      "text": "You can reduce your startup time if you configure your web server to host .unityweb files using brotli compression.",
+      "location": {
+        "url": "https://vlibras.gov.br/app/target/UnityLoader.js",
+        "line": 2,
+        "column": 8487,
+        "lineNumber": 2,
+        "columnNumber": 8487
+      }
+    },
+    {
+      "type": "log",
+      "text": "[UnityCache] 'https://vlibras.gov.br/app/target/playerweb.wasm.framework.unityweb' successfully downloaded and stored in the indexedDB cache",
+      "location": {
+        "url": "https://vlibras.gov.br/app/target/UnityLoader.js",
+        "line": 3,
+        "column": 10750,
+        "lineNumber": 3,
+        "columnNumber": 10750
+      }
+    },
+    {
+      "type": "log",
+      "text": "[UnityCache] 'https://vlibras.gov.br/app/target/playerweb.wasm.code.unityweb' successfully downloaded and stored in the indexedDB cache",
+      "location": {
+        "url": "https://vlibras.gov.br/app/target/UnityLoader.js",
+        "line": 3,
+        "column": 10750,
+        "lineNumber": 3,
+        "columnNumber": 10750
+      }
+    },
+    {
+      "type": "log",
+      "text": "[UnityCache] 'https://vlibras.gov.br/app/target/playerweb.data.unityweb' successfully downloaded and stored in the indexedDB cache",
+      "location": {
+        "url": "https://vlibras.gov.br/app/target/UnityLoader.js",
+        "line": 3,
+        "column": 10750,
+        "lineNumber": 3,
+        "columnNumber": 10750
+      }
+    },
+    {
+      "type": "log",
+      "text": "Loading player data from data.unity3d",
+      "location": {
+        "url": "https://vlibras.gov.br/app/target/UnityLoader.js",
+        "line": 3,
+        "column": 8916,
+        "lineNumber": 3,
+        "columnNumber": 8916
+      }
+    },
+    {
+      "type": "log",
+      "text": "Creating WebGL 2.0 context.",
+      "location": {
+        "url": "https://vlibras.gov.br/app/target/UnityLoader.js",
+        "line": 3,
+        "column": 8916,
+        "lineNumber": 3,
+        "columnNumber": 8916
+      }
+    },
+    {
+      "type": "log",
+      "text": "Renderer: WebKit WebGL",
+      "location": {
+        "url": "https://vlibras.gov.br/app/target/UnityLoader.js",
+        "line": 3,
+        "column": 8916,
+        "lineNumber": 3,
+        "columnNumber": 8916
+      }
+    },
+    {
+      "type": "log",
+      "text": "Version:  OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))",
+      "location": {
+        "url": "https://vlibras.gov.br/app/target/UnityLoader.js",
+        "line": 3,
+        "column": 8916,
+        "lineNumber": 3,
+        "columnNumber": 8916
+      }
+    },
+    {
+      "type": "log",
+      "text": " EXT_clip_control GL_EXT_clip_control EXT_color_buffer_float GL_EXT_color_buffer_float EXT_color_buffer_half_float GL_EXT_color_buffer_half_float EXT_conservative_depth GL_EXT_conservative_depth EXT_depth_clamp GL_EXT_depth_clamp EXT_float_blend GL_EXT_float_blend EXT_polygon_offset_clamp GL_EXT_polygon_offset_clamp EXT_texture_compression_bptc GL_EXT_texture_compression_bptc EXT_texture_compression_rgtc GL_EXT_texture_compression_rgtc EXT_texture_filter_anisotropic GL_EXT_texture_filter_anisotropic EXT_texture_mirror_clamp_to_edge GL_EXT_texture_mirror_clamp_to_edge NV_shader_noperspective_interpolation GL_NV_shader_noperspective_interpolation OES_draw_buffers_indexed GL_OES_draw_buffers_indexed OES_sample_variables GL_OES_sample_variables OES_shader_multisample_interpolation GL_OES_shader_multisample_interpolation OES_texture_float_linear GL_OES_texture_float_linear OVR_multiview2 GL_OVR_multiview2 WEBGL_clip_cull_distance GL_WEBGL_clip_cull_distance WEBGL_compressed_texture_astc GL_WEBGL_compressed_textur",
+      "location": {
+        "url": "https://vlibras.gov.br/app/target/UnityLoader.js",
+        "line": 3,
+        "column": 8916,
+        "lineNumber": 3,
+        "columnNumber": 8916
+      }
+    },
+    {
+      "type": "log",
+      "text": "e_astc WEBGL_compressed_texture_etc GL_WEBGL_compressed_texture_etc WEBGL_compressed_texture_etc1 GL_WEBGL_compressed_texture_etc1 WEBGL_compressed_texture_s3tc GL_WEBGL_compressed_texture_s3tc WEBGL_compressed_texture_s3tc_srgb GL_WEBGL_compressed_texture_s3tc_srgb WEBGL_debug_renderer_info GL_WEBGL_debug_renderer_info WEBGL_debug_shaders GL_WEBGL_debug_shaders WEBGL_lose_context GL_WEBGL_lose_context WEBGL_multi_draw GL_WEBGL_multi_draw WEBGL_polygon_mode GL_WEBGL_polygon_mode WEBGL_stencil_texturing GL_WEBGL_stencil_texturing",
+      "location": {
+        "url": "https://vlibras.gov.br/app/target/UnityLoader.js",
+        "line": 3,
+        "column": 8916,
+        "lineNumber": 3,
+        "columnNumber": 8916
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0xa6c00c50200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+      "location": {
+        "url": "http://localhost:3008/",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0xa6c00c50200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+      "location": {
+        "url": "http://localhost:3008/",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0xa6c00c50200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+      "location": {
+        "url": "http://localhost:3008/",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0xa6c00c50200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)",
+      "location": {
+        "url": "http://localhost:3008/",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "type": "log",
+      "text": "Base Url is now https://dicionario2.vlibras.gov.br/2018.3.1/WEBGL/BR/",
+      "location": {
+        "url": "https://vlibras.gov.br/app/target/UnityLoader.js",
+        "line": 3,
+        "column": 8916,
+        "lineNumber": 3,
+        "columnNumber": 8916
+      }
+    },
+    {
+      "type": "log",
+      "text": "SET BASE URL TO https://dicionario2.vlibras.gov.br/2018.3.1/WEBGL/BR/",
+      "location": {
+        "url": "https://vlibras.gov.br/app/target/UnityLoader.js",
+        "line": 3,
+        "column": 8916,
+        "lineNumber": 3,
+        "columnNumber": 8916
+      }
+    },
+    {
+      "type": "log",
+      "text": "Base Url is now https://dicionario2.vlibras.gov.br/2018.3.1/WEBGL/",
+      "location": {
+        "url": "https://vlibras.gov.br/app/target/UnityLoader.js",
+        "line": 3,
+        "column": 8916,
+        "lineNumber": 3,
+        "columnNumber": 8916
+      }
+    },
+    {
+      "type": "log",
+      "text": "SET BASE URL TO https://dicionario2.vlibras.gov.br/2018.3.1/WEBGL/",
+      "location": {
+        "url": "https://vlibras.gov.br/app/target/UnityLoader.js",
+        "line": 3,
+        "column": 8916,
+        "lineNumber": 3,
+        "columnNumber": 8916
+      }
+    },
+    {
+      "type": "log",
+      "text": "Base Url is now https://dicionario2.vlibras.gov.br/2018.3.1/WEBGL/BR/",
+      "location": {
+        "url": "https://vlibras.gov.br/app/target/UnityLoader.js",
+        "line": 3,
+        "column": 8916,
+        "lineNumber": 3,
+        "columnNumber": 8916
+      }
+    },
+    {
+      "type": "log",
+      "text": "SET BASE URL TO https://dicionario2.vlibras.gov.br/2018.3.1/WEBGL/BR/",
+      "location": {
+        "url": "https://vlibras.gov.br/app/target/UnityLoader.js",
+        "line": 3,
+        "column": 8916,
+        "lineNumber": 3,
+        "columnNumber": 8916
+      }
+    }
+  ],
+  "summary": {
+    "failed": [
+      {
+        "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/assets/fonts/rawline-400i.woff",
+        "method": "GET",
+        "failed": true,
+        "failure": "net::ERR_TOO_MANY_REDIRECTS",
+        "resourceType": "font"
+      }
+    ],
+    "blocked": [],
+    "unityAssets": [
+      {
+        "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/target/UnityLoader.js",
+        "method": "GET",
+        "status": 200,
+        "contentType": "application/javascript; charset=utf-8",
+        "size": 84418,
+        "durationMs": null,
+        "resourceType": "script",
+        "failed": false
+      },
+      {
+        "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/target/playerweb.data.unityweb",
+        "method": "GET",
+        "status": 200,
+        "contentType": "application/vnd.unity",
+        "size": 10376767,
+        "durationMs": null,
+        "resourceType": "xhr",
+        "failed": false
+      },
+      {
+        "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/target/playerweb.json",
+        "method": "GET",
+        "status": 200,
+        "contentType": "application/json; charset=utf-8",
+        "size": 248,
+        "durationMs": null,
+        "resourceType": "xhr",
+        "failed": false
+      },
+      {
+        "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/target/playerweb.wasm.code.unityweb",
+        "method": "GET",
+        "status": 200,
+        "contentType": "application/vnd.unity",
+        "size": 3200645,
+        "durationMs": null,
+        "resourceType": "xhr",
+        "failed": false
+      },
+      {
+        "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app/target/playerweb.wasm.framework.unityweb",
+        "method": "GET",
+        "status": 200,
+        "contentType": "application/vnd.unity",
+        "size": 77267,
+        "durationMs": null,
+        "resourceType": "xhr",
+        "failed": false
+      },
+      {
+        "url": "https://vlibras.gov.br/app/target/UnityLoader.js",
+        "method": "GET",
+        "status": 302,
+        "contentType": "text/plain",
+        "size": 4,
+        "durationMs": null,
+        "resourceType": "script",
+        "failed": false
+      },
+      {
+        "url": "https://vlibras.gov.br/app/target/playerweb.data.unityweb",
+        "method": "GET",
+        "status": 302,
+        "contentType": "text/plain",
+        "size": 4,
+        "durationMs": null,
+        "resourceType": "xhr",
+        "failed": false
+      },
+      {
+        "url": "https://vlibras.gov.br/app/target/playerweb.json",
+        "method": "GET",
+        "status": 302,
+        "contentType": "text/plain",
+        "size": 4,
+        "durationMs": null,
+        "resourceType": "xhr",
+        "failed": false
+      },
+      {
+        "url": "https://vlibras.gov.br/app/target/playerweb.wasm.code.unityweb",
+        "method": "GET",
+        "status": 302,
+        "contentType": "text/plain",
+        "size": 4,
+        "durationMs": null,
+        "resourceType": "xhr",
+        "failed": false
+      },
+      {
+        "url": "https://vlibras.gov.br/app/target/playerweb.wasm.framework.unityweb",
+        "method": "GET",
+        "status": 302,
+        "contentType": "text/plain",
+        "size": 4,
+        "durationMs": null,
+        "resourceType": "xhr",
+        "failed": false
+      }
+    ]
+  }
+}

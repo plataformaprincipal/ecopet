@@ -233,7 +233,9 @@
     "partners": "Partners",
     "myDashboard": "My Dashboard",
     "integrations": "Integrations",
-    "logs": "Logs"
+    "logs": "Logs",
+    "support": "Support",
+    "reports": "Reports"
   },
   "errors": {
     "unauthorized": "Session expired or not signed in.",
@@ -411,7 +413,9 @@
           "accountHolderDoc": "Holder CPF/CNPJ",
           "instagram": "Instagram",
           "website": "Website",
-          "linkedin": "LinkedIn"
+          "linkedin": "LinkedIn",
+          "deliveryLegend": "Delivery and tele-service",
+          "paymentLegend": "Accepted payment methods"
         },
         "legends": {
           "partnerType": "Partner type *",
@@ -1194,7 +1198,21 @@
       "noPartnersDesc": "Follow trusted partners.",
       "noSearchesTitle": "No saved searches",
       "noSearchesDesc": "Your recent searches will appear here."
-    }
+    },
+    "authModal": {
+      "title": "Sign in or create your account",
+      "description": "To use this feature, sign in or register for free.",
+      "signIn": "Sign in",
+      "createAccount": "Create account"
+    },
+    "loading": "Loading...",
+    "emptyPartners": "No partners found.",
+    "partnerNotFound": "Partner not found.",
+    "backToPartners": "Back to partners",
+    "viewPartner": "View partner",
+    "viewProducts": "View products",
+    "viewServices": "View services",
+    "reviews": "reviews"
   },
   "a11y": {
     "title": "ECOPET Accessibility",

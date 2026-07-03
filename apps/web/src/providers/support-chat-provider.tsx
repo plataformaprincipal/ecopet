@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 
 interface SupportChatContextValue {
   isOpen: boolean;
@@ -28,8 +28,13 @@ export function SupportChatProvider({ children }: { children: ReactNode }) {
     setHasUnread(true);
   }, []);
 
+  const value = useMemo(
+    () => ({ isOpen, hasUnread, openChat, closeChat, markRead, notifyNew }),
+    [isOpen, hasUnread, openChat, closeChat, markRead, notifyNew]
+  );
+
   return (
-    <SupportChatContext.Provider value={{ isOpen, hasUnread, openChat, closeChat, markRead, notifyNew }}>
+    <SupportChatContext.Provider value={value}>
       {children}
     </SupportChatContext.Provider>
   );

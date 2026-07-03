@@ -7,7 +7,6 @@ import {
   vlibrasFromScriptEvent,
   vlibrasReady,
 } from "./vlibras-load-outcome";
-import { VLIBRAS_AVATAR_POLL_MS, VLIBRAS_AVATAR_TIMEOUT_MS } from "./constants";
 
 describe("vlibras-load-outcome", () => {
   it("handleScriptOnError não lança exceção e retorna unavailable", () => {
@@ -43,10 +42,5 @@ describe("vlibras-load-outcome", () => {
       "https://www.vlibras.gov.br/app/vlibras-plugin.js"
     );
     assert.equal(nextScriptUrl(urls, [...urls]), null);
-  });
-
-  it("poll do avatar: 500ms por até 10s", () => {
-    assert.equal(VLIBRAS_AVATAR_POLL_MS, 500);
-    assert.equal(VLIBRAS_AVATAR_TIMEOUT_MS, 10_000);
   });
 });

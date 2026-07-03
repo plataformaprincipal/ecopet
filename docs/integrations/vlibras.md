@@ -1,36 +1,38 @@
 # Relatório — Integração VLibras EcoPet (correção definitiva)
 
-## Causa raiz
+## Causa raiz (Unity travado na barra de progresso)
 
-### Problema principal (avatar não aparecia)
+### Problema principal (2026-07)
 
-O `VLibrasWidget` renderizava um **`<div />` vazio** via `createPortal` e montava o DOM oficial **imperativamente** com `root.replaceChildren()` no `useEffect`.
+O loader EcoPet chamava `dispatchSpaLoadEvent()` em loop (poll a cada 500ms) e em toda navegação SPA. Isso reexecutava o `window.onload` registrado pelo plugin oficial gov.br.
 
-No React, cada re-render reconcilia o virtual DOM com o real. Como o JSX declarava um container **sem filhos**, o React **removia** `[vw-access-button]`, `[vw-plugin-wrapper]` e `.vp-access-button` injetados pelo plugin — inclusive após `new VLibras.Widget()`.
+No código oficial (`vlibras-plugin.js`, módulo 9927), cada `window.onload` chama `m.load([vw-plugin-wrapper])`, que faz **`innerHTML = ...`** no wrapper — **apagando o `#gameContainer` e o canvas Unity enquanto os assets `.unityweb` ainda carregavam**.
 
-**Sintoma:** alavanca acionada, script carregado, widget instanciado, mas botão/avatar sumiam ou nunca persistiam.
+**Sintoma:** popup abre, logo Unity, barra de progresso trava, avatar nunca aparece.
 
-### Problemas secundários
+### Recursos Unity (Network)
 
-| # | Problema | Impacto |
-|---|----------|---------|
-| 1 | `display: none` no estado oculto | Podia impedir reexibição estável do avatar |
-| 2 | `retryVLibrasLoad()` removia o `<script>` | Reinjeção desnecessária e race conditions |
-| 3 | SPA Next.js | `window.load` já disparado antes do script — mitigado com `dispatchEvent('load')` após init e em mudanças de rota |
-| 4 | CSP | Já liberava `vlibras.gov.br` — **não era bloqueio** |
+| Ordem | URL | Status | Notas |
+|-------|-----|--------|-------|
+| 1º | `https://vlibras.gov.br/app/vlibras-plugin.js` | 302→200 | Redirect para jsdelivr (oficial) |
+| 2º | `.../vlibras-plugin.chunk.js` | 200 | Plugin UI |
+| 3º (clique) | `.../target/UnityLoader.js` | 302→200 | Loader Unity legado |
+| 4º | `.../target/playerweb.json` | 200 | Manifest Unity |
+| 5º | `.../target/playerweb.data.unityweb` | 200 | ~10MB |
+| 6º | `.../target/playerweb.wasm.code.unityweb` | 200 | ~3MB WASM |
 
----
+**Request que falhava:** não era HTTP — era **destruição do DOM** antes do WASM terminar. Secundário: CSP sem `'wasm-unsafe-eval'` (Chrome bloqueia compilação WASM).
 
-## Correções aplicadas
+### Correções aplicadas
 
-1. **DOM oficial no JSX** — estrutura idêntica à documentação VLibras 6.0, gerenciada pelo React (não mais `replaceChildren`).
-2. **Script único** — flag `scriptInjected`; sem remover tag após sucesso.
-3. **Widget único** — `widgetInstance` reutilizada; log `Widget já existente`.
-4. **Alavanca OFF** — `visibility/opacity/pointer-events` (sem `display:none`); script, DOM e instância preservados.
-5. **Retry soft** — `resetVLibrasWidget()` destrói só a instância, mantém script + DOM.
-6. **Navegação SPA** — `notifyVLibrasRouteChange()` em `usePathname`.
-7. **Logs diagnósticos** — `console.info` / `console.warn` / `console.error` prefixo `[VLIBRAS]`.
-8. **CSS** — `position: fixed`, `z-index: 2147483646/7`, overflow visible.
+1. **`fireOfficialLoadOnce()`** — `window.onload` oficial dispara **uma única vez** após `new VLibras.Widget()`.
+2. **Removido** poll `ensureAvatarInjected` com re-onload.
+3. **`notifyVLibrasRouteChange`** — só `vp-enable-text-capture`; **não** re-onload.
+4. **`rootPath` oficial** — `https://vlibras.gov.br/app/` (barra final).
+5. **CSP** — `'wasm-unsafe-eval'` + `media-src` + jsdelivr (redirect oficial).
+6. **CSS** — `#gameContainer canvas` visível; toolbar z-index abaixo do VLibras.
+7. **Toolbar** — fecha ao ativar Libras (não cobre avatar).
+
 
 ---
 

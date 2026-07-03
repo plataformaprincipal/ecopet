@@ -279,8 +279,7 @@ html[dir="rtl"] .a11y-toolbar-root {
 }
 
 /* VLibras — visível, clicável e acima de overlays EcoPet (toolbar, chat, modais) */
-[vw],
-#ecopet-vlibras-root {
+[vw] {
   position: fixed !important;
   bottom: 0 !important;
   left: 0 !important;
@@ -295,18 +294,16 @@ html[dir="rtl"] .a11y-toolbar-root {
   direction: ltr !important;
   unicode-bidi: isolate;
   z-index: 2147483647 !important;
+  pointer-events: auto !important;
+  overflow: visible !important;
 }
-
-/* Ocultar visualmente sem destruir instância (alavanca OFF) */
-[vw].ecopet-vlibras-hidden,
-#ecopet-vlibras-root.ecopet-vlibras-hidden {
+[vw].ecopet-vlibras-hidden {
   visibility: hidden !important;
   opacity: 0 !important;
   pointer-events: none !important;
 }
 
-[vw]:not(.ecopet-vlibras-hidden),
-#ecopet-vlibras-root:not(.ecopet-vlibras-hidden) {
+[vw]:not(.ecopet-vlibras-hidden) {
   visibility: visible !important;
   opacity: 1 !important;
   overflow: visible !important;
@@ -321,8 +318,7 @@ html[dir="rtl"] .a11y-toolbar-root {
 
 [vw-plugin-wrapper] {
   pointer-events: auto !important;
-  position: fixed !important;
-  z-index: 2147483647 !important;
+  overflow: visible !important;
 }
 
 [vw] .vp-access-button,
@@ -337,8 +333,7 @@ html[dir="rtl"] .a11y-toolbar-root {
 }
 
 /* Espaço acima da FAB de acessibilidade EcoPet (canto inferior esquerdo) */
-[vw]:not(.ecopet-vlibras-hidden),
-#ecopet-vlibras-root:not(.ecopet-vlibras-hidden) {
+[vw]:not(.ecopet-vlibras-hidden) {
   margin-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px)) !important;
 }
 
@@ -351,4 +346,23 @@ body {
 
 #main-content {
   overflow: visible;
+}
+
+/* Unity WebGL — não clipar canvas do avatar dentro do plugin gov.br */
+[vw] #gameContainer,
+[vw-plugin-wrapper] #gameContainer {
+  position: relative !important;
+  pointer-events: auto !important;
+  overflow: visible !important;
+}
+
+[vw] #gameContainer canvas,
+[vw-plugin-wrapper] #gameContainer canvas {
+  pointer-events: auto !important;
+  display: block !important;
+}
+
+/* Painel EcoPet abaixo do plugin VLibras quando ambos visíveis */
+.a11y-toolbar-root {
+  z-index: 2147483640 !important;
 }

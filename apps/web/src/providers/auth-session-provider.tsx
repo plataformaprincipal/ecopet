@@ -10,7 +10,6 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { usePathname } from "next/navigation";
 import { SESSION_CHANGED_EVENT } from "@/lib/auth/session-events";
 import {
   fetchAuthSession,
@@ -27,7 +26,6 @@ type AuthSessionContextValue = {
 const AuthSessionContext = createContext<AuthSessionContextValue | null>(null);
 
 export function AuthSessionProvider({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
   const [data, setData] = useState<AuthSessionData | null>(null);
   const [status, setStatus] = useState<SessionStatus>("loading");
   const hasResolvedOnce = useRef(false);
@@ -56,7 +54,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [pathname]);
+  }, []);
 
   useEffect(() => {
     const onChanged = () => {

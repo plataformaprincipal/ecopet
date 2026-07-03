@@ -1,9 +1,9 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { MainNavigation } from "@/components/shared/navigation/main-navigation";
 import { BottomNav } from "@/components/shared/navigation/bottom-nav";
-import { EcopetAIAssistant } from "@/components/features/ai/ecopet-ai-assistant";
 import { PublicAppBar } from "@/components/layouts/public-app-bar";
 import { isPublicClientPath, isPublicMarketplacePath } from "@/lib/auth/routes";
 import { useFoundationSession } from "@/hooks/use-foundation-session";
@@ -12,6 +12,14 @@ import { isPublicClientShellPath } from "@/lib/public-client/nav";
 import { isClientAreaPath } from "@/lib/client/nav";
 import { isOngAreaPath } from "@/lib/ong/nav";
 import { PublicClientShell } from "@/components/features/public-client/public-client-shell";
+
+const EcopetAIAssistant = dynamic(
+  () =>
+    import("@/components/features/ai/ecopet-ai-assistant").then((m) => ({
+      default: m.EcopetAIAssistant,
+    })),
+  { ssr: false }
+);
 
 const IMMERSIVE_PATHS = ["/feed", "/social", "/eccopet"];
 function isImmersivePath(pathname: string) {

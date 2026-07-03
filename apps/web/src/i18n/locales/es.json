@@ -233,7 +233,9 @@
     "partners": "Socios",
     "myDashboard": "Mi Panel",
     "integrations": "Integraciones",
-    "logs": "Registros"
+    "logs": "Registros",
+    "support": "Soporte",
+    "reports": "Denuncias"
   },
   "errors": {
     "unauthorized": "Sesión expirada o no autenticado.",
@@ -411,7 +413,9 @@
           "accountHolderDoc": "Holder CPF/CNPJ",
           "instagram": "Instagram",
           "website": "Website",
-          "linkedin": "LinkedIn"
+          "linkedin": "LinkedIn",
+          "deliveryLegend": "Entrega y tele-servicio",
+          "paymentLegend": "Formas de pago aceptadas"
         },
         "legends": {
           "partnerType": "Tipo de socio *",
@@ -1194,7 +1198,21 @@
       "noPartnersDesc": "Sigue socios de confianza.",
       "noSearchesTitle": "Sin búsquedas guardadas",
       "noSearchesDesc": "Tus búsquedas recientes aparecerán aquí."
-    }
+    },
+    "authModal": {
+      "title": "Inicia sesión o crea tu cuenta",
+      "description": "Para usar esta función, inicia sesión o regístrate gratis.",
+      "signIn": "Iniciar sesión",
+      "createAccount": "Crear cuenta"
+    },
+    "loading": "Cargando...",
+    "emptyPartners": "No se encontraron socios.",
+    "partnerNotFound": "Socio no encontrado.",
+    "backToPartners": "Volver a socios",
+    "viewPartner": "Ver socio",
+    "viewProducts": "Ver productos",
+    "viewServices": "Ver servicios",
+    "reviews": "reseñas"
   },
   "a11y": {
     "title": "Accesibilidad ECOPET",

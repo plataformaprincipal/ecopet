@@ -1,5 +1,5 @@
 /**
- * Testes i18n — pt-BR, en, es
+ * Testes i18n — pt-BR, en, es + paridade de chaves
  */
 import fs from "fs";
 import path from "path";
@@ -47,13 +47,16 @@ let failed = 0;
 
 console.log("=== EcoPet — test:i18n ===\n");
 
-for (const file of ["pt-BR.json", "en.json", "es.json"]) {
+const localeFiles = ["pt-BR.json", "en.json", "es.json"];
+const flats = {};
+
+for (const file of localeFiles) {
   const full = path.join(localesDir, file);
   const data = JSON.parse(fs.readFileSync(full, "utf8"));
-  const flat = flatten(data);
+  flats[file] = flatten(data);
   console.log(`→ ${file}`);
   for (const key of REQUIRED_KEYS) {
-    if (flat[key]) {
+    if (flats[file][key]) {
       console.log(`  ✓ ${key}`);
     } else {
       console.error(`  ✗ ${key} ausente`);
@@ -62,5 +65,27 @@ for (const file of ["pt-BR.json", "en.json", "es.json"]) {
   }
 }
 
-console.log(failed ? `\n❌ ${failed} chaves ausentes` : "\n✅ i18n pt-BR / en / es OK");
+// Paridade de chaves entre locales
+const ptKeys = new Set(Object.keys(flats["pt-BR.json"]));
+const enKeys = new Set(Object.keys(flats["en.json"]));
+const esKeys = new Set(Object.keys(flats["es.json"]));
+
+function diffKeys(source, target, label) {
+  const missing = [...source].filter((k) => !target.has(k));
+  if (missing.length) {
+    console.error(`\n✗ ${label}: ${missing.length} chaves ausentes (ex.: ${missing.slice(0, 5).join(", ")})`);
+    failed += missing.length;
+  } else {
+    console.log(`\n✓ ${label}: paridade OK (${source.size} chaves)`);
+  }
+}
+
+diffKeys(ptKeys, enKeys, "en vs pt-BR");
+diffKeys(ptKeys, esKeys, "es vs pt-BR");
+
+console.log(
+  failed
+    ? `\n❌ ${failed} problemas i18n`
+    : `\n✅ i18n pt-BR / en / es OK (${ptKeys.size} chaves alinhadas)`
+);
 process.exit(failed > 0 ? 1 : 0);

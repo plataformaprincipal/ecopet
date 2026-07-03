@@ -1,9 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
+import { useCallback } from "react";
 import type { AccountStatus } from "@prisma/client";
-import { SESSION_CHANGED_EVENT } from "@/lib/auth/session-events";
+import { useAuthSession } from "@/hooks/use-auth-session";
 import type { AppRole } from "@/lib/permissions";
 
 type FoundationSession = {
@@ -14,85 +13,30 @@ type FoundationSession = {
   accountStatus: AccountStatus;
 };
 
-async function parseJsonBody(res: Response): Promise<unknown> {
-  const raw = await res.text();
-  if (!raw.trim()) return null;
-  try {
-    return JSON.parse(raw) as unknown;
-  } catch {
-    return null;
-  }
-}
-
-async function fetchFoundationSession(): Promise<FoundationSession | null> {
-  const res = await fetch("/api/auth/me", { credentials: "include", cache: "no-store" });
-  if (!res.ok) return null;
-
-  const data = (await parseJsonBody(res)) as {
-    success?: boolean;
-    data?: { user?: FoundationSession };
-  } | null;
-  if (data?.success === false || !data?.data?.user) return null;
-
-  return data.data.user;
-}
-
+/** Sessão foundation — reutiliza AuthSessionProvider (sem fetch duplicado em /api/auth/me). */
 export function useFoundationSession() {
-  const pathname = usePathname();
-  const [user, setUser] = useState<FoundationSession | null>(null);
-  const [loading, setLoading] = useState(true);
-  const hasResolvedOnce = useRef(false);
+  const { data, status, update } = useAuthSession();
+
+  const user: FoundationSession | null = data?.user
+    ? {
+        id: data.user.id,
+        email: data.user.email,
+        name: data.user.name,
+        role: data.user.role as AppRole,
+        accountStatus: (data.user.accountStatus ?? "ACTIVE") as AccountStatus,
+      }
+    : null;
 
   const refreshUser = useCallback(async () => {
-    setLoading(true);
-    try {
-      setUser(await fetchFoundationSession());
-    } catch {
-      setUser(null);
-    } finally {
-      setLoading(false);
-      hasResolvedOnce.current = true;
-    }
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    const isInitialLoad = !hasResolvedOnce.current;
-
-    (async () => {
-      if (isInitialLoad) setLoading(true);
-      try {
-        const sessionUser = await fetchFoundationSession();
-        if (!cancelled) setUser(sessionUser);
-      } catch {
-        if (!cancelled && isInitialLoad) setUser(null);
-      } finally {
-        if (!cancelled) {
-          if (isInitialLoad) setLoading(false);
-          hasResolvedOnce.current = true;
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [pathname]);
-
-  useEffect(() => {
-    const onSessionChanged = () => {
-      void refreshUser();
-    };
-    window.addEventListener(SESSION_CHANGED_EVENT, onSessionChanged);
-    return () => window.removeEventListener(SESSION_CHANGED_EVENT, onSessionChanged);
-  }, [refreshUser]);
+    await update();
+  }, [update]);
 
   return {
     user,
     role: user?.role ?? null,
     accountStatus: user?.accountStatus ?? null,
     isAuthenticated: !!user,
-    loading,
+    loading: status === "loading",
     refreshUser,
   };
 }

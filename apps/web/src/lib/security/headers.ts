@@ -19,6 +19,7 @@ export function productionOnlyHeaders(): { key: string; value: string }[] {
  * CSP compatível com Next.js e VLibras.
  * VLibras carrega scripts de vlibras.gov.br — exceção documentada em docs/security/web-security.md
  * O plugin oficial redireciona (302) para o espelho CDN gov.br em cdn.jsdelivr.net.
+ * Unity WebGL executa WASM via URL blob: — exige blob: em script-src.
  */
 const VLIBRAS_HOSTS =
   "https://vlibras.gov.br https://www.vlibras.gov.br https://*.vlibras.gov.br";
@@ -30,7 +31,7 @@ export function contentSecurityPolicy(): string {
   const vlibrasSources = `${VLIBRAS_HOSTS} ${VLIBRAS_CDN}`;
   const directives = [
     "default-src 'self'",
-    `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${vlibrasSources} https://cdn.talkjs.com`,
+    `script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob: ${vlibrasSources} https://cdn.talkjs.com`,
     `style-src 'self' 'unsafe-inline' ${vlibrasSources}`,
     `img-src 'self' data: blob: https: http: ${VLIBRAS_HOSTS}`,
     "font-src 'self' data: https:",
