@@ -87,6 +87,11 @@ export function AccessibilityToolbar() {
   const atMin = fontScale <= FONT_SCALE_MIN;
   const atMax = fontScale >= FONT_SCALE_MAX;
 
+  const dismissPanel = useCallback(() => {
+    setOpen(false);
+    setMinimized(true);
+  }, []);
+
   const handleToggle = useCallback(
     (key: BooleanKey, label: string) => {
       const wasActive = useAccessibilityStore.getState()[key];
@@ -97,13 +102,16 @@ export function AccessibilityToolbar() {
         if (wasActive) {
           hideVLibras();
         } else {
-          setOpen(false);
-          setMinimized(false);
+          dismissPanel();
         }
       }
     },
-    [toggle, announce, t]
+    [toggle, announce, t, dismissPanel]
   );
+
+  useEffect(() => {
+    if (librasEnabled) dismissPanel();
+  }, [librasEnabled, dismissPanel]);
 
   const handleBrailleToggle = useCallback(() => {
     toggleBraille();
@@ -135,7 +143,14 @@ export function AccessibilityToolbar() {
   }, [minimized]);
 
   return (
-    <div className="a11y-toolbar-root bottom-24 left-4 lg:bottom-6" role="region" aria-label={t("a11y.title")}>
+    <div
+      className={cn(
+        "a11y-toolbar-root bottom-24 left-4 lg:bottom-6",
+        librasEnabled && "a11y-toolbar-root--libras-active"
+      )}
+      role="region"
+      aria-label={t("a11y.title")}
+    >
       {open && !minimized && (
         <div
           id="ecopet-a11y-toolbar"

@@ -366,3 +366,9 @@ body {
 .a11y-toolbar-root {
   z-index: 2147483640 !important;
 }
+
+/* Libras ativo: só FAB visível; widget gov.br fica acima (z-index maior) */
+.a11y-toolbar-root--libras-active #ecopet-a11y-toolbar {
+  display: none !important;
+  pointer-events: none !important;
+}

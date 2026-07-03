@@ -50,8 +50,7 @@ export function FoundationLoginForm({ variant = "default" }: FoundationLoginForm
       const raw = await res.text();
       let data: {
         success?: boolean;
-        data?: { redirectTo?: string };
-        user?: { role?: string };
+        data?: { redirectTo?: string; user?: { role?: string } };
         error?: string | { message?: string; code?: string };
       };
       try {
@@ -78,7 +77,7 @@ export function FoundationLoginForm({ variant = "default" }: FoundationLoginForm
           : "/dashboard";
       const redirectTo =
         data.data?.redirectTo ??
-        (data.user?.role ? dashboardPathForRole(data.user.role) : null) ??
+        (data.data?.user?.role ? dashboardPathForRole(data.data.user.role) : null) ??
         safeCallback;
       const sessionReady = await confirmSessionCookie();
       if (!sessionReady) {
