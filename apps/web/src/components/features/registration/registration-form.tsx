@@ -3,14 +3,14 @@
 import { useCallback, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { notifySessionChanged } from "@/lib/auth/session-events";
+import { confirmSessionCookie } from "@/lib/auth/confirm-session";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/features/auth/password-input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "@/lib/api";
 import { ApiRequestError, mapRegisterConflictMessage } from "@/lib/api-errors";
-import { useAppStore } from "@/store/app-store";
 import {
   BRAZILIAN_STATES,
   getDefaultFormValues,
@@ -212,7 +212,6 @@ function DocumentUpload({
 
 export function RegistrationForm() {
   const router = useRouter();
-  const setApiToken = useAppStore((s) => s.setApiToken);
   const { t } = useTranslation();
   const [role, setRole] = useState<RegistrationRole>("TUTOR");
   const [values, setValues] = useState<FormValues>(() => getDefaultFormValues("TUTOR"));
@@ -287,22 +286,17 @@ export function RegistrationForm() {
     try {
       const payload = buildRegisterPayload(role, values);
       const res = await api<{
-        token: string;
         redirectTo: string;
         pendingApproval?: boolean;
         message?: string;
         user: { accountStatus?: string };
       }>("/api/auth/register", { method: "POST", body: JSON.stringify(payload) });
-      setApiToken(res.token);
-      const signInResult = await signIn("credentials", {
-        email: String(values.email),
-        password: String(values.password),
-        redirect: false,
-      });
-      if (signInResult?.error) {
+      const sessionReady = await confirmSessionCookie();
+      if (!sessionReady) {
         setFormError(t("auth.register.loginAfterRegisterError"));
         return;
       }
+      notifySessionChanged();
       const message =
         res.message ??
         (res.pendingApproval ? t("auth.register.successPending") : t("auth.register.successActive"));

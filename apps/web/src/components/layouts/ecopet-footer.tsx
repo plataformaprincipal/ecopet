@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSession } from "next-auth/react";
+import { useAuthSession } from "@/hooks/use-auth-session";
 import { Phone, MessageCircle } from "lucide-react";
 import { EcoPetLogo } from "@/components/shared/brand/ecopet-logo";
 import { useSupportChat } from "@/providers/support-chat-provider";
@@ -35,7 +35,7 @@ function resolveHref(link: NavLink, isAuthenticated: boolean): string {
 export function EcopetFooter() {
   const { openChat, hasUnread } = useSupportChat();
   const { t } = useTranslation();
-  const { status } = useSession();
+  const { status } = useAuthSession();
   const isAuthenticated = status === "authenticated";
 
   return (

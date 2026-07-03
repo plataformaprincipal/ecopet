@@ -14,14 +14,27 @@ type FoundationSession = {
   accountStatus: AccountStatus;
 };
 
+async function parseJsonBody(res: Response): Promise<unknown> {
+  const raw = await res.text();
+  if (!raw.trim()) return null;
+  try {
+    return JSON.parse(raw) as unknown;
+  } catch {
+    return null;
+  }
+}
+
 async function fetchFoundationSession(): Promise<FoundationSession | null> {
   const res = await fetch("/api/auth/me", { credentials: "include", cache: "no-store" });
   if (!res.ok) return null;
 
-  const data = await res.json();
+  const data = (await parseJsonBody(res)) as {
+    success?: boolean;
+    data?: { user?: FoundationSession };
+  } | null;
   if (data?.success === false || !data?.data?.user) return null;
 
-  return data.data.user as FoundationSession;
+  return data.data.user;
 }
 
 export function useFoundationSession() {

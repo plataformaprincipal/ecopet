@@ -1,14 +1,14 @@
 "use client";
 
 import { useCallback } from "react";
-import { useSession } from "next-auth/react";
+import { useAuthSession } from "@/hooks/use-auth-session";
 import { useMarketplaceStore } from "@/store/marketplace-store";
 import { addProductToServerCart, toggleServerFavorite } from "@/lib/marketplace/cart-client";
 import { useMarketplaceAuthGate } from "@/hooks/use-marketplace-auth-gate";
 import type { MarketplaceProduct, MarketplaceService, MarketplacePartner } from "@/lib/marketplace/types";
 
 export function useMarketplaceActions() {
-  const { data: session } = useSession();
+  const { data: session } = useAuthSession();
   const { requireAuth, AuthModal, isAuthenticated } = useMarketplaceAuthGate();
   const {
     toggleFavoriteProduct,

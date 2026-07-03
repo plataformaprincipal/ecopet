@@ -242,6 +242,8 @@ export function AccessibilityToolbar() {
                 label={t("a11y.reset")}
                 onClick={() => {
                   reset();
+                  hideVLibras();
+                  useAccessibilityStore.getState().setVlibrasStatus("idle");
                   announce(t("a11y.preferencesSaved"), "polite");
                 }}
                 disabled={!hasActiveSettings()}

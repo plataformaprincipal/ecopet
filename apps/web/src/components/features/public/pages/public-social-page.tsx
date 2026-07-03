@@ -10,7 +10,7 @@ import { PublicPostCard } from "../public-post-card";
 import { SkeletonCard } from "../skeleton-card";
 import { fetchPublicPosts, fetchPublicTrending } from "@/lib/public/client-api";
 import type { ApiSocialPost } from "@/lib/social/client-api";
-import { useSession } from "next-auth/react";
+import { useAuthSession } from "@/hooks/use-auth-session";
 import { SocialFeed } from "@/components/features/social/feed/social-feed";
 
 const FEED_CATEGORIES = [
@@ -192,7 +192,7 @@ function GuestSocialFeed() {
 }
 
 export function PublicSocialPage() {
-  const { status } = useSession();
+  const { status } = useAuthSession();
   if (status === "authenticated") {
     return (
       <div className="mx-auto max-w-2xl">

@@ -37,8 +37,8 @@ export type RemotePreferencesResult =
   | { ok: false; unauthorized: boolean };
 
 /** Carrega preferências do perfil. Retorna null em visitante, 401 ou falha — localStorage permanece fonte. */
-export async function loadRemotePreferences(token: string): Promise<RemotePreferencesResult> {
-  const result = await localApiSafe<PreferencesResponse>(PREFERENCES_API, { token });
+export async function loadRemotePreferences(token?: string): Promise<RemotePreferencesResult> {
+  const result = await localApiSafe<PreferencesResponse>(PREFERENCES_API, token ? { token } : {});
   if (!result.ok) {
     return { ok: false, unauthorized: result.status === 401 };
   }
@@ -47,12 +47,12 @@ export async function loadRemotePreferences(token: string): Promise<RemotePrefer
 
 /** Persiste preferências no perfil. Falhas (incl. 401) são silenciosas — localStorage continua válido. */
 export async function saveRemotePreferences(
-  token: string,
+  token: string | undefined,
   a11y: AccessibilityPreferences
 ): Promise<{ ok: boolean; unauthorized: boolean }> {
   const result = await localApiSafe<PreferencesResponse>(PREFERENCES_API, {
     method: "PATCH",
-    token,
+    ...(token ? { token } : {}),
     body: JSON.stringify({ a11y }),
   });
   return { ok: result.ok, unauthorized: !result.ok && result.status === 401 };

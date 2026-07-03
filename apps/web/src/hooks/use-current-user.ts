@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
+import { useAuthSession } from "@/hooks/use-auth-session";
 import { api } from "@/lib/api";
 import { useAppStore } from "@/store/app-store";
 
@@ -37,27 +37,19 @@ export interface CurrentUser {
 }
 
 export function useCurrentUser() {
-  const { data: session, status: sessionStatus } = useSession();
+  const { status: sessionStatus } = useAuthSession();
   const storeToken = useAppStore((s) => s.apiToken);
-  const setApiToken = useAppStore((s) => s.setApiToken);
   const [hydrated, setHydrated] = useState(false);
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const sessionToken = session?.apiToken;
-  const token = storeToken || sessionToken || null;
+  const token = storeToken || null;
 
   useEffect(() => {
     setHydrated(useAppStore.persist.hasHydrated());
     const unsub = useAppStore.persist.onFinishHydration(() => setHydrated(true));
     return unsub;
   }, []);
-
-  useEffect(() => {
-    if (sessionToken && !storeToken) {
-      setApiToken(sessionToken);
-    }
-  }, [sessionToken, storeToken, setApiToken]);
 
   useEffect(() => {
     if (!hydrated || sessionStatus === "loading") return;

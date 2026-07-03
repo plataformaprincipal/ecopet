@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
-import { useSession } from "next-auth/react";
+import { useAuthSession } from "@/hooks/use-auth-session";
 import { AuthRequiredModal } from "@/components/features/social/feed/auth-required-modal";
 
 type AuthGateContextValue = {
@@ -14,7 +14,7 @@ type AuthGateContextValue = {
 const AuthGateContext = createContext<AuthGateContextValue | null>(null);
 
 export function AuthGateProvider({ children }: { children: React.ReactNode }) {
-  const { status } = useSession();
+  const { status } = useAuthSession();
   const [open, setOpen] = useState(false);
 
   const isAuthenticated = status === "authenticated";

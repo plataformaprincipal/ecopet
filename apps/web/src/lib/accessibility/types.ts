@@ -59,7 +59,7 @@ export const DEFAULT_PREFERENCES: AccessibilityPreferences = {
   motorMode: false,
   cognitiveMode: false,
   visualAlerts: false,
-  librasEnabled: true,
+  librasEnabled: false,
   locale: "pt-BR",
 };
 

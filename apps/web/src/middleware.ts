@@ -28,11 +28,18 @@ async function fetchAuthoritativeStatus(request: NextRequest, token: string) {
     cache: "no-store",
   });
   if (!res.ok) return null;
-  const body = await res.json();
-  if (!body?.success) return null;
+  const raw = await res.text();
+  if (!raw.trim()) return null;
+  let body: { success?: boolean; data?: { role: AppRole; accountStatus: AccountStatus } };
+  try {
+    body = JSON.parse(raw) as typeof body;
+  } catch {
+    return null;
+  }
+  if (!body?.success || !body.data) return null;
   return {
-    role: body.data.role as AppRole,
-    accountStatus: body.data.accountStatus as AccountStatus,
+    role: body.data.role,
+    accountStatus: body.data.accountStatus,
     setCookie: res.headers.get("set-cookie"),
   };
 }

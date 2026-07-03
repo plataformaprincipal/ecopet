@@ -70,7 +70,7 @@ export const useAccessibilityStore = create<AccessibilityState>()(
         const normalized = normalizeLocale(locale) ?? locale;
         set({ locale: normalized });
       },
-      reset: () => set({ ...DEFAULT_PREFERENCES }),
+      reset: () => set({ ...DEFAULT_PREFERENCES, vlibrasStatus: "idle" }),
       hasActiveSettings: () => {
         const s = get();
         return (Object.keys(DEFAULT_PREFERENCES) as (keyof AccessibilityPreferences)[]).some(

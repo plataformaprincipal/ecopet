@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useAuthSession } from "@/hooks/use-auth-session";
 import { Loader2 } from "lucide-react";
 import type { ConversationContextType } from "@prisma/client";
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,7 @@ export function StartConversationButton({
   ariaLabel,
 }: StartConversationButtonProps) {
   const router = useRouter();
-  const { status } = useSession();
+  const { status } = useAuthSession();
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);

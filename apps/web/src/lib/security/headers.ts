@@ -38,6 +38,7 @@ export function contentSecurityPolicy(): string {
     `frame-src 'self' ${vlibrasSources} https://cdn.talkjs.com`,
     `worker-src 'self' blob: ${vlibrasSources}`,
     `child-src 'self' blob: ${vlibrasSources}`,
+    `media-src 'self' blob: ${vlibrasSources}`,
     "frame-ancestors 'self'",
     "base-uri 'self'",
     "form-action 'self'",

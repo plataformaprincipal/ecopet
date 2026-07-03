@@ -1,25 +1,15 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useSession } from "next-auth/react";
-import { useAppStore } from "@/store/app-store";
+import { useAuthSession } from "@/hooks/use-auth-session";
 import { useMarketplaceStore } from "@/store/marketplace-store";
 import { useSocialStore } from "@/store/social-store";
 import { useNotificationsStore } from "@/store/notifications-store";
 
-/** Mantém apiToken do Zustand alinhado com a sessão NextAuth após login. */
+/** Reidrata stores por usuário quando a sessão EcoPet muda. */
 export function AuthTokenSync() {
-  const { data: session, status } = useSession();
-  const setApiToken = useAppStore((s) => s.setApiToken);
-  const storeToken = useAppStore((s) => s.apiToken);
+  const { data: session, status } = useAuthSession();
   const lastUserId = useRef<string | null>(null);
-
-  useEffect(() => {
-    const sessionToken = (session as { apiToken?: string } | null)?.apiToken;
-    if (sessionToken && sessionToken !== storeToken) {
-      setApiToken(sessionToken);
-    }
-  }, [session, storeToken, setApiToken]);
 
   useEffect(() => {
     const userId = session?.user?.id ?? null;
