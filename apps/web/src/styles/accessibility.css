@@ -278,15 +278,19 @@ html[dir="rtl"] .a11y-toolbar-root {
   right: 1rem;
 }
 
-/* VLibras — visível, clicável e acima de overlays EcoPet (toolbar, chat, modais) */
+/* VLibras — botão oficial no centro da lateral direita */
 [vw] {
   position: fixed !important;
-  bottom: 0 !important;
-  left: 0 !important;
+  top: 50% !important;
+  right: 0 !important;
+  left: auto !important;
+  bottom: auto !important;
+  transform: translateY(-50%) !important;
   direction: ltr !important;
   unicode-bidi: isolate;
   z-index: 2147483646 !important;
   overflow: visible !important;
+  margin: 0 !important;
 }
 
 [vw-access-button],
@@ -332,11 +336,6 @@ html[dir="rtl"] .a11y-toolbar-root {
   z-index: 2147483647 !important;
 }
 
-/* Espaço acima da FAB de acessibilidade EcoPet (canto inferior esquerdo) */
-[vw]:not(.ecopet-vlibras-hidden) {
-  margin-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px)) !important;
-}
-
 /* Garante que layout EcoPet não crie clipping em overlays fixos (VLibras, toolbar, chat) */
 html,
 body {
@@ -367,8 +366,3 @@ body {
   z-index: 2147483640 !important;
 }
 
-/* Libras ativo: só FAB visível; widget gov.br fica acima (z-index maior) */
-.a11y-toolbar-root--libras-active #ecopet-a11y-toolbar {
-  display: none !important;
-  pointer-events: none !important;
-}

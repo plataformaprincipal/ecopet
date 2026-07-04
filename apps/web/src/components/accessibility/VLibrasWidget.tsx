@@ -1,19 +1,18 @@
 "use client";
 
 import Script from "next/script";
-import { useLayoutEffect, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { useAccessibilityStore } from "@/store/accessibility-store";
 import { VLIBRAS_SCRIPT_URL } from "@/lib/accessibility/constants";
 import {
-  hideVLibras,
-  initVLibras,
-  setVLibrasVisible,
+  activateVLibras,
+  deactivateVLibras,
   VW_HIDDEN_CLASS,
 } from "@/lib/accessibility/vlibras-loader";
 
-/** DOM oficial gov.br — um único container [vw]. */
+/** DOM oficial gov.br — um único container [vw], sempre montado. */
 function VLibrasOfficialDom({ visible }: { visible: boolean }) {
   return (
     <div
@@ -32,8 +31,11 @@ function VLibrasOfficialDom({ visible }: { visible: boolean }) {
 
 export function VLibrasWidget() {
   const librasEnabled = useAccessibilityStore((s) => s.librasEnabled);
+  const setVlibrasStatus = useAccessibilityStore((s) => s.setVlibrasStatus);
   const [mounted, setMounted] = useState(false);
   const [scriptReady, setScriptReady] = useState(false);
+  const [scriptRequested, setScriptRequested] = useState(false);
+  const lastSyncedRef = useRef<boolean | null>(null);
 
   useLayoutEffect(() => setMounted(true), []);
 
@@ -44,29 +46,50 @@ export function VLibrasWidget() {
   }, []);
 
   useLayoutEffect(() => {
+    if (librasEnabled) setScriptRequested(true);
+  }, [librasEnabled]);
+
+  useLayoutEffect(() => {
     if (!mounted) return;
 
     if (!librasEnabled) {
-      hideVLibras();
+      if (lastSyncedRef.current !== false) {
+        deactivateVLibras();
+        setVlibrasStatus("idle");
+        lastSyncedRef.current = false;
+      }
       return;
     }
 
-    if (!scriptReady && !window.VLibras) return;
+    if (!scriptReady && !window.VLibras) {
+      setVlibrasStatus("loading");
+      return;
+    }
 
-    initVLibras();
-    setVLibrasVisible(true);
-  }, [mounted, librasEnabled, scriptReady]);
+    if (lastSyncedRef.current !== true) {
+      const ok = activateVLibras();
+      setVlibrasStatus(ok ? "ready" : "error");
+      lastSyncedRef.current = true;
+    }
+  }, [mounted, librasEnabled, scriptReady, setVlibrasStatus]);
 
   if (!mounted) return null;
 
   return (
     <>
-      {librasEnabled && !scriptReady && (
+      {scriptRequested && !scriptReady && (
         <Script
           id="vlibras-plugin"
           src={VLIBRAS_SCRIPT_URL}
           strategy="afterInteractive"
-          onLoad={() => setScriptReady(true)}
+          onLoad={() => {
+            setScriptReady(true);
+            if (librasEnabled) {
+              const ok = activateVLibras();
+              useAccessibilityStore.getState().setVlibrasStatus(ok ? "ready" : "error");
+              lastSyncedRef.current = true;
+            }
+          }}
         />
       )}
       {createPortal(<VLibrasOfficialDom visible={librasEnabled} />, document.body)}

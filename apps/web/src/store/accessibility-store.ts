@@ -57,7 +57,17 @@ export const useAccessibilityStore = create<AccessibilityState>()(
         set({ lineHeight: Math.min(SPACING_MAX, get().lineHeight + SPACING_STEP) }),
       decreaseLineHeight: () =>
         set({ lineHeight: Math.max(SPACING_MIN, get().lineHeight - SPACING_STEP) }),
-      toggle: (key) => set({ [key]: !get()[key] } as Partial<AccessibilityPreferences>),
+      toggle: (key) => {
+        const next = !get()[key];
+        if (key === "librasEnabled") {
+          set({
+            librasEnabled: next,
+            vlibrasStatus: next ? "loading" : "idle",
+          });
+          return;
+        }
+        set({ [key]: next } as Partial<AccessibilityPreferences>);
+      },
       toggleBraille: () => {
         const next = !get().brailleEnabled;
         if (next) {

@@ -39,7 +39,7 @@ import {
 } from "@/store/accessibility-store";
 import type { AccessibilityPreferences } from "@/lib/accessibility/types";
 import { useTranslation } from "@/providers/i18n-provider";
-import { hideVLibras } from "@/lib/accessibility/vlibras-loader";
+import { deactivateVLibras } from "@/lib/accessibility/vlibras-loader";
 import { useAriaAnnounce } from "./aria-live-region";
 type BooleanKey = {
   [K in keyof AccessibilityPreferences]: AccessibilityPreferences[K] extends boolean ? K : never;
@@ -98,20 +98,12 @@ export function AccessibilityToolbar() {
       toggle(key);
       announce(`${label} ${!wasActive ? t("a11y.activated") : t("a11y.deactivated")}`, "polite");
 
-      if (key === "librasEnabled") {
-        if (wasActive) {
-          hideVLibras();
-        } else {
-          dismissPanel();
-        }
+      if (key === "librasEnabled" && !wasActive) {
+        dismissPanel();
       }
     },
     [toggle, announce, t, dismissPanel]
   );
-
-  useEffect(() => {
-    if (librasEnabled) dismissPanel();
-  }, [librasEnabled, dismissPanel]);
 
   const handleBrailleToggle = useCallback(() => {
     toggleBraille();
@@ -144,10 +136,7 @@ export function AccessibilityToolbar() {
 
   return (
     <div
-      className={cn(
-        "a11y-toolbar-root bottom-24 left-4 lg:bottom-6",
-        librasEnabled && "a11y-toolbar-root--libras-active"
-      )}
+      className="a11y-toolbar-root bottom-24 left-4 lg:bottom-6"
       role="region"
       aria-label={t("a11y.title")}
     >
@@ -230,7 +219,7 @@ export function AccessibilityToolbar() {
                 label={t("a11y.reset")}
                 onClick={() => {
                   reset();
-                  hideVLibras();
+                  deactivateVLibras();
                   announce(t("a11y.preferencesSaved"), "polite");
                 }}
                 disabled={!hasActiveSettings()}
