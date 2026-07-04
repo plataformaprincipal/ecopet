@@ -9,6 +9,8 @@ import { VLIBRAS_SCRIPT_URL } from "@/lib/accessibility/constants";
 import {
   activateVLibras,
   deactivateVLibras,
+  syncVLibrasBodyClass,
+  VW_DISABLED_CLASS,
   VW_HIDDEN_CLASS,
 } from "@/lib/accessibility/vlibras-loader";
 
@@ -17,7 +19,7 @@ function VLibrasOfficialDom({ visible }: { visible: boolean }) {
   return (
     <div
       vw=""
-      className={cn("enabled", !visible && VW_HIDDEN_CLASS)}
+      className={cn("enabled", !visible && VW_HIDDEN_CLASS, !visible && VW_DISABLED_CLASS)}
       aria-hidden={visible ? "false" : "true"}
       suppressHydrationWarning
     >
@@ -51,6 +53,7 @@ export function VLibrasWidget() {
 
   useLayoutEffect(() => {
     if (!mounted) return;
+    syncVLibrasBodyClass(librasEnabled);
 
     if (!librasEnabled) {
       if (lastSyncedRef.current !== false) {

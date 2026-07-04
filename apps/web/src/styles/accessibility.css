@@ -278,7 +278,7 @@ html[dir="rtl"] .a11y-toolbar-root {
   right: 1rem;
 }
 
-/* VLibras — botão oficial no centro da lateral direita */
+/* VLibras — botão oficial no centro da lateral direita (somente quando ativo) */
 [vw] {
   position: fixed !important;
   top: 50% !important;
@@ -293,40 +293,55 @@ html[dir="rtl"] .a11y-toolbar-root {
   margin: 0 !important;
 }
 
-[vw-access-button],
-[vw-plugin-wrapper] {
-  direction: ltr !important;
-  unicode-bidi: isolate;
-  z-index: 2147483647 !important;
-  pointer-events: auto !important;
-  overflow: visible !important;
-}
-[vw].ecopet-vlibras-hidden {
+[vw].ecopet-vlibras-hidden,
+[vw].ecopet-vlibras-disabled {
   visibility: hidden !important;
   opacity: 0 !important;
   pointer-events: none !important;
+  z-index: -1 !important;
 }
 
-[vw]:not(.ecopet-vlibras-hidden) {
+/* Libras OFF — bloqueia container, filhos, canvas Unity e tooltip "Interagir" */
+body.ecopet-vlibras-inactive [vw],
+body.ecopet-vlibras-inactive [vw] *,
+body.ecopet-vlibras-inactive [vw-access-button],
+body.ecopet-vlibras-inactive [vw-plugin-wrapper],
+body.ecopet-vlibras-inactive [vw-plugin-wrapper] *,
+body.ecopet-vlibras-inactive #gameContainer,
+body.ecopet-vlibras-inactive #gameContainer * {
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  z-index: -1 !important;
+}
+
+[vw]:not(.ecopet-vlibras-hidden):not(.ecopet-vlibras-disabled) {
   visibility: visible !important;
   opacity: 1 !important;
   overflow: visible !important;
   pointer-events: auto !important;
 }
 
-[vw-access-button] {
-  pointer-events: auto !important;
-  cursor: pointer !important;
-  position: relative !important;
-}
-
-[vw-plugin-wrapper] {
+[vw]:not(.ecopet-vlibras-hidden):not(.ecopet-vlibras-disabled) [vw-access-button],
+[vw]:not(.ecopet-vlibras-hidden):not(.ecopet-vlibras-disabled) [vw-plugin-wrapper] {
+  direction: ltr !important;
+  unicode-bidi: isolate;
+  z-index: 2147483647 !important;
   pointer-events: auto !important;
   overflow: visible !important;
 }
 
-[vw] .vp-access-button,
-[vw-access-button] .vp-access-button {
+[vw]:not(.ecopet-vlibras-hidden):not(.ecopet-vlibras-disabled) [vw-access-button] {
+  cursor: pointer !important;
+  position: relative !important;
+}
+
+[vw]:not(.ecopet-vlibras-hidden):not(.ecopet-vlibras-disabled) [vw-plugin-wrapper] {
+  overflow: visible !important;
+}
+
+[vw]:not(.ecopet-vlibras-hidden):not(.ecopet-vlibras-disabled) .vp-access-button,
+[vw]:not(.ecopet-vlibras-hidden):not(.ecopet-vlibras-disabled) [vw-access-button] .vp-access-button {
   display: block !important;
   visibility: visible !important;
   opacity: 1 !important;
@@ -348,21 +363,30 @@ body {
 }
 
 /* Unity WebGL — não clipar canvas do avatar dentro do plugin gov.br */
-[vw] #gameContainer,
-[vw-plugin-wrapper] #gameContainer {
+[vw]:not(.ecopet-vlibras-hidden):not(.ecopet-vlibras-disabled) #gameContainer,
+[vw]:not(.ecopet-vlibras-hidden):not(.ecopet-vlibras-disabled) [vw-plugin-wrapper] #gameContainer {
   position: relative !important;
   pointer-events: auto !important;
   overflow: visible !important;
 }
 
-[vw] #gameContainer canvas,
-[vw-plugin-wrapper] #gameContainer canvas {
+[vw]:not(.ecopet-vlibras-hidden):not(.ecopet-vlibras-disabled) #gameContainer canvas,
+[vw]:not(.ecopet-vlibras-hidden):not(.ecopet-vlibras-disabled) [vw-plugin-wrapper] #gameContainer canvas {
   pointer-events: auto !important;
   display: block !important;
 }
 
-/* Painel EcoPet abaixo do plugin VLibras quando ambos visíveis */
+/* Painel EcoPet acima de tooltips/overlays VLibras quando aberto */
 .a11y-toolbar-root {
   z-index: 2147483640 !important;
+}
+
+.a11y-toolbar-root:has(#ecopet-a11y-toolbar) {
+  z-index: 2147483647 !important;
+}
+
+#ecopet-a11y-toolbar {
+  position: relative;
+  z-index: 2147483647 !important;
 }
 

@@ -3,6 +3,7 @@
  * Falha em runtime de produção quando segredos obrigatórios estão ausentes.
  */
 import { resolveAuthSecret } from "@/lib/auth-secret";
+import { isLocalhostUrl, resolvePublicAppUrl } from "@/lib/app-url";
 
 const IS_PROD = process.env.NODE_ENV === "production";
 const IS_BUILD =
@@ -40,8 +41,8 @@ export const env = {
   databaseUrl: requireEnv("DATABASE_URL"),
   authSecret: resolveAuthSecret(),
   nextAuthSecret: resolveNextAuthSecret(),
-  nextAuthUrl: requireEnv("NEXTAUTH_URL", "http://localhost:3000"),
-  appUrl: requireEnv("APP_URL", process.env.NEXTAUTH_URL ?? "http://localhost:3000"),
+  nextAuthUrl: requireEnv("NEXTAUTH_URL", resolvePublicAppUrl()),
+  appUrl: requireEnv("APP_URL", resolvePublicAppUrl()),
 
   apiInternalUrl: process.env.API_INTERNAL_URL?.trim() ?? "",
   nextPublicApiUrl: process.env.NEXT_PUBLIC_API_URL?.trim() ?? "",
@@ -52,3 +53,17 @@ export const env = {
   smtpUser: process.env.SMTP_USER?.trim() ?? "",
   smtpPass: process.env.SMTP_PASS?.trim() ?? "",
 } as const;
+
+if (IS_PROD && !IS_BUILD && process.env.VERCEL === "1") {
+  if (!process.env.DATABASE_URL?.trim()) {
+    throw new Error(
+      "[env] DATABASE_URL ausente na Vercel — login/cadastro não funcionam sem o banco Supabase."
+    );
+  }
+  const publicUrl = resolvePublicAppUrl();
+  if (isLocalhostUrl(publicUrl)) {
+    console.warn(
+      "[env] NEXTAUTH_URL/APP_URL apontam para localhost na Vercel. Defina a URL HTTPS de produção."
+    );
+  }
+}

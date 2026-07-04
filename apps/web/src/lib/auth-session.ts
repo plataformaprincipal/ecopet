@@ -1,14 +1,16 @@
 import { SignJWT, jwtVerify } from "jose";
 import type { AccountStatus, UserRole } from "@prisma/client";
 import { resolveAuthSecret } from "@/lib/auth-secret";
+import { isProductionHttps } from "@/lib/app-url";
 
 export const SESSION_COOKIE = "ecopet-session";
 
 const secret = () => new TextEncoder().encode(resolveAuthSecret());
 
-/** Cookie Secure apenas em deploy HTTPS real — evita quebrar login em http://localhost com next start. */
+/** Cookie Secure em deploy HTTPS (Vercel ou URL pública https://). */
 function sessionCookieSecure(): boolean {
   if (process.env.FORCE_INSECURE_SESSION_COOKIE === "1") return false;
+  if (isProductionHttps()) return true;
 
   const appUrl = (
     process.env.NEXTAUTH_URL?.trim() ||
@@ -20,8 +22,7 @@ function sessionCookieSecure(): boolean {
   if (appUrl.startsWith("http://")) return false;
   if (appUrl.startsWith("https://")) return true;
 
-  // Vercel/produção sem URL explícita: HTTPS na borda
-  return process.env.NODE_ENV === "production" && Boolean(process.env.VERCEL);
+  return process.env.NODE_ENV === "production";
 }
 
 export async function createSessionToken(

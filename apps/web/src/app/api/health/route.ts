@@ -11,9 +11,12 @@ export async function GET() {
       timestamp: new Date().toISOString(),
     });
   } catch {
+    const configured = Boolean(process.env.DATABASE_URL?.trim());
     return apiFailure(
       "DATABASE_UNAVAILABLE",
-      "Não foi possível conectar ao banco de dados.",
+      configured
+        ? "Não foi possível conectar ao banco de dados."
+        : "DATABASE_URL não configurada no ambiente de produção.",
       503
     );
   }
