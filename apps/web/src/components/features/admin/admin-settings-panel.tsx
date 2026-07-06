@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { AdminHeader } from "./admin-header";
+import { AdminPageHeader } from "./ui/admin-page-header";
 import { AdminAlert } from "./admin-alert";
 
 type Settings = {
@@ -67,7 +67,7 @@ export function AdminSettingsPanel() {
   if (loading) {
     return (
       <>
-        <AdminHeader title="Configurações" />
+        <AdminPageHeader title="Configurações" />
         <p className="p-6 text-sm text-muted-foreground" role="status">Carregando…</p>
       </>
     );
@@ -76,7 +76,7 @@ export function AdminSettingsPanel() {
   if (!settings) {
     return (
       <>
-        <AdminHeader title="Configurações" />
+        <AdminPageHeader title="Configurações" />
         <p className="p-6 text-sm text-red-600" role="alert">{error || "Configurações indisponíveis."}</p>
       </>
     );
@@ -84,7 +84,11 @@ export function AdminSettingsPanel() {
 
   return (
     <>
-      <AdminHeader title="Configurações" description="Preferências gerais da plataforma EcoPet." />
+      <AdminPageHeader
+        title="Configurações da Plataforma"
+        description="Preferências gerais da plataforma EcoPet. Alterações geram AuditLog."
+        breadcrumbs={[{ label: "Admin", href: "/admin" }, { label: "Configurações" }]}
+      />
       <div className="max-w-2xl space-y-6 p-6">
         {success && <AdminAlert type="success" message={success} onDismiss={() => setSuccess("")} />}
         {error && <AdminAlert type="error" message={error} onDismiss={() => setError("")} />}

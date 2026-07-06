@@ -2,13 +2,18 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { AdminHeader } from "./admin-header";
-import { MetricGrid } from "@/components/features/gestor-admin/metric-card";
-
-type Metric = { key: string; label: string; value: number };
+import { AdminPageHeader } from "./ui/admin-page-header";
+import { AdminMetricGrid } from "./ui/admin-metric-card";
+import { AdminDataTable } from "./ui/admin-data-table";
+import { AdminAlert } from "./admin-alert";
+import { fetchAdminModule } from "@/lib/admin/client-api";
 
 export function AdminDashboardPanel() {
-  const [metrics, setMetrics] = useState<Metric[]>([]);
+  const [data, setData] = useState<{
+    metrics: { key: string; label: string; value: number }[];
+    tables?: { id: string; label: string; rows: Record<string, unknown>[] }[];
+    quickActions?: { label: string; href: string }[];
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -16,10 +21,8 @@ export function AdminDashboardPanel() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/admin/overview", { credentials: "include" });
-      const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.error?.message ?? "Erro ao carregar métricas");
-      setMetrics(data.data.metrics);
+      const result = await fetchAdminModule("dashboard");
+      setData(result as typeof data);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -31,47 +34,54 @@ export function AdminDashboardPanel() {
     void load();
   }, [load]);
 
-  const pendingPartners = metrics.find((m) => m.key === "partners_pending")?.value ?? 0;
-  const pendingOngs = metrics.find((m) => m.key === "ongs_pending")?.value ?? 0;
-
   return (
     <>
-      <AdminHeader
-        title="Dashboard"
-        description="Visão geral da plataforma — dados em tempo real do banco."
+      <AdminPageHeader
+        title="Dashboard Executivo"
+        description="Visão geral da empresa — dados em tempo real do banco."
+        breadcrumbs={[{ label: "Admin", href: "/admin" }, { label: "Dashboard" }]}
       />
-      <div className="space-y-6 p-6">
-        {loading && <p className="text-sm text-muted-foreground" role="status">Carregando métricas…</p>}
-        {error && (
-          <p className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
-            {error}
+      <div className="space-y-6 p-4 sm:p-6">
+        {loading && (
+          <p className="text-sm text-muted-foreground" role="status">
+            Carregando métricas…
           </p>
         )}
-        {!loading && !error && metrics.length > 0 && (
-          <MetricGrid items={metrics.map((m) => ({ label: m.label, value: m.value }))} columns={3} />
-        )}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <QuickLink
-            href="/admin/approvals"
-            title="Aprovações pendentes"
-            description={`${pendingPartners} parceiro(s) · ${pendingOngs} ONG(s)`}
+        {error && <AdminAlert type="error" message={error} onDismiss={() => setError("")} />}
+
+        {!loading && !error && data?.metrics && data.metrics.length > 0 && (
+          <AdminMetricGrid
+            items={data.metrics.map((m) => ({
+              label: m.label,
+              value: typeof m.value === "number" && m.value > 9999 ? m.value.toLocaleString("pt-BR") : m.value,
+            }))}
+            columns={4}
           />
-          <QuickLink href="/admin/users" title="Gerenciar usuários" description="Busca, filtros e status" />
-          <QuickLink href="/admin/social" title="Moderação social" description="Posts e denúncias" />
-        </div>
+        )}
+
+        {data?.quickActions && data.quickActions.length > 0 && (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {data.quickActions.map((a) => (
+              <Link
+                key={a.href}
+                href={a.href}
+                className="rounded-2xl border bg-white p-4 shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ecopet-green dark:bg-white/5"
+              >
+                <span className="font-semibold">{a.label}</span>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {data?.tables?.map((table) => (
+          <section key={table.id}>
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              {table.label}
+            </h2>
+            <AdminDataTable rows={table.rows} emptyLabel="Sem registros." />
+          </section>
+        ))}
       </div>
     </>
-  );
-}
-
-function QuickLink({ href, title, description }: { href: string; title: string; description: string }) {
-  return (
-    <Link
-      href={href}
-      className="rounded-2xl border bg-white p-4 shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ecopet-green dark:bg-white/5"
-    >
-      <h2 className="font-semibold">{title}</h2>
-      <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-    </Link>
   );
 }

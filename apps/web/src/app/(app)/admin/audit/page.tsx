@@ -1,12 +1,5 @@
-import { AdminSectionPanel } from "@/components/features/admin/admin-section-panel";
+import { AdminModulePage } from "@/components/features/admin/admin-module-page";
 
 export default function AdminAuditPage() {
-  return (
-    <AdminSectionPanel
-      title="Auditoria"
-      description="Logs administrativos e ações sensíveis."
-      endpoint="audit"
-      showFilters
-    />
-  );
+  return <AdminModulePage moduleId="audit" />;
 }

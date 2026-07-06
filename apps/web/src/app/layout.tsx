@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "@/styles/globals.css";
 import { ThemeProvider } from "@/providers/theme-provider";
+import { Providers } from "@/app/providers";
 import { AuthSessionProvider } from "@/providers/session-provider";
 import { AuthGateProvider } from "@/providers/auth-gate-provider";
 import { AuthTokenSync } from "@/providers/auth-token-sync";
@@ -74,6 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <body className={`${inter.variable} ${jakarta.variable} font-sans antialiased`}>
+        <Providers>
         <ThemeProvider>
           <AccessibilityProvider>
             <I18nProvider>
@@ -99,6 +101,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </I18nProvider>
           </AccessibilityProvider>
         </ThemeProvider>
+        </Providers>
         <Suspense fallback={null}>
           <VLibrasWidget />
         </Suspense>
