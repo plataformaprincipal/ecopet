@@ -127,6 +127,7 @@ export const ROLE_ROUTE_PREFIXES: Record<AppRole, readonly string[]> = {
     "/dashboard/admin/support",
     "/dashboard/admin/messages",
     "/dashboard/admin/social",
+    "/perfil",
     "/feed",
     "/configuracoes",
     "/conta",

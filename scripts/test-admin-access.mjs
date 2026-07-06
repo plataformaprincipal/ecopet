@@ -77,6 +77,13 @@ async function main() {
   ok("PARTNER não acessa /admin", !canAccessRoute("PARTNER", "/admin"));
   ok("ONG não acessa /admin", !canAccessRoute("ONG", "/admin"));
   ok("ADMIN acessa /admin", canAccessRoute("ADMIN", "/admin"));
+  ok("ADMIN acessa /perfil", canAccessRoute("ADMIN", "/perfil"));
+
+  const { requiresAuthoritativeStatus } = await import(
+    "../apps/web/src/lib/edge/authoritative-status.ts"
+  );
+  ok("requiresAuthoritativeStatus(/admin)", requiresAuthoritativeStatus("/admin"));
+  ok("requiresAuthoritativeStatus(/gestor)", requiresAuthoritativeStatus("/gestor"));
 
   if (!process.env.DATABASE_URL?.trim()) {
     console.log("⚠ DATABASE_URL ausente — pulando testes de banco");

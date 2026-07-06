@@ -78,6 +78,7 @@
     "test:cloudinary": "tsx --tsconfig apps/web/tsconfig.json scripts/test-cloudinary-upload.mjs",
     "test:ngo-flows": "node scripts/test-ngo-flows.mjs",
     "admin:create": "node scripts/admin-create.mjs",
+    "admin:create-new": "node scripts/create-new-admin.mjs",
     "admin:bootstrap": "node scripts/admin-bootstrap.mjs",
     "test:empty-states": "node --import tsx scripts/test-empty-states.mjs",
     "test:no-mocks": "node scripts/test-no-mocks.mjs",
