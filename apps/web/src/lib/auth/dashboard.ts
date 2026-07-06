@@ -10,7 +10,7 @@ export function dashboardPathForRole(role: string): string {
     case "ONG":
       return "/ngo";
     case "ADMIN":
-      return "/dashboard/admin";
+      return "/admin";
     case "GESTOR":
       return "/gestor";
     default:

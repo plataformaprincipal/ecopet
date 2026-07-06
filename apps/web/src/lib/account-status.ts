@@ -93,6 +93,17 @@ export function canAccessWithAccountStatus(
   if (accountStatus === "PENDING") {
     if (pathname === ACCOUNT_STATUS_PAGES.PENDING_REVIEW) return { allowed: true };
 
+    if (role === "ADMIN") {
+      const adminPaths = ["/admin", "/gestor", "/dashboard/admin"];
+      if (adminPaths.some((p) => pathMatchesPrefix(pathname, p))) {
+        return {
+          allowed: false,
+          redirectTo: "/perfil",
+          code: "PENDING_LIMITED",
+        };
+      }
+    }
+
     const blockedForRole =
       (role === "PARTNER" &&
         PARTNER_PENDING_BLOCKED_PREFIXES.some((p) => pathMatchesPrefix(pathname, p))) ||

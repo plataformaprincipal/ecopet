@@ -22,5 +22,14 @@ export {
 } from "@prisma/client";
 export type * from "@prisma/client";
 
-export { prisma, createPrismaClient } from "./client";
+export { prisma, createPrismaClient, getResolvedDatabaseUrl } from "./client";
+export {
+  buildDatabaseBootDiagnostics,
+  extractPrismaConnectError,
+  logDatabaseBootDiagnostics,
+  logPrismaConnectFailure,
+  parseDatabaseUrlHost,
+  type DatabaseBootDiagnostics,
+  type PrismaConnectErrorDetails,
+} from "./diagnostics";
 export * from "./repositories/index";

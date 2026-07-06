@@ -1,0 +1,5 @@
+import { AdminUsersPanel } from "@/components/features/admin/admin-users-panel";
+
+export default function AdminUsersPage() {
+  return <AdminUsersPanel />;
+}

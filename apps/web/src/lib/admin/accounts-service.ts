@@ -4,6 +4,7 @@ import {
   ApprovalType,
   UserRole,
   VerificationStatus,
+  type UserRole as UserRoleType,
 } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { writeAuditLog } from "@/lib/audit-log";
@@ -28,6 +29,8 @@ const partnerSelect = {
       city: true,
       state: true,
       verificationStatus: true,
+      approvedAt: true,
+      rejectionReason: true,
     },
   },
 } as const;
@@ -44,6 +47,7 @@ const ongSelect = {
   ongProfile: {
     select: {
       ongName: true,
+      name: true,
       cnpj: true,
       responsibleName: true,
       institutionalEmail: true,
@@ -51,9 +55,32 @@ const ongSelect = {
       city: true,
       state: true,
       verificationStatus: true,
+      approvedAt: true,
+      rejectionReason: true,
     },
   },
 } as const;
+
+async function notifyAccountUser(params: {
+  userId: string;
+  role: UserRoleType;
+  title: string;
+  message: string;
+  actionUrl?: string;
+}) {
+  await prisma.notification.create({
+    data: {
+      userId: params.userId,
+      role: params.role,
+      type: "SYSTEM",
+      title: params.title,
+      message: params.message,
+      body: params.message,
+      actionUrl: params.actionUrl,
+      priority: "HIGH",
+    },
+  });
+}
 
 export async function listPendingPartners() {
   return prisma.user.findMany({
@@ -95,12 +122,51 @@ export async function listOngsByStatus(status?: AccountStatus) {
 
 type ReviewAction = "approve" | "reject" | "suspend";
 
+function profileApprovalData(
+  action: ReviewAction,
+  adminId: string,
+  reason?: string
+): {
+  verificationStatus: VerificationStatus;
+  approvedAt: Date | null;
+  approvedById: string | null;
+  rejectionReason: string | null;
+} {
+  const now = new Date();
+  if (action === "approve") {
+    return {
+      verificationStatus: VerificationStatus.APPROVED,
+      approvedAt: now,
+      approvedById: adminId,
+      rejectionReason: null,
+    };
+  }
+  if (action === "reject") {
+    return {
+      verificationStatus: VerificationStatus.REJECTED,
+      approvedAt: null,
+      approvedById: null,
+      rejectionReason: reason?.trim() ?? null,
+    };
+  }
+  return {
+    verificationStatus: VerificationStatus.SUSPENDED,
+    approvedAt: null,
+    approvedById: null,
+    rejectionReason: reason?.trim() ?? "Conta suspensa pela administração.",
+  };
+}
+
 export async function reviewAccount(params: {
   targetUserId: string;
   action: ReviewAction;
   reason?: string;
   adminId: string;
 }) {
+  if (params.adminId === params.targetUserId) {
+    throw new Error("SELF_ACTION");
+  }
+
   const target = await prisma.user.findUnique({
     where: { id: params.targetUserId },
     include: { partnerProfile: true, ongProfile: true },
@@ -117,7 +183,11 @@ export async function reviewAccount(params: {
   const before = {
     accountStatus: target.accountStatus,
     accountStatusReason: target.accountStatusReason,
+    verificationStatus:
+      target.partnerProfile?.verificationStatus ?? target.ongProfile?.verificationStatus,
   };
+
+  const profileData = profileApprovalData(params.action, params.adminId, params.reason);
 
   if (params.action === "approve") {
     await prisma.$transaction(async (tx) => {
@@ -132,14 +202,14 @@ export async function reviewAccount(params: {
       if (target.role === UserRole.PARTNER && target.partnerProfile) {
         await tx.partnerProfile.update({
           where: { userId: target.id },
-          data: { verificationStatus: VerificationStatus.APPROVED },
+          data: profileData,
         });
       }
 
       if (target.role === UserRole.ONG && target.ongProfile) {
         await tx.ongProfile.update({
           where: { userId: target.id },
-          data: { verificationStatus: VerificationStatus.APPROVED },
+          data: profileData,
         });
       }
 
@@ -165,8 +235,16 @@ export async function reviewAccount(params: {
       resource: "User",
       resourceId: target.id,
       entityBefore: before,
-      entityAfter: { accountStatus: AccountStatus.ACTIVE },
+      entityAfter: { accountStatus: AccountStatus.ACTIVE, verificationStatus: VerificationStatus.APPROVED },
       observation: params.reason,
+    });
+
+    await notifyAccountUser({
+      userId: target.id,
+      role: target.role,
+      title: "Conta aprovada",
+      message: `Olá ${target.name}, sua conta foi aprovada. Você já pode usar a plataforma.`,
+      actionUrl: target.role === UserRole.PARTNER ? "/partner" : "/ngo",
     });
 
     const approveEvent = target.role === UserRole.PARTNER ? "PARTNER_APPROVED" : "ONG_APPROVED";
@@ -198,14 +276,14 @@ export async function reviewAccount(params: {
       if (target.role === UserRole.PARTNER && target.partnerProfile) {
         await tx.partnerProfile.update({
           where: { userId: target.id },
-          data: { verificationStatus: VerificationStatus.REJECTED },
+          data: profileData,
         });
       }
 
       if (target.role === UserRole.ONG && target.ongProfile) {
         await tx.ongProfile.update({
           where: { userId: target.id },
-          data: { verificationStatus: VerificationStatus.REJECTED },
+          data: profileData,
         });
       }
 
@@ -233,8 +311,17 @@ export async function reviewAccount(params: {
       entityAfter: {
         accountStatus: AccountStatus.REJECTED,
         accountStatusReason: params.reason!.trim(),
+        verificationStatus: VerificationStatus.REJECTED,
       },
       observation: params.reason!.trim(),
+    });
+
+    await notifyAccountUser({
+      userId: target.id,
+      role: target.role,
+      title: "Conta não aprovada",
+      message: `Sua solicitação não foi aprovada. Motivo: ${params.reason!.trim()}`,
+      actionUrl: "/conta/rejeitada",
     });
 
     const rejectEvent = target.role === UserRole.PARTNER ? "PARTNER_REJECTED" : "ONG_REJECTED";
@@ -258,6 +345,20 @@ export async function reviewAccount(params: {
       },
     });
 
+    if (target.role === UserRole.PARTNER && target.partnerProfile) {
+      await tx.partnerProfile.update({
+        where: { userId: target.id },
+        data: profileData,
+      });
+    }
+
+    if (target.role === UserRole.ONG && target.ongProfile) {
+      await tx.ongProfile.update({
+        where: { userId: target.id },
+        data: profileData,
+      });
+    }
+
     await tx.approvalRequest.updateMany({
       where: { requesterId: target.id, status: ApprovalStatus.PENDING },
       data: {
@@ -276,8 +377,19 @@ export async function reviewAccount(params: {
     resource: "User",
     resourceId: target.id,
     entityBefore: before,
-    entityAfter: { accountStatus: AccountStatus.SUSPENDED },
+    entityAfter: {
+      accountStatus: AccountStatus.SUSPENDED,
+      verificationStatus: VerificationStatus.SUSPENDED,
+    },
     observation: params.reason,
+  });
+
+  await notifyAccountUser({
+    userId: target.id,
+    role: target.role,
+    title: "Conta suspensa",
+    message: `Sua conta foi suspensa. ${params.reason?.trim() || "Entre em contato com o suporte."}`,
+    actionUrl: "/conta/suspensa",
   });
 
   const suspendEvent = target.role === UserRole.PARTNER ? "PARTNER_SUSPENDED" : "ONG_SUSPENDED";

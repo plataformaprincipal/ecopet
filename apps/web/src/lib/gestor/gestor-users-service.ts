@@ -98,6 +98,10 @@ export async function updateGestorUserStatus(params: {
   adminId: string;
   reason?: string;
 }) {
+  if (params.userId === params.adminId) {
+    throw new Error("SELF_ACTION");
+  }
+
   const target = await prisma.user.findUnique({ where: { id: params.userId } });
   if (!target) throw new Error("NOT_FOUND");
 

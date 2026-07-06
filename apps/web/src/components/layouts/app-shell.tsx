@@ -72,10 +72,11 @@ function FoundationAppShell({
   const isClientArea = isClientAreaPath(pathname);
   const isOngArea =
     isOngAreaPath(pathname) || pathname === "/ngo" || pathname.startsWith("/ngo/");
+  const isAdminArea = pathname.startsWith("/admin");
   const isImmersive = isImmersivePath(pathname);
   const showAi = role === "CLIENT" && pathname !== "/eccopet";
 
-  if (isPartnerArea || isClientArea || isOngArea) {
+  if (isPartnerArea || isClientArea || isOngArea || isAdminArea) {
     return <div className="min-h-screen">{children}</div>;
   }
 

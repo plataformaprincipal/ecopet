@@ -234,7 +234,7 @@ export function canAccessRoute(role: AppRole, pathname: string): boolean {
 export function getDefaultDashboardPath(role: AppRole): string {
   switch (role) {
     case "ADMIN":
-      return "/dashboard/admin";
+      return "/admin";
     case "PARTNER":
       return "/partner";
     case "ONG":

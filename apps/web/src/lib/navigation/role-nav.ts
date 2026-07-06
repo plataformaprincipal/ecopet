@@ -99,7 +99,7 @@ const ONG_SECONDARY: RoleSecondaryNavItem[] = [
 ];
 
 const ADMIN_MAIN: RoleNavItem[] = [
-  { href: "/dashboard/admin", labelKey: "nav.adminPanel", icon: Shield, match: ["/dashboard/admin", "/gestor", "/admin"] },
+  { href: "/admin", labelKey: "nav.adminPanel", icon: Shield, match: ["/admin", "/dashboard/admin", "/gestor"] },
   { href: "/gestor/permissions", labelKey: "nav.users", icon: Users, match: ["/gestor/permissions", "/dashboard/admin/accounts"] },
   {
     href: "/dashboard/admin/integrations",

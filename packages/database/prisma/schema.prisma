@@ -35,6 +35,7 @@ enum VerificationStatus {
   PENDING
   APPROVED
   REJECTED
+  SUSPENDED
 }
 
 enum EmailStatus {
@@ -606,6 +607,8 @@ model User {
   securityEvents      SecurityEvent[]
   gestorInvitesSent   GestorInvite[] @relation("InviteSender")
   platformDocuments   PlatformDocument[]
+  partnersApproved    PartnerProfile[] @relation("PartnerProfileApprovedBy")
+  ongsApproved        OngProfile[] @relation("OngProfileApprovedBy")
   verificationCodes   VerificationCode[]
   organizationId      String?
   organization        Organization? @relation(fields: [organizationId], references: [id])
@@ -1053,6 +1056,9 @@ model OngProfile {
   description        String?
   focusArea          String?
   verificationStatus VerificationStatus @default(PENDING)
+  approvedAt         DateTime?
+  approvedById       String?
+  rejectionReason    String?
   photos             Json?
   requirements       String?
   actionTypes        Json?
@@ -1063,6 +1069,7 @@ model OngProfile {
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
   user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  approvedBy         User?              @relation("OngProfileApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
 }
 
 model PartnerProfile {
@@ -1092,9 +1099,13 @@ model PartnerProfile {
   cnpjDetails        Json?
   logoAlt            String?
   verificationStatus VerificationStatus @default(PENDING)
+  approvedAt         DateTime?
+  approvedById       String?
+  rejectionReason    String?
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
   user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  approvedBy         User?              @relation("PartnerProfileApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
   availabilitySlots  PartnerAvailability[]
   blockedSlots       PartnerBlockedSlot[]
 }
@@ -3550,4 +3561,17 @@ model UploadAsset {
   @@index([ownerId])
   @@index([purpose])
   @@index([publicId])
+}
+
+/// Configurações globais da plataforma (singleton) — painel /admin/settings
+model PlatformSettings {
+  id                 String   @id @default("singleton")
+  maintenanceMode    Boolean  @default(false)
+  maintenanceMessage String?
+  institutionalText  String?
+  supportEmail       String?
+  contactEmail       String?
+  marketplaceEnabled Boolean  @default(true)
+  updatedAt          DateTime @updatedAt
+  updatedById        String?
 }

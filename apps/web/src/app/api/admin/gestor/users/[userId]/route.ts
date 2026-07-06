@@ -33,6 +33,9 @@ export async function PATCH(request: Request, context: RouteContext) {
     if ((e as Error).message === "NOT_FOUND") {
       return apiFailure("NOT_FOUND", "Usuário não encontrado.", 404);
     }
+    if ((e as Error).message === "SELF_ACTION") {
+      return apiFailure("FORBIDDEN", "Você não pode suspender sua própria conta.", 403);
+    }
     console.error("[gestor:users:patch]", e);
     return apiFailure("INTERNAL", "Erro interno. Tente novamente.", 500);
   }

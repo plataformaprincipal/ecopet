@@ -3,7 +3,8 @@
  * Falha em runtime de produção quando segredos obrigatórios estão ausentes.
  */
 import { resolveAuthSecret } from "@/lib/auth-secret";
-import { isLocalhostUrl, resolvePublicAppUrl } from "@/lib/app-url";
+import { resolvePublicAppUrl } from "@/lib/app-url";
+import { validateProductionEnv } from "@/lib/validate-production-env";
 
 const IS_PROD = process.env.NODE_ENV === "production";
 const IS_BUILD =
@@ -54,16 +55,4 @@ export const env = {
   smtpPass: process.env.SMTP_PASS?.trim() ?? "",
 } as const;
 
-if (IS_PROD && !IS_BUILD && process.env.VERCEL === "1") {
-  if (!process.env.DATABASE_URL?.trim()) {
-    throw new Error(
-      "[env] DATABASE_URL ausente na Vercel — login/cadastro não funcionam sem o banco Supabase."
-    );
-  }
-  const publicUrl = resolvePublicAppUrl();
-  if (isLocalhostUrl(publicUrl)) {
-    console.warn(
-      "[env] NEXTAUTH_URL/APP_URL apontam para localhost na Vercel. Defina a URL HTTPS de produção."
-    );
-  }
-}
+validateProductionEnv();

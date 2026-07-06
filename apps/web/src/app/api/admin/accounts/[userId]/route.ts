@@ -52,6 +52,9 @@ export async function PATCH(request: Request, context: RouteContext) {
     if (code === "REASON_REQUIRED") {
       return apiFailure("VALIDATION", "Informe o motivo da rejeição.", 400);
     }
+    if (code === "SELF_ACTION") {
+      return apiFailure("FORBIDDEN", "Você não pode executar esta ação em sua própria conta.", 403);
+    }
     if (process.env.NODE_ENV !== "production") {
       console.error("[admin:accounts:review]", e);
     }
