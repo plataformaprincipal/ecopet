@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { Bell, Search, Menu } from "lucide-react";
+import { ErpNotificationCenter } from "@/components/features/admin/erp/erp-notification-center";
+import { ErpAssistantDrawer } from "@/components/features/admin/erp/erp-assistant-drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Search, Menu } from "lucide-react";
 import { useState } from "react";
 
 type Props = {
@@ -48,11 +50,8 @@ export function AdminShellHeader({ onMenuToggle }: Props) {
         </div>
       </form>
       <div className="ml-auto flex items-center gap-2">
-        <Button type="button" variant="ghost" size="icon" aria-label="Notificações" asChild>
-          <Link href="/admin/audit">
-            <Bell className="h-5 w-5" />
-          </Link>
-        </Button>
+        <ErpAssistantDrawer />
+        <ErpNotificationCenter />
         <Link
           href="/perfil"
           className="flex items-center gap-2 rounded-full border px-2 py-1 text-sm hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ecopet-green"
