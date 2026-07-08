@@ -24,7 +24,8 @@ export async function GET() {
 
     const refreshed =
       jwt.accountStatus !== authoritative.accountStatus ||
-      jwt.role !== authoritative.role;
+      jwt.role !== authoritative.role ||
+      jwt.email !== authoritative.email;
 
     const response = apiSuccess({
       userId: authoritative.userId,
@@ -36,6 +37,7 @@ export async function GET() {
     if (refreshed) {
       const newToken = await createSessionToken(
         authoritative.userId,
+        authoritative.email,
         authoritative.role,
         authoritative.accountStatus
       );

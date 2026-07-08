@@ -1,16 +1,14 @@
 import { apiSuccess } from "@/lib/api-response";
-import { requireAuth } from "@/lib/auth/require-auth";
+import { requireAdmin } from "@/lib/auth/guards";
 import { handleSocialRouteError } from "@/lib/social/api-handler";
 import { moderatePost } from "@/lib/social/reports";
-import { requireAdmin } from "@/lib/social/permissions";
 
 type Params = { params: Promise<{ postId: string }> };
 
 export async function PATCH(req: Request, { params }: Params) {
   try {
-    const { user, error } = await requireAuth(["ADMIN"]);
+    const { user, error } = await requireAdmin({ path: new URL(req.url).pathname });
     if (error) return error;
-    await requireAdmin(user!.id);
     const { postId } = await params;
     const body = await req.json();
     const post = await moderatePost({

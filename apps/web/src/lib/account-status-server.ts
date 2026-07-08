@@ -7,6 +7,7 @@ import {
 
 export type AuthoritativeAccount = {
   userId: string;
+  email: string;
   role: UserRole;
   accountStatus: AccountStatus;
 };
@@ -16,11 +17,12 @@ export async function getAuthoritativeAccountStatus(
 ): Promise<AuthoritativeAccount | null> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, role: true, accountStatus: true },
+    select: { id: true, email: true, role: true, accountStatus: true },
   });
   if (!user) return null;
   return {
     userId: user.id,
+    email: user.email,
     role: user.role,
     accountStatus: user.accountStatus,
   };

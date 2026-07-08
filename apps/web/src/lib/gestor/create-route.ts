@@ -7,7 +7,7 @@ type HandlerFn = (filters: ReturnType<typeof parseGestorFilters>) => Promise<unk
 
 export function createGestorGetHandler(handler: HandlerFn) {
   return async function GET(request: Request) {
-    const { error } = await requireGestorAdmin();
+    const { error } = await requireGestorAdmin(request);
     if (error) return error;
     try {
       const filters = parseGestorFilters(new URL(request.url).searchParams);

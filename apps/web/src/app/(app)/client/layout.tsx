@@ -1,18 +1,14 @@
-import { redirect } from "next/navigation";
-import { UserRole } from "@prisma/client";
-import { getCurrentUser } from "@/lib/auth";
-import { dashboardPathForRole } from "@/lib/auth/dashboard";
 import { prisma } from "@/lib/prisma";
 import { ClientExperienceShell } from "@/components/features/client/experience/client-experience-shell";
+import { guardRole } from "@/lib/auth/guards";
+import { UserRole } from "@prisma/client";
 
 export default async function ClientExperienceLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const user = await getCurrentUser();
-  if (!user) redirect("/login?callbackUrl=/client");
-  if (user.role !== UserRole.CLIENT) redirect(dashboardPathForRole(user.role));
+  const user = await guardRole([UserRole.CLIENT], "/client");
 
   const pet = await prisma.pet.findFirst({
     where: { ownerId: user.id, deletedAt: null },

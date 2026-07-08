@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import { AccountStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
@@ -21,6 +20,7 @@ import {
   LOGIN_USER_NOT_FOUND_MESSAGE,
   LOGIN_WRONG_PASSWORD_MESSAGE,
 } from "@/lib/constants/auth-messages";
+import { auditLogin, auditLoginFailed } from "@/lib/auth/auth-audit";
 
 const LOGIN_LIMIT = 10;
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
@@ -41,6 +41,7 @@ export async function POST(request: Request) {
     }
 
     const { identifier, password } = parsed.data;
+    const userAgent = request.headers.get("user-agent") ?? undefined;
 
     if (!checkAuthRateLimit(`login:id:${identifier.toLowerCase()}`, LOGIN_LIMIT, LOGIN_WINDOW_MS)) {
       return apiFailure("RATE_LIMIT", "Muitas tentativas. Aguarde alguns minutos.", 429);
@@ -48,14 +49,17 @@ export async function POST(request: Request) {
 
     const user = await findUserByLoginIdentifier(prisma, identifier);
     if (!user) {
+      void auditLoginFailed({ identifier, reason: "USER_NOT_FOUND", ip, userAgent });
       return apiFailure("USER_NOT_FOUND", LOGIN_USER_NOT_FOUND_MESSAGE, 401);
     }
 
     if (user.accountStatus === AccountStatus.SUSPENDED) {
+      void auditLoginFailed({ userId: user.id, identifier, reason: "ACCOUNT_SUSPENDED", ip, userAgent });
       return apiFailure("ACCOUNT_SUSPENDED", LOGIN_ACCOUNT_SUSPENDED_MESSAGE, 403);
     }
 
     if (user.accountStatus === AccountStatus.REJECTED) {
+      void auditLoginFailed({ userId: user.id, identifier, reason: "ACCOUNT_REJECTED", ip, userAgent });
       return apiFailure("ACCOUNT_INACTIVE", LOGIN_ACCOUNT_INACTIVE_MESSAGE, 403);
     }
 
@@ -65,19 +69,22 @@ export async function POST(request: Request) {
       user.accountStatus !== AccountStatus.ACTIVE &&
       user.accountStatus !== AccountStatus.PENDING
     ) {
+      void auditLoginFailed({ userId: user.id, identifier, reason: "ACCOUNT_INACTIVE", ip, userAgent });
       return apiFailure("ACCOUNT_INACTIVE", LOGIN_ACCOUNT_INACTIVE_MESSAGE, 403);
     }
 
     if (isInstitutionalCatalogUser(user)) {
+      void auditLoginFailed({ userId: user.id, identifier, reason: "INSTITUTIONAL_CATALOG", ip, userAgent });
       return apiFailure("ACCOUNT_INACTIVE", LOGIN_ACCOUNT_INACTIVE_MESSAGE, 403);
     }
 
     const valid = await verifyPassword(password, user.passwordHash);
     if (!valid) {
+      void auditLoginFailed({ userId: user.id, identifier, reason: "WRONG_PASSWORD", ip, userAgent });
       return apiFailure("WRONG_PASSWORD", LOGIN_WRONG_PASSWORD_MESSAGE, 401);
     }
 
-    const token = await createSessionToken(user.id, user.role, user.accountStatus);
+    const token = await createSessionToken(user.id, user.email, user.role, user.accountStatus);
 
     const fullUser = await prisma.user.findUnique({
       where: { id: user.id },
@@ -85,6 +92,8 @@ export async function POST(request: Request) {
     });
 
     const redirectTo = dashboardPathForRole(user.role);
+
+    void auditLogin({ userId: user.id, email: user.email, ip, userAgent });
 
     const response = apiSuccess({
       message: "Login realizado com sucesso.",

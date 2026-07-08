@@ -1,12 +1,11 @@
-import { UserRole } from "@prisma/client";
 import { apiSuccess } from "@/lib/api-response";
-import { requireAuth } from "@/lib/auth/require-auth";
+import { requireAdmin } from "@/lib/auth/guards";
 import { handleChatRouteError } from "@/lib/messages/api-handler";
-import { listMessageReports, getMessageReport, reviewMessageReport } from "@/lib/messages/reports";
+import { listMessageReports } from "@/lib/messages/reports";
 
 export async function GET(req: Request) {
   try {
-    const { user, error } = await requireAuth([UserRole.ADMIN]);
+    const { user, error } = await requireAdmin({ path: new URL(req.url).pathname });
     if (error) return error;
     const url = new URL(req.url);
     const data = await listMessageReports({

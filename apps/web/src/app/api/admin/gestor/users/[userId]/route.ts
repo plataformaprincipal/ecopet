@@ -11,7 +11,7 @@ const actionSchema = z.object({
 type RouteContext = { params: Promise<{ userId: string }> };
 
 export async function PATCH(request: Request, context: RouteContext) {
-  const { user, error } = await requireGestorAdmin();
+  const { user, error } = await requireGestorAdmin(request);
   if (error) return error;
 
   const { userId } = await context.params;

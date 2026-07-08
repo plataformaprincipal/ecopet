@@ -173,7 +173,7 @@ export function getDefaultDashboardPath(role: AppRole): string {
     case "ONG":
       return "/ngo";
     case "CLIENT":
-      return "/client";
+      return "/cliente";
     default:
       return "/dashboard";
   }

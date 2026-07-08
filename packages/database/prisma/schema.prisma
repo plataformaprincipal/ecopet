@@ -624,6 +624,11 @@ model User {
   partnerAppointments Appointment[] @relation("PartnerAppointments")
   petDocumentsOwned   PetDocument[]
   aiChatLogs          AIChatLog[]
+  aiConversations     AIConversation[]
+  aiPlatformLogs      AILog[]
+  aiTokenUsages       AITokenUsage[]
+  aiFeedbacks         AIFeedback[]
+  aiPromptsCreated    AIPrompt[] @relation("AIPromptAuthor")
   convertedGuestChats GuestChatSession[] @relation("GuestConvertedUser")
   iotDevices          IotDevice[]
   agroUnits           AgroUnit[]
@@ -3574,4 +3579,210 @@ model PlatformSettings {
   marketplaceEnabled Boolean  @default(true)
   updatedAt          DateTime @updatedAt
   updatedById        String?
+}
+
+// ─── Plataforma AI-First (infraestrutura centralizada) ─────────────────────
+
+enum AIPlatformStatus {
+  ACTIVE
+  INACTIVE
+  DRAFT
+}
+
+model AIProvider {
+  id           String           @id @default(cuid())
+  code         String           @unique
+  name         String
+  status       AIPlatformStatus @default(INACTIVE)
+  isConfigured Boolean          @default(false)
+  metadata     Json?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  models      AIModel[]
+  logs        AILog[]
+  tokenUsages AITokenUsage[]
+}
+
+model AIModel {
+  id              String           @id @default(cuid())
+  providerId      String
+  code            String
+  name            String
+  version         String?
+  contextWindow   Int              @default(8192)
+  streaming       Boolean          @default(true)
+  vision          Boolean          @default(false)
+  functionCalling Boolean          @default(false)
+  status          AIPlatformStatus @default(INACTIVE)
+  inputCostPer1k  Float            @default(0)
+  outputCostPer1k Float           @default(0)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  provider    AIProvider    @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  agents      AIAgent[]
+  logs        AILog[]
+  tokenUsages AITokenUsage[]
+
+  @@unique([providerId, code])
+  @@index([status])
+}
+
+model AIAgent {
+  id          String           @id @default(cuid())
+  code        String           @unique
+  name        String
+  description String
+  promptId    String?
+  modelId     String?
+  temperature Float            @default(0.7)
+  toolIds     Json?
+  permissions Json?
+  status      AIPlatformStatus @default(ACTIVE)
+  metadata    Json?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  prompt        AIPrompt?        @relation(fields: [promptId], references: [id], onDelete: SetNull)
+  model         AIModel?         @relation(fields: [modelId], references: [id], onDelete: SetNull)
+  conversations AIConversation[]
+  logs          AILog[]
+
+  @@index([status])
+}
+
+model AIPrompt {
+  id               String   @id @default(cuid())
+  code             String
+  name             String
+  category         String
+  version          String
+  content          String   @db.Text
+  recommendedModel String?
+  temperature      Float    @default(0.7)
+  isActive         Boolean  @default(true)
+  createdById      String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  agents    AIAgent[]
+  createdBy User?     @relation("AIPromptAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@unique([code, version])
+  @@index([category])
+  @@index([isActive])
+}
+
+model AIConversation {
+  id        String           @id @default(cuid())
+  userId    String
+  agentId   String?
+  petId     String?
+  partnerId String?
+  ngoId     String?
+  title     String?
+  summary   String?          @db.Text
+  status    AIPlatformStatus @default(ACTIVE)
+  metadata  Json?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agent    AIAgent?    @relation(fields: [agentId], references: [id], onDelete: SetNull)
+  messages AIMessage[]
+  logs     AILog[]
+
+  @@index([userId])
+  @@index([agentId])
+}
+
+model AIMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  role           String
+  content        String   @db.Text
+  tokensInput    Int      @default(0)
+  tokensOutput   Int      @default(0)
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  conversation AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+}
+
+model AITool {
+  id          String           @id @default(cuid())
+  code        String           @unique
+  name        String
+  description String
+  permissions Json?
+  parameters  Json?
+  status      AIPlatformStatus @default(ACTIVE)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model AILog {
+  id             String   @id @default(cuid())
+  userId         String?
+  agentId        String?
+  modelId        String?
+  providerId     String?
+  conversationId String?
+  prompt         String   @db.Text
+  response       String?  @db.Text
+  tokensInput    Int      @default(0)
+  tokensOutput   Int      @default(0)
+  durationMs     Int      @default(0)
+  errorCode      String?
+  errorMessage   String?
+  result         Json?
+  createdAt      DateTime @default(now())
+
+  user         User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  agent        AIAgent?        @relation(fields: [agentId], references: [id], onDelete: SetNull)
+  model        AIModel?        @relation(fields: [modelId], references: [id], onDelete: SetNull)
+  provider     AIProvider?     @relation(fields: [providerId], references: [id], onDelete: SetNull)
+  conversation AIConversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([agentId])
+  @@index([createdAt])
+}
+
+model AITokenUsage {
+  id            String   @id @default(cuid())
+  userId        String?
+  providerId    String?
+  modelId       String?
+  project       String?
+  tokensInput   Int      @default(0)
+  tokensOutput  Int      @default(0)
+  estimatedCost Float    @default(0)
+  usageDate     DateTime @default(now())
+  createdAt     DateTime @default(now())
+
+  user     User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  provider AIProvider? @relation(fields: [providerId], references: [id], onDelete: SetNull)
+  model    AIModel?    @relation(fields: [modelId], references: [id], onDelete: SetNull)
+
+  @@index([usageDate])
+  @@index([userId])
+}
+
+model AIFeedback {
+  id             String   @id @default(cuid())
+  userId         String
+  conversationId String?
+  messageId      String?
+  rating         Int?
+  comment        String?  @db.Text
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

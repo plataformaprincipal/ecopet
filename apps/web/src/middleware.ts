@@ -7,6 +7,9 @@ import { requiresAuthoritativeStatus } from "@/lib/edge/authoritative-status";
 import {
   canAccessRoute,
   getDefaultDashboardPath,
+  isAdminOnlyPath,
+  isNgoOnlyPath,
+  isPartnerOnlyPath,
   type AppRole,
 } from "@/lib/edge/permissions";
 import type { AccountStatus } from "@/lib/edge/types";
@@ -15,6 +18,10 @@ function loginRedirect(request: NextRequest, pathname: string) {
   const loginUrl = new URL("/login", request.url);
   loginUrl.searchParams.set("callbackUrl", pathname);
   return NextResponse.redirect(loginUrl);
+}
+
+function unauthorizedRedirect(request: NextRequest) {
+  return NextResponse.redirect(new URL("/unauthorized", request.url));
 }
 
 function dashboardRedirect(request: NextRequest, role: AppRole) {
@@ -49,17 +56,35 @@ function applyRefreshedCookie(response: NextResponse, setCookie: string | null) 
   return response;
 }
 
+function isRoleExclusivePath(pathname: string): boolean {
+  return isAdminOnlyPath(pathname) || isPartnerOnlyPath(pathname) || isNgoOnlyPath(pathname);
+}
+
+function requiredRoleForPath(pathname: string): AppRole | null {
+  if (isAdminOnlyPath(pathname)) return "ADMIN";
+  if (isPartnerOnlyPath(pathname)) return "PARTNER";
+  if (isNgoOnlyPath(pathname)) return "ONG";
+  return null;
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get(SESSION_COOKIE)?.value;
 
   if (pathname === "/" && token) {
     try {
-      await verifySessionToken(token);
-      return applyRefreshedCookie(
-        NextResponse.redirect(new URL("/inicio", request.url)),
-        null
-      );
+      const jwt = await verifySessionToken(token);
+      const destination =
+        jwt.role === "ADMIN"
+          ? "/admin"
+          : jwt.role === "CLIENT"
+            ? "/cliente"
+            : jwt.role === "PARTNER"
+              ? "/partner"
+              : jwt.role === "ONG"
+                ? "/ngo"
+                : "/inicio";
+      return applyRefreshedCookie(NextResponse.redirect(new URL(destination, request.url)), null);
     } catch {
       /* token inválido — visitante vê landing */
     }
@@ -94,7 +119,8 @@ export async function middleware(request: NextRequest) {
         );
       }
     } catch {
-      /* token inválido */
+      role = null;
+      accountStatus = null;
     }
   }
 
@@ -107,10 +133,33 @@ export async function middleware(request: NextRequest) {
     }
     return applyRefreshedCookie(
       NextResponse.redirect(
-        new URL(role === "CLIENT" ? "/client" : "/feed", request.url)
+        new URL(role === "CLIENT" ? "/cliente" : "/feed", request.url)
       ),
       refreshedCookie
     );
+  }
+
+  if (isRoleExclusivePath(pathname)) {
+    if (!token || !role) {
+      return loginRedirect(request, pathname);
+    }
+
+    const requiredRole = requiredRoleForPath(pathname);
+    if (requiredRole && role !== requiredRole) {
+      if (requiredRole === "ADMIN") {
+        return applyRefreshedCookie(unauthorizedRedirect(request), refreshedCookie);
+      }
+      return applyRefreshedCookie(dashboardRedirect(request, role), refreshedCookie);
+    }
+
+    if (requiredRole === "ADMIN" && accountStatus !== "ACTIVE") {
+      return applyRefreshedCookie(
+        NextResponse.redirect(new URL("/perfil", request.url)),
+        refreshedCookie
+      );
+    }
+
+    return applyRefreshedCookie(NextResponse.next(), refreshedCookie);
   }
 
   if (!requiresAuth(pathname)) {
@@ -122,6 +171,9 @@ export async function middleware(request: NextRequest) {
   }
 
   if (!canAccessRoute(role, pathname)) {
+    if (isAdminOnlyPath(pathname)) {
+      return applyRefreshedCookie(unauthorizedRedirect(request), refreshedCookie);
+    }
     return applyRefreshedCookie(dashboardRedirect(request, role), refreshedCookie);
   }
 

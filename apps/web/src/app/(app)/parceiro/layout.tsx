@@ -1,19 +1,14 @@
-import { redirect } from "next/navigation";
-import { UserRole } from "@prisma/client";
-import { getCurrentUser } from "@/lib/auth";
-import { dashboardPathForRole } from "@/lib/auth/dashboard";
 import { prisma } from "@/lib/prisma";
 import { getPartnerAccessLevel } from "@/lib/partner/access";
 import { PartnerShell } from "@/components/features/partner/partner-shell";
+import { guardPartner } from "@/lib/auth/guards";
 
 export default async function PartnerAreaLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const user = await getCurrentUser();
-  if (!user) redirect("/login?callbackUrl=/parceiro/comunidade");
-  if (user.role !== UserRole.PARTNER) redirect(dashboardPathForRole(user.role));
+  const user = await guardPartner("/parceiro");
 
   const partnerProfile = await prisma.partnerProfile.findUnique({
     where: { userId: user.id },

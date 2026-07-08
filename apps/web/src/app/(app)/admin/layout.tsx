@@ -1,14 +1,10 @@
-import { redirect } from "next/navigation";
-import { AccountStatus, UserRole } from "@prisma/client";
-import { getCurrentUser } from "@/lib/auth";
-import { dashboardPathForRole } from "@/lib/auth/dashboard";
 import { AdminLayout } from "@/components/features/admin/admin-layout";
+import { auditAdminAccess } from "@/lib/auth/auth-audit";
+import { guardAdmin } from "@/lib/auth/guards";
 
 export default async function AdminRootLayout({ children }: { children: React.ReactNode }) {
-  const user = await getCurrentUser();
-  if (!user) redirect("/login?callbackUrl=/admin");
-  if (user.role !== UserRole.ADMIN) redirect(dashboardPathForRole(user.role));
-  if (user.accountStatus !== AccountStatus.ACTIVE) redirect("/perfil");
+  const user = await guardAdmin("/admin");
+  void auditAdminAccess({ userId: user.id, path: "/admin" });
 
   return <AdminLayout>{children}</AdminLayout>;
 }

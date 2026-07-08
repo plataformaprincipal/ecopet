@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import type { GestorFilters } from "@/lib/gestor/gestor-filters";
 import { dateRangeWhere, paginationArgs } from "@/lib/gestor/gestor-filters";
 import { maskCpf, maskCnpj } from "@/lib/gestor/gestor-utils";
-import { writeAuditLog } from "@/lib/audit-log";
+import { auditReactivation, auditSuspension } from "@/lib/auth/auth-audit";
 
 function userWhere(filters: GestorFilters) {
   return {
@@ -116,16 +116,23 @@ export async function updateGestorUserStatus(params: {
     },
   });
 
-  await writeAuditLog({
-    actorId: params.adminId,
-    action: "UPDATE",
-    module: "gestor.users",
-    resource: "User",
-    resourceId: params.userId,
-    entityBefore: before,
-    entityAfter: { accountStatus: nextStatus, accountStatusReason: params.reason ?? null },
-    observation: params.action === "suspend" ? "Usuário suspenso via Painel Gestor" : "Usuário reativado via Painel Gestor",
-  });
+  if (params.action === "suspend") {
+    await auditSuspension({
+      actorId: params.adminId,
+      targetUserId: params.userId,
+      before,
+      after: { accountStatus: nextStatus, accountStatusReason: params.reason ?? null },
+      reason: params.reason,
+    });
+  } else {
+    await auditReactivation({
+      actorId: params.adminId,
+      targetUserId: params.userId,
+      before,
+      after: { accountStatus: nextStatus, accountStatusReason: params.reason ?? null },
+      reason: params.reason,
+    });
+  }
 
   return { userId: params.userId, accountStatus: nextStatus };
 }

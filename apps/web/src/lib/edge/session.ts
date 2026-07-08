@@ -14,11 +14,14 @@ function sessionSecret(): Uint8Array {
 
 export async function verifySessionToken(token: string): Promise<{
   userId: string;
+  id: string;
+  email: string;
   role: AppRole;
   accountStatus: AccountStatus;
 }> {
   const { payload } = await jwtVerify(token, sessionSecret());
-  const userId = payload.userId;
+  const userId = payload.userId ?? payload.id;
+  const email = payload.email;
   const role = payload.role;
   const accountStatus = payload.accountStatus;
   if (typeof userId !== "string" || typeof role !== "string") {
@@ -26,6 +29,8 @@ export async function verifySessionToken(token: string): Promise<{
   }
   return {
     userId,
+    id: userId,
+    email: typeof email === "string" ? email : "",
     role: role as AppRole,
     accountStatus: (typeof accountStatus === "string"
       ? accountStatus

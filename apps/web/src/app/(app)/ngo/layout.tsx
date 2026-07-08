@@ -1,10 +1,7 @@
-import { redirect } from "next/navigation";
-import { UserRole } from "@prisma/client";
-import { getCurrentUser } from "@/lib/auth";
-import { dashboardPathForRole } from "@/lib/auth/dashboard";
 import { prisma } from "@/lib/prisma";
 import { getOngAccessLevel } from "@/lib/ong/access";
 import { NgoExperienceShell } from "@/components/features/ong/experience/ngo-experience-shell";
+import { guardNgo } from "@/lib/auth/guards";
 
 function resolveStatusTone(
   accountStatus: string,
@@ -21,9 +18,7 @@ export default async function NgoExperienceLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const user = await getCurrentUser();
-  if (!user) redirect("/login?callbackUrl=/ngo");
-  if (user.role !== UserRole.ONG) redirect(dashboardPathForRole(user.role));
+  const user = await guardNgo("/ngo");
 
   const ongProfile = await prisma.ongProfile.findUnique({
     where: { userId: user.id },

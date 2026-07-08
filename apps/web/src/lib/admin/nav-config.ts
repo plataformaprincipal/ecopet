@@ -65,6 +65,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin/data-center", label: "Data Center", icon: Database, group: "Tecnologia" },
   { href: "/admin/inovacao", label: "Inovação", icon: Lightbulb, group: "IA & Inovação" },
   { href: "/admin/ia-center", label: "IA Center", icon: Bot, group: "IA & Inovação" },
+  { href: "/admin/ai", label: "Plataforma AI", icon: Sparkles, group: "IA & Inovação" },
   { href: "/admin/laboratorio", label: "Laboratório", icon: FlaskConical, group: "IA & Inovação" },
   { href: "/admin/automacoes", label: "Automações", icon: Workflow, group: "IA & Inovação" },
   { href: "/admin/produto", label: "Produto", icon: Package, group: "Produto" },

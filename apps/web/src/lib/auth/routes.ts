@@ -14,6 +14,7 @@ export const PUBLIC_EXACT = new Set([
   "/",
   "/login",
   "/cadastro",
+  "/register",
   "/recuperar-senha",
   "/redefinir-senha",
   "/esqueci-senha",
@@ -22,7 +23,9 @@ export const PUBLIC_EXACT = new Set([
   "/termos",
   "/termos-de-uso",
   "/privacidade",
+  "/privacy",
   "/politica-de-privacidade",
+  "/unauthorized",
   "/legal/privacidade",
   "/legal/termos",
   "/legal/cliente/termos",
@@ -70,11 +73,8 @@ export function isPrivateMarketplacePath(pathname: string): boolean {
 /** Rotas públicas do fluxo pré-cadastro cliente */
 export function isPublicClientPath(pathname: string): boolean {
   if (pathname === "/explorar" || pathname === "/explore") return true;
-  if (pathname === "/social") return true;
   if (pathname === "/eccopet") return true;
   if (pathname === "/ia") return true;
-  if (pathname === "/meu-pet") return true;
-  if (pathname === "/perfil" || pathname === "/profile") return true;
   if (pathname === "/adocao" || pathname.startsWith("/adocao/")) return true;
   if (pathname === "/adoption" || pathname.startsWith("/adoption/")) return true;
   if (pathname === "/campaigns" || pathname.startsWith("/campaigns/")) return true;
@@ -84,12 +84,26 @@ export function isPublicClientPath(pathname: string): boolean {
 
 /** Rotas públicas da rede social (visitante / pré-cadastro) */
 export function isPublicSocialPath(pathname: string): boolean {
-  if (pathname === "/social") return true;
   if (pathname === "/feed") return true;
   if (pathname.startsWith("/feed/post/")) return true;
   if (/^\/feed\/profile\/[^/]+$/.test(pathname)) return true;
   if (pathname.startsWith("/feed/hashtag/")) return true;
   if (pathname === "/feed/search") return true;
+  return false;
+}
+
+/** Rotas que exigem autenticação mesmo fora da matriz de roles */
+export const AUTH_REQUIRED_EXACT = new Set([
+  "/perfil",
+  "/profile",
+  "/social",
+  "/pedidos",
+  "/meu-pet",
+  "/meupet",
+]);
+
+export function isAuthRequiredPath(pathname: string): boolean {
+  if (AUTH_REQUIRED_EXACT.has(pathname)) return true;
   return false;
 }
 
@@ -103,6 +117,7 @@ export function isPublicPath(pathname: string): boolean {
 }
 
 export function requiresAuth(pathname: string): boolean {
+  if (isAuthRequiredPath(pathname)) return true;
   if (isPublicPath(pathname)) return false;
   if (pathname.startsWith("/api/")) return false;
   if (pathname.startsWith("/_next")) return false;

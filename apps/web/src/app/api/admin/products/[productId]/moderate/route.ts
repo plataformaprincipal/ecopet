@@ -1,8 +1,7 @@
 import { z } from "zod";
-import { UserRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiFailure } from "@/lib/api-response";
-import { requireAuth } from "@/lib/auth/require-auth";
+import { requireAdmin } from "@/lib/auth/guards";
 
 const moderateSchema = z.object({
   action: z.enum(["hide", "restore"]),
@@ -12,7 +11,7 @@ const moderateSchema = z.object({
 type RouteContext = { params: Promise<{ productId: string }> };
 
 export async function PATCH(request: Request, context: RouteContext) {
-  const { user, error } = await requireAuth([UserRole.ADMIN]);
+  const { user, error } = await requireAdmin({ path: new URL(request.url).pathname });
   if (error) return error;
   const { productId } = await context.params;
 

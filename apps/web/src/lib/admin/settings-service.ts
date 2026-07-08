@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { writeAuditLog } from "@/lib/audit-log";
+import { auditPermissionChange } from "@/lib/auth/auth-audit";
 
 const SETTINGS_ID = "singleton";
 
@@ -36,14 +36,12 @@ export async function updatePlatformSettings(adminId: string, input: PlatformSet
     },
   });
 
-  await writeAuditLog({
+  await auditPermissionChange({
     actorId: adminId,
-    action: "UPDATE",
-    module: "admin.settings",
-    resource: "PlatformSettings",
     resourceId: SETTINGS_ID,
-    entityBefore: before,
-    entityAfter: updated,
+    before,
+    after: updated,
+    observation: "Atualização de configurações da plataforma",
   });
 
   return updated;

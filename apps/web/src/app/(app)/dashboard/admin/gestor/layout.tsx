@@ -1,13 +1,10 @@
-import { redirect } from "next/navigation";
-import { UserRole } from "@prisma/client";
-import { getCurrentUser } from "@/lib/auth";
-import { dashboardPathForRole } from "@/lib/auth/dashboard";
 import { GestorLayout } from "@/components/features/gestor-admin/gestor-layout";
+import { auditAdminAccess } from "@/lib/auth/auth-audit";
+import { guardAdmin } from "@/lib/auth/guards";
 
 export default async function GestorAdminLayout({ children }: { children: React.ReactNode }) {
-  const user = await getCurrentUser();
-  if (!user) redirect("/login?callbackUrl=/dashboard/admin/gestor");
-  if (user.role !== UserRole.ADMIN) redirect(dashboardPathForRole(user.role));
+  const user = await guardAdmin("/dashboard/admin/gestor");
+  void auditAdminAccess({ userId: user.id, path: "/dashboard/admin/gestor" });
 
   return <GestorLayout>{children}</GestorLayout>;
 }

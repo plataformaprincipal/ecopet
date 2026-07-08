@@ -1,10 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { apiSuccess } from "@/lib/api-response";
-import { requireAuth } from "@/lib/auth/require-auth";
-import { UserRole } from "@prisma/client";
+import { requireAdmin } from "@/lib/auth/guards";
 
 export async function GET(request: Request) {
-  const { user, error } = await requireAuth([UserRole.ADMIN]);
+  const { user, error } = await requireAdmin({ path: new URL(request.url).pathname });
   if (error) return error;
 
   const url = new URL(request.url);

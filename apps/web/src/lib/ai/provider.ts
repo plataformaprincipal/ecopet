@@ -1,55 +1,128 @@
-import { INTEGRATION_ERROR_CODES, IntegrationNotConfiguredError } from "@/lib/integrations/errors";
-import { isOpenAiConfigured } from "@/lib/integrations/env-check";
-import { writeIntegrationLog } from "@/lib/integrations/log";
+import { AiProviderNotConfiguredError } from "@/lib/ai/errors";
+import type {
+  AiEmbedInput,
+  AiEmbedResult,
+  AiGenerateInput,
+  AiGenerateResult,
+  AiHealthCheckResult,
+  AiModerateInput,
+  AiModerateResult,
+  AiModelInfo,
+  AiStreamChunk,
+} from "@/lib/ai/types";
 
-export type AiProvider = "openai";
+/** Contrato único — nenhuma tela importa OpenAI/Anthropic/Google diretamente. */
+export interface AIProvider {
+  readonly id: string;
+  readonly name: string;
+  generateResponse(input: AiGenerateInput): Promise<AiGenerateResult>;
+  streamResponse(input: AiGenerateInput): AsyncIterable<AiStreamChunk>;
+  embed(input: AiEmbedInput): Promise<AiEmbedResult>;
+  moderate(input: AiModerateInput): Promise<AiModerateResult>;
+  listModels(): Promise<AiModelInfo[]>;
+  healthCheck(): Promise<AiHealthCheckResult>;
+}
 
-export type AiCompletionInput = {
-  prompt: string;
-  systemPrompt?: string;
-  maxTokens?: number;
-  metadata?: Record<string, string>;
-};
+class UnconfiguredAIProvider implements AIProvider {
+  readonly id = "unconfigured";
+  readonly name = "Unconfigured";
 
-export type AiCompletionResult = {
-  provider: AiProvider;
-  model: string;
-  content: string;
-};
+  private fail(): never {
+    throw new AiProviderNotConfiguredError();
+  }
 
-export function assertOpenAiConfigured(env = process.env): void {
-  if (!isOpenAiConfigured(env)) {
-    throw new IntegrationNotConfiguredError(
-      INTEGRATION_ERROR_CODES.OPENAI_NOT_CONFIGURED,
-      "OpenAI não configurado. Defina OPENAI_API_KEY."
-    );
+  async generateResponse(_input: AiGenerateInput): Promise<AiGenerateResult> {
+    this.fail();
+  }
+
+  async *streamResponse(_input: AiGenerateInput): AsyncIterable<AiStreamChunk> {
+    this.fail();
+  }
+
+  async embed(_input: AiEmbedInput): Promise<AiEmbedResult> {
+    this.fail();
+  }
+
+  async moderate(_input: AiModerateInput): Promise<AiModerateResult> {
+    this.fail();
+  }
+
+  async listModels(): Promise<AiModelInfo[]> {
+    this.fail();
+  }
+
+  async healthCheck(): Promise<AiHealthCheckResult> {
+    return {
+      ok: false,
+      provider: this.id,
+      message: "AI Provider not configured.",
+    };
   }
 }
 
-/** Interface preparada — não gera resposta falsa sem chave */
-export async function createAiCompletion(input: AiCompletionInput): Promise<AiCompletionResult> {
-  assertOpenAiConfigured();
+let activeProvider: AIProvider | null = null;
 
-  const model = process.env.OPENAI_MODEL?.trim() || "gpt-4o-mini";
-
-  await writeIntegrationLog({
-    integrationName: "openai",
-    provider: "OpenAI",
-    action: "completion",
-    status: "PENDING",
-    message: "Chave presente — implementação de chamada pendente (Etapa 9B).",
-    metadata: { promptLength: input.prompt.length },
-  });
-
-  throw new IntegrationNotConfiguredError(
-    INTEGRATION_ERROR_CODES.OPENAI_NOT_CONFIGURED,
-    "Chamada OpenAI preparada mas não ativada nesta etapa."
-  );
+/** Registra implementação real (ex.: OpenAIProvider) quando a chave estiver disponível. */
+export function registerAIProvider(provider: AIProvider) {
+  activeProvider = provider;
 }
 
-export function getAiStatus(env = process.env) {
+export function getAIProvider(): AIProvider {
+  return activeProvider ?? new UnconfiguredAIProvider();
+}
+
+export function isAIProviderConfigured(): boolean {
+  return activeProvider !== null;
+}
+
+/** Compatibilidade com código legado — delega para AIProvider.generateResponse */
+export async function createAiCompletion(input: {
+  prompt: string;
+  systemPrompt: string;
+  modelId: string;
+  maxTokens?: number;
+  temperature?: number;
+  metadata?: Record<string, string>;
+}) {
+  const provider = getAIProvider();
+  const result = await provider.generateResponse({
+    model: input.modelId,
+    messages: [
+      { role: "system", content: input.systemPrompt },
+      { role: "user", content: input.prompt },
+    ],
+    maxTokens: input.maxTokens,
+    temperature: input.temperature,
+    metadata: input.metadata,
+  });
   return {
-    configured: isOpenAiConfigured(env),
-    errorCode: isOpenAiConfigured(env) ? null : INTEGRATION_ERROR_CODES.OPENAI_NOT_CONFIGURED,
+    provider: result.provider as "openai" | "anthropic" | "google",
+    model: result.model,
+    content: result.content,
+    usage: result.usage,
   };
+}
+
+export function assertOpenAiConfigured(): void {
+  if (!isAIProviderConfigured()) {
+    throw new AiProviderNotConfiguredError();
+  }
+}
+
+export const assertProviderConfigured = assertOpenAiConfigured;
+
+export function getAiStatus() {
+  const configured = isAIProviderConfigured();
+  return {
+    openai: { configured: false },
+    anthropic: { configured: false },
+    google: { configured: false },
+    ready: configured,
+    errorCode: configured ? null : "AI_PROVIDER_NOT_CONFIGURED",
+    message: configured ? null : "AI Provider not configured.",
+  };
+}
+
+export function isProviderReady(): boolean {
+  return isAIProviderConfigured();
 }

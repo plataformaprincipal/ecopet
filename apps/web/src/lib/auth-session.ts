@@ -27,10 +27,11 @@ function sessionCookieSecure(): boolean {
 
 export async function createSessionToken(
   userId: string,
+  email: string,
   role: UserRole,
   accountStatus: AccountStatus = "ACTIVE"
 ): Promise<string> {
-  return new SignJWT({ userId, role, accountStatus })
+  return new SignJWT({ userId, id: userId, email, role, accountStatus })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("7d")
@@ -39,11 +40,14 @@ export async function createSessionToken(
 
 export async function verifySessionToken(token: string): Promise<{
   userId: string;
+  id: string;
+  email: string;
   role: UserRole;
   accountStatus: AccountStatus;
 }> {
   const { payload } = await jwtVerify(token, secret());
-  const userId = payload.userId;
+  const userId = payload.userId ?? payload.id;
+  const email = payload.email;
   const role = payload.role;
   const accountStatus = payload.accountStatus;
   if (typeof userId !== "string" || typeof role !== "string") {
@@ -51,6 +55,8 @@ export async function verifySessionToken(token: string): Promise<{
   }
   return {
     userId,
+    id: userId,
+    email: typeof email === "string" ? email : "",
     role: role as UserRole,
     accountStatus: (typeof accountStatus === "string"
       ? accountStatus

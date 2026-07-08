@@ -1,16 +1,14 @@
 import { apiSuccess } from "@/lib/api-response";
-import { requireAuth } from "@/lib/auth/require-auth";
+import { requireAdmin } from "@/lib/auth/guards";
 import { handleSocialRouteError } from "@/lib/social/api-handler";
 import { getAdminReport, updateAdminReport } from "@/lib/social/reports";
-import { requireAdmin } from "@/lib/social/permissions";
 
 type Params = { params: Promise<{ reportId: string }> };
 
 export async function GET(_req: Request, { params }: Params) {
   try {
-    const { user, error } = await requireAuth(["ADMIN"]);
+    const { error } = await requireAdmin({ path: new URL(_req.url).pathname });
     if (error) return error;
-    await requireAdmin(user!.id);
     const { reportId } = await params;
     const report = await getAdminReport(reportId);
     return apiSuccess({ report });
@@ -21,9 +19,8 @@ export async function GET(_req: Request, { params }: Params) {
 
 export async function PATCH(req: Request, { params }: Params) {
   try {
-    const { user, error } = await requireAuth(["ADMIN"]);
+    const { user, error } = await requireAdmin({ path: new URL(req.url).pathname });
     if (error) return error;
-    await requireAdmin(user!.id);
     const { reportId } = await params;
     const body = await req.json();
     const report = await updateAdminReport({

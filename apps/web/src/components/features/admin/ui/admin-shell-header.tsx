@@ -1,20 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useSession } from "next-auth/react";
 import { ErpNotificationCenter } from "@/components/features/admin/erp/erp-notification-center";
 import { ErpAssistantDrawer } from "@/components/features/admin/erp/erp-assistant-drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Menu } from "lucide-react";
 import { useState } from "react";
+import { useAuthSession } from "@/hooks/use-auth-session";
 
 type Props = {
   onMenuToggle?: () => void;
 };
 
 export function AdminShellHeader({ onMenuToggle }: Props) {
-  const { data: session } = useSession();
+  const { data: session } = useAuthSession();
   const [q, setQ] = useState("");
 
   return (

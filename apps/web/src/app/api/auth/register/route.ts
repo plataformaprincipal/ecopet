@@ -437,7 +437,7 @@ export async function POST(request: Request) {
         return apiFailure("CNPJ_DUPLICATE", USER_ALREADY_REGISTERED_MESSAGE, 409);
       }
       const user = await createLegacyPartnerUser(legacy);
-      const token = await createSessionToken(user.id, user.role, user.accountStatus ?? AccountStatus.ACTIVE);
+      const token = await createSessionToken(user.id, user.email, user.role, user.accountStatus ?? AccountStatus.ACTIVE);
       const fullUser = await prisma.user.findUnique({ where: { id: user.id }, select: safeUserSelect });
       const response = apiSuccess(
         { message: "Conta criada com sucesso!", user: fullUser ? sanitizeUser(fullUser) : user, redirectTo: dashboardPathForRole(user.role) },
@@ -450,7 +450,7 @@ export async function POST(request: Request) {
 
     if (partnerData) {
       const user = await createPartnerUser(partnerData);
-      const token = await createSessionToken(user.id, user.role, user.accountStatus ?? AccountStatus.ACTIVE);
+      const token = await createSessionToken(user.id, user.email, user.role, user.accountStatus ?? AccountStatus.ACTIVE);
       const fullUser = await prisma.user.findUnique({ where: { id: user.id }, select: safeUserSelect });
       const response = apiSuccess(
         { message: "Cadastro de parceiro recebido. Sua conta está em análise e você será avisado após a aprovação.", user: fullUser ? sanitizeUser(fullUser) : user, redirectTo: dashboardPathForRole(user.role) },
@@ -472,7 +472,7 @@ export async function POST(request: Request) {
         return apiFailure("CNPJ_DUPLICATE", USER_ALREADY_REGISTERED_MESSAGE, 409);
       }
       const user = await createLegacyOngUser(legacy);
-      const token = await createSessionToken(user.id, user.role, user.accountStatus ?? AccountStatus.ACTIVE);
+      const token = await createSessionToken(user.id, user.email, user.role, user.accountStatus ?? AccountStatus.ACTIVE);
       const fullUser = await prisma.user.findUnique({ where: { id: user.id }, select: safeUserSelect });
       const response = apiSuccess(
         { message: "Conta criada com sucesso!", user: fullUser ? sanitizeUser(fullUser) : user, redirectTo: dashboardPathForRole(user.role) },
@@ -485,7 +485,7 @@ export async function POST(request: Request) {
 
     if (ongData) {
       const user = await createOngUser(ongData);
-      const token = await createSessionToken(user.id, user.role, user.accountStatus ?? AccountStatus.ACTIVE);
+      const token = await createSessionToken(user.id, user.email, user.role, user.accountStatus ?? AccountStatus.ACTIVE);
       const fullUser = await prisma.user.findUnique({ where: { id: user.id }, select: safeUserSelect });
       const response = apiSuccess(
         { message: "Cadastro de ONG recebido. Sua conta está em análise e você será avisado após a aprovação.", user: fullUser ? sanitizeUser(fullUser) : user, redirectTo: dashboardPathForRole(user.role) },
@@ -572,7 +572,7 @@ export async function POST(request: Request) {
       throw new Error("Unsupported role in client-only path");
     });
 
-    const token = await createSessionToken(user.id, user.role, user.accountStatus ?? AccountStatus.ACTIVE);
+    const token = await createSessionToken(user.id, user.email, user.role, user.accountStatus ?? AccountStatus.ACTIVE);
     const fullUser = await prisma.user.findUnique({ where: { id: user.id }, select: safeUserSelect });
 
     const response = apiSuccess(

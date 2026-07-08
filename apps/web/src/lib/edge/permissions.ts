@@ -8,6 +8,10 @@ export type { AppRole };
 
 export const ADMIN_ONLY_PREFIXES = ["/gestor", "/admin"] as const;
 
+export const PARTNER_ONLY_PREFIXES = ["/partner", "/parceiro", "/dashboard/partner"] as const;
+
+export const NGO_ONLY_PREFIXES = ["/ngo", "/ong", "/dashboard/ong"] as const;
+
 export const ROLE_ROUTE_PREFIXES: Record<AppRole, readonly string[]> = {
   CLIENT: [
     "/dashboard",
@@ -214,6 +218,14 @@ export function isAdminOnlyPath(pathname: string): boolean {
   return ADMIN_ONLY_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
+export function isPartnerOnlyPath(pathname: string): boolean {
+  return PARTNER_ONLY_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
+
+export function isNgoOnlyPath(pathname: string): boolean {
+  return NGO_ONLY_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
+
 export function pathMatchesPrefix(pathname: string, prefix: string): boolean {
   return pathname === prefix || pathname.startsWith(`${prefix}/`);
 }
@@ -241,7 +253,7 @@ export function getDefaultDashboardPath(role: AppRole): string {
     case "ONG":
       return "/ngo";
     case "CLIENT":
-      return "/client";
+      return "/cliente";
     default:
       return "/dashboard";
   }
