@@ -76,6 +76,108 @@ export function isWhatsAppConfigured(source: NodeJS.ProcessEnv = process.env): b
   );
 }
 
+export function isInstagramConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
+  return Boolean(env("INSTAGRAM_ACCESS_TOKEN", source) || env("META_APP_ID", source));
+}
+
+export function isFacebookConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
+  return Boolean(
+    env("FACEBOOK_APP_ID", source) && env("FACEBOOK_APP_SECRET", source)
+  );
+}
+
+export function isTikTokConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
+  return Boolean(env("TIKTOK_CLIENT_KEY", source) && env("TIKTOK_CLIENT_SECRET", source));
+}
+
+export function isGoogleCalendarConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
+  return Boolean(env("GOOGLE_CALENDAR_CLIENT_ID", source) || env("GOOGLE_CLIENT_ID", source));
+}
+
+export function isGoogleDriveConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
+  return Boolean(env("GOOGLE_DRIVE_CLIENT_ID", source) || env("GOOGLE_CLIENT_ID", source));
+}
+
+export function isGoogleSheetsConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
+  return Boolean(env("GOOGLE_SHEETS_API_KEY", source) || env("GOOGLE_API_KEY", source));
+}
+
+export function isGoogleBusinessConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
+  return Boolean(env("GOOGLE_BUSINESS_PROFILE_ID", source) || env("GOOGLE_MY_BUSINESS_API_KEY", source));
+}
+
+export function isNotionConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
+  return Boolean(env("NOTION_API_KEY", source) || env("NOTION_TOKEN", source));
+}
+
+export function isTrelloConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
+  return Boolean(env("TRELLO_API_KEY", source) && env("TRELLO_TOKEN", source));
+}
+
+export function isSlackConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
+  return Boolean(env("SLACK_BOT_TOKEN", source) || env("SLACK_WEBHOOK_URL", source));
+}
+
+export function isZapierConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
+  return Boolean(env("ZAPIER_WEBHOOK_URL", source) || env("ZAPIER_HOOK_URL", source));
+}
+
+export function isN8nConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
+  return Boolean(env("N8N_WEBHOOK_URL", source) || env("N8N_API_KEY", source));
+}
+
+export function isCrmExternalConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
+  return Boolean(env("CRM_EXTERNAL_API_URL", source) || env("EXTERNAL_CRM_API_KEY", source));
+}
+
+export function isVetSystemConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
+  return Boolean(env("VET_SYSTEM_API_URL", source) || env("VETERINARY_SYSTEM_API_KEY", source));
+}
+
+export function isErpExternalConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
+  return Boolean(env("ERP_EXTERNAL_API_URL", source) || env("EXTERNAL_ERP_API_KEY", source));
+}
+
+export function isPdvExternalConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
+  return Boolean(env("PDV_EXTERNAL_API_URL", source) || env("EXTERNAL_PDV_API_KEY", source));
+}
+
+export function isInventorySystemConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
+  return Boolean(env("INVENTORY_SYSTEM_API_URL", source) || env("STOCK_SYSTEM_API_KEY", source));
+}
+
+export function isCustomWebhookConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
+  return Boolean(env("PARTNER_CUSTOM_WEBHOOK_URL", source) || env("WEBHOOK_SECRET", source));
+}
+
+export function isPixManualConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
+  return Boolean(env("PIX_MANUAL_KEY", source) || env("PIX_RECEIVER_KEY", source));
+}
+
+export function isCorreiosConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
+  return Boolean(env("CORREIOS_API_TOKEN", source) || env("CORREIOS_CONTRATO", source));
+}
+
+export function isMelhorEnvioConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
+  return Boolean(env("MELHOR_ENVIO_TOKEN", source));
+}
+
+export function isViaCepConfigured(): boolean {
+  return true;
+}
+
+export function isVLibrasConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
+  return Boolean(env("VLIBRAS_WIDGET_URL", source) || env("VLIBRAS_ENABLED", source));
+}
+
+export function isGeminiConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
+  return Boolean(env("GOOGLE_API_KEY", source) || env("GEMINI_API_KEY", source));
+}
+
+export function isAnthropicConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
+  return Boolean(env("ANTHROPIC_API_KEY", source));
+}
+
 export function isShippingCarrierConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
   return Boolean(
     env("MELHOR_ENVIO_TOKEN", source) ||

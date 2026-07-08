@@ -9,6 +9,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import { writeAuditLog } from "@/lib/audit-log";
 import { sendTransactionalEmail } from "@/lib/mail/transactional";
+import { emitPlatformEvent, PLATFORM_EVENTS } from "@/lib/events/event-bus";
 
 const partnerSelect = {
   id: true,
@@ -255,6 +256,15 @@ export async function reviewAccount(params: {
       text: `Olá ${target.name}, sua conta foi aprovada.`,
       html: `<p>Olá <strong>${target.name}</strong>, sua conta foi <strong>aprovada</strong>.</p>`,
     });
+
+    await emitPlatformEvent({
+      type: target.role === UserRole.PARTNER ? PLATFORM_EVENTS.PARTNER_APPROVED : PLATFORM_EVENTS.ONG_APPROVED,
+      actorId: params.adminId,
+      actorRole: "ADMIN",
+      entityType: "User",
+      entityId: target.id,
+      payload: { email: target.email, name: target.name },
+    }).catch(() => undefined);
 
     return { accountStatus: AccountStatus.ACTIVE };
   }

@@ -37,7 +37,7 @@ export function bootstrapAgentRegistry() {
     defineAgent("veterinarian", "Veterinário", "Saúde animal", [UserRole.CLIENT, UserRole.TUTOR], ["pet", "agenda"], ["search-pets"]),
     defineAgent("pet", "Meu Pet", "Assistente do pet", [UserRole.CLIENT, UserRole.TUTOR], ["pet"], ["search-pets"]),
     defineAgent("marketing", "Marketing", "Campanhas", [UserRole.PARTNER, UserRole.ONG, UserRole.ADMIN], ["dashboard", "social"]),
-    defineAgent("finance", "Financeiro", "Indicadores financeiros", [UserRole.PARTNER, UserRole.ADMIN], ["dashboard"], ["search-finance"]),
+    defineAgent("finance", "Financeiro", "Indicadores financeiros", [UserRole.CLIENT, UserRole.TUTOR, UserRole.PARTNER, UserRole.ADMIN], ["dashboard"], ["search-finance"]),
     defineAgent("legal", "Jurídico", "Conformidade", [UserRole.ADMIN], ["admin"]),
     defineAgent("commercial", "Comercial", "CRM e vendas", [UserRole.PARTNER, UserRole.ADMIN], ["partner", "dashboard"]),
     defineAgent("support", "Suporte", "Atendimento", [UserRole.CLIENT, UserRole.PARTNER, UserRole.ONG, UserRole.ADMIN, UserRole.TUTOR], ["chat", "profile"]),

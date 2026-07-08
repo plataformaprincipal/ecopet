@@ -1,5 +1,5 @@
-import { NgoCampaignsManager } from "@/components/features/ong/experience/ngo-campaigns-manager";
+import { redirect } from "next/navigation";
 
-export default function NgoCampaignsRoute() {
-  return <NgoCampaignsManager />;
+export default function NgoCampaignsRedirect() {
+  redirect("/ngo/campanhas");
 }

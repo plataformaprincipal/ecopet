@@ -6,15 +6,19 @@ import { adminFetch } from "@/lib/admin/client-api";
 import type { ErpModuleResponse } from "@/lib/admin/erp/types";
 import type { AdminModuleConfig } from "@/lib/admin/module-config";
 
-type Props = { config: AdminModuleConfig };
+type Props = { config: AdminModuleConfig; initialFilters?: Record<string, string> };
 
-export function AdminErpModulePanel({ config }: Props) {
+export function AdminErpModulePanel({ config, initialFilters }: Props) {
   const [data, setData] = useState<ErpModuleResponse | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [forbidden, setForbidden] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [filters, setFilters] = useState<Record<string, string>>({ page: "1", limit: "20" });
+  const [filters, setFilters] = useState<Record<string, string>>({
+    page: "1",
+    limit: "20",
+    ...initialFilters,
+  });
 
   const moduleKey = config.erpModuleId ?? config.id;
 

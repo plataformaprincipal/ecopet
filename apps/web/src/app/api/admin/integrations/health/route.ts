@@ -1,11 +1,14 @@
+import { requireAdmin } from "@/lib/auth/guards";
+import { handleGestorRouteError } from "@/lib/gestor/api-handler";
 import { apiSuccess } from "@/lib/api-response";
-import { requireAdmin } from "@/lib/admin/require-admin";
-import { getIntegrationHealthReport } from "@/lib/integrations/health";
+import { getIntegrationHealthSummary } from "@/lib/integrations/integration-registry";
 
 export async function GET() {
-  const { error } = await requireAdmin();
+  const { error } = await requireAdmin({ path: "/api/admin/integrations/health" });
   if (error) return error;
-
-  const report = await getIntegrationHealthReport();
-  return apiSuccess({ health: report });
+  try {
+    return apiSuccess(await getIntegrationHealthSummary());
+  } catch (e) {
+    return handleGestorRouteError(e);
+  }
 }

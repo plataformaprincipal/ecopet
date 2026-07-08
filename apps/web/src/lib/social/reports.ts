@@ -4,6 +4,7 @@ import { requireActiveSocialUser } from "@/lib/social/permissions";
 import { SOCIAL_RATE_LIMITS } from "@/lib/social/constants";
 import { checkSocialRateLimit } from "@/lib/social/rate-limit";
 import { writeAuditLog } from "@/lib/audit-log";
+import { emitPlatformEvent, PLATFORM_EVENTS } from "@/lib/events/event-bus";
 import { notifyModerationApplied, notifyReportReceived } from "@/lib/social/notifications/social-notification-service";
 import type { SocialReportReason } from "@prisma/client";
 
@@ -63,6 +64,17 @@ export async function createReport(params: {
   });
   for (const admin of admins) {
     await notifyReportReceived({ adminId: admin.id, reportId: report.id });
+  }
+
+  if (params.postId) {
+    await emitPlatformEvent({
+      type: PLATFORM_EVENTS.POST_REPORTED,
+      actorId: params.reporterId,
+      entityType: "SocialPost",
+      entityId: params.postId,
+      payload: { reportId: report.id, reason: params.reason },
+      severity: params.reason === "VIOLENCE" || params.reason === "HATE" ? "high" : "medium",
+    }).catch(() => undefined);
   }
 
   return { id: report.id, status: report.status };

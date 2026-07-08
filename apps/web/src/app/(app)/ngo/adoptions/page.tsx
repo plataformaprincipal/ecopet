@@ -1,5 +1,5 @@
-import { NgoAdoptionRequestsList } from "@/components/features/ong/experience/ngo-adoption-requests-list";
+import { redirect } from "next/navigation";
 
-export default function NgoAdoptionsRoute() {
-  return <NgoAdoptionRequestsList />;
+export default function NgoAdoptionsRedirect() {
+  redirect("/ngo/adocoes");
 }

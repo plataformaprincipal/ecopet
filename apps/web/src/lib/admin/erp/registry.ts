@@ -21,6 +21,37 @@ import { getGestorPartners, getGestorOngs } from "@/lib/gestor/gestor-users-serv
 import { getGestorMarketplace } from "@/lib/gestor/gestor-marketplace-service";
 import { getGestorSocial } from "@/lib/gestor/gestor-social-service";
 import { getGestorSupport } from "@/lib/gestor/gestor-support-service";
+import {
+  getAdminEmpresaModule,
+  getAdminOperacaoModule,
+  getAdminIntegracoesExpandedModule,
+  getAdminAutomacoesExpandedModule,
+  getAdminIaCenterExpandedModule,
+  getAdminAuditoriaExpandedModule,
+  getAdminConfiguracoesModule,
+  getAdminPermissoesExpandedModule,
+} from "@/lib/admin/erp/admin-internal-service";
+import {
+  getAdminModeracaoModule,
+  getAdminContasModule,
+  getAdminSuporteModule,
+  getAdminComunidadeModule,
+  getAdminLojasModule,
+  getAdminPerfisModule,
+  getAdminMensagensModule,
+  getAdminReputacaoModule,
+  getAdminIncidentesModule,
+  getAdminGovernancaModule,
+} from "@/lib/admin/governance/governance-erp-service";
+import {
+  getAdminIntegrationsHubModule,
+  getAdminAutomationsHubModule,
+  getAdminEventsModule,
+  getAdminWebhooksModule,
+  getAdminJobsModule,
+  getAdminFilasModule,
+  getAdminIntegrationLogsModule,
+} from "@/lib/platform/integration-automation-service";
 import { getErpBiModule } from "@/lib/admin/erp/bi-service";
 import { auditToTimeline, buildAiInsights, normalizeErpResponse, PAID } from "@/lib/admin/erp/enrich";
 import type { ErpModuleResponse } from "@/lib/admin/erp/types";
@@ -264,26 +295,38 @@ async function getDataCenter(_filters: GestorFilters): Promise<ErpModuleResponse
 }
 
 async function getProduct(_filters: GestorFilters): Promise<ErpModuleResponse> {
-  const [products, services, flags] = await Promise.all([
+  const [products, services, flags, reports, feedbacks] = await Promise.all([
     prisma.product.count({ where: { deletedAt: null } }),
     prisma.service.count({ where: { deletedAt: null } }),
     prisma.featureFlag.count(),
+    prisma.contentReport.count({ where: { status: "PENDING" } }),
+    prisma.aIFeedback.count(),
   ]);
   const kpis = [
     { key: "products", label: "Produtos", value: products },
     { key: "services", label: "Serviços", value: services },
-    { key: "features", label: "Features flags", value: flags },
-    { key: "releases", label: "Releases", value: 0 },
+    { key: "features", label: "Feature flags", value: flags },
+    { key: "bugs", label: "Denúncias abertas", value: reports },
+    { key: "feedbacks", label: "Feedbacks", value: feedbacks },
   ];
   return wrap("produto", async () => ({
     kpis,
     metrics: kpis,
+    tables: [
+      { id: "roadmap", label: "Roadmap", rows: [] },
+      { id: "backlog", label: "Backlog", rows: [] },
+      { id: "bugs", label: "Bugs / denúncias", rows: [] },
+      { id: "releases", label: "Releases", rows: [] },
+      { id: "experiments", label: "Experimentos", rows: flags > 0 ? [{ id: "flags", item: "Feature flags ativos", qtd: flags }] : [] },
+    ],
     tabs: [
       { id: "roadmap", label: "Roadmap" },
       { id: "backlog", label: "Backlog" },
       { id: "bugs", label: "Bugs" },
+      { id: "releases", label: "Releases" },
+      { id: "experiments", label: "Experimentos" },
     ],
-    disclaimer: "Roadmap/backlog integrável a ferramentas externas — contadores de produto/serviço são reais.",
+    disclaimer: "Roadmap/backlog via ferramentas externas. Contadores de produto, flags e feedbacks são reais.",
   }));
 }
 
@@ -307,6 +350,8 @@ async function getFinanceErp(filters: GestorFilters): Promise<ErpModuleResponse>
 
 const REGISTRY: Record<string, Handler> = {
   dashboard: (f) => wrap("dashboard", () => getAdminExecutiveDashboard(f)),
+  empresa: (f) => wrap("empresa", () => getAdminEmpresaModule(f)),
+  operacao: (f) => wrap("operacao", () => getAdminOperacaoModule(f)),
   bi: getErpBiModule,
   financeiro: getFinanceErp,
   contabil: (f) => wrap("contabil", () => getAdminAccountingModule(f), "accounting"),
@@ -315,26 +360,45 @@ const REGISTRY: Record<string, Handler> = {
   rh: (f) => wrap("rh", () => getAdminHrModule(f), "hr"),
   ti: (f) => wrap("ti", () => getAdminItModule(f), "it"),
   ciberseguranca: getCybersecurity,
+  seguranca: getCybersecurity,
   inovacao: (f) => wrap("inovacao", () => getAdminInnovationModule(f), "ai"),
-  "ia-center": (f) => wrap("ia-center", () => getAdminInnovationModule(f), "ai"),
+  "ia-center": (f) => wrap("ia-center", () => getAdminIaCenterExpandedModule(f), "ai"),
+  ia: (f) => wrap("ia", () => getAdminIaCenterExpandedModule(f), "ai"),
   marketing: (f) => wrap("marketing", () => getAdminMarketingModule(f)),
   administrativo: (f) => wrap("administrativo", () => getAdminAdministrativeModule(f)),
-  permissoes: (f) => wrap("permissoes", () => getAdminPermissionsModule(f)),
+  permissoes: (f) => wrap("permissoes", () => getAdminPermissoesExpandedModule(f)),
   laboratorio: (f) => wrap("laboratorio", () => getAdminLaboratoryModule(f)),
   comercial: (f) => wrap("comercial", () => getAdminCommercialModule(f)),
   crm: (f) => wrap("crm", () => getAdminCommercialModule(f)),
   tecnico: (f) => wrap("tecnico", () => getAdminTechnicalModule(f)),
-  suporte: (f) => wrap("suporte", () => getGestorSupport(f), "support"),
-  integracoes: (f) => wrap("integracoes", () => getAdminIntegrationsModule()),
+  suporte: (f) => wrap("suporte", () => getAdminSuporteModule(f), "support"),
+  integracoes: (f) => wrap("integracoes", () => getAdminIntegrationsHubModule(f)),
   partners: (f) => wrap("partners", () => getGestorPartners(f)),
   ngos: (f) => wrap("ngos", () => getGestorOngs(f)),
   marketplace: (f) => wrap("marketplace", () => getGestorMarketplace(f)),
   social: (f) => wrap("social", () => getGestorSocial(f)),
   audit: (f) => wrap("audit", () => getGestorAudit(f)),
+  auditoria: (f) => wrap("auditoria", () => getAdminAuditoriaExpandedModule(f)),
+  configuracoes: () => wrap("configuracoes", () => getAdminConfiguracoesModule()),
   analytics: getAnalytics,
-  automacoes: getAutomations,
+  automacoes: (f) => wrap("automacoes", () => getAdminAutomationsHubModule(f)),
   "data-center": getDataCenter,
   produto: getProduct,
+  moderacao: (f) => wrap("moderacao", () => getAdminModeracaoModule(f), "governance"),
+  contas: (f) => wrap("contas", () => getAdminContasModule(f), "governance.accounts"),
+  comunidade: (f) => wrap("comunidade", () => getAdminComunidadeModule(f), "governance.community"),
+  lojas: (f) => wrap("lojas", () => getAdminLojasModule(f), "governance.stores"),
+  perfis: (f) => wrap("perfis", () => getAdminPerfisModule(f), "governance.profiles"),
+  mensagens: (f) => wrap("mensagens", () => getAdminMensagensModule(f), "governance.messages"),
+  reputacao: (f) => wrap("reputacao", () => getAdminReputacaoModule(f), "governance.reputation"),
+  incidentes: (f) => wrap("incidentes", () => getAdminIncidentesModule(f), "governance.incidents"),
+  governanca: (f) => wrap("governanca", () => getAdminGovernancaModule(f), "governance"),
+  eventos: (f) => wrap("eventos", () => getAdminEventsModule(f), "platform.events"),
+  webhooks: (f) => wrap("webhooks", () => getAdminWebhooksModule(f), "platform.webhooks"),
+  jobs: (f) => wrap("jobs", () => getAdminJobsModule(f), "platform.jobs"),
+  filas: (f) => wrap("filas", () => getAdminFilasModule(f), "platform.jobs"),
+  workflows: (f) => wrap("workflows", () => getAdminAutomationsHubModule(f), "platform.workflows"),
+  "logs-integracao": (f) => wrap("logs-integracao", () => getAdminIntegrationLogsModule(f), "platform.integrations"),
 };
 
 export async function getErpModule(moduleId: string, filters: GestorFilters): Promise<ErpModuleResponse> {

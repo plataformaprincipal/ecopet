@@ -111,7 +111,7 @@ export async function buildOngDashboardSummary(
       id: "complete-profile",
       title: "Complete o perfil da ONG",
       description: "Descrição e missão ajudam adotantes a confiar na sua instituição.",
-      href: "/ong/perfil-gestao",
+      href: "/ngo/profile",
       priority: "high",
     });
   }
@@ -130,7 +130,7 @@ export async function buildOngDashboardSummary(
       id: "update-photos",
       title: `${staleAnimals.length} animal(is) sem fotos recentes`,
       description: "Atualize imagens para aumentar chances de adoção.",
-      href: "/ong/adocoes",
+      href: "/ngo/animais",
       priority: "medium",
     });
   }
@@ -141,7 +141,7 @@ export async function buildOngDashboardSummary(
       id: "improve-descriptions",
       title: "Melhore descrições dos animais",
       description: `${noDescription.length} cadastro(s) com descrição curta ou vazia.`,
-      href: "/ong/adocoes",
+      href: "/ngo/animais",
       priority: "medium",
     });
   }
@@ -161,7 +161,7 @@ export async function buildOngDashboardSummary(
       id: "register-animal",
       title: "Cadastre seu primeiro animal",
       description: "Publique animais disponíveis para adoção.",
-      href: "/ong/adocoes",
+      href: "/ngo/animais",
       priority: "high",
     });
   }
@@ -172,7 +172,7 @@ export async function buildOngDashboardSummary(
       id: "review-pending",
       title: "Revise adoções em análise",
       description: `${pendingReview.length} animal(is) com status em análise.`,
-      href: "/ong/adocoes",
+      href: "/ngo/animais",
       priority: "low",
     });
   }
@@ -182,7 +182,7 @@ export async function buildOngDashboardSummary(
       id: "answer-adoption-requests",
       title: `${adoptionRequestsPending} pedido(s) de adoção aguardando`,
       description: "Responda interessados rapidamente para concretizar adoções.",
-      href: "/ngo/adoptions",
+      href: "/ngo/adocoes",
       priority: "high",
     });
   }

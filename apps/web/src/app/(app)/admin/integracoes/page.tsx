@@ -1,5 +1,5 @@
-﻿import { AdminModulePage } from "@/components/features/admin/admin-module-page";
+﻿import { AdminIntegracoesPanel } from "@/components/features/admin/admin-integracoes-panel";
 
-export default function AdminPage() {
-  return <AdminModulePage moduleId="integracoes" />;
+export default function AdminIntegracoesPage() {
+  return <AdminIntegracoesPanel />;
 }

@@ -2,10 +2,10 @@ import { AdminErpModulePanel } from "@/components/features/admin/admin-erp-modul
 import { getAdminModule } from "@/lib/admin/module-config";
 import { notFound } from "next/navigation";
 
-type Props = { moduleId: string };
+type Props = { moduleId: string; initialFilters?: Record<string, string> };
 
-export function AdminModulePage({ moduleId }: Props) {
+export function AdminModulePage({ moduleId, initialFilters }: Props) {
   const config = getAdminModule(moduleId);
   if (!config) notFound();
-  return <AdminErpModulePanel config={config} />;
+  return <AdminErpModulePanel config={config} initialFilters={initialFilters} />;
 }

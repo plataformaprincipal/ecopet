@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiFailure } from "@/lib/api-response";
 import { requireOngWithAccess } from "@/lib/ong/require-ong-access";
 import { createNotification } from "@/lib/notifications/notification-service";
+import { auditNgoErp } from "@/lib/ong/erp/store";
 
 type RouteContext = { params: Promise<{ requestId: string }> };
 
@@ -59,6 +60,18 @@ export async function PATCH(request: Request, context: RouteContext) {
   const updated = await prisma.adoptionRequest.update({
     where: { id: requestId },
     data: { status, history: updatedHistory as object },
+  });
+
+  await auditNgoErp({
+    actorId: user!.id,
+    ongId: user!.id,
+    module: "adocoes",
+    resource: "adoption_request",
+    action: status === "REJECTED" ? "REJECT" : status === "APPROVED" || status === "COMPLETED" ? "APPROVE" : "UPDATE",
+    resourceId: requestId,
+    entityBefore: { status: existing.status },
+    entityAfter: { status, note: body.note ?? null },
+    observation: `Adoção ${existing.listing?.name ?? requestId}: ${status}`,
   });
 
   // Sincroniza o status do animal quando necessário.

@@ -78,7 +78,7 @@ export function NgoHomeDashboard({ ngoName }: Props) {
             {t("ngoArea.home.openAi")}
           </Link>
           <Link
-            href="/ngo/animals"
+            href="/ngo/animais"
             className="inline-flex items-center rounded-xl border border-zinc-300 px-3.5 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 dark:border-white/15 dark:text-zinc-200 dark:hover:bg-white/5"
           >
             {t("ngoArea.home.manageAnimals")}
@@ -134,7 +134,7 @@ export function NgoHomeDashboard({ ngoName }: Props) {
             summary.recentRequests.map((r) => (
               <Link
                 key={r.id}
-                href="/ngo/adoptions"
+                href="/ngo/adocoes"
                 className="block rounded-xl border border-zinc-200/80 bg-white p-3 text-sm dark:border-white/10 dark:bg-zinc-900/60"
               >
                 <div className="flex items-center justify-between">
@@ -160,7 +160,7 @@ export function NgoHomeDashboard({ ngoName }: Props) {
             summary.recentAnimals.map((a) => (
               <Link
                 key={a.id}
-                href="/ngo/animals"
+                href="/ngo/animais"
                 className="block rounded-xl border border-zinc-200/80 bg-white p-3 text-sm dark:border-white/10 dark:bg-zinc-900/60"
               >
                 <div className="flex items-center justify-between">

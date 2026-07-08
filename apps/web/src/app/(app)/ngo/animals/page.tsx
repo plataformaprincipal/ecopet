@@ -1,5 +1,5 @@
-import { OngAdoptionsPage } from "@/components/features/ong/pages/ong-adoptions-page";
+import { redirect } from "next/navigation";
 
-export default function NgoAnimalsRoute() {
-  return <OngAdoptionsPage accessLevel="full" />;
+export default function NgoAnimalsRedirect() {
+  redirect("/ngo/animais");
 }

@@ -45,6 +45,9 @@ export async function getAdminExecutiveDashboard(_filters: GestorFilters) {
     recentReports,
     recentAudit,
     criticalLogs,
+    aiCostMonth,
+    paymentFailuresMonth,
+    integrationErrors,
   ] = await Promise.all([
     prisma.user.count(),
     prisma.user.count({ where: { role: UserRole.CLIENT, accountStatus: AccountStatus.ACTIVE } }),
@@ -123,6 +126,19 @@ export async function getAdminExecutiveDashboard(_filters: GestorFilters) {
       },
     }),
     prisma.platformIntegrationLog.count({ where: { status: { in: ["ERROR", "FAILED"] } } }),
+    prisma.aITokenUsage.aggregate({
+      where: { usageDate: { gte: monthStart } },
+      _sum: { estimatedCost: true },
+    }),
+    prisma.paymentEvent.count({
+      where: {
+        createdAt: { gte: monthStart },
+        OR: [{ errorCode: { not: null } }, { status: { in: ["failed", "FAILED", "error", "ERROR"] } }],
+      },
+    }),
+    prisma.platformIntegrationLog.count({
+      where: { status: { in: ["ERROR", "FAILED"] }, createdAt: { gte: monthStart } },
+    }),
   ]);
 
   const grossTotal = revenueTotal._sum.total ?? 0;
@@ -154,6 +170,10 @@ export async function getAdminExecutiveDashboard(_filters: GestorFilters) {
       { key: "avg_ticket", label: "Ticket médio", value: Math.round(avgTicket * 100) / 100 },
       { key: "monthly_growth", label: "Crescimento mensal (%)", value: growth },
       { key: "critical_alerts", label: "Alertas críticos", value: criticalLogs + openReports },
+      { key: "integration_errors", label: "Integrações com erro", value: integrationErrors, variant: integrationErrors > 0 ? "warning" : "default" },
+      { key: "pending_actions", label: "Ações pendentes", value: pendingApprovals + openTickets },
+      { key: "ai_cost", label: "Custo estimado IA", value: Math.round((aiCostMonth._sum.estimatedCost ?? 0) * 100) / 100 },
+      { key: "payment_failures", label: "Falhas de pagamento", value: paymentFailuresMonth, variant: paymentFailuresMonth > 0 ? "warning" : "default" },
     ],
     quickActions: [
       { label: "Aprovar parceiros", href: "/admin/approvals" },

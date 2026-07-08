@@ -1,5 +1,5 @@
-import { EccoPetAIShell } from "@/components/features/eccopet-ai/eccopet-ai-shell";
+import { NgoIaErpPage } from "@/components/features/ong/erp/ngo-ia-erp-page";
 
 export default function NgoEccoPetRoute() {
-  return <EccoPetAIShell />;
+  return <NgoIaErpPage />;
 }

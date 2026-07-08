@@ -3,27 +3,31 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  Calendar,
-  MessageSquare,
+  Activity,
+  AlertTriangle,
+  CalendarClock,
   PawPrint,
+  Pill,
   ShoppingBag,
-  ShoppingCart,
   Sparkles,
+  Stethoscope,
+  Syringe,
+  TrendingDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ClientPageHeader } from "../client-page-header";
 import { ClientPageSkeleton } from "../client-skeleton";
-import { ClientStatsCards } from "../client-stats-cards";
-import { ClientEmptyState } from "../client-empty-state";
-import type { ClientDashboardSummary } from "@/lib/client/dashboard-summary";
+import { PetOsCard, PetOsMetric, PetOsEmpty } from "../petos/petos-card";
+import type { PetOsOverview } from "@/lib/client/petos-overview";
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleString("pt-BR", {
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return new Date(iso).toLocaleString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+}
+function formatDay(iso: string) {
+  return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+}
+function brl(value: number) {
+  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
 type ClientDashboardHomeProps = {
@@ -31,169 +35,183 @@ type ClientDashboardHomeProps = {
 };
 
 export function ClientDashboardHome({ userName }: ClientDashboardHomeProps) {
-  const [summary, setSummary] = useState<ClientDashboardSummary | null>(null);
+  const [data, setData] = useState<PetOsOverview | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError("");
     try {
-      const res = await fetch("/api/client/dashboard/summary", { credentials: "include" });
+      const res = await fetch("/api/client/petos/overview", { credentials: "include", cache: "no-store" });
       const json = await res.json();
-      if (json.success) setSummary(json.data.summary);
+      if (!res.ok || json.success === false) throw new Error(json.error?.message ?? "Erro ao carregar painel");
+      setData(json.data.overview as PetOsOverview);
+    } catch (e) {
+      setError((e as Error).message);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    load();
+    void load();
   }, [load]);
 
   if (loading) return <ClientPageSkeleton />;
 
   const firstName = userName.split(" ")[0];
 
+  if (error) {
+    return (
+      <div className="space-y-4">
+        <ClientPageHeader title={`Olá, ${firstName}`} description="Seu painel no ecossistema EcoPet." />
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700 dark:border-rose-900 dark:bg-rose-950/30" role="alert">
+          {error}
+          <Button variant="outline" size="sm" className="ml-3" onClick={load}>Tentar novamente</Button>
+        </div>
+      </div>
+    );
+  }
+  if (!data) return null;
+
   return (
     <div className="space-y-8">
       <ClientPageHeader
         title={`Olá, ${firstName}`}
-        description="Seu resumo no ecossistema EcoPet — pets, agenda, pedidos e mensagens."
+        description="Resumo do dia, saúde, agenda, finanças e recomendações do seu pet."
         actions={
           <div className="flex flex-wrap gap-2">
             <Button asChild size="sm" variant="outline">
-              <Link href="/cliente/meu-pet">Cadastrar pet</Link>
+              <Link href="/cliente/pets">Meus pets</Link>
             </Button>
             <Button asChild size="sm">
-              <Link href="/cliente/explorar">Agendar serviço</Link>
+              <Link href="/cliente/agenda">Agendar serviço</Link>
             </Button>
           </div>
         }
       />
 
-      {summary ? (
-        <ClientStatsCards
-          items={[
-            { label: "Pets", value: summary.petsCount, icon: PawPrint },
-            { label: "Agendamentos", value: summary.upcomingAppointments.length, icon: Calendar },
-            { label: "Mensagens", value: summary.unreadMessages, icon: MessageSquare },
-            { label: "Carrinho", value: summary.cartItemsCount, icon: ShoppingCart },
-          ]}
-        />
+      {/* Linha 1: métricas do dia */}
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <PetOsCard title="Resumo do dia" icon={Sparkles} accent="emerald">
+          <PetOsMetric
+            value={data.today.remindersToday + data.today.appointmentsToday}
+            hint={`${data.today.remindersToday} lembretes · ${data.today.appointmentsToday} agendamentos hoje`}
+          />
+        </PetOsCard>
+        <PetOsCard title="Pets cadastrados" icon={PawPrint} accent="violet" href="/cliente/pets">
+          <PetOsMetric value={data.petsCount} hint={data.pets.map((p) => p.name).join(", ") || "Nenhum pet"} />
+        </PetOsCard>
+        <PetOsCard title="Gastos do mês" icon={TrendingDown} accent="rose" href="/dashboard/client/orders">
+          <PetOsMetric value={brl(data.finance.spentThisMonth)} hint="Compras no marketplace" />
+        </PetOsCard>
+        <PetOsCard title="Medicamentos pendentes" icon={Pill} accent="amber" href="/cliente/saude">
+          <PetOsMetric value={data.today.medicationsActive} hint="Tratamentos ativos" />
+        </PetOsCard>
+      </section>
+
+      {/* Linha 2: saúde e agenda */}
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <PetOsCard title="Próximas consultas" icon={CalendarClock} accent="sky" href="/cliente/agenda">
+          {data.upcomingAppointments.length === 0 ? (
+            <PetOsEmpty message="Nenhuma consulta agendada." />
+          ) : (
+            <ul className="space-y-2">
+              {data.upcomingAppointments.slice(0, 3).map((a) => (
+                <li key={a.id} className="text-sm">
+                  <p className="font-medium text-zinc-900 dark:text-white">{a.serviceName ?? "Serviço"}</p>
+                  <p className="text-zinc-500">{[a.partnerName, formatDate(a.scheduledAt)].filter(Boolean).join(" · ")}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </PetOsCard>
+
+        <PetOsCard title="Vacinas pendentes" icon={Syringe} accent="amber" href="/cliente/saude">
+          {data.vaccinesPending.length === 0 ? (
+            <PetOsEmpty message="Nenhuma vacina agendada." />
+          ) : (
+            <ul className="space-y-2">
+              {data.vaccinesPending.slice(0, 3).map((v) => (
+                <li key={v.id} className="text-sm">
+                  <p className="font-medium text-zinc-900 dark:text-white">{v.name}</p>
+                  <p className="text-zinc-500">{v.petName} · {formatDay(v.nextDue)}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </PetOsCard>
+
+        <PetOsCard title="Alertas importantes" icon={AlertTriangle} accent="rose">
+          {data.iot.alerts.length === 0 ? (
+            <PetOsEmpty message="Nenhum alerta no momento." />
+          ) : (
+            <ul className="space-y-2">
+              {data.iot.alerts.slice(0, 3).map((a) => (
+                <li key={a.id} className="text-sm">
+                  <p className="font-medium text-zinc-900 dark:text-white">{a.message}</p>
+                  <p className="text-zinc-500">{a.severity} · {formatDay(a.createdAt)}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </PetOsCard>
+      </section>
+
+      {/* Linha 3: recomendações */}
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <PetOsCard title="Produtos recomendados" icon={ShoppingBag} accent="sky" href="/cliente/marketplace">
+          {data.recommendations.products.length === 0 ? (
+            <PetOsEmpty message="Sem recomendações no momento." />
+          ) : (
+            <ul className="space-y-2">
+              {data.recommendations.products.slice(0, 3).map((p) => (
+                <li key={p.id} className="flex items-center justify-between text-sm">
+                  <span className="truncate text-zinc-900 dark:text-white">{p.name}</span>
+                  <span className="ml-2 shrink-0 text-zinc-500">{brl(p.price)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </PetOsCard>
+
+        <PetOsCard title="Serviços recomendados" icon={Stethoscope} accent="emerald" href="/cliente/agenda">
+          {data.recommendations.services.length === 0 ? (
+            <PetOsEmpty message="Sem serviços recomendados." />
+          ) : (
+            <ul className="space-y-2">
+              {data.recommendations.services.slice(0, 3).map((s) => (
+                <li key={s.id} className="flex items-center justify-between text-sm">
+                  <span className="truncate text-zinc-900 dark:text-white">{s.name}</span>
+                  <span className="ml-2 shrink-0 text-zinc-500">{brl(s.price)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </PetOsCard>
+
+        <PetOsCard title="Atividades recentes" icon={Activity} accent="violet">
+          {data.recentActivities.length === 0 ? (
+            <PetOsEmpty message="Nenhuma atividade registrada." />
+          ) : (
+            <ul className="space-y-2">
+              {data.recentActivities.slice(0, 3).map((e) => (
+                <li key={e.id} className="text-sm">
+                  <p className="font-medium text-zinc-900 dark:text-white">{e.title}</p>
+                  <p className="text-zinc-500">{e.petName} · {formatDay(e.createdAt)}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </PetOsCard>
+      </section>
+
+      {data.recommendations.products.length === 0 && data.petsCount === 0 ? (
+        <p className="text-sm text-zinc-500">
+          Comece cadastrando um pet em <Link href="/cliente/pets" className="font-medium text-emerald-700 hover:underline dark:text-emerald-400">Meus pets</Link> para liberar todo o painel.
+        </p>
       ) : null}
-
-      <div className="flex flex-wrap gap-2">
-        <Button asChild size="sm" variant="outline">
-          <Link href="/cliente/marketplace">Explorar marketplace</Link>
-        </Button>
-        <Button asChild size="sm" variant="outline">
-          <Link href="/dashboard/client/orders">Ver meus pedidos</Link>
-        </Button>
-      </div>
-
-      {summary && summary.recommendations.length > 0 ? (
-        <section className="space-y-3">
-          <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-zinc-500">
-            <Sparkles className="h-4 w-4" aria-hidden />
-            Recomendações
-          </h2>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {summary.recommendations.map((rec) => (
-              <Link
-                key={rec.id}
-                href={rec.href}
-                className="rounded-2xl border border-zinc-200/80 bg-white p-4 transition hover:shadow-md dark:border-white/10 dark:bg-zinc-900/60"
-              >
-                <p className="font-medium text-zinc-900 dark:text-white">{rec.title}</p>
-                <p className="mt-1 text-sm text-zinc-500">{rec.description}</p>
-              </Link>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">Próximos lembretes</h2>
-          {!summary || summary.upcomingReminders.length === 0 ? (
-            <p className="text-sm text-zinc-500">Nenhum lembrete pendente.</p>
-          ) : (
-            summary.upcomingReminders.map((r) => (
-              <div
-                key={r.id}
-                className="rounded-xl border border-zinc-200/80 bg-white p-3 text-sm dark:border-white/10 dark:bg-zinc-900/60"
-              >
-                <p className="font-medium">{r.title}</p>
-                <p className="text-zinc-500">
-                  {r.petName} · {formatDate(r.dueAt)}
-                </p>
-              </div>
-            ))
-          )}
-        </section>
-
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">Próximos agendamentos</h2>
-          {!summary || summary.upcomingAppointments.length === 0 ? (
-            <ClientEmptyState
-              icon={Calendar}
-              title="Nenhum agendamento"
-              description="Explore serviços e marque o próximo cuidado do seu pet."
-              actionLabel="Explorar serviços"
-              actionHref="/cliente/explorar"
-            />
-          ) : (
-            summary.upcomingAppointments.map((a) => (
-              <Link
-                key={a.id}
-                href={`/dashboard/client/appointments/${a.id}`}
-                className="block rounded-xl border border-zinc-200/80 bg-white p-3 text-sm dark:border-white/10 dark:bg-zinc-900/60"
-              >
-                <p className="font-medium">{a.serviceName ?? "Serviço"}</p>
-                <p className="text-zinc-500">
-                  {a.partnerName} · {formatDate(a.scheduledAt)}
-                </p>
-              </Link>
-            ))
-          )}
-        </section>
-
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">Pedidos recentes</h2>
-          {!summary || summary.recentOrders.length === 0 ? (
-            <ClientEmptyState
-              icon={ShoppingBag}
-              title="Nenhum pedido"
-              description="Suas compras no marketplace aparecerão aqui."
-              actionLabel="Ir ao marketplace"
-              actionHref="/cliente/marketplace"
-            />
-          ) : (
-            summary.recentOrders.map((o) => (
-              <Link
-                key={o.id}
-                href={`/dashboard/client/orders/${o.id}`}
-                className="block rounded-xl border border-zinc-200/80 bg-white p-3 text-sm dark:border-white/10 dark:bg-zinc-900/60"
-              >
-                <p className="font-medium">R$ {o.total.toFixed(2)}</p>
-                <p className="text-zinc-500">
-                  {o.status} · {formatDate(o.createdAt)}
-                </p>
-              </Link>
-            ))
-          )}
-        </section>
-
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">Mensagens</h2>
-          <div className="rounded-xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60">
-            <p className="text-2xl font-semibold">{summary?.unreadMessages ?? 0}</p>
-            <p className="text-sm text-zinc-500">não lidas</p>
-            <Button asChild variant="ghost" className="mt-2 h-auto p-0">
-              <Link href="/dashboard/messages">Abrir mensagens</Link>
-            </Button>
-          </div>
-        </section>
-      </div>
     </div>
   );
 }

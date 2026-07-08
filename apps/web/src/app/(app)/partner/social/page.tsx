@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { dashboardPathForRole } from "@/lib/auth/dashboard";
 import { prisma } from "@/lib/prisma";
 import { getPartnerAccessLevel } from "@/lib/partner/access";
-import { PartnerCommunityPage } from "@/components/features/partner/pages/partner-community-page";
+import { PartnerSocialErpPage } from "@/components/features/partner/erp/partner-social-erp-page";
 
 export default async function PartnerSocialRoute() {
   const user = await getCurrentUser();
@@ -20,5 +20,5 @@ export default async function PartnerSocialRoute() {
     verificationStatus: profile?.verificationStatus,
   });
 
-  return <PartnerCommunityPage partnerId={user.id} accessLevel={accessLevel} />;
+  return <PartnerSocialErpPage partnerId={user.id} accessLevel={accessLevel} />;
 }
