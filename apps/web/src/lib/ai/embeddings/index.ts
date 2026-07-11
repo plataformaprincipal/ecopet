@@ -1,10 +1,11 @@
-import { AiProviderNotConfiguredError } from "@/lib/ai/errors";
-
-/** Infraestrutura de embeddings — integração com provedor pendente. */
-export async function createEmbedding(_input: { text: string }) {
-  throw new AiProviderNotConfiguredError();
-}
-
-export function isEmbeddingsConfigured(): boolean {
-  return false;
-}
+/** Reexport — implementação real em ai-embeddings.ts */
+export {
+  createEmbedding,
+  createEmbeddings,
+  isEmbeddingsConfigured,
+  ingestKnowledgeDocument,
+  semanticSearch,
+  chunkText,
+  contentHash,
+  cosineSimilarity,
+} from "@/lib/ai/ai-embeddings";

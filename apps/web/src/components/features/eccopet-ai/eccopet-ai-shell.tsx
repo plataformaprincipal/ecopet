@@ -94,11 +94,15 @@ export function EccoPetAIShell() {
       if (!isAuthenticated) setDemoCount((n) => n + 1);
 
       try {
-        const res = await api<{ reply: string }>("/api/ai/chat", {
-          method: "POST",
-          body: JSON.stringify({ message: clean, type: "general" }),
-        });
-        const reply = res.reply?.trim() || DEMO_REPLY;
+        const res = await api<{ success?: boolean; data?: { reply?: string; content?: string }; reply?: string; content?: string }>(
+          "/api/ai/chat",
+          {
+            method: "POST",
+            body: JSON.stringify({ message: clean, type: "general" }),
+          }
+        );
+        const reply =
+          (res.data?.content ?? res.data?.reply ?? res.content ?? res.reply)?.trim() || DEMO_REPLY;
         updateConversation(convId, (c) => ({
           ...c,
           messages: c.messages.map((m) =>

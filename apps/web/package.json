@@ -19,7 +19,8 @@
     "test:registration:rules": "node --import tsx --test src/lib/registration/collect-step-errors.test.ts",
     "test:vlibras": "node --import tsx --test src/lib/accessibility/vlibras-load-outcome.test.ts",
     "test:social:permissions": "node --import tsx --test src/lib/social/persona-permissions.test.ts",
-    "test:talkjs": "node --import tsx --test src/lib/talkjs/server.test.ts"
+    "test:talkjs": "node --import tsx --test src/lib/talkjs/server.test.ts",
+    "test:ai": "node --import tsx --test ../../scripts/test-foundation-ai.mjs"
   },
   "dependencies": {
     "@ecopet/database": "*",
@@ -45,6 +46,7 @@
     "next-auth": "^4.24.11",
     "next-themes": "^0.4.6",
     "nodemailer": "^7.0.13",
+    "openai": "^4.104.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "resend": "^6.14.0",

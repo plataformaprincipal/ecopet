@@ -11,6 +11,12 @@ type AiPlatformData = {
   stats: { totalRequests: number; totalTokens: number; totalCostUsd: number; byAgent: Record<string, number> };
   prompts: { key: string; version: string; agentId: string }[];
   integrationPoints: { id: string; label: string; route: string; status: string }[];
+  governance?: {
+    usage: { total: number; errors: number; estimatedCostUsd: number; byModule: Record<string, number>; byRole: Record<string, number> };
+    indexedDocuments: number;
+    pendingModeration: number;
+    config: { model: string; dailyUserLimit: number; monthlyBudgetCents: number; globallyEnabled: boolean };
+  } | null;
 };
 
 async function fetchJson<T>(path: string): Promise<T> {
@@ -29,10 +35,16 @@ export function AdminAiPlatformPanel() {
     setLoading(true);
     setError("");
     try {
-      const [agentsRes, modelsRes, promptsRes] = await Promise.all([
+      const [agentsRes, modelsRes, promptsRes, governance] = await Promise.all([
         fetchJson<{ agents: AiPlatformData["agents"]; integrationPoints: AiPlatformData["integrationPoints"] }>("/api/ai/agents"),
         fetchJson<{ models: AiPlatformData["models"]; providers: AiPlatformData["providers"] }>("/api/ai/models"),
         fetchJson<{ prompts: AiPlatformData["prompts"]; stats: AiPlatformData["stats"]; providers: AiPlatformData["providers"] }>("/api/ai/prompts"),
+        fetchJson<{
+          usage: { total: number; errors: number; estimatedCostUsd: number; byModule: Record<string, number>; byRole: Record<string, number> };
+          indexedDocuments: number;
+          pendingModeration: number;
+          config: { model: string; dailyUserLimit: number; monthlyBudgetCents: number; globallyEnabled: boolean };
+        }>("/api/admin/ai/governance").catch(() => null),
       ]);
 
       setData({
@@ -42,6 +54,7 @@ export function AdminAiPlatformPanel() {
         providers: promptsRes.providers ?? modelsRes.providers,
         prompts: promptsRes.prompts,
         stats: promptsRes.stats,
+        governance,
       });
     } catch (e) {
       setError((e as Error).message);
@@ -122,6 +135,37 @@ export function AdminAiPlatformPanel() {
           </div>
         </CardContent>
       </Card>
+
+      {data.governance && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Governança OpenAI</CardTitle>
+            <CardDescription>
+              Modelo {data.governance.config.model} · limite diário {data.governance.config.dailyUserLimit} ·
+              orçamento {data.governance.config.monthlyBudgetCents}¢ ·{" "}
+              {data.governance.config.globallyEnabled ? "ativa" : "pausada"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded border p-3 text-center">
+              <p className="text-2xl font-bold">{data.governance.usage.total}</p>
+              <p className="text-xs text-muted-foreground">Uso no mês</p>
+            </div>
+            <div className="rounded border p-3 text-center">
+              <p className="text-2xl font-bold">{data.governance.usage.errors}</p>
+              <p className="text-xs text-muted-foreground">Erros</p>
+            </div>
+            <div className="rounded border p-3 text-center">
+              <p className="text-2xl font-bold">{data.governance.indexedDocuments}</p>
+              <p className="text-xs text-muted-foreground">Docs indexados</p>
+            </div>
+            <div className="rounded border p-3 text-center">
+              <p className="text-2xl font-bold">{data.governance.pendingModeration}</p>
+              <p className="text-xs text-muted-foreground">Moderação pendente</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

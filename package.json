@@ -58,6 +58,7 @@
     "test:foundation:talkjs": "node scripts/test-foundation-talkjs.mjs",
     "test:foundation:social": "node scripts/test-foundation-social.mjs",
     "test:foundation:notifications": "node scripts/test-foundation-notifications.mjs",
+    "test:foundation:ai": "tsx --tsconfig apps/web/tsconfig.json --test scripts/test-foundation-ai.mjs && node scripts/test-foundation-ai-integration.mjs",
     "test:foundation:gestor": "node scripts/test-foundation-gestor.mjs",
     "test:foundation:all": "node scripts/test-foundation-all.mjs",
     "test:security": "node scripts/test-security.mjs",

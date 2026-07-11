@@ -1,10 +1,13 @@
 import "@/lib/ai/agents";
 import "@/lib/ai/prompts/registry";
 import "@/lib/ai/tools/registry";
+import "@/lib/ai/bootstrap-openai";
 
 export type * from "@/lib/ai/types";
 export { AI_ERROR_CODES, AI_PROVIDER_NOT_CONFIGURED_MESSAGE, AiProviderNotConfiguredError } from "@/lib/ai/errors";
 export { runOrchestrator } from "@/lib/ai/orchestrator";
+export { runEcoPetAI, runEcoPetAIViaLegacyAgents } from "@/lib/ai/ai-orchestrator";
+export type { RunEcoPetAIInput, RunEcoPetAIResult } from "@/lib/ai/ai-orchestrator";
 export type { AIProvider } from "@/lib/ai/provider";
 export {
   getAIProvider,
@@ -38,6 +41,15 @@ export { writeAiLog, listAiLogs, getAiLogStats } from "@/lib/ai/logger";
 export { writeAiPlatformLog, listTokenUsage, listConversations, listFeedbacks } from "@/lib/ai/logs/service";
 export { AI_INTEGRATION_POINTS, getIntegrationPoint } from "@/lib/ai/integration-points";
 export { moderateInput, moderateOutput } from "@/lib/ai/moderation";
+export { moderateContent } from "@/lib/ai/ai-moderation";
 export { listTools, listToolsForAgent, executeTool } from "@/lib/ai/tools/registry";
+export { executeInternalTool, listInternalToolNames } from "@/lib/ai/ai-tools";
 export { bootstrapAiPlatform } from "@/lib/ai/db/bootstrap";
 export { aiProviderNotConfiguredResponse, mapAiErrorToResponse } from "@/lib/ai/api-helper";
+export { AI_CONFIG, AI_SAFETY_DISCLAIMER, normalizeLocale } from "@/lib/ai/ai-config";
+export { getOpenAIClient } from "@/lib/ai/openai-client";
+export { createEmbeddings, semanticSearch, ingestKnowledgeDocument } from "@/lib/ai/ai-embeddings";
+export { generateProductRecommendations } from "@/lib/ai/ai-recommendations";
+export { recordAiUsage, getDailyUsage, getAdminUsageStats } from "@/lib/ai/ai-usage";
+export { writeAiAuditLog } from "@/lib/ai/ai-audit";
+export { enforceAiLimits } from "@/lib/ai/ai-rate-limit";

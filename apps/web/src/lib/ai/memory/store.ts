@@ -127,6 +127,9 @@ export async function createConversation(params: {
   agentCode?: string;
   petId?: string;
   title?: string;
+  module?: string;
+  role?: string;
+  locale?: string;
 }) {
   let agentId: string | undefined;
   if (params.agentCode) {
@@ -139,6 +142,9 @@ export async function createConversation(params: {
       agentId,
       petId: params.petId,
       title: params.title,
+      module: params.module,
+      role: params.role,
+      locale: params.locale ?? "pt-BR",
     },
   });
 }

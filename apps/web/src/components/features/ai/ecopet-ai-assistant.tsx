@@ -36,11 +36,17 @@ export function EcopetAIAssistant() {
     setMessages((m) => [...m, { role: "user", content: userMsg }]);
     setLoading(true);
     try {
-      const res = await api<{ reply: string }>("/api/ai/chat", {
+      const res = await api<{
+        success?: boolean;
+        data?: { reply?: string; content?: string };
+        reply?: string;
+        content?: string;
+      }>("/api/ai/chat", {
         method: "POST",
         body: JSON.stringify({ message: userMsg, type: "general" }),
       });
-      setMessages((m) => [...m, { role: "assistant", content: res.reply }]);
+      const content = res.data?.content ?? res.data?.reply ?? res.content ?? res.reply ?? t("empty.ai.unavailable");
+      setMessages((m) => [...m, { role: "assistant", content }]);
     } catch {
       setMessages((m) => [
         ...m,

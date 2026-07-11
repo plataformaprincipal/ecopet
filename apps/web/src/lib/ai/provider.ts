@@ -10,6 +10,7 @@ import type {
   AiModelInfo,
   AiStreamChunk,
 } from "@/lib/ai/types";
+import { AI_CONFIG } from "@/lib/ai/ai-config";
 
 /** Contrato único — nenhuma tela importa OpenAI/Anthropic/Google diretamente. */
 export interface AIProvider {
@@ -112,14 +113,25 @@ export function assertOpenAiConfigured(): void {
 export const assertProviderConfigured = assertOpenAiConfigured;
 
 export function getAiStatus() {
-  const configured = isAIProviderConfigured();
+  const openaiConfigured = Boolean(AI_CONFIG.apiKey) && AI_CONFIG.globallyEnabled;
+  if (openaiConfigured && activeProvider === null) {
+    try {
+      // Import síncrono evitado no path quente; bootstrap via side-effect de index.ts
+      void import("@/lib/ai/openai-provider").then(({ OpenAIProvider }) => {
+        if (activeProvider === null) registerAIProvider(new OpenAIProvider());
+      });
+    } catch {
+      // ignore
+    }
+  }
+  const configured = isAIProviderConfigured() || openaiConfigured;
   return {
-    openai: { configured: false },
-    anthropic: { configured: false },
-    google: { configured: false },
-    ready: configured,
-    errorCode: configured ? null : "AI_PROVIDER_NOT_CONFIGURED",
-    message: configured ? null : "AI Provider not configured.",
+    openai: { configured: openaiConfigured },
+    anthropic: { configured: Boolean(process.env.ANTHROPIC_API_KEY) },
+    google: { configured: Boolean(process.env.GEMINI_API_KEY) },
+    ready: configured && openaiConfigured,
+    errorCode: openaiConfigured ? null : "AI_PROVIDER_NOT_CONFIGURED",
+    message: openaiConfigured ? null : "AI Provider not configured.",
   };
 }
 
