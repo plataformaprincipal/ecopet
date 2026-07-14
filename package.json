@@ -32,6 +32,7 @@
     "validate:gmail": "node scripts/validate-gmail-smtp.mjs",
     "setup:smtp:dev": "node scripts/setup-smtp.mjs --dev",
     "sync:env": "node scripts/sync-web-env.mjs",
+    "test:sync-env": "node scripts/test-sync-env.mjs",
     "validate:env": "node scripts/validate-production-env.mjs",
     "test:auth": "node scripts/test-auth-flow.mjs",
     "test:register": "node scripts/test-register-duplicates.mjs",
