@@ -130,8 +130,10 @@ export function getAiStatus() {
     anthropic: { configured: Boolean(process.env.ANTHROPIC_API_KEY) },
     google: { configured: Boolean(process.env.GEMINI_API_KEY) },
     ready: configured && openaiConfigured,
-    errorCode: openaiConfigured ? null : "AI_PROVIDER_NOT_CONFIGURED",
-    message: openaiConfigured ? null : "AI Provider not configured.",
+    errorCode: openaiConfigured ? null : "AI_NOT_CONFIGURED",
+    message: openaiConfigured
+      ? null
+      : "Os recursos de inteligência artificial ainda não estão disponíveis neste ambiente.",
   };
 }
 

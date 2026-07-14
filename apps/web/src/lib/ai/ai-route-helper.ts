@@ -1,9 +1,14 @@
 import { z } from "zod";
 import { apiSuccess, apiFailure } from "@/lib/api-response";
 import { requireAuth } from "@/lib/auth/guards";
-import { runEcoPetAI } from "@/lib/ai/ai-orchestrator";
+import { runEcoPetAI, type RunEcoPetAIResult } from "@/lib/ai/ai-orchestrator";
 import type { AiModule } from "@/lib/ai/ai-config";
 import { normalizeLocale } from "@/lib/ai/ai-config";
+import { isAiNotConfiguredCode } from "@/lib/ai/ai-errors";
+import {
+  aiNotConfiguredResponse,
+  AI_NOT_CONFIGURED_USER_MESSAGE,
+} from "@/lib/integrations/integration-errors";
 
 export const aiActionBodySchema = z.object({
   input: z.string().min(1).max(8000).optional(),
@@ -25,6 +30,31 @@ export const aiActionBodySchema = z.object({
   productIds: z.array(z.string()).optional(),
   context: z.string().max(4000).optional(),
 });
+
+/** Mapeia falha de runEcoPetAI para resposta HTTP — nunca finge sucesso. */
+export function aiFailureResponse(result: RunEcoPetAIResult) {
+  const code = result.error?.code ?? "AI_ERROR";
+  const message = result.error?.message ?? "Erro na IA.";
+
+  if (isAiNotConfiguredCode(code)) {
+    return aiNotConfiguredResponse(message || AI_NOT_CONFIGURED_USER_MESSAGE);
+  }
+
+  const status =
+    code.includes("RATE") || code.includes("BUDGET")
+      ? 429
+      : code.includes("CONFIRM")
+        ? 409
+        : code.includes("BLOCK") || code.includes("CONTENT")
+          ? 422
+          : code.includes("PERSONA") || code.includes("FORBIDDEN")
+            ? 403
+            : code.includes("SESSION")
+              ? 401
+              : 503;
+
+  return apiFailure(code, message, status);
+}
 
 export async function handleModuleAiAction(opts: {
   request: Request;
@@ -66,14 +96,7 @@ export async function handleModuleAiAction(opts: {
   });
 
   if (!result.success) {
-    const code = result.error?.code ?? "AI_ERROR";
-    const status =
-      code.includes("RATE") || code.includes("BUDGET") ? 429
-      : code.includes("CONFIRM") ? 409
-      : code.includes("BLOCK") || code.includes("CONTENT") ? 422
-      : code.includes("PERSONA") ? 403
-      : 503;
-    return apiFailure(code, result.error?.message ?? "Erro na IA.", status);
+    return aiFailureResponse(result);
   }
 
   return apiSuccess({

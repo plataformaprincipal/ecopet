@@ -16,6 +16,7 @@ import { createEmbeddings } from "@/lib/ai/ai-embeddings";
 import { moderateContent } from "@/lib/ai/ai-moderation";
 import { AI_MODEL_REGISTRY } from "@/lib/ai/models/registry";
 import { recordAiSuccess, recordAiFailure } from "@/lib/ai/ai-rate-limit";
+import { AiRuntimeError, AI_RUNTIME_ERROR_CODES } from "@/lib/ai/ai-errors";
 
 /**
  * Provider OpenAI — Responses API como interface principal,
@@ -25,7 +26,18 @@ export class OpenAIProvider implements AIProvider {
   readonly id = "openai";
   readonly name = "OpenAI";
 
+  private assertConfigured(): void {
+    if (!AI_CONFIG.isConfigured || !AI_CONFIG.apiKey) {
+      throw new AiRuntimeError(
+        AI_RUNTIME_ERROR_CODES.NOT_CONFIGURED,
+        "Os recursos de inteligência artificial ainda não estão disponíveis neste ambiente.",
+        503
+      );
+    }
+  }
+
   async generateResponse(input: AiGenerateInput): Promise<AiGenerateResult> {
+    this.assertConfigured();
     const client = getOpenAIClient();
     const model = input.model || AI_CONFIG.model;
     const maxTokens = input.maxTokens ?? AI_CONFIG.maxOutputTokens;
@@ -60,7 +72,8 @@ export class OpenAIProvider implements AIProvider {
           },
         };
       }
-    } catch {
+    } catch (e) {
+      if (e instanceof AiRuntimeError) throw e;
       // fallback abaixo
     }
 
@@ -90,6 +103,7 @@ export class OpenAIProvider implements AIProvider {
   }
 
   async *streamResponse(input: AiGenerateInput): AsyncIterable<AiStreamChunk> {
+    this.assertConfigured();
     const client = getOpenAIClient();
     const model = input.model || AI_CONFIG.model;
     const stream = await client.chat.completions.create({
@@ -107,10 +121,12 @@ export class OpenAIProvider implements AIProvider {
   }
 
   async embed(input: AiEmbedInput): Promise<AiEmbedResult> {
+    this.assertConfigured();
     return createEmbeddings(input.texts, input.model);
   }
 
   async moderate(input: AiModerateInput): Promise<AiModerateResult> {
+    this.assertConfigured();
     const result = await moderateContent(input.text);
     return {
       allowed: result.allowed && result.decision !== "BLOCK",

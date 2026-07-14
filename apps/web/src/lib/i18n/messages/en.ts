@@ -101,6 +101,21 @@ const messages: MessageTree = {
       label: "Select language",
     },
   },
+  admin: {
+    integrations: {
+      title: "Integrations",
+      description: "External provider status. Secrets are never displayed.",
+      refresh: "Refresh",
+      loading: "Loading integration status…",
+      lastChecked: "Last checked",
+      missingVariables: "Missing variables",
+      noMissing: "No required variables missing.",
+      capabilities: "Capabilities",
+      test: "Test",
+      testing: "Testing…",
+      erpSection: "ERP — test and toggle integrations",
+    },
+  },
 };
 
 export default messages;

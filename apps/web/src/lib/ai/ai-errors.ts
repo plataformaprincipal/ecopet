@@ -7,6 +7,9 @@ export {
 export type { AiErrorCode } from "@/lib/ai/errors";
 
 export const AI_RUNTIME_ERROR_CODES = {
+  /** Preferido em respostas de API — alinhado a INTEGRATION_ERROR_CODES.AI_NOT_CONFIGURED */
+  NOT_CONFIGURED: "AI_NOT_CONFIGURED",
+  /** @deprecated Prefer NOT_CONFIGURED / AI_NOT_CONFIGURED */
   KEY_MISSING: "AI_KEY_MISSING",
   SESSION_MISSING: "AI_SESSION_MISSING",
   PERSONA_INVALID: "AI_PERSONA_INVALID",
@@ -21,6 +24,16 @@ export const AI_RUNTIME_ERROR_CODES = {
   MODULE_DISABLED: "AI_MODULE_DISABLED",
   GLOBAL_PAUSED: "AI_GLOBAL_PAUSED",
 } as const;
+
+const AI_NOT_CONFIGURED_CODES = new Set([
+  "AI_NOT_CONFIGURED",
+  "AI_KEY_MISSING",
+  "AI_PROVIDER_NOT_CONFIGURED",
+]);
+
+export function isAiNotConfiguredCode(code?: string | null): boolean {
+  return Boolean(code && AI_NOT_CONFIGURED_CODES.has(code));
+}
 
 export type AiRuntimeErrorCode =
   | (typeof AI_RUNTIME_ERROR_CODES)[keyof typeof AI_RUNTIME_ERROR_CODES]
@@ -41,15 +54,20 @@ export class AiRuntimeError extends Error {
 /** Mensagens seguras para o usuário — sem stack, chave ou prompt interno. */
 export function userFacingAiMessage(code: string, locale: "pt-BR" | "en-US" | "es-ES" = "pt-BR"): string {
   const messages: Record<string, Record<"pt-BR" | "en-US" | "es-ES", string>> = {
+    AI_NOT_CONFIGURED: {
+      "pt-BR": "Os recursos de inteligência artificial ainda não estão disponíveis neste ambiente.",
+      "en-US": "Artificial intelligence features are not available in this environment yet.",
+      "es-ES": "Los recursos de inteligencia artificial aún no están disponibles en este entorno.",
+    },
     AI_KEY_MISSING: {
-      "pt-BR": "Assistente indisponível no momento. Tente novamente mais tarde.",
-      "en-US": "Assistant unavailable right now. Please try again later.",
-      "es-ES": "Asistente no disponible en este momento. Inténtelo más tarde.",
+      "pt-BR": "Os recursos de inteligência artificial ainda não estão disponíveis neste ambiente.",
+      "en-US": "Artificial intelligence features are not available in this environment yet.",
+      "es-ES": "Los recursos de inteligencia artificial aún no están disponibles en este entorno.",
     },
     AI_PROVIDER_NOT_CONFIGURED: {
-      "pt-BR": "Assistente indisponível no momento. Tente novamente mais tarde.",
-      "en-US": "Assistant unavailable right now. Please try again later.",
-      "es-ES": "Asistente no disponible en este momento. Inténtelo más tarde.",
+      "pt-BR": "Os recursos de inteligência artificial ainda não estão disponíveis neste ambiente.",
+      "en-US": "Artificial intelligence features are not available in this environment yet.",
+      "es-ES": "Los recursos de inteligencia artificial aún no están disponibles en este entorno.",
     },
     AI_RATE_LIMIT: {
       "pt-BR": "Você atingiu o limite diário de uso da IA. Tente novamente amanhã.",

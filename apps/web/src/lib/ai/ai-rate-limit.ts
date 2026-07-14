@@ -103,8 +103,8 @@ export async function enforceAiLimits(userId: string): Promise<void> {
   }
   if (!AI_CONFIG.isConfigured) {
     throw new AiRuntimeError(
-      AI_RUNTIME_ERROR_CODES.KEY_MISSING,
-      "IA não configurada.",
+      AI_RUNTIME_ERROR_CODES.NOT_CONFIGURED,
+      "Os recursos de inteligência artificial ainda não estão disponíveis neste ambiente.",
       503
     );
   }

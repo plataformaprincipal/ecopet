@@ -4,14 +4,20 @@ import { useState, useCallback } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  X, Send, Sparkles, Search, PawPrint, ShoppingBag, Stethoscope,
-  Compass, Calendar, MessageSquare, ChevronRight,
+  X, Send, Sparkles, PawPrint, ShoppingBag, Stethoscope,
+  Compass, Calendar, ChevronRight,
 } from "lucide-react";
 import { EcopetSymbol } from "@/components/shared/brand/ecopet-symbol";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
+import { ApiRequestError } from "@/lib/api-errors";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/providers/i18n-provider";
+import {
+  AiUnavailableBanner,
+  isAiNotConfiguredErrorCode,
+} from "@/components/features/ai/ai-unavailable-banner";
+import { AI_SAFETY_DISCLAIMER } from "@/lib/ai/ai-disclaimer";
 
 const QUICK_COMMANDS = [
   { labelKey: "empty.ai.quickProducts", icon: ShoppingBag, href: "/marketplace" },
@@ -26,13 +32,16 @@ export function EcopetAIAssistant() {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
-  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [unavailable, setUnavailable] = useState(false);
+  const [unavailableMessage, setUnavailableMessage] = useState<string | null>(null);
 
   const send = useCallback(async () => {
-    if (!message.trim() || loading) return;
+    if (!message.trim() || loading || unavailable) return;
     const userMsg = message.trim();
     setMessage("");
+    setError(null);
     setMessages((m) => [...m, { role: "user", content: userMsg }]);
     setLoading(true);
     try {
@@ -41,21 +50,45 @@ export function EcopetAIAssistant() {
         data?: { reply?: string; content?: string };
         reply?: string;
         content?: string;
+        error?: { code?: string; message?: string };
       }>("/api/ai/chat", {
         method: "POST",
         body: JSON.stringify({ message: userMsg, type: "general" }),
       });
-      const content = res.data?.content ?? res.data?.reply ?? res.content ?? res.reply ?? t("empty.ai.unavailable");
+
+      if (res.success === false || isAiNotConfiguredErrorCode(res.error?.code)) {
+        setUnavailable(true);
+        setUnavailableMessage(res.error?.message ?? t("empty.ai.unavailable"));
+        setMessages((m) => m.slice(0, -1));
+        setMessage(userMsg);
+        return;
+      }
+
+      const content = (res.data?.content ?? res.data?.reply ?? res.content ?? res.reply)?.trim();
+      if (!content) {
+        setError(t("empty.ai.unavailable"));
+        setMessages((m) => m.slice(0, -1));
+        setMessage(userMsg);
+        return;
+      }
       setMessages((m) => [...m, { role: "assistant", content }]);
-    } catch {
-      setMessages((m) => [
-        ...m,
-        { role: "assistant", content: t("empty.ai.unavailable") },
-      ]);
+    } catch (err) {
+      const code = err instanceof ApiRequestError ? err.code : undefined;
+      const msg = err instanceof Error ? err.message : t("empty.ai.unavailable");
+      if (isAiNotConfiguredErrorCode(code)) {
+        setUnavailable(true);
+        setUnavailableMessage(msg);
+        setMessages((m) => m.slice(0, -1));
+        setMessage(userMsg);
+      } else {
+        setError(msg);
+        setMessages((m) => m.slice(0, -1));
+        setMessage(userMsg);
+      }
     } finally {
       setLoading(false);
     }
-  }, [message, loading, t]);
+  }, [message, loading, unavailable, t]);
 
   return (
     <>
@@ -102,7 +135,10 @@ export function EcopetAIAssistant() {
               </header>
 
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                {messages.length === 0 ? (
+                {unavailable && (
+                  <AiUnavailableBanner message={unavailableMessage ?? undefined} />
+                )}
+                {messages.length === 0 && !unavailable ? (
                   <div className="flex h-full flex-col items-center justify-center text-center text-sm text-ecopet-gray">
                     <EcopetSymbol variant="accent" size={48} className="mb-3" />
                     <p>{t("empty.ai.noHistory")}</p>
@@ -114,9 +150,22 @@ export function EcopetAIAssistant() {
                     </div>
                   ))
                 )}
+                {loading && (
+                  <p className="text-sm text-ecopet-gray" role="status">
+                    Gerando resposta…
+                  </p>
+                )}
+                {error && (
+                  <p className="text-xs text-red-600" role="alert">
+                    {error}
+                  </p>
+                )}
               </div>
 
               <div className="border-t p-3 space-y-2">
+                <p className="text-[10px] leading-snug text-ecopet-gray">
+                  {AI_SAFETY_DISCLAIMER["pt-BR"]}
+                </p>
                 <div className="flex flex-wrap gap-1">
                   {QUICK_COMMANDS.map(({ labelKey, icon: Icon, href }) => (
                     <Link key={labelKey} href={href} className="flex items-center gap-1 rounded-full bg-ecopet-green/10 px-2 py-1 text-[10px] font-semibold text-ecopet-green">
@@ -129,10 +178,11 @@ export function EcopetAIAssistant() {
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && void send()}
-                    placeholder={t("empty.ai.placeholder")}
-                    className="flex-1 rounded-xl border px-3 py-2 text-sm"
+                    placeholder={unavailable ? "IA indisponível" : t("empty.ai.placeholder")}
+                    disabled={loading || unavailable}
+                    className="flex-1 rounded-xl border px-3 py-2 text-sm disabled:opacity-60"
                   />
-                  <Button size="icon" onClick={() => void send()} disabled={loading || !message.trim()}>
+                  <Button size="icon" onClick={() => void send()} disabled={loading || unavailable || !message.trim()}>
                     <Send className="h-4 w-4" />
                   </Button>
                 </div>

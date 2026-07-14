@@ -26,7 +26,11 @@ export async function createEmbeddings(texts: string[], model?: string): Promise
   dimensions: number;
 }> {
   if (!AI_CONFIG.isConfigured) {
-    throw new AiRuntimeError(AI_RUNTIME_ERROR_CODES.KEY_MISSING, "IA não configurada.", 503);
+    throw new AiRuntimeError(
+      AI_RUNTIME_ERROR_CODES.NOT_CONFIGURED,
+      "Os recursos de inteligência artificial ainda não estão disponíveis neste ambiente.",
+      503
+    );
   }
   const client = getOpenAIClient();
   const embedModel = model ?? AI_CONFIG.embeddingModel;

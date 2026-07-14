@@ -1603,7 +1603,7 @@
     "loading": "Cargando conversaciones...",
     "empty": "Aún no tienes conversaciones.",
     "selectConversation": "Selecciona una conversación para comenzar",
-    "configError": "Mensajes temporalmente no disponibles. Verifica la configuración de TalkJS.",
+    "configError": "El servicio de mensajes aún no está configurado en este entorno.",
     "error": "No se pudo iniciar la conversación.",
     "retry": "Intentar de nuevo",
     "backToList": "Volver a conversaciones",
@@ -2383,5 +2383,18 @@
       "animalsForAdoption": "Animales para adopción",
       "activeCampaigns": "Campañas activas"
     }
+  },
+  "adminIntegrations": {
+    "title": "Integraciones",
+    "description": "Estado de proveedores externos. Los secrets nunca se muestran.",
+    "refresh": "Actualizar",
+    "loading": "Cargando estado de integraciones…",
+    "lastChecked": "Última verificación",
+    "missingVariables": "Variables ausentes",
+    "noMissing": "No faltan variables obligatorias.",
+    "capabilities": "Capabilities",
+    "test": "Probar",
+    "testing": "Probando…",
+    "erpSection": "ERP — probar y activar integraciones"
   }
 }

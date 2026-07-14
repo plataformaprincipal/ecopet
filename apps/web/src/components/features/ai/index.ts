@@ -9,6 +9,7 @@ export { AIAgentSelector } from "@/components/features/ai/ai-agent-selector";
 export { AIModelSelector } from "@/components/features/ai/ai-model-selector";
 export { AIEmptyState } from "@/components/features/ai/ai-empty-state";
 export { AIErrorState } from "@/components/features/ai/ai-error-state";
+export { AiUnavailableBanner, isAiNotConfiguredErrorCode } from "@/components/features/ai/ai-unavailable-banner";
 export { EcoPetAIButton } from "@/components/features/ai/ecopet-ai-button";
 export { EcoPetAIChat } from "@/components/features/ai/ecopet-ai-chat";
 export { AIComposerAssistant } from "@/components/features/ai/ai-composer-assistant";

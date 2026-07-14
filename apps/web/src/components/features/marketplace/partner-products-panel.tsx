@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { FileUploadField } from "@/components/ui/file-upload-field";
 import { productImageAlt } from "@/lib/accessibility/image-alt";
+import { AIComposerAssistant } from "@/components/features/ai/ai-composer-assistant";
 
 const CATEGORIES = ["FOOD", "HYGIENE", "TOYS", "ACCESSORIES", "MEDICINE", "HEALTH", "BEDDING", "TRANSPORT", "OTHER"];
 const SPECIES = ["DOG", "CAT", "BIRD", "FISH", "RODENT", "REPTILE", "OTHER"];
@@ -234,6 +235,38 @@ export function PartnerProductsPanel({ mode = "list", productId }: { mode?: "lis
             </FormField>
             <FormField id="product-desc" label="Descrição completa" required>
               <textarea id="product-desc" className="w-full rounded border px-3 py-2 text-sm" rows={3} placeholder="Descrição detalhada do produto" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required />
+              <div className="mt-2">
+                <AIComposerAssistant
+                  endpoint="/api/ai/partner/product-description"
+                  seed={
+                    form.name
+                      ? `Produto: ${form.name}. Categoria: ${form.catalogCategory}. Marca: ${form.brand || "n/d"}. Gere uma descrição completa em português.`
+                      : "Sugira uma descrição de produto pet em português."
+                  }
+                  label="Gerar descrição com IA"
+                  onSuggestion={(text) => {
+                    // Aceita texto livre ou JSON com description / descrição
+                    try {
+                      const parsed = JSON.parse(text) as Record<string, unknown>;
+                      const desc =
+                        (typeof parsed.description === "string" && parsed.description) ||
+                        (typeof parsed.descricao === "string" && parsed.descricao) ||
+                        (typeof parsed.fullDescription === "string" && parsed.fullDescription) ||
+                        text;
+                      const short =
+                        (typeof parsed.shortDescription === "string" && parsed.shortDescription) ||
+                        (typeof parsed.descricaoCurta === "string" && parsed.descricaoCurta);
+                      setForm((f) => ({
+                        ...f,
+                        description: desc,
+                        ...(short ? { shortDescription: short } : {}),
+                      }));
+                    } catch {
+                      setForm((f) => ({ ...f, description: text }));
+                    }
+                  }}
+                />
+              </div>
             </FormField>
             <div className="grid gap-2 sm:grid-cols-2">
               <FormField id="product-category" label="Categoria" required>

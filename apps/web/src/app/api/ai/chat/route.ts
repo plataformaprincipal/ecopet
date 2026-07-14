@@ -4,6 +4,12 @@ import { requireAuth } from "@/lib/auth/guards";
 import { runEcoPetAI } from "@/lib/ai/ai-orchestrator";
 import { normalizeLocale } from "@/lib/ai/ai-config";
 import { getDailyUsage } from "@/lib/ai/ai-usage";
+import { aiFailureResponse } from "@/lib/ai/ai-route-helper";
+import { isAiNotConfiguredCode } from "@/lib/ai/ai-errors";
+import {
+  AI_NOT_CONFIGURED_USER_MESSAGE,
+  INTEGRATION_ERROR_CODES,
+} from "@/lib/integrations/integration-errors";
 
 const chatSchema = z.object({
   message: z.string().min(1).max(8000),
@@ -58,20 +64,21 @@ export async function POST(request: Request) {
 
   if (!result.success) {
     const code = result.error?.code ?? "AI_ERROR";
-    const status =
-      code.includes("RATE") || code.includes("BUDGET") ? 429
-      : code.includes("BLOCK") || code.includes("CONTENT") ? 422
-      : code.includes("PERSONA") || code.includes("FORBIDDEN") ? 403
-      : 503;
+    const message = result.error?.message ?? AI_NOT_CONFIGURED_USER_MESSAGE;
+    if (isAiNotConfiguredCode(code)) {
+      return Response.json(
+        {
+          success: false as const,
+          error: { code: INTEGRATION_ERROR_CODES.AI_NOT_CONFIGURED, message },
+          reply: null,
+        },
+        { status: 503 }
+      );
+    }
+    const failure = aiFailureResponse(result);
     // Compat legado: alguns clientes leem `reply` no topo
-    return Response.json(
-      {
-        success: false,
-        error: { code, message: result.error?.message ?? "Erro na IA." },
-        reply: null,
-      },
-      { status }
-    );
+    const payload = (await failure.json()) as Record<string, unknown>;
+    return Response.json({ ...payload, reply: null }, { status: failure.status });
   }
 
   const usage = await getDailyUsage(user.id).catch(() => null);

@@ -39,6 +39,9 @@ const TECHNICAL_PATTERNS = [
 ];
 
 export function mapApiErrorMessage(message: string, code?: string): string {
+  if (code === "AI_NOT_CONFIGURED" || code === "AI_KEY_MISSING" || code === "AI_PROVIDER_NOT_CONFIGURED") {
+    return message || "Os recursos de inteligência artificial ainda não estão disponíveis neste ambiente.";
+  }
   if (code === "USER_NOT_FOUND") return message;
   if (code === "USER_OR_PASSWORD_INCORRECT") return message;
   if (code === "ACCOUNT_UNAVAILABLE" || code === "ACCOUNT_LOCKED" || code === "EMAIL_NOT_VERIFIED") return message;

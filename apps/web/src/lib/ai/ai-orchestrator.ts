@@ -10,7 +10,8 @@ import { moderateContent, moderateAiOutput } from "@/lib/ai/ai-moderation";
 import { getAIProvider } from "@/lib/ai/provider";
 import { recordAiUsage } from "@/lib/ai/ai-usage";
 import { writeAiAuditLog } from "@/lib/ai/ai-audit";
-import { AiRuntimeError, AI_RUNTIME_ERROR_CODES, userFacingAiMessage } from "@/lib/ai/ai-errors";
+import { AiRuntimeError, AI_RUNTIME_ERROR_CODES, isAiNotConfiguredCode, userFacingAiMessage } from "@/lib/ai/ai-errors";
+import { isAiProviderNotConfiguredError } from "@/lib/ai/errors";
 import {
   createConversation,
   appendConversationMessage,
@@ -20,6 +21,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import { runOrchestrator } from "@/lib/ai/orchestrator";
 import type { AiAgentId, AiIntegrationPointId } from "@/lib/ai/types";
+import { bootstrapOpenAIProvider } from "@/lib/ai/bootstrap-openai";
 
 export type RunEcoPetAIInput = {
   userId: string;
@@ -88,6 +90,15 @@ export async function runEcoPetAI(params: RunEcoPetAIInput): Promise<RunEcoPetAI
     if (!params.userId) {
       throw new AiRuntimeError(AI_RUNTIME_ERROR_CODES.SESSION_MISSING, "Sessão ausente.", 401);
     }
+    // Gate único: sem chave/config não chama provider nem inventa resposta.
+    if (!AI_CONFIG.isConfigured) {
+      throw new AiRuntimeError(
+        AI_RUNTIME_ERROR_CODES.NOT_CONFIGURED,
+        userFacingAiMessage(AI_RUNTIME_ERROR_CODES.NOT_CONFIGURED, locale),
+        503
+      );
+    }
+    bootstrapOpenAIProvider();
     if (!canAccessModule(params.role, params.module)) {
       throw new AiRuntimeError(AI_RUNTIME_ERROR_CODES.PERSONA_INVALID, "Persona sem acesso ao módulo.", 403);
     }
@@ -309,13 +320,25 @@ export async function runEcoPetAI(params: RunEcoPetAIInput): Promise<RunEcoPetAI
     };
   } catch (e) {
     recordAiFailure();
-    const code =
+    let code: string =
       e instanceof AiRuntimeError
         ? e.code
-        : e instanceof Error && /timeout|AbortError/i.test(e.message)
-          ? AI_RUNTIME_ERROR_CODES.TIMEOUT
-          : AI_RUNTIME_ERROR_CODES.UNAVAILABLE;
-    const status = e instanceof AiRuntimeError ? e.status : 503;
+        : isAiProviderNotConfiguredError(e)
+          ? AI_RUNTIME_ERROR_CODES.NOT_CONFIGURED
+          : e instanceof Error && /timeout|AbortError/i.test(e.message)
+            ? AI_RUNTIME_ERROR_CODES.TIMEOUT
+            : e instanceof Error && /OPENAI_API_KEY|não configurad|not configured/i.test(e.message)
+              ? AI_RUNTIME_ERROR_CODES.NOT_CONFIGURED
+              : AI_RUNTIME_ERROR_CODES.UNAVAILABLE;
+    if (isAiNotConfiguredCode(code) || code === AI_RUNTIME_ERROR_CODES.KEY_MISSING) {
+      code = AI_RUNTIME_ERROR_CODES.NOT_CONFIGURED;
+    }
+    const status =
+      e instanceof AiRuntimeError
+        ? e.status
+        : isAiNotConfiguredCode(code)
+          ? 503
+          : 503;
     await recordAiUsage({
       userId: params.userId,
       role: params.role,

@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { AI_CONFIG } from "@/lib/ai/ai-config";
+import { AiRuntimeError, AI_RUNTIME_ERROR_CODES } from "@/lib/ai/ai-errors";
 
 let client: OpenAI | null = null;
 
@@ -9,7 +10,11 @@ let client: OpenAI | null = null;
  */
 export function getOpenAIClient(): OpenAI {
   if (!AI_CONFIG.apiKey) {
-    throw new Error("OPENAI_API_KEY ausente.");
+    throw new AiRuntimeError(
+      AI_RUNTIME_ERROR_CODES.NOT_CONFIGURED,
+      "Os recursos de inteligência artificial ainda não estão disponíveis neste ambiente.",
+      503
+    );
   }
   if (!client) {
     client = new OpenAI({

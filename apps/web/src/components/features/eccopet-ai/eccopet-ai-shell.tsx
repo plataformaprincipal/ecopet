@@ -17,8 +17,13 @@ import { useAuthGate } from "@/providers/auth-gate-provider";
 import { useTranslation } from "@/providers/i18n-provider";
 import type { TranslateFn } from "@/lib/i18n";
 import { api } from "@/lib/api";
+import { ApiRequestError } from "@/lib/api-errors";
 import { cn } from "@/lib/utils";
 import type { EccoPetTool } from "@/lib/public/eccopet-tools";
+import {
+  AiUnavailableBanner,
+  isAiNotConfiguredErrorCode,
+} from "@/components/features/ai/ai-unavailable-banner";
 import { AIConversationSidebar, type AIPreset } from "./ai-conversation-sidebar";
 import { AIChatWindow } from "./ai-chat-window";
 import { AIContextPanel } from "./ai-context-panel";
@@ -50,13 +55,14 @@ type MobileView = "history" | "chat" | "context";
 export function EccoPetAIShell() {
   const { isAuthenticated } = useAuthGate();
   const { t } = useTranslation();
-  const DEMO_REPLY = t("ecopetAi.demoReply");
   const [conversations, setConversations] = useState<AIConversation[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [demoCount, setDemoCount] = useState(0);
   const [gateOpen, setGateOpen] = useState(false);
   const [mobileView, setMobileView] = useState<MobileView>("chat");
+  const [aiUnavailable, setAiUnavailable] = useState(false);
+  const [aiUnavailableMessage, setAiUnavailableMessage] = useState<string | null>(null);
 
   const active = useMemo(() => conversations.find((c) => c.id === activeId) ?? null, [conversations, activeId]);
   const messages = active?.messages ?? [];
@@ -94,37 +100,85 @@ export function EccoPetAIShell() {
       if (!isAuthenticated) setDemoCount((n) => n + 1);
 
       try {
-        const res = await api<{ success?: boolean; data?: { reply?: string; content?: string }; reply?: string; content?: string }>(
-          "/api/ai/chat",
-          {
-            method: "POST",
-            body: JSON.stringify({ message: clean, type: "general" }),
-          }
-        );
-        const reply =
-          (res.data?.content ?? res.data?.reply ?? res.content ?? res.reply)?.trim() || DEMO_REPLY;
+        const res = await api<{
+          success?: boolean;
+          data?: { reply?: string; content?: string };
+          reply?: string;
+          content?: string;
+          error?: { code?: string; message?: string };
+        }>("/api/ai/chat", {
+          method: "POST",
+          body: JSON.stringify({ message: clean, type: "general" }),
+        });
+
+        if (res.success === false || isAiNotConfiguredErrorCode(res.error?.code)) {
+          const msg =
+            res.error?.message ||
+            t("empty.ai.unavailable") ||
+            "Os recursos de inteligência artificial ainda não estão disponíveis neste ambiente.";
+          setAiUnavailable(true);
+          setAiUnavailableMessage(msg);
+          updateConversation(convId, (c) => ({
+            ...c,
+            messages: c.messages.filter((m) => m.id !== pendingId && m.id !== userMsg.id),
+          }));
+          return;
+        }
+
+        const reply = (res.data?.content ?? res.data?.reply ?? res.content ?? res.reply)?.trim() ?? "";
+        if (!reply) {
+          updateConversation(convId, (c) => ({
+            ...c,
+            messages: c.messages.map((m) =>
+              m.id === pendingId
+                ? { id: m.id, role: "assistant", content: t("empty.ai.unavailable") }
+                : m
+            ),
+          }));
+          return;
+        }
+
         updateConversation(convId, (c) => ({
           ...c,
           messages: c.messages.map((m) =>
             m.id === pendingId
-              ? { id: m.id, role: "assistant", content: reply, recommendations: deriveRecommendations(`${clean} ${reply}`, t) }
+              ? {
+                  id: m.id,
+                  role: "assistant",
+                  content: reply,
+                  recommendations: deriveRecommendations(`${clean} ${reply}`, t),
+                }
               : m
           ),
         }));
-      } catch {
-        updateConversation(convId, (c) => ({
-          ...c,
-          messages: c.messages.map((m) =>
-            m.id === pendingId
-              ? { id: m.id, role: "assistant", content: DEMO_REPLY, recommendations: deriveRecommendations(clean, t) }
-              : m
-          ),
-        }));
+      } catch (err) {
+        const code = err instanceof ApiRequestError ? err.code : undefined;
+        const msg =
+          err instanceof Error
+            ? err.message
+            : t("empty.ai.unavailable");
+        if (isAiNotConfiguredErrorCode(code)) {
+          setAiUnavailable(true);
+          setAiUnavailableMessage(msg);
+          updateConversation(convId, (c) => ({
+            ...c,
+            messages: c.messages.filter((m) => m.id !== pendingId && m.id !== userMsg.id),
+          }));
+        } else {
+          updateConversation(convId, (c) => ({
+            ...c,
+            messages: c.messages.map((m) =>
+              m.id === pendingId
+                ? { id: m.id, role: "assistant", content: msg }
+                : m
+            ),
+          }));
+        }
       } finally {
         setLoading(false);
       }
     },
-    [activeId, demoCount, isAuthenticated, loading, updateConversation, DEMO_REPLY, t]
+    [activeId, demoCount, isAuthenticated, loading, updateConversation, t]
   );
 
   const handleNew = useCallback(() => {
@@ -228,17 +282,24 @@ export function EccoPetAIShell() {
         {/* CENTER — chat */}
         <div
           className={cn(
-            "min-h-0 overflow-hidden rounded-3xl border border-zinc-200/70 bg-white/50 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-zinc-900/30",
-            mobileView !== "chat" && "hidden lg:block"
+            "flex min-h-0 flex-col overflow-hidden rounded-3xl border border-zinc-200/70 bg-white/50 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-zinc-900/30",
+            mobileView !== "chat" && "hidden lg:flex"
           )}
         >
-          <AIChatWindow
-            messages={messages}
-            loading={loading}
-            onSend={send}
-            onSelectTool={handleSelectTool}
-            onAttachAttempt={handleAttach}
-          />
+          {aiUnavailable && (
+            <div className="border-b border-zinc-200/60 p-3 dark:border-white/10">
+              <AiUnavailableBanner message={aiUnavailableMessage ?? undefined} />
+            </div>
+          )}
+          <div className="min-h-0 flex-1">
+            <AIChatWindow
+              messages={messages}
+              loading={loading}
+              onSend={aiUnavailable ? () => undefined : send}
+              onSelectTool={aiUnavailable ? () => undefined : handleSelectTool}
+              onAttachAttempt={handleAttach}
+            />
+          </div>
         </div>
 
         {/* RIGHT — context */}
