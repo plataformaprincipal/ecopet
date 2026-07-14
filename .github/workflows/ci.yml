@@ -85,3 +85,9 @@ jobs:
           WEB_URL=http://localhost:3000 npm run test:foundation:notifications
           WEB_URL=http://localhost:3000 npm run test:foundation:ai
           WEB_URL=http://localhost:3000 npm run test:foundation:gestor
+
+      - name: Install Playwright browser
+        run: npx playwright install chromium --with-deps
+
+      - name: E2E mínimo
+        run: WEB_URL=http://localhost:3000 npm run test:e2e -- e2e/foundation-flow.spec.ts

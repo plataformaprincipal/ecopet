@@ -16,10 +16,9 @@ export function productionOnlyHeaders(): { key: string; value: string }[] {
 }
 
 /**
- * CSP compatível com Next.js e VLibras.
- * VLibras carrega scripts de vlibras.gov.br — exceção documentada em docs/security/web-security.md
- * O plugin oficial redireciona (302) para o espelho CDN gov.br em cdn.jsdelivr.net.
- * Unity WebGL executa WASM via URL blob: — exige blob: em script-src.
+ * CSP compatível com Next.js, VLibras e TalkJS.
+ * Ver docs/security/csp.md — unsafe-inline/unsafe-eval ainda necessários para VLibras/WASM.
+ * Não remover essas exceções sem QA de acessibilidade + chat.
  */
 const VLIBRAS_HOSTS =
   "https://vlibras.gov.br https://www.vlibras.gov.br https://*.vlibras.gov.br";
@@ -31,15 +30,17 @@ export function contentSecurityPolicy(): string {
   const vlibrasSources = `${VLIBRAS_HOSTS} ${VLIBRAS_CDN}`;
   const directives = [
     "default-src 'self'",
+    // TalkJS + VLibras: hosts explícitos; sem wildcard genérico de terceiros
     `script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob: ${vlibrasSources} https://cdn.talkjs.com`,
     `style-src 'self' 'unsafe-inline' ${vlibrasSources}`,
-    `img-src 'self' data: blob: https: http: ${VLIBRAS_HOSTS}`,
+    `img-src 'self' data: blob: https: ${VLIBRAS_HOSTS}`,
     "font-src 'self' data: https:",
     `connect-src 'self' https: wss: ${vlibrasSources} https://cdn.talkjs.com https://api.talkjs.com wss://*.talkjs.com`,
     `frame-src 'self' ${vlibrasSources} https://cdn.talkjs.com`,
     `worker-src 'self' blob: ${vlibrasSources}`,
     `child-src 'self' blob: ${vlibrasSources}`,
     `media-src 'self' blob: ${vlibrasSources}`,
+    "object-src 'none'",
     "frame-ancestors 'self'",
     "base-uri 'self'",
     "form-action 'self'",
