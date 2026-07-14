@@ -11,6 +11,7 @@ import {
   Scissors,
   Stethoscope,
   History,
+  Trash2,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -36,6 +37,7 @@ export function AIConversationSidebar({
   activeId,
   onNew,
   onSelect,
+  onDelete,
   onSelectPreset,
   className,
 }: {
@@ -43,6 +45,7 @@ export function AIConversationSidebar({
   activeId: string | null;
   onNew: () => void;
   onSelect: (id: string) => void;
+  onDelete?: (id: string) => void;
   onSelectPreset: (preset: AIPreset) => void;
   className?: string;
 }) {
@@ -92,13 +95,13 @@ export function AIConversationSidebar({
         ) : (
           <ul className="space-y-0.5">
             {conversations.map((c) => (
-              <li key={c.id}>
+              <li key={c.id} className="group relative flex items-center gap-0.5">
                 <button
                   type="button"
                   onClick={() => onSelect(c.id)}
                   aria-current={activeId === c.id ? "true" : undefined}
                   className={cn(
-                    "flex w-full items-center gap-2 truncate rounded-2xl px-3 py-2 text-left text-sm transition",
+                    "flex min-w-0 flex-1 items-center gap-2 truncate rounded-2xl px-3 py-2 text-left text-sm transition",
                     activeId === c.id
                       ? "bg-ecopet-green/10 font-medium text-ecopet-green"
                       : "text-zinc-600 hover:bg-zinc-100/70 dark:text-zinc-300 dark:hover:bg-white/5"
@@ -107,6 +110,20 @@ export function AIConversationSidebar({
                   <MessageCircle className="h-4 w-4 shrink-0 opacity-60" aria-hidden />
                   <span className="truncate">{c.title}</span>
                 </button>
+                {onDelete ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(c.id);
+                    }}
+                    aria-label={t("ecopetAi.sidebar.delete")}
+                    title={t("ecopetAi.sidebar.delete")}
+                    className="mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-zinc-400 opacity-0 transition hover:bg-red-50 hover:text-red-600 group-hover:opacity-100 focus-visible:opacity-100 dark:hover:bg-red-950/40"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                  </button>
+                ) : null}
               </li>
             ))}
           </ul>

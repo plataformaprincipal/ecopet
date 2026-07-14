@@ -1,18 +1,22 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Send, ImagePlus, Paperclip, Loader2 } from "lucide-react";
+import { Send, ImagePlus, Paperclip, Loader2, Square } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/providers/i18n-provider";
 
 export function AIPromptBox({
   onSend,
   disabled,
+  loading,
+  onCancel,
   onAttachAttempt,
   placeholder,
 }: {
   onSend: (text: string) => void;
   disabled?: boolean;
+  loading?: boolean;
+  onCancel?: () => void;
   /** Called when an attach button is used (prepared, not yet active). */
   onAttachAttempt?: () => void;
   placeholder?: string;
@@ -20,10 +24,11 @@ export function AIPromptBox({
   const { t } = useTranslation();
   const [value, setValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const isLoading = Boolean(loading || disabled);
 
   function submit() {
     const text = value.trim();
-    if (!text || disabled) return;
+    if (!text || isLoading) return;
     onSend(text);
     setValue("");
     if (textareaRef.current) textareaRef.current.style.height = "auto";
@@ -76,23 +81,39 @@ export function AIPromptBox({
             }
           }}
           placeholder={placeholder ?? t("ecopetAi.promptPlaceholder")}
-          className="max-h-40 flex-1 resize-none bg-transparent py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none dark:text-white"
+          disabled={isLoading}
+          className="max-h-40 flex-1 resize-none bg-transparent py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none disabled:opacity-60 dark:text-white"
         />
 
-        <button
-          type="button"
-          onClick={submit}
-          disabled={disabled || !value.trim()}
-          aria-label={t("ecopetAi.send")}
-          className={cn(
-            "flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-white transition",
-            disabled || !value.trim()
-              ? "cursor-not-allowed bg-zinc-300 dark:bg-zinc-700"
-              : "bg-ecopet-green shadow-md shadow-ecopet-green/25 hover:bg-emerald-700 active:scale-95"
-          )}
-        >
-          {disabled ? <Loader2 className="h-5 w-5 animate-spin" aria-hidden /> : <Send className="h-5 w-5" aria-hidden />}
-        </button>
+        {loading && onCancel ? (
+          <button
+            type="button"
+            onClick={onCancel}
+            aria-label={t("ecopetAi.cancel")}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-zinc-700 text-white transition hover:bg-zinc-800 active:scale-95"
+          >
+            <Square className="h-4 w-4 fill-current" aria-hidden />
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={submit}
+            disabled={isLoading || !value.trim()}
+            aria-label={t("ecopetAi.send")}
+            className={cn(
+              "flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-white transition",
+              isLoading || !value.trim()
+                ? "cursor-not-allowed bg-zinc-300 dark:bg-zinc-700"
+                : "bg-ecopet-green shadow-md shadow-ecopet-green/25 hover:bg-emerald-700 active:scale-95"
+            )}
+          >
+            {isLoading ? (
+              <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+            ) : (
+              <Send className="h-5 w-5" aria-hidden />
+            )}
+          </button>
+        )}
       </div>
     </div>
   );

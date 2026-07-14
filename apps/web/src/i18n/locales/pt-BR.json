@@ -58,7 +58,14 @@
     "attachImageTitle": "Anexar imagem (em breve)",
     "attachFileTitle": "Anexar arquivo (em breve)",
     "send": "Enviar mensagem",
+    "cancel": "Cancelar",
+    "regenerate": "Regenerar",
     "thinking": "Pensando...",
+    "errors": {
+      "quota": "Você atingiu o limite de uso da IA. Tente novamente mais tarde.",
+      "timeout": "A resposta demorou demais. Tente novamente.",
+      "generic": "Não foi possível obter a resposta. Tente novamente."
+    },
     "toolsTitle": "Ferramentas de IA",
     "toolStatus": {
       "comingSoon": "Em breve",
@@ -110,7 +117,8 @@
       "newConversation": "Nova conversa",
       "shortcuts": "Atalhos",
       "history": "Histórico",
-      "historyEmpty": "Suas conversas aparecerão aqui."
+      "historyEmpty": "Suas conversas aparecerão aqui.",
+      "delete": "Excluir conversa"
     },
     "presets": {
       "assistant": {
@@ -1573,6 +1581,11 @@
       "email": "E-mail",
       "sms": "SMS",
       "whatsapp": "WhatsApp",
+      "push": "Push no navegador",
+      "pushSubscribe": "Ativar neste dispositivo",
+      "pushSubscribeSuccess": "Push ativado neste dispositivo.",
+      "pushSubscribeError": "Não foi possível ativar push neste dispositivo.",
+      "pushNotConfigured": "Em preparação / não configurado",
       "marketing": "Marketing e novidades",
       "orders": "Pedidos",
       "appointments": "Agendamentos",

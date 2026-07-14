@@ -58,7 +58,14 @@
     "attachImageTitle": "Attach image (coming soon)",
     "attachFileTitle": "Attach file (coming soon)",
     "send": "Send message",
+    "cancel": "Cancel",
+    "regenerate": "Regenerate",
     "thinking": "Thinking...",
+    "errors": {
+      "quota": "You reached the AI usage limit. Please try again later.",
+      "timeout": "The response took too long. Please try again.",
+      "generic": "Could not get a response. Please try again."
+    },
     "toolsTitle": "AI tools",
     "toolStatus": {
       "comingSoon": "Coming soon",
@@ -110,7 +117,8 @@
       "newConversation": "New chat",
       "shortcuts": "Shortcuts",
       "history": "History",
-      "historyEmpty": "Your chats will appear here."
+      "historyEmpty": "Your chats will appear here.",
+      "delete": "Delete chat"
     },
     "presets": {
       "assistant": {
@@ -1573,6 +1581,11 @@
       "email": "Email",
       "sms": "SMS",
       "whatsapp": "WhatsApp",
+      "push": "Browser push",
+      "pushSubscribe": "Enable on this device",
+      "pushSubscribeSuccess": "Push enabled on this device.",
+      "pushSubscribeError": "Could not enable push on this device.",
+      "pushNotConfigured": "In preparation / not configured",
       "marketing": "Marketing & news",
       "orders": "Orders",
       "appointments": "Appointments",

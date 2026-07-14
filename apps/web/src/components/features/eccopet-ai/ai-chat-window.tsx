@@ -11,13 +11,19 @@ import type { AIMessage } from "./types";
 export function AIChatWindow({
   messages,
   loading,
+  conversationId,
   onSend,
+  onCancel,
+  onRegenerate,
   onSelectTool,
   onAttachAttempt,
 }: {
   messages: AIMessage[];
   loading: boolean;
+  conversationId?: string | null;
   onSend: (text: string) => void;
+  onCancel?: () => void;
+  onRegenerate?: () => void;
   onSelectTool: (tool: EccoPetTool) => void;
   onAttachAttempt?: () => void;
 }) {
@@ -28,6 +34,8 @@ export function AIChatWindow({
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
 
+  const lastAssistantId = [...messages].reverse().find((m) => m.role === "assistant" && !m.pending)?.id;
+
   return (
     <div className="flex h-full flex-col">
       <div ref={scrollRef} className="flex-1 overflow-y-auto" aria-live="polite">
@@ -36,7 +44,13 @@ export function AIChatWindow({
         ) : (
           <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6">
             {messages.map((m) => (
-              <AIMessageBubble key={m.id} message={m} />
+              <AIMessageBubble
+                key={m.id}
+                message={m}
+                conversationId={conversationId ?? undefined}
+                showRegenerate={Boolean(onRegenerate) && m.id === lastAssistantId && !loading}
+                onRegenerate={onRegenerate}
+              />
             ))}
           </div>
         )}
@@ -44,7 +58,13 @@ export function AIChatWindow({
 
       <div className="border-t border-zinc-200/60 bg-white/40 px-4 py-3 backdrop-blur-md dark:border-white/5 dark:bg-zinc-950/30">
         <div className="mx-auto w-full max-w-3xl space-y-2">
-          <AIPromptBox onSend={onSend} disabled={loading} onAttachAttempt={onAttachAttempt} />
+          <AIPromptBox
+            onSend={onSend}
+            disabled={loading}
+            loading={loading}
+            onCancel={onCancel}
+            onAttachAttempt={onAttachAttempt}
+          />
           <AIDisclaimer />
         </div>
       </div>

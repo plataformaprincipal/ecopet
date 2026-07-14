@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Sparkles, ArrowUpRight, Loader2 } from "lucide-react";
+import { Sparkles, ArrowUpRight, Loader2, RotateCcw } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/providers/i18n-provider";
+import { AIFeedbackButtons } from "@/components/features/ai/ai-feedback-buttons";
 import type { AIMessage } from "./types";
 
 /** Lightweight markdown: paragraphs, **bold**, and "- " bullet lists. */
@@ -54,7 +55,17 @@ function renderInline(text: string) {
   });
 }
 
-export function AIMessageBubble({ message }: { message: AIMessage }) {
+export function AIMessageBubble({
+  message,
+  conversationId,
+  showRegenerate,
+  onRegenerate,
+}: {
+  message: AIMessage;
+  conversationId?: string;
+  showRegenerate?: boolean;
+  onRegenerate?: () => void;
+}) {
   const { t } = useTranslation();
   const isUser = message.role === "user";
 
@@ -101,6 +112,27 @@ export function AIMessageBubble({ message }: { message: AIMessage }) {
                 <ArrowUpRight className="h-3 w-3" aria-hidden />
               </Link>
             ))}
+          </div>
+        ) : null}
+
+        {!isUser && !message.pending && message.content ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <AIFeedbackButtons
+              conversationId={conversationId}
+              messageId={message.id}
+              contentToCopy={message.content}
+            />
+            {showRegenerate && onRegenerate ? (
+              <button
+                type="button"
+                onClick={onRegenerate}
+                aria-label={t("ecopetAi.regenerate")}
+                className="inline-flex items-center gap-1 rounded p-1 text-xs text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-800"
+              >
+                <RotateCcw className="h-3.5 w-3.5" aria-hidden />
+                {t("ecopetAi.regenerate")}
+              </button>
+            ) : null}
           </div>
         ) : null}
       </div>
