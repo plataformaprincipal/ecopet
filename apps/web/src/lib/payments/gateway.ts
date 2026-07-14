@@ -1,9 +1,24 @@
+/**
+ * Payment gateway façade — keeps checkout-compatible exports while delegating
+ * to the Phase 11 payment architecture (payment-service + providers).
+ *
+ * Never marks payments as paid without a verified provider webhook.
+ */
+
 import { prisma } from "@/lib/prisma";
 import { resolveActivePaymentProvider } from "@/lib/integrations/env-check";
 import { INTEGRATION_ERROR_CODES, IntegrationNotConfiguredError } from "@/lib/integrations/errors";
 import { writeIntegrationLog } from "@/lib/integrations/log";
+import {
+  createPaymentIntent as createPaymentIntentViaService,
+  isManualOrNonePaymentMode,
+  resolvePaymentProvider,
+} from "@/lib/payments/payment-service";
+import type { CreatePaymentIntentInput as ServiceCreateInput } from "@/lib/payments/payment-provider";
+import { toLegacyProviderId } from "@/lib/payments/payment-provider";
 
-export type PaymentProvider = "MERCADO_PAGO" | "PAGARME" | "STRIPE";
+/** Legacy uppercase provider ids stored on Payment rows */
+export type PaymentProvider = "MERCADO_PAGO" | "PAGARME" | "STRIPE" | "MANUAL";
 
 export type CreatePaymentIntentInput = {
   orderId: string;
@@ -18,13 +33,42 @@ export type CreatePaymentIntentInput = {
 export type PaymentIntentResult = {
   provider: PaymentProvider;
   externalId?: string;
-  status: "NOT_CONFIGURED" | "PENDING" | "REQUIRES_ACTION";
+  status: "NOT_CONFIGURED" | "PENDING" | "REQUIRES_ACTION" | "MANUAL";
   checkoutUrl?: string;
+  message?: string;
 };
 
 export interface PaymentGateway {
   readonly provider: PaymentProvider;
   createPaymentIntent(input: CreatePaymentIntentInput): Promise<PaymentIntentResult>;
+}
+
+function mapServiceStatus(
+  status: import("@/lib/payments/payment-provider").PaymentIntentStatus
+): PaymentIntentResult["status"] {
+  switch (status) {
+    case "not_configured":
+      return "NOT_CONFIGURED";
+    case "requires_action":
+      return "REQUIRES_ACTION";
+    case "manual":
+      return "MANUAL";
+    default:
+      return "PENDING";
+  }
+}
+
+function mapServiceResult(
+  result: import("@/lib/payments/payment-provider").PaymentIntentResult
+): PaymentIntentResult {
+  const legacy = toLegacyProviderId(result.provider);
+  return {
+    provider: legacy === "NONE" ? "MANUAL" : (legacy as PaymentProvider),
+    externalId: result.externalId,
+    status: mapServiceStatus(result.status),
+    checkoutUrl: result.checkoutUrl,
+    message: result.message,
+  };
 }
 
 async function recordPaymentEvent(params: {
@@ -55,73 +99,93 @@ async function recordPaymentEvent(params: {
   }
 }
 
+/** True when a real external gateway has credentials (not manual/none). */
 export function isPaymentGatewayConfigured(env = process.env): boolean {
+  if (isManualOrNonePaymentMode(env)) return false;
   return Boolean(resolveActivePaymentProvider(env));
 }
 
 export function getConfiguredPaymentProvider(env = process.env): PaymentProvider | null {
-  return resolveActivePaymentProvider(env) as PaymentProvider | null;
+  if (isManualOrNonePaymentMode(env)) return null;
+  const active = resolveActivePaymentProvider(env);
+  return (active as PaymentProvider | null) ?? null;
 }
 
-/** Não cria PIX/cartão falso — apenas registra intenção quando provedor real existir */
+/**
+ * Creates a payment intent safely for checkout.
+ * - PAYMENT_PROVIDER=none|manual|missing keys → MANUAL/PENDING, never paid, no external APIs
+ * - Configured external provider → delegates to architecture (still never marks paid here)
+ */
 export async function createPaymentIntentSafe(
   input: CreatePaymentIntentInput
 ): Promise<PaymentIntentResult | null> {
-  const provider = getConfiguredPaymentProvider();
-  if (!provider) {
-    await writeIntegrationLog({
-      integrationName: "payment_gateway",
-      provider: "none",
-      action: "create_intent",
-      status: "NOT_CONFIGURED",
-      errorCode: INTEGRATION_ERROR_CODES.PAYMENT_GATEWAY_NOT_CONFIGURED,
-      message: `Pedido #${input.orderNumber} — gateway ausente.`,
-      metadata: { orderId: input.orderId },
+  const serviceInput: ServiceCreateInput = { ...input };
+  const mapped = mapServiceResult(await createPaymentIntentViaService(serviceInput));
+  const legacyProvider = mapped.provider;
+
+  const dbStatus =
+    mapped.status === "NOT_CONFIGURED"
+      ? "NOT_CONFIGURED"
+      : mapped.status === "MANUAL"
+        ? "PENDING"
+        : "PENDING";
+
+  try {
+    const payment = await prisma.payment.create({
+      data: {
+        orderId: input.orderId,
+        provider: legacyProvider,
+        amount: input.amount,
+        currency: input.currency ?? "BRL",
+        // Never SUCCEEDED/PAID from create intent alone
+        status: "PENDING",
+        externalId: mapped.externalId,
+        metadata: {
+          customerEmail: input.customerEmail,
+          intentStatus: mapped.status,
+          note: mapped.message,
+        },
+      },
     });
+
     await recordPaymentEvent({
       orderId: input.orderId,
-      provider: "none",
+      paymentId: payment.id,
+      provider: legacyProvider,
       eventType: "CREATE_INTENT",
-      status: "NOT_CONFIGURED",
-      errorCode: INTEGRATION_ERROR_CODES.PAYMENT_GATEWAY_NOT_CONFIGURED,
-      message: "Gateway de pagamento não configurado.",
+      status: dbStatus,
+      errorCode:
+        mapped.status === "NOT_CONFIGURED"
+          ? INTEGRATION_ERROR_CODES.PAYMENT_GATEWAY_NOT_CONFIGURED
+          : undefined,
+      message:
+        mapped.message ??
+        "Intenção registrada — nunca marcada como paga sem webhook do provedor.",
     });
-    return null;
+
+    await writeIntegrationLog({
+      integrationName: "payment_gateway",
+      provider: legacyProvider,
+      action: "create_intent",
+      status: dbStatus,
+      errorCode:
+        mapped.status === "NOT_CONFIGURED"
+          ? INTEGRATION_ERROR_CODES.PAYMENT_GATEWAY_NOT_CONFIGURED
+          : undefined,
+      message: mapped.message,
+      metadata: { orderId: input.orderId, paymentId: payment.id },
+    });
+  } catch {
+    await recordPaymentEvent({
+      orderId: input.orderId,
+      provider: legacyProvider,
+      eventType: "CREATE_INTENT",
+      status: dbStatus,
+      message: mapped.message,
+    });
   }
 
-  const payment = await prisma.payment.create({
-    data: {
-      orderId: input.orderId,
-      provider,
-      amount: input.amount,
-      currency: input.currency ?? "BRL",
-      status: "PENDING",
-      metadata: { customerEmail: input.customerEmail },
-    },
-  });
-
-  await recordPaymentEvent({
-    orderId: input.orderId,
-    paymentId: payment.id,
-    provider,
-    eventType: "CREATE_INTENT",
-    status: "PENDING",
-    message: "Intenção registrada — aguardando implementação Etapa 9B.",
-  });
-
-  await writeIntegrationLog({
-    integrationName: "payment_gateway",
-    provider,
-    action: "create_intent",
-    status: "PENDING",
-    metadata: { orderId: input.orderId, paymentId: payment.id },
-  });
-
-  return {
-    provider,
-    status: "PENDING",
-    externalId: undefined,
-  };
+  return mapped;
 }
 
 export async function assertPaymentGatewayConfigured(): Promise<PaymentProvider> {
@@ -134,3 +198,6 @@ export async function assertPaymentGatewayConfigured(): Promise<PaymentProvider>
   }
   return provider;
 }
+
+/** Expose architecture provider for advanced callers */
+export { resolvePaymentProvider };
