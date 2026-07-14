@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { DEFAULT_AUTOMATION_TEMPLATES } from "@/lib/workflows/workflow-registry";
-import { getIntegrationHealthSummary, listGlobalIntegrations } from "@/lib/integrations/integration-registry";
+import { getIntegrationHealthSummary, listGlobalIntegrations } from "@/lib/integrations/integration-registry-erp";
 import { paginationArgs } from "@/lib/gestor/gestor-filters";
 import type { GestorFilters } from "@/lib/gestor/gestor-filters";
 

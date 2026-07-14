@@ -2,7 +2,7 @@ import { apiFailure, apiSuccess } from "@/lib/api-response";
 import { requireAdmin } from "@/lib/auth/guards";
 import { parseGestorFilters } from "@/lib/gestor/gestor-filters";
 import { handleGestorRouteError } from "@/lib/gestor/api-handler";
-import { getIntegrationHealthSummary, listGlobalIntegrations } from "@/lib/integrations/integration-registry";
+import { getIntegrationHealthSummary, listGlobalIntegrations } from "@/lib/integrations/integration-registry-erp";
 import { getRecentIntegrationLogs } from "@/lib/integrations/log";
 import { seedAutomationTemplates } from "@/lib/platform/integration-automation-service";
 
