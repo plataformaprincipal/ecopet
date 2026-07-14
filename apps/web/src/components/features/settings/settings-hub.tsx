@@ -69,10 +69,36 @@ export function SettingsHub() {
               <Card className="card-premium">
                 <CardContent className="p-6">
                   <h2 className="heading-3 mb-4">Segurança</h2>
-                  <SettingRow label="Autenticação em dois fatores (2FA)" action={<Toggle />} />
-                  <SettingRow label="Sessões ativas" value="3 dispositivos" action={<Button variant="outline" size="sm">Gerenciar</Button>} />
-                  <SettingRow label="Dispositivos confiáveis" value="iPhone, MacBook" />
-                  <SettingRow label="Histórico de acessos" action={<Button variant="ghost" size="sm">Ver logs <ChevronRight className="h-4 w-4" /></Button>} />
+                  <SettingRow
+                    label="Autenticação em dois fatores (2FA)"
+                    value="Em preparação"
+                    action={
+                      <span className="rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800 dark:bg-amber-950/50 dark:text-amber-200">
+                        Em preparação
+                      </span>
+                    }
+                  />
+                  <p className="mb-3 text-xs text-ecopet-gray">
+                    O 2FA ainda não está disponível. Quando o backend estiver pronto, esta opção será habilitada.
+                  </p>
+                  <SettingRow
+                    label="Sessões ativas"
+                    value="Em preparação"
+                    action={
+                      <span className="rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800 dark:bg-amber-950/50 dark:text-amber-200">
+                        Em preparação
+                      </span>
+                    }
+                  />
+                  <SettingRow label="Dispositivos confiáveis" value="Em preparação" />
+                  <SettingRow
+                    label="Histórico de acessos"
+                    action={
+                      <span className="rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800 dark:bg-amber-950/50 dark:text-amber-200">
+                        Em preparação
+                      </span>
+                    }
+                  />
                   <div className="mt-6 border-t border-ecopet-gray/10 pt-4 dark:border-white/10">
                     <h3 className="mb-2 text-sm font-semibold text-ecopet-dark dark:text-white">Sessão</h3>
                     <p className="mb-3 text-sm text-ecopet-gray">Encerre sua sessão neste dispositivo.</p>
@@ -146,9 +172,33 @@ export function SettingsHub() {
               <Card className="card-premium">
                 <CardContent className="p-6">
                   <h2 className="heading-3 mb-4">Integrações</h2>
-                  <SettingRow label="Instagram" value="Conectado" action={<Button variant="outline" size="sm">Desconectar</Button>} />
-                  <SettingRow label="Google Calendar" value="Pendente" action={<Button size="sm">Conectar</Button>} />
-                  <SettingRow label="Apple Health" value="Disponível" action={<Button variant="outline" size="sm">Conectar</Button>} />
+                  <p className="mb-4 text-sm text-ecopet-gray">
+                    Conexões com redes externas ainda estão em preparação. Nada é conectado por estes botões.
+                  </p>
+                  <SettingRow
+                    label="Instagram"
+                    action={
+                      <span className="rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800 dark:bg-amber-950/50 dark:text-amber-200">
+                        Em preparação
+                      </span>
+                    }
+                  />
+                  <SettingRow
+                    label="Google Calendar"
+                    action={
+                      <span className="rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800 dark:bg-amber-950/50 dark:text-amber-200">
+                        Em preparação
+                      </span>
+                    }
+                  />
+                  <SettingRow
+                    label="Apple Health"
+                    action={
+                      <span className="rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800 dark:bg-amber-950/50 dark:text-amber-200">
+                        Em preparação
+                      </span>
+                    }
+                  />
                 </CardContent>
               </Card>
             )}

@@ -69,7 +69,7 @@ function TalkJSMessagesInner({ initialConversationId }: { initialConversationId?
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-2 p-8 text-center text-sm text-muted-foreground">
         <AlertCircle className="h-8 w-8 text-amber-500" aria-hidden />
-        <p>{t("messagesModule.configError")}</p>
+        <p>O serviço de mensagens ainda não está configurado neste ambiente.</p>
       </div>
     );
   }

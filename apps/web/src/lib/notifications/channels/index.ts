@@ -5,6 +5,12 @@ import { SmsChannelProvider } from "@/lib/notifications/channels/sms";
 import { WhatsappChannelProvider } from "@/lib/notifications/channels/whatsapp";
 import { PushChannelProvider } from "@/lib/notifications/channels/push";
 
+/**
+ * Channel registry for NotificationDispatcher.
+ * In-app always delivers when prefs allow.
+ * Email/SMS deliver when credentials + destination exist; otherwise SKIPPED_NOT_CONFIGURED.
+ * Push/WhatsApp remain skip-until-fully-wired (never fake success).
+ */
 const providers: NotificationChannelProvider[] = [
   new InAppChannelProvider(),
   new EmailChannelProvider(),
