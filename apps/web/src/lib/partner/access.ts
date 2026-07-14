@@ -15,9 +15,13 @@ const APPROVAL_REQUIRED_PREFIXES = [
 ] as const;
 
 export function getPartnerAccessLevel(ctx: PartnerAccessContext): PartnerAccessLevel {
-  const approved =
-    ctx.accountStatus === "ACTIVE" && ctx.verificationStatus === "APPROVED";
-  return approved ? "full" : "limited";
+  // Registration rule: ACTIVE partner has immediate commercial access.
+  // verificationStatus may stay PENDING for documents without locking the shell.
+  if (ctx.accountStatus === "SUSPENDED" || ctx.accountStatus === "REJECTED") {
+    return "limited";
+  }
+  if (ctx.accountStatus === "ACTIVE") return "full";
+  return "limited";
 }
 
 export function partnerRouteRequiresApproval(pathname: string): boolean {

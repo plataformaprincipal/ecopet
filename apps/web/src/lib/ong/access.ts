@@ -18,9 +18,9 @@ export function getOngAccessLevel(ctx: OngAccessContext): OngAccessLevel {
   if (ctx.accountStatus === "SUSPENDED" || ctx.accountStatus === "REJECTED") {
     return "blocked";
   }
-  const approved =
-    ctx.accountStatus === "ACTIVE" && ctx.verificationStatus === "APPROVED";
-  return approved ? "full" : "limited";
+  // Registration rule: ACTIVE ONG has immediate institutional access.
+  if (ctx.accountStatus === "ACTIVE") return "full";
+  return "limited";
 }
 
 export function ongRouteRequiresApproval(pathname: string): boolean {

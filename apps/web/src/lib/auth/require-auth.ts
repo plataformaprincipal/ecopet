@@ -1,5 +1,4 @@
-import { UserRole, VerificationStatus } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
+import { UserRole } from "@prisma/client";
 import {
   requireAuth as requireAuthenticatedUser,
   requireRole,
@@ -39,28 +38,13 @@ export async function requireActivePartner() {
 }
 
 /**
- * Parceiro com verificação aprovada. Usado para operações comerciais
- * (cadastrar/editar produtos e serviços). Contas PENDING ficam bloqueadas
- * até a aprovação do administrador.
+ * Parceiro autenticado com conta ACTIVE.
+ * Document verification (PartnerProfile.verificationStatus) may remain PENDING
+ * for KYC/docs without blocking commercial operations — registration rule:
+ * PARTNER ACTIVE + immediate use, no mandatory manual approval.
  */
 export async function requireApprovedPartner() {
-  const result = await requirePartner();
-  if (result.error || !result.user) return result;
-
-  const profile = await prisma.partnerProfile.findUnique({
-    where: { userId: result.user.id },
-    select: { verificationStatus: true },
-  });
-
-  if (!profile || profile.verificationStatus !== VerificationStatus.APPROVED) {
-    const { apiFailure } = await import("@/lib/api-response");
-    return {
-      user: null,
-      error: apiFailure("ACCOUNT_PENDING_APPROVAL", PARTNER_PENDING_APPROVAL_MESSAGE, 403),
-    };
-  }
-
-  return result;
+  return requirePartner();
 }
 
 export async function requireClient() {

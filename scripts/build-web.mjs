@@ -21,7 +21,7 @@ function run(command, args, cwd) {
     cwd,
     env: process.env,
     stdio: "inherit",
-    shell: true,
+    shell: false,
   });
   if (result.status !== 0) {
     process.exit(result.status ?? 1);
@@ -31,4 +31,4 @@ function run(command, args, cwd) {
 run(process.execPath, [path.join(root, "scripts", "prisma-generate-safe.mjs")], root);
 
 const nextBin = path.join(root, "node_modules", "next", "dist", "bin", "next");
-run(process.execPath, [heap, nextBin, "build"], webDir);
+run(process.execPath, [nextBin, "build"], webDir);

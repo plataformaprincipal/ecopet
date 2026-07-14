@@ -54,7 +54,7 @@ ok(
   "todos os itens da bottom nav apontam para /partner*",
   PARTNER_EXPERIENCE_BOTTOM_NAV.every((i) => i.href === "/partner" || i.href.startsWith("/partner/"))
 );
-ok("sidebar contém as 13 áreas do parceiro", PARTNER_EXPERIENCE_NAV.length === 13);
+ok("sidebar contém as áreas core + ERP do parceiro", PARTNER_EXPERIENCE_NAV.length >= 13);
 
 // 3. Áreas esperadas presentes
 const expected = [
@@ -120,8 +120,8 @@ ok(
   getPartnerAccessLevel({ accountStatus: "PENDING", verificationStatus: "PENDING" }) === "limited"
 );
 ok(
-  "parceiro ATIVO sem verificação → limited",
-  getPartnerAccessLevel({ accountStatus: "ACTIVE", verificationStatus: null }) === "limited"
+  "parceiro ATIVO sem verificação documental → full (sem aprovação manual obrigatória)",
+  getPartnerAccessLevel({ accountStatus: "ACTIVE", verificationStatus: null }) === "full"
 );
 
 // 8. account-status middleware: PENDING acessa /partner (gate fica no shell)

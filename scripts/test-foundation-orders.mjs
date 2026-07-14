@@ -1,23 +1,54 @@
 /**
  * Testes Etapa 8 — Pedidos (cliente + parceiro + isolamento)
  */
-import { PrismaClient, ProductCatalogStatus } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
+import { generateValidCnpj } from "./cnpj-test-utils.mjs";
 
 const WEB = process.env.WEB_URL || "http://localhost:3000";
 const prisma = new PrismaClient();
 const jar = new Map();
 const pwd = "Ecopet@Forte2026";
+const TEST_RUN_IP_BASE = `10.255.${Date.now() % 200}`;
+let reqSeq = 0;
 
-function assert(c, m) { if (!c) throw new Error(m); }
-function phone(s) { return `119${String(s).padStart(8, "0").slice(-8)}`; }
-function cnpj() { return String(Date.now()).slice(-10).padEnd(14, "0").slice(0, 14); }
+function assert(c, m) {
+  if (!c) throw new Error(m);
+}
+function nextTestIp() {
+  reqSeq += 1;
+  return `${TEST_RUN_IP_BASE}.${(reqSeq % 200) + 1}`;
+}
+function phoneE164(suffix) {
+  return `+55119${String(suffix).replace(/\D/g, "").padStart(8, "0").slice(-8)}`;
+}
+
+async function resetAuthRateLimit() {
+  try {
+    await fetch(`${WEB}/api/auth/test/reset-rate-limit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{}",
+    });
+  } catch {
+    /* optional */
+  }
+}
 
 async function req(path, opts = {}) {
-  const headers = { "Content-Type": "application/json", ...(opts.headers || {}) };
+  const headers = {
+    "Content-Type": "application/json",
+    "x-forwarded-for": opts.testIp ?? nextTestIp(),
+    ...(opts.headers || {}),
+  };
   if (jar.get("c")) headers.Cookie = jar.get("c");
   const res = await fetch(`${WEB}${path}`, { ...opts, headers });
   const sc = res.headers.get("set-cookie");
-  if (sc?.includes("ecopet-session")) jar.set("c", sc.split(";")[0]);
+  const setCookies =
+    typeof res.headers.getSetCookie === "function" ? res.headers.getSetCookie() : sc ? [sc] : [];
+  for (const raw of setCookies) {
+    const session = raw.split(";")[0];
+    if (session.includes("ecopet-session=")) jar.set("c", session);
+  }
   return { status: res.status, data: await res.json().catch(() => ({})) };
 }
 
@@ -26,21 +57,41 @@ async function registerPartner(email, suffix) {
   const reg = await req("/api/auth/register", {
     method: "POST",
     body: JSON.stringify({
-      role: "PARTNER", name: "Loja Pedido", email, password: pwd, confirmPassword: pwd,
-      phone: phone(suffix), businessName: "Loja", legalName: "Loja LTDA", cnpj: cnpj(),
-      category: "Pet Shop", address: "Rua A", city: "SP", state: "SP",
+      role: "PARTNER",
+      name: "Loja Pedido",
+      email,
+      password: pwd,
+      confirmPassword: pwd,
+      phone: phoneE164(suffix),
+      businessName: "Loja Pedido",
+      legalName: "Loja Pedido LTDA",
+      cnpj: generateValidCnpj(suffix),
+      category: "Pet Shop",
+      address: "Rua A, 100",
+      city: "São Paulo",
+      state: "SP",
+      acceptTerms: true,
+      acceptPrivacy: true,
     }),
   });
-  assert(reg.status === 201, "register partner");
+  assert(
+    reg.status === 201,
+    `register partner → ${reg.status} ${JSON.stringify(reg.data?.error ?? reg.data)}`
+  );
 }
 
 async function login(email) {
   jar.clear();
-  const r = await req("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password: pwd }) });
-  assert(r.status === 200, `login ${email}`);
+  const r = await req("/api/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password: pwd }),
+  });
+  assert(r.status === 200, `login ${email} → ${r.status}`);
 }
 
 async function main() {
+  await resetAuthRateLimit();
+
   const ts = Date.now();
   const partnerEmail = `partner.order.${ts}@test.ecopet.local`;
   const clientEmail = `client.order.${ts}@test.ecopet.local`;
@@ -50,24 +101,47 @@ async function main() {
   const create = await req("/api/partner/products", {
     method: "POST",
     body: JSON.stringify({
-      name: `Pedido Flow ${ts}`, description: "Produto E2E", shortDescription: "E2E",
-      catalogCategory: "FOOD", price: 55, stock: 10, status: "ACTIVE",
+      name: `Pedido Flow ${ts}`,
+      description: "Produto E2E",
+      shortDescription: "E2E",
+      catalogCategory: "FOOD",
+      price: 55,
+      stock: 10,
+      status: "ACTIVE",
     }),
   });
-  assert(create.status === 201, "parceiro cria produto");
+  assert(
+    create.status === 201,
+    `parceiro cria produto → ${create.status} ${JSON.stringify(create.data?.error ?? create.data)}`
+  );
   const productId = create.data.data.product.id;
-  const partnerId = create.data.data.product.sellerId;
 
   jar.clear();
-  await req("/api/auth/register", {
+  const clientReg = await req("/api/auth/register", {
     method: "POST",
     body: JSON.stringify({
-      role: "CLIENT", name: "Cliente Teste", email: clientEmail, password: pwd, confirmPassword: pwd,
-      phone: phone(ts + 1), birthDate: "1990-01-01", username: `ord${ts}`, gender: "MASCULINO", acceptTerms: true, acceptPrivacy: true,
+      role: "CLIENT",
+      name: "Cliente Teste",
+      email: clientEmail,
+      password: pwd,
+      confirmPassword: pwd,
+      phone: phoneE164(ts + 1),
+      birthDate: "1990-01-01",
+      username: `ord${String(ts).slice(-10)}`,
+      gender: "MASCULINO",
+      acceptTerms: true,
+      acceptPrivacy: true,
     }),
   });
+  assert(
+    clientReg.status === 201,
+    `register client → ${clientReg.status} ${JSON.stringify(clientReg.data?.error ?? clientReg.data)}`
+  );
 
-  await req("/api/cart/items", { method: "POST", body: JSON.stringify({ productId, quantity: 1 }) });
+  await req("/api/cart/items", {
+    method: "POST",
+    body: JSON.stringify({ productId, quantity: 1 }),
+  });
 
   const stockBefore = create.data.data.product.stock;
   const checkout = await req("/api/checkout", {
@@ -75,13 +149,24 @@ async function main() {
     body: JSON.stringify({
       deliveryMethod: "PICKUP_LOCAL",
       paymentMethod: "PIX",
-      phone: phone(ts + 2),
+      phone: phoneE164(ts + 2),
       address: { street: "Rua A", city: "São Paulo", state: "SP" },
     }),
   });
-  assert(checkout.status === 201 || checkout.status === 200, "checkout creates order");
-  const orderId = checkout.data.data?.order?.id;
+  assert(
+    checkout.status === 201 || checkout.status === 200,
+    `checkout creates order → ${checkout.status} ${JSON.stringify(checkout.data?.error ?? checkout.data)}`
+  );
+  const order = checkout.data.data?.order;
+  const orderId = order?.id;
   assert(orderId, "order id returned");
+  // Sem gateway: não marcar como pago mesmo com paymentMethod PIX no formulário
+  if (order?.paymentStatus) {
+    assert(
+      order.paymentStatus !== "PAID" && order.paymentStatus !== "APPROVED",
+      `pedido não deve estar pago sem gateway (got ${order.paymentStatus})`
+    );
+  }
 
   const after = await prisma.product.findUnique({ where: { id: productId } });
   assert(after && after.stock < stockBefore, "stock reduced");
@@ -115,4 +200,14 @@ async function main() {
   console.log("✓ test:foundation:orders passou");
 }
 
-main().catch((e) => { console.error("✗", e.message); process.exit(1); }).finally(() => prisma.$disconnect());
+main()
+  .then(() => {
+    process.exitCode = 0;
+  })
+  .catch((e) => {
+    console.error("✗", e.message);
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    await prisma.$disconnect().catch(() => undefined);
+  });

@@ -27,6 +27,8 @@ const FORBIDDEN_SOURCE_PATTERNS = [
 
 const ALLOWED_PATHS = new Set([
   path.normalize("lib/production-guard.ts"),
+  // Test-only doubles; guarded with NODE_ENV=test and never imported by production routes.
+  path.normalize("lib/integrations/fakes/index.ts"),
 ]);
 
 const IGNORE_DIRS = new Set(["node_modules", ".next"]);

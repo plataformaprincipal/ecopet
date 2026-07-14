@@ -113,8 +113,8 @@ ok(
   getOngAccessLevel({ accountStatus: "PENDING", verificationStatus: "PENDING" }) === "limited"
 );
 ok(
-  "ONG ATIVA sem verificação → limited",
-  getOngAccessLevel({ accountStatus: "ACTIVE", verificationStatus: null }) === "limited"
+  "ONG ATIVA sem verificação documental → full (sem aprovação manual obrigatória)",
+  getOngAccessLevel({ accountStatus: "ACTIVE", verificationStatus: null }) === "full"
 );
 ok(
   "ONG SUSPENSA → blocked",

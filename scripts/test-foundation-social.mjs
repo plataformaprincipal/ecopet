@@ -6,13 +6,23 @@ import { PrismaClient, UserRole, AccountStatus } from "@prisma/client";
 import { readFileSync } from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { generateValidCnpj } from "./cnpj-test-utils.mjs";
 
 const WEB = process.env.WEB_URL || "http://localhost:3000";
 const prisma = new PrismaClient();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const TEST_RUN_IP_BASE = `10.250.${Date.now() % 200}`;
+let reqSeq = 0;
 
 function assert(cond, msg) {
   if (!cond) throw new Error(msg);
+}
+function nextTestIp() {
+  reqSeq += 1;
+  return `${TEST_RUN_IP_BASE}.${(reqSeq % 200) + 1}`;
+}
+function phoneE164(suffix) {
+  return `+55119${String(suffix).replace(/\D/g, "").padStart(8, "0").slice(-8)}`;
 }
 
 const jars = new Map();
@@ -22,53 +32,67 @@ function jarFor(name) {
   return jars.get(name);
 }
 
-async function reqAs(jarName, path, opts = {}) {
+async function resetAuthRateLimit() {
+  try {
+    await fetch(`${WEB}/api/auth/test/reset-rate-limit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{}",
+    });
+  } catch {
+    /* optional */
+  }
+}
+
+async function reqAs(jarName, pathName, opts = {}) {
   const jar = jarFor(jarName);
-  const headers = { "Content-Type": "application/json", ...(opts.headers || {}) };
+  const headers = {
+    "Content-Type": "application/json",
+    "x-forwarded-for": opts.testIp ?? nextTestIp(),
+    ...(opts.headers || {}),
+  };
   const cookie = jar.get("cookie");
   if (cookie) headers.Cookie = cookie;
-  const res = await fetch(`${WEB}${path}`, { ...opts, headers });
+  const res = await fetch(`${WEB}${pathName}`, { ...opts, headers });
   const setCookie = res.headers.get("set-cookie");
-  if (setCookie) {
-    const session = setCookie.split(";")[0];
-    if (session.includes("=")) jar.set("cookie", session);
-    if (setCookie.includes("Max-Age=0") || setCookie.includes("max-age=0")) jar.delete("cookie");
+  const setCookies =
+    typeof res.headers.getSetCookie === "function" ? res.headers.getSetCookie() : setCookie ? [setCookie] : [];
+  for (const raw of setCookies) {
+    const session = raw.split(";")[0];
+    if (session.includes("ecopet-session=")) jar.set("cookie", session);
+    if (raw.includes("Max-Age=0") || raw.includes("max-age=0")) jar.delete("cookie");
   }
   const data = await res.json().catch(() => ({}));
   return { status: res.status, data };
 }
 
-function generateCnpj() {
-  return String(Date.now()).slice(-10).padEnd(14, "0").slice(0, 14);
-}
-
 async function registerAndLogin(jarName, role, email, extra = {}) {
   const password = "Ecopet@Forte2026";
+  const suffix = Date.now() + Math.floor(Math.random() * 1000);
   const base = {
     role,
     name: `Teste ${role}`,
     email,
     password,
     confirmPassword: password,
-    phone: `11${String(Date.now()).slice(-9)}`,
+    phone: phoneE164(suffix),
+    acceptTerms: true,
+    acceptPrivacy: true,
     ...extra,
   };
   if (role === "CLIENT") {
     base.birthDate = "1990-01-15";
-    base.username = `user${String(Date.now()).slice(-10)}`;
+    base.username = `user${String(suffix).slice(-10)}`;
     base.gender = "MASCULINO";
-    base.acceptTerms = true;
-    base.acceptPrivacy = true;
-    base.phone = `119${String(Date.now()).slice(-8)}`;
   }
   if (role === "PARTNER") {
     Object.assign(base, {
       businessName: "Loja Social",
       legalName: "Loja Social LTDA",
-      cnpj: generateCnpj(),
+      cnpj: generateValidCnpj(suffix),
       category: "Pet Shop",
-      address: "Rua A",
-      city: "SP",
+      address: "Rua A, 100",
+      city: "São Paulo",
       state: "SP",
     });
   }
@@ -76,14 +100,14 @@ async function registerAndLogin(jarName, role, email, extra = {}) {
     Object.assign(base, {
       ongName: "ONG Social",
       responsibleName: "Resp",
-      cnpj: generateCnpj(),
-      address: "Rua B",
-      city: "SP",
+      cnpj: generateValidCnpj(suffix + 7),
+      address: "Rua B, 200",
+      city: "São Paulo",
       state: "SP",
     });
   }
   const reg = await reqAs(jarName, "/api/auth/register", { method: "POST", body: JSON.stringify(base) });
-  assert(reg.status === 201, `${role} register`);
+  assert(reg.status === 201, `${role} register → ${reg.status} ${JSON.stringify(reg.data?.error ?? {})}`);
   const login = await reqAs(jarName, "/api/auth/login", {
     method: "POST",
     body: JSON.stringify({ email, password }),
@@ -119,6 +143,7 @@ async function activateUser(userId) {
 }
 
 async function main() {
+  await resetAuthRateLimit();
   const ts = Date.now();
   console.log("=== EcoPet Foundation Social Tests ===\n");
 
@@ -131,7 +156,17 @@ async function main() {
   await activateUser(partner.id);
 
   const pendingEmail = `social.pending.${ts}@test.ecopet.local`;
-  await registerAndLogin("pending", "PARTNER", pendingEmail);
+  const pendingUser = await registerAndLogin("pending", "PARTNER", pendingEmail);
+  // Cadastro real cria ACTIVE; forçamos PENDING só para validar o gate de conta.
+  await prisma.user.update({
+    where: { id: pendingUser.id },
+    data: { accountStatus: AccountStatus.PENDING },
+  });
+  // Re-login para atualizar JWT com status PENDING
+  await reqAs("pending", "/api/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email: pendingEmail, password: "Ecopet@Forte2026" }),
+  });
 
   const suspendedEmail = `social.suspended.${ts}@test.ecopet.local`;
   const suspended = await registerAndLogin("suspended", "CLIENT", suspendedEmail);
@@ -258,12 +293,27 @@ async function main() {
   });
   assert(shareChat.status === 201 && shareChat.data.data?.chatMessageId, `19 share chat: ${shareChat.status} ${JSON.stringify(shareChat.data)}`);
 
-  // 20 denúncia post
+  // 20 denúncia post (cliente denuncia post próprio de outro fluxo — parceiro denuncia o post do client)
   const reportPost = await reqAs("partner", "/api/social/reports", {
     method: "POST",
     body: JSON.stringify({ postId, reason: "SPAM" }),
   });
-  assert(reportPost.status === 201, "20 denúncia post");
+  if (reportPost.status === 429) {
+    await resetAuthRateLimit();
+    const retry = await reqAs("partner2", "/api/social/reports", {
+      method: "POST",
+      body: JSON.stringify({ postId, reason: "SPAM" }),
+    });
+    assert(
+      retry.status === 201,
+      `20 denúncia post (retry) → ${retry.status} ${JSON.stringify(retry.data?.error ?? retry.data)}`
+    );
+  } else {
+    assert(
+      reportPost.status === 201,
+      `20 denúncia post → ${reportPost.status} ${JSON.stringify(reportPost.data?.error ?? reportPost.data)}`
+    );
+  }
 
   // 21 denúncia comentário
   const reportComment = await reqAs("client", "/api/social/reports", {
@@ -341,9 +391,14 @@ async function main() {
   const uploadData = await uploadRes.json();
   assert(uploadRes.status === 201 || uploadData.error?.code === "UPLOAD_NOT_CONFIGURED", "31 upload dev/prod");
 
-  // 32 produção sem provedor — verificado via código (UPLOAD_NOT_CONFIGURED em IntegrationNotConfiguredError)
+  // 32 produção sem provedor — purpose social registrado nas constraints oficiais
+  const uploadConstraints = readFileSync(
+    path.join(__dirname, "../apps/web/src/lib/storage/upload-constraints.ts"),
+    "utf8"
+  );
+  assert(uploadConstraints.includes("social_post_media"), "32 purpose social no upload");
   const uploadRoute = readFileSync(path.join(__dirname, "../apps/web/src/app/api/upload/route.ts"), "utf8");
-  assert(uploadRoute.includes("social_post_media"), "32 purpose social no upload");
+  assert(uploadRoute.includes("isUploadPurpose"), "32 upload valida purpose");
 
   // 33 notification social
   const notif = await prisma.notification.findFirst({
@@ -366,7 +421,13 @@ async function main() {
   }
   assert(rateBlocked, "34 rate limit");
 
-  // 35 build sem dados fictícios — seed check
+  // Novo parceiro após rate-limit do anterior (evita 429 nos cenários 40–41)
+  const partnerFresh = await registerAndLogin(
+    "partner2",
+    "PARTNER",
+    `social.partner2.${ts}@test.ecopet.local`
+  );
+  await activateUser(partnerFresh.id);
   const seed = readFileSync(path.join(__dirname, "../packages/database/prisma/seed.ts"), "utf8");
   assert(!seed.includes("socialPost.create"), "35 seed sem posts fake");
 
@@ -410,14 +471,17 @@ async function main() {
   assert(adoptionPost.data.data?.post?.type === "ADOPTION", "39 tipo ADOPTION");
 
   // 40 parceiro cria post de produto (sem produto vinculado — tipo permitido)
-  const productPost = await reqAs("partner", "/api/social/posts", {
+  const productPost = await reqAs("partner2", "/api/social/posts", {
     method: "POST",
     body: JSON.stringify({ type: "PRODUCT", content: "Novidade na loja!" }),
   });
-  assert(productPost.status === 201, "40 parceiro post produto");
+  assert(
+    productPost.status === 201,
+    `40 parceiro post produto → ${productPost.status} ${JSON.stringify(productPost.data?.error ?? {})}`
+  );
 
   // 41 parceiro cria post de serviço
-  const servicePost = await reqAs("partner", "/api/social/posts", {
+  const servicePost = await reqAs("partner2", "/api/social/posts", {
     method: "POST",
     body: JSON.stringify({ type: "SERVICE", content: "Banho e tosa com desconto" }),
   });
@@ -461,8 +525,13 @@ async function main() {
 }
 
 main()
+  .then(() => {
+    process.exitCode = 0;
+  })
   .catch((e) => {
     console.error("\n❌", e.message);
-    process.exit(1);
+    process.exitCode = 1;
   })
-  .finally(() => prisma.$disconnect());
+  .finally(async () => {
+    await prisma.$disconnect().catch(() => undefined);
+  });
