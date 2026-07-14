@@ -194,9 +194,17 @@ export function isDevUploadFallbackEnabled(source: NodeJS.ProcessEnv = process.e
 
 export function resolveActivePaymentProvider(source: NodeJS.ProcessEnv = process.env): string | null {
   const preferred = env("PAYMENT_PROVIDER", source);
+  if (preferred) {
+    const normalized = preferred.toLowerCase();
+    if (normalized === "none" || normalized === "manual") return null;
+  }
   if (preferred === "MERCADO_PAGO" && isMercadoPagoConfigured(source)) return "MERCADO_PAGO";
   if (preferred === "PAGARME" && isPagarmeConfigured(source)) return "PAGARME";
   if (preferred === "STRIPE" && isStripeConfigured(source)) return "STRIPE";
+  // Also accept lowercase preferred values
+  if (preferred?.toLowerCase() === "mercado_pago" && isMercadoPagoConfigured(source)) return "MERCADO_PAGO";
+  if (preferred?.toLowerCase() === "pagarme" && isPagarmeConfigured(source)) return "PAGARME";
+  if (preferred?.toLowerCase() === "stripe" && isStripeConfigured(source)) return "STRIPE";
   if (isMercadoPagoConfigured(source)) return "MERCADO_PAGO";
   if (isPagarmeConfigured(source)) return "PAGARME";
   if (isStripeConfigured(source)) return "STRIPE";

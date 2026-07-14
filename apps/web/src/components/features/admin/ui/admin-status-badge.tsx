@@ -2,12 +2,17 @@ import { cn } from "@/lib/utils";
 
 const VARIANTS: Record<string, string> = {
   ACTIVE: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+  AVAILABLE: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+  CONFIGURED: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
   PAID: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
   OPEN: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
   PENDING: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+  DEGRADED: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
   SUSPENDED: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
   REJECTED: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
   ERROR: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+  UNAVAILABLE: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+  DISABLED: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
   NOT_CONFIGURED: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
   INATIVO: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
 };

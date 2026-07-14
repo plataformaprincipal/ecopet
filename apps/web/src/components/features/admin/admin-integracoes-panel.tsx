@@ -2,9 +2,61 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AdminPageHeader } from "./ui/admin-page-header";
+import { AdminStatusBadge } from "./ui/admin-status-badge";
 import { AdminModulePage } from "./admin-module-page";
 
-type IntegrationRow = {
+/** TODO(i18n): wire to admin.integrations.* keys in pt-BR / en / es */
+
+type IntegrationStatusItem = {
+  provider: string;
+  displayName: string;
+  configured: boolean;
+  available: boolean;
+  status: string;
+  missingVariables: string[];
+  lastCheckedAt?: string;
+  sanitizedError?: string;
+  capabilities: string[];
+};
+
+type SmokeFeedback = {
+  provider: string;
+  ok: boolean;
+  code: string;
+  message?: string;
+};
+
+const TEST_ENDPOINT: Record<string, { path: string; body?: Record<string, string> }> = {
+  openai: { path: "/api/admin/integrations/openai/test" },
+  resend: { path: "/api/admin/integrations/resend/test" },
+  twilio: { path: "/api/admin/integrations/twilio/test" },
+  talkjs: { path: "/api/admin/integrations/talkjs/test" },
+  cloudinary: { path: "/api/admin/integrations/cloudinary/test" },
+  mercado_pago: {
+    path: "/api/admin/integrations/payment/test",
+    body: { provider: "mercado_pago" },
+  },
+  stripe: {
+    path: "/api/admin/integrations/payment/test",
+    body: { provider: "stripe" },
+  },
+};
+
+const PHASE3_ORDER = [
+  "openai",
+  "resend",
+  "twilio",
+  "talkjs",
+  "cloudinary",
+  "mercado_pago",
+  "stripe",
+  "push",
+  "supabase",
+] as const;
+
+type ErpRow = {
   id: string;
   integracao: string;
   status: string;
@@ -12,29 +64,126 @@ type IntegrationRow = {
   ativo?: boolean;
 };
 
-export function AdminIntegracoesPanel() {
-  const [rows, setRows] = useState<IntegrationRow[]>([]);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [loadingId, setLoadingId] = useState<string | null>(null);
+function formatCheckedAt(iso?: string) {
+  if (!iso) return "—";
+  try {
+    return new Date(iso).toLocaleString("pt-BR");
+  } catch {
+    return iso;
+  }
+}
 
-  const loadRows = useCallback(async () => {
-    const res = await fetch("/api/admin/erp/integracoes", { credentials: "include", cache: "no-store" });
-    const json = await res.json();
-    if (json.success) {
-      const table = (json.data.tables as { id: string; rows: IntegrationRow[] }[])?.find(
-        (t) => t.id === "integrations"
+export function AdminIntegracoesPanel() {
+  const [integrations, setIntegrations] = useState<IntegrationStatusItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [testingId, setTestingId] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<SmokeFeedback | null>(null);
+
+  const [erpRows, setErpRows] = useState<ErpRow[]>([]);
+  const [erpFeedback, setErpFeedback] = useState<string | null>(null);
+  const [erpLoadingId, setErpLoadingId] = useState<string | null>(null);
+
+  const loadStatuses = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/integrations/status", {
+        credentials: "include",
+        cache: "no-store",
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        setError(json.error?.message ?? "Erro ao carregar status das integrações.");
+        return;
+      }
+      const list = (json.data?.integrations ?? []) as IntegrationStatusItem[];
+      const byId = new Map(list.map((i) => [i.provider, i]));
+      const ordered = PHASE3_ORDER.map(
+        (id) =>
+          byId.get(id) ?? {
+            provider: id,
+            displayName: id,
+            configured: false,
+            available: false,
+            status: "NOT_CONFIGURED",
+            missingVariables: [],
+            capabilities: [],
+          }
       );
-      setRows(table?.rows ?? []);
+      setIntegrations(ordered);
+    } catch {
+      setError("Não foi possível carregar o painel de integrações.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const loadErpRows = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/erp/integracoes", {
+        credentials: "include",
+        cache: "no-store",
+      });
+      const json = await res.json();
+      if (json.success) {
+        const table = (json.data.tables as { id: string; rows: ErpRow[] }[])?.find(
+          (t) => t.id === "integrations"
+        );
+        setErpRows(table?.rows ?? []);
+      }
+    } catch {
+      /* ERP legado opcional */
     }
   }, []);
 
   useEffect(() => {
-    void loadRows();
-  }, [loadRows]);
+    void loadStatuses();
+    void loadErpRows();
+  }, [loadStatuses, loadErpRows]);
 
-  const testConnection = async (id: string) => {
-    setLoadingId(id);
+  const runSmokeTest = async (provider: string) => {
+    const endpoint = TEST_ENDPOINT[provider];
+    if (!endpoint) return;
+
+    setTestingId(provider);
     setFeedback(null);
+    try {
+      const res = await fetch(endpoint.path, {
+        method: "POST",
+        credentials: "include",
+        ...(endpoint.body
+          ? {
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(endpoint.body),
+            }
+          : {}),
+      });
+      const json = await res.json();
+      const data = json.data ?? json;
+      const result = data?.results?.[0] ?? data;
+      setFeedback({
+        provider,
+        ok: Boolean(result?.ok),
+        code: result?.code ?? (json.success ? "OK" : "ERROR"),
+        message: result?.message ?? json.error?.message,
+      });
+      await loadStatuses();
+    } catch {
+      setFeedback({
+        provider,
+        ok: false,
+        code: "SMOKE_FAILED",
+        message: "Falha de rede ao executar o teste.",
+      });
+    } finally {
+      setTestingId(null);
+    }
+  };
+
+  const testErpConnection = async (id: string) => {
+    setErpLoadingId(id);
+    setErpFeedback(null);
     try {
       const res = await fetch("/api/admin/erp/integracoes", {
         method: "POST",
@@ -43,16 +192,16 @@ export function AdminIntegracoesPanel() {
         body: JSON.stringify({ action: "test", entity: id, id }),
       });
       const json = await res.json();
-      setFeedback(json.error?.message ?? json.data?.message ?? "Teste concluído.");
-      await loadRows();
+      setErpFeedback(json.error?.message ?? json.data?.message ?? "Teste concluído.");
+      await loadErpRows();
     } finally {
-      setLoadingId(null);
+      setErpLoadingId(null);
     }
   };
 
-  const toggleIntegration = async (id: string, enabled?: boolean) => {
-    setLoadingId(id);
-    setFeedback(null);
+  const toggleErpIntegration = async (id: string, enabled?: boolean) => {
+    setErpLoadingId(id);
+    setErpFeedback(null);
     try {
       const res = await fetch("/api/admin/erp/integracoes", {
         method: "POST",
@@ -61,46 +210,166 @@ export function AdminIntegracoesPanel() {
         body: JSON.stringify({ action: "toggle", entity: id, id, payload: { enabled } }),
       });
       const json = await res.json();
-      setFeedback(json.error?.message ?? (json.success ? "Integração atualizada." : "Erro ao atualizar."));
-      await loadRows();
+      setErpFeedback(
+        json.error?.message ?? (json.success ? "Integração atualizada." : "Erro ao atualizar.")
+      );
+      await loadErpRows();
     } finally {
-      setLoadingId(null);
+      setErpLoadingId(null);
     }
   };
 
   return (
-    <div className="space-y-4">
-      <AdminModulePage moduleId="integracoes" />
-      <section className="mx-4 mb-6 rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-zinc-900/60 sm:mx-6">
-        <h2 className="mb-3 font-semibold">Testar e ativar integrações</h2>
-        {feedback ? <p className="mb-3 text-sm text-zinc-600 dark:text-zinc-400">{feedback}</p> : null}
-        <div className="space-y-2">
-          {rows.map((row) => (
-            <div
-              key={row.id}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-zinc-100 px-3 py-2 dark:border-white/10"
-            >
-              <div>
-                <p className="text-sm font-medium">{row.integracao}</p>
-                <p className="text-xs text-zinc-500">{row.status}</p>
-              </div>
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline" disabled={loadingId === row.id} onClick={() => void testConnection(row.id)}>
-                  Testar
-                </Button>
-                <Button
-                  size="sm"
-                  variant={row.ativo ? "secondary" : "default"}
-                  disabled={loadingId === row.id || !row.configurado}
-                  onClick={() => void toggleIntegration(row.id, !row.ativo)}
-                >
-                  {row.ativo ? "Desativar" : "Ativar"}
-                </Button>
-              </div>
-            </div>
-          ))}
+    <div className="space-y-6">
+      <AdminPageHeader
+        title="Integrações"
+        description="Status dos provedores externos (Phase 3). Secrets nunca são exibidos."
+        breadcrumbs={[{ label: "Admin", href: "/admin" }, { label: "Integrações" }]}
+      >
+        <Button variant="outline" size="sm" onClick={() => void loadStatuses()} disabled={loading}>
+          Atualizar
+        </Button>
+      </AdminPageHeader>
+
+      <div className="space-y-4 px-4 pb-6 sm:px-6">
+        {loading ? (
+          <p className="text-sm text-muted-foreground" role="status">
+            Carregando status das integrações…
+          </p>
+        ) : null}
+
+        {error ? (
+          <p className="text-sm text-red-600" role="alert">
+            {error}
+          </p>
+        ) : null}
+
+        {feedback ? (
+          <p
+            className={`text-sm ${feedback.ok ? "text-green-700 dark:text-green-400" : "text-amber-700 dark:text-amber-400"}`}
+            role="status"
+          >
+            [{feedback.provider}] {feedback.code}
+            {feedback.message ? ` — ${feedback.message}` : ""}
+          </p>
+        ) : null}
+
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {integrations.map((item) => {
+            const canTest = Boolean(TEST_ENDPOINT[item.provider]) && item.configured;
+            return (
+              <Card key={item.provider} className="border-zinc-200/80 dark:border-white/10">
+                <CardHeader className="pb-2">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <CardTitle className="text-base">{item.displayName}</CardTitle>
+                      <CardDescription className="font-mono text-xs">{item.provider}</CardDescription>
+                    </div>
+                    <AdminStatusBadge status={item.status} />
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm">
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground">Última checagem</p>
+                    <p>{formatCheckedAt(item.lastCheckedAt)}</p>
+                  </div>
+
+                  {item.missingVariables.length > 0 ? (
+                    <div>
+                      <p className="text-xs font-medium text-amber-700 dark:text-amber-400">
+                        Variáveis ausentes
+                      </p>
+                      <ul className="mt-1 list-inside list-disc font-mono text-xs text-amber-800 dark:text-amber-300">
+                        {item.missingVariables.map((v) => (
+                          <li key={v}>{v}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Nenhuma variável obrigatória ausente.</p>
+                  )}
+
+                  {item.capabilities.length > 0 ? (
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground">Capabilities</p>
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {item.capabilities.map((cap) => (
+                          <span
+                            key={cap}
+                            className="rounded-md bg-zinc-100 px-1.5 py-0.5 text-[11px] text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                          >
+                            {cap}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {item.sanitizedError ? (
+                    <p className="text-xs text-muted-foreground">{item.sanitizedError}</p>
+                  ) : null}
+
+                  {canTest ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={testingId === item.provider}
+                      onClick={() => void runSmokeTest(item.provider)}
+                    >
+                      {testingId === item.provider ? "Testando…" : "Testar"}
+                    </Button>
+                  ) : null}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
-      </section>
+      </div>
+
+      {/* ERP legado — mantido para não quebrar fluxos existentes */}
+      <div className="space-y-4 border-t border-zinc-200/80 pt-4 dark:border-white/10">
+        <AdminModulePage moduleId="integracoes" />
+        <section className="mx-4 mb-6 rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-zinc-900/60 sm:mx-6">
+          <h2 className="mb-3 font-semibold">ERP — testar e ativar integrações</h2>
+          {erpFeedback ? (
+            <p className="mb-3 text-sm text-zinc-600 dark:text-zinc-400">{erpFeedback}</p>
+          ) : null}
+          <div className="space-y-2">
+            {erpRows.map((row) => (
+              <div
+                key={row.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-zinc-100 px-3 py-2 dark:border-white/10"
+              >
+                <div>
+                  <p className="text-sm font-medium">{row.integracao}</p>
+                  <p className="text-xs text-zinc-500">{row.status}</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={erpLoadingId === row.id}
+                    onClick={() => void testErpConnection(row.id)}
+                  >
+                    Testar
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={row.ativo ? "secondary" : "default"}
+                    disabled={erpLoadingId === row.id || !row.configurado}
+                    onClick={() => void toggleErpIntegration(row.id, !row.ativo)}
+                  >
+                    {row.ativo ? "Desativar" : "Ativar"}
+                  </Button>
+                </div>
+              </div>
+            ))}
+            {erpRows.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhuma integração ERP listada.</p>
+            ) : null}
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

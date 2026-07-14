@@ -82,8 +82,11 @@ export function integrationApiFailure(
   );
 }
 
+export const AI_NOT_CONFIGURED_USER_MESSAGE =
+  "Os recursos de inteligência artificial ainda não estão disponíveis neste ambiente.";
+
 export function aiNotConfiguredResponse(
-  message = "IA não configurada. Defina AI_ENABLED≠false e OPENAI_API_KEY."
+  message = AI_NOT_CONFIGURED_USER_MESSAGE
 ): NextResponse {
   return integrationApiFailure(INTEGRATION_ERROR_CODES.AI_NOT_CONFIGURED, message, 503);
 }
