@@ -42,6 +42,15 @@ async function resetAuthRateLimit() {
   } catch {
     /* optional */
   }
+  try {
+    await fetch(`${WEB}/api/social/test/reset-rate-limit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{}",
+    });
+  } catch {
+    /* optional until rebuild */
+  }
 }
 
 async function reqAs(jarName, pathName, opts = {}) {
@@ -152,8 +161,11 @@ async function main() {
 
   const client = await registerAndLogin("client", "CLIENT", `social.client.${ts}@test.ecopet.local`);
   const partner = await registerAndLogin("partner", "PARTNER", `social.partner.${ts}@test.ecopet.local`);
+  // Reporter dedicado — evita colisão com rate-limit / bloqueio do partner principal
+  const reporter = await registerAndLogin("reporter", "CLIENT", `social.reporter.${ts}@test.ecopet.local`);
   await activateUser(client.id);
   await activateUser(partner.id);
+  await activateUser(reporter.id);
 
   const pendingEmail = `social.pending.${ts}@test.ecopet.local`;
   const pendingUser = await registerAndLogin("pending", "PARTNER", pendingEmail);
@@ -293,34 +305,26 @@ async function main() {
   });
   assert(shareChat.status === 201 && shareChat.data.data?.chatMessageId, `19 share chat: ${shareChat.status} ${JSON.stringify(shareChat.data)}`);
 
-  // 20 denúncia post (cliente denuncia post próprio de outro fluxo — parceiro denuncia o post do client)
-  const reportPost = await reqAs("partner", "/api/social/reports", {
+  // 20 denúncia post — reporter dedicado (não é o autor)
+  await resetAuthRateLimit();
+  const reportPost = await reqAs("reporter", "/api/social/reports", {
     method: "POST",
     body: JSON.stringify({ postId, reason: "SPAM" }),
   });
-  if (reportPost.status === 429) {
-    await resetAuthRateLimit();
-    const retry = await reqAs("partner2", "/api/social/reports", {
-      method: "POST",
-      body: JSON.stringify({ postId, reason: "SPAM" }),
-    });
-    assert(
-      retry.status === 201,
-      `20 denúncia post (retry) → ${retry.status} ${JSON.stringify(retry.data?.error ?? retry.data)}`
-    );
-  } else {
-    assert(
-      reportPost.status === 201,
-      `20 denúncia post → ${reportPost.status} ${JSON.stringify(reportPost.data?.error ?? reportPost.data)}`
-    );
-  }
+  assert(
+    reportPost.status === 201,
+    `20 denúncia post → ${reportPost.status} ${JSON.stringify(reportPost.data?.error ?? reportPost.data)}`
+  );
 
-  // 21 denúncia comentário
+  // 21 denúncia comentário — autor do post denuncia comentário do partner
   const reportComment = await reqAs("client", "/api/social/reports", {
     method: "POST",
     body: JSON.stringify({ commentId, reason: "HARASSMENT" }),
   });
-  assert(reportComment.status === 201, "21 denúncia comentário");
+  assert(
+    reportComment.status === 201,
+    `21 denúncia comentário → ${reportComment.status} ${JSON.stringify(reportComment.data?.error ?? reportComment.data)}`
+  );
 
   // 22 admin oculta post
   const hide = await reqAs("admin", `/api/admin/social/posts/${postId}/moderate`, {
@@ -421,15 +425,22 @@ async function main() {
   }
   assert(rateBlocked, "34 rate limit");
 
-  // Novo parceiro após rate-limit do anterior (evita 429 nos cenários 40–41)
+  // Limpa rate-limit social e usa parceiro fresco para PRODUCT/SERVICE
+  await resetAuthRateLimit();
   const partnerFresh = await registerAndLogin(
     "partner2",
     "PARTNER",
     `social.partner2.${ts}@test.ecopet.local`
   );
   await activateUser(partnerFresh.id);
+
+  // 35 seed sem SocialPost fake
   const seed = readFileSync(path.join(__dirname, "../packages/database/prisma/seed.ts"), "utf8");
   assert(!seed.includes("socialPost.create"), "35 seed sem posts fake");
+  // SocialPost é o modelo autoritativo — lib/social não deve escrever no Post legado
+  const socialPostsLib = readFileSync(path.join(__dirname, "../apps/web/src/lib/social/posts.ts"), "utf8");
+  assert(socialPostsLib.includes("prisma.socialPost"), "35 SocialPost autoritativo");
+  assert(!/\bprisma\.post\./.test(socialPostsLib), "35 sem writes no Post legado");
 
   // 36 visitante vê feed público
   const guestFeed = await reqAs("guest", "/api/social/feed");

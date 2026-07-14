@@ -58,12 +58,16 @@ export async function createReport(params: {
     });
   }
 
-  const admins = await prisma.user.findMany({
-    where: { role: "ADMIN", accountStatus: "ACTIVE" },
-    select: { id: true },
-  });
-  for (const admin of admins) {
-    await notifyReportReceived({ adminId: admin.id, reportId: report.id });
+  try {
+    const admins = await prisma.user.findMany({
+      where: { role: "ADMIN", accountStatus: "ACTIVE" },
+      select: { id: true },
+    });
+    for (const admin of admins) {
+      await notifyReportReceived({ adminId: admin.id, reportId: report.id }).catch(() => undefined);
+    }
+  } catch {
+    // Denúncia já persistida — falha de notificação não deve invalidar o report.
   }
 
   if (params.postId) {
