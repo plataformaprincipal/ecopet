@@ -61,6 +61,17 @@ function SettingRow({
   );
 }
 
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const raw = atob(base64);
+  const output = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i += 1) {
+    output[i] = raw.charCodeAt(i);
+  }
+  return output;
+}
+
 export function NotificationPreferencesPanel() {
   const { t } = useTranslation();
   const [prefs, setPrefs] = useState<NotificationPreferences | null>(null);
@@ -69,6 +80,8 @@ export function NotificationPreferencesPanel() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);
+  const [pushMessage, setPushMessage] = useState<string | null>(null);
 
   useEffect(() => {
     fetchNotificationPreferences()
@@ -99,6 +112,66 @@ export function NotificationPreferencesPanel() {
     }
   }
 
+  async function subscribePush() {
+    setPushBusy(true);
+    setPushMessage(null);
+    setError(null);
+    try {
+      const keyRes = await fetch("/api/push/vapid-public-key");
+      const keyJson = (await keyRes.json()) as { configured?: boolean; publicKey?: string };
+      if (!keyJson.configured || !keyJson.publicKey) {
+        setPushMessage(t("notifications.preferences.pushNotConfigured"));
+        return;
+      }
+
+      if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+        setError(t("notifications.preferences.pushSubscribeError"));
+        return;
+      }
+
+      const registration = await navigator.serviceWorker.register("/sw.js");
+      await navigator.serviceWorker.ready;
+
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") {
+        setError(t("notifications.preferences.pushSubscribeError"));
+        return;
+      }
+
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(keyJson.publicKey) as BufferSource,
+      });
+
+      const json = subscription.toJSON();
+      const res = await fetch("/api/push/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          endpoint: json.endpoint,
+          keys: json.keys,
+        }),
+      });
+      const body = (await res.json()) as {
+        success?: boolean;
+        error?: { message?: string };
+      };
+      if (!res.ok || !body.success) {
+        setError(body.error?.message ?? t("notifications.preferences.pushSubscribeError"));
+        return;
+      }
+
+      if (!prefs?.pushEnabled) {
+        await save({ pushEnabled: true });
+      }
+      setPushMessage(t("notifications.preferences.pushSubscribeSuccess"));
+    } catch {
+      setError(t("notifications.preferences.pushSubscribeError"));
+    } finally {
+      setPushBusy(false);
+    }
+  }
+
   if (loading) {
     return (
       <Card className="card-premium">
@@ -119,6 +192,8 @@ export function NotificationPreferencesPanel() {
 
   const channelHint = (configured: boolean) =>
     configured ? undefined : t("notifications.preferences.channelNotConfigured");
+
+  const pushConfigured = Boolean(channels?.push);
 
   return (
     <Card className="card-premium">
@@ -157,6 +232,47 @@ export function NotificationPreferencesPanel() {
           disabled={!channels?.whatsapp}
           onChange={(v) => void save({ whatsappEnabled: v })}
         />
+        <div className="border-b border-ecopet-gray/10 py-3 dark:border-white/10">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium text-ecopet-dark dark:text-white">
+                {t("notifications.preferences.push")}
+              </p>
+              {!pushConfigured ? (
+                <p className="text-xs text-ecopet-gray">
+                  {t("notifications.preferences.pushNotConfigured")}
+                </p>
+              ) : null}
+            </div>
+            <Toggle
+              checked={prefs.pushEnabled}
+              onChange={(v) => void save({ pushEnabled: v })}
+              disabled={!pushConfigured}
+              label={t("notifications.preferences.push")}
+            />
+          </div>
+          {pushConfigured ? (
+            <div className="mt-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={pushBusy}
+                onClick={() => void subscribePush()}
+              >
+                {pushBusy ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
+                ) : null}
+                {t("notifications.preferences.pushSubscribe")}
+              </Button>
+            </div>
+          ) : null}
+          {pushMessage ? (
+            <p className="mt-2 text-xs text-ecopet-green" role="status">
+              {pushMessage}
+            </p>
+          ) : null}
+        </div>
         <SettingRow
           label={t("notifications.preferences.marketing")}
           checked={prefs.marketingEnabled}

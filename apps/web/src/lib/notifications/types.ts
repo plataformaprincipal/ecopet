@@ -38,6 +38,7 @@ export interface NotificationPreferences {
   emailEnabled: boolean;
   smsEnabled: boolean;
   whatsappEnabled: boolean;
+  pushEnabled: boolean;
   marketingEnabled: boolean;
   orderUpdates: boolean;
   appointmentUpdates: boolean;

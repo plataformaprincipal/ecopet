@@ -32,8 +32,7 @@ async function channelAllowedByPrefs(
   if (channel === "inApp") return Boolean(prefs.inAppEnabled);
   if (channel === "email") return Boolean(prefs.emailEnabled);
   if (channel === "sms") return Boolean(prefs.smsEnabled);
-  // No dedicated pushEnabled column yet — treat as opt-in via emailEnabled-like marketing off by default
-  if (channel === "push") return Boolean(prefs.emailEnabled);
+  if (channel === "push") return Boolean(prefs.pushEnabled);
   if (channel === "whatsapp") return Boolean(prefs.whatsappEnabled);
   return false;
 }

@@ -535,6 +535,7 @@ model User {
   following     Follow[]  @relation("Follower")
   notifications Notification[]
   notificationPreference NotificationPreference?
+  pushSubscriptions PushSubscription[]
   sentMessages  Message[] @relation("Sender")
   conversations ConversationParticipant[]
   createdConversations Conversation[] @relation("ConversationCreator")
@@ -1590,6 +1591,7 @@ model NotificationPreference {
   emailEnabled       Boolean  @default(false)
   smsEnabled         Boolean  @default(false)
   whatsappEnabled    Boolean  @default(false)
+  pushEnabled        Boolean  @default(false)
   marketingEnabled   Boolean  @default(false)
   orderUpdates       Boolean  @default(true)
   appointmentUpdates Boolean  @default(true)
@@ -1605,6 +1607,24 @@ model NotificationPreference {
   user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+model PushSubscription {
+  id        String    @id @default(cuid())
+  userId    String
+  endpoint  String
+  p256dh    String
+  auth      String
+  userAgent String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  revokedAt DateTime?
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([endpoint])
+  @@index([userId])
+  @@index([userId, revokedAt])
 }
 
 model Conversation {

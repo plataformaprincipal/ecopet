@@ -43,6 +43,18 @@ export class FakeSmsProvider {
   }
 }
 
+export class FakePushProvider {
+  readonly name = "fake-push";
+  readonly sent: Array<{ endpoint: string; title: string; body: string }> = [];
+  constructor() {
+    assertTestEnv();
+  }
+  async send(params: { endpoint: string; title: string; body: string }) {
+    this.sent.push(params);
+    return { sent: true as const, id: `fake-push-${this.sent.length}` };
+  }
+}
+
 export class FakeUploadProvider {
   readonly name = "fake-upload";
   constructor() {
