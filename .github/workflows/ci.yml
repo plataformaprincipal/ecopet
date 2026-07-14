@@ -32,6 +32,14 @@ jobs:
       APP_URL: http://localhost:3000
       JWT_SECRET: ci-jwt-secret-minimum-32-characters-long
       NODE_ENV: test
+      NODE_OPTIONS: --max-old-space-size=8192
+      AUTH_RATE_LIMIT_RELAXED: "1"
+      AUTH_TEST_RESET_RATE_LIMIT: "1"
+      AUTH_TEST_EXPOSE_OTP: "1"
+      PHONE_SMS_RECOVERY_ENABLED: "1"
+      AI_ENABLED: "false"
+      PAYMENT_PROVIDER: none
+      UPLOAD_DEV_FALLBACK: "1"
 
     steps:
       - uses: actions/checkout@v4
@@ -54,13 +62,26 @@ jobs:
 
       - run: npm run build
 
+      - run: npm run test:no-mocks
+
+      - run: npm run test:i18n
+
+      - run: npm run test:sync-env
+
       - name: Start web server
         run: |
-          AUTH_TEST_EXPOSE_OTP=1 PHONE_SMS_RECOVERY_ENABLED=1 npm run start -w @ecopet/web &
-          npx wait-on http://localhost:3000/api/health --timeout 120000
+          AUTH_TEST_EXPOSE_OTP=1 PHONE_SMS_RECOVERY_ENABLED=1 AUTH_RATE_LIMIT_RELAXED=1 AUTH_TEST_RESET_RATE_LIMIT=1 npm run start -w @ecopet/web &
+          npx wait-on http://localhost:3000/api/health --timeout 180000
 
-      - name: Foundation tests (subset)
+      - name: Foundation + security suites
         run: |
           WEB_URL=http://localhost:3000 npm run test:foundation:auth
-          WEB_URL=http://localhost:3000 npm run test:foundation:gestor
           WEB_URL=http://localhost:3000 npm run test:security
+          WEB_URL=http://localhost:3000 npm run test:foundation:talkjs
+          WEB_URL=http://localhost:3000 npm run test:foundation:marketplace
+          WEB_URL=http://localhost:3000 npm run test:foundation:cart
+          WEB_URL=http://localhost:3000 npm run test:foundation:orders
+          WEB_URL=http://localhost:3000 npm run test:foundation:social
+          WEB_URL=http://localhost:3000 npm run test:foundation:notifications
+          WEB_URL=http://localhost:3000 npm run test:foundation:ai
+          WEB_URL=http://localhost:3000 npm run test:foundation:gestor
