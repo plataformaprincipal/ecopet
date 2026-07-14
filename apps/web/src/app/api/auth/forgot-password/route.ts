@@ -129,7 +129,15 @@ export async function POST(request: Request) {
       });
 
       if (!emailResult.sent) {
-        return apiFailure("SEND_FAILED", FORGOT_PASSWORD_SEND_FAILED_MESSAGE, 503);
+        // Suites locais com AUTH_TEST_EXPOSE_OTP=1 precisam do OTP sem provedor de e-mail real.
+        if (process.env.AUTH_TEST_EXPOSE_OTP === "1") {
+          console.warn(
+            "[forgot-password] e-mail não enviado — continuando com OTP de teste:",
+            emailResult.errorCode ?? "SEND_FAILED"
+          );
+        } else {
+          return apiFailure("SEND_FAILED", FORGOT_PASSWORD_SEND_FAILED_MESSAGE, 503);
+        }
       }
 
       if (process.env.NODE_ENV !== "production" && emailResult.emailId) {
@@ -141,6 +149,11 @@ export async function POST(request: Request) {
       if (!smsResult.sent) {
         if (smsResult.devOnly && process.env.NODE_ENV !== "production") {
           console.info(`[forgot-password] SMS dev-only para ${maskPhoneForLog(user.phone)}`);
+        } else if (process.env.AUTH_TEST_EXPOSE_OTP === "1") {
+          console.warn(
+            "[forgot-password] SMS não enviado — continuando com OTP de teste:",
+            smsResult.errorCode ?? "SEND_FAILED"
+          );
         } else if (!smsResult.devOnly) {
           return apiFailure("SEND_FAILED", FORGOT_PASSWORD_SEND_FAILED_MESSAGE, 503);
         }

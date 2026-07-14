@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { UserRole, AccountStatus, VerificationStatus, ApprovalStatus, ApprovalType, Prisma } from "@prisma/client";
+import { UserRole, AccountStatus, VerificationStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
   hashPassword,
@@ -89,7 +89,7 @@ async function createPartnerUser(data: PartnerRegisterInput) {
         cpf: isAutonomous ? data.cpf : null,
         cnpj: isAutonomous ? null : data.cnpj,
         avatarUrl: data.logoUrl ?? undefined,
-        accountStatus: AccountStatus.PENDING,
+        accountStatus: AccountStatus.ACTIVE,
         termsAcceptedAt: new Date(),
         lgpdAcceptedAt: new Date(),
         zipCode: data.addressDetails.zipCode.replace(/\D/g, ""),
@@ -101,15 +101,6 @@ async function createPartnerUser(data: PartnerRegisterInput) {
         },
       },
       select: { id: true, name: true, email: true, role: true, accountStatus: true },
-    });
-    await tx.approvalRequest.create({
-      data: {
-        type: ApprovalType.PARTNER,
-        entityType: "User",
-        entityId: created.id,
-        requesterId: created.id,
-        status: ApprovalStatus.PENDING,
-      },
     });
     return created;
   });
@@ -140,7 +131,7 @@ async function createLegacyPartnerUser(data: {
         role: UserRole.PARTNER,
         phone: data.phone,
         cnpj: data.cnpj,
-        accountStatus: AccountStatus.PENDING,
+        accountStatus: AccountStatus.ACTIVE,
         termsAcceptedAt: new Date(),
         lgpdAcceptedAt: new Date(),
         partnerProfile: {
@@ -160,15 +151,6 @@ async function createLegacyPartnerUser(data: {
         },
       },
       select: { id: true, name: true, email: true, role: true, accountStatus: true },
-    });
-    await tx.approvalRequest.create({
-      data: {
-        type: ApprovalType.PARTNER,
-        entityType: "User",
-        entityId: created.id,
-        requesterId: created.id,
-        status: ApprovalStatus.PENDING,
-      },
     });
     return created;
   });
@@ -196,7 +178,7 @@ async function createLegacyOngUser(data: {
         role: UserRole.ONG,
         phone: data.phone,
         cnpj: data.cnpj,
-        accountStatus: AccountStatus.PENDING,
+        accountStatus: AccountStatus.ACTIVE,
         ongProfile: {
           create: {
             ongName: data.ongName.trim(),
@@ -214,15 +196,6 @@ async function createLegacyOngUser(data: {
         },
       },
       select: { id: true, name: true, email: true, role: true, accountStatus: true },
-    });
-    await tx.approvalRequest.create({
-      data: {
-        type: ApprovalType.ONG,
-        entityType: "User",
-        entityId: created.id,
-        requesterId: created.id,
-        status: ApprovalStatus.PENDING,
-      },
     });
     return created;
   });
@@ -260,7 +233,7 @@ async function createOngUser(data: OngRegisterInput) {
         city: data.city.trim(),
         state: data.state,
         address: data.address?.trim() || null,
-        accountStatus: AccountStatus.PENDING,
+        accountStatus: AccountStatus.ACTIVE,
         termsAcceptedAt: new Date(),
         lgpdAcceptedAt: new Date(),
         ongProfile: {
@@ -287,15 +260,6 @@ async function createOngUser(data: OngRegisterInput) {
         },
       },
       select: { id: true, name: true, email: true, role: true, accountStatus: true },
-    });
-    await tx.approvalRequest.create({
-      data: {
-        type: ApprovalType.ONG,
-        entityType: "User",
-        entityId: created.id,
-        requesterId: created.id,
-        status: ApprovalStatus.PENDING,
-      },
     });
     return created;
   });
@@ -453,7 +417,7 @@ export async function POST(request: Request) {
       const token = await createSessionToken(user.id, user.email, user.role, user.accountStatus ?? AccountStatus.ACTIVE);
       const fullUser = await prisma.user.findUnique({ where: { id: user.id }, select: safeUserSelect });
       const response = apiSuccess(
-        { message: "Cadastro de parceiro recebido. Sua conta está em análise e você será avisado após a aprovação.", user: fullUser ? sanitizeUser(fullUser) : user, redirectTo: dashboardPathForRole(user.role) },
+        { message: "Conta criada com sucesso!", user: fullUser ? sanitizeUser(fullUser) : user, redirectTo: dashboardPathForRole(user.role) },
         201
       );
       response.cookies.set(SESSION_COOKIE, token, sessionCookieOptions());
@@ -488,7 +452,7 @@ export async function POST(request: Request) {
       const token = await createSessionToken(user.id, user.email, user.role, user.accountStatus ?? AccountStatus.ACTIVE);
       const fullUser = await prisma.user.findUnique({ where: { id: user.id }, select: safeUserSelect });
       const response = apiSuccess(
-        { message: "Cadastro de ONG recebido. Sua conta está em análise e você será avisado após a aprovação.", user: fullUser ? sanitizeUser(fullUser) : user, redirectTo: dashboardPathForRole(user.role) },
+        { message: "Conta criada com sucesso!", user: fullUser ? sanitizeUser(fullUser) : user, redirectTo: dashboardPathForRole(user.role) },
         201
       );
       response.cookies.set(SESSION_COOKIE, token, sessionCookieOptions());

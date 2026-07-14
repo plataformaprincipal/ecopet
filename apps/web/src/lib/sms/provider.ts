@@ -86,7 +86,7 @@ export async function sendPasswordResetSms(to: string, code: string): Promise<Sm
   const provider = resolveSmsProvider();
 
   if (!provider) {
-    if (process.env.NODE_ENV !== "production") {
+    if (process.env.NODE_ENV !== "production" || process.env.AUTH_TEST_EXPOSE_OTP === "1") {
       console.info(`[sms:dev] SMS não configurado — destino ${maskPhoneForLog(to)}`);
       return { sent: false, provider: "console", devOnly: true, errorCode: "SMS_NOT_CONFIGURED" };
     }

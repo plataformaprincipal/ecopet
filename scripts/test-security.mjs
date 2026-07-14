@@ -3,6 +3,8 @@
  */
 import bcrypt from "bcryptjs";
 import { PrismaClient, UserRole, AccountStatus } from "@prisma/client";
+import { generateValidCnpj } from "./cnpj-test-utils.mjs";
+import { clientMobilePhone } from "./test-helpers/client-register-fields.mjs";
 
 const WEB = process.env.WEB_URL || "http://localhost:3000";
 const prisma = new PrismaClient();
@@ -20,12 +22,24 @@ function assert(cond, msg) {
 }
 
 function phone(suffix) {
-  return `119${String(suffix).padStart(8, "0").slice(-8)}`;
+  return clientMobilePhone(suffix);
 }
 
 function cnpj(seed) {
-  const base = String(seed).replace(/\D/g, "").slice(-10).padEnd(10, "0");
-  return `${base}${String(Date.now() % 10000).padStart(4, "0")}`.slice(0, 14);
+  return generateValidCnpj(seed);
+}
+
+async function resetAuthRateLimit() {
+  try {
+    const res = await fetch(`${WEB}/api/auth/test/reset-rate-limit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{}",
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
 }
 
 const jars = new Map();
@@ -57,18 +71,19 @@ async function reqAs(jarName, path, opts = {}) {
 }
 
 async function registerUser(jarName, role, email, extra = {}) {
+  const suffix = `${email.length}${Date.now()}${Math.floor(Math.random() * 1000)}`;
   const base = {
     role,
-    name: `Sec ${role}`,
+    name: role === "CLIENT" ? `Sec Cliente ${suffix.slice(-4)}` : `Sec ${role}`,
     email,
     password: PASSWORD,
     confirmPassword: PASSWORD,
-    phone: phone(email.length + Date.now()),
+    phone: phone(suffix),
     ...extra,
   };
   if (role === "CLIENT") {
     base.birthDate = "1990-01-01";
-    base.username = `user${String(Date.now()).slice(-10)}`;
+    base.username = `user${String(Date.now()).slice(-10)}${String(Math.floor(Math.random() * 99)).padStart(2, "0")}`;
     base.gender = "MASCULINO";
     base.acceptTerms = true;
     base.acceptPrivacy = true;
@@ -77,7 +92,7 @@ async function registerUser(jarName, role, email, extra = {}) {
     Object.assign(base, {
       businessName: "Loja Sec",
       legalName: "Loja Sec LTDA",
-      cnpj: cnpj(email),
+      cnpj: cnpj(`${email}${suffix}`),
       category: "Pet Shop",
       address: "Rua A",
       city: "SP",
@@ -85,7 +100,10 @@ async function registerUser(jarName, role, email, extra = {}) {
     });
   }
   const reg = await reqAs(jarName, "/api/auth/register", { method: "POST", body: JSON.stringify(base) });
-  assert(reg.status === 201, `register ${role} ${reg.status}`);
+  assert(
+    reg.status === 201,
+    `register ${role} ${reg.status} ${reg.data?.error?.message ?? JSON.stringify(reg.data?.error ?? {})}`
+  );
   const login = await reqAs(jarName, "/api/auth/login", {
     method: "POST",
     body: JSON.stringify({ email, password: PASSWORD }),
@@ -126,6 +144,8 @@ async function activateUser(userId) {
 async function main() {
   const ts = Date.now();
   console.log("=== EcoPet Security Tests ===\n");
+
+  await resetAuthRateLimit();
 
   const clientAEmail = `sec.clientA.${ts}@test.ecopet.local`;
   const clientBEmail = `sec.clientB.${ts}@test.ecopet.local`;
@@ -312,9 +332,11 @@ async function main() {
   console.log("✓ solicitação LGPD registrada");
 
   // --- rate limit login (por último, IP dedicado) ---
+  // Com AUTH_RATE_LIMIT_RELAXED=1 o limite sobe para 500; ainda deve bloquear.
   let blocked = false;
-  const rateIp = `test-rate-${ts}`;
-  for (let i = 0; i < 12; i++) {
+  const rateIp = `203.0.113.${(ts % 200) + 1}`;
+  const maxAttempts = 520;
+  for (let i = 0; i < maxAttempts; i++) {
     const r = await fetch(`${WEB}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-forwarded-for": rateIp },
@@ -331,9 +353,18 @@ async function main() {
   console.log("\n✓ Todos os testes de segurança passaram.");
 }
 
+async function shutdown(code) {
+  try {
+    await prisma.$disconnect();
+  } catch {
+    /* ignore */
+  }
+  process.exitCode = code;
+}
+
 main()
+  .then(() => shutdown(0))
   .catch((e) => {
     console.error("\n✗", e.message);
-    process.exit(1);
-  })
-  .finally(() => prisma.$disconnect());
+    return shutdown(1);
+  });

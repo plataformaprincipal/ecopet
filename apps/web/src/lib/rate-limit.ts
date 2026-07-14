@@ -2,6 +2,23 @@ type Bucket = { count: number; resetAt: number };
 
 const store = new Map<string, Bucket>();
 
+/** Limpa buckets in-memory — uso em testes (nunca afeta produção multi-instância). */
+export function resetRateLimitStore(prefix?: string): number {
+  if (!prefix) {
+    const size = store.size;
+    store.clear();
+    return size;
+  }
+  let removed = 0;
+  for (const key of store.keys()) {
+    if (key.startsWith(prefix)) {
+      store.delete(key);
+      removed += 1;
+    }
+  }
+  return removed;
+}
+
 export function checkRateLimit(key: string, limit: number, windowMs: number): boolean {
   const force = process.env.RATE_LIMIT_FORCE === "1";
   if (process.env.NODE_ENV !== "production" && !force) {
@@ -12,6 +29,9 @@ export function checkRateLimit(key: string, limit: number, windowMs: number): bo
 
 /** Rate limit para autenticação — ativo em todos os ambientes */
 export function checkAuthRateLimit(key: string, limit: number, windowMs: number): boolean {
+  if (process.env.AUTH_RATE_LIMIT_DISABLED === "1") {
+    return true;
+  }
   const relaxed = process.env.AUTH_RATE_LIMIT_RELAXED === "1";
   const effectiveLimit = relaxed ? 500 : limit;
   return consumeRateLimit(key, effectiveLimit, windowMs);

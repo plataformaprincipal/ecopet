@@ -2,9 +2,25 @@
  * Testes de fundação: cadastro, login, sessão, proteção por role.
  * Usa e-mails únicos por execução — não é seed permanente.
  */
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import { generateValidCnpj } from "./cnpj-test-utils.mjs";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const rootEnv = path.resolve(__dirname, "..", ".env");
+if (!process.env.DATABASE_URL && fs.existsSync(rootEnv)) {
+  for (const line of fs.readFileSync(rootEnv, "utf8").split(/\r?\n/)) {
+    const m = line.match(/^DATABASE_URL=(.*)$/);
+    if (!m) continue;
+    process.env.DATABASE_URL = m[1].trim().replace(/^["']|["']$/g, "");
+    break;
+  }
+}
+
 const WEB = process.env.WEB_URL || "http://localhost:3000";
+const TEST_RUN_IP_BASE = `10.253.${Date.now() % 200}`;
+let reqSeq = 0;
 
 function assert(cond, msg) {
   if (!cond) throw new Error(msg);
@@ -14,10 +30,33 @@ function generateCnpj() {
   return generateValidCnpj(Date.now());
 }
 
+function nextTestIp() {
+  reqSeq += 1;
+  return `${TEST_RUN_IP_BASE}.${(reqSeq % 200) + 1}`;
+}
+
 const cookieJar = new Map();
 
+async function resetAuthRateLimit() {
+  try {
+    const res = await fetch(`${WEB}/api/auth/test/reset-rate-limit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{}",
+    });
+    if (res.ok) return true;
+  } catch {
+    /* servidor antigo sem endpoint — segue com IPs únicos */
+  }
+  return false;
+}
+
 async function req(path, opts = {}) {
-  const headers = { "Content-Type": "application/json", ...(opts.headers || {}) };
+  const headers = {
+    "Content-Type": "application/json",
+    "x-forwarded-for": opts.testIp ?? nextTestIp(),
+    ...(opts.headers || {}),
+  };
   const cookie = cookieJar.get("cookie");
   if (cookie) headers.Cookie = cookie;
 
@@ -27,12 +66,12 @@ async function req(path, opts = {}) {
   });
 
   const setCookie = res.headers.get("set-cookie");
-  if (setCookie) {
-    const session = setCookie.split(";")[0];
-    if (session.includes("=")) cookieJar.set("cookie", session);
-    if (setCookie.includes("Max-Age=0") || setCookie.includes("max-age=0")) {
-      cookieJar.delete("cookie");
-    }
+  const setCookies =
+    typeof res.headers.getSetCookie === "function" ? res.headers.getSetCookie() : setCookie ? [setCookie] : [];
+  for (const raw of setCookies) {
+    const session = raw.split(";")[0];
+    if (session.includes("ecopet-session=")) cookieJar.set("cookie", session);
+    if (raw.includes("Max-Age=0") || raw.includes("max-age=0")) cookieJar.delete("cookie");
   }
 
   const data = await res.json().catch(() => ({}));
@@ -61,6 +100,12 @@ function validationMessage(res) {
   if (typeof err === "string") return err;
   if (err && typeof err === "object" && err.message) return err.message;
   return "";
+}
+
+function responseMessage(res) {
+  const fromError = validationMessage(res);
+  if (fromError) return fromError;
+  return res.data?.data?.message ?? res.data?.message ?? "";
 }
 
 function isoDateDaysAgo(days) {
@@ -99,6 +144,9 @@ async function main() {
   assert(health.status === 200, "health deve retornar 200");
   assert(health.data.success === true, "health success");
   assert(health.data.data?.database === "connected", "database connected");
+
+  const rateReset = await resetAuthRateLimit();
+  console.log(rateReset ? "[rate-limit] reset OK" : "[rate-limit] reset indisponível — usando IPs únicos");
 
   // 2. E-mail inválido (sem @)
   const emailNoAt = await req("/api/auth/register", {
@@ -414,7 +462,7 @@ async function main() {
   });
   console.log("[register CLIENT]", client.status);
   assert(client.status === 201, "register client 201");
-  assert(client.data.data?.redirectTo === "/dashboard/client", "redirect client");
+  assert(client.data.data?.redirectTo === "/cliente", "redirect client");
 
   // 6. Duplicate email
   const dup = await req("/api/auth/register", {
@@ -500,8 +548,8 @@ async function main() {
   });
   assert(forgotEmailMissing.status === 200, "recuperação e-mail inexistente 200 genérico");
   assert(
-    validationMessage(forgotEmailMissing).includes("instruções de recuperação") ||
-      validationMessage(forgotEmailMissing).includes("recuperação"),
+    responseMessage(forgotEmailMissing).includes("instruções de recuperação") ||
+      responseMessage(forgotEmailMissing).includes("recuperação"),
     "mensagem genérica sem revelar existência"
   );
 
@@ -639,7 +687,7 @@ async function main() {
     }),
   });
   assert(partner.status === 201, "register partner 201");
-  assert(partner.data.data?.redirectTo === "/dashboard/partner", "redirect partner");
+  assert(partner.data.data?.redirectTo === "/partner", "redirect partner");
   assert(partner.data.data?.user?.accountStatus === "ACTIVE", "partner ACTIVE imediato");
   assert(!partner.data.data?.pendingApproval, "sem pendingApproval no cadastro");
 
@@ -653,7 +701,7 @@ async function main() {
     body: JSON.stringify({ email: partnerEmail, password }),
   });
   assert(partnerLogin.status === 200, "partner login imediato");
-  assert(partnerLogin.data.data?.redirectTo === "/dashboard/partner", "partner redirect login");
+  assert(partnerLogin.data.data?.redirectTo === "/partner", "partner redirect login");
   assert(partnerLogin.data.data?.user?.accountStatus === "ACTIVE", "partner ACTIVE no login");
 
   // 12. Duplicate CNPJ
@@ -702,7 +750,7 @@ async function main() {
   });
   assert(ong.status === 201, "register ong 201");
   assert(ong.data.data?.user?.accountStatus === "ACTIVE", "ong ACTIVE imediato");
-  assert(ong.data.data?.redirectTo === "/dashboard/ong", "redirect ong");
+  assert(ong.data.data?.redirectTo === "/ngo", "redirect ong");
 
   cookieJar.delete("cookie");
   const ongLogin = await req("/api/auth/login", {
@@ -710,7 +758,7 @@ async function main() {
     body: JSON.stringify({ email: ongEmail, password }),
   });
   assert(ongLogin.status === 200, "ong login imediato");
-  assert(ongLogin.data.data?.redirectTo === "/dashboard/ong", "ong redirect login");
+  assert(ongLogin.data.data?.redirectTo === "/ngo", "ong redirect login");
   assert(ongLogin.data.data?.user?.accountStatus === "ACTIVE", "ong ACTIVE no login");
 
   // 14. Logout
@@ -722,7 +770,11 @@ async function main() {
   console.log("\n✓ Todos os testes de fundação passaram.");
 }
 
-main().catch((e) => {
-  console.error("\n✗", e.message);
-  process.exit(1);
-});
+main()
+  .then(() => {
+    process.exitCode = 0;
+  })
+  .catch((e) => {
+    console.error("\n✗", e.message);
+    process.exitCode = 1;
+  });

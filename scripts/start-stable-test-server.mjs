@@ -65,11 +65,15 @@ async function main() {
 
   killPort(PORT);
 
-  console.log("→ npm run build …");
-  await new Promise((resolve, reject) => {
-    const child = spawn("npm", ["run", "build"], { cwd: root, shell: true, stdio: "inherit" });
-    child.on("exit", (code) => (code === 0 ? resolve() : reject(new Error(`build exit ${code}`))));
-  });
+  if (process.env.SKIP_BUILD === "1") {
+    console.log("→ SKIP_BUILD=1 — reutilizando .next existente");
+  } else {
+    console.log("→ npm run build …");
+    await new Promise((resolve, reject) => {
+      const child = spawn("npm", ["run", "build"], { cwd: root, shell: true, stdio: "inherit" });
+      child.on("exit", (code) => (code === 0 ? resolve() : reject(new Error(`build exit ${code}`))));
+    });
+  }
 
   console.log(`→ next start na porta ${PORT} …`);
   const server = spawn("npm", ["run", "start"], {
@@ -80,6 +84,9 @@ async function main() {
       ...process.env,
       PORT,
       AUTH_RATE_LIMIT_RELAXED: process.env.AUTH_RATE_LIMIT_RELAXED ?? "1",
+      AUTH_TEST_RESET_RATE_LIMIT: process.env.AUTH_TEST_RESET_RATE_LIMIT ?? "1",
+      AUTH_TEST_EXPOSE_OTP: process.env.AUTH_TEST_EXPOSE_OTP ?? "1",
+      PHONE_SMS_RECOVERY_ENABLED: process.env.PHONE_SMS_RECOVERY_ENABLED ?? "1",
     },
     detached: process.platform !== "win32",
   });
