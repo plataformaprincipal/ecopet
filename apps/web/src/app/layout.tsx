@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "@/styles/globals.css";
 import { ThemeProvider } from "@/providers/theme-provider";
@@ -8,14 +7,13 @@ import { AuthGateProvider } from "@/providers/auth-gate-provider";
 import { AuthTokenSync } from "@/providers/auth-token-sync";
 import { AccessibilityProvider } from "@/providers/accessibility-provider";
 import { SkipLink } from "@/components/shared/accessibility/skip-link";
-import { AccessibilityToolbarLazy } from "@/components/shared/accessibility/accessibility-toolbar-lazy";
+import { GlobalAccessibility } from "@/components/shared/accessibility/global-accessibility";
 import { I18nProvider } from "@/providers/i18n-provider";
 import { PreferencesSync } from "@/hooks/use-preferences-sync";
 import { AriaLiveProvider } from "@/components/shared/accessibility/aria-live-region";
 import { EcopetFooter } from "@/components/layouts/ecopet-footer";
 import { SupportChatProvider } from "@/providers/support-chat-provider";
 import { SupportChatPanelLazy } from "@/components/features/support/support-chat-panel-lazy";
-import { VLibrasWidget } from "@/components/accessibility/VLibrasWidget";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-jakarta", weight: ["500", "600", "700", "800"] });
@@ -80,28 +78,29 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <AriaLiveProvider>
                 <AuthSessionProvider>
                   <AuthGateProvider>
-                  <AuthTokenSync />
-                  <PreferencesSync />
-                  <SupportChatProvider>
-                    <SkipLink />
-                    <div className="flex min-h-screen flex-col">
-                      <div id="main-content" role="main" tabIndex={-1} className="flex-1 outline-none">
-                        {children}
+                    <AuthTokenSync />
+                    <PreferencesSync />
+                    <SupportChatProvider>
+                      <SkipLink />
+                      <div className="flex min-h-screen flex-col">
+                        <div id="main-content" role="main" tabIndex={-1} className="flex-1 outline-none">
+                          {children}
+                        </div>
+                        <EcopetFooter />
                       </div>
-                      <EcopetFooter />
-                    </div>
-                    <SupportChatPanelLazy />
-                    <AccessibilityToolbarLazy />
-                  </SupportChatProvider>
+                      <SupportChatPanelLazy />
+                    </SupportChatProvider>
                   </AuthGateProvider>
                 </AuthSessionProvider>
+                {/*
+                  Acessibilidade global — fora de AuthGate/SupportChat.
+                  Aparece em todas as rotas, antes e depois do login, sem depender de role.
+                */}
+                <GlobalAccessibility />
               </AriaLiveProvider>
             </I18nProvider>
           </AccessibilityProvider>
         </ThemeProvider>
-        <Suspense fallback={null}>
-          <VLibrasWidget />
-        </Suspense>
       </body>
     </html>
   );

@@ -50,6 +50,8 @@
     "test:foundation:orders": "node scripts/test-foundation-orders.mjs",
     "test:foundation:integrations": "node scripts/test-foundation-integrations.mjs",
     "test:foundation:navigation": "node scripts/test-foundation-navigation.mjs",
+    "test:accessibility": "node scripts/test-global-accessibility.mjs",
+    "test:foundation:accessibility": "node scripts/test-global-accessibility.mjs",
     "test:foundation:auth": "node scripts/test-foundation-auth.mjs",
     "test:foundation:auth:i18n": "node scripts/test-foundation-auth-i18n.mjs",
     "test:foundation:partner": "node scripts/test-foundation-partner.mjs",

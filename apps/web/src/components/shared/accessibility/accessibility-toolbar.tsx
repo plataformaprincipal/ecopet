@@ -137,8 +137,10 @@ export function AccessibilityToolbar() {
   return (
     <div
       className="a11y-toolbar-root bottom-28 left-4 lg:bottom-6"
+      style={{ paddingBottom: "max(0px, env(safe-area-inset-bottom))" }}
       role="region"
       aria-label={t("a11y.title")}
+      data-ecopet-a11y-root="true"
     >
       {open && !minimized && (
         <div
