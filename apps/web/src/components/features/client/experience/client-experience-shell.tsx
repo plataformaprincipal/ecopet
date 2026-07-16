@@ -47,7 +47,7 @@ export function ClientExperienceShell({ userName, primaryPet, children }: Props)
         <div className="flex min-h-0 flex-1">
           <main
             className={cn(
-              "min-w-0 flex-1 pb-24 lg:pb-6",
+              "min-w-0 flex-1 pb-[calc(4.75rem+env(safe-area-inset-bottom))] lg:pb-6",
               immersive ? "" : "mx-auto w-full max-w-5xl px-4 py-6"
             )}
           >
@@ -59,8 +59,8 @@ export function ClientExperienceShell({ userName, primaryPet, children }: Props)
 
       <ClientBottomNav />
 
-      {/* Floating actions (mobile) */}
-      <div className="fixed bottom-20 right-4 z-40 flex flex-col gap-2 lg:hidden">
+      {/* Floating actions above bottom nav (mobile) */}
+      <div className="fixed bottom-[calc(5.25rem+env(safe-area-inset-bottom))] right-4 z-40 flex flex-col gap-2 lg:hidden">
         <Link
           href="/client/eccopet"
           aria-label={t("clientArea.shell.assistant")}

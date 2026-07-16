@@ -12,30 +12,41 @@ import {
 export function PartnerBottomNav() {
   const pathname = usePathname();
   const { t } = useTranslation();
+  const items = PARTNER_EXPERIENCE_BOTTOM_NAV.slice(0, 5);
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 flex items-stretch justify-around border-t border-zinc-200/80 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/95 lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-200/80 bg-white/95 backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/95 lg:hidden"
       aria-label={t("partnerArea.area")}
     >
-      {PARTNER_EXPERIENCE_BOTTOM_NAV.map((item) => {
-        const active = isPartnerExperienceNavActive(pathname, item.href);
-        const Icon = item.icon;
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            aria-current={active ? "page" : undefined}
-            className={cn(
-              "flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors",
-              active ? "text-ecopet-green" : "text-zinc-500 dark:text-zinc-400"
-            )}
-          >
-            <Icon className="h-5 w-5" aria-hidden />
-            <span>{t(item.labelKey)}</span>
-          </Link>
-        );
-      })}
+      <div
+        className="mx-auto grid h-16 max-w-lg grid-cols-5 items-stretch px-1 pt-1 sm:h-[4.5rem]"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
+        {items.map((item) => {
+          const active = isPartnerExperienceNavActive(pathname, item.href);
+          const Icon = item.icon;
+          const label = t(item.labelKey);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={active ? "page" : undefined}
+              aria-label={label}
+              title={label}
+              className={cn(
+                "flex min-w-0 flex-col items-center justify-center gap-0.5 px-0.5",
+                "text-[11px] font-semibold leading-none whitespace-nowrap overflow-hidden",
+                "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ecopet-green",
+                active ? "text-ecopet-green" : "text-zinc-500 dark:text-zinc-400"
+              )}
+            >
+              <Icon className="h-5 w-5 shrink-0 sm:h-6 sm:w-6" aria-hidden />
+              <span className="max-w-full truncate px-0.5">{label}</span>
+            </Link>
+          );
+        })}
+      </div>
     </nav>
   );
 }

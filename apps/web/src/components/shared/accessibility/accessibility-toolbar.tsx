@@ -136,7 +136,7 @@ export function AccessibilityToolbar() {
 
   return (
     <div
-      className="a11y-toolbar-root bottom-24 left-4 lg:bottom-6"
+      className="a11y-toolbar-root bottom-28 left-4 lg:bottom-6"
       role="region"
       aria-label={t("a11y.title")}
     >

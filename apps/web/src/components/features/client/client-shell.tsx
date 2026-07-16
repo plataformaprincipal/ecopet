@@ -25,7 +25,8 @@ export function ClientShell({ userName, children }: ClientShellProps) {
         </div>
         <main
           className={cn(
-            "mx-auto w-full max-w-6xl flex-1 px-4 py-6 pb-28 sm:px-6 lg:px-8 lg:pb-8",
+            "mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 lg:px-8",
+            "pb-[calc(4.75rem+env(safe-area-inset-bottom))] lg:pb-8",
             "animate-in fade-in duration-300"
           )}
         >
