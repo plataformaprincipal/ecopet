@@ -87,6 +87,40 @@ export function AdminIntegracoesPanel() {
   const [erpFeedback, setErpFeedback] = useState<string | null>(null);
   const [erpLoadingId, setErpLoadingId] = useState<string | null>(null);
 
+  type MpDiag = {
+    status: string;
+    environment: string;
+    testMode: boolean;
+    api: string;
+    publicKeyConfigured: boolean;
+    accessTokenConfigured: boolean;
+    webhookSecretConfigured: boolean;
+    webhookPath: string;
+    webhookFutureUrl: string;
+    sanitizedMessage?: string;
+    counts: {
+      total: number;
+      approved: number;
+      pending: number;
+      rejected: number;
+      cancelled: number;
+      refunded: number;
+    };
+    lastWebhook?: {
+      eventType: string;
+      status: string;
+      receivedAt: string;
+      failureReason?: string | null;
+    } | null;
+    lastSuccessAt?: string | null;
+    lastErrorSanitized?: string | null;
+    latencyMs?: number | null;
+    errorRate?: number | null;
+    probe?: { ok: boolean; code: string; message: string; charged: false };
+  };
+  const [mpDiag, setMpDiag] = useState<MpDiag | null>(null);
+  const [mpDiagBusy, setMpDiagBusy] = useState(false);
+
   const loadStatuses = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -140,10 +174,27 @@ export function AdminIntegracoesPanel() {
     }
   }, []);
 
+  const loadMpDiagnostics = useCallback(async (probe = false) => {
+    setMpDiagBusy(true);
+    try {
+      const res = await fetch(
+        `/api/admin/integrations/mercado-pago/diagnostics${probe ? "?probe=1" : ""}`,
+        { credentials: "include", cache: "no-store" }
+      );
+      const json = await res.json();
+      if (res.ok && json.success) setMpDiag(json.data as MpDiag);
+    } catch {
+      /* ignore */
+    } finally {
+      setMpDiagBusy(false);
+    }
+  }, []);
+
   useEffect(() => {
     void loadStatuses();
     void loadErpRows();
-  }, [loadStatuses, loadErpRows]);
+    void loadMpDiagnostics(false);
+  }, [loadStatuses, loadErpRows, loadMpDiagnostics]);
 
   const sendResendTestEmail = async () => {
     setTestEmailBusy(true);
@@ -349,6 +400,68 @@ export function AdminIntegracoesPanel() {
                     >
                       {testingId === item.provider ? "Testando…" : "Testar config"}
                     </Button>
+                  ) : null}
+
+                  {item.provider === "mercado_pago" ? (
+                    <div className="space-y-2 border-t border-zinc-100 pt-3 dark:border-white/10">
+                      <p className="text-xs font-medium text-muted-foreground">
+                        Diagnóstico API Orders (sem cobrança)
+                      </p>
+                      {mpDiag ? (
+                        <ul className="space-y-1 text-[11px] text-muted-foreground">
+                          <li>
+                            Ambiente: {mpDiag.environment} · API: {mpDiag.api} ·{" "}
+                            {mpDiag.testMode ? "TEST" : "LIVE"}
+                          </li>
+                          <li>
+                            Public Key: {mpDiag.publicKeyConfigured ? "sim" : "não"} · Access Token:{" "}
+                            {mpDiag.accessTokenConfigured ? "sim" : "não"} · Webhook secret:{" "}
+                            {mpDiag.webhookSecretConfigured ? "sim" : "pendente"}
+                          </li>
+                          <li>
+                            Pagamentos: {mpDiag.counts.total} · aprovados {mpDiag.counts.approved} ·
+                            pendentes {mpDiag.counts.pending} · rejeitados {mpDiag.counts.rejected} ·
+                            cancelados {mpDiag.counts.cancelled} · estornos {mpDiag.counts.refunded}
+                          </li>
+                          <li>
+                            Último webhook:{" "}
+                            {mpDiag.lastWebhook
+                              ? `${mpDiag.lastWebhook.eventType} (${mpDiag.lastWebhook.status})`
+                              : "nenhum"}
+                          </li>
+                          <li>Último sucesso: {mpDiag.lastSuccessAt ?? "—"}</li>
+                          <li>Último erro: {mpDiag.lastErrorSanitized ?? "—"}</li>
+                          {mpDiag.latencyMs != null ? <li>Latência probe: {mpDiag.latencyMs}ms</li> : null}
+                          {mpDiag.probe ? (
+                            <li>
+                              Probe: {mpDiag.probe.code} — {mpDiag.probe.message}
+                            </li>
+                          ) : null}
+                          <li className="font-mono">Webhook: {mpDiag.webhookFutureUrl}</li>
+                          {mpDiag.sanitizedMessage ? <li>{mpDiag.sanitizedMessage}</li> : null}
+                        </ul>
+                      ) : (
+                        <p className="text-[11px] text-muted-foreground">Carregue o diagnóstico.</p>
+                      )}
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={mpDiagBusy}
+                          onClick={() => void loadMpDiagnostics(false)}
+                        >
+                          {mpDiagBusy ? "…" : "Atualizar diag."}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          disabled={mpDiagBusy || !item.configured}
+                          onClick={() => void loadMpDiagnostics(true)}
+                        >
+                          Probe API (sem cobrança)
+                        </Button>
+                      </div>
+                    </div>
                   ) : null}
 
                   {item.provider === "resend" && item.configured ? (

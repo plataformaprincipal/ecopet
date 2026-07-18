@@ -30,11 +30,60 @@ const handlers: Partial<Record<JobType, (job: JobRecord) => Promise<void>>> = {
     });
   },
   PROCESS_PAYMENT_WEBHOOK: async (job) => {
+    const payload = job.payload as {
+      webhookEventId?: string;
+      provider?: string;
+    };
+    const webhookEventId = String(payload.webhookEventId ?? "");
+    const provider = String(payload.provider ?? "");
+
+    // Mercado Pago: processamento canônico é síncrono em /api/webhooks/mercado-pago
+    // (consulta API Orders). Job permanece para auditoria / reprocesso legado.
+    if (provider === "mercado-pago" || provider === "mercado_pago") {
+      const { prisma } = await import("@/lib/prisma");
+      const event = webhookEventId
+        ? await prisma.webhookEvent.findUnique({ where: { id: webhookEventId } })
+        : null;
+      if (event?.status === "PENDING" && event.externalId) {
+        const { getMercadoPagoOrder } = await import("@/lib/mercado-pago/client");
+        const { mapMpOrderStatusToInternal } = await import("@/lib/mercado-pago/status");
+        const { applyInternalPaymentStatus } = await import(
+          "@/lib/mercado-pago/apply-payment-status"
+        );
+        const remote = await getMercadoPagoOrder(event.externalId);
+        if (remote.ok) {
+          const payment = await prisma.payment.findFirst({
+            where: {
+              provider: "mercado_pago",
+              OR: [{ providerOrderId: remote.data.id }, { externalId: remote.data.id }],
+            },
+          });
+          if (payment) {
+            await applyInternalPaymentStatus({
+              paymentId: payment.id,
+              internalStatus: mapMpOrderStatusToInternal(
+                remote.data.status,
+                remote.data.status_detail
+              ),
+              statusDetail: remote.data.status_detail,
+              providerOrderId: remote.data.id,
+              providerPaymentId: remote.data.transactions?.payments?.[0]?.id ?? null,
+              source: "webhook",
+            });
+          }
+          await prisma.webhookEvent.update({
+            where: { id: event.id },
+            data: { status: "PROCESSED", processedAt: new Date() },
+          });
+        }
+      }
+    }
+
     await writeAuditLog({
       action: "SYNC",
       module: "platform.webhooks",
       resource: "WebhookEvent",
-      resourceId: String((job.payload as { webhookEventId?: string }).webhookEventId ?? job.id),
+      resourceId: webhookEventId || job.id,
       observation: "Webhook de pagamento processado",
     });
   },

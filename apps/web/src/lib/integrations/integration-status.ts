@@ -22,6 +22,7 @@ import {
   INTEGRATION_ERROR_CODES,
 } from "@/lib/integrations/integration-errors";
 import { getResendOperationalStatus } from "@/lib/email/resend-status";
+import { getMercadoPagoSanitizedStatus } from "@/lib/mercado-pago/config";
 
 export type IntegrationState =
   | "NOT_CONFIGURED"
@@ -34,7 +35,13 @@ export type IntegrationState =
   | "DOMAIN_PENDING"
   /** Resend — domínio verificado e operacional */
   | "ACTIVE"
-  | "ERROR";
+  | "ERROR"
+  /** Mercado Pago — ambiente TEST pronto */
+  | "TEST_READY"
+  /** Mercado Pago — webhook ainda não cadastrado */
+  | "WEBHOOK_PENDING"
+  | "AUTH_ERROR"
+  | "WEBHOOK_ERROR";
 
 export type IntegrationStatus = {
   provider: string;
@@ -146,6 +153,22 @@ export function getIntegrationStatus(
       missingVariables: resend.missingVariables,
       lastCheckedAt: resend.lastCheckedAt,
       sanitizedError: resend.sanitizedMessage,
+      capabilities: def.capabilities,
+    };
+  }
+
+  if (def.id === "mercado_pago") {
+    const mp = getMercadoPagoSanitizedStatus(source as NodeJS.ProcessEnv);
+    const missingVariables = missingForProvider(def, source);
+    return {
+      provider: def.id,
+      displayName: def.name,
+      configured: mp.configured,
+      available: mp.configured && mp.publicKeyConfigured,
+      status: mp.status as IntegrationState,
+      missingVariables,
+      lastCheckedAt,
+      sanitizedError: mp.sanitizedMessage,
       capabilities: def.capabilities,
     };
   }

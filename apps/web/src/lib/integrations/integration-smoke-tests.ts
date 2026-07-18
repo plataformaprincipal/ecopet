@@ -342,9 +342,19 @@ export async function smokeTestPayment(
         if (!hasRealEnv("MERCADO_PAGO_ACCESS_TOKEN")) {
           return notConfigured(id, ["MERCADO_PAGO_ACCESS_TOKEN"]);
         }
+        const pk =
+          readEnv("NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY") || readEnv("MERCADO_PAGO_PUBLIC_KEY");
+        if (!pk) {
+          return failResult(
+            id,
+            "INVALID_CONFIG",
+            "Public Key ausente (NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY).",
+            "config_validation"
+          );
+        }
         return okResult(
           id,
-          "Mercado Pago configurado (validação de env; cobrança não executada).",
+          "Mercado Pago API Orders configurado (env; cobrança não executada).",
           "config_validation"
         );
       }

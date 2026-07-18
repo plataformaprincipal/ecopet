@@ -54,7 +54,7 @@
 | Twilio         | N/A      | Sim     | logs  | Twilio   | SMS_NOT_CONFIGURED / SKIPPED | Sim | admin smoke / recovery SMS | PRONTO PARA CREDENCIAL |
 | TalkJS         | Sim      | Sim     | Conversation | TalkJS | mensagem indisponível | Sim | foundation:talkjs 9/9     | FUNCIONAL LOCAL*     |
 | Cloudinary     | Upload UI| Sim     | UploadAsset | Cloudinary / local_dev | bloqueio prod / fallback dev | Sim | admin smoke              | PRONTO PARA CREDENCIAL |
-| Mercado Pago   | Admin    | Adapter | Payment | MP     | PENDING_CONFIRMATION | Sim          | admin payment smoke           | PRONTO PARA CREDENCIAL |
+| Mercado Pago   | Checkout transparente | API Orders (`/v1/orders`) | Payment/WebhookEvent | MP TEST | COD + pedido pendente | Sim (teste) | `test:mercado-pago` / admin diagnostics | TEST_READY — webhook/prod/split pendentes (ver `docs/mercado-pago.md`) |
 | Stripe         | Admin    | Adapter | Payment | Stripe | PENDING_CONFIRMATION | Sim          | admin payment smoke           | PRONTO PARA CREDENCIAL |
 | Push (VAPID)   | Prefs    | Stub    | Dispatch| —      | SKIPPED_NOT_CONFIGURED | Parcial     | channel status                | PARCIAL / OCULTO COM SEGURANÇA |
 | Supabase DB    | —        | Sim     | Prisma  | PG     | N/A       | Sim               | health / auth                 | FUNCIONAL LOCAL      |

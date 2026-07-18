@@ -74,10 +74,14 @@ export const INTEGRATION_PROVIDER_REGISTRY: readonly IntegrationProviderDefiniti
   {
     id: "mercado_pago",
     name: "Mercado Pago",
-    requiredEnvVars: ["MERCADO_PAGO_ACCESS_TOKEN"],
-    optionalEnvVars: ["MERCADO_PAGO_PUBLIC_KEY", "MERCADO_PAGO_WEBHOOK_SECRET"],
+    requiredEnvVars: ["MERCADO_PAGO_ACCESS_TOKEN", "NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY"],
+    optionalEnvVars: [
+      "MERCADO_PAGO_PUBLIC_KEY",
+      "MERCADO_PAGO_ENVIRONMENT",
+      "MERCADO_PAGO_WEBHOOK_SECRET",
+    ],
     category: "payment",
-    capabilities: ["checkout", "pix", "webhooks"],
+    capabilities: ["checkout_transparent", "api_orders", "pix", "card", "boleto", "webhooks"],
   },
   {
     id: "stripe",

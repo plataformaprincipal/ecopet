@@ -1,19 +1,19 @@
-# Mercado Pago
+# Mercado Pago (resumo)
+
+Documentação completa: [docs/mercado-pago.md](../mercado-pago.md)
 
 ## Variáveis
 ```
 PAYMENT_PROVIDER=none
 MERCADO_PAGO_ACCESS_TOKEN=
-MERCADO_PAGO_PUBLIC_KEY=
+NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY=
+MERCADO_PAGO_ENVIRONMENT=test
 MERCADO_PAGO_WEBHOOK_SECRET=
 ```
 
-## Sem chave / `PAYMENT_PROVIDER=none|manual`
-- Pedidos ficam pendentes
-- **Não** marcar pago
-- UI não deve prometer PIX/cartão ativo
+## Fluxo
+Checkout Transparente via **API Orders** (`/v1/orders`).  
+Webhook: `/api/webhooks/mercado-pago` (cadastro pendente até domínio).
 
-## Ativação
-1. `PAYMENT_PROVIDER=mercado_pago` + tokens
-2. Configurar webhook
-3. Smoke admin payment test
+## Split
+Não implementado. Apenas metadados estimados por parceiro.

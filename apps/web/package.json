@@ -19,6 +19,7 @@
     "test:registration:rules": "node --import tsx --test src/lib/registration/collect-step-errors.test.ts",
     "test:vlibras": "node --import tsx --test src/lib/accessibility/vlibras-load-outcome.test.ts",
     "test:email": "tsx --tsconfig tsconfig.json --test src/lib/email/email-enterprise.test.ts",
+    "test:mercado-pago": "tsx --tsconfig tsconfig.json --test src/lib/mercado-pago/mercado-pago.test.ts",
     "test:social:permissions": "node --import tsx --test src/lib/social/persona-permissions.test.ts",
     "test:talkjs": "node --import tsx --test src/lib/talkjs/server.test.ts",
     "test:ai": "node --import tsx --test ../../scripts/test-foundation-ai.mjs"
@@ -51,6 +52,7 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "resend": "^6.14.0",
+    "server-only": "^0.0.1",
     "tailwind-merge": "^3.3.0",
     "talkjs": "^0.46.0",
     "twilio": "^6.0.2",

@@ -6,8 +6,10 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { MercadoPagoCheckout } from "@/components/features/marketplace/mercado-pago-checkout";
 
 type PaymentMethod = "PIX" | "CARD" | "CASH";
+type PayMode = "delivery" | "online";
 
 const PAYMENT_OPTIONS: { value: PaymentMethod; label: string; hint: string }[] = [
   { value: "PIX", label: "PIX", hint: "Pagamento via PIX no momento da entrega ou retirada." },
@@ -20,6 +22,13 @@ export function CheckoutPanel() {
   const [cart, setCart] = useState<Record<string, unknown> | null>(null);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [mpAvailable, setMpAvailable] = useState(false);
+  const [payMode, setPayMode] = useState<PayMode>("delivery");
+  const [pendingOrder, setPendingOrder] = useState<{
+    id: string;
+    total: number;
+  } | null>(null);
+  const [payerEmail, setPayerEmail] = useState("");
   const [form, setForm] = useState({
     deliveryMethod: "PICKUP_LOCAL",
     paymentMethod: "PIX" as PaymentMethod,
@@ -38,6 +47,19 @@ export function CheckoutPanel() {
       .then((d) => {
         if (d.success) setCart(d.data.cart);
       });
+    fetch("/api/auth/me", { credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => {
+        const email = d?.data?.user?.email ?? d?.user?.email;
+        if (typeof email === "string") setPayerEmail(email);
+      })
+      .catch(() => undefined);
+    fetch("/api/checkout/mercado-pago/config", { credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success && d.data?.publicKey) setMpAvailable(true);
+      })
+      .catch(() => undefined);
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -68,7 +90,34 @@ export function CheckoutPanel() {
       setError(data.error?.message ?? "Erro ao finalizar pedido.");
       return;
     }
-    router.push(`/checkout/sucesso/${data.data.order.id}`);
+
+    const order = data.data.order as { id: string; total: number };
+    if (payMode === "online" && mpAvailable) {
+      setPendingOrder({ id: order.id, total: Number(order.total) });
+      return;
+    }
+    router.push(`/checkout/sucesso/${order.id}`);
+  }
+
+  if (pendingOrder) {
+    return (
+      <div className="mx-auto max-w-lg space-y-4">
+        <p className="text-sm text-muted-foreground">
+          Pedido criado. Conclua o pagamento online com segurança.
+        </p>
+        <MercadoPagoCheckout
+          orderId={pendingOrder.id}
+          amount={pendingOrder.total}
+          payerEmail={payerEmail || "cliente@testuser.com"}
+          onPaid={(result) => {
+            router.push(
+              `/checkout/sucesso/${pendingOrder.id}?payment=${result.paymentId}&status=${result.status}`
+            );
+          }}
+          onCancel={() => router.push(`/checkout/sucesso/${pendingOrder.id}`)}
+        />
+      </div>
+    );
   }
 
   if (!cart) return <p className="text-sm">Carregando...</p>;
@@ -76,7 +125,10 @@ export function CheckoutPanel() {
   if (items.length === 0) {
     return (
       <p className="rounded border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
-        Carrinho vazio. <Link href="/produtos" className="underline">Ver produtos</Link>
+        Carrinho vazio.{" "}
+        <Link href="/produtos" className="underline">
+          Ver produtos
+        </Link>
       </p>
     );
   }
@@ -84,7 +136,9 @@ export function CheckoutPanel() {
     return (
       <p className="text-sm text-red-600">
         Remova itens de outras lojas — apenas um parceiro por pedido.{" "}
-        <Link href="/carrinho" className="underline">Voltar ao carrinho</Link>
+        <Link href="/carrinho" className="underline">
+          Voltar ao carrinho
+        </Link>
       </p>
     );
   }
@@ -98,7 +152,8 @@ export function CheckoutPanel() {
           <h2 className="font-medium">Resumo do pedido</h2>
           {items.map((item) => (
             <p key={String(item.id)} className="text-sm">
-              {String(item.name)} · {Number(item.quantity)}x · R$ {Number(item.unitPrice).toFixed(2)}
+              {String(item.name)} · {Number(item.quantity)}x · R${" "}
+              {Number(item.unitPrice).toFixed(2)}
             </p>
           ))}
           <p className="font-medium">Subtotal: R$ {Number(cart.subtotal).toFixed(2)}</p>
@@ -123,34 +178,79 @@ export function CheckoutPanel() {
               </select>
             </div>
 
-            <fieldset>
-              <legend className="mb-2 text-sm font-medium">Pagamento na entrega ou retirada</legend>
-              <p id={paymentHintId} className="mb-2 text-xs text-muted-foreground">
-                O pagamento não é cobrado agora. Você escolhe como pagar quando receber o pedido ou o serviço.
-              </p>
-              <div className="flex flex-col gap-2" role="radiogroup" aria-describedby={paymentHintId}>
-                {PAYMENT_OPTIONS.map((opt) => (
-                  <label
-                    key={opt.value}
-                    className="flex cursor-pointer items-start gap-2 rounded border px-3 py-2 text-sm has-[:checked]:border-primary"
-                  >
+            {mpAvailable ? (
+              <fieldset>
+                <legend className="mb-2 text-sm font-medium">Quando pagar</legend>
+                <div className="flex flex-col gap-2">
+                  <label className="flex cursor-pointer items-start gap-2 rounded border px-3 py-2 text-sm has-[:checked]:border-primary">
                     <input
                       type="radio"
-                      name="paymentMethod"
-                      value={opt.value}
-                      checked={form.paymentMethod === opt.value}
-                      onChange={() => setForm({ ...form, paymentMethod: opt.value })}
-                      required
+                      name="payMode"
+                      checked={payMode === "delivery"}
+                      onChange={() => setPayMode("delivery")}
                       className="mt-1"
                     />
                     <span>
-                      <span className="font-medium">{opt.label}</span>
-                      <span className="block text-xs text-muted-foreground">{opt.hint}</span>
+                      <span className="font-medium">Na entrega ou retirada</span>
+                      <span className="block text-xs text-muted-foreground">
+                        Sem cobrança online agora.
+                      </span>
                     </span>
                   </label>
-                ))}
-              </div>
-            </fieldset>
+                  <label className="flex cursor-pointer items-start gap-2 rounded border px-3 py-2 text-sm has-[:checked]:border-primary">
+                    <input
+                      type="radio"
+                      name="payMode"
+                      checked={payMode === "online"}
+                      onChange={() => setPayMode("online")}
+                      className="mt-1"
+                    />
+                    <span>
+                      <span className="font-medium">Pagar agora (Mercado Pago)</span>
+                      <span className="block text-xs text-muted-foreground">
+                        Checkout transparente · ambiente de teste · cartão / PIX / boleto.
+                      </span>
+                    </span>
+                  </label>
+                </div>
+              </fieldset>
+            ) : null}
+
+            {payMode === "delivery" ? (
+              <fieldset>
+                <legend className="mb-2 text-sm font-medium">Pagamento na entrega ou retirada</legend>
+                <p id={paymentHintId} className="mb-2 text-xs text-muted-foreground">
+                  O pagamento não é cobrado agora. Você escolhe como pagar quando receber o pedido.
+                </p>
+                <div className="flex flex-col gap-2" role="radiogroup" aria-describedby={paymentHintId}>
+                  {PAYMENT_OPTIONS.map((opt) => (
+                    <label
+                      key={opt.value}
+                      className="flex cursor-pointer items-start gap-2 rounded border px-3 py-2 text-sm has-[:checked]:border-primary"
+                    >
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value={opt.value}
+                        checked={form.paymentMethod === opt.value}
+                        onChange={() => setForm({ ...form, paymentMethod: opt.value })}
+                        required
+                        className="mt-1"
+                      />
+                      <span>
+                        <span className="font-medium">{opt.label}</span>
+                        <span className="block text-xs text-muted-foreground">{opt.hint}</span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Após confirmar o pedido, você será direcionado ao checkout seguro do Mercado Pago.
+                Valores são recalculados no servidor.
+              </p>
+            )}
 
             <div>
               <label htmlFor="checkout-phone" className="mb-1 block text-sm font-medium">
@@ -261,7 +361,11 @@ export function CheckoutPanel() {
             )}
 
             <Button type="submit" disabled={saving} aria-describedby={error ? "checkout-error" : undefined}>
-              {saving ? "Processando..." : "Confirmar pedido"}
+              {saving
+                ? "Processando..."
+                : payMode === "online"
+                  ? "Criar pedido e pagar"
+                  : "Confirmar pedido"}
             </Button>
             <Button asChild variant="ghost">
               <Link href="/carrinho">Voltar</Link>

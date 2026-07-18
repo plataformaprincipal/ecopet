@@ -2165,24 +2165,40 @@ model PlatformIntegrationLog {
   @@index([status, createdAt])
 }
 
-/// Pagamentos reais — nunca marcar SUCCEEDED sem webhook do provedor
+/// Pagamentos reais — nunca marcar pago sem confirmação server-side (API/webhook)
 model Payment {
-  id         String   @id @default(cuid())
-  orderId    String
-  provider   String
-  externalId String?
-  amount     Float
-  currency   String   @default("BRL")
-  status     String   @default("PENDING")
-  metadata   Json?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  events     PaymentEvent[]
+  id                String    @id @default(cuid())
+  orderId           String
+  userId            String?
+  partnerId         String?
+  provider          String
+  environment       String    @default("test")
+  externalId        String?
+  providerOrderId   String?
+  providerPaymentId String?
+  externalReference String?
+  idempotencyKey    String?   @unique
+  paymentMethod     String?
+  amount            Float
+  currency          String    @default("BRL")
+  status            String    @default("PENDING")
+  statusDetail      String?
+  metadata          Json?
+  approvedAt        DateTime?
+  cancelledAt       DateTime?
+  refundedAt        DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  order             Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  events            PaymentEvent[]
 
   @@index([orderId])
+  @@index([userId])
+  @@index([partnerId])
   @@index([provider, status])
   @@index([externalId])
+  @@index([providerOrderId])
+  @@index([externalReference])
 }
 
 model PaymentEvent {
@@ -4008,21 +4024,25 @@ enum InternalTaskStatus {
 }
 
 model WebhookEvent {
-  id           String             @id @default(cuid())
-  provider     String
-  eventType    String
-  externalId   String?
-  payload      Json
-  status       WebhookEventStatus @default(PENDING)
-  processedAt  DateTime?
-  errorMessage String?
-  idempotencyKey String?          @unique
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
+  id             String             @id @default(cuid())
+  provider       String
+  eventType      String
+  externalId     String?
+  payload        Json
+  payloadHash    String?
+  status         WebhookEventStatus @default(PENDING)
+  processedAt    DateTime?
+  errorMessage   String?
+  failureReason  String?
+  attemptCount   Int                @default(0)
+  idempotencyKey String?            @unique
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
 
   @@index([provider, createdAt])
   @@index([status, createdAt])
   @@index([externalId])
+  @@index([payloadHash])
 }
 
 model SystemEvent {

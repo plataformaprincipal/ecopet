@@ -120,15 +120,29 @@ export const INTEGRATION_DEFINITIONS: IntegrationDefinition[] = [
     name: "mercado_pago",
     provider: "Mercado Pago",
     category: "payment",
-    requiredEnvVars: ["MERCADO_PAGO_ACCESS_TOKEN"],
+    requiredEnvVars: ["MERCADO_PAGO_ACCESS_TOKEN", "NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY"],
     canRunInProduction: true,
     canRunInDevelopment: true,
-    resolveStatus: (env = process.env) => (isMercadoPagoConfigured(env) ? "PARTIAL" : "NOT_CONFIGURED"),
-    resolveMessage: (env = process.env) =>
-      isMercadoPagoConfigured(env)
-        ? "Credenciais presentes — gateway real pendente (Etapa 9B)."
-        : "Mercado Pago não configurado.",
-    recommendedAction: "Defina MERCADO_PAGO_ACCESS_TOKEN e implemente webhook.",
+    resolveStatus: (env = process.env) => {
+      if (!isMercadoPagoConfigured(env)) return "NOT_CONFIGURED";
+      const pk =
+        env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY?.trim() || env.MERCADO_PAGO_PUBLIC_KEY?.trim();
+      if (!pk) return "PARTIAL";
+      if (!env.MERCADO_PAGO_WEBHOOK_SECRET?.trim()) return "PARTIAL";
+      return "ACTIVE";
+    },
+    resolveMessage: (env = process.env) => {
+      if (!isMercadoPagoConfigured(env)) return "Mercado Pago não configurado.";
+      const pk =
+        env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY?.trim() || env.MERCADO_PAGO_PUBLIC_KEY?.trim();
+      if (!pk) return "Access Token OK — Public Key ausente (checkout transparente incompleto).";
+      if (!env.MERCADO_PAGO_WEBHOOK_SECRET?.trim()) {
+        return "TEST/API Orders pronto — webhook secret pendente de cadastro.";
+      }
+      return "Mercado Pago Checkout Transparente (API Orders) configurado.";
+    },
+    recommendedAction:
+      "Configure MERCADO_PAGO_* + NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY; cadastre webhook em produção.",
   },
   {
     name: "pagarme",
