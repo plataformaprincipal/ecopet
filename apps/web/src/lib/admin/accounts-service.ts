@@ -8,8 +8,16 @@ import {
 } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { writeAuditLog } from "@/lib/audit-log";
-import { sendTransactionalEmail } from "@/lib/mail/transactional";
 import { emitPlatformEvent, PLATFORM_EVENTS } from "@/lib/events/event-bus";
+import { getAppUrl } from "@/lib/mail/config";
+import { dispatchPremiumEmail } from "@/lib/mail/event-dispatch";
+import {
+  renderOngApprovedEmail,
+  renderOngRejectedEmail,
+  renderPartnerApprovedEmail,
+  renderPartnerRejectedEmail,
+  renderNotificationEmail,
+} from "@/lib/email/templates";
 
 const partnerSelect = {
   id: true,
@@ -249,12 +257,28 @@ export async function reviewAccount(params: {
     });
 
     const approveEvent = target.role === UserRole.PARTNER ? "PARTNER_APPROVED" : "ONG_APPROVED";
-    await sendTransactionalEmail({
+    const appUrl = getAppUrl();
+    const approveTpl =
+      target.role === UserRole.PARTNER
+        ? renderPartnerApprovedEmail({
+            locale: "pt-BR",
+            appUrl,
+            name: target.name,
+            dashboardUrl: `${appUrl}/parceiro`,
+          })
+        : renderOngApprovedEmail({
+            locale: "pt-BR",
+            appUrl,
+            name: target.name,
+            dashboardUrl: `${appUrl}/ong`,
+          });
+    await dispatchPremiumEmail({
       event: approveEvent,
       to: target.email,
-      subject: "Conta aprovada — EcoPet",
-      text: `Olá ${target.name}, sua conta foi aprovada.`,
-      html: `<p>Olá <strong>${target.name}</strong>, sua conta foi <strong>aprovada</strong>.</p>`,
+      subject: approveTpl.subject,
+      text: approveTpl.text,
+      html: approveTpl.html,
+      logPrefix: `[admin:${approveEvent}]`,
     });
 
     await emitPlatformEvent({
@@ -335,12 +359,27 @@ export async function reviewAccount(params: {
     });
 
     const rejectEvent = target.role === UserRole.PARTNER ? "PARTNER_REJECTED" : "ONG_REJECTED";
-    await sendTransactionalEmail({
+    const rejectTpl =
+      target.role === UserRole.PARTNER
+        ? renderPartnerRejectedEmail({
+            locale: "pt-BR",
+            appUrl: getAppUrl(),
+            name: target.name,
+            reason: params.reason!.trim(),
+          })
+        : renderOngRejectedEmail({
+            locale: "pt-BR",
+            appUrl: getAppUrl(),
+            name: target.name,
+            reason: params.reason!.trim(),
+          });
+    await dispatchPremiumEmail({
       event: rejectEvent,
       to: target.email,
-      subject: "Conta não aprovada — EcoPet",
-      text: `Olá ${target.name}, sua solicitação não foi aprovada. Motivo: ${params.reason!.trim()}`,
-      html: `<p>Olá <strong>${target.name}</strong>, sua solicitação não foi aprovada.</p><p>Motivo: ${params.reason!.trim()}</p>`,
+      subject: rejectTpl.subject,
+      text: rejectTpl.text,
+      html: rejectTpl.html,
+      logPrefix: `[admin:${rejectEvent}]`,
     });
 
     return { accountStatus: AccountStatus.REJECTED };
@@ -403,12 +442,20 @@ export async function reviewAccount(params: {
   });
 
   const suspendEvent = target.role === UserRole.PARTNER ? "PARTNER_SUSPENDED" : "ONG_SUSPENDED";
-  await sendTransactionalEmail({
+  const suspendTpl = renderNotificationEmail({
+    locale: "pt-BR",
+    appUrl: getAppUrl(),
+    title: "Conta suspensa",
+    message: `Olá ${target.name}, sua conta foi suspensa. ${params.reason?.trim() || "Entre em contato com o suporte."}`,
+    actionUrl: `${getAppUrl()}/conta/suspensa`,
+  });
+  await dispatchPremiumEmail({
     event: suspendEvent,
     to: target.email,
-    subject: "Conta suspensa — EcoPet",
-    text: `Olá ${target.name}, sua conta foi suspensa.`,
-    html: `<p>Olá <strong>${target.name}</strong>, sua conta foi <strong>suspensa</strong>.</p>`,
+    subject: suspendTpl.subject,
+    text: suspendTpl.text,
+    html: suspendTpl.html,
+    logPrefix: `[admin:${suspendEvent}]`,
   });
 
   return { accountStatus: AccountStatus.SUSPENDED };

@@ -30,4 +30,18 @@ export {
   renderNotificationEmail,
   renderEmailTemplate,
 } from "@/lib/email/templates/render";
+export {
+  renderPartnerApprovedEmail,
+  renderPartnerRejectedEmail,
+  renderOngApprovedEmail,
+  renderOngRejectedEmail,
+  renderOrderUpdatedEmail,
+  renderOrderShippedEmail,
+  renderQuoteAvailableEmail,
+  renderPurchaseConfirmationEmail,
+  renderContactEmail,
+  renderSupportEmail,
+  renderAdminNotificationEmail,
+  renderTestEmail,
+} from "@/lib/email/templates/enterprise";
 export type { EmailTemplateResult, EmailTemplateName } from "@/lib/email/templates/types";

@@ -27,6 +27,7 @@
     "mail:up": "node scripts/start-maildev.mjs",
     "mail:up:docker": "docker compose up -d mailpit",
     "test:mail": "node scripts/sync-web-env.mjs && node scripts/test-mail.mjs",
+    "test:email": "tsx --tsconfig apps/web/tsconfig.json --test apps/web/src/lib/email/email-enterprise.test.ts",
     "setup:smtp": "node scripts/setup-smtp.mjs",
     "setup:smtp:gmail": "node scripts/setup-smtp.mjs --help-gmail",
     "validate:gmail": "node scripts/validate-gmail-smtp.mjs",

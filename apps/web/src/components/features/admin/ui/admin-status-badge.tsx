@@ -8,6 +8,7 @@ const VARIANTS: Record<string, string> = {
   OPEN: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
   PENDING: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
   DEGRADED: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+  DOMAIN_PENDING: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
   SUSPENDED: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
   REJECTED: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
   ERROR: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",

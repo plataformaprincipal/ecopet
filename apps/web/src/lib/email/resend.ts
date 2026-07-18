@@ -1,18 +1,50 @@
 import { Resend } from "resend";
-import { sendEmail } from "@/lib/email/email-service";
+import {
+  getEmailFromAddress,
+  getResendApiKey as getKeyFromConfig,
+  isResendConfigured,
+} from "@/lib/email/config";
 
+/** @deprecated Use getEmailFromAddress from config — mantido para compatibilidade. */
 export const RESEND_DEFAULT_FROM = "onboarding@resend.dev";
 
 export function getResendApiKey(source: NodeJS.ProcessEnv = process.env): string | undefined {
-  return source.RESEND_API_KEY?.trim() || undefined;
+  return getKeyFromConfig(source);
 }
 
 export function getResendFromAddress(source: NodeJS.ProcessEnv = process.env): string {
-  return source.EMAIL_FROM?.trim() || RESEND_DEFAULT_FROM;
+  return getEmailFromAddress(source);
 }
 
 export function isResendReady(source: NodeJS.ProcessEnv = process.env): boolean {
-  return Boolean(getResendApiKey(source));
+  return isResendConfigured(source);
+}
+
+let singleton: Resend | null = null;
+let singletonKey: string | undefined;
+
+/**
+ * Cliente Resend singleton — inicializa uma vez por processo.
+ * Usa exclusivamente process.env.RESEND_API_KEY (via config).
+ */
+export function getResendClient(source: NodeJS.ProcessEnv = process.env): Resend | null {
+  const apiKey = getResendApiKey(source);
+  if (!apiKey) {
+    singleton = null;
+    singletonKey = undefined;
+    return null;
+  }
+  if (singleton && singletonKey === apiKey) {
+    return singleton;
+  }
+  singleton = new Resend(apiKey);
+  singletonKey = apiKey;
+  return singleton;
+}
+
+/** @deprecated Prefer getResendClient(). */
+export function createResendClient(source: NodeJS.ProcessEnv = process.env): Resend | null {
+  return getResendClient(source);
 }
 
 export type ResendSendPayload = {
@@ -32,21 +64,8 @@ export type ResendSendResult = {
   errorCode?: string;
 };
 
-/** @deprecated Prefer `sendEmail` from `@/lib/email/email-service`. */
-export function createResendClient(source: NodeJS.ProcessEnv = process.env): Resend | null {
-  const apiKey = getResendApiKey(source);
-  if (!apiKey) return null;
-  return new Resend(apiKey);
-}
-
-/** Envia via serviço centralizado — `new Resend(process.env.RESEND_API_KEY)`. */
-export async function sendViaResendSdk(payload: ResendSendPayload): Promise<ResendSendResult> {
-  return sendEmail({
-    to: payload.to,
-    subject: payload.subject,
-    html: payload.html,
-    text: payload.text,
-    from: payload.from,
-    logPrefix: payload.logPrefix ?? "[resend]",
-  });
+/** Reset do singleton — apenas testes. */
+export function __resetResendClientForTests(): void {
+  singleton = null;
+  singletonKey = undefined;
 }

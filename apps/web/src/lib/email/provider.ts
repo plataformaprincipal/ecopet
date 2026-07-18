@@ -5,6 +5,8 @@ import { isEmailConfigured, isResendConfigured, isSmtpConfigured } from "@/lib/i
 import { INTEGRATION_ERROR_CODES, IntegrationNotConfiguredError } from "@/lib/integrations/errors";
 import { writeIntegrationLog } from "@/lib/integrations/log";
 import type { TransactionalEmailEvent } from "@/lib/mail/transactional";
+import { sendEmail } from "@/lib/email/email-service";
+import { getEmailFromRaw } from "@/lib/email/config";
 
 export type EmailSendResult = {
   sent: boolean;
@@ -39,15 +41,14 @@ async function logEmail(
 }
 
 async function sendViaResend(payload: { to: string; subject: string; html: string; text: string }) {
-  const key = process.env.RESEND_API_KEY?.trim();
-  if (!key) return false;
-  const from = resolveEmailFrom();
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from, to: payload.to, subject: payload.subject, html: payload.html, text: payload.text }),
+  const result = await sendEmail({
+    to: payload.to,
+    subject: payload.subject,
+    html: payload.html,
+    text: payload.text,
+    logPrefix: "[email:provider]",
   });
-  return res.ok;
+  return result.sent;
 }
 
 async function sendViaSendGrid(payload: { to: string; subject: string; html: string; text: string }) {
@@ -89,12 +90,7 @@ async function sendViaBrevo(payload: { to: string; subject: string; html: string
 }
 
 function resolveEmailFrom(): string {
-  return (
-    process.env.EMAIL_FROM?.trim() ||
-    process.env.SMTP_FROM_EMAIL?.trim() ||
-    process.env.RESEND_FROM?.trim() ||
-    "noreply@ecopet.local"
-  );
+  return getEmailFromRaw();
 }
 
 export function assertEmailConfigured(requireDelivery = false): void {

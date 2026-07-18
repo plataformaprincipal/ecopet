@@ -1,3 +1,5 @@
+import { isResendConfigured as isResendConfiguredFromEmail } from "@/lib/email/config";
+
 function env(key: string, source: NodeJS.ProcessEnv = process.env): string | undefined {
   const v = source[key];
   return typeof v === "string" && v.trim() ? v.trim() : undefined;
@@ -39,7 +41,7 @@ export function isSmtpConfigured(source: NodeJS.ProcessEnv = process.env): boole
 }
 
 export function isResendConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
-  return Boolean(env("RESEND_API_KEY", source));
+  return isResendConfiguredFromEmail(source);
 }
 
 export function isEmailConfigured(source: NodeJS.ProcessEnv = process.env): boolean {

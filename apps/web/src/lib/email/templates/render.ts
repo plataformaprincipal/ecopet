@@ -4,6 +4,20 @@ import { emailHeader, emailButton, emailOtpBlock, emailTitle, emailParagraph, em
 import { emailLayout } from "@/lib/email/templates/components/layout";
 import { escapeHtml } from "@/lib/email/templates/utils";
 import type { EmailTemplateResult, EmailTemplateName } from "@/lib/email/templates/types";
+import {
+  renderPartnerApprovedEmail,
+  renderPartnerRejectedEmail,
+  renderOngApprovedEmail,
+  renderOngRejectedEmail,
+  renderOrderUpdatedEmail,
+  renderOrderShippedEmail,
+  renderQuoteAvailableEmail,
+  renderPurchaseConfirmationEmail,
+  renderContactEmail,
+  renderSupportEmail,
+  renderAdminNotificationEmail,
+  renderTestEmail,
+} from "@/lib/email/templates/enterprise";
 
 function build(params: {
   locale: EmailLocale;
@@ -243,6 +257,30 @@ export function renderEmailTemplate(
       return renderAppointmentScheduledEmail(params as Parameters<typeof renderAppointmentScheduledEmail>[0]);
     case "notification":
       return renderNotificationEmail(params as Parameters<typeof renderNotificationEmail>[0]);
+    case "partner-approved":
+      return renderPartnerApprovedEmail(params as Parameters<typeof renderPartnerApprovedEmail>[0]);
+    case "partner-rejected":
+      return renderPartnerRejectedEmail(params as Parameters<typeof renderPartnerRejectedEmail>[0]);
+    case "ong-approved":
+      return renderOngApprovedEmail(params as Parameters<typeof renderOngApprovedEmail>[0]);
+    case "ong-rejected":
+      return renderOngRejectedEmail(params as Parameters<typeof renderOngRejectedEmail>[0]);
+    case "order-updated":
+      return renderOrderUpdatedEmail(params as Parameters<typeof renderOrderUpdatedEmail>[0]);
+    case "order-shipped":
+      return renderOrderShippedEmail(params as Parameters<typeof renderOrderShippedEmail>[0]);
+    case "quote-available":
+      return renderQuoteAvailableEmail(params as Parameters<typeof renderQuoteAvailableEmail>[0]);
+    case "purchase-confirmation":
+      return renderPurchaseConfirmationEmail(params as Parameters<typeof renderPurchaseConfirmationEmail>[0]);
+    case "contact":
+      return renderContactEmail(params as Parameters<typeof renderContactEmail>[0]);
+    case "support":
+      return renderSupportEmail(params as Parameters<typeof renderSupportEmail>[0]);
+    case "admin-notification":
+      return renderAdminNotificationEmail(params as Parameters<typeof renderAdminNotificationEmail>[0]);
+    case "test-email":
+      return renderTestEmail(params as Parameters<typeof renderTestEmail>[0]);
     default:
       throw new Error(`Template de e-mail desconhecido: ${String(template)}`);
   }

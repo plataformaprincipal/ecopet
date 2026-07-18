@@ -79,6 +79,9 @@ export function AdminIntegracoesPanel() {
   const [error, setError] = useState<string | null>(null);
   const [testingId, setTestingId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<SmokeFeedback | null>(null);
+  const [testEmailTo, setTestEmailTo] = useState("");
+  const [testEmailBusy, setTestEmailBusy] = useState(false);
+  const [testEmailMsg, setTestEmailMsg] = useState<string | null>(null);
 
   const [erpRows, setErpRows] = useState<ErpRow[]>([]);
   const [erpFeedback, setErpFeedback] = useState<string | null>(null);
@@ -141,6 +144,34 @@ export function AdminIntegracoesPanel() {
     void loadStatuses();
     void loadErpRows();
   }, [loadStatuses, loadErpRows]);
+
+  const sendResendTestEmail = async () => {
+    setTestEmailBusy(true);
+    setTestEmailMsg(null);
+    try {
+      const res = await fetch("/api/admin/test-email", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to: testEmailTo.trim() }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        setTestEmailMsg(json.error?.message ?? "Falha ao enviar e-mail de teste.");
+        return;
+      }
+      setTestEmailMsg(
+        `E-mail de teste enviado${json.data?.to ? ` para ${json.data.to}` : ""}.${
+          json.data?.domainNote ? ` ${json.data.domainNote}` : ""
+        }`
+      );
+      await loadStatuses();
+    } catch {
+      setTestEmailMsg("Falha de rede ao enviar e-mail de teste.");
+    } finally {
+      setTestEmailBusy(false);
+    }
+  };
 
   const runSmokeTest = async (provider: string) => {
     const endpoint = TEST_ENDPOINT[provider];
@@ -316,8 +347,39 @@ export function AdminIntegracoesPanel() {
                       disabled={testingId === item.provider}
                       onClick={() => void runSmokeTest(item.provider)}
                     >
-                      {testingId === item.provider ? "Testando…" : "Testar"}
+                      {testingId === item.provider ? "Testando…" : "Testar config"}
                     </Button>
+                  ) : null}
+
+                  {item.provider === "resend" && item.configured ? (
+                    <div className="space-y-2 border-t border-zinc-100 pt-3 dark:border-white/10">
+                      <p className="text-xs font-medium text-muted-foreground">
+                        Enviar e-mail de teste (ADMIN)
+                      </p>
+                      <input
+                        type="email"
+                        value={testEmailTo}
+                        onChange={(e) => setTestEmailTo(e.target.value)}
+                        placeholder="destinatario@exemplo.com"
+                        className="w-full rounded-md border border-zinc-200 bg-transparent px-2 py-1.5 text-xs dark:border-white/10"
+                        aria-label="Destinatário do e-mail de teste"
+                      />
+                      <Button
+                        size="sm"
+                        disabled={testEmailBusy || !testEmailTo.trim()}
+                        onClick={() => void sendResendTestEmail()}
+                      >
+                        {testEmailBusy ? "Enviando…" : "Enviar teste"}
+                      </Button>
+                      {testEmailMsg ? (
+                        <p className="text-xs text-muted-foreground" role="status">
+                          {testEmailMsg}
+                        </p>
+                      ) : null}
+                      <p className="text-[11px] text-muted-foreground">
+                        A chave Resend nunca é exibida. Status: {item.status}
+                      </p>
+                    </div>
                   ) : null}
                 </CardContent>
               </Card>

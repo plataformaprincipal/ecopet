@@ -9,6 +9,14 @@ import {
   renderAppointmentScheduledEmail,
   renderNotificationEmail,
   renderPasswordChangedEmail,
+  renderPartnerApprovedEmail,
+  renderPartnerRejectedEmail,
+  renderOngApprovedEmail,
+  renderOngRejectedEmail,
+  renderOrderUpdatedEmail,
+  renderOrderShippedEmail,
+  renderPurchaseConfirmationEmail,
+  renderAdminNotificationEmail,
   getUserEmailLocale,
   type EmailLocale,
 } from "@/lib/email/templates";
@@ -169,7 +177,7 @@ export async function emailOrderEvent(
   event: Extract<TransactionalEmailEvent, "ORDER_CREATED" | "ORDER_CONFIRMED" | "ORDER_CANCELLED" | "ORDER_COMPLETED">,
   to: string,
   orderNumber: number,
-  params: { name: string; locale?: EmailLocale; message?: string; title?: string }
+  params: { name: string; locale?: EmailLocale; message?: string; title?: string; statusLabel?: string }
 ) {
   const locale = params.locale ?? "pt-BR";
   const tpl =
@@ -180,12 +188,28 @@ export async function emailOrderEvent(
           name: params.name,
           orderNumber,
         })
-      : renderNotificationEmail({
-          locale,
-          appUrl: getAppUrl(),
-          title: params.title,
-          message: params.message ?? `Pedido #${orderNumber}`,
-        });
+      : event === "ORDER_CONFIRMED"
+        ? renderPurchaseConfirmationEmail({
+            locale,
+            appUrl: getAppUrl(),
+            name: params.name,
+            orderNumber,
+          })
+        : event === "ORDER_COMPLETED"
+          ? renderOrderUpdatedEmail({
+              locale,
+              appUrl: getAppUrl(),
+              name: params.name,
+              orderNumber,
+              statusLabel: params.statusLabel ?? (locale === "en" ? "Completed" : "Concluído"),
+            })
+          : renderOrderUpdatedEmail({
+              locale,
+              appUrl: getAppUrl(),
+              name: params.name,
+              orderNumber,
+              statusLabel: params.statusLabel ?? params.message ?? (locale === "en" ? "Updated" : "Atualizado"),
+            });
 
   await dispatchPremiumEmail({
     event,
@@ -194,6 +218,100 @@ export async function emailOrderEvent(
     html: tpl.html,
     text: tpl.text,
     logPrefix: `[order:${event}]`,
+  });
+}
+
+export async function emailPartnerDecision(
+  event: "PARTNER_APPROVED" | "PARTNER_REJECTED",
+  to: string,
+  params: { name: string; reason?: string; locale?: EmailLocale }
+) {
+  const locale = params.locale ?? "pt-BR";
+  const tpl =
+    event === "PARTNER_APPROVED"
+      ? renderPartnerApprovedEmail({ locale, appUrl: getAppUrl(), name: params.name })
+      : renderPartnerRejectedEmail({
+          locale,
+          appUrl: getAppUrl(),
+          name: params.name,
+          reason: params.reason ?? "—",
+        });
+  await dispatchPremiumEmail({
+    event,
+    to,
+    subject: tpl.subject,
+    html: tpl.html,
+    text: tpl.text,
+    logPrefix: `[${event}]`,
+  });
+}
+
+export async function emailOngDecision(
+  event: "ONG_APPROVED" | "ONG_REJECTED",
+  to: string,
+  params: { name: string; reason?: string; locale?: EmailLocale }
+) {
+  const locale = params.locale ?? "pt-BR";
+  const tpl =
+    event === "ONG_APPROVED"
+      ? renderOngApprovedEmail({ locale, appUrl: getAppUrl(), name: params.name })
+      : renderOngRejectedEmail({
+          locale,
+          appUrl: getAppUrl(),
+          name: params.name,
+          reason: params.reason ?? "—",
+        });
+  await dispatchPremiumEmail({
+    event,
+    to,
+    subject: tpl.subject,
+    html: tpl.html,
+    text: tpl.text,
+    logPrefix: `[${event}]`,
+  });
+}
+
+export async function emailOrderShipped(
+  to: string,
+  params: { name: string; orderNumber: number | string; trackingCode?: string; locale?: EmailLocale }
+) {
+  const locale = params.locale ?? "pt-BR";
+  const tpl = renderOrderShippedEmail({
+    locale,
+    appUrl: getAppUrl(),
+    name: params.name,
+    orderNumber: params.orderNumber,
+    trackingCode: params.trackingCode,
+  });
+  await dispatchPremiumEmail({
+    event: "ORDER_CONFIRMED",
+    to,
+    subject: tpl.subject,
+    html: tpl.html,
+    text: tpl.text,
+    logPrefix: "[order:shipped]",
+  });
+}
+
+export async function emailAdminNotice(
+  to: string,
+  params: { title: string; message: string; actionUrl?: string; locale?: EmailLocale }
+) {
+  const locale = params.locale ?? "pt-BR";
+  const tpl = renderAdminNotificationEmail({
+    locale,
+    appUrl: getAppUrl(),
+    title: params.title,
+    message: params.message,
+    actionUrl: params.actionUrl,
+  });
+  await dispatchPremiumEmail({
+    event: "REVIEW_RECEIVED",
+    to,
+    subject: tpl.subject,
+    html: tpl.html,
+    text: tpl.text,
+    logPrefix: "[admin-notice]",
   });
 }
 

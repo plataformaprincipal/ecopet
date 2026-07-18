@@ -18,6 +18,7 @@
     "test:partner:rules": "node --import tsx --test src/lib/partner/operation-rules.test.ts src/lib/partner/document-validation.test.ts",
     "test:registration:rules": "node --import tsx --test src/lib/registration/collect-step-errors.test.ts",
     "test:vlibras": "node --import tsx --test src/lib/accessibility/vlibras-load-outcome.test.ts",
+    "test:email": "tsx --tsconfig tsconfig.json --test src/lib/email/email-enterprise.test.ts",
     "test:social:permissions": "node --import tsx --test src/lib/social/persona-permissions.test.ts",
     "test:talkjs": "node --import tsx --test src/lib/talkjs/server.test.ts",
     "test:ai": "node --import tsx --test ../../scripts/test-foundation-ai.mjs"

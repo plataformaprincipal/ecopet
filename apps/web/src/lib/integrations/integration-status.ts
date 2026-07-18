@@ -21,6 +21,7 @@ import {
   IntegrationError,
   INTEGRATION_ERROR_CODES,
 } from "@/lib/integrations/integration-errors";
+import { getResendOperationalStatus } from "@/lib/email/resend-status";
 
 export type IntegrationState =
   | "NOT_CONFIGURED"
@@ -28,7 +29,12 @@ export type IntegrationState =
   | "AVAILABLE"
   | "DEGRADED"
   | "UNAVAILABLE"
-  | "DISABLED";
+  | "DISABLED"
+  /** Resend / e-mail — domínio DNS ainda não verificado */
+  | "DOMAIN_PENDING"
+  /** Resend — domínio verificado e operacional */
+  | "ACTIVE"
+  | "ERROR";
 
 export type IntegrationStatus = {
   provider: string;
@@ -125,6 +131,21 @@ export function getIntegrationStatus(
       missingVariables: [],
       lastCheckedAt,
       sanitizedError: reason,
+      capabilities: def.capabilities,
+    };
+  }
+
+  if (def.id === "resend") {
+    const resend = getResendOperationalStatus(source);
+    return {
+      provider: def.id,
+      displayName: def.name,
+      configured: resend.configured,
+      available: resend.available,
+      status: resend.status,
+      missingVariables: resend.missingVariables,
+      lastCheckedAt: resend.lastCheckedAt,
+      sanitizedError: resend.sanitizedMessage,
       capabilities: def.capabilities,
     };
   }

@@ -12,4 +12,16 @@ export type EmailTemplateName =
   | "password-changed"
   | "order-placed"
   | "appointment-scheduled"
-  | "notification";
+  | "notification"
+  | "partner-approved"
+  | "partner-rejected"
+  | "ong-approved"
+  | "ong-rejected"
+  | "order-updated"
+  | "order-shipped"
+  | "quote-available"
+  | "purchase-confirmation"
+  | "contact"
+  | "support"
+  | "admin-notification"
+  | "test-email";

@@ -3,9 +3,11 @@ import type { EmailLocale } from "@/lib/email/templates/locale";
 import { emailHtmlLang } from "@/lib/email/templates/locale";
 import { getEmailCopy } from "@/lib/email/templates/i18n/copy";
 import { escapeHtml } from "@/lib/email/templates/utils";
+import { getEmailSupportAddress } from "@/lib/email/config";
 
 export function emailFooter(locale: EmailLocale): string {
   const { common } = getEmailCopy(locale);
+  const support = getEmailSupportAddress();
   return `
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-top:32px;border-top:1px solid ${EMAIL_BRAND.border};">
   <tr>
@@ -17,7 +19,7 @@ export function emailFooter(locale: EmailLocale): string {
         ${escapeHtml(common.autoEmail)}
       </p>
       <p style="margin:0 0 16px;font-size:12px;color:${EMAIL_BRAND.textMuted};">
-        ${escapeHtml(common.support)} · ${escapeHtml(common.rights)}
+        ${escapeHtml(support)} · ${escapeHtml(common.rights)}
       </p>
       <p style="margin:0 0 8px;font-size:11px;font-weight:700;color:${EMAIL_BRAND.secondary};text-transform:uppercase;letter-spacing:0.4px;">
         ${escapeHtml(common.aiSectionTitle)}

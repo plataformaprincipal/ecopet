@@ -183,7 +183,7 @@ export async function smokeTestOpenAi(actorId?: string | null): Promise<SmokeTes
   });
 }
 
-/** Resend — validação de config apenas (não envia e-mail). */
+/** Resend — validação de config apenas (não envia e-mail). Use POST /api/admin/test-email para envio. */
 export async function smokeTestResend(actorId?: string | null): Promise<SmokeTestResult> {
   return withAudit(actorId, "resend", async () => {
     const status = getIntegrationStatus("resend");
@@ -194,9 +194,15 @@ export async function smokeTestResend(actorId?: string | null): Promise<SmokeTes
     if (!key || key.length < 10) {
       return notConfigured("resend", ["RESEND_API_KEY"]);
     }
+    const domainNote =
+      status.status === "DOMAIN_PENDING"
+        ? " Domínio pendente — envios sandbox/limitados até DNS verificado."
+        : status.status === "ACTIVE"
+          ? " Domínio ACTIVE."
+          : "";
     return okResult(
       "resend",
-      "Resend configurado (validação de env; envio real não executado).",
+      `Resend configurado (${status.status}). Envio real: POST /api/admin/test-email.${domainNote}`,
       "config_validation"
     );
   });
