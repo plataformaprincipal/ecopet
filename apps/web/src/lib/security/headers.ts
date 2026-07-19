@@ -31,11 +31,11 @@ export function contentSecurityPolicy(): string {
   const directives = [
     "default-src 'self'",
     // TalkJS + VLibras: hosts explícitos; sem wildcard genérico de terceiros
-    `script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob: ${vlibrasSources} https://cdn.talkjs.com`,
-    `style-src 'self' 'unsafe-inline' ${vlibrasSources}`,
-    `img-src 'self' data: blob: https: ${VLIBRAS_HOSTS}`,
-    "font-src 'self' data: https:",
-    `connect-src 'self' https: wss: ${vlibrasSources} https://cdn.talkjs.com https://api.talkjs.com wss://*.talkjs.com`,
+    `script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob: ${vlibrasSources} https://cdn.talkjs.com https://maps.googleapis.com https://maps.gstatic.com`,
+    `style-src 'self' 'unsafe-inline' ${vlibrasSources} https://fonts.googleapis.com`,
+    `img-src 'self' data: blob: https: ${VLIBRAS_HOSTS} https://maps.gstatic.com https://maps.googleapis.com https://*.ggpht.com https://*.googleusercontent.com`,
+    "font-src 'self' data: https: https://fonts.gstatic.com",
+    `connect-src 'self' https: wss: ${vlibrasSources} https://cdn.talkjs.com https://api.talkjs.com wss://*.talkjs.com https://maps.googleapis.com https://places.googleapis.com`,
     `frame-src 'self' ${vlibrasSources} https://cdn.talkjs.com`,
     `worker-src 'self' blob: ${vlibrasSources}`,
     `child-src 'self' blob: ${vlibrasSources}`,

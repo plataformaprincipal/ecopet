@@ -38,6 +38,8 @@ const addressDetailsSchema = z.object({
   state: z.string().length(2, "UF obrigatória."),
   complement: z.string().optional(),
   reference: z.string().optional(),
+  latitude: z.number().min(-90).max(90).nullable().optional(),
+  longitude: z.number().min(-180).max(180).nullable().optional(),
 });
 
 const operationDetailsSchema = z.object({

@@ -662,19 +662,28 @@ model User {
 }
 
 model Address {
-  id         String  @id @default(cuid())
-  userId     String  @unique
-  street     String
-  number     String
-  complement String?
-  district   String
-  city       String
-  state      String
-  zipCode    String
-  country    String  @default("BR")
-  latitude   Float?
-  longitude  Float?
-  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                 String    @id @default(cuid())
+  userId             String    @unique
+  street             String
+  number             String
+  complement         String?
+  district           String
+  city               String
+  state              String
+  zipCode            String
+  country            String    @default("BR")
+  latitude           Float?
+  longitude          Float?
+  googlePlaceId      String?
+  formattedAddress   String?
+  geocodedAt         DateTime?
+  geocodingSource    String?
+  locationAccuracy   String?
+  locationVerifiedAt DateTime?
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([city, state])
+  @@index([latitude, longitude])
 }
 
 model Pet {
@@ -1065,75 +1074,97 @@ model ServiceProviderProfile {
 }
 
 model OngProfile {
-  id                 String             @id @default(cuid())
-  userId             String             @unique
-  ongName            String?
-  name               String
-  tradeName          String?
-  documentType       String?
-  cnpj               String             @unique
-  responsible        String
-  responsibleName    String?
-  institutionalEmail String?
-  address            String?
-  city               String?
-  state              String?
-  zipCode            String?
-  description        String?
-  focusArea          String?
-  verificationStatus VerificationStatus @default(PENDING)
-  approvedAt         DateTime?
-  approvedById       String?
-  rejectionReason    String?
-  photos             Json?
-  requirements       String?
-  actionTypes        Json?
-  animalCapacity     Int?
-  acceptsDonations   Boolean            @default(true)
-  documents          Json?
-  profileDetails     Json?
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
-  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  approvedBy         User?              @relation("OngProfileApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+  id                     String             @id @default(cuid())
+  userId                 String             @unique
+  ongName                String?
+  name                   String
+  tradeName              String?
+  documentType           String?
+  cnpj                   String             @unique
+  responsible            String
+  responsibleName        String?
+  institutionalEmail     String?
+  address                String?
+  city                   String?
+  state                  String?
+  zipCode                String?
+  description            String?
+  focusArea              String?
+  verificationStatus     VerificationStatus @default(PENDING)
+  approvedAt             DateTime?
+  approvedById           String?
+  rejectionReason        String?
+  photos                 Json?
+  requirements           String?
+  actionTypes            Json?
+  animalCapacity         Int?
+  acceptsDonations       Boolean            @default(true)
+  documents              Json?
+  profileDetails         Json?
+  latitude               Float?
+  longitude              Float?
+  googlePlaceId          String?
+  formattedAddress       String?
+  geocodedAt             DateTime?
+  /// Exibir localização pública (comercial/institucional).
+  publicLocationEnabled  Boolean            @default(true)
+  /// Quando true, APIs públicas arredondam coordenadas (~1km).
+  locationApproximate    Boolean            @default(false)
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+  user                   User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  approvedBy             User?              @relation("OngProfileApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  @@index([latitude, longitude])
+  @@index([city, state])
 }
 
 model PartnerProfile {
-  id                 String             @id @default(cuid())
-  userId             String             @unique
-  partnerType        String?
-  businessName       String
-  slug               String?            @unique
-  legalName          String
-  cnpj               String?            @unique
-  corporateType      String?
-  category           String
-  commercialEmail    String?
-  responsibleName    String?
-  address            String
-  city               String
-  state              String
-  zipCode            String?
-  description        String?
-  businessHours      String?
-  activityStartDate  DateTime?
-  activityAreas      Json?
-  addressDetails     Json?
-  operationDetails   Json?
-  financialDetails   Json?
+  id                    String             @id @default(cuid())
+  userId                String             @unique
+  partnerType           String?
+  businessName          String
+  slug                  String?            @unique
+  legalName             String
+  cnpj                  String?            @unique
+  corporateType         String?
+  category              String
+  commercialEmail       String?
+  responsibleName       String?
+  address               String
+  city                  String
+  state                 String
+  zipCode               String?
+  description           String?
+  businessHours         String?
+  activityStartDate     DateTime?
+  activityAreas         Json?
+  addressDetails        Json?
+  operationDetails      Json?
+  financialDetails      Json?
   verificationDocuments Json?
-  cnpjDetails        Json?
-  logoAlt            String?
-  verificationStatus VerificationStatus @default(PENDING)
-  approvedAt         DateTime?
-  approvedById       String?
-  rejectionReason    String?
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
-  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  approvedBy         User?              @relation("PartnerProfileApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
-  availabilitySlots  PartnerAvailability[]
-  blockedSlots       PartnerBlockedSlot[]
+  cnpjDetails           Json?
+  logoAlt               String?
+  verificationStatus    VerificationStatus @default(PENDING)
+  approvedAt            DateTime?
+  approvedById          String?
+  rejectionReason       String?
+  latitude              Float?
+  longitude             Float?
+  googlePlaceId         String?
+  formattedAddress      String?
+  geocodedAt            DateTime?
+  serviceRadiusKm       Float?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  user                  User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  approvedBy            User?              @relation("PartnerProfileApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+  availabilitySlots     PartnerAvailability[]
+  blockedSlots          PartnerBlockedSlot[]
+
+  @@index([latitude, longitude])
+  @@index([city, state])
+  @@index([category, verificationStatus])
 }
 
 model EmailLog {
@@ -2648,6 +2679,21 @@ model RateLimitBucket {
   updatedAt DateTime @updatedAt
 
   @@index([resetAt])
+}
+
+/// Métricas sanitizadas de uso Google Maps (sem chave, sem endereço completo sensível).
+model MapsUsageEvent {
+  id        String   @id @default(cuid())
+  action    String
+  success   Boolean  @default(true)
+  errorCode String?
+  userId    String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([action, createdAt])
+  @@index([success, createdAt])
+  @@index([userId])
 }
 
 model VerificationCode {

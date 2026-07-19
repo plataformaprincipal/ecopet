@@ -16,6 +16,9 @@ export async function GET(request: Request) {
     state: url.searchParams.get("state") ?? undefined,
     page: numParam(url.searchParams.get("page")),
     pageSize: numParam(url.searchParams.get("pageSize")),
+    lat: numParam(url.searchParams.get("lat")),
+    lng: numParam(url.searchParams.get("lng")),
+    radiusKm: numParam(url.searchParams.get("radiusKm")),
   });
   return apiSuccess(result);
 }

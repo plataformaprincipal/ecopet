@@ -14,7 +14,7 @@ import { getTurnstilePublicConfig } from "@/lib/turnstile/config";
 import { RegisterProgress } from "@/components/features/foundation/register-progress";
 import { FoundationPasswordField, FoundationConfirmPasswordField } from "@/components/features/foundation/password-field";
 import { InternationalPhoneField } from "@/components/features/foundation/international-phone-field";
-import { AddressByCepField } from "@/components/shared/address/address-by-cep-field";
+import { AddressFormWithMaps } from "@/components/maps/address-form-with-maps";
 import { PartnerTypeSelector } from "@/components/features/foundation/partner/partner-type-selector";
 import { PartnerSelectableCards } from "@/components/features/foundation/partner/partner-selectable-cards";
 import { PartnerLegalAcceptance,
@@ -700,7 +700,7 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
             {form.addressDetails.streetType === "Outro" && (
               <Field label={p.fields.streetTypeOther} id="partner-street-type-other" value={form.addressDetails.streetTypeOther} onChange={(v) => patch({ addressDetails: { ...form.addressDetails, streetTypeOther: v } })} error={fieldErrors["addressDetails.streetTypeOther"]} required tv={tv} />
             )}
-            <AddressByCepField
+            <AddressFormWithMaps
               value={form.addressDetails}
               onChange={(addr) => patch({ addressDetails: { ...form.addressDetails, ...addr } })}
               errors={{

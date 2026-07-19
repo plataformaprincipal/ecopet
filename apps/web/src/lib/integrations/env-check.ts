@@ -70,7 +70,9 @@ export function isOpenAiConfigured(source: NodeJS.ProcessEnv = process.env): boo
 }
 
 export function isGoogleMapsConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
-  return Boolean(env("GOOGLE_MAPS_API_KEY", source));
+  return Boolean(
+    env("NEXT_PUBLIC_GOOGLE_MAPS_API_KEY", source) || env("GOOGLE_MAPS_API_KEY", source)
+  );
 }
 
 export function isMapboxConfigured(source: NodeJS.ProcessEnv = process.env): boolean {

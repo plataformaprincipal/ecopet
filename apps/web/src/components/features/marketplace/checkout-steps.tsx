@@ -12,7 +12,8 @@ import { checkoutOrder, type DeliveryMethod, type PaymentMethod, type Order } fr
 import { fetchPartnerLogistics, calculateShipping, type LogisticsMethod } from "@/lib/logistics/api";
 import { fetchWalletBalance } from "@/lib/wallet/api";
 import { useAppStore } from "@/store/app-store";
-import { AddressByCepField, type AddressByCepValue } from "@/components/shared/address/address-by-cep-field";
+import { type AddressByCepValue } from "@/components/shared/address/address-by-cep-field";
+import { AddressFormWithMaps } from "@/components/maps/address-form-with-maps";
 import { EMPTY_ADDRESS } from "@/lib/address/types";
 
 const STEPS = [
@@ -200,7 +201,7 @@ export function CheckoutSteps() {
 
             {step === 2 && (
               <>
-                <AddressByCepField
+                <AddressFormWithMaps
                   value={address}
                   onChange={setAddress}
                   title="Endereço de entrega"
@@ -212,7 +213,7 @@ export function CheckoutSteps() {
                   Receber em endereço alternativo
                 </label>
                 {useAlternateAddress && (
-                  <AddressByCepField
+                  <AddressFormWithMaps
                     value={alternateAddress}
                     onChange={setAlternateAddress}
                     title="Endereço alternativo"
@@ -311,7 +312,7 @@ export function CheckoutSteps() {
                       Endereço de cobrança diferente do de entrega
                     </label>
                     {useBillingAddress && (
-                      <AddressByCepField
+                      <AddressFormWithMaps
                         value={billingAddress}
                         onChange={setBillingAddress}
                         title="Endereço de cobrança"

@@ -52,6 +52,11 @@ async function createPartnerUser(data: PartnerRegisterInput) {
   const category = composePartnerCategory(data.activityAreas, data.activityAreasOther);
   const passwordHash = await hashPassword(data.password);
 
+  const lat =
+    typeof data.addressDetails.latitude === "number" ? data.addressDetails.latitude : null;
+  const lng =
+    typeof data.addressDetails.longitude === "number" ? data.addressDetails.longitude : null;
+
   const profileCreate = {
     partnerType: data.partnerType,
     businessName,
@@ -76,6 +81,9 @@ async function createPartnerUser(data: PartnerRegisterInput) {
     responsibleName: data.name.trim(),
     commercialEmail: data.email,
     verificationStatus: VerificationStatus.PENDING,
+    latitude: lat,
+    longitude: lng,
+    geocodedAt: lat != null && lng != null ? new Date() : undefined,
   } as Prisma.PartnerProfileUncheckedCreateWithoutUserInput;
 
   return prisma.$transaction(async (tx) => {
@@ -97,6 +105,8 @@ async function createPartnerUser(data: PartnerRegisterInput) {
         city: data.addressDetails.city.trim(),
         state: data.addressDetails.state,
         address: addressLine,
+        latitude: lat ?? undefined,
+        longitude: lng ?? undefined,
         partnerProfile: {
           create: profileCreate,
         },

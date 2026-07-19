@@ -1,5 +1,7 @@
 import { AccountStatus, PartnerServiceStatus, ProductCatalogStatus, Prisma, VerificationStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { haversineDistanceKm } from "@/lib/google-maps/distance";
+import { isValidLatLng } from "@/lib/google-maps/validation";
 
 export type PublicServiceFilters = {
   q?: string;
@@ -247,12 +249,19 @@ export type PublicPartnerFilters = {
   state?: string;
   page?: number;
   pageSize?: number;
+  lat?: number;
+  lng?: number;
+  radiusKm?: number;
 };
 
 export async function queryPublicPartners(filters: PublicPartnerFilters) {
   const page = Math.max(1, filters.page ?? 1);
   const pageSize = Math.min(50, Math.max(1, filters.pageSize ?? 12));
   const skip = (page - 1) * pageSize;
+  const origin =
+    filters.lat != null && filters.lng != null && isValidLatLng({ lat: filters.lat, lng: filters.lng })
+      ? { lat: filters.lat, lng: filters.lng }
+      : null;
 
   const where: Prisma.UserWhereInput = {
     role: "PARTNER",
@@ -289,6 +298,9 @@ export async function queryPublicPartners(filters: PublicPartnerFilters) {
             city: true,
             state: true,
             category: true,
+            latitude: true,
+            longitude: true,
+            formattedAddress: true,
           },
         },
         _count: {
@@ -319,8 +331,14 @@ export async function queryPublicPartners(filters: PublicPartnerFilters) {
     prisma.user.count({ where }),
   ]);
 
-  return {
-    partners: partners.map((p) => ({
+  let mapped = partners.map((p) => {
+    const lat = p.partnerProfile?.latitude ?? null;
+    const lng = p.partnerProfile?.longitude ?? null;
+    const distanceKm =
+      origin && lat != null && lng != null
+        ? Math.round(haversineDistanceKm(origin, { lat, lng }) * 100) / 100
+        : null;
+    return {
       id: p.id,
       name: p.partnerProfile?.businessName ?? p.name,
       description: p.partnerProfile?.description,
@@ -329,7 +347,27 @@ export async function queryPublicPartners(filters: PublicPartnerFilters) {
       category: p.partnerProfile?.category,
       productCount: p._count.products,
       serviceCount: p._count.services,
-    })),
+      latitude: lat,
+      longitude: lng,
+      distanceKm,
+    };
+  });
+
+  if (origin && filters.radiusKm && filters.radiusKm > 0) {
+    mapped = mapped.filter((p) => p.distanceKm == null || p.distanceKm <= filters.radiusKm!);
+  }
+
+  if (origin) {
+    mapped = mapped.sort((a, b) => {
+      if (a.distanceKm == null && b.distanceKm == null) return 0;
+      if (a.distanceKm == null) return 1;
+      if (b.distanceKm == null) return -1;
+      return a.distanceKm - b.distanceKm;
+    });
+  }
+
+  return {
+    partners: mapped,
     total,
     page,
     pageSize,

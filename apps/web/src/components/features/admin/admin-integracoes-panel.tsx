@@ -422,6 +422,17 @@ export function AdminIntegracoesPanel() {
                     </div>
                   ) : null}
 
+                  {item.provider === "google_maps" ? (
+                    <div className="space-y-2 border-t border-zinc-100 pt-3 dark:border-white/10">
+                      <Button asChild size="sm" variant="outline">
+                        <Link href="/admin/integracoes/google-maps">Diagnóstico Google Maps</Link>
+                      </Button>
+                      <Button asChild size="sm" variant="outline">
+                        <Link href="/admin/localizacoes">Localizações</Link>
+                      </Button>
+                    </div>
+                  ) : null}
+
                   {item.provider === "mercado_pago" ? (
                     <div className="space-y-2 border-t border-zinc-100 pt-3 dark:border-white/10">
                       <p className="text-xs font-medium text-muted-foreground">

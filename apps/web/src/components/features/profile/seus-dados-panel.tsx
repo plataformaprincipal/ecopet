@@ -13,7 +13,8 @@ import {
   updateProfile,
   checkPasswordStrength,
 } from "@/lib/auth/api";
-import { AddressByCepField, toAddressValue } from "@/components/shared/address/address-by-cep-field";
+import { toAddressValue } from "@/components/shared/address/address-by-cep-field";
+import { AddressFormWithMaps } from "@/components/maps/address-form-with-maps";
 import { EMPTY_ADDRESS, type AddressByCepValue } from "@/lib/address/types";
 
 export function SeusDadosPanel() {
@@ -112,7 +113,7 @@ export function SeusDadosPanel() {
           <Input placeholder="Nome" value={name} onChange={(e) => setName(e.target.value)} />
           <Input placeholder="E-mail" value={email} disabled className="bg-ecopet-gray/5" />
           <Input placeholder="Telefone" value={phone} onChange={(e) => setPhone(e.target.value)} />
-          <AddressByCepField
+          <AddressFormWithMaps
             value={address}
             onChange={setAddress}
             title="Endereço"

@@ -1003,14 +1003,39 @@ export const ENV_REGISTRY: EnvVarDefinition[] = [
 
   // ─── Mapas / logística ───
   {
+    name: "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY",
+    tier: "optional",
+    scopes: ["web"],
+    environments: ["Production", "Preview", "Development"],
+    purpose: "Google Maps JavaScript / Places (chave web com restrição de domínio HTTP)",
+    usedIn: [
+      "apps/web/src/lib/google-maps/config.ts",
+      "apps/web/src/lib/google-maps/loader.ts",
+    ],
+    example: "AIza...",
+    secret: false,
+  },
+  {
     name: "GOOGLE_MAPS_API_KEY",
     tier: "optional",
     scopes: ["web"],
-    environments: ["Production", "Preview"],
-    purpose: "Google Maps",
-    usedIn: ["apps/web/src/lib/integrations/env-check.ts"],
-    example: "AIzaSyxxxxx",
+    environments: ["Production", "Preview", "Development"],
+    purpose: "Google Geocoding/Directions REST no servidor (opcional; fallback da chave pública)",
+    usedIn: [
+      "apps/web/src/lib/google-maps/server-config.ts",
+      "apps/web/src/lib/integrations/env-check.ts",
+    ],
+    example: "AIza...",
     secret: true,
+  },
+  {
+    name: "GOOGLE_MAPS_ENABLED",
+    tier: "optional",
+    scopes: ["web"],
+    environments: ["Production", "Preview", "Development"],
+    purpose: "Flag opcional para desabilitar Maps sem remover a chave",
+    usedIn: ["apps/web/src/lib/google-maps/config.ts"],
+    example: "true",
   },
   {
     name: "MAPBOX_ACCESS_TOKEN",

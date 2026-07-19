@@ -63,6 +63,9 @@ type PublicPartnerRow = {
   category?: string | null;
   productCount: number;
   serviceCount: number;
+  latitude?: number | null;
+  longitude?: number | null;
+  distanceKm?: number | null;
 };
 
 function parseImages(raw: unknown): string[] {
@@ -151,7 +154,7 @@ function mapPartner(p: PublicPartnerRow): MarketplacePartner {
     cover: "",
     description: p.description ?? "",
     location: [p.city, p.state].filter(Boolean).join(", "),
-    distanceKm: 0,
+    distanceKm: p.distanceKm ?? 0,
     rating: 0,
     reviewCount: 0,
     salesCount: p.productCount,
