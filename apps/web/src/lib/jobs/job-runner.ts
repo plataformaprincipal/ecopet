@@ -87,6 +87,35 @@ const handlers: Partial<Record<JobType, (job: JobRecord) => Promise<void>>> = {
       observation: "Webhook de pagamento processado",
     });
   },
+  PROCESS_MP_WEBHOOK_RETRY: async (job) => {
+    const id = String((job.payload as { mpWebhookEventId?: string }).mpWebhookEventId ?? "");
+    if (!id) return;
+    const { reprocessMpWebhookEvent } = await import("@/lib/mercado-pago/webhooks/pipeline");
+    await reprocessMpWebhookEvent(id);
+    await writeAuditLog({
+      action: "SYNC",
+      module: "payments.mercado_pago",
+      resource: "MpWebhookEvent",
+      resourceId: id,
+      observation: "Retry webhook Mercado Pago",
+    });
+  },
+  MP_RECONCILE: async (job) => {
+    const { runMercadoPagoReconciliation } = await import(
+      "@/lib/mercado-pago/reconciliation"
+    );
+    const report = await runMercadoPagoReconciliation({
+      limit: Number((job.payload as { limit?: number }).limit ?? 50),
+    });
+    await writeAuditLog({
+      action: "SYNC",
+      module: "payments.mercado_pago",
+      resource: "MpReconciliationIssue",
+      resourceId: job.id,
+      observation: `Conciliação: ${report.issuesCreated} issues`,
+      metadata: report as unknown as Record<string, unknown>,
+    });
+  },
   REPROCESS_FAILED_JOB: async (job) => {
     const jobId = String((job.payload as { jobId?: string }).jobId ?? "");
     if (jobId) await processJobById(jobId);

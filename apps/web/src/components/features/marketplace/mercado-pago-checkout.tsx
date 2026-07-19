@@ -71,11 +71,24 @@ function loadMpSdk(): Promise<void> {
 export function MercadoPagoCheckout({ orderId, amount, payerEmail, onPaid, onCancel }: Props) {
   const [config, setConfig] = useState<MpConfig | null>(null);
   const [method, setMethod] = useState<"card" | "pix" | "boleto">("card");
+  const [enabledMethods, setEnabledMethods] = useState<Array<"card" | "pix" | "boleto">>([
+    "card",
+    "pix",
+    "boleto",
+  ]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<PayResult | null>(null);
   const submitLock = useRef(false);
+  const [installmentOptions, setInstallmentOptions] = useState<
+    Array<{
+      installments: number;
+      installmentAmount: number;
+      totalAmount: number;
+      recommendedMessage: string;
+    }>
+  >([]);
 
   const [card, setCard] = useState({
     cardNumber: "",
@@ -98,6 +111,21 @@ export function MercadoPagoCheckout({ orderId, amount, payerEmail, onPaid, onCan
           throw new Error(json.error?.message ?? "Configuração indisponível");
         }
         await loadMpSdk();
+        const methodsRes = await fetch("/api/checkout/mercado-pago/payment-methods", {
+          credentials: "include",
+        });
+        const methodsJson = await methodsRes.json();
+        if (!cancelled && methodsRes.ok && methodsJson.success) {
+          const ids = (methodsJson.data.methods as Array<{ methodId: string }>).map((m) => m.methodId);
+          const next: Array<"card" | "pix" | "boleto"> = [];
+          if (ids.includes("credit_card") || ids.includes("debit_card")) next.push("card");
+          if (ids.includes("pix")) next.push("pix");
+          if (ids.includes("boleto")) next.push("boleto");
+          if (next.length) {
+            setEnabledMethods(next);
+            setMethod(next[0]);
+          }
+        }
         if (!cancelled) {
           setConfig(json.data);
           setLoading(false);
@@ -113,6 +141,30 @@ export function MercadoPagoCheckout({ orderId, amount, payerEmail, onPaid, onCan
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    const digits = card.cardNumber.replace(/\D/g, "");
+    if (digits.length < 6 || method !== "card") return;
+    const t = setTimeout(() => {
+      void (async () => {
+        try {
+          const res = await fetch("/api/checkout/mercado-pago/installments", {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ orderId, bin: digits.slice(0, 6) }),
+          });
+          const json = await res.json();
+          if (res.ok && json.success) {
+            setInstallmentOptions(json.data.options ?? []);
+          }
+        } catch {
+          /* ignore */
+        }
+      })();
+    }, 400);
+    return () => clearTimeout(t);
+  }, [card.cardNumber, method, orderId]);
 
   const payOnline = useCallback(
     async (body: Record<string, unknown>) => {
@@ -245,21 +297,23 @@ export function MercadoPagoCheckout({ orderId, amount, payerEmail, onPaid, onCan
             ["pix", "PIX"],
             ["boleto", "Boleto"],
           ] as const
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            type="button"
-            role="tab"
-            aria-selected={method === id}
-            className={`rounded border px-3 py-1.5 text-sm ${
-              method === id ? "border-primary bg-primary/5 font-medium" : ""
-            }`}
-            onClick={() => setMethod(id)}
-            disabled={submitting}
-          >
-            {label}
-          </button>
-        ))}
+        )
+          .filter(([id]) => enabledMethods.includes(id))
+          .map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={method === id}
+              className={`rounded border px-3 py-1.5 text-sm ${
+                method === id ? "border-primary bg-primary/5 font-medium" : ""
+              }`}
+              onClick={() => setMethod(id)}
+              disabled={submitting}
+            >
+              {label}
+            </button>
+          ))}
       </div>
 
       {error ? (
@@ -275,7 +329,20 @@ export function MercadoPagoCheckout({ orderId, amount, payerEmail, onPaid, onCan
             {result.statusDetail ? ` (${result.statusDetail})` : ""}
           </p>
           {result.mpOrder?.qrCode ? (
-            <p className="break-all font-mono text-xs">PIX: {result.mpOrder.qrCode}</p>
+            <div className="space-y-2">
+              <p className="break-all font-mono text-xs">PIX: {result.mpOrder.qrCode}</p>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => void navigator.clipboard.writeText(result.mpOrder?.qrCode || "")}
+              >
+                Copiar código Pix
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Aguardando pagamento. O pedido só será marcado como pago após confirmação oficial.
+              </p>
+            </div>
           ) : null}
           {result.mpOrder?.qrCodeBase64 ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -385,6 +452,32 @@ export function MercadoPagoCheckout({ orderId, amount, payerEmail, onPaid, onCan
               required
               disabled={submitting}
             />
+          </div>
+          <div>
+            <label htmlFor="mp-installments" className="mb-1 block text-sm font-medium">
+              Parcelas
+            </label>
+            <select
+              id="mp-installments"
+              className="w-full rounded-md border px-3 py-2 text-sm"
+              value={card.installments}
+              onChange={(e) => setCard({ ...card, installments: Number(e.target.value) || 1 })}
+              disabled={submitting}
+            >
+              {installmentOptions.length > 0 ? (
+                installmentOptions.map((opt) => (
+                  <option key={opt.installments} value={opt.installments}>
+                    {opt.recommendedMessage ||
+                      `${opt.installments}x de R$ ${opt.installmentAmount.toFixed(2)} (total R$ ${opt.totalAmount.toFixed(2)})`}
+                  </option>
+                ))
+              ) : (
+                <option value={1}>1x de R$ {amount.toFixed(2)}</option>
+              )}
+            </select>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Opções oficiais do Mercado Pago (não hardcoded).
+            </p>
           </div>
           <p className="text-xs text-muted-foreground">
             Dados do cartão são tokenizados pelo SDK Mercado Pago no seu navegador. O EcoPet não

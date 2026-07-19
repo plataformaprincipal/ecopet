@@ -99,6 +99,11 @@ export function isSupabaseEnvConfigured(source: EnvSource = process.env): boolea
   return hasRealEnv("DATABASE_URL", source);
 }
 
+export function isTurnstileEnvConfigured(source: EnvSource = process.env): boolean {
+  // Catálogo client-safe: só Site Key. Secret é verificada no diagnóstico server-only.
+  return hasRealEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", source);
+}
+
 export type ProviderConfiguredChecker = (source?: EnvSource) => boolean;
 
 export const PROVIDER_CONFIGURED_CHECKERS: Record<string, ProviderConfiguredChecker> = {
@@ -111,4 +116,5 @@ export const PROVIDER_CONFIGURED_CHECKERS: Record<string, ProviderConfiguredChec
   stripe: isStripeEnvConfigured,
   push: isPushEnvConfigured,
   supabase: isSupabaseEnvConfigured,
+  turnstile: isTurnstileEnvConfigured,
 };

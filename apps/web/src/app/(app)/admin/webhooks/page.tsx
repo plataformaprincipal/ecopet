@@ -1,5 +1,5 @@
-import { AdminModulePage } from "@/components/features/admin/admin-module-page";
+import { redirect } from "next/navigation";
 
 export default function AdminWebhooksPage() {
-  return <AdminModulePage moduleId="webhooks" />;
+  redirect("/admin/mercado-pago/eventos");
 }

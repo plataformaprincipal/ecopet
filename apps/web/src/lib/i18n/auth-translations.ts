@@ -130,6 +130,12 @@ const VALIDATION_MESSAGE_KEYS: Record<string, TranslationKey> = {
   "Informe a missão da instituição.": "auth.register.ong.validation.missionRequired",
   "Informe a visão da instituição.": "auth.register.ong.validation.visionRequired",
   [FORGOT_PASSWORD_GENERIC_MESSAGE]: "auth.forgotPassword.success",
+  // Turnstile (mensagens públicas genéricas → chaves i18n)
+  "Verificação necessária. Conclua o desafio para continuar.": "turnstile.required",
+  "Não foi possível verificar. Tente novamente.": "turnstile.failed",
+  "Verificação expirada. Conclua o desafio novamente.": "turnstile.expired",
+  "Serviço temporariamente indisponível. Tente novamente.": "turnstile.unavailable",
+  "Serviço de verificação temporariamente indisponível.": "turnstile.unavailable",
   [FORGOT_PASSWORD_SEND_FAILED_MESSAGE]: "auth.forgotPassword.sendFailed",
   [FORGOT_PASSWORD_NOT_FOUND_MESSAGE]: "auth.forgotPassword.notFound",
   [FORGOT_PASSWORD_PHONE_UNAVAILABLE_MESSAGE]: "auth.forgotPassword.phoneUnavailable",

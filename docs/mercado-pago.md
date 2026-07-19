@@ -1,67 +1,103 @@
-# Mercado Pago — Checkout Transparente (API Orders)
+# Mercado Pago — Checkout Transparente (API Orders) + Webhooks multi-tópico
 
 ## Arquitetura
 
 ```
-Cliente (Public Key / SDK JS)
-  → tokeniza cartão no browser
-  → POST /api/checkout/mercado-pago/order
-       → servidor recalcula pedido EcoPet
-       → persiste Payment + idempotencyKey
-       → POST https://api.mercadopago.com/v1/orders (Access Token)
-       → atualiza status interno
-
-Webhook (quando cadastrado)
-  → POST /api/webhooks/mercado-pago
-       → valida x-signature + timestamp
-       → GET /v1/orders/{id} (fonte da verdade)
-       → aplica Payment/Order + estoque + notificações
+POST /api/webhooks/mercado-pago
+  → verify signature (x-signature / ts / data.id)
+  → normalize topic (catálogo oficial)
+  → persist MpWebhookEvent (idempotente)
+  → route → handler
+  → GET recurso oficial (quando aplicável)
+  → efeitos de negócio + notificações (não bloqueantes)
 ```
 
-- **Não** usa Checkout Pro / Preferences.
-- **Não** usa a API de Pagamentos legada (`/v1/payments`) como caminho canônico.
-- Pedido só fica `PAID` após resposta server-side confirmada ou webhook validado + consulta à API.
+Checkout: Public Key no browser → `POST /api/checkout/mercado-pago/order` → `POST /v1/orders`.
 
-## Variáveis (apenas nomes)
+## Variáveis (somente nomes)
 
-| Variável | Onde |
-|----------|------|
-| `MERCADO_PAGO_ACCESS_TOKEN` | servidor |
-| `NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY` | browser |
-| `MERCADO_PAGO_ENVIRONMENT` | `test` (padrão seguro) \| `production` |
-| `MERCADO_PAGO_WEBHOOK_SECRET` | servidor (assinatura) |
-| `PAYMENT_PROVIDER` | opcional (`none` / preferência) |
+- `MERCADO_PAGO_ACCESS_TOKEN`
+- `NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY`
+- `MERCADO_PAGO_ENVIRONMENT` (`test` | `production`)
+- `MERCADO_PAGO_WEBHOOK_SECRET`
 
-Nunca versione valores reais. Nunca exponha o Access Token no frontend.
+## Matriz de eventos (painel Webhooks)
 
-## Ambiente de teste
+| Evento (painel) | Topic / type | Backend | Banco | Cliente | Parceiro | Admin | Testes | Status real |
+|-----------------|--------------|---------|-------|---------|----------|-------|--------|-------------|
+| Order (MP) | `order` | Handler + GET `/v1/orders` | Payment/Order + MpWebhookEvent | Status pedido | Status | Hub eventos | Sim | **ACTIVE** |
+| Alertas de fraude | `stop_delivery_op_wh` | Bloqueia expedição + refund tentativa | MpFraudAlert | Aviso genérico | Alerta | `/admin/mercado-pago/fraudes` | Sim | **ACTIVE** |
+| Card Updater | `automatic-payments` / `topic_card_id_wh` | Registro | MpSubscriptionEvent | — | — | Catálogo | Sim | **NOT_APPLICABLE** |
+| Envios | (aliases) | Registro | MpShipment | Se houver | — | Nota | Sim | **NOT_APPLICABLE** |
+| Pagamentos legacy | `payment` | GET `/v1/payments` bridge | Snapshot + Payment | — | — | Hub | Sim | **PARTIAL** |
+| Vinculação apps | `mp-connect` | Sem tokens | MpApplicationLink | — | — | Hub | Sim | **PARTIAL** |
+| Reclamações | `topic_claims_integration_wh` | GET `/v1/claims` | MpClaim | Central financeira | Central | `/reclamacoes` | Sim | **ACTIVE** |
+| Contestações | `topic_chargebacks_wh` | GET `/v1/chargebacks` | MpDispute | Central | Central | `/contestacoes` | Sim | **ACTIVE** |
+| Perfil pagamento | — | Estrutural | MpPayerProfileEvent | — | — | Catálogo | Sim | **NOT_APPLICABLE** |
+| Planos/assinaturas | `subscription_*` | Estrutural | MpSubscriptionEvent | Nota | — | Nota | Sim | **NOT_APPLICABLE** |
+| Delivery proximity | — | Estrutural | — | — | — | Nota | Sim | **NOT_APPLICABLE** |
+| Pedidos comerciais | `topic_merchant_order_wh` | GET `/merchant_orders` | MpCommercialOrder | — | — | Hub | Sim | **PARTIAL** |
+| Point | `point_integration_wh` | Estrutural | MpPointEvent | — | — | Nota | Sim | **NOT_APPLICABLE** |
+| Wallet Connect | `wallet_connect` | Estrutural | MpWalletEvent | — | — | Catálogo | Sim | **NOT_APPLICABLE** |
+| Self Service | — | Estrutural | MpSelfServiceEvent | — | — | Catálogo | Sim | **NOT_APPLICABLE** |
 
-1. Crie aplicação no painel Mercado Pago com **Checkout Transparente** + **API Orders**.
-2. Use **credenciais de teste**.
-3. Defina `MERCADO_PAGO_ENVIRONMENT=test`.
-4. Tokens `TEST-*` forçam modo test mesmo se environment=production.
+**ACTIVE** = validação + consulta API (quando há endpoint) + persistência + efeitos + UI + testes.  
+**PARTIAL** = processado com limitações (compat / sem OAuth completo).  
+**NOT_APPLICABLE** = produto não usado no EcoPet; evento persistido sem efeito financeiro inventado.
 
-## Instalação / execução local
+## Modelos Prisma (principais)
 
-```bash
-npm install
-npm run db:generate
-# aplicar schema (migrate deploy ou db:push conforme o ambiente)
-npm run sync:env
-npm run dev
-```
+`MpWebhookEvent`, `MpWebhookAttempt`, `MpResourceSnapshot`, `MpFraudAlert`, `MpClaim`, `MpDispute`, `MpShipment`, `MpApplicationLink`, `MpSubscriptionEvent`, `MpPointEvent`, `MpWalletEvent`, `MpCommercialOrder`, `MpReconciliationIssue`, flags `Order.fraudHold` / `Order.fulfillmentBlocked`.
 
-Checkout: `/checkout` → opção **Pagar agora (Mercado Pago)** quando Public Key + Access Token estiverem configurados.
+## Segurança
 
-## Rotas
+- Assinatura + timestamp skew + idempotência + payload sanitizado.
+- Nunca marcar pago só pelo webhook.
+- Fraude: resposta 200 rápida (MP não retenta este tópico).
+- Sem Access Token / secret / cartão no banco ou logs.
 
-| Método | Path | Auth |
-|--------|------|------|
-| GET | `/api/checkout/mercado-pago/config` | cliente |
-| POST | `/api/checkout/mercado-pago/order` | cliente |
-| GET | `/api/checkout/mercado-pago/order/[id]` | cliente |
-| POST | `/api/webhooks/mercado-pago` | público + assinatura |
-| GET | `/api/admin/integrations/mercado-pago/diagnostics` | ADMIN |
+## Admin
+
+- `/admin/mercado-pago/eventos`
+- `/admin/mercado-pago/fraudes`
+- `/admin/mercado-pago/reclamacoes`
+- `/admin/mercado-pago/contestacoes`
+- `/admin/financeiro/pagamentos` — lista + estorno total/parcial
+- `/admin/financeiro/estornos` — solicitações e histórico
+- `/admin/financeiro/conciliacao`
+- `/api/admin/financeiro/metodos` — sync/habilitar meios suportados pela conta
+- Reprocessar evento · Conciliar
+
+## Meios de pagamento
+
+Sincronizados via `GET /v1/payment_methods` → `PaymentMethodConfiguration`.  
+Checkout só exibe métodos `enabled && supportedByAccount`.  
+Parcelas: `GET /v1/payment_methods/installments` (nunca hardcoded).
+
+## Estornos
+
+Ver `docs/refunds.md`. API oficial: `POST /v1/payments/{id}/refunds`.  
+Modelo `PaymentRefund`. Estoque não volta automaticamente no estorno.
+
+## Cliente / Parceiro
+
+- `/cliente/financeiro`
+- `/partner/financeiro`
+- Solicitação de estorno: `POST /api/orders/{orderId}/refund`
+
+## Jobs
+
+- `PROCESS_MP_WEBHOOK_RETRY`
+- `MP_RECONCILE`
+
+## Webhook URL
+
+`https://eccopet.com/api/webhooks/mercado-pago` (quando domínio ativo).  
+Testes: configurar URL de teste no painel; pagamentos TEST podem não notificar automaticamente.
+
+## Split / OAuth
+
+Não implementado. Sem ativação de marketplace split.
 
 ## Testes
 
@@ -69,55 +105,6 @@ Checkout: `/checkout` → opção **Pagar agora (Mercado Pago)** quando Public K
 npm run test:mercado-pago -w @ecopet/web
 ```
 
-Cobertura: config, modo test, ausência de Access Token no bundle/log patterns, assinatura webhook, mapeamento de status, erros HTTP mapeados.
+## LGPD
 
-## Cartões / contas de teste
-
-Use exclusivamente os cartões e usuários de teste oficiais do Mercado Pago (documentação do painel).  
-**Não** documente números/credenciais neste repositório.
-
-## Webhook (pendente até domínio)
-
-URL futura: `https://eccopet.com/api/webhooks/mercado-pago`
-
-Enquanto o domínio/secret não estiverem cadastrados:
-
-- build **não** falha;
-- status admin: `TEST_READY` ou `WEBHOOK_PENDING`;
-- pagamentos de teste podem ser confirmados via resposta da API + polling `GET order`.
-
-## Produção (pendências)
-
-1. Credenciais de produção (não misturar com TEST).
-2. `MERCADO_PAGO_ENVIRONMENT=production` apenas com token prod.
-3. Cadastrar webhook + secret.
-4. Validar 3DS / meios de pagamento reais.
-5. Conciliação e política de estornos.
-6. **Split / marketplace OAuth** — **não implementado**. Apenas metadados estimados por parceiro no Payment.
-
-## Rotação de credenciais
-
-1. Gere novo Access Token / Public Key no painel.
-2. Atualize Vercel + `.env` local.
-3. Revogue o token antigo.
-4. Rode diagnóstico ADMIN (`probe=1`) — sem cobrança.
-
-## Diagnóstico admin
-
-`/admin/integracoes` → card Mercado Pago → **Probe API (sem cobrança)**.
-
-Estados: `NOT_CONFIGURED` | `TEST_READY` | `WEBHOOK_PENDING` | `ACTIVE` | `DEGRADED` | `AUTH_ERROR` | `WEBHOOK_ERROR` | `ERROR`.
-
-## Limitações atuais
-
-- Split de pagamento / repasse automático: **não pronto**.
-- Cancelamento/estorno automático via API: parcialmente documentado; conciliação manual.
-- Webhooks de teste do MP podem ser limitados — preferir consulta server-side após criar a order.
-- Estoque: baixa no `checkoutFromCart`; liberação idempotente se pagamento falhar/estornar.
-
-## Confirmações de segurança
-
-- Access Token nunca no browser.
-- Sem dados de cartão no banco EcoPet.
-- Sem mocks de pagamento em produção.
-- Sem cobrança real com `MERCADO_PAGO_ENVIRONMENT=test` + credenciais TEST.
+Payloads sanitizados; sem PAN/CVV; retenção via tabelas Mp*; exclusão segue política de pedidos do usuário.

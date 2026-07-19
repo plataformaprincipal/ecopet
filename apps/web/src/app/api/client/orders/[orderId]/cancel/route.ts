@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiFailure } from "@/lib/api-response";
 import { requireClient } from "@/lib/auth/require-auth";
 import { createInternalNotification } from "@/lib/notifications/internal";
+import { cancelPendingMercadoPagoPayment } from "@/lib/mercado-pago/cancellations";
 
 type RouteContext = { params: Promise<{ orderId: string }> };
 
@@ -13,11 +14,33 @@ export async function PATCH(_req: Request, context: RouteContext) {
 
   const order = await prisma.order.findFirst({
     where: { id: orderId, userId: user!.id },
-    include: { items: true },
+    include: {
+      items: true,
+      payments: {
+        where: {
+          provider: "mercado_pago",
+          status: { in: ["CREATED", "PENDING", "PROCESSING", "ACTION_REQUIRED"] },
+        },
+      },
+    },
   });
   if (!order) return apiFailure("NOT_FOUND", "Pedido não encontrado.", 404);
   if (order.status !== OrderStatus.PENDING_CONFIRMATION) {
     return apiFailure("VALIDATION", "Só é possível cancelar pedidos aguardando confirmação.", 400);
+  }
+
+  // Cancela cobranças pendentes no MP (diferente de estorno de aprovado)
+  for (const payment of order.payments) {
+    await cancelPendingMercadoPagoPayment({
+      paymentId: payment.id,
+      actorId: user!.id,
+      reason: "cancelled_by_client",
+    });
+  }
+
+  const fresh = await prisma.order.findUnique({ where: { id: orderId } });
+  if (fresh?.status === OrderStatus.CANCELLED) {
+    return apiSuccess({ order: fresh, cancelledViaPayment: true });
   }
 
   const updated = await prisma.$transaction(async (tx) => {

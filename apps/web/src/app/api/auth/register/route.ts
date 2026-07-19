@@ -19,7 +19,8 @@ import {
 } from "@/schemas/partner-register";
 import { validateStrongPassword, PASSWORD_MISMATCH_MESSAGE } from "@/lib/password/validate-strong-password";
 import { apiSuccess, apiFailure } from "@/lib/api-response";
-import { checkAuthRateLimit, clientIp } from "@/lib/rate-limit";
+import { checkDistributedRateLimit, clientIp } from "@/lib/rate-limit";
+import { requireTurnstile, registerActionForRole } from "@/lib/turnstile/server";
 import { emailRegisterCompleted } from "@/lib/mail/event-dispatch";
 import { localeFromAcceptLanguage } from "@/lib/email/templates";
 import {
@@ -268,11 +269,27 @@ async function createOngUser(data: OngRegisterInput) {
 export async function POST(request: Request) {
   try {
     const ip = clientIp(request);
-    if (!checkAuthRateLimit(`register:${ip}`, 10, 60 * 60 * 1000)) {
+    if (!(await checkDistributedRateLimit(`register:${ip}`, 10, 60 * 60 * 1000))) {
       return apiFailure("RATE_LIMITED", "Muitas tentativas de cadastro. Tente novamente mais tarde.", 429);
     }
 
     const body = await request.json();
+
+    const roleHint =
+      body?.role === UserRole.PARTNER
+        ? "PARTNER"
+        : body?.role === UserRole.ONG
+          ? "ONG"
+          : "CLIENT";
+    const turnstileAction = registerActionForRole(roleHint);
+    const turnstileError = await requireTurnstile({
+      token: body?.turnstileToken,
+      expectedAction: turnstileAction,
+      request,
+      remoteIp: ip,
+      flow: `register_${roleHint.toLowerCase()}`,
+    });
+    if (turnstileError) return turnstileError;
 
     let partnerData: PartnerRegisterInput | null = null;
     let legacyPartner = false;

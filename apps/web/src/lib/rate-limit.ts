@@ -1,3 +1,5 @@
+import { prisma } from "@/lib/prisma";
+
 type Bucket = { count: number; resetAt: number };
 
 const store = new Map<string, Bucket>();
@@ -27,7 +29,7 @@ export function checkRateLimit(key: string, limit: number, windowMs: number): bo
   return consumeRateLimit(key, limit, windowMs);
 }
 
-/** Rate limit para autenticação — ativo em todos os ambientes */
+/** Rate limit para autenticação — ativo em todos os ambientes (memória do processo). */
 export function checkAuthRateLimit(key: string, limit: number, windowMs: number): boolean {
   if (process.env.AUTH_RATE_LIMIT_DISABLED === "1") {
     return true;
@@ -35,6 +37,61 @@ export function checkAuthRateLimit(key: string, limit: number, windowMs: number)
   const relaxed = process.env.AUTH_RATE_LIMIT_RELAXED === "1";
   const effectiveLimit = relaxed ? 500 : limit;
   return consumeRateLimit(key, effectiveLimit, windowMs);
+}
+
+/**
+ * Rate limit distribuído via PostgreSQL (RateLimitBucket).
+ * Preferir em fluxos críticos na Vercel (multi-instância).
+ * Combina com o limite em memória do processo como primeira linha.
+ */
+export async function checkDistributedRateLimit(
+  key: string,
+  limit: number,
+  windowMs: number
+): Promise<boolean> {
+  if (process.env.AUTH_RATE_LIMIT_DISABLED === "1") {
+    return true;
+  }
+  const relaxed = process.env.AUTH_RATE_LIMIT_RELAXED === "1";
+  const effectiveLimit = relaxed ? 500 : limit;
+
+  // Linha rápida local
+  if (!consumeRateLimit(key, effectiveLimit, windowMs)) {
+    return false;
+  }
+
+  const now = new Date();
+  try {
+    const existing = await prisma.rateLimitBucket.findUnique({ where: { id: key } });
+    if (!existing || existing.resetAt.getTime() <= now.getTime()) {
+      await prisma.rateLimitBucket.upsert({
+        where: { id: key },
+        create: {
+          id: key,
+          count: 1,
+          resetAt: new Date(now.getTime() + windowMs),
+        },
+        update: {
+          count: 1,
+          resetAt: new Date(now.getTime() + windowMs),
+        },
+      });
+      return true;
+    }
+
+    if (existing.count >= effectiveLimit) {
+      return false;
+    }
+
+    await prisma.rateLimitBucket.update({
+      where: { id: key },
+      data: { count: { increment: 1 } },
+    });
+    return true;
+  } catch {
+    // Fallback: decisão já tomada pela memória do processo
+    return true;
+  }
 }
 
 function consumeRateLimit(key: string, limit: number, windowMs: number): boolean {
@@ -58,10 +115,8 @@ function normalizeIp(raw: string | null | undefined): string | null {
   if (!raw) return null;
   let ip = raw.trim();
   if (!ip) return null;
-  // IPv6 entre colchetes com porta: [::1]:443
   const bracket = ip.match(/^\[(.+)\]:\d+$/);
   if (bracket) return bracket[1];
-  // IPv4 com porta: 1.2.3.4:5678 (não confundir com IPv6 puro, que tem múltiplos ":")
   if (ip.includes(".") && ip.includes(":")) {
     ip = ip.split(":")[0];
   }

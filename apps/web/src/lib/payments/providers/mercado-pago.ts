@@ -13,7 +13,12 @@ import type {
 } from "@/lib/payments/payment-provider";
 import { PaymentNotConfiguredError } from "@/lib/payments/payment-errors";
 import { isMercadoPagoConfigured } from "@/lib/mercado-pago/config";
-import { getMercadoPagoOrder } from "@/lib/mercado-pago/client";
+import {
+  cancelMercadoPagoLegacyPayment,
+  getMercadoPagoOrder,
+  newIdempotencyKey,
+  refundMercadoPagoLegacyPayment,
+} from "@/lib/mercado-pago/client";
 import { mapMpOrderStatusToInternal } from "@/lib/mercado-pago/status";
 import { verifyMercadoPagoWebhookSignature } from "@/lib/mercado-pago/webhook-signature";
 
@@ -28,7 +33,6 @@ export class MercadoPagoPaymentProvider implements PaymentProvider {
         message: "MERCADO_PAGO_ACCESS_TOKEN ausente — nenhuma cobrança criada.",
       };
     }
-    // Fluxo canônico: POST /api/checkout/mercado-pago/order (API Orders)
     return {
       provider: this.id,
       status: "pending",
@@ -52,7 +56,9 @@ export class MercadoPagoPaymentProvider implements PaymentProvider {
         ? "paid"
         : internal === "REJECTED" || internal === "CANCELLED" || internal === "EXPIRED"
           ? "failed"
-          : internal === "REFUNDED" || internal === "CHARGED_BACK"
+          : internal === "REFUNDED" ||
+              internal === "PARTIALLY_REFUNDED" ||
+              internal === "CHARGED_BACK"
             ? "refunded"
             : "pending";
     return { provider: this.id, externalId, status: mapped };
@@ -62,23 +68,47 @@ export class MercadoPagoPaymentProvider implements PaymentProvider {
     if (!isMercadoPagoConfigured()) {
       throw new PaymentNotConfiguredError("Mercado Pago não configurado.");
     }
-    return {
-      provider: this.id,
-      externalId,
-      status: "pending",
-      message: "Cancelamento de order: use painel MP ou endpoint oficial de cancelamento.",
-    };
-  }
-
-  async refundPayment(externalId: string, _amount?: number): Promise<PaymentActionResult> {
-    if (!isMercadoPagoConfigured()) {
-      throw new PaymentNotConfiguredError("Mercado Pago não configurado.");
+    const result = await cancelMercadoPagoLegacyPayment(externalId, newIdempotencyKey());
+    if (!result.ok) {
+      return {
+        provider: this.id,
+        externalId,
+        status: "failed",
+        message: result.message,
+      };
     }
     return {
       provider: this.id,
       externalId,
-      status: "pending",
-      message: "Estorno via API Orders ainda não exposto neste adapter (use conciliação admin).",
+      status: "canceled",
+      message: "Pagamento pendente cancelado no Mercado Pago.",
+    };
+  }
+
+  async refundPayment(externalId: string, amount?: number): Promise<PaymentActionResult> {
+    if (!isMercadoPagoConfigured()) {
+      throw new PaymentNotConfiguredError("Mercado Pago não configurado.");
+    }
+    const result = await refundMercadoPagoLegacyPayment(
+      externalId,
+      newIdempotencyKey(),
+      amount
+    );
+    if (!result.ok) {
+      return {
+        provider: this.id,
+        externalId,
+        status: "failed",
+        message: result.message,
+      };
+    }
+    return {
+      provider: this.id,
+      externalId,
+      status: "refunded",
+      message: amount
+        ? `Estorno parcial de ${amount.toFixed(2)} enviado ao Mercado Pago.`
+        : "Estorno total enviado ao Mercado Pago.",
     };
   }
 
@@ -108,7 +138,6 @@ export class MercadoPagoPaymentProvider implements PaymentProvider {
       xRequestId: get("x-request-id"),
       dataId,
     });
-    // Sem secret em TEST: aceita presença de assinatura para smoke; rota real usa processMercadoPagoWebhook
     if (result.reason === "WEBHOOK_SECRET_MISSING") {
       return Boolean(get("x-signature"));
     }

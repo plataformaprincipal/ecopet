@@ -94,6 +94,8 @@ export async function createMercadoPagoCheckoutOrder(input: CreateCheckoutOrderI
         idempotencyKey,
         externalReference,
         paymentMethod: methodId,
+        paymentType: input.paymentMethodType ?? (isCard ? "credit_card" : methodId),
+        installments: isCard ? input.installments ?? 1 : 1,
         metadata: {
           platformFeeEstimated: null,
           partnerNetEstimated: amount,

@@ -1,12 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2, Mail, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { TurnstileField } from "@/components/security/turnstile-field";
+import { useTurnstile } from "@/hooks/use-turnstile";
+import { TURNSTILE_ACTIONS } from "@/lib/turnstile/actions";
+import { getTurnstilePublicConfig } from "@/lib/turnstile/config";
 import {
   FoundationPasswordField,
   FoundationConfirmPasswordField,
@@ -110,6 +114,11 @@ export function FoundationForgotPasswordForm() {
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
   const [resendIn, setResendIn] = useState(0);
+  const turnstileEnabled = useMemo(() => getTurnstilePublicConfig().enabled, []);
+  const turnstile = useTurnstile({
+    action: TURNSTILE_ACTIONS.PASSWORD_RECOVERY,
+    required: turnstileEnabled,
+  });
 
   useEffect(() => {
     if (resendIn <= 0) return;
@@ -121,6 +130,10 @@ export function FoundationForgotPasswordForm() {
 
   async function handleSendCode(e?: React.FormEvent) {
     e?.preventDefault();
+    if (turnstileEnabled && !turnstile.isVerified) {
+      setError(t("turnstile.required"));
+      return;
+    }
     setLoading(true);
     setError("");
     setInfo("");
@@ -129,7 +142,11 @@ export function FoundationForgotPasswordForm() {
       const res = await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier }),
+        body: JSON.stringify({
+          identifier,
+          turnstileToken: turnstile.consumeToken(),
+          turnstileAction: TURNSTILE_ACTIONS.PASSWORD_RECOVERY,
+        }),
       });
       const data = await res.json();
 
@@ -139,6 +156,7 @@ export function FoundationForgotPasswordForm() {
             ? data.error
             : data.error?.message ?? t("common.error");
         setError(tApi(msg, data.error?.code));
+        turnstile.reset();
         return;
       }
 
@@ -400,6 +418,18 @@ export function FoundationForgotPasswordForm() {
               />
             </div>
 
+            {turnstileEnabled ? (
+              <TurnstileField
+                action={TURNSTILE_ACTIONS.PASSWORD_RECOVERY}
+                state={turnstile.state}
+                resetKey={turnstile.resetKey}
+                onVerify={turnstile.onVerify}
+                onExpire={turnstile.onExpire}
+                onError={turnstile.onError}
+                onLoad={turnstile.onLoad}
+              />
+            ) : null}
+
             {error && (
               <p
                 id="forgot-error"
@@ -411,7 +441,11 @@ export function FoundationForgotPasswordForm() {
               </p>
             )}
 
-            <Button type="submit" className="h-11 w-full text-base" disabled={loading}>
+            <Button
+              type="submit"
+              className="h-11 w-full text-base"
+              disabled={loading || (turnstileEnabled && !turnstile.isVerified)}
+            >
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />

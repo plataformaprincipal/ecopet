@@ -52,6 +52,11 @@ export function isMercadoPagoConfigured(source: NodeJS.ProcessEnv = process.env)
   return Boolean(env("MERCADO_PAGO_ACCESS_TOKEN", source));
 }
 
+export function isTurnstileConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
+  // Catálogo admin: Site Key pública; Secret é validada só no servidor (server-config).
+  return Boolean(env("NEXT_PUBLIC_TURNSTILE_SITE_KEY", source));
+}
+
 export function isPagarmeConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
   return Boolean(env("PAGARME_API_KEY", source));
 }

@@ -7,6 +7,10 @@ import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { TurnstileField } from "@/components/security/turnstile-field";
+import { useTurnstile } from "@/hooks/use-turnstile";
+import { TURNSTILE_ACTIONS } from "@/lib/turnstile/actions";
+import { getTurnstilePublicConfig } from "@/lib/turnstile/config";
 import { FoundationPasswordField, FoundationConfirmPasswordField } from "@/components/features/foundation/password-field";
 import { RegisterProgress } from "@/components/features/foundation/register-progress";
 import {
@@ -77,6 +81,11 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
   const [termsError, setTermsError] = useState("");
   const [stepFeedback, setStepFeedback] = useState<string[]>([]);
+  const turnstileEnabled = useMemo(() => getTurnstilePublicConfig().enabled, []);
+  const turnstile = useTurnstile({
+    action: TURNSTILE_ACTIONS.REGISTER_CLIENT,
+    required: turnstileEnabled,
+  });
 
   const [form, setForm] = useState({
     name: "",
@@ -165,7 +174,11 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
     return err ? tv(err) : undefined;
   }, [form.birthDate, tv]);
 
-  const canSubmit = acceptTerms && acceptPrivacy && !loading;
+  const canSubmit =
+    acceptTerms &&
+    acceptPrivacy &&
+    !loading &&
+    (!turnstileEnabled || turnstile.isVerified);
 
   function validatePersonalStep(): FieldErrors {
     const errors: FieldErrors = {};
@@ -278,6 +291,7 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
       return;
     }
 
+    const turnstileToken = turnstile.consumeToken();
     const payload = {
       role: "CLIENT" as const,
       name: normalizeFullName(form.name),
@@ -291,6 +305,8 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
       confirmPassword: form.confirmPassword,
       acceptTerms: true,
       acceptPrivacy: true,
+      turnstileToken,
+      turnstileAction: TURNSTILE_ACTIONS.REGISTER_CLIENT,
     };
 
     try {
@@ -308,6 +324,7 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
             ? tv(mapRegisterConflictMessage(code, message))
             : tApi(message, code) || t("auth.client.registerError");
         setError(msg);
+        turnstile.reset();
         setStep("security");
         return;
       }
@@ -502,6 +519,18 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
               }}
               error={termsError}
             />
+
+            {turnstileEnabled ? (
+              <TurnstileField
+                action={TURNSTILE_ACTIONS.REGISTER_CLIENT}
+                state={turnstile.state}
+                resetKey={turnstile.resetKey}
+                onVerify={turnstile.onVerify}
+                onExpire={turnstile.onExpire}
+                onError={turnstile.onError}
+                onLoad={turnstile.onLoad}
+              />
+            ) : null}
 
             {error && (
               <p id="client-register-error" className="text-sm text-red-600" role="alert" aria-live="polite">

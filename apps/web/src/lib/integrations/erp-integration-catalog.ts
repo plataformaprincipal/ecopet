@@ -36,6 +36,7 @@ import {
   isAnthropicConfigured,
   isViaCepConfigured,
   isVLibrasConfigured,
+  isTurnstileConfigured,
 } from "@/lib/integrations/env-check";
 
 export type IntegrationCatalogItem = {
@@ -184,6 +185,13 @@ export const ADMIN_INTEGRATION_CATALOG: IntegrationCatalogItem[] = [
   { id: "melhor_envio", nome: "Melhor Envio", category: "logística", envKeys: ["MELHOR_ENVIO_TOKEN"], check: isMelhorEnvioConfigured, partial: true },
   { id: "viacep", nome: "ViaCEP", category: "dados", envKeys: [], check: isViaCepConfigured },
   { id: "vlibras", nome: "VLibras", category: "acessibilidade", envKeys: ["VLIBRAS_ENABLED"], check: isVLibrasConfigured, partial: true },
+  {
+    id: "turnstile",
+    nome: "Cloudflare Turnstile",
+    category: "segurança",
+    envKeys: ["NEXT_PUBLIC_TURNSTILE_SITE_KEY"],
+    check: isTurnstileConfigured,
+  },
 ];
 
 export function testIntegrationConnection(integrationId: string, catalog: IntegrationCatalogItem[]): {

@@ -12,7 +12,7 @@ import { findUserByLoginIdentifier } from "@/lib/auth/login-identifier";
 import { dashboardPathForRole } from "@/lib/auth/dashboard";
 import { loginSchema } from "@/schemas/auth";
 import { apiSuccess, apiFailure } from "@/lib/api-response";
-import { checkAuthRateLimit, clientIp } from "@/lib/rate-limit";
+import { checkDistributedRateLimit, clientIp } from "@/lib/rate-limit";
 import { isInstitutionalCatalogUser } from "@/lib/catalog/constants";
 import {
   LOGIN_ACCOUNT_INACTIVE_MESSAGE,
@@ -21,6 +21,9 @@ import {
   LOGIN_WRONG_PASSWORD_MESSAGE,
 } from "@/lib/constants/auth-messages";
 import { auditLogin, auditLoginFailed } from "@/lib/auth/auth-audit";
+import { isLoginTurnstileRequired } from "@/lib/turnstile/login-risk";
+import { requireTurnstile, TURNSTILE_ACTIONS } from "@/lib/turnstile/server";
+import { turnstilePublicMessage } from "@/lib/turnstile/errors";
 
 const LOGIN_LIMIT = 10;
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
@@ -28,7 +31,7 @@ const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 export async function POST(request: Request) {
   try {
     const ip = clientIp(request);
-    if (!checkAuthRateLimit(`login:${ip}`, LOGIN_LIMIT, LOGIN_WINDOW_MS)) {
+    if (!(await checkDistributedRateLimit(`login:${ip}`, LOGIN_LIMIT, LOGIN_WINDOW_MS))) {
       return apiFailure("RATE_LIMIT", "Muitas tentativas. Aguarde alguns minutos.", 429);
     }
 
@@ -43,8 +46,33 @@ export async function POST(request: Request) {
     const { identifier, password } = parsed.data;
     const userAgent = request.headers.get("user-agent") ?? undefined;
 
-    if (!checkAuthRateLimit(`login:id:${identifier.toLowerCase()}`, LOGIN_LIMIT, LOGIN_WINDOW_MS)) {
+    if (
+      !(await checkDistributedRateLimit(
+        `login:id:${identifier.toLowerCase()}`,
+        LOGIN_LIMIT,
+        LOGIN_WINDOW_MS
+      ))
+    ) {
       return apiFailure("RATE_LIMIT", "Muitas tentativas. Aguarde alguns minutos.", 429);
+    }
+
+    const turnstileRequired = await isLoginTurnstileRequired({ ip, identifier });
+    if (turnstileRequired) {
+      if (!body?.turnstileToken) {
+        return apiFailure(
+          "TURNSTILE_REQUIRED",
+          turnstilePublicMessage("TOKEN_MISSING"),
+          403
+        );
+      }
+      const turnstileError = await requireTurnstile({
+        token: body.turnstileToken,
+        expectedAction: TURNSTILE_ACTIONS.LOGIN_RISK,
+        request,
+        remoteIp: ip,
+        flow: "login_risk",
+      });
+      if (turnstileError) return turnstileError;
     }
 
     const user = await findUserByLoginIdentifier(prisma, identifier);

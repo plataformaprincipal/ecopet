@@ -48,6 +48,26 @@ export async function PATCH(request: Request, context: RouteContext) {
   if (!order) return apiFailure("NOT_FOUND", "Pedido não encontrado.", 404);
 
   const nextStatus = parsed.data.status;
+  const shippingStatuses: OrderStatus[] = [
+    OrderStatus.SHIPPED,
+    OrderStatus.OUT_FOR_DELIVERY,
+    OrderStatus.READY_FOR_PICKUP,
+    OrderStatus.READY_PICKUP,
+    OrderStatus.DELIVERED,
+    OrderStatus.PICKED_UP,
+  ];
+  if (
+    (order.fraudHold || order.fulfillmentBlocked) &&
+    shippingStatuses.includes(nextStatus) &&
+    nextStatus !== OrderStatus.CANCELLED
+  ) {
+    return apiFailure(
+      "FORBIDDEN",
+      "Expedição bloqueada por alerta de segurança/fraude. Contate o suporte EcoPet.",
+      403
+    );
+  }
+
   const allowed = ALLOWED_TRANSITIONS[order.status] ?? [];
   if (!allowed.includes(nextStatus)) {
     return apiFailure(

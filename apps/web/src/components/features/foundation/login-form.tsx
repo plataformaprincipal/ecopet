@@ -1,11 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { TurnstileField } from "@/components/security/turnstile-field";
+import { useTurnstile } from "@/hooks/use-turnstile";
+import { TURNSTILE_ACTIONS } from "@/lib/turnstile/actions";
+import { getTurnstilePublicConfig } from "@/lib/turnstile/config";
 import { dashboardPathForRole } from "@/lib/auth/dashboard";
 import { notifySessionChanged } from "@/lib/auth/session-events";
 import { confirmSessionCookie } from "@/lib/auth/confirm-session";
@@ -34,6 +38,12 @@ export function FoundationLoginForm({ variant = "default" }: FoundationLoginForm
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [turnstileRequired, setTurnstileRequired] = useState(false);
+  const turnstileEnabled = useMemo(() => getTurnstilePublicConfig().enabled, []);
+  const turnstile = useTurnstile({
+    action: TURNSTILE_ACTIONS.LOGIN_RISK,
+    required: turnstileRequired && turnstileEnabled,
+  });
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -44,7 +54,16 @@ export function FoundationLoginForm({ variant = "default" }: FoundationLoginForm
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier, password }),
+        body: JSON.stringify({
+          identifier,
+          password,
+          ...(turnstileRequired
+            ? {
+                turnstileToken: turnstile.consumeToken(),
+                turnstileAction: TURNSTILE_ACTIONS.LOGIN_RISK,
+              }
+            : {}),
+        }),
         credentials: "include",
       });
       const raw = await res.text();
@@ -61,13 +80,22 @@ export function FoundationLoginForm({ variant = "default" }: FoundationLoginForm
       }
       if (!res.ok || data.success === false) {
         const parsed = parseApiError(data);
-        setError(
-          tApi(parsed.message || t("auth.login.genericError"), parsed.code)
-        );
+        if (parsed.code === "TURNSTILE_REQUIRED") {
+          setTurnstileRequired(true);
+          turnstile.reset();
+        } else if (
+          parsed.code === "TURNSTILE_FAILED" ||
+          parsed.code === "WRONG_PASSWORD" ||
+          parsed.code === "USER_NOT_FOUND"
+        ) {
+          turnstile.reset();
+          if (parsed.code === "TURNSTILE_FAILED") {
+            setTurnstileRequired(true);
+          }
+        }
+        setError(tApi(parsed.message || t("auth.login.genericError"), parsed.code));
         return;
       }
-      // Aceita apenas caminhos internos absolutos; rejeita URLs externas e
-      // protocol-relative ("//host", "/\\host") para evitar open-redirect.
       const safeCallback =
         callbackUrl &&
         callbackUrl.startsWith("/") &&
@@ -93,6 +121,10 @@ export function FoundationLoginForm({ variant = "default" }: FoundationLoginForm
       setLoading(false);
     }
   }
+
+  const canSubmit =
+    !loading &&
+    (!turnstileRequired || !turnstileEnabled || turnstile.isVerified);
 
   const formContent = (
     <>
@@ -123,7 +155,7 @@ export function FoundationLoginForm({ variant = "default" }: FoundationLoginForm
         <div>
           <div className="flex items-center justify-between gap-2">
             <label htmlFor="login-password" className="text-sm font-medium text-ecopet-dark dark:text-white">
-              Senha
+              {t("auth.login.password")}
             </label>
             <label className="flex items-center gap-2 text-xs text-ecopet-gray dark:text-white/60">
               <input type="checkbox" className="rounded border-ecopet-gray/30" />
@@ -148,16 +180,29 @@ export function FoundationLoginForm({ variant = "default" }: FoundationLoginForm
             className="inline-block rounded-sm font-medium text-ecopet-green underline-offset-2 transition-colors hover:text-emerald-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ecopet-green/40 focus-visible:ring-offset-2 dark:text-emerald-400 dark:hover:text-emerald-300"
             aria-label={t("auth.login.forgotLinkAria")}
           >
-            Esqueci minha senha
+            {t("auth.login.forgot")}
           </Link>
         </p>
+
+        {turnstileRequired && turnstileEnabled ? (
+          <TurnstileField
+            action={TURNSTILE_ACTIONS.LOGIN_RISK}
+            state={turnstile.state}
+            resetKey={turnstile.resetKey}
+            onVerify={turnstile.onVerify}
+            onExpire={turnstile.onExpire}
+            onError={turnstile.onError}
+            onLoad={turnstile.onLoad}
+          />
+        ) : null}
+
         {error && (
           <p id="login-error" className="text-sm text-red-600" role="alert" aria-live="polite">
             {error}
           </p>
         )}
-        <Button type="submit" className="w-full rounded-2xl" size="lg" disabled={loading}>
-          {loading ? t("auth.login.entering") : "Entrar"}
+        <Button type="submit" className="w-full rounded-2xl" size="lg" disabled={!canSubmit}>
+          {loading ? t("auth.login.entering") : t("auth.login.submit")}
         </Button>
       </form>
       {variant === "default" && (

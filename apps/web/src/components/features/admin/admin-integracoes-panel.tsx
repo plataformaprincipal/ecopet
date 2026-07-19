@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AdminPageHeader } from "./ui/admin-page-header";
@@ -400,6 +401,14 @@ export function AdminIntegracoesPanel() {
                     >
                       {testingId === item.provider ? "Testando…" : "Testar config"}
                     </Button>
+                  ) : null}
+
+                  {item.provider === "turnstile" ? (
+                    <div className="space-y-2 border-t border-zinc-100 pt-3 dark:border-white/10">
+                      <Button asChild size="sm" variant="outline">
+                        <Link href="/admin/integracoes/turnstile">Abrir diagnóstico Turnstile</Link>
+                      </Button>
+                    </div>
                   ) : null}
 
                   {item.provider === "mercado_pago" ? (

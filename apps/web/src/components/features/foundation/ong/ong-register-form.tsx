@@ -7,6 +7,10 @@ import type { CountryCode } from "libphonenumber-js";
 import { Check, ImageIcon, Loader2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { TurnstileField } from "@/components/security/turnstile-field";
+import { useTurnstile } from "@/hooks/use-turnstile";
+import { TURNSTILE_ACTIONS } from "@/lib/turnstile/actions";
+import { getTurnstilePublicConfig } from "@/lib/turnstile/config";
 import { RegisterProgress } from "@/components/features/foundation/register-progress";
 import { FoundationPasswordField, FoundationConfirmPasswordField } from "@/components/features/foundation/password-field";
 import { InternationalPhoneField } from "@/components/features/foundation/international-phone-field";
@@ -228,6 +232,11 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
   const [documents, setDocuments] = useState<OngDocumentItem[]>([]);
   const [docsError, setDocsError] = useState("");
   const [stepFeedback, setStepFeedback] = useState<string[]>([]);
+  const turnstileEnabled = useMemo(() => getTurnstilePublicConfig().enabled, []);
+  const turnstile = useTurnstile({
+    action: TURNSTILE_ACTIONS.REGISTER_NGO,
+    required: turnstileEnabled,
+  });
 
   useEffect(() => {
     try {
@@ -449,9 +458,13 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
     }
 
     try {
-      const payload = formToOngRegisterPayload(form, phoneE164, {
-        providedDocumentTypes: documents.filter((d) => d.status === "uploaded").map((d) => d.type),
-      });
+      const payload = {
+        ...formToOngRegisterPayload(form, phoneE164, {
+          providedDocumentTypes: documents.filter((d) => d.status === "uploaded").map((d) => d.type),
+        }),
+        turnstileToken: turnstile.consumeToken(),
+        turnstileAction: TURNSTILE_ACTIONS.REGISTER_NGO,
+      };
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -462,6 +475,7 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
       if (!res.ok || data.success === false) {
         const { code, message } = parseApiFailureError(data);
         setError(res.status === 409 ? mapRegisterConflictMessage(code, message) : tApi(message, code) || o.validation.registerError);
+        turnstile.reset();
         return;
       }
       localStorage.removeItem(ONG_DRAFT_KEY);
@@ -847,6 +861,17 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
             onAcceptPrivacyChange={setAcceptPrivacy}
             error={termsError || fieldErrors.legal}
           />
+          {turnstileEnabled ? (
+            <TurnstileField
+              action={TURNSTILE_ACTIONS.REGISTER_NGO}
+              state={turnstile.state}
+              resetKey={turnstile.resetKey}
+              onVerify={turnstile.onVerify}
+              onExpire={turnstile.onExpire}
+              onError={turnstile.onError}
+              onLoad={turnstile.onLoad}
+            />
+          ) : null}
         </section>
       )}
 
@@ -856,7 +881,11 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
             {o.actions.back}
           </Button>
           {step === "security" ? (
-            <Button type="button" onClick={() => void handleSubmit()} disabled={loading || !acceptTerms || !acceptPrivacy}>
+            <Button
+              type="button"
+              onClick={() => void handleSubmit()}
+              disabled={loading || !acceptTerms || !acceptPrivacy || (turnstileEnabled && !turnstile.isVerified)}
+            >
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />

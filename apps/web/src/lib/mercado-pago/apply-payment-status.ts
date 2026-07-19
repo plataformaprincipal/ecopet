@@ -134,19 +134,23 @@ export async function applyInternalPaymentStatus(params: {
     }
 
     if (
-      (isTerminalFailure(params.internalStatus) || isRefundedStatus(params.internalStatus)) &&
-      payment.order.status === OrderStatus.PAID &&
-      isRefundedStatus(params.internalStatus)
+      isRefundedStatus(params.internalStatus) &&
+      (payment.order.status === OrderStatus.PAID ||
+        payment.order.status === OrderStatus.PARTIALLY_REFUNDED)
     ) {
+      const orderStatus =
+        params.internalStatus === "PARTIALLY_REFUNDED"
+          ? OrderStatus.PARTIALLY_REFUNDED
+          : OrderStatus.REFUNDED;
       await tx.order.update({
         where: { id: payment.orderId },
-        data: { status: OrderStatus.REFUNDED },
+        data: { status: orderStatus },
       });
       await tx.orderStatusHistory.create({
         data: {
           orderId: payment.orderId,
-          status: OrderStatus.REFUNDED,
-          note: `Pagamento estornado/charged_back (${params.source})`,
+          status: orderStatus,
+          note: `Pagamento ${params.internalStatus} (${params.source})`,
         },
       });
     }
@@ -171,10 +175,16 @@ export async function applyInternalPaymentStatus(params: {
   });
 
   const meta = (payment.metadata as PaymentMeta | null) ?? {};
-  if (
+  // Estoque: liberar em falha/cancelamento/expiração.
+  // Estorno total/parcial NÃO devolve estoque automaticamente (exige devolução física/admin).
+  const shouldReleaseStock =
     !meta.stockReleased &&
-    (isTerminalFailure(params.internalStatus) || isRefundedStatus(params.internalStatus))
-  ) {
+    isTerminalFailure(params.internalStatus) &&
+    params.internalStatus !== "REFUNDED" &&
+    params.internalStatus !== "PARTIALLY_REFUNDED" &&
+    params.internalStatus !== "CHARGED_BACK";
+
+  if (shouldReleaseStock) {
     try {
       await restoreStockForOrder(payment.orderId, payment.userId);
       await prisma.payment.update({
@@ -185,6 +195,18 @@ export async function applyInternalPaymentStatus(params: {
       });
     } catch {
       /* estoque: log via audit abaixo */
+    }
+  }
+
+  // Chargeback: bloqueia fulfillment; estoque fica para análise
+  if (params.internalStatus === "CHARGED_BACK") {
+    try {
+      await prisma.order.update({
+        where: { id: payment.orderId },
+        data: { fulfillmentBlocked: true, fraudHold: true },
+      });
+    } catch {
+      /* ignore */
     }
   }
 

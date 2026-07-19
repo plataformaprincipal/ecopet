@@ -267,6 +267,19 @@
       "ADMIN": "Administrator"
     }
   },
+  "turnstile": {
+    "verifying": "Verifying...",
+    "verified": "Verification complete",
+    "required": "Verification required",
+    "waiting": "Waiting for verification",
+    "expired": "Verification expired. Please try again.",
+    "failed": "Could not verify. Please try again.",
+    "retry": "Try again",
+    "unavailable": "Service temporarily unavailable",
+    "suspicious": "Suspicious activity detected",
+    "tooManyAttempts": "Too many attempts",
+    "waitBeforeRetry": "Please wait before trying again"
+  },
   "auth": {
     "login": {
       "title": "Welcome back",

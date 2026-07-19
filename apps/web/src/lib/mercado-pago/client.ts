@@ -151,3 +151,99 @@ export async function getMercadoPagoOrder(
   const id = encodeURIComponent(providerOrderId);
   return mpFetch<MpOrderResponse>(`/v1/orders/${id}`, { method: "GET" });
 }
+
+/** GET /v1/payments/{id} — Payments API legada (compatibilidade webhook). */
+export async function getMercadoPagoLegacyPayment(
+  paymentId: string
+): Promise<MpClientResult<Record<string, unknown>>> {
+  const id = encodeURIComponent(paymentId);
+  return mpFetch<Record<string, unknown>>(`/v1/payments/${id}`, { method: "GET" });
+}
+
+/** GET /v1/claims/{id} */
+export async function getMercadoPagoClaim(
+  claimId: string
+): Promise<MpClientResult<Record<string, unknown>>> {
+  const id = encodeURIComponent(claimId);
+  return mpFetch<Record<string, unknown>>(`/v1/claims/${id}`, { method: "GET" });
+}
+
+/** GET /v1/chargebacks/{id} */
+export async function getMercadoPagoChargeback(
+  chargebackId: string
+): Promise<MpClientResult<Record<string, unknown>>> {
+  const id = encodeURIComponent(chargebackId);
+  return mpFetch<Record<string, unknown>>(`/v1/chargebacks/${id}`, { method: "GET" });
+}
+
+/** GET /merchant_orders/{id} — pedidos comerciais (Checkout Pro / QR). */
+export async function getMercadoPagoMerchantOrder(
+  merchantOrderId: string
+): Promise<MpClientResult<Record<string, unknown>>> {
+  const id = encodeURIComponent(merchantOrderId);
+  return mpFetch<Record<string, unknown>>(`/merchant_orders/${id}`, { method: "GET" });
+}
+
+/** POST /v1/payments/{id}/refunds — estorno total (body vazio) ou parcial `{ amount }`. */
+export async function refundMercadoPagoLegacyPayment(
+  paymentId: string,
+  idempotencyKey: string,
+  amount?: number
+): Promise<MpClientResult<Record<string, unknown>>> {
+  const id = encodeURIComponent(paymentId);
+  const body =
+    amount !== undefined && Number.isFinite(amount)
+      ? { amount: Number(amount.toFixed(2)) }
+      : {};
+  return mpFetch<Record<string, unknown>>(`/v1/payments/${id}/refunds`, {
+    method: "POST",
+    body,
+    idempotencyKey,
+  });
+}
+
+/** GET /v1/payments/{id}/refunds — lista estornos do pagamento. */
+export async function listMercadoPagoPaymentRefunds(
+  paymentId: string
+): Promise<MpClientResult<unknown>> {
+  const id = encodeURIComponent(paymentId);
+  return mpFetch<unknown>(`/v1/payments/${id}/refunds`, { method: "GET" });
+}
+
+/**
+ * Cancela pagamento pendente (Payments API).
+ * PUT /v1/payments/{id} com status cancelled — só para não capturados/pendentes.
+ */
+export async function cancelMercadoPagoLegacyPayment(
+  paymentId: string,
+  idempotencyKey: string
+): Promise<MpClientResult<Record<string, unknown>>> {
+  const id = encodeURIComponent(paymentId);
+  return mpFetch<Record<string, unknown>>(`/v1/payments/${id}`, {
+    method: "PUT",
+    body: { status: "cancelled" },
+    idempotencyKey,
+  });
+}
+
+/** GET /v1/payment_methods — meios disponíveis na conta. */
+export async function getMercadoPagoPaymentMethods(): Promise<
+  MpClientResult<Array<Record<string, unknown>>>
+> {
+  return mpFetch<Array<Record<string, unknown>>>("/v1/payment_methods", { method: "GET" });
+}
+
+/** GET /v1/payment_methods/installments — opções oficiais de parcelamento. */
+export async function getMercadoPagoInstallments(params: {
+  amount: number;
+  bin?: string;
+  paymentMethodId?: string;
+}): Promise<MpClientResult<unknown>> {
+  const q = new URLSearchParams();
+  q.set("amount", params.amount.toFixed(2));
+  if (params.bin) q.set("bin", params.bin.slice(0, 8));
+  if (params.paymentMethodId) q.set("payment_method_id", params.paymentMethodId);
+  return mpFetch<unknown>(`/v1/payment_methods/installments?${q.toString()}`, {
+    method: "GET",
+  });
+}

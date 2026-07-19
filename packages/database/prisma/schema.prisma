@@ -121,6 +121,7 @@ enum OrderStatus {
   PICKED_UP
   CANCELLED
   REFUNDED
+  PARTIALLY_REFUNDED
 }
 
 enum SubscriptionPlan {
@@ -548,6 +549,8 @@ model User {
   partnerOrders Order[]   @relation("PartnerOrders")
   wallet        Wallet?
   refunds       Refund[]
+  paymentRefundsRequested PaymentRefund[] @relation("PaymentRefundRequester")
+  paymentRefundsApproved  PaymentRefund[] @relation("PaymentRefundApprover")
   advisorySubscription AdvisorySubscription?
   partnerLogistics PartnerLogisticsConfig? @relation("PartnerLogistics")
   cart          Cart?
@@ -1374,6 +1377,9 @@ model Order {
   walletTransactionId String?
   trackingCode      String?
   estimatedDelivery DateTime?
+  /// Bloqueio de expedição (ex.: alerta de fraude Mercado Pago)
+  fulfillmentBlocked Boolean       @default(false)
+  fraudHold         Boolean        @default(false)
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
 
@@ -1383,11 +1389,18 @@ model Order {
   fulfillments      OrderFulfillment[]
   statusHistory     OrderStatusHistory[]
   refunds           Refund[]
+  paymentRefunds    PaymentRefund[]
   payments          Payment[]
+  mpFraudAlerts     MpFraudAlert[]
+  mpClaims          MpClaim[]
+  mpDisputes        MpDispute[]
+  mpShipments       MpShipment[]
 
   @@index([userId])
   @@index([partnerId])
   @@index([status])
+  @@index([fraudHold])
+  @@index([fulfillmentBlocked])
 }
 
 model OrderFulfillment {
@@ -2179,18 +2192,27 @@ model Payment {
   externalReference String?
   idempotencyKey    String?   @unique
   paymentMethod     String?
+  paymentType       String?
+  installments      Int?
   amount            Float
+  refundedAmount    Float     @default(0)
   currency          String    @default("BRL")
   status            String    @default("PENDING")
   statusDetail      String?
   metadata          Json?
   approvedAt        DateTime?
+  rejectedAt        DateTime?
   cancelledAt       DateTime?
   refundedAt        DateTime?
+  expiresAt         DateTime?
+  /// Lock lógico para estornos concorrentes (admin)
+  refundLockUntil   DateTime?
+  refundLockBy      String?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
   order             Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
   events            PaymentEvent[]
+  paymentRefunds    PaymentRefund[]
 
   @@index([orderId])
   @@index([userId])
@@ -2199,6 +2221,59 @@ model Payment {
   @@index([externalId])
   @@index([providerOrderId])
   @@index([externalReference])
+}
+
+/// Estorno Mercado Pago (total/parcial) — separado do Refund legado de carteira
+model PaymentRefund {
+  id                 String    @id @default(cuid())
+  paymentId          String
+  orderId            String
+  /// Comprador do pedido
+  buyerUserId        String?
+  providerRefundId   String?
+  type               String
+  amount             Float
+  reason             String
+  internalReason     String?
+  requestedById      String?
+  approvedById       String?
+  status             String    @default("REQUESTED")
+  providerStatus     String?
+  idempotencyKey     String?   @unique
+  stockReturnStatus  String    @default("NOT_REQUIRED")
+  requestedAt        DateTime  @default(now())
+  processedAt        DateTime?
+  failedAt           DateTime?
+  failureCode        String?
+  failureReason      String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  payment            Payment   @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  order              Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  requestedBy        User?     @relation("PaymentRefundRequester", fields: [requestedById], references: [id], onDelete: SetNull)
+  approvedBy         User?     @relation("PaymentRefundApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  @@index([paymentId, createdAt])
+  @@index([orderId, createdAt])
+  @@index([status, createdAt])
+  @@index([providerRefundId])
+}
+
+/// Habilitação administrativa de meios (não pode ativar o que a conta MP não suporta)
+model PaymentMethodConfiguration {
+  id                  String   @id @default(cuid())
+  methodId            String   @unique
+  displayName         String
+  enabled             Boolean  @default(true)
+  supportedByAccount  Boolean  @default(false)
+  lastCheckedAt       DateTime?
+  notes               String?
+  updatedById         String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([enabled, supportedByAccount])
 }
 
 model PaymentEvent {
@@ -2464,6 +2539,40 @@ model SecurityEvent {
   user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([eventType, createdAt])
+}
+
+/// Métricas / auditoria sanitizada de desafios bot (Turnstile). Nunca armazena token ou secret.
+model SecurityVerificationEvent {
+  id                    String   @id @default(cuid())
+  provider              String
+  action                String
+  flow                  String?
+  success               Boolean
+  errorCode             String?
+  hostname              String?
+  environment           String?
+  userId                String?
+  requestCorrelationId  String?
+  /// Hash SHA-256 do token (anti-replay). Nunca o token em claro.
+  tokenHash             String?  @unique
+  /// Hash truncado do IP (minimização LGPD). Nunca IP bruto.
+  ipHash                String?
+  createdAt             DateTime @default(now())
+
+  @@index([provider, createdAt])
+  @@index([action, createdAt])
+  @@index([success, createdAt])
+  @@index([errorCode, createdAt])
+}
+
+/// Contador de rate limit compatível com Vercel multi-instância (PostgreSQL).
+model RateLimitBucket {
+  id        String   @id
+  count     Int      @default(0)
+  resetAt   DateTime
+  updatedAt DateTime @updatedAt
+
+  @@index([resetAt])
 }
 
 model VerificationCode {
@@ -4130,4 +4239,357 @@ model NotificationEvent {
 
   @@index([status, createdAt])
   @@index([userId])
+}
+
+// ─── Mercado Pago Webhooks (multi-tópico) ───
+
+enum MpWebhookProcessingStatus {
+  RECEIVED
+  VALIDATED
+  PROCESSING
+  PROCESSED
+  IGNORED
+  UNSUPPORTED
+  NOT_APPLICABLE
+  RETRY_PENDING
+  FAILED
+  DEAD_LETTER
+}
+
+enum MpFraudAlertStatus {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  BLOCKED
+  RELEASED
+  REFUNDED
+}
+
+enum MpClaimStatus {
+  OPEN
+  UNDER_REVIEW
+  WAITING_SELLER
+  WAITING_BUYER
+  RESOLVED
+  CLOSED
+  UNKNOWN
+}
+
+enum MpDisputeStatus {
+  OPEN
+  UNDER_REVIEW
+  EVIDENCE_REQUIRED
+  EVIDENCE_SUBMITTED
+  WON
+  LOST
+  CANCELLED
+  UNKNOWN
+}
+
+/// Evento de webhook Mercado Pago (sanitizado, tipado, com retry/dead-letter).
+model MpWebhookEvent {
+  id                String                    @id @default(cuid())
+  provider          String                    @default("mercado_pago")
+  environment       String                    @default("test")
+  eventType         String
+  panelTopic        String?
+  action            String?
+  providerEventId   String?
+  resourceType      String?
+  resourceId        String?
+  applicationId     String?
+  mpUserId          String?
+  requestId         String?
+  payloadHash       String
+  signatureValid    Boolean                   @default(false)
+  liveMode          Boolean?
+  processingStatus  MpWebhookProcessingStatus @default(RECEIVED)
+  retryCount        Int                       @default(0)
+  maxRetries        Int                       @default(5)
+  nextRetryAt       DateTime?
+  failureCode       String?
+  failureReason     String?
+  sanitizedPayload  Json
+  orderId           String?
+  paymentId         String?
+  partnerId         String?
+  userId            String?
+  legacyWebhookId   String?
+  receivedAt        DateTime                  @default(now())
+  validatedAt       DateTime?
+  processedAt       DateTime?
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+  attempts          MpWebhookAttempt[]
+  snapshots         MpResourceSnapshot[]
+
+  @@unique([providerEventId, eventType, resourceId])
+  @@index([processingStatus, createdAt])
+  @@index([eventType, createdAt])
+  @@index([resourceId])
+  @@index([orderId])
+  @@index([paymentId])
+  @@index([payloadHash])
+  @@index([nextRetryAt])
+  @@index([environment, createdAt])
+}
+
+model MpWebhookAttempt {
+  id              String   @id @default(cuid())
+  webhookEventId  String
+  attemptNumber   Int
+  status          String
+  failureCode     String?
+  failureReason   String?
+  latencyMs       Int?
+  createdAt       DateTime @default(now())
+  webhookEvent    MpWebhookEvent @relation(fields: [webhookEventId], references: [id], onDelete: Cascade)
+
+  @@index([webhookEventId, createdAt])
+}
+
+model MpResourceSnapshot {
+  id              String   @id @default(cuid())
+  webhookEventId  String?
+  resourceType    String
+  resourceId      String
+  source          String
+  sanitizedBody   Json
+  fetchedAt       DateTime @default(now())
+  webhookEvent    MpWebhookEvent? @relation(fields: [webhookEventId], references: [id], onDelete: SetNull)
+
+  @@index([resourceType, resourceId])
+  @@index([webhookEventId])
+}
+
+model MpFraudAlert {
+  id                String             @id @default(cuid())
+  providerAlertId   String?
+  paymentProviderId String?
+  merchantOrderId   String?
+  siteId            String?
+  description       String?
+  status            MpFraudAlertStatus @default(PENDING_REVIEW)
+  orderId           String?
+  paymentId         String?
+  partnerId         String?
+  userId            String?
+  webhookEventId    String?
+  adminNotes        String?
+  resolvedAt        DateTime?
+  resolvedById      String?
+  metadata          Json?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  order             Order?             @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([orderId])
+  @@index([paymentId])
+  @@index([partnerId])
+}
+
+model MpClaim {
+  id               String        @id @default(cuid())
+  providerClaimId  String        @unique
+  status           MpClaimStatus @default(OPEN)
+  reason           String?
+  description      String?
+  amount           Float?
+  currency         String        @default("BRL")
+  dueDate          DateTime?
+  orderId          String?
+  paymentId        String?
+  partnerId        String?
+  userId           String?
+  webhookEventId   String?
+  resolution       String?
+  sellerResponse   String?
+  metadata         Json?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  order            Order?        @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([orderId])
+  @@index([partnerId])
+  @@index([userId])
+}
+
+model MpDispute {
+  id                 String          @id @default(cuid())
+  providerDisputeId  String          @unique
+  status             MpDisputeStatus @default(OPEN)
+  reason             String?
+  amount             Float?
+  currency           String          @default("BRL")
+  paymentProviderId  String?
+  dueDate            DateTime?
+  orderId            String?
+  paymentId          String?
+  partnerId          String?
+  userId             String?
+  webhookEventId     String?
+  evidenceSubmitted  Boolean         @default(false)
+  outcome            String?
+  payoutBlocked      Boolean         @default(true)
+  metadata           Json?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  order              Order?          @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([orderId])
+  @@index([partnerId])
+  @@index([dueDate])
+}
+
+model MpShipment {
+  id                 String    @id @default(cuid())
+  providerShipmentId String    @unique
+  status             String    @default("UNKNOWN")
+  carrier            String?
+  trackingCode       String?
+  estimatedDelivery  DateTime?
+  shippedAt          DateTime?
+  deliveredAt        DateTime?
+  failedAt           DateTime?
+  returnedAt         DateTime?
+  orderId            String?
+  partnerId          String?
+  webhookEventId     String?
+  metadata           Json?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  order              Order?    @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([orderId])
+  @@index([partnerId])
+  @@index([trackingCode])
+}
+
+model MpApplicationLink {
+  id               String    @id @default(cuid())
+  applicationId    String?
+  mpUserId         String?
+  action           String?
+  status           String    @default("UNKNOWN")
+  scopes           Json?
+  partnerId        String?
+  webhookEventId   String?
+  revokedAt        DateTime?
+  expiresAt        DateTime?
+  metadata         Json?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([partnerId])
+  @@index([status, createdAt])
+  @@index([applicationId])
+}
+
+model MpSubscriptionEvent {
+  id               String   @id @default(cuid())
+  topic            String
+  providerId       String
+  status           String   @default("RECEIVED")
+  applicability    String   @default("NOT_APPLICABLE")
+  userId           String?
+  webhookEventId   String?
+  sanitizedData    Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([topic, createdAt])
+  @@index([providerId])
+  @@index([applicability])
+}
+
+model MpPointEvent {
+  id               String   @id @default(cuid())
+  providerId       String
+  status           String   @default("RECEIVED")
+  applicability    String   @default("NOT_APPLICABLE")
+  deviceId         String?
+  partnerId        String?
+  webhookEventId   String?
+  sanitizedData    Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([partnerId])
+}
+
+model MpWalletEvent {
+  id               String   @id @default(cuid())
+  providerId       String
+  status           String   @default("RECEIVED")
+  applicability    String   @default("NOT_APPLICABLE")
+  webhookEventId   String?
+  sanitizedData    Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([status, createdAt])
+}
+
+model MpPayerProfileEvent {
+  id               String   @id @default(cuid())
+  providerId       String
+  status           String   @default("RECEIVED")
+  applicability    String   @default("NOT_APPLICABLE")
+  webhookEventId   String?
+  sanitizedData    Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model MpSelfServiceEvent {
+  id               String   @id @default(cuid())
+  providerId       String
+  status           String   @default("RECEIVED")
+  applicability    String   @default("NOT_APPLICABLE")
+  webhookEventId   String?
+  sanitizedData    Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model MpCommercialOrder {
+  id                      String   @id @default(cuid())
+  providerMerchantOrderId String   @unique
+  status                  String   @default("UNKNOWN")
+  applicability           String   @default("LEGACY_COMPAT")
+  orderId                 String?
+  paymentId               String?
+  partnerId               String?
+  webhookEventId          String?
+  sanitizedData           Json?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([orderId])
+}
+
+model MpReconciliationIssue {
+  id          String    @id @default(cuid())
+  issueType   String
+  severity    String    @default("medium")
+  status      String    @default("OPEN")
+  orderId     String?
+  paymentId   String?
+  resourceId  String?
+  message     String
+  details     Json?
+  resolvedAt  DateTime?
+  resolvedBy  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status, createdAt])
+  @@index([issueType, status])
+  @@index([orderId])
 }

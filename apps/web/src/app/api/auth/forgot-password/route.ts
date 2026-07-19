@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
-import { checkAuthRateLimit, clientIp } from "@/lib/rate-limit";
+import { checkDistributedRateLimit, clientIp } from "@/lib/rate-limit";
+import { requireTurnstile, TURNSTILE_ACTIONS } from "@/lib/turnstile/server";
+import { turnstilePublicMessage } from "@/lib/turnstile/errors";
 import {
   FORGOT_PASSWORD_GENERIC_MESSAGE,
   FORGOT_PASSWORD_PHONE_UNAVAILABLE_MESSAGE,
@@ -51,7 +53,7 @@ function genericRecoveryResponse(channel: "email" | "phone", devOtp?: string) {
 export async function POST(request: Request) {
   try {
     const ip = clientIp(request);
-    if (!checkAuthRateLimit(`forgot:ip:${ip}`, RATE_LIMIT_IP, RATE_WINDOW_MS)) {
+    if (!(await checkDistributedRateLimit(`forgot:ip:${ip}`, RATE_LIMIT_IP, RATE_WINDOW_MS))) {
       return apiFailure("RATE_LIMIT", RECOVERY_BLOCKED_MESSAGE, 429);
     }
 
@@ -61,6 +63,22 @@ export async function POST(request: Request) {
     if (!parsed.success) {
       const first = parsed.error.errors[0];
       return apiFailure("VALIDATION", first?.message ?? "Dados inválidos", 400);
+    }
+
+    // Turnstile antes de OTP/Resend — falha amigável (sem enumeração).
+    const turnstileError = await requireTurnstile({
+      token: body?.turnstileToken,
+      expectedAction: TURNSTILE_ACTIONS.PASSWORD_RECOVERY,
+      request,
+      remoteIp: ip,
+      flow: "password_recovery",
+    });
+    if (turnstileError) {
+      return apiFailure(
+        "TURNSTILE_FAILED",
+        turnstilePublicMessage("TOKEN_INVALID"),
+        400
+      );
     }
 
     const { identifier } = parsed.data;
