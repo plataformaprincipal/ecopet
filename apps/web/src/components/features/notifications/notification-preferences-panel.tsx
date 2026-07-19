@@ -117,6 +117,43 @@ export function NotificationPreferencesPanel() {
     setPushMessage(null);
     setError(null);
     try {
+      // Preferência: Firebase Cloud Messaging (quando configurado)
+      const { isFirebaseClientReady } = await import("@/lib/firebase/config");
+      if (isFirebaseClientReady()) {
+        const { requestFcmToken } = await import("@/lib/firebase/messaging-client");
+        const result = await requestFcmToken();
+        if (result.token) {
+          const res = await fetch("/api/notifications/push/register", {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              token: result.token,
+              deviceId: result.deviceId,
+              permissionStatus: "GRANTED",
+            }),
+          });
+          const body = (await res.json()) as {
+            success?: boolean;
+            error?: { message?: string };
+          };
+          if (!res.ok || !body.success) {
+            setError(body.error?.message ?? t("notifications.preferences.pushSubscribeError"));
+            return;
+          }
+          if (!prefs?.pushEnabled) {
+            await save({ pushEnabled: true });
+          }
+          setPushMessage(t("notifications.preferences.pushSubscribeSuccess"));
+          return;
+        }
+        if (result.state === "DENIED") {
+          setError(t("push.deniedHint"));
+          return;
+        }
+        // continua para Web Push legado se FCM falhar
+      }
+
       const keyRes = await fetch("/api/push/vapid-public-key");
       const keyJson = (await keyRes.json()) as { configured?: boolean; publicKey?: string };
       if (!keyJson.configured || !keyJson.publicKey) {

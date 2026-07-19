@@ -1615,6 +1615,37 @@
       "saveError": "Could not save preferences."
     }
   },
+  "push": {
+    "enable": "Enable notifications",
+    "disable": "Disable on this device",
+    "working": "Please wait…",
+    "notConfigured": "Firebase push is not configured in this environment.",
+    "unsupported": "This browser does not support push notifications.",
+    "deniedHint": "Permission blocked. Re-enable it in your browser settings for this site.",
+    "cardTitle": "Notifications on this device",
+    "cardDescription": "Get alerts for orders, messages and schedule even when the app is in the background.",
+    "statusLabel": "Status",
+    "device": "Device",
+    "lastSync": "Last sync",
+    "errorGeneric": "Could not sync notifications. Please try again.",
+    "open": "Open",
+    "dismiss": "Dismiss",
+    "foregroundTitle": "New notification",
+    "test": "Send test",
+    "sent": "Sent",
+    "failed": "Failed",
+    "tryAgain": "Try again",
+    "status": {
+      "default": "Not enabled",
+      "requesting": "Requesting permission…",
+      "granted": "Allowed",
+      "denied": "Blocked",
+      "unsupported": "Unsupported",
+      "registered": "Active on this device",
+      "error": "Error",
+      "errorToken": "Failed to register token"
+    }
+  },
   "gestor": {
     "title": "ECOPET Manager",
     "loading": "Loading ECOPET Manager...",

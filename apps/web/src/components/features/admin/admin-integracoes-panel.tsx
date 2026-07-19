@@ -411,6 +411,17 @@ export function AdminIntegracoesPanel() {
                     </div>
                   ) : null}
 
+                  {item.provider === "push" ? (
+                    <div className="space-y-2 border-t border-zinc-100 pt-3 dark:border-white/10">
+                      <Button asChild size="sm" variant="outline">
+                        <Link href="/admin/integracoes/firebase">Diagnóstico Firebase / FCM</Link>
+                      </Button>
+                      <Button asChild size="sm" variant="outline">
+                        <Link href="/admin/notificacoes/push">Painel Push</Link>
+                      </Button>
+                    </div>
+                  ) : null}
+
                   {item.provider === "mercado_pago" ? (
                     <div className="space-y-2 border-t border-zinc-100 pt-3 dark:border-white/10">
                       <p className="text-xs font-medium text-muted-foreground">

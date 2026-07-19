@@ -537,6 +537,7 @@ model User {
   notifications Notification[]
   notificationPreference NotificationPreference?
   pushSubscriptions PushSubscription[]
+  pushDevices       PushDevice[]
   sentMessages  Message[] @relation("Sender")
   conversations ConversationParticipant[]
   createdConversations Conversation[] @relation("ConversationCreator")
@@ -1638,6 +1639,80 @@ model PushSubscription {
   @@unique([endpoint])
   @@index([userId])
   @@index([userId, revokedAt])
+}
+
+/// Dispositivo FCM (Firebase Cloud Messaging) vinculado ao usuário autenticado.
+enum PushProvider {
+  FCM
+  WEB_PUSH
+}
+
+enum PushDeliveryStatus {
+  QUEUED
+  SENDING
+  SENT
+  FAILED
+  INVALID_TOKEN
+  SKIPPED
+  RETRY_PENDING
+}
+
+model PushDevice {
+  id                   String       @id @default(cuid())
+  userId               String
+  provider             PushProvider @default(FCM)
+  /// SHA-256 do token — busca/deduplicação (nunca expor o token).
+  tokenHash            String       @unique
+  /// Token FCM original cifrado (AES-256-GCM) — apenas server-side para envio.
+  encryptedToken       String
+  deviceId             String?
+  deviceName           String?
+  platform             String?
+  browser              String?
+  userAgentSanitized   String?
+  permissionStatus     String       @default("GRANTED")
+  active               Boolean      @default(true)
+  lastSeenAt           DateTime     @default(now())
+  lastSentAt           DateTime?
+  lastSuccessAt        DateTime?
+  lastFailureAt        DateTime?
+  failureCount         Int          @default(0)
+  invalidatedAt        DateTime?
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+
+  user                 User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deliveries           PushNotificationDelivery[]
+
+  @@index([userId, active])
+  @@index([active, lastSeenAt])
+  @@index([provider, active])
+  @@index([deviceId])
+}
+
+model PushNotificationDelivery {
+  id                 String             @id @default(cuid())
+  notificationId     String?
+  pushDeviceId       String
+  providerMessageId  String?
+  status             PushDeliveryStatus @default(QUEUED)
+  attemptCount       Int                @default(0)
+  sentAt             DateTime?
+  deliveredAt        DateTime?
+  failedAt           DateTime?
+  errorCode          String?
+  errorMessage       String?
+  idempotencyKey     String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  pushDevice         PushDevice         @relation(fields: [pushDeviceId], references: [id], onDelete: Cascade)
+
+  @@index([pushDeviceId, status])
+  @@index([notificationId])
+  @@index([status, createdAt])
+  @@index([idempotencyKey])
+  @@unique([idempotencyKey, pushDeviceId])
 }
 
 model Conversation {

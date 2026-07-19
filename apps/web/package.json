@@ -22,6 +22,7 @@
     "test:mercado-pago": "tsx --tsconfig tsconfig.json --test src/lib/mercado-pago/mercado-pago.test.ts src/lib/mercado-pago/webhooks/webhooks.test.ts",
     "test:refunds": "node --require ./scripts/stub-server-only.cjs --import tsx --test src/lib/mercado-pago/refunds.test.ts",
     "test:turnstile": "node --require ./scripts/stub-server-only.cjs --import tsx --test src/lib/turnstile/turnstile.test.ts",
+    "test:firebase": "node --require ./scripts/stub-server-only.cjs --import tsx --test src/lib/firebase/firebase.test.ts",
     "test:social:permissions": "node --import tsx --test src/lib/social/persona-permissions.test.ts",
     "test:talkjs": "node --import tsx --test src/lib/talkjs/server.test.ts",
     "test:ai": "node --import tsx --test ../../scripts/test-foundation-ai.mjs"
@@ -43,6 +44,8 @@
     "class-variance-authority": "^0.7.1",
     "cloudinary": "^2.6.1",
     "clsx": "^2.1.1",
+    "firebase": "^12.16.0",
+    "firebase-admin": "^14.2.0",
     "framer-motion": "^12.12.1",
     "jose": "^6.0.11",
     "libphonenumber-js": "^1.13.7",

@@ -101,7 +101,18 @@ export async function dispatchNotification(
         title: input.title,
         message: input.message,
         actionUrl: input.actionUrl,
-        metadata: input.metadata as Record<string, unknown> | undefined,
+        metadata: {
+          ...(input.metadata as Record<string, unknown> | undefined),
+          notificationId: notificationId ?? undefined,
+          type,
+          idempotencyKey:
+            typeof (input.metadata as { idempotencyKey?: string } | undefined)?.idempotencyKey ===
+            "string"
+              ? (input.metadata as { idempotencyKey: string }).idempotencyKey
+              : notificationId
+                ? `notif:${notificationId}:${provider.channel}`
+                : undefined,
+        },
       });
       results.push(outcome);
     } catch (err) {

@@ -14,6 +14,7 @@ import { AriaLiveProvider } from "@/components/shared/accessibility/aria-live-re
 import { EcopetFooter } from "@/components/layouts/ecopet-footer";
 import { SupportChatProvider } from "@/providers/support-chat-provider";
 import { SupportChatPanelLazy } from "@/components/features/support/support-chat-panel-lazy";
+import { ForegroundNotificationListener } from "@/components/notifications/foreground-notification-listener";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-jakarta", weight: ["500", "600", "700", "800"] });
@@ -80,6 +81,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <AuthGateProvider>
                     <AuthTokenSync />
                     <PreferencesSync />
+                    <ForegroundNotificationListener />
                     <SupportChatProvider>
                       <SkipLink />
                       <div className="flex min-h-screen flex-col">

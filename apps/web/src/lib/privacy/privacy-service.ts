@@ -136,6 +136,15 @@ export async function updatePrivacyRequestStatus(params: {
     },
   });
 
+  if (params.status === "COMPLETED" && request.type === "DELETE_ACCOUNT") {
+    try {
+      const { deactivateAllDevicesForUser } = await import("@/lib/firebase/token-management");
+      await deactivateAllDevicesForUser(request.userId);
+    } catch {
+      /* best-effort — não bloquear fluxo LGPD */
+    }
+  }
+
   await writeAuditLog({
     actorId: params.adminId,
     action: "UPDATE",

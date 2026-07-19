@@ -1615,6 +1615,37 @@
       "saveError": "No se pudieron guardar las preferencias."
     }
   },
+  "push": {
+    "enable": "Activar notificaciones",
+    "disable": "Desactivar en este dispositivo",
+    "working": "Espere…",
+    "notConfigured": "Push de Firebase aún no está configurado en este entorno.",
+    "unsupported": "Este navegador no admite notificaciones push.",
+    "deniedHint": "Permiso bloqueado. Reactívelo en la configuración del navegador para este sitio.",
+    "cardTitle": "Notificaciones en este dispositivo",
+    "cardDescription": "Reciba alertas de pedidos, mensajes y agenda aunque la app esté en segundo plano.",
+    "statusLabel": "Estado",
+    "device": "Dispositivo",
+    "lastSync": "Última sincronización",
+    "errorGeneric": "No se pudieron sincronizar las notificaciones. Inténtelo de nuevo.",
+    "open": "Abrir",
+    "dismiss": "Descartar",
+    "foregroundTitle": "Nueva notificación",
+    "test": "Enviar prueba",
+    "sent": "Enviado",
+    "failed": "Fallo",
+    "tryAgain": "Intentar de nuevo",
+    "status": {
+      "default": "No activado",
+      "requesting": "Solicitando permiso…",
+      "granted": "Permitido",
+      "denied": "Bloqueado",
+      "unsupported": "No compatible",
+      "registered": "Activo en este dispositivo",
+      "error": "Error",
+      "errorToken": "Error al registrar el token"
+    }
+  },
   "gestor": {
     "title": "Gestor ECOPET",
     "loading": "Cargando Gestor ECOPET...",
