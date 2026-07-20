@@ -59,7 +59,7 @@ export const INTEGRATION_PROVIDER_REGISTRY: readonly IntegrationProviderDefiniti
     id: "talkjs",
     name: "TalkJS",
     requiredEnvVars: ["NEXT_PUBLIC_TALKJS_APP_ID", "TALKJS_SECRET_KEY"],
-    optionalEnvVars: ["TALKJS_WEBHOOK_VERIFY"],
+    optionalEnvVars: ["TALKJS_WEBHOOK_VERIFY", "TALKJS_WEBHOOK_SECRET", "TALKJS_ENVIRONMENT", "TALKJS_API_BASE_URL"],
     category: "chat",
     capabilities: ["realtime_chat", "conversations"],
   },

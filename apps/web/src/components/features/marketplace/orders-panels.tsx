@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { StartConversationButton } from "@/components/messages/StartConversationButton";
 
 const PAYMENT_LABELS: Record<string, string> = {
   PIX: "PIX na entrega",
@@ -18,6 +19,7 @@ type Order = {
   total: number;
   createdAt: string;
   paymentMethod?: string;
+  partnerId?: string | null;
   items?: { name: string; quantity: number; price: number }[];
   statusHistory?: { status: string; note?: string; createdAt: string }[];
 };
@@ -102,6 +104,18 @@ export function ClientOrdersPanel({ mode = "list", orderId }: { mode?: "list" | 
           {order.status === "PENDING_CONFIRMATION" && (
             <Button size="sm" variant="outline" onClick={cancel}>Cancelar pedido</Button>
           )}
+          {order.partnerId ? (
+            <StartConversationButton
+              size="sm"
+              variant="default"
+              participantUserId={order.partnerId}
+              contextType="ORDER"
+              contextId={order.id}
+              title={`Pedido #${order.orderNumber}`}
+              label="Falar com o parceiro"
+              ariaLabel="Falar com o parceiro sobre este pedido"
+            />
+          ) : null}
           {error && <p className="text-red-600">{error}</p>}
           <Button asChild variant="ghost"><Link href="/dashboard/client/orders">Voltar</Link></Button>
         </CardContent>

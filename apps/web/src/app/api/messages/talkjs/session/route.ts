@@ -9,6 +9,7 @@ import {
   getTalkJsSecretKey,
   syncTalkJsUser,
 } from "@/lib/talkjs/server";
+import { getTalkJsPrivateConfig } from "@/lib/talkjs/config";
 
 export async function GET() {
   try {
@@ -29,6 +30,7 @@ export async function GET() {
 
     const signature = generateTalkJsSignature(dbUser.id);
     const identityVerificationEnabled = Boolean(getTalkJsSecretKey());
+    const { environment } = getTalkJsPrivateConfig();
 
     if (identityVerificationEnabled) {
       await syncTalkJsUser({
@@ -40,11 +42,12 @@ export async function GET() {
       });
     }
 
-    return apiSuccess({
+    const res = apiSuccess({
       appId,
       userId: dbUser.id,
       signature,
       identityVerificationEnabled,
+      environment,
       user: {
         id: dbUser.id,
         name: dbUser.name,
@@ -53,6 +56,9 @@ export async function GET() {
         role: dbUser.role,
       },
     });
+
+    res.headers.set("Cache-Control", "no-store, max-age=0");
+    return res;
   } catch (e) {
     return handleChatRouteError(e);
   }

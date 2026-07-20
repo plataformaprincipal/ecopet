@@ -1,21 +1,31 @@
 import { createHmac } from "crypto";
 import type { ConversationContextType, UserRole } from "@prisma/client";
 import type { TalkJsUserPayload } from "@/lib/talkjs/types";
+import {
+  getTalkJsPrivateConfig,
+  getTalkJsPublicConfig,
+  isTalkJsServerConfigured as isConfigured,
+  toTalkJsUserId,
+} from "@/lib/talkjs/config";
 
-const TALKJS_API = "https://api.talkjs.com/v1";
+export {
+  getTalkJsHealthSnapshot,
+  isMessagingFlagEnabled,
+  listMessagingFeatureFlags,
+  isTalkJsPublicConfigured,
+  toTalkJsUserId,
+} from "@/lib/talkjs/config";
 
 export function getTalkJsAppId(): string | null {
-  const appId = process.env.NEXT_PUBLIC_TALKJS_APP_ID?.trim();
-  return appId || null;
+  return getTalkJsPublicConfig().appId;
 }
 
 export function getTalkJsSecretKey(): string | null {
-  const secret = process.env.TALKJS_SECRET_KEY?.trim();
-  return secret || null;
+  return getTalkJsPrivateConfig().secretKey;
 }
 
 export function isTalkJsServerConfigured(): boolean {
-  return Boolean(getTalkJsAppId() && getTalkJsSecretKey());
+  return isConfigured();
 }
 
 export function buildTalkJsConversationId(params: {
@@ -32,18 +42,17 @@ export function buildTalkJsConversationId(params: {
 export function generateTalkJsSignature(userId: string): string | null {
   const secret = getTalkJsSecretKey();
   if (!secret) return null;
-  // Identity Verification: ative em TalkJS Dashboard → Settings → Security
-  // e use a mesma secret key em TALKJS_SECRET_KEY.
-  // O frontend recebe esta assinatura via GET /api/messages/talkjs/session.
-  return createHmac("sha256", secret).update(userId).digest("hex");
+  const talkJsId = toTalkJsUserId(userId);
+  return createHmac("sha256", secret).update(talkJsId).digest("hex");
 }
 
 async function talkJsRequest(path: string, body: Record<string, unknown>) {
   const appId = getTalkJsAppId();
   const secret = getTalkJsSecretKey();
+  const { apiV1Base } = getTalkJsPrivateConfig();
   if (!appId || !secret) return;
 
-  const res = await fetch(`${TALKJS_API}/${appId}${path}`, {
+  const res = await fetch(`${apiV1Base}/${appId}${path}`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${secret}`,
@@ -54,12 +63,13 @@ async function talkJsRequest(path: string, body: Record<string, unknown>) {
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    console.warn(`[TalkJS] sync failed ${path}: ${res.status} ${text}`);
+    console.warn(`[TalkJS] sync failed ${path}: ${res.status} ${text.slice(0, 200)}`);
   }
 }
 
 export async function syncTalkJsUser(user: TalkJsUserPayload) {
-  await talkJsRequest(`/users/${encodeURIComponent(user.id)}`, {
+  const id = toTalkJsUserId(user.id);
+  await talkJsRequest(`/users/${encodeURIComponent(id)}`, {
     name: user.name,
     email: user.email,
     photoUrl: user.photoUrl ?? undefined,
@@ -76,7 +86,7 @@ export async function syncTalkJsConversation(params: {
   contextId: string | null;
   ecopetConversationId: string;
 }) {
-  const participants = params.participantIds.map((id) => [id]);
+  const participants = params.participantIds.map((id) => [toTalkJsUserId(id)]);
   await talkJsRequest(`/conversations/${encodeURIComponent(params.conversationId)}`, {
     participants,
     subject: params.subject,
@@ -91,7 +101,8 @@ export async function syncTalkJsConversation(params: {
 export function assertPersonaCanMessage(initiatorRole: UserRole, targetRole: UserRole): boolean {
   if (initiatorRole === "ADMIN") return true;
   if (initiatorRole === "CLIENT" && (targetRole === "PARTNER" || targetRole === "ONG")) return true;
-  if (initiatorRole === "PARTNER" && targetRole === "CLIENT") return true;
-  if (initiatorRole === "ONG" && targetRole === "CLIENT") return true;
+  if (initiatorRole === "TUTOR" && (targetRole === "PARTNER" || targetRole === "ONG")) return true;
+  if (initiatorRole === "PARTNER" && (targetRole === "CLIENT" || targetRole === "TUTOR")) return true;
+  if (initiatorRole === "ONG" && (targetRole === "CLIENT" || targetRole === "TUTOR")) return true;
   return false;
 }

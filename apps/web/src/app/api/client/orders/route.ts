@@ -16,5 +16,11 @@ export async function GET() {
     take: 200,
   });
 
-  return apiSuccess({ orders, total: orders.length });
+  return apiSuccess({
+    orders: orders.map((o) => ({
+      ...o,
+      partnerId: o.partnerId,
+    })),
+    total: orders.length,
+  });
 }

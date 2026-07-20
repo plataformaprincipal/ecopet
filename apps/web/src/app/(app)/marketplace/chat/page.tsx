@@ -1,25 +1,45 @@
 "use client";
 
-import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import { MarketplacePageWrapper } from "@/components/features/marketplace/marketplace-page-wrapper";
-import { ChatHub } from "@/components/features/ecosystem/chat/chat-hub";
+import { Suspense, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
-function ChatContent() {
+/**
+ * Marketplace chat → redireciona para a central TalkJS real.
+ * Aceita ?partner= / ?userId= / ?contextType= / ?contextId=
+ */
+function MarketplaceChatRedirect() {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const role = (searchParams.get("role") as "client" | "partner" | "ngo") ?? "client";
-  const partner = searchParams.get("partner") ?? undefined;
-  const initialId = partner ? "c1" : undefined;
 
-  return <ChatHub role={role} initialConversationId={initialId} />;
+  useEffect(() => {
+    const qs = new URLSearchParams();
+    const partner = searchParams.get("partner") ?? searchParams.get("userId");
+    const contextType = searchParams.get("contextType");
+    const contextId = searchParams.get("contextId");
+    if (partner) qs.set("partner", partner);
+    if (contextType) qs.set("contextType", contextType);
+    if (contextId) qs.set("contextId", contextId);
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    router.replace(`/dashboard/messages${suffix}`);
+  }, [router, searchParams]);
+
+  return (
+    <div className="flex min-h-[320px] items-center justify-center p-8 text-sm text-muted-foreground" role="status">
+      Abrindo mensagens…
+    </div>
+  );
 }
 
 export default function MarketplaceChatPage() {
   return (
-    <MarketplacePageWrapper title="Mensagens" className="mx-auto max-w-6xl flex-1 p-4 lg:p-8">
-      <Suspense fallback={<div className="animate-pulse h-96 rounded-2xl bg-ecopet-gray/10" />}>
-        <ChatContent />
-      </Suspense>
-    </MarketplacePageWrapper>
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-6xl animate-pulse p-8">
+          <div className="h-96 rounded-2xl bg-muted/40" />
+        </div>
+      }
+    >
+      <MarketplaceChatRedirect />
+    </Suspense>
   );
 }
