@@ -158,6 +158,7 @@ export function applyCartSessionCookie(response: NextResponse, sessionId: string
     response.cookies.set(CART_SESSION_COOKIE, sessionId, {
       httpOnly: true,
       sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
       path: "/",
       maxAge: 60 * 60 * 24 * 30,
     });

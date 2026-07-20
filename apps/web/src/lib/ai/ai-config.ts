@@ -65,6 +65,16 @@ export const AI_CONFIG = {
   get monthlyBudgetCents(): number {
     return num(process.env.OPENAI_MONTHLY_BUDGET_CENTS, 5_000);
   },
+  get projectId(): string | undefined {
+    const id = process.env.OPENAI_PROJECT_ID?.trim();
+    return id || undefined;
+  },
+  get maxRetries(): number {
+    return Math.min(5, Math.max(1, num(process.env.OPENAI_MAX_RETRIES, 3)));
+  },
+  get retryBaseDelayMs(): number {
+    return num(process.env.OPENAI_RETRY_BASE_MS, 400);
+  },
   get maxInputChars(): number {
     return 8_000;
   },

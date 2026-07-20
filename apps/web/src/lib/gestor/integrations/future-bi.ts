@@ -37,8 +37,14 @@ export const EXTERNAL_BI_INTEGRATIONS: ExternalBiIntegration[] = [
   {
     id: "google_analytics",
     name: "Google Analytics",
-    status: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ? "ACTIVE" : "NOT_CONFIGURED",
-    description: "Analytics web.",
+    status: (() => {
+      const id = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim();
+      if (!id) return "NOT_CONFIGURED" as const;
+      if (!/^G-[A-Z0-9]+$/i.test(id)) return "NOT_CONFIGURED" as const;
+      if (/xxxxxxxx|your_/i.test(id)) return "NOT_CONFIGURED" as const;
+      return "ACTIVE" as const;
+    })(),
+    description: "GA4 web (gtag + Consent Mode v2) — ver /admin/integracoes/google-analytics.",
     requiredEnvVars: ["NEXT_PUBLIC_GA_MEASUREMENT_ID"],
     docsUrl: "https://developers.google.com/analytics",
   },

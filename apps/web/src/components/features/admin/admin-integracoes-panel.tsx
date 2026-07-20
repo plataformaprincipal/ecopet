@@ -337,6 +337,32 @@ export function AdminIntegracoesPanel() {
           </p>
         ) : null}
 
+        <Card className="border-zinc-200/80 dark:border-white/10">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Diagnósticos avançados</CardTitle>
+            <CardDescription>
+              Painéis sanitizados — Turnstile, Firebase, Google Maps, Analytics e Tag Manager.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            <Button asChild size="sm" variant="outline">
+              <Link href="/admin/integracoes/turnstile">Turnstile</Link>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/admin/integracoes/firebase">Firebase / FCM</Link>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/admin/integracoes/google-maps">Google Maps</Link>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/admin/integracoes/google-analytics">Google Analytics 4</Link>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/admin/integracoes/google-tag-manager">Google Tag Manager</Link>
+            </Button>
+          </CardContent>
+        </Card>
+
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {integrations.map((item) => {
             const canTest = Boolean(TEST_ENDPOINT[item.provider]) && item.configured;
@@ -429,6 +455,21 @@ export function AdminIntegracoesPanel() {
                       </Button>
                       <Button asChild size="sm" variant="outline">
                         <Link href="/admin/localizacoes">Localizações</Link>
+                      </Button>
+                    </div>
+                  ) : null}
+
+                  {item.provider === "google_analytics" ? (
+                    <div className="space-y-2 border-t border-zinc-100 pt-3 dark:border-white/10">
+                      <Button asChild size="sm" variant="outline">
+                        <Link href="/admin/integracoes/google-analytics">
+                          Diagnóstico Google Analytics 4
+                        </Link>
+                      </Button>
+                      <Button asChild size="sm" variant="outline">
+                        <Link href="/admin/integracoes/google-tag-manager">
+                          Diagnóstico Google Tag Manager
+                        </Link>
                       </Button>
                     </div>
                   ) : null}

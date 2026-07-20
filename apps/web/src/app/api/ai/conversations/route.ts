@@ -1,28 +1,15 @@
 import { apiSuccess, apiFailure } from "@/lib/api-response";
 import { requireAuth } from "@/lib/auth/guards";
-import { prisma } from "@/lib/prisma";
 import { createConversation } from "@/lib/ai/memory/store";
 import { normalizeLocale } from "@/lib/ai/ai-config";
+import { listAssistantConversations } from "@/lib/ai/assistant";
 
-export async function GET() {
+export async function GET(request: Request) {
   const { user, error } = await requireAuth();
   if (error || !user) return error!;
 
-  const conversations = await prisma.aIConversation.findMany({
-    where: { userId: user.id, deletedAt: null },
-    orderBy: { updatedAt: "desc" },
-    take: 50,
-    select: {
-      id: true,
-      title: true,
-      module: true,
-      locale: true,
-      status: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
-
+  const q = new URL(request.url).searchParams.get("q") ?? undefined;
+  const conversations = await listAssistantConversations(user.id, q ?? undefined);
   return apiSuccess({ conversations });
 }
 
@@ -42,7 +29,7 @@ export async function POST(request: Request) {
   try {
     const conversation = await createConversation({
       userId: user.id,
-      module: "eccopet-ai",
+      module: "ecopet-ai",
       role: String(user.role),
       locale,
       title,

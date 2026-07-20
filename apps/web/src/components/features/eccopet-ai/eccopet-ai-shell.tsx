@@ -14,12 +14,16 @@ import { Sparkles, MessageSquare, PanelRight, Bookmark, Lock } from "lucide-reac
 import { EcoPetLogo } from "@/components/shared/brand/ecopet-logo";
 import { LanguageSelector } from "@/components/features/i18n/language-selector";
 import { useAuthGate } from "@/providers/auth-gate-provider";
+import { useAuthSession } from "@/hooks/use-auth-session";
 import { useTranslation } from "@/providers/i18n-provider";
 import type { TranslateFn } from "@/lib/i18n";
 import { api } from "@/lib/api";
 import { ApiRequestError, parseApiFailureError } from "@/lib/api-errors";
 import { cn } from "@/lib/utils";
 import type { EccoPetTool } from "@/lib/public/eccopet-tools";
+import { getSmartSuggestions } from "@/lib/ai/modules/suggestions";
+import type { AssistantPersona } from "@/lib/ai/assistant/types";
+import type { AiLocale } from "@/lib/ai/ai-disclaimer";
 import {
   AiUnavailableBanner,
   isAiNotConfiguredErrorCode,
@@ -95,7 +99,19 @@ type ChatApiJson = {
 
 export function EccoPetAIShell() {
   const { isAuthenticated } = useAuthGate();
+  const { data: session } = useAuthSession();
   const { t, locale } = useTranslation();
+  const persona: AssistantPersona = (() => {
+    const role = session?.user?.role;
+    if (role === "ADMIN") return "ADMIN";
+    if (role === "PARTNER") return "PARTNER";
+    if (role === "ONG") return "ONG";
+    return "CLIENT";
+  })();
+  const smartSuggestions = useMemo(
+    () => getSmartSuggestions(persona, locale as AiLocale),
+    [persona, locale]
+  );
   const [conversations, setConversations] = useState<AIConversation[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -128,6 +144,8 @@ export function EccoPetAIShell() {
             title: string | null;
             createdAt: string;
             updatedAt?: string;
+            pinned?: boolean;
+            favorite?: boolean;
           }>;
         };
       }>("/api/ai/conversations");
@@ -141,6 +159,8 @@ export function EccoPetAIShell() {
             title: c.title?.trim() || t("ecopetAi.sidebar.newConversation"),
             messages: existing?.messages ?? [],
             createdAt: new Date(c.createdAt).getTime(),
+            pinned: Boolean(c.pinned),
+            favorite: Boolean(c.favorite),
           };
         });
       });
@@ -287,48 +307,163 @@ export function EccoPetAIShell() {
           return;
         }
 
-        const res = await fetch("/api/ai/chat", {
+        const res = await fetch("/api/ai/chat/stream", {
           method: "POST",
           credentials: "include",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
           signal: controller.signal,
           body: JSON.stringify({
             message: clean,
-            type: "general",
             locale,
             conversationId: convId,
-            module: "eccopet-ai",
+            pagePath: typeof window !== "undefined" ? window.location.pathname : "/eccopet",
+            module: "ecopet-ai",
           }),
         });
-        const json = (await res.json().catch(() => ({}))) as ChatApiJson;
-        const code = json.error?.code;
 
-        if (!res.ok || json.success === false) {
-          applyChatError(code, json.error?.message, convId, pendingId, userMsg.id);
+        // Fallback se stream indisponível
+        if (res.status === 501 || !res.ok || !res.body) {
+          const fallback = await fetch("/api/ai/chat", {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            signal: controller.signal,
+            body: JSON.stringify({
+              message: clean,
+              type: "general",
+              locale,
+              conversationId: convId,
+              module: "ecopet-ai",
+            }),
+          });
+          const json = (await fallback.json().catch(() => ({}))) as ChatApiJson;
+          const code = json.error?.code;
+          if (!fallback.ok || json.success === false) {
+            applyChatError(code, json.error?.message, convId, pendingId, userMsg.id);
+            return;
+          }
+          const reply =
+            (json.data?.content ?? json.data?.reply ?? json.content ?? json.reply)?.trim() ?? "";
+          if (!reply) {
+            applyChatError("AI_UNAVAILABLE", t("empty.ai.unavailable"), convId, pendingId);
+            return;
+          }
+          const serverMessageId = json.data?.messageId;
+          const serverConv = json.data?.conversationId;
+          if (serverConv && serverConv !== convId) {
+            setActiveId(serverConv);
+          }
+          updateConversation(serverConv || convId, (c) => ({
+            ...c,
+            messages: c.messages.map((m) =>
+              m.id === pendingId
+                ? {
+                    id: serverMessageId || m.id,
+                    role: "assistant",
+                    content: reply,
+                    recommendations: deriveRecommendations(`${clean} ${reply}`, t),
+                  }
+                : m
+            ),
+          }));
           return;
         }
 
-        const reply =
-          (json.data?.content ?? json.data?.reply ?? json.content ?? json.reply)?.trim() ?? "";
-        if (!reply) {
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        let assembled = "";
+        let serverMessageId: string | undefined;
+        let serverConv = convId;
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const parts = buffer.split("\n\n");
+          buffer = parts.pop() ?? "";
+          for (const part of parts) {
+            const line = part.split("\n").find((l) => l.startsWith("data: "));
+            if (!line) continue;
+            let event: {
+              type?: string;
+              text?: string;
+              content?: string;
+              code?: string;
+              message?: string;
+              messageId?: string;
+              conversationId?: string;
+              phase?: string;
+              tools?: string[];
+            };
+            try {
+              event = JSON.parse(line.slice(6)) as typeof event;
+            } catch {
+              continue;
+            }
+            if (event.type === "status" && event.phase) {
+              const phaseLabel =
+                event.phase === "tools"
+                  ? t("ecopetAi.status.tools")
+                  : event.phase === "context"
+                    ? t("ecopetAi.status.context")
+                    : event.phase === "summary"
+                      ? t("ecopetAi.status.summary")
+                      : t("ecopetAi.status.generating");
+              updateConversation(convId, (c) => ({
+                ...c,
+                messages: c.messages.map((m) =>
+                  m.id === pendingId
+                    ? {
+                        id: m.id,
+                        role: "assistant",
+                        content: assembled || phaseLabel,
+                        pending: true,
+                      }
+                    : m
+                ),
+              }));
+            } else if (event.type === "delta" && event.text) {
+              assembled += event.text;
+              updateConversation(convId, (c) => ({
+                ...c,
+                messages: c.messages.map((m) =>
+                  m.id === pendingId
+                    ? { id: m.id, role: "assistant", content: assembled, pending: true }
+                    : m
+                ),
+              }));
+            } else if (event.type === "error") {
+              applyChatError(event.code, event.message, convId, pendingId, userMsg.id);
+              return;
+            } else if (event.type === "done") {
+              assembled = event.content?.trim() || assembled;
+              serverMessageId = event.messageId;
+              if (event.conversationId) serverConv = event.conversationId;
+            }
+          }
+        }
+
+        if (!assembled.trim()) {
           applyChatError("AI_UNAVAILABLE", t("empty.ai.unavailable"), convId, pendingId);
           return;
         }
-
-        const serverMessageId = json.data?.messageId;
-        updateConversation(convId, (c) => ({
+        if (serverConv !== convId) setActiveId(serverConv);
+        updateConversation(serverConv, (c) => ({
           ...c,
           messages: c.messages.map((m) =>
             m.id === pendingId
               ? {
                   id: serverMessageId || m.id,
                   role: "assistant",
-                  content: reply,
-                  recommendations: deriveRecommendations(`${clean} ${reply}`, t),
+                  content: assembled,
+                  recommendations: deriveRecommendations(`${clean} ${assembled}`, t),
                 }
               : m
           ),
         }));
+        void loadConversations();
+        return;
       } catch (err) {
         if ((err as Error)?.name === "AbortError") {
           updateConversation(convId, (c) => ({
@@ -351,6 +486,7 @@ export function EccoPetAIShell() {
       demoCount,
       ensureConversationId,
       isAuthenticated,
+      loadConversations,
       loading,
       locale,
       t,
@@ -523,6 +659,38 @@ export function EccoPetAIShell() {
     [activeId, isAuthenticated, t]
   );
 
+  const handlePatchConversation = useCallback(
+    async (
+      id: string,
+      patch: { title?: string; pinned?: boolean; favorite?: boolean }
+    ) => {
+      if (!isAuthenticated) return;
+      try {
+        await api(`/api/ai/conversations/${id}`, {
+          method: "PATCH",
+          body: JSON.stringify(patch),
+        });
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.id === id
+              ? {
+                  ...c,
+                  ...(patch.title ? { title: patch.title } : {}),
+                  ...(typeof patch.pinned === "boolean" ? { pinned: patch.pinned } : {}),
+                  ...(typeof patch.favorite === "boolean"
+                    ? { favorite: patch.favorite }
+                    : {}),
+                }
+              : c
+          )
+        );
+      } catch {
+        setChatError(t("ecopetAi.errors.generic"));
+      }
+    },
+    [isAuthenticated, t]
+  );
+
   const handleNew = useCallback(() => {
     setActiveId(null);
     setChatError(null);
@@ -619,6 +787,17 @@ export function EccoPetAIShell() {
             onDelete={(id) => {
               void handleDelete(id);
             }}
+            onRename={(id, title) => {
+              void handlePatchConversation(id, { title });
+            }}
+            onTogglePin={(id) => {
+              const cur = conversations.find((c) => c.id === id);
+              void handlePatchConversation(id, { pinned: !cur?.pinned });
+            }}
+            onToggleFavorite={(id) => {
+              const cur = conversations.find((c) => c.id === id);
+              void handlePatchConversation(id, { favorite: !cur?.favorite });
+            }}
             onSelectPreset={handleSelectPreset}
             className="w-full"
           />
@@ -656,6 +835,7 @@ export function EccoPetAIShell() {
               }
               onSelectTool={aiUnavailable ? () => undefined : handleSelectTool}
               onAttachAttempt={handleAttach}
+              suggestions={smartSuggestions}
             />
           </div>
         </div>

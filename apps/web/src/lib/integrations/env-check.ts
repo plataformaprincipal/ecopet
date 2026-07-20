@@ -75,6 +75,25 @@ export function isGoogleMapsConfigured(source: NodeJS.ProcessEnv = process.env):
   );
 }
 
+/** GA4 — Measurement ID válido (G-*). Placeholders não contam. */
+export function isGoogleAnalyticsConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
+  const id = env("NEXT_PUBLIC_GA_MEASUREMENT_ID", source);
+  if (!id) return false;
+  const v = id.toLowerCase();
+  if (v.includes("xxxxxxxx") || v.includes("your_") || v === "g-xxxxxxxxxx" || v === "g-xxx") {
+    return false;
+  }
+  return /^G-[A-Z0-9]+$/i.test(id);
+}
+
+/** GTM — Container ID válido (GTM-*). Placeholders não contam. */
+export function isGoogleTagManagerConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
+  const id = env("NEXT_PUBLIC_GTM_ID", source);
+  if (!id) return false;
+  if (/^GTM-X+$/i.test(id)) return false;
+  return /^GTM-[A-Z0-9]{4,12}$/i.test(id);
+}
+
 export function isMapboxConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
   return Boolean(env("MAPBOX_ACCESS_TOKEN", source));
 }

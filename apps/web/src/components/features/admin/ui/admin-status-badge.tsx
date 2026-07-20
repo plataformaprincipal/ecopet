@@ -16,10 +16,26 @@ const VARIANTS: Record<string, string> = {
   DISABLED: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
   NOT_CONFIGURED: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
   INATIVO: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
+  READY: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+  READY_WITH_WARNINGS: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+  NOT_READY: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+  PASS: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+  WARN: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+  FAIL: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+  MANUAL: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
+  ONLINE: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+  OFFLINE: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+  N_A: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
+  HEALTHY: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+  UNHEALTHY: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+  RECOMMENDED: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+  OPTIONAL: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
+  GRANTED: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+  DENIED: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
 };
 
 export function AdminStatusBadge({ status, className }: { status: string; className?: string }) {
-  const key = status.toUpperCase().replace(/\s/g, "_");
+  const key = status.toUpperCase().replace(/\s/g, "_").replace(/\//g, "_");
   return (
     <span
       className={cn(

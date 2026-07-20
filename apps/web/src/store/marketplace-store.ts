@@ -3,6 +3,8 @@ import { persist } from "zustand/middleware";
 import type { CartItem, MarketplaceFilters, CustomServiceRequest, MarketplaceProduct, MarketplaceService, MarketplacePartner } from "@/lib/marketplace/types";
 import { DEFAULT_FILTERS } from "@/lib/marketplace/types";
 import { getQuoteById } from "@/lib/ecosystem/quotes-api";
+import { analyticsService } from "@/lib/analytics/service";
+import { MarketplaceEvents } from "@/lib/analytics/events";
 
 interface MarketplaceState {
   cart: CartItem[];
@@ -78,7 +80,7 @@ export const useMarketplaceStore = create<MarketplaceState>()(
       partnerCache: {},
       compareSnapshots: {},
 
-      addToCart: (item) =>
+      addToCart: (item) => {
         set((s) => {
           const existing = s.cart.find((c) => c.itemId === item.itemId && c.type === item.type);
           if (existing) {
@@ -93,13 +95,47 @@ export const useMarketplaceStore = create<MarketplaceState>()(
             cart: [...s.cart, { ...item, id: `cart-${Date.now()}-${Math.random().toString(36).slice(2, 7)}` }],
             cartOpen: true,
           };
-        }),
+        });
+        analyticsService.track(MarketplaceEvents.ADD_TO_CART, {
+          value: item.price * item.quantity,
+          params: {
+            item_id: item.itemId,
+            item_type: item.type,
+            quantity: item.quantity,
+            currency: "BRL",
+          },
+        });
+        // Espelho ecommerce namespaced (GTM) — não duplica hit GA4.
+        void import("@/lib/gtm").then(({ pushGtmEcommerce }) =>
+          pushGtmEcommerce("add_to_cart", {
+            currency: "BRL",
+            value: item.price * item.quantity,
+            items: [
+              {
+                item_id: item.itemId,
+                item_category: item.type,
+                price: item.price,
+                quantity: item.quantity,
+              },
+            ],
+          })
+        );
+      },
 
-      removeFromCart: (id) => set((s) => ({ cart: s.cart.filter((c) => c.id !== id) })),
-      updateQuantity: (id, qty) =>
+      removeFromCart: (id) => {
+        set((s) => ({ cart: s.cart.filter((c) => c.id !== id) }));
+        analyticsService.track(MarketplaceEvents.REMOVE_FROM_CART, {
+          params: { cart_line_id: id },
+        });
+      },
+      updateQuantity: (id, qty) => {
         set((s) => ({
           cart: s.cart.map((c) => (c.id === id ? { ...c, quantity: Math.max(1, qty) } : c)),
-        })),
+        }));
+        analyticsService.track(MarketplaceEvents.UPDATE_CART_QTY, {
+          params: { cart_line_id: id, quantity: Math.max(1, qty) },
+        });
+      },
       clearCart: () => set({ cart: [] }),
 
       cartCount: () => get().cart.reduce((s, c) => s + c.quantity, 0),

@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { analyticsService } from "@/lib/analytics/service";
+import { PetEvents } from "@/lib/analytics/events";
 
 type Pet = { id: string; name: string; species: string; breed?: string | null };
 
@@ -54,6 +56,12 @@ export function ClientPetsPanel({ mode = "list" }: { mode?: "list" | "new" }) {
       setError(data.error?.message ?? "Erro ao criar pet");
       return;
     }
+    analyticsService.track(PetEvents.PET_ADD, {
+      params: {
+        pet_id: data.data.pet.id,
+        species: form.species,
+      },
+    });
     window.location.href = `/dashboard/client/pets/${data.data.pet.id}`;
   }
 

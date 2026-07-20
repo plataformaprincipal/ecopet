@@ -648,6 +648,9 @@ model User {
   aiAuditLogs         AIAuditLog[]
   aiRecommendations   AIRecommendation[]
   aiJobs              AIJob[]
+  aiToolExecutions    AIToolExecution[]
+  aiSecurityEvents    AISecurityEvent[]
+  aiFiles             AIFile[]
   aiPrivacySettings   AIPrivacySettings?
   aiPromptsCreated    AIPrompt[] @relation("AIPromptAuthor")
   convertedGuestChats GuestChatSession[] @relation("GuestConvertedUser")
@@ -4005,6 +4008,7 @@ model AIMessage {
 
   @@index([conversationId])
   @@index([createdAt])
+  @@index([conversationId, createdAt])
 }
 
 model AITool {
@@ -4065,6 +4069,8 @@ model AITokenUsage {
 
   @@index([usageDate])
   @@index([userId])
+  @@index([createdAt])
+  @@index([usageDate, userId])
 }
 
 model AIFeedback {
@@ -4080,6 +4086,8 @@ model AIFeedback {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([createdAt])
+  @@index([conversationId])
 }
 
 model AIUsage {
@@ -4121,6 +4129,7 @@ model AIAuditLog {
   @@index([userId, createdAt])
   @@index([module, createdAt])
   @@index([decision])
+  @@index([createdAt])
 }
 
 model AIKnowledgeDocument {
@@ -4196,6 +4205,71 @@ model AIJob {
   @@index([status, createdAt])
   @@index([type, status])
   @@index([userId])
+}
+
+/// Execução de ferramenta (Function Calling) — observabilidade enterprise
+model AIToolExecution {
+  id             String   @id @default(cuid())
+  userId         String?
+  conversationId String?
+  toolName       String
+  module         String?
+  success        Boolean  @default(true)
+  latencyMs      Int      @default(0)
+  errorCode      String?
+  /// Params/resultados já sanitizados (nunca secrets)
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([toolName, createdAt])
+  @@index([success, createdAt])
+}
+
+/// Eventos de segurança / Prompt Firewall
+model AISecurityEvent {
+  id        String   @id @default(cuid())
+  userId    String?
+  category  String
+  severity  String   @default("medium")
+  decision  String
+  reason    String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([category, createdAt])
+  @@index([severity, createdAt])
+}
+
+/// Metadados de arquivo para IA (OCR/visão futuros — não processados aqui)
+model AIFile {
+  id             String   @id @default(cuid())
+  userId         String
+  conversationId String?
+  purpose        String   @default("ai_attachment")
+  fileName       String
+  mimeType       String
+  sizeBytes      Int
+  extension      String?
+  cloudinaryId   String?
+  secureUrl      String?
+  status         String   @default("UPLOADED")
+  /// virusScan: pending|clean|skipped — camada preparada
+  virusScan      String   @default("skipped")
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([conversationId])
+  @@index([status])
 }
 
 model AIPrivacySettings {
@@ -4713,4 +4787,68 @@ model MpReconciliationIssue {
   @@index([status, createdAt])
   @@index([issueType, status])
   @@index([orderId])
+}
+
+// ─── Analytics Ops (estado interno — NÃO duplica warehouse GA4) ───
+
+/// Estado operacional da integração analytics (config/flags/health sanitizados).
+model AnalyticsOpsState {
+  id                 String    @id @default(cuid())
+  /// Ex.: google_analytics
+  provider           String    @unique
+  status             String    @default("UNKNOWN")
+  environment        String?
+  /// Flags internas não-secretas (debugLogging, cacheTtlSec, etc.)
+  configFlags        Json?
+  /// Snapshot sanitizado do último diagnóstico
+  lastDiagnostics    Json?
+  lastHealthAt       DateTime?
+  lastSuccessAt      DateTime?
+  lastErrorAt        DateTime?
+  lastErrorCode      String?
+  lastSyncAt         DateTime?
+  avgResponseMs      Float?
+  catalogEventCount  Int?
+  updatedById        String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([status, updatedAt])
+  @@index([lastHealthAt])
+}
+
+/// Erros operacionais internos da camada analytics (sem PII / sem Measurement ID).
+model AnalyticsOpsError {
+  id        String   @id @default(cuid())
+  provider  String   @default("google_analytics")
+  code      String
+  message   String
+  module    String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([provider, createdAt])
+  @@index([code, createdAt])
+}
+
+/// Deduplicação transacional analytics/GTM — NÃO armazena warehouse de eventos.
+model AnalyticsTransactionalDedup {
+  id                   String   @id @default(cuid())
+  /// purchase | refund | donation_completed | etc.
+  eventName            String
+  /// hash(eventName + entityType + entityId) — sem PII
+  deduplicationKey     String   @unique
+  entityType           String
+  /// hash do identificador interno (nunca ID externo sensível em claro)
+  entityReferenceHash  String
+  status               String   @default("CLAIMED")
+  environment          String?
+  firstProcessedAt     DateTime @default(now())
+  lastAttemptAt        DateTime @updatedAt
+  attempts             Int      @default(1)
+  expiresAt            DateTime?
+
+  @@index([eventName, firstProcessedAt])
+  @@index([expiresAt])
+  @@index([entityType, entityReferenceHash])
 }

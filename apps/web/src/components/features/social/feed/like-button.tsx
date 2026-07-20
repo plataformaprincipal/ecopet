@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { likePost, unlikePost } from "@/lib/social/client-api";
 import { useAuthGate } from "@/providers/auth-gate-provider";
 import { useTranslation } from "@/providers/i18n-provider";
+import { analyticsService } from "@/lib/analytics/service";
+import { SocialEvents } from "@/lib/analytics/events";
 
 export function LikeButton({ postId, initialLiked, initialCount }: { postId: string; initialLiked?: boolean; initialCount: number }) {
   const { requireAuth } = useAuthGate();
@@ -16,9 +18,15 @@ export function LikeButton({ postId, initialLiked, initialCount }: { postId: str
   async function toggle() {
     requireAuth(async () => {
       try {
+        const wasLiked = liked;
         const data = liked ? await unlikePost(postId) : await likePost(postId);
         setLiked(data.liked);
         setCount(data.count);
+        if (!wasLiked && data.liked) {
+          analyticsService.track(SocialEvents.LIKE, {
+            params: { content_type: "post", item_id: postId },
+          });
+        }
       } catch {
         /* ignore */
       }

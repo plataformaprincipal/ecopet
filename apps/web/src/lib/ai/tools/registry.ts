@@ -23,12 +23,19 @@ export function listToolsForAgent(agentId: AiAgentId, role: UserRole) {
   return listTools({ agentId, role });
 }
 
+/**
+ * @deprecated Prefer `executeBusinessTool` / `runFunctionCallingLoop` (modules + enterprise).
+ * Mantido para compatibilidade com agentes legados.
+ */
 export async function executeTool(toolId: string, _params: Record<string, unknown>) {
   const tool = getTool(toolId);
   if (!tool) return { toolId, result: null, executed: false };
   return {
     toolId,
-    result: { status: "pending", message: `Ferramenta ${tool.name} registrada — execução pendente.` },
+    result: {
+      status: "deprecated_stub",
+      message: `Use modules/enterprise FC (consult_*). Stub legado: ${tool.name}.`,
+    },
     executed: false,
   };
 }

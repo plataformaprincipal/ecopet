@@ -15,6 +15,7 @@ export type UploadPurpose =
   | "partner_document"
   | "ngo_document"
   | "chat_attachment"
+  | "ai_attachment"
   | "social_post_media"
   | "social_profile_avatar"
   | "social_profile_cover";
@@ -29,6 +30,7 @@ export const UPLOAD_PURPOSES: UploadPurpose[] = [
   "partner_document",
   "ngo_document",
   "chat_attachment",
+  "ai_attachment",
   "social_post_media",
   "social_profile_avatar",
   "social_profile_cover",
@@ -54,6 +56,7 @@ export const PURPOSE_FOLDER: Record<UploadPurpose, string> = {
   partner_document: "ecopet/partners/documents",
   ngo_document: "ecopet/ngos/documents",
   chat_attachment: "ecopet/chat",
+  ai_attachment: "ecopet/ai",
 };
 
 const IMAGE_MIME = ["image/jpeg", "image/png", "image/webp"];
@@ -70,6 +73,13 @@ export const ALLOWED_MIME: Record<UploadPurpose, string[]> = {
   partner_document: DOC_MIME,
   ngo_document: DOC_MIME,
   chat_attachment: DOC_MIME,
+  ai_attachment: [
+    ...DOC_MIME,
+    "text/plain",
+    "text/csv",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  ],
   social_post_media: IMAGE_MIME,
   social_profile_avatar: IMAGE_MIME,
   social_profile_cover: IMAGE_MIME,
@@ -89,6 +99,7 @@ export const MAX_BYTES: Record<UploadPurpose, number> = {
   partner_document: 10 * MB,
   ngo_document: 10 * MB,
   chat_attachment: 10 * MB,
+  ai_attachment: 10 * MB,
 };
 
 /** Extensões permitidas (derivadas dos MIME types). */
@@ -97,6 +108,10 @@ const MIME_EXTENSIONS: Record<string, string[]> = {
   "image/png": ["png"],
   "image/webp": ["webp"],
   "application/pdf": ["pdf"],
+  "text/plain": ["txt"],
+  "text/csv": ["csv"],
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ["docx"],
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": ["xlsx"],
 };
 
 /** Extensões bloqueadas: executáveis, scripts, HTML e formatos perigosos. */

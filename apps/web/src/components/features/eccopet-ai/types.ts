@@ -16,4 +16,6 @@ export type AIConversation = {
   title: string;
   messages: AIMessage[];
   createdAt: number;
+  pinned?: boolean;
+  favorite?: boolean;
 };

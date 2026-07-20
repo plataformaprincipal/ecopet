@@ -15,6 +15,8 @@ import { ATTENDANCE_LABELS, SERVICE_LABELS } from "@/lib/appointments/labels";
 import type { AppointmentAttendanceMode, AppointmentServiceType } from "@/lib/appointments/types";
 import { todayIsoDate, validateClientAppointmentForm } from "@/lib/appointments/validation";
 import { ApiRequestError } from "@/lib/api-errors";
+import { analyticsService } from "@/lib/analytics/service";
+import { AppointmentEvents, ServiceEvents } from "@/lib/analytics/events";
 
 interface AppointmentBookingFormProps {
   onSuccess?: () => void;
@@ -84,6 +86,15 @@ export function AppointmentBookingForm({ onSuccess }: AppointmentBookingFormProp
         scheduledDate,
         scheduledTime,
         observations: observations.trim() || undefined,
+      });
+      analyticsService.track(AppointmentEvents.CREATED, {
+        params: {
+          service_type: serviceType,
+          attendance_mode: attendanceMode,
+        },
+      });
+      analyticsService.track(ServiceEvents.BOOK, {
+        params: { service_type: serviceType },
       });
       setSuccessMsg("Agendamento confirmado com sucesso! Você pode acompanhar em Meus agendamentos.");
       setScheduledDate("");

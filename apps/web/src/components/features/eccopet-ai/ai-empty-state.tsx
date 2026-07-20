@@ -1,7 +1,5 @@
 "use client";
 
-"use client";
-
 import { Sparkles } from "lucide-react";
 import type { EccoPetTool } from "@/lib/public/eccopet-tools";
 import { useTranslation } from "@/providers/i18n-provider";
@@ -11,9 +9,11 @@ import { AIToolGrid } from "./ai-tool-grid";
 export function AIEmptyState({
   onSendSuggestion,
   onSelectTool,
+  suggestions,
 }: {
   onSendSuggestion: (text: string) => void;
   onSelectTool: (tool: EccoPetTool) => void;
+  suggestions?: string[];
 }) {
   const { t } = useTranslation();
   return (
@@ -28,10 +28,16 @@ export function AIEmptyState({
         {t("ecopetAi.greetingSub")}
       </p>
 
-      <AISuggestionChips onSelect={onSendSuggestion} className="mt-6" />
+      <AISuggestionChips
+        suggestions={suggestions}
+        onSelect={onSendSuggestion}
+        className="mt-6"
+      />
 
       <div className="mt-8 w-full text-left">
-        <h2 className="mb-3 text-sm font-semibold text-zinc-700 dark:text-zinc-200">{t("ecopetAi.toolsTitle")}</h2>
+        <h2 className="mb-3 text-sm font-semibold text-zinc-700 dark:text-zinc-200">
+          {t("ecopetAi.toolsTitle")}
+        </h2>
         <AIToolGrid onSelectTool={onSelectTool} />
       </div>
     </div>

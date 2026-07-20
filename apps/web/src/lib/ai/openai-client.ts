@@ -20,6 +20,7 @@ export function getOpenAIClient(): OpenAI {
     client = new OpenAI({
       apiKey: AI_CONFIG.apiKey,
       timeout: AI_CONFIG.requestTimeoutMs,
+      ...(AI_CONFIG.projectId ? { project: AI_CONFIG.projectId } : {}),
     });
   }
   return client;

@@ -15,6 +15,9 @@ import { EcopetFooter } from "@/components/layouts/ecopet-footer";
 import { SupportChatProvider } from "@/providers/support-chat-provider";
 import { SupportChatPanelLazy } from "@/components/features/support/support-chat-panel-lazy";
 import { ForegroundNotificationListener } from "@/components/notifications/foreground-notification-listener";
+import { GoogleAnalyticsProvider } from "@/providers/google-analytics-provider";
+import { GoogleTagManagerProvider } from "@/providers/google-tag-manager-provider";
+import { ConsentBanner } from "@/components/shared/consent/consent-banner";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-jakarta", weight: ["500", "600", "700", "800"] });
@@ -77,28 +80,33 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <AccessibilityProvider>
             <I18nProvider>
               <AriaLiveProvider>
-                <AuthSessionProvider>
-                  <AuthGateProvider>
-                    <AuthTokenSync />
-                    <PreferencesSync />
-                    <ForegroundNotificationListener />
-                    <SupportChatProvider>
-                      <SkipLink />
-                      <div className="flex min-h-screen flex-col">
-                        <div id="main-content" role="main" tabIndex={-1} className="flex-1 outline-none">
-                          {children}
-                        </div>
-                        <EcopetFooter />
-                      </div>
-                      <SupportChatPanelLazy />
-                    </SupportChatProvider>
-                  </AuthGateProvider>
-                </AuthSessionProvider>
-                {/*
-                  Acessibilidade global — fora de AuthGate/SupportChat.
-                  Aparece em todas as rotas, antes e depois do login, sem depender de role.
-                */}
-                <GlobalAccessibility />
+                <GoogleTagManagerProvider>
+                  <GoogleAnalyticsProvider>
+                    <AuthSessionProvider>
+                      <AuthGateProvider>
+                        <AuthTokenSync />
+                        <PreferencesSync />
+                        <ForegroundNotificationListener />
+                        <SupportChatProvider>
+                          <SkipLink />
+                          <div className="flex min-h-screen flex-col">
+                            <div id="main-content" role="main" tabIndex={-1} className="flex-1 outline-none">
+                              {children}
+                            </div>
+                            <EcopetFooter />
+                          </div>
+                          <SupportChatPanelLazy />
+                          <ConsentBanner />
+                        </SupportChatProvider>
+                      </AuthGateProvider>
+                    </AuthSessionProvider>
+                    {/*
+                      Acessibilidade global — fora de AuthGate/SupportChat.
+                      Aparece em todas as rotas, antes e depois do login, sem depender de role.
+                    */}
+                    <GlobalAccessibility />
+                  </GoogleAnalyticsProvider>
+                </GoogleTagManagerProvider>
               </AriaLiveProvider>
             </I18nProvider>
           </AccessibilityProvider>

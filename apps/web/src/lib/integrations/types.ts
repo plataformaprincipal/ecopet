@@ -145,7 +145,8 @@ export type PlatformIntegrationCategory =
   | "shipping"
   | "messaging"
   | "erp"
-  | "storage";
+  | "storage"
+  | "analytics";
 
 export type IntegrationDefinition = {
   name: string;

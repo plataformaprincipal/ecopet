@@ -35,6 +35,8 @@ import { dashboardPathForRole } from "@/lib/auth/dashboard";
 import { notifySessionChanged } from "@/lib/auth/session-events";
 import { confirmSessionCookie } from "@/lib/auth/confirm-session";
 import { mapRegisterConflictMessage, parseApiFailureError } from "@/lib/api-errors";
+import { analyticsService } from "@/lib/analytics/service";
+import { AuthEvents, ProfileEvents } from "@/lib/analytics/events";
 import {
   ClientLegalAcceptance,
   CLIENT_LEGAL_ACCEPTANCE_MESSAGE,
@@ -337,6 +339,19 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
         setStep("security");
         return;
       }
+      if (data.data?.user?.id) {
+        analyticsService.setUser({
+          userId: data.data.user.id,
+          userRole: data.data.user.role ?? "CLIENT",
+        });
+      }
+      analyticsService.track(AuthEvents.SIGN_UP, {
+        label: "client",
+        params: { method: "credentials", user_role: "CLIENT" },
+      });
+      analyticsService.track(ProfileEvents.CLIENT_CREATE, {
+        params: { user_role: "CLIENT" },
+      });
       router.push(redirectTo);
       notifySessionChanged();
       router.refresh();

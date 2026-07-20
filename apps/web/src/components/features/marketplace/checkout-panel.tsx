@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { MercadoPagoCheckout } from "@/components/features/marketplace/mercado-pago-checkout";
+import { analyticsService } from "@/lib/analytics/service";
+import { OrderEvents, PaymentEvents } from "@/lib/analytics/events";
 
 type PaymentMethod = "PIX" | "CARD" | "CASH";
 type PayMode = "delivery" | "online";
@@ -66,6 +68,9 @@ export function CheckoutPanel() {
     e.preventDefault();
     setSaving(true);
     setError("");
+    analyticsService.track(OrderEvents.BEGIN_CHECKOUT, {
+      params: { payment_method: form.paymentMethod, delivery_method: form.deliveryMethod },
+    });
     const res = await fetch("/api/checkout", {
       method: "POST",
       credentials: "include",
@@ -92,7 +97,15 @@ export function CheckoutPanel() {
     }
 
     const order = data.data.order as { id: string; total: number };
+    analyticsService.track(OrderEvents.ORDER_COMPLETE, {
+      value: Number(order.total),
+      params: { order_id: order.id, pay_mode: payMode },
+    });
     if (payMode === "online" && mpAvailable) {
+      analyticsService.track(PaymentEvents.PAYMENT_START, {
+        value: Number(order.total),
+        params: { order_id: order.id, provider: "mercado_pago" },
+      });
       setPendingOrder({ id: order.id, total: Number(order.total) });
       return;
     }
@@ -109,7 +122,51 @@ export function CheckoutPanel() {
           orderId={pendingOrder.id}
           amount={pendingOrder.total}
           payerEmail={payerEmail || "cliente@testuser.com"}
-          onPaid={(result) => {
+          onPaid={async (result) => {
+            const approved = String(result.status).toUpperCase() === "APPROVED";
+            analyticsService.track(
+              approved ? PaymentEvents.PAYMENT_APPROVED : PaymentEvents.PAYMENT_DENIED,
+              {
+                value: pendingOrder.total,
+                params: {
+                  order_id: pendingOrder.id,
+                  status: result.status,
+                  provider: "mercado_pago",
+                },
+              }
+            );
+            if (approved) {
+              // Claim server-side (sobrevive reload) + dedupe client.
+              let allowPurchase = true;
+              try {
+                const claimRes = await fetch("/api/telemetry/transactional-claim", {
+                  method: "POST",
+                  credentials: "include",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    eventName: "purchase",
+                    entityType: "order",
+                    entityId: pendingOrder.id,
+                  }),
+                });
+                const claimJson = await claimRes.json();
+                if (claimRes.ok && claimJson.success && claimJson.data?.claimed === false) {
+                  allowPurchase = false;
+                }
+              } catch {
+                /* se claim falhar, gtag ainda aplica sessionStorage dedupe */
+              }
+              if (allowPurchase) {
+                analyticsService.track(OrderEvents.PURCHASE, {
+                  value: pendingOrder.total,
+                  params: {
+                    order_id: pendingOrder.id,
+                    transaction_id: pendingOrder.id,
+                    currency: "BRL",
+                  },
+                });
+              }
+            }
             router.push(
               `/checkout/sucesso/${pendingOrder.id}?payment=${result.paymentId}&status=${result.status}`
             );

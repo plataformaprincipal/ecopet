@@ -1,5 +1,5 @@
-﻿import { AdminModulePage } from "@/components/features/admin/admin-module-page";
+﻿import { AdminBiIntelligencePanel } from "@/components/features/admin/admin-bi-intelligence-panel";
 
-export default function AdminPage() {
-  return <AdminModulePage moduleId="bi" />;
+export default function AdminBiPage() {
+  return <AdminBiIntelligencePanel domain="executive" />;
 }

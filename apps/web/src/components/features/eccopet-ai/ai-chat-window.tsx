@@ -17,6 +17,7 @@ export function AIChatWindow({
   onRegenerate,
   onSelectTool,
   onAttachAttempt,
+  suggestions,
 }: {
   messages: AIMessage[];
   loading: boolean;
@@ -26,6 +27,7 @@ export function AIChatWindow({
   onRegenerate?: () => void;
   onSelectTool: (tool: EccoPetTool) => void;
   onAttachAttempt?: () => void;
+  suggestions?: string[];
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const isEmpty = messages.length === 0;
@@ -40,7 +42,11 @@ export function AIChatWindow({
     <div className="flex h-full flex-col">
       <div ref={scrollRef} className="flex-1 overflow-y-auto" aria-live="polite">
         {isEmpty ? (
-          <AIEmptyState onSendSuggestion={onSend} onSelectTool={onSelectTool} />
+          <AIEmptyState
+            onSendSuggestion={onSend}
+            onSelectTool={onSelectTool}
+            suggestions={suggestions}
+          />
         ) : (
           <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6">
             {messages.map((m) => (

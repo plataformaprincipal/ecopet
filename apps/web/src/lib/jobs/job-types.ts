@@ -11,6 +11,8 @@ export const JOB_TYPES = [
   "EXPORT_DATA",
   "CLEANUP_OLD_LOGS",
   "REPROCESS_FAILED_JOB",
+  "ANALYTICS_HEALTH_CHECK",
+  "ANALYTICS_DIAGNOSTICS_REFRESH",
 ] as const;
 
 export type JobType = (typeof JOB_TYPES)[number];

@@ -120,6 +120,28 @@ const handlers: Partial<Record<JobType, (job: JobRecord) => Promise<void>>> = {
     const jobId = String((job.payload as { jobId?: string }).jobId ?? "");
     if (jobId) await processJobById(jobId);
   },
+  ANALYTICS_HEALTH_CHECK: async (job) => {
+    const { AnalyticsServerService } = await import("@/lib/analytics/server");
+    await AnalyticsServerService.health(true);
+    await writeAuditLog({
+      action: "SYNC",
+      module: "admin-analytics",
+      resource: "AnalyticsHealth",
+      resourceId: job.id,
+      observation: "Health check analytics persistido",
+    });
+  },
+  ANALYTICS_DIAGNOSTICS_REFRESH: async (job) => {
+    const { AnalyticsServerService } = await import("@/lib/analytics/server");
+    await AnalyticsServerService.diagnostics({ persist: true, skipCache: true });
+    await writeAuditLog({
+      action: "SYNC",
+      module: "admin-analytics",
+      resource: "AnalyticsDiagnostics",
+      resourceId: job.id,
+      observation: "Diagnostics analytics atualizado",
+    });
+  },
 };
 
 export async function processJobById(jobId: string) {

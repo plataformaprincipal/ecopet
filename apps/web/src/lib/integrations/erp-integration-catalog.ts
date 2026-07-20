@@ -37,6 +37,7 @@ import {
   isViaCepConfigured,
   isVLibrasConfigured,
   isTurnstileConfigured,
+  isGoogleAnalyticsConfigured,
 } from "@/lib/integrations/env-check";
 
 export type IntegrationCatalogItem = {
@@ -191,6 +192,13 @@ export const ADMIN_INTEGRATION_CATALOG: IntegrationCatalogItem[] = [
     category: "segurança",
     envKeys: ["NEXT_PUBLIC_TURNSTILE_SITE_KEY"],
     check: isTurnstileConfigured,
+  },
+  {
+    id: "google_analytics",
+    nome: "Google Analytics 4",
+    category: "analytics",
+    envKeys: ["NEXT_PUBLIC_GA_MEASUREMENT_ID"],
+    check: isGoogleAnalyticsConfigured,
   },
 ];
 

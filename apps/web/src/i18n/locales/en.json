@@ -61,6 +61,12 @@
     "cancel": "Cancel",
     "regenerate": "Regenerate",
     "thinking": "Thinking...",
+    "status": {
+      "context": "Building context…",
+      "tools": "Fetching platform data…",
+      "generating": "Generating reply…",
+      "summary": "Updating memory…"
+    },
     "errors": {
       "quota": "You reached the AI usage limit. Please try again later.",
       "timeout": "The response took too long. Please try again.",
@@ -279,6 +285,15 @@
     "suspicious": "Suspicious activity detected",
     "tooManyAttempts": "Too many attempts",
     "waitBeforeRetry": "Please wait before trying again"
+  },
+  "analytics": {
+    "consent": {
+      "title": "Cookies and analytics",
+      "description": "We use analytics cookies to improve ECOPET. You can accept or decline.",
+      "accept": "Accept analytics",
+      "reject": "Decline",
+      "manage": "Manage preferences"
+    }
   },
   "auth": {
     "login": {

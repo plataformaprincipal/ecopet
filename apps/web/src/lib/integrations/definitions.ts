@@ -4,6 +4,8 @@ import {
   isCloudinaryConfigured,
   isDevUploadFallbackEnabled,
   isEmailConfigured,
+  isGoogleAnalyticsConfigured,
+  isGoogleTagManagerConfigured,
   isGoogleMapsConfigured,
   isMapboxConfigured,
   isMercadoPagoConfigured,
@@ -239,6 +241,37 @@ export const INTEGRATION_DEFINITIONS: IntegrationDefinition[] = [
     resolveStatus: (env = process.env) => (isGoogleMapsConfigured(env) ? "PARTIAL" : "NOT_CONFIGURED"),
     resolveMessage: () => "Geocodificação Google Maps preparada, não ativa sem chave.",
     recommendedAction: "Defina GOOGLE_MAPS_API_KEY.",
+  },
+  {
+    name: "google_analytics",
+    provider: "Google Analytics 4",
+    category: "analytics",
+    requiredEnvVars: ["NEXT_PUBLIC_GA_MEASUREMENT_ID"],
+    canRunInProduction: true,
+    canRunInDevelopment: true,
+    resolveStatus: (env = process.env) =>
+      isGoogleAnalyticsConfigured(env) ? "ACTIVE" : "NOT_CONFIGURED",
+    resolveMessage: (env = process.env) =>
+      isGoogleAnalyticsConfigured(env)
+        ? "GA4 configurado (gtag + Consent Mode v2)."
+        : "NEXT_PUBLIC_GA_MEASUREMENT_ID ausente ou inválido.",
+    recommendedAction: "Defina NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXX no ambiente de produção.",
+  },
+  {
+    name: "google_tag_manager",
+    provider: "Google Tag Manager",
+    category: "analytics",
+    requiredEnvVars: ["NEXT_PUBLIC_GTM_ID"],
+    canRunInProduction: true,
+    canRunInDevelopment: true,
+    resolveStatus: (env = process.env) =>
+      isGoogleTagManagerConfigured(env) ? "ACTIVE" : "NOT_CONFIGURED",
+    resolveMessage: (env = process.env) =>
+      isGoogleTagManagerConfigured(env)
+        ? "GTM configurado (dataLayer namespaced + Consent Mode v2)."
+        : "NEXT_PUBLIC_GTM_ID ausente ou inválido.",
+    recommendedAction:
+      "Defina NEXT_PUBLIC_GTM_ID=GTM-XXXX. Não duplique tags GA4 no container se o EcoPet já envia via gtag.",
   },
   {
     name: "mapbox",

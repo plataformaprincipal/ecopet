@@ -93,6 +93,18 @@ export async function assertMonthlyBudget(): Promise<void> {
   }
 }
 
+/** Limites para endpoints operacionais que não chamam OpenAI (NL filters, previsões heurísticas). */
+export function enforceOperationalAiLimits(userId: string): void {
+  if (!AI_CONFIG.globallyEnabled) {
+    throw new AiRuntimeError(
+      AI_RUNTIME_ERROR_CODES.GLOBAL_PAUSED,
+      "IA pausada pela administração.",
+      503
+    );
+  }
+  assertAiRequestRateLimit(userId);
+}
+
 export async function enforceAiLimits(userId: string): Promise<void> {
   if (!AI_CONFIG.globallyEnabled) {
     throw new AiRuntimeError(

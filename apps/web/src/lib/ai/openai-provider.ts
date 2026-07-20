@@ -17,6 +17,8 @@ import { moderateContent } from "@/lib/ai/ai-moderation";
 import { AI_MODEL_REGISTRY } from "@/lib/ai/models/registry";
 import { recordAiSuccess, recordAiFailure } from "@/lib/ai/ai-rate-limit";
 import { AiRuntimeError, AI_RUNTIME_ERROR_CODES } from "@/lib/ai/ai-errors";
+import { withRetry } from "@/lib/ai/utils/retry";
+import { sanitizeAiMessages } from "@/lib/ai/utils/sanitize-input";
 
 /**
  * Provider OpenAI — Responses API como interface principal,
@@ -41,11 +43,12 @@ export class OpenAIProvider implements AIProvider {
     const client = getOpenAIClient();
     const model = input.model || AI_CONFIG.model;
     const maxTokens = input.maxTokens ?? AI_CONFIG.maxOutputTokens;
+    const { messages: safeMessages } = sanitizeAiMessages(input.messages);
 
     try {
       // Responses API (preferencial)
       if (typeof (client as { responses?: { create: Function } }).responses?.create === "function") {
-        const inputMessages = input.messages.map((m) => ({
+        const inputMessages = safeMessages.map((m) => ({
           role: m.role as "system" | "user" | "assistant",
           content: m.content,
         }));
@@ -78,12 +81,22 @@ export class OpenAIProvider implements AIProvider {
     }
 
     try {
-      const completion = await client.chat.completions.create({
-        model,
-        messages: input.messages.map((m) => ({ role: m.role, content: m.content })),
-        max_tokens: maxTokens,
-        temperature: input.temperature ?? 0.7,
-      });
+      const completion = await withRetry(
+        async () =>
+          client.chat.completions.create({
+            model,
+            messages: safeMessages.map((m) => ({
+              role: m.role as "system" | "user" | "assistant",
+              content: m.content,
+            })),
+            max_tokens: maxTokens,
+            temperature: input.temperature ?? 0.7,
+          }),
+        {
+          maxAttempts: AI_CONFIG.maxRetries,
+          baseDelayMs: AI_CONFIG.retryBaseDelayMs,
+        }
+      );
       recordAiSuccess();
       const content = completion.choices[0]?.message?.content?.trim() ?? "";
       return {
@@ -106,9 +119,40 @@ export class OpenAIProvider implements AIProvider {
     this.assertConfigured();
     const client = getOpenAIClient();
     const model = input.model || AI_CONFIG.model;
+    const { messages: safeMessages } = sanitizeAiMessages(input.messages);
+
+    // Responses API stream (preferencial) — sem importar enterprise (evita server-only no client graph)
+    try {
+      if (typeof client.responses?.create === "function") {
+        const stream = (await client.responses.create({
+          model,
+          input: safeMessages.map((m) => ({
+            role: m.role as "system" | "user" | "assistant",
+            content: m.content,
+          })),
+          max_output_tokens: input.maxTokens ?? AI_CONFIG.maxOutputTokens,
+          temperature: input.temperature ?? 0.7,
+          stream: true,
+        })) as unknown as AsyncIterable<{ type?: string; delta?: string }>;
+
+        for await (const event of stream) {
+          if (typeof event.delta === "string" && event.delta && event.type?.includes("delta")) {
+            yield { delta: event.delta };
+          }
+        }
+        yield { delta: "", done: true };
+        return;
+      }
+    } catch {
+      // fallback Completions
+    }
+
     const stream = await client.chat.completions.create({
       model,
-      messages: input.messages.map((m) => ({ role: m.role, content: m.content })),
+      messages: safeMessages.map((m) => ({
+        role: m.role as "system" | "user" | "assistant",
+        content: m.content,
+      })),
       max_tokens: input.maxTokens ?? AI_CONFIG.maxOutputTokens,
       temperature: input.temperature ?? 0.7,
       stream: true,

@@ -61,6 +61,12 @@
     "cancel": "Cancelar",
     "regenerate": "Regenerar",
     "thinking": "Pensando...",
+    "status": {
+      "context": "Montando contexto…",
+      "tools": "Consultando datos de la plataforma…",
+      "generating": "Generando respuesta…",
+      "summary": "Actualizando memoria…"
+    },
     "errors": {
       "quota": "Alcanzaste el límite de uso de la IA. Inténtalo más tarde.",
       "timeout": "La respuesta tardó demasiado. Inténtalo de nuevo.",
@@ -279,6 +285,15 @@
     "suspicious": "Actividad sospechosa detectada",
     "tooManyAttempts": "Demasiados intentos",
     "waitBeforeRetry": "Espera antes de intentarlo de nuevo"
+  },
+  "analytics": {
+    "consent": {
+      "title": "Cookies y análisis",
+      "description": "Usamos cookies de análisis para mejorar ECOPET. Puedes aceptar o rechazar.",
+      "accept": "Aceptar análisis",
+      "reject": "Rechazar",
+      "manage": "Administrar preferencias"
+    }
   },
   "auth": {
     "login": {

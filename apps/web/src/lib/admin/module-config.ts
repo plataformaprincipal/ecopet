@@ -34,7 +34,8 @@ export const ADMIN_MODULES: Record<string, AdminModuleConfig> = {
   bi: {
     id: "bi",
     title: "Business Intelligence",
-    description: "BI corporativo — receita, segmentação, previsões e anomalias.",
+    description:
+      "Centro de Inteligência — KPIs EcoPet, GA4 Data API, marketplace, social, parceiros e alertas.",
     apiEndpoint: "bi",
     erpModuleId: "bi",
   },

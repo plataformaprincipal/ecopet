@@ -61,6 +61,12 @@
     "cancel": "Cancelar",
     "regenerate": "Regenerar",
     "thinking": "Pensando...",
+    "status": {
+      "context": "Montando contexto…",
+      "tools": "Consultando dados da plataforma…",
+      "generating": "Gerando resposta…",
+      "summary": "Atualizando memória…"
+    },
     "errors": {
       "quota": "Você atingiu o limite de uso da IA. Tente novamente mais tarde.",
       "timeout": "A resposta demorou demais. Tente novamente.",
@@ -279,6 +285,15 @@
     "suspicious": "Atividade suspeita detectada",
     "tooManyAttempts": "Muitas tentativas",
     "waitBeforeRetry": "Aguarde antes de tentar novamente"
+  },
+  "analytics": {
+    "consent": {
+      "title": "Cookies e análise",
+      "description": "Usamos cookies de análise para melhorar a ECOPET. Você pode aceitar ou recusar.",
+      "accept": "Aceitar análise",
+      "reject": "Recusar",
+      "manage": "Gerenciar preferências"
+    }
   },
   "auth": {
     "login": {

@@ -14,6 +14,8 @@ import { dashboardPathForRole } from "@/lib/auth/dashboard";
 import { notifySessionChanged } from "@/lib/auth/session-events";
 import { confirmSessionCookie } from "@/lib/auth/confirm-session";
 import { useAuthMessages } from "@/lib/i18n/use-auth-messages";
+import { analyticsService } from "@/lib/analytics/service";
+import { AuthEvents } from "@/lib/analytics/events";
 
 function parseApiError(data: {
   error?: string | { message?: string; code?: string };
@@ -79,6 +81,10 @@ export function FoundationLoginForm({ variant = "default" }: FoundationLoginForm
         return;
       }
       if (!res.ok || data.success === false) {
+        analyticsService.track(AuthEvents.LOGIN_ERROR, {
+          label: "credentials",
+          params: { method: "credentials" },
+        });
         const parsed = parseApiError(data);
         if (parsed.code === "TURNSTILE_REQUIRED") {
           setTurnstileRequired(true);
@@ -112,6 +118,15 @@ export function FoundationLoginForm({ variant = "default" }: FoundationLoginForm
         setError(t("auth.login.sessionError"));
         return;
       }
+      const user = data.data?.user as { id?: string; role?: string } | undefined;
+      const role = user?.role;
+      if (user?.id) {
+        analyticsService.setUser({ userId: user.id, userRole: role ?? null });
+      }
+      analyticsService.track(AuthEvents.LOGIN, {
+        label: "credentials",
+        params: { method: "credentials", user_role: role },
+      });
       router.push(redirectTo);
       notifySessionChanged();
       router.refresh();

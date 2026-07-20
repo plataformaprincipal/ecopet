@@ -6,6 +6,12 @@ import { cn } from "@/lib/utils";
 
 const AI_ADMIN_NAV = [
   { href: "/admin/ai", label: "Dashboard", exact: true },
+  { href: "/admin/ai/executive", label: "Executivo" },
+  { href: "/admin/ai/foundation", label: "Fundação" },
+  { href: "/admin/ai/assistant", label: "Assistente" },
+  { href: "/admin/ai/enterprise", label: "Enterprise" },
+  { href: "/admin/ai/operational", label: "Operacional" },
+  { href: "/admin/ai/modules", label: "Módulos & Tools" },
   { href: "/admin/ai/agents", label: "Agentes" },
   { href: "/admin/ai/prompts", label: "Prompts" },
   { href: "/admin/ai/models", label: "Modelos" },

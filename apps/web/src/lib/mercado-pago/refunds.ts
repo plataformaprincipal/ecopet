@@ -285,6 +285,19 @@ export async function executePaymentRefund(input: ExecuteRefundInput): Promise<{
       /* ignore */
     }
 
+    try {
+      const { claimTransactionalEvent } = await import(
+        "@/lib/server/gtm/deduplication-service"
+      );
+      await claimTransactionalEvent({
+        eventName: "refund",
+        entityType: "payment_refund",
+        entityId: refundRow.id,
+      });
+    } catch {
+      /* claim analítico best-effort — não afeta estorno MP */
+    }
+
     return {
       ok: true,
       code: "OK",

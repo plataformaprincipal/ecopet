@@ -1,5 +1,25 @@
 # Production readiness — EcoPet
 
+## Banco / Supabase
+
+Ver documentação dedicada:
+
+- [database/supabase-audit.md](./database/supabase-audit.md)
+- [database/disaster-recovery.md](./database/disaster-recovery.md)
+- [database/checklist-producao.md](./database/checklist-producao.md)
+
+Painel: `/admin/producao` → **Banco**.
+
+## Painel Admin (Prompt 5 + GTM Produção)
+
+- UI: `/admin/producao` — Status, Segurança, Analytics, **GTM**, Performance, LGPD, SEO, Integrações, Health, Diagnostics, Checklist, Logs, Versões
+- UI GTM: `/admin/producao/google-tag-manager` — Status Geral GTM + checklists de go-live
+- API: `GET /api/admin/production/status`
+- Consent banner LGPD: `ConsentBanner` (Consent Mode v2)
+- Checklists: `docs/deploy/launch-checklist.md`, `rollback-checklist.md`, `monitoring-checklist.md`
+- Validação manual GTM: `docs/runbooks/google-tag-manager-manual-validation.md`
+- Doc produção GTM: `docs/integrations/google-tag-manager-production.md`
+
 ## Já validado localmente (sem depender de provedores pagos)
 
 - [x] type-check / lint / build (heap 8GB)

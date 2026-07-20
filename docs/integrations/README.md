@@ -22,6 +22,8 @@ Este diretório documenta como ativar provedores externos **somente com variáve
 | Stripe | [stripe.md](./stripe.md) | `STRIPE_*` | idem |
 | Push | [push.md](./push.md) | `VAPID_*` | canal skipped |
 | Supabase | (DB) | `DATABASE_URL`, `DIRECT_URL` | obrigatório |
+| Google Analytics 4 | [../google-analytics-4.md](../google-analytics-4.md) | `NEXT_PUBLIC_GA_MEASUREMENT_ID` | tracking off / DEV_ONLY |
+| Google Tag Manager | [google-tag-manager-production.md](./google-tag-manager-production.md) | `NEXT_PUBLIC_GTM_ID` | container não carrega |
 
 ## Status no código
 
@@ -29,7 +31,8 @@ Este diretório documenta como ativar provedores externos **somente com variáve
 - Status: `apps/web/src/lib/integrations/integration-status.ts`
 - API: `GET /api/admin/integrations/status`
 - Smoke: `POST /api/admin/integrations/{provider}/test`
+- Produção GTM: `/admin/producao/google-tag-manager`
 
 ## Produção
 
-Ver [../production-readiness.md](../production-readiness.md).
+Ver [../production-readiness.md](../production-readiness.md) e [google-tag-manager-production.md](./google-tag-manager-production.md).
