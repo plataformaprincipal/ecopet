@@ -3,6 +3,7 @@
 **Data:** 2026-07-20 (America/Sao_Paulo)  
 **Branch:** `release/etapa-5-auditoria-final`  
 **Commit base (pré-correções):** `a87e0bab59c4b24771d80877a7bd0ce9d7bda1b8`  
+**Commit release (Etapa 5):** `73238c6`  
 **Node:** v24.16.0 · **npm:** 11.13.0 · **OS:** Windows 10.0.26200
 
 ---
