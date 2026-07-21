@@ -13,7 +13,27 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error(error);
+    const correlationId =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `fe_${Date.now()}`;
+
+    void fetch("/api/telemetry/client-error", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: error.name || "Error",
+        message: (error.message || "Unknown").slice(0, 500),
+        stack: error.stack?.slice(0, 2000),
+        digest: error.digest,
+        route: typeof window !== "undefined" ? window.location.pathname : undefined,
+        correlationId,
+      }),
+    }).catch(() => undefined);
+
+    if (process.env.NODE_ENV !== "production") {
+      console.error("[error-boundary]", error);
+    }
   }, [error]);
 
   return (
@@ -25,6 +45,12 @@ export default function Error({
         </h1>
         <p className="mt-2 max-w-md text-sm text-ecopet-gray">
           Não foi possível carregar esta página. Tente novamente ou volte ao início.
+          {error.digest ? (
+            <>
+              {" "}
+              Código: <code className="text-xs">{error.digest}</code>
+            </>
+          ) : null}
         </p>
       </div>
       <div className="flex gap-3">

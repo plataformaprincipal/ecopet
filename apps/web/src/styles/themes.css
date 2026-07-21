@@ -1,0 +1,42 @@
+/**
+ * ECOPET themes — light / dark semantic surfaces
+ */
+
+.dark {
+  --color-ecopet-surface: #1c2420;
+  --color-ecopet-dark-bg: #121816;
+  --color-ecopet-dark-card: #1c2420;
+  --color-ecopet-gray: #a8b2ab;
+
+  --ep-bg: #121816;
+  --ep-bg-elevated: #1c2420;
+  --ep-bg-muted: #24302a;
+  --ep-bg-inverse: #0a4f26;
+  --ep-fg: #f5f7f6;
+  --ep-fg-muted: #a8b2ab;
+  --ep-fg-subtle: #7d8982;
+  --ep-fg-inverse: #ffffff;
+  --ep-border: rgba(255, 255, 255, 0.1);
+  --ep-border-strong: rgba(255, 255, 255, 0.2);
+  --ep-ring: var(--ep-green-400);
+
+  --ep-success-bg: rgba(21, 128, 61, 0.18);
+  --ep-warning-bg: rgba(180, 83, 9, 0.18);
+  --ep-danger-bg: rgba(220, 38, 38, 0.18);
+  --ep-info-bg: rgba(37, 99, 235, 0.18);
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.45);
+  --shadow-floating: 0 20px 48px rgba(0, 0, 0, 0.55);
+  --shadow-premium: var(--shadow-md);
+  --shadow-premium-lg: var(--shadow-lg);
+}
+
+html.a11y-high-contrast {
+  --ep-ring: #ffffff;
+  --ep-border: #ffffff;
+  --ep-interactive: #ffffff;
+  --ep-interactive-fg: #000000;
+}

@@ -14,6 +14,18 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
+    void fetch("/api/telemetry/client-error", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: error.name || "GlobalError",
+        message: (error.message || "Unknown").slice(0, 500),
+        stack: error.stack?.slice(0, 2000),
+        digest: error.digest,
+        route: typeof window !== "undefined" ? window.location.pathname : undefined,
+      }),
+    }).catch(() => undefined);
+
     if (process.env.NODE_ENV !== "production") {
       console.error("[global-error]", error);
     }

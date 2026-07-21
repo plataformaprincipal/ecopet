@@ -92,13 +92,13 @@ export function ClientMyPetPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <ClientPageHeader
         title="Meu Pet"
         description="Cadastre, edite e acompanhe os pets vinculados à sua conta."
         actions={
-          <Button size="sm" className="gap-2" onClick={() => setShowForm((v) => !v)}>
-            <Plus className="h-4 w-4" />
+          <Button size="sm" className="gap-2 rounded-[var(--radius-button)]" onClick={() => setShowForm((v) => !v)}>
+            <Plus className="h-4 w-4" strokeWidth={2} />
             Cadastrar pet
           </Button>
         }
@@ -109,9 +109,9 @@ export function ClientMyPetPage() {
       {showForm && (
         <form
           onSubmit={handleCreate}
-          className="space-y-3 rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-zinc-900/60"
+          className="space-y-3 rounded-[var(--radius-xl)] border border-ecopet-gray/12 bg-white p-5 shadow-[var(--shadow-sm)] dark:border-white/10 dark:bg-ecopet-dark-card"
         >
-          <h3 className="font-medium">Novo pet</h3>
+          <h3 className="font-display text-base font-semibold text-ecopet-dark dark:text-white">Novo pet</h3>
           <Input
             placeholder="Nome"
             value={form.name}
@@ -120,7 +120,7 @@ export function ClientMyPetPage() {
             aria-label="Nome do pet"
           />
           <select
-            className="w-full rounded-lg border px-3 py-2 text-sm dark:bg-zinc-950"
+            className="w-full rounded-[var(--radius-input)] border border-ecopet-gray/20 bg-white px-3 py-2 text-sm text-ecopet-dark dark:border-white/10 dark:bg-ecopet-dark dark:text-white"
             value={form.species}
             onChange={(e) => setForm({ ...form, species: e.target.value })}
             aria-label="Espécie"
@@ -134,7 +134,7 @@ export function ClientMyPetPage() {
           <Input type="date" value={form.birthDate} onChange={(e) => setForm({ ...form, birthDate: e.target.value })} aria-label="Data de nascimento" />
           <Input type="number" step="0.1" placeholder="Peso (kg)" value={form.weight} onChange={(e) => setForm({ ...form, weight: e.target.value })} />
           <div className="flex gap-2">
-            <Button type="submit" disabled={saving}>{saving ? "Salvando..." : "Salvar"}</Button>
+            <Button type="submit" disabled={saving} className="rounded-[var(--radius-button)]">{saving ? "Salvando..." : "Salvar"}</Button>
             <Button type="button" variant="ghost" onClick={() => setShowForm(false)}>Cancelar</Button>
           </div>
         </form>
@@ -155,32 +155,35 @@ export function ClientMyPetPage() {
           {pets.map((pet) => (
             <article
               key={pet.id}
-              className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-zinc-900/60"
+              className="rounded-[var(--radius-xl)] border border-ecopet-gray/12 bg-white p-5 shadow-[var(--shadow-sm)] transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)] dark:border-white/10 dark:bg-ecopet-dark-card"
             >
-              <h3 className="font-display text-lg font-semibold">{pet.name}</h3>
-              <p className="text-sm text-zinc-500">
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-ecopet-green/10">
+                <PawPrint className="h-5 w-5 text-ecopet-green" strokeWidth={2} aria-hidden />
+              </div>
+              <h3 className="font-display text-lg font-semibold text-ecopet-dark dark:text-white">{pet.name}</h3>
+              <p className="text-sm text-ecopet-gray dark:text-white/70">
                 {pet.species}{pet.breed ? ` · ${pet.breed}` : ""}
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
-                <Button asChild size="sm" variant="outline">
+                <Button asChild size="sm" variant="outline" className="rounded-[var(--radius-button)]">
                   <Link href={`/dashboard/client/pets/${pet.id}`}>Ver detalhes</Link>
                 </Button>
-                <Button asChild size="sm" variant="outline">
+                <Button asChild size="sm" variant="outline" className="rounded-[var(--radius-button)]">
                   <Link href={`/dashboard/client/pets/${pet.id}/edit`}>
-                    <Pencil className="mr-1 h-3.5 w-3.5" />
+                    <Pencil className="mr-1 h-3.5 w-3.5" strokeWidth={2} />
                     Editar
                   </Link>
                 </Button>
-                <Button asChild size="sm" variant="outline">
+                <Button asChild size="sm" variant="outline" className="rounded-[var(--radius-button)]">
                   <Link href={`/dashboard/client/pets/${pet.id}/reminders`}>Lembretes</Link>
                 </Button>
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="text-red-600"
+                  className="text-ep-danger"
                   onClick={() => handleRemove(pet.id, pet.name)}
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-4 w-4" strokeWidth={2} />
                 </Button>
               </div>
             </article>

@@ -54,7 +54,7 @@ export function AppSidebar() {
   const { t } = useTranslation();
 
   return (
-    <aside className="hidden w-[17rem] flex-col border-r border-ecopet-gray/10 bg-white dark:border-white/10 dark:bg-[#0a0d10] lg:flex" aria-label="Menu principal">
+    <aside className="hidden w-[17rem] flex-col border-r border-ecopet-gray/10 bg-white dark:border-white/10 dark:bg-ecopet-dark-bg lg:flex" aria-label="Menu principal">
       <div className="border-b border-ecopet-gray/10 p-5 dark:border-white/10">
         <Logo responsive />
       </div>
@@ -68,13 +68,13 @@ export function AppSidebar() {
               href={item.href}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "flex items-center gap-3 rounded-[12px] px-4 py-2.5 text-sm font-medium transition-all duration-200",
+                "flex min-h-[44px] items-center gap-3 rounded-[var(--radius-md)] px-4 py-2.5 text-sm font-medium transition-colors duration-[var(--duration-fast)]",
                 active
-                  ? "bg-ecopet-brand text-white shadow-[var(--shadow-premium)]"
+                  ? "bg-ecopet-green text-white shadow-[var(--shadow-sm)]"
                   : "text-ecopet-gray hover:bg-ecopet-green/8 hover:text-ecopet-dark dark:hover:bg-white/5 dark:hover:text-white"
               )}
             >
-              <Icon className="h-5 w-5 shrink-0" aria-hidden />
+              <Icon className="h-5 w-5 shrink-0" strokeWidth={2} aria-hidden />
               {navLabelKeys[item.href] ? t(navLabelKeys[item.href]) : item.label}
             </Link>
           );
@@ -84,15 +84,15 @@ export function AppSidebar() {
         <NotificationBell variant="sidebar" showLabel label={t("nav.notifications")} />
         <Link
           href="/assinatura"
-          className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-ecopet-yellow hover:bg-ecopet-yellow/10"
+          className="flex min-h-[44px] items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-ecopet-green hover:bg-ecopet-green/10 dark:text-ecopet-green-500"
         >
-          <Crown className="h-5 w-5" aria-hidden /> {t("nav.premium")}
+          <Crown className="h-5 w-5" strokeWidth={2} aria-hidden /> {t("nav.premium")}
         </Link>
         <Link
           href="/configuracoes"
-          className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-ecopet-gray hover:bg-ecopet-green/5"
+          className="flex min-h-[44px] items-center gap-3 rounded-xl px-4 py-3 text-sm text-ecopet-gray hover:bg-ecopet-green/5"
         >
-          <Settings className="h-5 w-5" aria-hidden /> {t("nav.settings")}
+          <Settings className="h-5 w-5" strokeWidth={2} aria-hidden /> {t("nav.settings")}
         </Link>
       </div>
     </aside>

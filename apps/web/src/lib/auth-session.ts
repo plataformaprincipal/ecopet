@@ -9,6 +9,15 @@ const secret = () => new TextEncoder().encode(resolveAuthSecret());
 
 /** Cookie Secure em deploy HTTPS (Vercel ou URL pública https://). */
 function sessionCookieSecure(): boolean {
+  // Nunca permitir cookie inseguro em produção (mesmo com flag de debug).
+  if (process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production") {
+    if (process.env.FORCE_INSECURE_SESSION_COOKIE === "1") {
+      console.warn(
+        "[auth] FORCE_INSECURE_SESSION_COOKIE ignorado em produção — cookie permanece Secure."
+      );
+    }
+    return true;
+  }
   if (process.env.FORCE_INSECURE_SESSION_COOKIE === "1") return false;
   if (isProductionHttps()) return true;
 
@@ -22,7 +31,7 @@ function sessionCookieSecure(): boolean {
   if (appUrl.startsWith("http://")) return false;
   if (appUrl.startsWith("https://")) return true;
 
-  return process.env.NODE_ENV === "production";
+  return false;
 }
 
 export async function createSessionToken(

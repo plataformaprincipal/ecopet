@@ -12,16 +12,16 @@ export function ClientPageHeader({ title, description, actions, className }: Cli
   return (
     <div
       className={cn(
-        "flex flex-col gap-4 border-b border-zinc-200/80 pb-6 dark:border-white/10 sm:flex-row sm:items-start sm:justify-between",
+        "flex flex-col gap-4 border-b border-ecopet-gray/12 pb-6 dark:border-white/10 sm:flex-row sm:items-start sm:justify-between",
         className
       )}
     >
-      <div className="min-w-0 space-y-1">
-        <h1 className="font-display text-2xl font-semibold tracking-tight text-zinc-900 dark:text-white sm:text-3xl">
+      <div className="min-w-0 space-y-1.5">
+        <h1 className="font-display text-2xl font-bold tracking-tight text-ecopet-dark dark:text-white sm:text-3xl">
           {title}
         </h1>
         {description ? (
-          <p className="max-w-2xl text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
+          <p className="max-w-2xl text-sm leading-relaxed text-ecopet-gray dark:text-white/65">
             {description}
           </p>
         ) : null}

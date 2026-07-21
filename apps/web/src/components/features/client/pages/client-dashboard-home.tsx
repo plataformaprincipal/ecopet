@@ -64,9 +64,9 @@ export function ClientDashboardHome({ userName }: ClientDashboardHomeProps) {
 
   if (error) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 animate-fade-in">
         <ClientPageHeader title={`Olá, ${firstName}`} description="Seu painel no ecossistema EcoPet." />
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700 dark:border-rose-900 dark:bg-rose-950/30" role="alert">
+        <div className="rounded-[var(--radius-xl)] border border-ep-danger/30 bg-ep-danger/10 p-5 text-sm text-ep-danger" role="alert">
           {error}
           <Button variant="outline" size="sm" className="ml-3" onClick={load}>Tentar novamente</Button>
         </div>
@@ -76,7 +76,7 @@ export function ClientDashboardHome({ userName }: ClientDashboardHomeProps) {
   if (!data) return null;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fade-in">
       <ClientPageHeader
         title={`Olá, ${firstName}`}
         description="Resumo do dia, saúde, agenda, finanças e recomendações do seu pet."

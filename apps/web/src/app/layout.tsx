@@ -52,8 +52,11 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
   manifest: "/manifest.webmanifest",
   icons: {
-    icon: [{ url: "/brand/ecopet-logo.png", type: "image/png" }],
-    apple: [{ url: "/brand/ecopet-logo.png", type: "image/png" }],
+    icon: [
+      { url: "/brand/ecopet-mark.svg", type: "image/svg+xml" },
+      { url: "/brand/ecopet-logo.png", type: "image/png" },
+    ],
+    apple: [{ url: "/brand/ecopet-icon-192.svg", type: "image/svg+xml" }],
   },
   appleWebApp: {
     capable: true,

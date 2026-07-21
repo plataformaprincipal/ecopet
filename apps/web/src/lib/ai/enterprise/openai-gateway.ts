@@ -15,7 +15,34 @@ import type { AiChatMessage, AiStreamChunk } from "@/lib/ai/types";
 import type { OpenAiToolSchema } from "@/lib/ai/modules/types";
 import { resolveEnterpriseModel } from "./model-strategy";
 import type { EnterpriseGenerateWithToolsResult, EnterpriseToolCall } from "./types";
+import { isObservabilityFlagEnabled } from "@/lib/observability/config";
+import { trackMetric, MetricNames } from "@/lib/observability/metrics";
+import { recordIntegrationEvent } from "@/lib/observability/integrations";
+import { captureError } from "@/lib/observability/error-capture";
 
+function recordAiTelemetry(input: {
+  model: string;
+  api: string;
+  durationMs: number;
+  promptTokens?: number;
+  completionTokens?: number;
+  ok: boolean;
+}) {
+  if (!isObservabilityFlagEnabled("aiTelemetry")) return;
+  trackMetric(MetricNames.AI_REQUESTS, 1, { model: input.model, api: input.api, ok: input.ok });
+  trackMetric(MetricNames.AI_DURATION_MS, input.durationMs, { model: input.model });
+  if (input.promptTokens != null) trackMetric(MetricNames.AI_TOKENS_IN, input.promptTokens, { model: input.model });
+  if (input.completionTokens != null)
+    trackMetric(MetricNames.AI_TOKENS_OUT, input.completionTokens, { model: input.model });
+  if (!input.ok) trackMetric(MetricNames.AI_ERRORS, 1, { model: input.model });
+  recordIntegrationEvent("openai", input.ok ? "openai.request.ok" : "openai.request.error", {
+    model: input.model,
+    api: input.api,
+    durationMs: input.durationMs,
+    promptTokens: input.promptTokens,
+    completionTokens: input.completionTokens,
+  });
+}
 function assertConfigured() {
   if (!AI_CONFIG.isConfigured || !AI_CONFIG.apiKey) {
     throw new AiRuntimeError(
@@ -120,6 +147,14 @@ export async function enterpriseGenerate(input: {
 
       const usage = (response as { usage?: { input_tokens?: number; output_tokens?: number } }).usage;
       recordAiSuccess();
+      recordAiTelemetry({
+        model,
+        api: "responses",
+        durationMs: Date.now() - started,
+        promptTokens: usage?.input_tokens,
+        completionTokens: usage?.output_tokens,
+        ok: true,
+      });
       return {
         content: extractResponsesText(response),
         model,
@@ -178,6 +213,14 @@ export async function enterpriseGenerate(input: {
     });
 
     recordAiSuccess();
+    recordAiTelemetry({
+      model: completion.model ?? model,
+      api: "chat_completions",
+      durationMs: Date.now() - started,
+      promptTokens: completion.usage?.prompt_tokens,
+      completionTokens: completion.usage?.completion_tokens,
+      ok: true,
+    });
     return {
       content: msg?.content?.trim() ?? "",
       model: completion.model ?? model,
@@ -193,6 +236,13 @@ export async function enterpriseGenerate(input: {
     };
   } catch (e) {
     recordAiFailure();
+    recordAiTelemetry({
+      model,
+      api: "chat_completions",
+      durationMs: Date.now() - started,
+      ok: false,
+    });
+    captureError(e, { module: "openai", action: "enterpriseGenerate" });
     throw e;
   }
 }

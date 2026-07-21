@@ -1,26 +1,41 @@
 @import "tailwindcss";
+@import "./tokens.css";
+@import "./themes.css";
+@import "./motion.css";
 
 @theme {
-  /* Manual da Marca ECOPET — cores oficiais */
+  /* Brand scale (Tailwind utilities) */
   --color-ecopet-brand: #003b16;
-  --color-ecopet-brand-secondary: #0f5a2a;
-  --color-ecopet-brand-cream: #f7f4dc;
+  --color-ecopet-brand-secondary: #0f6f34;
+  --color-ecopet-brand-cream: #f4f7f4;
   --color-ecopet-brand-text: #102015;
   --color-ecopet-dark: #003b16;
-  --color-ecopet-green: #0f5a2a;
-  --color-ecopet-yellow: #f5c800;
-  --color-ecopet-gray: #4a4a5a;
-  --color-ecopet-cream: #f2efe3;
+  --color-ecopet-green: #128a3f;
+  --color-ecopet-green-500: #16a34a;
+  --color-ecopet-green-600: #128a3f;
+  --color-ecopet-green-700: #0f6f34;
+  --color-ecopet-green-800: #0a4f26;
+  --color-ecopet-green-900: #003b16;
+  /* Accent only — not primary brand */
+  --color-ecopet-yellow: #c9a227;
+  --color-ecopet-gray: #4a5560;
+  --color-ecopet-cream: #f4f7f4;
   --color-ecopet-surface: #ffffff;
-  --color-ecopet-dark-bg: #1a1f1a;
-  --color-ecopet-dark-card: #252b25;
+  --color-ecopet-dark-bg: #121816;
+  --color-ecopet-dark-card: #1c2420;
+  --color-ep-success: #15803d;
+  --color-ep-warning: #b45309;
+  --color-ep-danger: #dc2626;
+  --color-ep-info: #2563eb;
+
   --font-sans: var(--font-inter), "SF Pro Display", system-ui, sans-serif;
   --font-display: var(--font-jakarta), var(--font-inter), "SF Pro Display", system-ui, sans-serif;
+
   --radius-ecopet: 16px;
   --radius-input: 12px;
   --radius-button: 12px;
-  --shadow-premium: 0 1px 3px rgba(0, 59, 22, 0.06), 0 8px 24px rgba(0, 59, 22, 0.08);
-  --shadow-premium-lg: 0 4px 6px rgba(0, 59, 22, 0.05), 0 20px 48px rgba(0, 59, 22, 0.12);
+  --shadow-premium: 0 4px 12px rgba(0, 36, 16, 0.08), 0 2px 4px rgba(0, 36, 16, 0.04);
+  --shadow-premium-lg: 0 12px 32px rgba(0, 36, 16, 0.12), 0 4px 8px rgba(0, 36, 16, 0.06);
 }
 
 @layer base {
@@ -30,120 +45,87 @@
     line-height: calc(1.5 + var(--a11y-line-height, 0) * 0.15);
     scroll-behavior: smooth;
   }
+
   * {
     @apply border-ecopet-gray/20;
   }
+
   body {
     @apply bg-white text-ecopet-gray antialiased dark:bg-ecopet-dark-bg dark:text-white;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
+
   :focus-visible {
-    outline: 2px solid var(--color-ecopet-green);
+    outline: 2px solid var(--ep-ring, var(--color-ecopet-green));
     outline-offset: 2px;
   }
-  h1, .heading-1 {
-    @apply font-display text-3xl font-extrabold tracking-tight text-ecopet-dark dark:text-white lg:text-4xl;
+
+  /* Typography scale */
+  .text-display {
+    @apply font-display font-bold tracking-tight text-ecopet-dark dark:text-white;
+    font-size: clamp(1.75rem, 1.4rem + 1.5vw, 2.5rem);
+    line-height: 1.15;
   }
-  h2, .heading-2 {
-    @apply font-display text-2xl font-extrabold tracking-tight text-ecopet-dark dark:text-white;
+
+  h1,
+  .heading-1 {
+    @apply font-display font-bold tracking-tight text-ecopet-dark dark:text-white;
+    font-size: clamp(1.5rem, 1.3rem + 1vw, 2.25rem);
+    line-height: 1.2;
   }
-  h3, .heading-3 {
+
+  h2,
+  .heading-2 {
+    @apply font-display text-2xl font-bold tracking-tight text-ecopet-dark dark:text-white;
+    font-size: clamp(1.25rem, 1.15rem + 0.6vw, 1.75rem);
+  }
+
+  h3,
+  .heading-3 {
     @apply font-display text-xl font-semibold text-ecopet-dark dark:text-white;
   }
+
+  h4,
+  .heading-4 {
+    @apply font-display text-lg font-semibold text-ecopet-dark dark:text-white;
+  }
+
   .section-title {
     @apply font-display text-lg font-semibold text-ecopet-dark dark:text-white;
   }
+
+  .body-large {
+    @apply text-base leading-relaxed text-ecopet-gray dark:text-white/85;
+  }
+
   .body-text {
     @apply text-sm leading-relaxed text-ecopet-gray dark:text-white/80;
   }
+
+  .body-small {
+    @apply text-xs leading-relaxed text-ecopet-gray dark:text-white/70;
+  }
+
+  .label-text {
+    @apply text-sm font-medium text-ecopet-dark dark:text-white;
+  }
+
   .caption-text {
     @apply text-xs text-ecopet-gray/80 dark:text-white/60;
   }
+
+  .overline-text {
+    @apply text-[11px] font-semibold uppercase tracking-widest text-ecopet-gray dark:text-white/55;
+  }
+
+  .button-text {
+    @apply text-sm font-semibold;
+  }
+
   .secondary-text {
     @apply text-sm text-ecopet-gray dark:text-white/70;
   }
 }
 
-@layer utilities {
-  .text-gradient-ecopet {
-    @apply bg-gradient-to-r from-ecopet-green to-ecopet-yellow bg-clip-text text-transparent;
-  }
-  .glass {
-    @apply border border-white/20 bg-white/80 backdrop-blur-md dark:border-white/10 dark:bg-ecopet-dark-card/80;
-  }
-  .glass-dark {
-    @apply border border-white/10 bg-ecopet-dark/90 backdrop-blur-xl;
-  }
-  .card-premium {
-    @apply rounded-[20px] border border-ecopet-gray/10 bg-white shadow-[var(--shadow-premium)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[var(--shadow-premium-lg)] dark:border-white/10 dark:bg-ecopet-dark-card;
-  }
-  .shadow-premium { box-shadow: var(--shadow-premium); }
-  .shadow-premium-lg { box-shadow: var(--shadow-premium-lg); }
-  .animate-fade-in { animation: fade-in 0.4s ease-out both; }
-  .gradient-ecopet {
-    @apply bg-gradient-to-br from-ecopet-dark via-ecopet-green to-ecopet-dark;
-  }
-  .gradient-ecopet-accent {
-    @apply bg-gradient-to-br from-ecopet-dark to-ecopet-green;
-  }
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
-  .animate-ecopet-pulse {
-    animation: ecopet-pulse 2.5s ease-in-out infinite;
-  }
-  .animate-ecopet-glow {
-    animation: ecopet-glow 3s ease-in-out infinite;
-  }
-  .watermark-ecopet {
-    @apply pointer-events-none select-none opacity-[0.04] dark:opacity-[0.06];
-  }
-  .sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border-width: 0;
-  }
-}
-
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes ecopet-pulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.04); opacity: 0.92; }
-}
-
-@keyframes ecopet-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 200, 0, 0); }
-  50% { box-shadow: 0 0 24px 4px rgba(245, 200, 0, 0.25); }
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-.skeleton-shimmer {
-  background: linear-gradient(90deg, rgba(0,0,0,0.04) 25%, rgba(0,0,0,0.08) 50%, rgba(0,0,0,0.04) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-}
-
-.dark .skeleton-shimmer {
-  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
-  background-size: 200% 100%;
-}
-
+@import "./utilities.css";
 @import "./accessibility.css";

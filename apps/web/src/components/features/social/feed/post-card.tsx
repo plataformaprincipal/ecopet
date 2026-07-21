@@ -29,8 +29,8 @@ export function PostCard({
   const hidden = post.status === "HIDDEN";
 
   return (
-    <article className="rounded-xl border border-ecopet-gray/15 bg-white shadow-sm">
-      <header className="flex items-center gap-3 p-4">
+    <article className="rounded-[var(--radius-xl)] border border-ecopet-gray/12 bg-white shadow-[var(--shadow-sm)] transition hover:shadow-[var(--shadow-md)] dark:border-white/10 dark:bg-ecopet-dark-card animate-fade-in">
+      <header className="flex items-center gap-3 p-4 sm:p-5">
         <Link href={`/feed/profile/${post.author.id}`} aria-label={post.author.name}>
           <Avatar>
             <AvatarImage src={post.author.avatarUrl ?? undefined} alt="" />
@@ -39,13 +39,13 @@ export function PostCard({
         </Link>
         <div className="flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <Link href={`/feed/profile/${post.author.id}`} className="font-semibold hover:underline">
+            <Link href={`/feed/profile/${post.author.id}`} className="font-display font-semibold text-ecopet-dark hover:underline dark:text-white">
               {post.author.name}
             </Link>
             <PersonaBadge role={post.author.role} />
             {post.type && <PostTypeBadge type={post.type} />}
           </div>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-ecopet-gray dark:text-white/60">
             <time dateTime={post.createdAt}>{new Date(post.createdAt).toLocaleString()}</time>
             {post.editedAt && ` · ${t("socialFeed.post.edited")}`}
           </p>
@@ -53,14 +53,14 @@ export function PostCard({
       </header>
 
       {removed ? (
-        <p className="px-4 pb-4 text-sm text-muted-foreground italic">{t("socialFeed.post.removed")}</p>
+        <p className="px-4 pb-4 text-sm italic text-ecopet-gray dark:text-white/60 sm:px-5">{t("socialFeed.post.removed")}</p>
       ) : (
         <>
-          {hidden && <p className="px-4 text-xs text-amber-600">{t("socialFeed.post.hidden")}</p>}
-          {post.content && <p className="whitespace-pre-wrap px-4 pb-2 text-sm">{post.content}</p>}
+          {hidden && <p className="px-4 text-xs text-ep-warning sm:px-5">{t("socialFeed.post.hidden")}</p>}
+          {post.content && <p className="whitespace-pre-wrap px-4 pb-2 text-sm text-ecopet-dark dark:text-white/90 sm:px-5">{post.content}</p>}
           <AdoptionMetaCard post={post} />
           {post.hashtags.length > 0 && (
-            <div className="flex flex-wrap gap-2 px-4 pb-2">
+            <div className="flex flex-wrap gap-2 px-4 pb-2 sm:px-5">
               {post.hashtags.map((h) => (
                 <HashtagLink key={h.id} slug={h.slug} name={h.name} />
               ))}
@@ -68,13 +68,13 @@ export function PostCard({
           )}
           <PostMediaGrid media={post.media} />
           {onAskAi ? (
-            <div className="px-4 pb-1">
+            <div className="px-4 pb-1 sm:px-5">
               <button
                 type="button"
                 onClick={() => onAskAi(post)}
                 className="inline-flex items-center gap-1.5 rounded-full border border-ecopet-green/30 bg-ecopet-green/5 px-3 py-1 text-xs font-medium text-ecopet-green transition hover:bg-ecopet-green/10"
               >
-                <Sparkles className="h-3.5 w-3.5" aria-hidden />
+                <Sparkles className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
                 Perguntar à EccoPet
               </button>
             </div>

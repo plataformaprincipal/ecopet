@@ -1,0 +1,121 @@
+/**
+ * ECOPET Design System — Foundation tokens (Etapa 1)
+ * Prefer these variables over hardcoded values in new UI.
+ */
+
+:root {
+  /* ── Brand greens ── */
+  --ep-green-50: #ecfdf3;
+  --ep-green-100: #d1fae5;
+  --ep-green-200: #a7f3d0;
+  --ep-green-300: #6ee7b0;
+  --ep-green-400: #34d399;
+  --ep-green-500: #16a34a;
+  --ep-green-600: #128a3f;
+  --ep-green-700: #0f6f34;
+  --ep-green-800: #0a4f26;
+  --ep-green-900: #003b16;
+  --ep-green-950: #002410;
+
+  /* Legacy aliases (keep class names stable) */
+  --color-ecopet-brand: var(--ep-green-900);
+  --color-ecopet-brand-secondary: var(--ep-green-700);
+  --color-ecopet-dark: var(--ep-green-900);
+  --color-ecopet-green: var(--ep-green-600);
+
+  /* Soft surface (not brand wordmark) */
+  --color-ecopet-brand-cream: #f4f7f4;
+  --color-ecopet-cream: #f4f7f4;
+  --color-ecopet-brand-text: #102015;
+
+  /* Accent gold — ratings / warning accent only (not primary brand) */
+  --color-ecopet-yellow: #c9a227;
+  --ep-accent-gold: #c9a227;
+
+  /* Neutrals */
+  --ep-white: #ffffff;
+  --ep-black: #0a0f0c;
+  --ep-graphite: #1a221c;
+  --color-ecopet-gray: #4a5560;
+  --color-ecopet-surface: #ffffff;
+  --color-ecopet-dark-bg: #121816;
+  --color-ecopet-dark-card: #1c2420;
+
+  /* Semantic */
+  --ep-success: #15803d;
+  --ep-success-bg: #ecfdf3;
+  --ep-warning: #b45309;
+  --ep-warning-bg: #fffbeb;
+  --ep-danger: #dc2626;
+  --ep-danger-bg: #fef2f2;
+  --ep-info: #2563eb;
+  --ep-info-bg: #eff6ff;
+
+  /* Surfaces / text / border (light defaults) */
+  --ep-bg: var(--ep-white);
+  --ep-bg-elevated: #ffffff;
+  --ep-bg-muted: #f3f6f4;
+  --ep-bg-inverse: var(--ep-green-900);
+  --ep-fg: #1a221c;
+  --ep-fg-muted: #4a5560;
+  --ep-fg-subtle: #6b7280;
+  --ep-fg-inverse: #ffffff;
+  --ep-border: rgba(74, 85, 96, 0.18);
+  --ep-border-strong: rgba(74, 85, 96, 0.32);
+  --ep-ring: var(--ep-green-600);
+
+  /* Interactive */
+  --ep-interactive: var(--ep-green-600);
+  --ep-interactive-hover: var(--ep-green-700);
+  --ep-interactive-active: var(--ep-green-800);
+  --ep-interactive-fg: #ffffff;
+
+  /* Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+  --radius-ecopet: var(--radius-lg);
+  --radius-input: var(--radius-md);
+  --radius-button: var(--radius-md);
+
+  /* Elevation */
+  --shadow-xs: 0 1px 2px rgba(0, 36, 16, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 36, 16, 0.06), 0 1px 2px rgba(0, 36, 16, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 36, 16, 0.08), 0 2px 4px rgba(0, 36, 16, 0.04);
+  --shadow-lg: 0 12px 32px rgba(0, 36, 16, 0.12), 0 4px 8px rgba(0, 36, 16, 0.06);
+  --shadow-floating: 0 20px 48px rgba(0, 36, 16, 0.16), 0 8px 16px rgba(0, 36, 16, 0.08);
+  --shadow-premium: var(--shadow-md);
+  --shadow-premium-lg: var(--shadow-lg);
+
+  /* Motion */
+  --duration-fast: 120ms;
+  --duration-normal: 200ms;
+  --duration-slow: 320ms;
+  --easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --easing-emphasized: cubic-bezier(0.2, 0, 0, 1.2);
+
+  /* Layout */
+  --ep-container-sm: 40rem;
+  --ep-container-md: 48rem;
+  --ep-container-lg: 64rem;
+  --ep-container-xl: 80rem;
+  --ep-gutter: 1rem;
+  --ep-header-height: 4rem;
+  --ep-touch-min: 44px;
+
+  /* Z-index */
+  --z-base: 0;
+  --z-sticky: 40;
+  --z-dropdown: 50;
+  --z-overlay: 9998;
+  --z-modal: 9999;
+  --z-toast: 10000;
+  --z-a11y: 10050;
+
+  /* Opacity */
+  --opacity-disabled: 0.5;
+  --opacity-muted: 0.72;
+  --opacity-overlay: 0.5;
+}

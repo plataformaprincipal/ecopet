@@ -10,4 +10,14 @@ export async function register() {
   const { getResolvedDatabaseUrl } = await import("@ecopet/database/client");
   const { logDatabaseBootDiagnostics } = await import("@ecopet/database/diagnostics");
   logDatabaseBootDiagnostics(process.env.DATABASE_URL, getResolvedDatabaseUrl());
+
+  try {
+    const { logBootEvent } = await import("@/lib/observability/boot-logger");
+    logBootEvent("app.boot", {
+      module: "instrumentation",
+      event: "app.boot",
+    });
+  } catch {
+    // observabilidade opcional no boot
+  }
 }

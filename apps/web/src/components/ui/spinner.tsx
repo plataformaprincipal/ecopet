@@ -1,10 +1,21 @@
 import { cn } from "@/lib/utils";
 
-export function Spinner({ className, label = "Carregando" }: { className?: string; label?: string }) {
+export function Spinner({
+  className,
+  label = "Carregando",
+}: {
+  className?: string;
+  label?: string;
+}) {
   return (
-    <span role="status" aria-label={label} className={cn("inline-flex", className)}>
+    <span
+      role="status"
+      aria-label={label || undefined}
+      aria-hidden={!label}
+      className={cn("inline-flex", className)}
+    >
       <svg
-        className="h-4 w-4 animate-spin text-current"
+        className="h-4 w-4 animate-spin text-current motion-reduce:animate-none"
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         viewBox="0 0 24 24"

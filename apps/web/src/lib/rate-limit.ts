@@ -31,10 +31,18 @@ export function checkRateLimit(key: string, limit: number, windowMs: number): bo
 
 /** Rate limit para autenticação — ativo em todos os ambientes (memória do processo). */
 export function checkAuthRateLimit(key: string, limit: number, windowMs: number): boolean {
-  if (process.env.AUTH_RATE_LIMIT_DISABLED === "1") {
+  if (
+    process.env.AUTH_RATE_LIMIT_DISABLED === "1" &&
+    process.env.NODE_ENV !== "production" &&
+    process.env.VERCEL_ENV !== "production"
+  ) {
     return true;
   }
-  const relaxed = process.env.AUTH_RATE_LIMIT_RELAXED === "1";
+  const relaxed =
+    process.env.AUTH_RATE_LIMIT_RELAXED === "1" &&
+    process.env.VERCEL_ENV !== "production" &&
+    (process.env.NODE_ENV !== "production" ||
+      (process.env.ECOPET_STABLE_TEST_SERVER === "1" && process.env.VERCEL !== "1"));
   const effectiveLimit = relaxed ? 500 : limit;
   return consumeRateLimit(key, effectiveLimit, windowMs);
 }
@@ -49,10 +57,18 @@ export async function checkDistributedRateLimit(
   limit: number,
   windowMs: number
 ): Promise<boolean> {
-  if (process.env.AUTH_RATE_LIMIT_DISABLED === "1") {
+  if (
+    process.env.AUTH_RATE_LIMIT_DISABLED === "1" &&
+    process.env.NODE_ENV !== "production" &&
+    process.env.VERCEL_ENV !== "production"
+  ) {
     return true;
   }
-  const relaxed = process.env.AUTH_RATE_LIMIT_RELAXED === "1";
+  const relaxed =
+    process.env.AUTH_RATE_LIMIT_RELAXED === "1" &&
+    process.env.VERCEL_ENV !== "production" &&
+    (process.env.NODE_ENV !== "production" ||
+      (process.env.ECOPET_STABLE_TEST_SERVER === "1" && process.env.VERCEL !== "1"));
   const effectiveLimit = relaxed ? 500 : limit;
 
   // Linha rápida local

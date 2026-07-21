@@ -17,21 +17,25 @@ import { isInstitutionalCatalogUser } from "@/lib/catalog/constants";
 import {
   LOGIN_ACCOUNT_INACTIVE_MESSAGE,
   LOGIN_ACCOUNT_SUSPENDED_MESSAGE,
-  LOGIN_USER_NOT_FOUND_MESSAGE,
-  LOGIN_WRONG_PASSWORD_MESSAGE,
+  LOGIN_INVALID_CREDENTIALS_MESSAGE,
 } from "@/lib/constants/auth-messages";
 import { auditLogin, auditLoginFailed } from "@/lib/auth/auth-audit";
 import { isLoginTurnstileRequired } from "@/lib/turnstile/login-risk";
 import { requireTurnstile, TURNSTILE_ACTIONS } from "@/lib/turnstile/server";
 import { turnstilePublicMessage } from "@/lib/turnstile/errors";
+import { withApiTelemetry } from "@/lib/observability/with-api-telemetry";
+import { captureSecurityEvent } from "@/lib/observability/error-capture";
+import { trackMetric, MetricNames } from "@/lib/observability/metrics";
 
 const LOGIN_LIMIT = 10;
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 
-export async function POST(request: Request) {
+async function loginHandler(request: Request) {
   try {
     const ip = clientIp(request);
     if (!(await checkDistributedRateLimit(`login:${ip}`, LOGIN_LIMIT, LOGIN_WINDOW_MS))) {
+      trackMetric(MetricNames.RATE_LIMIT_HITS, 1, { module: "auth", route: "login" });
+      captureSecurityEvent("rate_limit", { route: "login" });
       return apiFailure("RATE_LIMIT", "Muitas tentativas. Aguarde alguns minutos.", 429);
     }
 
@@ -78,11 +82,15 @@ export async function POST(request: Request) {
     const user = await findUserByLoginIdentifier(prisma, identifier);
     if (!user) {
       void auditLoginFailed({ identifier, reason: "USER_NOT_FOUND", ip, userAgent });
-      return apiFailure("USER_NOT_FOUND", LOGIN_USER_NOT_FOUND_MESSAGE, 401);
+      trackMetric(MetricNames.AUTH_FAILURES, 1, { reason: "USER_NOT_FOUND" });
+      captureSecurityEvent("login_failed", { reason: "USER_NOT_FOUND" });
+      return apiFailure("INVALID_CREDENTIALS", LOGIN_INVALID_CREDENTIALS_MESSAGE, 401);
     }
 
     if (user.accountStatus === AccountStatus.SUSPENDED) {
       void auditLoginFailed({ userId: user.id, identifier, reason: "ACCOUNT_SUSPENDED", ip, userAgent });
+      trackMetric(MetricNames.AUTH_FAILURES, 1, { reason: "ACCOUNT_SUSPENDED" });
+      captureSecurityEvent("login_failed", { reason: "ACCOUNT_SUSPENDED", userId: user.id });
       return apiFailure("ACCOUNT_SUSPENDED", LOGIN_ACCOUNT_SUSPENDED_MESSAGE, 403);
     }
 
@@ -109,7 +117,9 @@ export async function POST(request: Request) {
     const valid = await verifyPassword(password, user.passwordHash);
     if (!valid) {
       void auditLoginFailed({ userId: user.id, identifier, reason: "WRONG_PASSWORD", ip, userAgent });
-      return apiFailure("WRONG_PASSWORD", LOGIN_WRONG_PASSWORD_MESSAGE, 401);
+      trackMetric(MetricNames.AUTH_FAILURES, 1, { reason: "WRONG_PASSWORD" });
+      captureSecurityEvent("login_failed", { reason: "WRONG_PASSWORD", userId: user.id });
+      return apiFailure("INVALID_CREDENTIALS", LOGIN_INVALID_CREDENTIALS_MESSAGE, 401);
     }
 
     const token = await createSessionToken(user.id, user.email, user.role, user.accountStatus);
@@ -135,6 +145,9 @@ export async function POST(request: Request) {
     if (process.env.NODE_ENV !== "production") {
       console.error("[login:error]", error);
     }
+    trackMetric(MetricNames.UNHANDLED_ERRORS, 1, { module: "auth" });
     return apiFailure("UNEXPECTED", "Não foi possível fazer login. Tente novamente.", 500);
   }
 }
+
+export const POST = withApiTelemetry("auth", loginHandler);

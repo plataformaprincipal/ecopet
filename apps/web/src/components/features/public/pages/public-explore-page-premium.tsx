@@ -73,10 +73,11 @@ export function PublicExplorePagePremium() {
     (data?.products.length ?? 0) + (data?.services.length ?? 0) + (data?.partners.length ?? 0) > 0;
 
   return (
-    <div className="space-y-8">
-      <header className="space-y-3">
-        <h1 className="font-display text-3xl font-bold text-zinc-900 dark:text-white sm:text-4xl">{t("pub.explore.title")}</h1>
-        <p className="max-w-2xl text-lg text-zinc-500 dark:text-zinc-400">
+    <div className="space-y-8 animate-fade-in">
+      <header className="relative overflow-hidden rounded-[var(--radius-xl)] border border-ecopet-gray/10 bg-white p-6 shadow-[var(--shadow-sm)] sm:p-8 dark:border-white/10 dark:bg-ecopet-dark-card">
+        <p className="overline-text text-ecopet-green">Discover</p>
+        <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-ecopet-dark dark:text-white sm:text-4xl">{t("pub.explore.title")}</h1>
+        <p className="mt-3 max-w-2xl text-base leading-relaxed text-ecopet-gray dark:text-white/70 sm:text-lg">
           {t("pub.explore.subtitle")}
         </p>
       </header>

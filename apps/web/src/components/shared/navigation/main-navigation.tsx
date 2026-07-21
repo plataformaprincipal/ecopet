@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Logo } from "@/components/shared/brand/logo";
+import { EcoPetLogo } from "@/components/shared/brand/ecopet-logo";
 import { isNavActive } from "@/lib/navigation/role-nav";
 import {
   getNavigationMode,
@@ -24,14 +24,14 @@ export function MainNavigation() {
   const logoHref = safeLogoHref(mode, role);
 
   return (
-    <aside className="hidden w-64 shrink-0 flex-col border-r border-ecopet-dark/20 bg-ecopet-dark dark:border-white/10 lg:flex">
-      <div className="p-6">
-        <Logo href={logoHref} responsive />
+    <aside className="hidden w-64 shrink-0 flex-col border-r border-white/10 bg-ecopet-dark lg:flex">
+      <div className="p-5">
+        <EcoPetLogo href={logoHref} variant="dark" showText size="md" priority />
       </div>
 
       {mode === "loading" ? (
-        <div className="flex flex-1 items-center justify-center px-6">
-          <p className="text-sm text-white/50">{t("common.loading")}</p>
+        <div className="flex flex-1 items-center justify-center px-6" role="status" aria-label={t("common.loading")}>
+          <div className="h-10 w-10 animate-ecopet-pulse rounded-2xl bg-white/10" aria-hidden />
         </div>
       ) : (
         <>
@@ -43,13 +43,13 @@ export function MainNavigation() {
                   key={href}
                   href={href}
                   className={cn(
-                    "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-200",
+                    "flex min-h-[44px] items-center gap-3 rounded-[var(--radius-md)] px-4 py-3 text-sm font-semibold transition-colors duration-[var(--duration-fast)]",
                     active
-                      ? "bg-ecopet-green text-white shadow-md shadow-ecopet-green/30"
-                      : "text-white/70 hover:bg-white/10 hover:text-white"
+                      ? "bg-ecopet-green text-white shadow-[var(--shadow-sm)]"
+                      : "text-white/75 hover:bg-white/10 hover:text-white"
                   )}
                 >
-                  <Icon className="h-5 w-5" />
+                  <Icon className="h-5 w-5" strokeWidth={2} aria-hidden />
                   {t(labelKey)}
                 </Link>
               );
@@ -57,7 +57,7 @@ export function MainNavigation() {
           </nav>
 
           {secondary.length > 0 && (
-            <div className="border-t border-ecopet-gray/10 p-3 dark:border-white/10">
+            <div className="border-t border-white/10 p-3">
               <p className="mb-2 px-4 text-[10px] font-bold uppercase tracking-wider text-white/50">
                 {t("common.more")}
               </p>
@@ -69,13 +69,13 @@ export function MainNavigation() {
                       key={href}
                       href={href}
                       className={cn(
-                        "flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors",
+                        "flex min-h-[44px] items-center gap-3 rounded-[var(--radius-md)] px-4 py-2.5 text-sm font-medium transition-colors",
                         active
-                          ? "bg-ecopet-green/20 text-ecopet-yellow"
+                          ? "bg-ecopet-green/25 text-white"
                           : "text-white/60 hover:bg-white/10 hover:text-white"
                       )}
                     >
-                      <Icon className="h-4 w-4" />
+                      <Icon className="h-4 w-4" strokeWidth={2} aria-hidden />
                       {t(labelKey)}
                     </Link>
                   );

@@ -22,11 +22,11 @@ function fmt(iso: string) {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  PENDING: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
-  CONFIRMED: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
-  SCHEDULED: "bg-sky-500/10 text-sky-700 dark:text-sky-400",
-  COMPLETED: "bg-zinc-500/10 text-zinc-600 dark:text-zinc-300",
-  CANCELLED: "bg-rose-500/10 text-rose-700 dark:text-rose-400",
+  PENDING: "bg-ep-warning/10 text-ep-warning",
+  CONFIRMED: "bg-ep-success/10 text-ep-success",
+  SCHEDULED: "bg-ep-info/10 text-ep-info",
+  COMPLETED: "bg-ecopet-gray/10 text-ecopet-gray dark:text-white/70",
+  CANCELLED: "bg-ep-danger/10 text-ep-danger",
 };
 
 export function ClientAgendaPage() {
@@ -56,11 +56,11 @@ export function ClientAgendaPage() {
   if (loading) return <ClientPageSkeleton />;
   if (error) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 animate-fade-in">
         <ClientPageHeader title="Agenda" description="Seus agendamentos EcoPet." />
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700 dark:border-rose-900 dark:bg-rose-950/30" role="alert">
+        <div className="rounded-[var(--radius-lg)] border border-ep-danger/25 bg-ep-danger/10 p-4 text-sm text-ep-danger" role="alert">
           {error}
-          <Button variant="outline" size="sm" className="ml-3" onClick={load}>Tentar novamente</Button>
+          <Button variant="outline" size="sm" className="ml-3 rounded-[var(--radius-button)]" onClick={load}>Tentar novamente</Button>
         </div>
       </div>
     );
@@ -71,13 +71,13 @@ export function ClientAgendaPage() {
   const past = appointments.filter((a) => new Date(a.scheduledAt).getTime() < now);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <ClientPageHeader
         title="Agenda"
         description="Consultas, banho, tosa, vacinas e demais serviços agendados."
         actions={
-          <Button asChild size="sm" className="gap-2">
-            <Link href="/agenda"><CalendarPlus className="h-4 w-4" /> Novo agendamento</Link>
+          <Button asChild size="sm" className="gap-2 rounded-[var(--radius-button)]">
+            <Link href="/agenda"><CalendarPlus className="h-4 w-4" strokeWidth={2} /> Novo agendamento</Link>
           </Button>
         }
       />
@@ -103,24 +103,24 @@ export function ClientAgendaPage() {
 function AgendaGroup({ title, items, emptyMsg }: { title: string; items: Appointment[]; emptyMsg: string }) {
   return (
     <section className="space-y-3">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">{title}</h2>
+      <h2 className="text-xs font-semibold uppercase tracking-[0.12em] text-ecopet-gray dark:text-white/50">{title}</h2>
       {items.length === 0 ? (
-        <p className="text-sm text-zinc-500">{emptyMsg}</p>
+        <p className="text-sm text-ecopet-gray dark:text-white/70">{emptyMsg}</p>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {items.map((a) => (
             <Link
               key={a.id}
               href={`/dashboard/client/appointments/${a.id}`}
-              className="rounded-2xl border border-zinc-200/80 bg-white p-4 text-sm transition hover:shadow-md dark:border-white/10 dark:bg-zinc-900/60"
+              className="rounded-[var(--radius-xl)] border border-ecopet-gray/12 bg-white p-4 text-sm shadow-[var(--shadow-xs)] transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)] dark:border-white/10 dark:bg-ecopet-dark-card"
             >
-              <div className="flex items-center justify-between">
-                <p className="font-medium text-zinc-900 dark:text-white">{a.service?.name ?? "Serviço"}</p>
-                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[a.status] ?? "bg-zinc-500/10 text-zinc-600"}`}>
+              <div className="flex items-center justify-between gap-2">
+                <p className="font-display font-semibold text-ecopet-dark dark:text-white">{a.service?.name ?? "Serviço"}</p>
+                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[a.status] ?? "bg-ecopet-gray/10 text-ecopet-gray"}`}>
                   {a.status}
                 </span>
               </div>
-              <p className="mt-1 text-zinc-500">
+              <p className="mt-1 text-ecopet-gray dark:text-white/70">
                 {[a.pet?.name, a.partner?.partnerProfile?.businessName ?? a.partner?.name, fmt(a.scheduledAt)]
                   .filter(Boolean)
                   .join(" · ")}

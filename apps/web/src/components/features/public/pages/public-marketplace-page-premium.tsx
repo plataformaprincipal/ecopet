@@ -143,13 +143,14 @@ export function PublicMarketplacePagePremium() {
   const hasItems = (data?.products.length ?? 0) + (data?.services.length ?? 0) > 0;
 
   return (
-    <div className="space-y-8">
-      <header className="relative overflow-hidden rounded-[20px] bg-gradient-to-br from-ecopet-green/10 via-white to-ecopet-yellow/10 p-8 dark:from-ecopet-green/20 dark:via-zinc-900 dark:to-ecopet-dark-card">
-        <Sparkles className="h-8 w-8 text-ecopet-green" aria-hidden />
-        <h1 className="mt-3 font-display text-3xl font-bold text-zinc-900 dark:text-white sm:text-4xl">
+    <div className="space-y-8 animate-fade-in">
+      <header className="relative overflow-hidden rounded-[var(--radius-xl)] border border-ecopet-green/15 bg-gradient-to-br from-ecopet-green/[0.08] via-white to-ecopet-cream p-6 sm:p-8 dark:from-ecopet-green/20 dark:via-ecopet-dark-card dark:to-ecopet-dark-bg">
+        <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-ecopet-green/15 blur-3xl" aria-hidden />
+        <Sparkles className="h-8 w-8 text-ecopet-green" strokeWidth={2} aria-hidden />
+        <h1 className="mt-3 font-display text-3xl font-bold tracking-tight text-ecopet-dark dark:text-white sm:text-4xl">
           {t("pub.marketplace.title")}
         </h1>
-        <p className="mt-2 max-w-2xl text-zinc-600 dark:text-zinc-300">
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ecopet-gray dark:text-white/70 sm:text-base">
           {t("pub.marketplace.subtitle")}
         </p>
       </header>

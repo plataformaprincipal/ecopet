@@ -1,9 +1,9 @@
 /**
- * Abstrações de monitoramento futuro.
- * Não instala Sentry / OpenTelemetry / Prometheus / Grafana.
+ * Abstrações de monitoramento.
+ * Better Stack via lib/observability; OTEL traces opcionais via env.
  */
 
-export type TelemetryBackend = "console" | "sentry" | "otel" | "prometheus" | "grafana";
+export type TelemetryBackend = "console" | "sentry" | "otel" | "prometheus" | "grafana" | "better_stack";
 
 export type TelemetryEvent = {
   name: string;
@@ -68,6 +68,7 @@ export function trackAiError(
 export const MONITORING_INTEGRATIONS_READY = {
   sentry: false,
   openTelemetry: false,
+  betterStack: true,
   prometheus: false,
   grafana: false,
   abstraction: true,

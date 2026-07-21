@@ -36,9 +36,9 @@ export function PremiumOnboardingWizard() {
   if (done) {
     return (
       <FadeIn className="mx-auto max-w-lg text-center">
-        <div className="card-premium rounded-2xl p-10">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-ecopet-green/10">
-            <Check className="h-8 w-8 text-ecopet-green" aria-hidden />
+        <div className="rounded-[var(--radius-xl)] border border-ecopet-gray/10 bg-white p-10 shadow-[var(--shadow-lg)] dark:border-white/10 dark:bg-ecopet-dark-card">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-ecopet-green/10">
+            <Check className="h-8 w-8 text-ecopet-green" strokeWidth={2} aria-hidden />
           </div>
           <h1 className="mt-6 font-display text-3xl font-bold text-ecopet-dark dark:text-white">
             {t("authPremium.onboarding.welcomeTitle")}
@@ -46,7 +46,7 @@ export function PremiumOnboardingWizard() {
           <p className="mt-3 text-ecopet-gray dark:text-white/70">
             {t("authPremium.onboarding.welcomeDesc")}
           </p>
-          <Button asChild className="mt-8 rounded-2xl" size="lg">
+          <Button asChild className="mt-8 rounded-xl" size="lg">
             <a href="/dashboard">{t("authPremium.onboarding.goDashboard")}</a>
           </Button>
         </div>
@@ -57,7 +57,7 @@ export function PremiumOnboardingWizard() {
   return (
     <div className="mx-auto w-full max-w-2xl space-y-8 py-6">
       <div className="text-center">
-        <h1 className="font-display text-3xl font-bold text-ecopet-dark dark:text-white">
+        <h1 className="font-display text-3xl font-bold tracking-tight text-ecopet-dark dark:text-white">
           {t("authPremium.onboarding.createAccount")}
         </h1>
         <p className="mt-2 text-sm text-ecopet-gray dark:text-white/70">
@@ -65,22 +65,28 @@ export function PremiumOnboardingWizard() {
         </p>
       </div>
 
-      <nav aria-label={t("authPremium.onboarding.progress")} className="flex justify-between gap-2">
+      <nav aria-label={t("authPremium.onboarding.progress")} className="relative flex justify-between gap-2">
+        <div className="absolute left-4 right-4 top-4 h-0.5 bg-ecopet-gray/15 dark:bg-white/10" aria-hidden />
+        <div
+          className="absolute left-4 top-4 h-0.5 bg-ecopet-green transition-all duration-[var(--duration-normal)]"
+          style={{ width: `calc(${((step - 1) / (STEPS.length - 1)) * 100}% - 0px)` }}
+          aria-hidden
+        />
         {STEPS.map((s) => (
           <div
             key={s.id}
             className={cn(
-              "flex flex-1 flex-col items-center gap-1",
+              "relative z-[1] flex flex-1 flex-col items-center gap-1.5",
               step >= s.id ? "text-ecopet-green" : "text-ecopet-gray/50"
             )}
           >
             <span
               className={cn(
-                "flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold",
-                step >= s.id ? "bg-ecopet-green text-white" : "bg-ecopet-gray/10"
+                "flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ring-4 ring-white dark:ring-ecopet-dark-bg",
+                step >= s.id ? "bg-ecopet-green text-white" : "bg-ecopet-gray/15"
               )}
             >
-              {step > s.id ? <Check className="h-4 w-4" /> : s.id}
+              {step > s.id ? <Check className="h-4 w-4" strokeWidth={2} /> : s.id}
             </span>
             <span className="hidden text-[10px] font-medium sm:block">{s.label}</span>
           </div>
@@ -88,11 +94,11 @@ export function PremiumOnboardingWizard() {
       </nav>
 
       {step === 1 && (
-        <FadeIn className="card-premium space-y-6 rounded-2xl p-6 sm:p-8">
+        <FadeIn className="space-y-6 rounded-[var(--radius-xl)] border border-ecopet-gray/10 bg-white p-6 shadow-[var(--shadow-md)] sm:p-8 dark:border-white/10 dark:bg-ecopet-dark-card">
           <h2 className="text-xl font-semibold text-ecopet-dark dark:text-white">{t("authPremium.onboarding.who")}</h2>
           <RegisterRoleSelector value={role} onChange={setRole} />
           <Button
-            className="w-full rounded-2xl"
+            className="w-full rounded-xl"
             size="lg"
             disabled={!role}
             onClick={() => setStep(2)}
@@ -104,7 +110,7 @@ export function PremiumOnboardingWizard() {
 
       {step === 2 && role && (
         <FadeIn className="space-y-4">
-          <div className="card-premium rounded-2xl p-4 sm:p-6">
+          <div className="rounded-[var(--radius-xl)] border border-ecopet-gray/10 bg-white p-4 shadow-[var(--shadow-md)] sm:p-6 dark:border-white/10 dark:bg-ecopet-dark-card">
             <FoundationRegisterForm initialRole={role} embedded />
           </div>
           <Button variant="ghost" className="w-full" onClick={() => setStep(1)}>
@@ -114,7 +120,7 @@ export function PremiumOnboardingWizard() {
       )}
 
       {step === 3 && (
-        <FadeIn className="card-premium space-y-6 rounded-2xl p-6 sm:p-8">
+        <FadeIn className="space-y-6 rounded-[var(--radius-xl)] border border-ecopet-gray/10 bg-white p-6 shadow-[var(--shadow-md)] sm:p-8 dark:border-white/10 dark:bg-ecopet-dark-card">
           <h2 className="text-xl font-semibold text-ecopet-dark dark:text-white">{t("authPremium.onboarding.firstPet")}</h2>
           <p className="text-sm text-ecopet-gray dark:text-white/70">
             {t("authPremium.onboarding.firstPetDesc")}
@@ -130,14 +136,14 @@ export function PremiumOnboardingWizard() {
               </div>
             ))}
           </div>
-          <Button className="w-full rounded-2xl" size="lg" onClick={() => setStep(4)}>
+          <Button className="w-full rounded-xl" size="lg" onClick={() => setStep(4)}>
             {t("authPremium.onboarding.continue")}
           </Button>
         </FadeIn>
       )}
 
       {step === 4 && (
-        <FadeIn className="card-premium space-y-6 rounded-2xl p-6 sm:p-8">
+        <FadeIn className="space-y-6 rounded-[var(--radius-xl)] border border-ecopet-gray/10 bg-white p-6 shadow-[var(--shadow-md)] sm:p-8 dark:border-white/10 dark:bg-ecopet-dark-card">
           <h2 className="text-xl font-semibold text-ecopet-dark dark:text-white">{t("authPremium.onboarding.prefsTitle")}</h2>
           <p className="text-sm text-ecopet-gray dark:text-white/70">
             {t("authPremium.onboarding.prefsDesc")}
@@ -153,19 +159,19 @@ export function PremiumOnboardingWizard() {
                     setPrefs((p) => (active ? p.filter((x) => x !== id) : [...p, id]))
                   }
                   className={cn(
-                    "flex items-center gap-3 rounded-2xl border p-4 text-left transition",
+                    "flex min-h-[52px] items-center gap-3 rounded-xl border p-4 text-left transition",
                     active
-                      ? "border-ecopet-green bg-ecopet-green/5"
+                      ? "border-ecopet-green bg-ecopet-green/5 shadow-[var(--shadow-xs)]"
                       : "border-ecopet-gray/15 hover:border-ecopet-green/30"
                   )}
                 >
-                  <Icon className="h-5 w-5 text-ecopet-green" aria-hidden />
+                  <Icon className="h-5 w-5 text-ecopet-green" strokeWidth={2} aria-hidden />
                   <span className="font-medium">{label}</span>
                 </button>
               );
             })}
           </div>
-          <Button className="w-full rounded-2xl" size="lg" onClick={() => setDone(true)}>
+          <Button className="w-full rounded-xl" size="lg" onClick={() => setDone(true)}>
             {t("authPremium.onboarding.finish")}
           </Button>
         </FadeIn>

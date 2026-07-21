@@ -5,7 +5,8 @@ import { getResendApiKey } from "@/lib/email/resend";
 const TEST_TO = "arthuralves2307@gmail.com";
 
 export async function GET() {
-  if (process.env.NODE_ENV === "production" && process.env.ALLOW_TEST_RESEND !== "1") {
+  // Rotas de teste de e-mail nunca em production/preview production-like.
+  if (process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production") {
     return NextResponse.json(
       { success: false, error: "Rota de teste desabilitada em produção." },
       { status: 403 }

@@ -58,6 +58,42 @@ export function auditProductionEnv(env: NodeJS.ProcessEnv = process.env): Produc
     recommended.push("EMAIL_FROM — remetente verificado no Resend");
   }
 
+  const dangerous = [
+    "FORCE_INSECURE_SESSION_COOKIE",
+    "AUTH_RATE_LIMIT_DISABLED",
+    "AUTH_TEST_EXPOSE_OTP",
+    "ALLOW_TEST_RESEND",
+    "TURNSTILE_DEV_BYPASS",
+    "AUTH_TEST_RESET_RATE_LIMIT",
+  ] as const;
+  // Harness local (`npm run test:server:start`) only — never on Vercel.
+  const localStableTestHarness =
+    env.ECOPET_STABLE_TEST_SERVER === "1" && env.VERCEL !== "1" && !env.VERCEL_ENV;
+  for (const key of dangerous) {
+    if (env[key] === "1" || env[key]?.toLowerCase() === "true") {
+      if (localStableTestHarness && key !== "FORCE_INSECURE_SESSION_COOKIE") {
+        warnings.push(`${key} ativo apenas no harness local ECOPET_STABLE_TEST_SERVER`);
+        continue;
+      }
+      critical.push(`${key} não permitido em produção`);
+    }
+  }
+
+  if (env.MERCADO_PAGO_ACCESS_TOKEN?.trim() && !env.MERCADO_PAGO_WEBHOOK_SECRET?.trim()) {
+    critical.push("MERCADO_PAGO_WEBHOOK_SECRET (obrigatório quando access token está configurado)");
+  }
+
+  if (
+    (env.TURNSTILE_ENABLED === "1" || env.TURNSTILE_ENABLED === "true" || !env.TURNSTILE_ENABLED) &&
+    env.VERCEL === "1"
+  ) {
+    if (!env.TURNSTILE_SECRET_KEY?.trim() || !env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim()) {
+      recommended.push(
+        "TURNSTILE_SITE_KEY + TURNSTILE_SECRET_KEY — formulários públicos falham abertos sem Turnstile"
+      );
+    }
+  }
+
   return { critical, recommended, warnings };
 }
 

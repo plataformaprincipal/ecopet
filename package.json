@@ -71,7 +71,9 @@
     "test:server:stop": "node scripts/stop-stable-test-server.mjs",
     "test:etapa13": "node scripts/run-etapa13-validation.mjs",
     "test:e2e": "playwright test",
+    "test:e2e:acceptance": "playwright test e2e/acceptance",
     "test:e2e:headed": "playwright test --headed",
+    "test:acceptance:cleanup": "node --import tsx scripts/acceptance-cleanup.mjs",
     "db:backup:local": "node scripts/db-backup-local.mjs",
     "test:express:contract": "node scripts/test-express-contract.mjs",
     "bootstrap:catalog": "node scripts/bootstrap-catalog.mjs",
@@ -101,5 +103,9 @@
   },
   "engines": {
     "node": ">=20"
+  },
+  "overrides": {
+    "ws": "8.21.1",
+    "form-data": "4.0.6"
   }
 }

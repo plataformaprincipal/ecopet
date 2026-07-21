@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { FoundationLoginForm } from "@/components/features/foundation/login-form";
+import { EcoPetLogo } from "@/components/shared/brand/ecopet-logo";
 import { useTranslation } from "@/providers/i18n-provider";
+import { FadeIn } from "@/components/design-system/motion";
 
 function SocialButton({
   label,
@@ -19,7 +21,7 @@ function SocialButton({
       disabled
       aria-disabled="true"
       title={comingSoon}
-      className="flex w-full items-center justify-center gap-3 rounded-2xl border border-ecopet-gray/15 bg-white px-4 py-3 text-sm font-medium text-ecopet-dark opacity-60 transition dark:border-white/10 dark:bg-ecopet-dark-card dark:text-white"
+      className="flex min-h-[48px] w-full items-center justify-center gap-3 rounded-xl border border-ecopet-gray/15 bg-white px-4 py-3 text-sm font-medium text-ecopet-dark opacity-60 transition dark:border-white/10 dark:bg-white/5 dark:text-white"
     >
       {icon}
       {label}
@@ -71,41 +73,47 @@ export function PremiumLoginExperience() {
   const { t } = useTranslation();
   const comingSoon = t("authPremium.login.comingSoon");
   return (
-    <div className="mx-auto w-full max-w-md space-y-8 py-4">
-      <div className="space-y-2 text-center lg:text-left">
-        <h1 className="font-display text-3xl font-bold tracking-tight text-ecopet-dark dark:text-white">
-          {t("authPremium.login.title")}
-        </h1>
-        <p className="text-sm text-ecopet-gray dark:text-white/70">
-          {t("authPremium.login.subtitle")}
-        </p>
+    <FadeIn className="mx-auto w-full max-w-md">
+      <div className="mb-8 flex justify-center lg:hidden">
+        <EcoPetLogo href="/" size="lg" showText variant="light" />
       </div>
 
-      <div className="space-y-3" role="group" aria-label={t("authPremium.login.socialGroup")}>
-        <SocialButton label={t("authPremium.login.google")} comingSoon={comingSoon} icon={<GoogleIcon />} />
-        <SocialButton label={t("authPremium.login.apple")} comingSoon={comingSoon} icon={<AppleIcon />} />
-        <SocialButton label={t("authPremium.login.facebook")} comingSoon={comingSoon} icon={<FacebookIcon />} />
-      </div>
-
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center" aria-hidden>
-          <div className="w-full border-t border-ecopet-gray/15 dark:border-white/10" />
+      <div className="rounded-[var(--radius-xl)] border border-ecopet-gray/10 bg-white/90 p-6 shadow-[var(--shadow-lg)] backdrop-blur-md sm:p-8 dark:border-white/10 dark:bg-ecopet-dark-card/90">
+        <div className="space-y-2 text-center lg:text-left">
+          <h1 className="font-display text-3xl font-bold tracking-tight text-ecopet-dark dark:text-white">
+            {t("authPremium.login.title")}
+          </h1>
+          <p className="text-sm leading-relaxed text-ecopet-gray dark:text-white/70">
+            {t("authPremium.login.subtitle")}
+          </p>
         </div>
-        <p className="relative flex justify-center text-xs uppercase tracking-wider">
-          <span className="bg-white px-3 text-ecopet-gray dark:bg-ecopet-dark-bg dark:text-white/50">
-            {t("authPremium.login.orEmail")}
-          </span>
+
+        <div className="mt-8 space-y-3" role="group" aria-label={t("authPremium.login.socialGroup")}>
+          <SocialButton label={t("authPremium.login.google")} comingSoon={comingSoon} icon={<GoogleIcon />} />
+          <SocialButton label={t("authPremium.login.apple")} comingSoon={comingSoon} icon={<AppleIcon />} />
+          <SocialButton label={t("authPremium.login.facebook")} comingSoon={comingSoon} icon={<FacebookIcon />} />
+        </div>
+
+        <div className="relative my-8">
+          <div className="absolute inset-0 flex items-center" aria-hidden>
+            <div className="w-full border-t border-ecopet-gray/15 dark:border-white/10" />
+          </div>
+          <p className="relative flex justify-center text-xs uppercase tracking-wider">
+            <span className="bg-white px-3 text-ecopet-gray dark:bg-ecopet-dark-card dark:text-white/50">
+              {t("authPremium.login.orEmail")}
+            </span>
+          </p>
+        </div>
+
+        <FoundationLoginForm variant="premium" />
+
+        <p className="mt-8 text-center text-sm text-ecopet-gray dark:text-white/60">
+          {t("authPremium.login.noAccount")}{" "}
+          <Link href="/cadastro" className="font-semibold text-ecopet-green hover:underline">
+            {t("authPremium.login.createAccount")}
+          </Link>
         </p>
       </div>
-
-      <FoundationLoginForm variant="premium" />
-
-      <p className="text-center text-sm text-ecopet-gray dark:text-white/60">
-        {t("authPremium.login.noAccount")}{" "}
-        <Link href="/cadastro" className="font-semibold text-ecopet-green hover:underline">
-          {t("authPremium.login.createAccount")}
-        </Link>
-      </p>
-    </div>
+    </FadeIn>
   );
 }

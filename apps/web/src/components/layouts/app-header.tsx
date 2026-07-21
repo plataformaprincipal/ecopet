@@ -19,7 +19,7 @@ export function AppHeader({ title, titleKey }: { title?: string; titleKey?: Tran
   const heading = titleKey ? t(titleKey) : title;
 
   return (
-    <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-ecopet-gray/10 bg-white/90 px-4 backdrop-blur-xl dark:border-white/10 dark:bg-[#0a0d10]/90 lg:px-8">
+    <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-ecopet-gray/10 bg-white/90 px-4 backdrop-blur-md dark:border-white/10 dark:bg-ecopet-dark-bg/90 lg:px-8">
       {heading && (
         <h1 className="font-display text-lg font-bold text-ecopet-dark dark:text-white lg:text-xl">
           {heading}
@@ -27,7 +27,7 @@ export function AppHeader({ title, titleKey }: { title?: string; titleKey?: Tran
       )}
       <div className="ml-auto flex items-center gap-1">
         <div className="relative hidden max-w-xs md:block">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ecopet-gray" aria-hidden />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ecopet-gray" strokeWidth={2} aria-hidden />
           <Input placeholder={t("common.search")} className="w-48 pl-10 lg:w-56" aria-label={t("common.search")} />
         </div>
         <NotificationBell variant="header" />

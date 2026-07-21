@@ -35,18 +35,18 @@ const FEATURES = [
 
 export function PublicMeuPetPreview() {
   return (
-    <div className="space-y-10">
+    <div className="space-y-10 animate-fade-in">
       <PublicPageHeader
         title="Meu Pet"
         description="Organize a vida do seu pet em um módulo dedicado. Antes de criar conta, conheça o que você poderá fazer."
         actions={
-          <Button asChild size="sm">
+          <Button asChild size="sm" className="rounded-[var(--radius-button)]">
             <Link href={signupUrl("/meu-pet")}>Criar perfil do meu pet</Link>
           </Button>
         }
       />
 
-      <div className="rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/50 p-4 text-sm text-emerald-900 dark:border-emerald-500/20 dark:bg-emerald-500/5 dark:text-emerald-100">
+      <div className="rounded-[var(--radius-lg)] border border-dashed border-ecopet-green/30 bg-ecopet-green/[0.06] p-4 text-sm text-ecopet-green-800 dark:border-ecopet-green/25 dark:bg-ecopet-green/10 dark:text-ecopet-cream">
         Para cadastrar pets e salvar dados reais, é necessário criar uma conta EcoPet. Nenhum dado
         é armazenado nesta visualização pública.
       </div>
@@ -55,11 +55,13 @@ export function PublicMeuPetPreview() {
         {FEATURES.map(({ icon: Icon, title, description }) => (
           <div
             key={title}
-            className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm transition hover:shadow-md dark:border-white/10 dark:bg-zinc-900/60"
+            className="rounded-[var(--radius-xl)] border border-ecopet-gray/12 bg-white p-5 shadow-[var(--shadow-sm)] transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)] dark:border-white/10 dark:bg-ecopet-dark-card"
           >
-            <Icon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" aria-hidden />
-            <h3 className="mt-3 font-medium text-zinc-900 dark:text-white">{title}</h3>
-            <p className="mt-1 text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
+            <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-ecopet-green/10">
+              <Icon className="h-5 w-5 text-ecopet-green" strokeWidth={2} aria-hidden />
+            </div>
+            <h3 className="mt-3 font-display text-base font-semibold text-ecopet-dark dark:text-white">{title}</h3>
+            <p className="mt-1 text-sm leading-relaxed text-ecopet-gray dark:text-white/70">
               {description}
             </p>
           </div>

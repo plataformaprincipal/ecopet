@@ -23,12 +23,12 @@ export function PartnerSidebar({
   const pathname = usePathname();
 
   return (
-    <aside className="hidden w-72 shrink-0 border-r border-zinc-200/80 bg-white/80 backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/80 lg:flex lg:flex-col">
-      <div className="border-b border-zinc-200/80 px-5 py-6 dark:border-white/10">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-400">
+    <aside className="hidden w-72 shrink-0 border-r border-ecopet-gray/12 bg-white/90 backdrop-blur-xl dark:border-white/10 dark:bg-ecopet-dark/90 lg:flex lg:flex-col">
+      <div className="border-b border-ecopet-gray/12 px-5 py-6 dark:border-white/10">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ecopet-green">
           Área do Parceiro
         </p>
-        <h2 className="mt-1 truncate font-display text-lg font-semibold text-zinc-900 dark:text-white">
+        <h2 className="mt-1 truncate font-display text-lg font-semibold text-ecopet-dark dark:text-white">
           {businessName}
         </h2>
         <div className="mt-3">
@@ -51,10 +51,11 @@ export function PartnerSidebar({
               href={locked ? "/parceiro/perfil-gestao" : item.href}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "group flex items-start gap-3 rounded-xl px-3 py-2.5 transition-all duration-200",
+                "group flex items-start gap-3 rounded-[var(--radius-md)] px-3 py-2.5 transition-all duration-200",
+                "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ecopet-green",
                 active
-                  ? "bg-zinc-900 text-white shadow-sm dark:bg-white dark:text-zinc-900"
-                  : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-white",
+                  ? "bg-ecopet-green/10 text-ecopet-green shadow-[var(--shadow-xs)]"
+                  : "text-ecopet-gray hover:bg-ecopet-green/[0.06] hover:text-ecopet-dark dark:text-white/65 dark:hover:bg-white/5 dark:hover:text-white",
                 locked && "opacity-60"
               )}
             >
@@ -63,13 +64,14 @@ export function PartnerSidebar({
                   "mt-0.5 h-4 w-4 shrink-0",
                   active ? "opacity-100" : "opacity-70 group-hover:opacity-100"
                 )}
+                strokeWidth={2}
               />
               <span className="min-w-0">
                 <span className="block text-sm font-medium leading-tight">{item.label}</span>
                 <span
                   className={cn(
                     "mt-0.5 block text-xs leading-snug",
-                    active ? "text-white/70 dark:text-zinc-600" : "text-zinc-400"
+                    active ? "text-ecopet-green/80" : "text-ecopet-gray/80 dark:text-white/45"
                   )}
                 >
                   {locked ? "Disponível após aprovação" : item.description}

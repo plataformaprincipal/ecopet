@@ -7,12 +7,14 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default: "bg-ecopet-green/10 text-ecopet-green",
-        premium: "bg-ecopet-yellow/20 text-ecopet-dark",
-        verified: "bg-blue-500/10 text-blue-600",
+        premium: "bg-ecopet-green/15 text-ecopet-green-800 dark:text-ecopet-green-500",
+        verified: "bg-ep-info/10 text-ep-info",
         vet: "bg-ecopet-dark/10 text-ecopet-dark dark:text-ecopet-green",
         outline: "border border-ecopet-gray/30 bg-transparent text-ecopet-gray",
         secondary: "bg-ecopet-gray/10 text-ecopet-gray",
-        destructive: "bg-red-500/10 text-red-600",
+        destructive: "bg-ep-danger/10 text-ep-danger",
+        success: "bg-ep-success/10 text-ep-success",
+        warning: "bg-ep-warning/10 text-ep-warning",
       },
     },
     defaultVariants: { variant: "default" },
@@ -26,3 +28,5 @@ export function Badge({
 }: React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof badgeVariants>) {
   return <div className={cn(badgeVariants({ variant }), className)} {...props} />;
 }
+
+export { badgeVariants };

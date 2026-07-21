@@ -9,7 +9,7 @@ interface LogoProps {
   responsive?: boolean;
 }
 
-/** @deprecated Prefer EcoPetLogo directly */
+/** Adapter — prefer EcoPetLogo / BrandMark for new usage */
 export function Logo({
   className,
   href = "/",
@@ -32,3 +32,5 @@ export function Logo({
 }
 
 export { EcoPetLogo, EcopetWatermark } from "./ecopet-logo";
+export { BrandMark, BrandLockupVertical } from "./brand-mark";
+export { InstitutionalLoader } from "./institutional-loader";

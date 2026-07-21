@@ -12,13 +12,13 @@ export function PublicNavbar() {
   const { t } = useTranslation();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-ecopet-gray/10 bg-white/90 backdrop-blur-xl dark:border-white/10 dark:bg-ecopet-dark-bg/90">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
-        <EcoPetLogo href="/" size="sm" showText />
+    <header className="sticky top-0 z-50 border-b border-ecopet-gray/10 bg-white/80 backdrop-blur-md dark:border-white/10 dark:bg-ecopet-dark-bg/85">
+      <div className="mx-auto flex h-[4.25rem] max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
+        <EcoPetLogo href="/" size="md" showText className="min-w-0" />
 
         <PrimaryDesktopNav context="public" className="hidden xl:flex" />
 
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           <LanguageSelector compact className="shrink-0" />
           <Button
             asChild
@@ -28,7 +28,7 @@ export function PublicNavbar() {
             aria-label={t("pub.nav.accessibility")}
           >
             <a href="#ecopet-a11y-toolbar" title={t("pub.nav.accessibility")}>
-              <Accessibility className="h-4 w-4" />
+              <Accessibility className="h-4 w-4" strokeWidth={2} />
             </a>
           </Button>
           <Button asChild variant="ghost" size="sm" className="hidden rounded-xl sm:inline-flex">

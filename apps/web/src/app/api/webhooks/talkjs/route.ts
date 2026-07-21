@@ -8,13 +8,17 @@ import {
   hashWebhookPayload,
   buildWebhookIdempotencyKey,
 } from "@/lib/talkjs/webhook-security";
+import { withApiTelemetry } from "@/lib/observability/with-api-telemetry";
+import { recordWebhookTelemetry } from "@/lib/observability/integrations";
+import { captureSecurityEvent } from "@/lib/observability/error-capture";
 
 /**
  * Webhook TalkJS — /api/webhooks/talkjs
  * Produção: exige TALKJS_WEBHOOK_SECRET + assinatura HMAC.
  * Test Mode: pode usar TALKJS_SECRET_KEY; configure TALKJS_WEBHOOK_VERIFY=1 após ativar no painel.
  */
-export async function POST(req: Request) {
+async function talkJsWebhookHandler(req: Request) {
+  const started = Date.now();
   if (!isMessagingFlagEnabled("webhooks")) {
     return apiFailure("WEBHOOKS_DISABLED", "Webhooks TalkJS desativados.", 503);
   }
@@ -35,6 +39,15 @@ export async function POST(req: Request) {
   });
 
   if (!verify.ok) {
+    captureSecurityEvent("webhook_invalid_signature", { provider: "talkjs" });
+    recordWebhookTelemetry({
+      provider: "talkjs",
+      eventType: "signature",
+      outcome: "rejected",
+      durationMs: Date.now() - started,
+      statusCode: 401,
+      errorCode: "INVALID_SIGNATURE",
+    });
     return apiFailure("INVALID_SIGNATURE", "Assinatura do webhook inválida.", 401);
   }
 
@@ -72,6 +85,13 @@ export async function POST(req: Request) {
     select: { id: true, status: true },
   });
   if (existing) {
+    recordWebhookTelemetry({
+      provider: "talkjs",
+      eventType,
+      outcome: "duplicate",
+      durationMs: Date.now() - started,
+      statusCode: 200,
+    });
     return apiSuccess({ received: true, duplicate: true, eventType });
   }
 
@@ -108,6 +128,13 @@ export async function POST(req: Request) {
         await prisma.webhookEvent.update({
           where: { id: eventRow.id },
           data: { status: "PROCESSED", processedAt: new Date() },
+        });
+        recordWebhookTelemetry({
+          provider: "talkjs",
+          eventType,
+          outcome: "processed",
+          durationMs: Date.now() - started,
+          statusCode: 200,
         });
         return apiSuccess({ received: true, eventType, notifications: false });
       }
@@ -157,6 +184,13 @@ export async function POST(req: Request) {
       data: { status: "PROCESSED", processedAt: new Date() },
     });
 
+    recordWebhookTelemetry({
+      provider: "talkjs",
+      eventType,
+      outcome: "processed",
+      durationMs: Date.now() - started,
+      statusCode: 200,
+    });
     return apiSuccess({ received: true, eventType });
   } catch (err) {
     const msg = err instanceof Error ? err.message.slice(0, 300) : "webhook_failed";
@@ -164,6 +198,16 @@ export async function POST(req: Request) {
       where: { id: eventRow.id },
       data: { status: "FAILED", errorMessage: msg, failureReason: msg },
     });
+    recordWebhookTelemetry({
+      provider: "talkjs",
+      eventType,
+      outcome: "failed",
+      durationMs: Date.now() - started,
+      statusCode: 500,
+      errorCode: "WEBHOOK_PROCESSING_ERROR",
+    });
     return apiFailure("WEBHOOK_PROCESSING_ERROR", "Falha ao processar webhook.", 500);
   }
 }
+
+export const POST = withApiTelemetry("talkjs", talkJsWebhookHandler);

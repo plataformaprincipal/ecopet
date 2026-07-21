@@ -29,10 +29,10 @@ const MOBILE_TABS: { id: MobileTab; labelKey: string; icon: typeof LayoutGrid }[
 
 function GuestPanelCTA({ title, description, signIn }: { title: string; description: string; signIn: string }) {
   return (
-    <section className="rounded-3xl border border-zinc-200/70 bg-white/70 p-4 text-center shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-zinc-900/50">
-      <p className="text-sm font-semibold text-zinc-900 dark:text-white">{title}</p>
-      <p className="mt-1 text-xs text-zinc-500">{description}</p>
-      <a href="/login" className="mt-3 inline-block rounded-xl bg-ecopet-green px-4 py-2 text-xs font-semibold text-white">
+    <section className="rounded-[var(--radius-xl)] border border-ecopet-gray/12 bg-white/80 p-5 text-center shadow-[var(--shadow-sm)] backdrop-blur-md dark:border-white/10 dark:bg-ecopet-dark-card/80">
+      <p className="text-sm font-semibold text-ecopet-dark dark:text-white">{title}</p>
+      <p className="mt-1 text-xs text-ecopet-gray dark:text-white/60">{description}</p>
+      <a href="/login" className="mt-3 inline-flex min-h-[40px] items-center rounded-xl bg-ecopet-green px-4 py-2 text-xs font-semibold text-white transition hover:bg-ecopet-green-700">
         {signIn}
       </a>
     </section>
@@ -54,15 +54,15 @@ export function SocialHub() {
   }
 
   return (
-    <div className="relative mx-auto w-full max-w-[1500px] px-3 pb-28 pt-4 sm:px-4 lg:px-6 lg:pb-8">
+    <div className="relative mx-auto w-full max-w-[1500px] px-3 pb-28 pt-4 sm:px-4 lg:px-6 lg:pb-8 animate-fade-in">
       {/* Top bar — logo + language selector (top right, all breakpoints) */}
-      <div className="mb-4 flex items-center justify-between gap-3">
+      <div className="mb-4 flex items-center justify-between gap-3 rounded-[var(--radius-lg)] border border-ecopet-gray/10 bg-white/80 px-3 py-2.5 shadow-[var(--shadow-xs)] backdrop-blur-md dark:border-white/10 dark:bg-ecopet-dark-card/80">
         <EcoPetLogo href="/social" size="sm" showText />
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => setMobileFiltersOpen((v) => !v)}
-            className="flex items-center gap-1.5 rounded-full border border-zinc-200/80 bg-white px-3 py-1.5 text-xs font-medium text-zinc-600 lg:hidden dark:border-white/10 dark:bg-zinc-900"
+            className="flex min-h-[36px] items-center gap-1.5 rounded-full border border-ecopet-gray/15 bg-white px-3 py-1.5 text-xs font-medium text-ecopet-gray lg:hidden dark:border-white/10 dark:bg-ecopet-dark-bg dark:text-white/70"
             aria-expanded={mobileFiltersOpen}
           >
             <Filter className="h-3.5 w-3.5" aria-hidden />
@@ -110,7 +110,7 @@ export function SocialHub() {
       ) : null}
 
       {/* Mobile tab switcher */}
-      <div className="mb-4 flex gap-1 rounded-2xl border border-zinc-200/80 bg-white p-1 shadow-sm dark:border-white/10 dark:bg-zinc-900/60 lg:hidden">
+      <div className="mb-4 flex gap-1 rounded-[var(--radius-lg)] border border-ecopet-gray/12 bg-white p-1 shadow-[var(--shadow-xs)] dark:border-white/10 dark:bg-ecopet-dark-card lg:hidden">
         {MOBILE_TABS.map((tab) => (
           <button
             key={tab.id}
@@ -118,11 +118,11 @@ export function SocialHub() {
             onClick={() => setMobileTab(tab.id)}
             aria-current={mobileTab === tab.id ? "page" : undefined}
             className={cn(
-              "flex flex-1 flex-col items-center gap-0.5 rounded-xl py-2 text-[11px] font-medium transition",
-              mobileTab === tab.id ? "bg-ecopet-green text-white" : "text-zinc-500"
+              "flex min-h-[44px] flex-1 flex-col items-center gap-0.5 rounded-xl py-2 text-[11px] font-medium transition",
+              mobileTab === tab.id ? "bg-ecopet-green text-white" : "text-ecopet-gray"
             )}
           >
-            <tab.icon className="h-4 w-4" aria-hidden />
+            <tab.icon className="h-4 w-4" strokeWidth={2} aria-hidden />
             {t(tab.labelKey)}
           </button>
         ))}

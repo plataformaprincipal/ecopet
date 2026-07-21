@@ -58,14 +58,14 @@ export function HubNotificationsPanel({ className }: { className?: string }) {
   return (
     <section
       className={cn(
-        "rounded-[20px] border border-zinc-200/80 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900/60",
+        "rounded-[var(--radius-xl)] border border-ecopet-gray/12 bg-white p-4 shadow-[var(--shadow-sm)] animate-fade-in dark:border-white/10 dark:bg-ecopet-dark-card",
         className
       )}
       aria-label={t("hub.notifications.title")}
     >
       <header className="mb-3 flex items-center justify-between">
-        <h2 className="flex items-center gap-2 font-semibold text-zinc-900 dark:text-white">
-          <Bell className="h-5 w-5 text-ecopet-green" aria-hidden />
+        <h2 className="flex items-center gap-2 font-display font-semibold text-ecopet-dark dark:text-white">
+          <Bell className="h-5 w-5 text-ecopet-green" strokeWidth={2} aria-hidden />
           {t("hub.notifications.title")}
           {unreadCount > 0 ? (
             <span className="rounded-full bg-ecopet-green px-2 py-0.5 text-[11px] font-semibold text-white">
@@ -81,34 +81,34 @@ export function HubNotificationsPanel({ className }: { className?: string }) {
       {loading && grouped.length === 0 ? (
         <div className="space-y-2" aria-busy="true">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-12 animate-pulse rounded-xl bg-zinc-100 dark:bg-zinc-800" />
+            <div key={i} className="h-12 animate-pulse rounded-[var(--radius-md)] bg-ecopet-cream/80 dark:bg-white/10" />
           ))}
         </div>
       ) : grouped.length === 0 ? (
-        <p className="py-6 text-center text-sm text-zinc-500">{t("hub.notifications.empty")}</p>
+        <p className="py-6 text-center text-sm text-ecopet-gray dark:text-white/60">{t("hub.notifications.empty")}</p>
       ) : (
         <ul className="space-y-2">
           {grouped.map((n) => {
             const Icon = CATEGORY_ICON[n.category] ?? Bell;
             const href = n.actionUrl ?? n.action?.href ?? null;
             const className = cn(
-              "flex items-start gap-3 rounded-xl border p-2.5 transition",
+              "flex items-start gap-3 rounded-[var(--radius-md)] border p-2.5 transition",
               n.read
-                ? "border-transparent hover:bg-zinc-50 dark:hover:bg-white/5"
+                ? "border-transparent hover:bg-ecopet-green/[0.04] dark:hover:bg-white/5"
                 : "border-ecopet-green/20 bg-ecopet-green/5"
             );
             const inner = (
               <>
-                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-ecopet-green/10">
-                  <Icon className="h-4 w-4 text-ecopet-green" aria-hidden />
+                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--radius-sm)] bg-ecopet-green/10">
+                  <Icon className="h-4 w-4 text-ecopet-green" strokeWidth={2} aria-hidden />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center justify-between gap-2">
-                    <span className="truncate text-xs font-semibold text-zinc-900 dark:text-white">{n.title}</span>
-                    <span className="shrink-0 text-[10px] text-zinc-400">{timeAgo(n.createdAt)}</span>
+                    <span className="truncate text-xs font-semibold text-ecopet-dark dark:text-white">{n.title}</span>
+                    <span className="shrink-0 text-[10px] text-ecopet-gray/80 dark:text-white/45">{timeAgo(n.createdAt)}</span>
                   </span>
-                  <span className="mt-0.5 line-clamp-2 block text-xs text-zinc-500">{n.description}</span>
-                  <span className="mt-1 inline-block rounded-full bg-zinc-100 px-2 py-0.5 text-[9px] font-medium uppercase tracking-wide text-zinc-500 dark:bg-white/10">
+                  <span className="mt-0.5 line-clamp-2 block text-xs text-ecopet-gray dark:text-white/65">{n.description}</span>
+                  <span className="mt-1 inline-block rounded-full bg-ecopet-green/10 px-2 py-0.5 text-[9px] font-medium uppercase tracking-wide text-ecopet-green">
                     {t(`hub.notifications.cat.${n.category}`)}
                   </span>
                 </span>

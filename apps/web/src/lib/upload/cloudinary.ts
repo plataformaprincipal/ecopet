@@ -5,6 +5,9 @@ import {
   validateUploadCandidate,
   type UploadPurpose,
 } from "@/lib/storage/upload-constraints";
+import { isObservabilityFlagEnabled } from "@/lib/observability/config";
+import { trackMetric, MetricNames } from "@/lib/observability/metrics";
+import { recordIntegrationEvent } from "@/lib/observability/integrations";
 
 export type { UploadPurpose } from "@/lib/storage/upload-constraints";
 
@@ -55,35 +58,56 @@ export async function uploadBuffer(params: {
 
   const cld = getCloudinary();
   const folder = `${PURPOSE_FOLDER[params.purpose]}/${params.ownerId}`;
-  const result = await new Promise<{
-    secure_url: string;
-    public_id: string;
-    bytes: number;
-    format?: string;
-    resource_type?: string;
-    original_filename?: string;
-  }>((resolve, reject) => {
-    const stream = cld.uploader.upload_stream(
-      {
-        folder,
-        resource_type: resourceTypeForMime(params.mimeType),
-        public_id: `${Date.now()}-${params.fileName.replace(/[^a-zA-Z0-9._-]/g, "_")}`,
-      },
-      (err, res) => {
-        if (err || !res) reject(err ?? new Error("Upload falhou"));
-        else resolve(res);
-      }
-    );
-    stream.end(params.buffer);
-  });
+  const started = Date.now();
+  try {
+    const result = await new Promise<{
+      secure_url: string;
+      public_id: string;
+      bytes: number;
+      format?: string;
+      resource_type?: string;
+      original_filename?: string;
+    }>((resolve, reject) => {
+      const stream = cld.uploader.upload_stream(
+        {
+          folder,
+          resource_type: resourceTypeForMime(params.mimeType),
+          public_id: `${Date.now()}-${params.fileName.replace(/[^a-zA-Z0-9._-]/g, "_")}`,
+        },
+        (err, res) => {
+          if (err || !res) reject(err ?? new Error("Upload falhou"));
+          else resolve(res);
+        }
+      );
+      stream.end(params.buffer);
+    });
 
-  return {
-    url: result.secure_url,
-    publicId: result.public_id,
-    sizeBytes: result.bytes,
-    mimeType: params.mimeType,
-    resourceType: result.resource_type ?? resourceTypeForMime(params.mimeType),
-    format: result.format,
-    originalFilename: result.original_filename ?? params.fileName,
-  };
+    if (isObservabilityFlagEnabled("integrationTelemetry")) {
+      trackMetric(MetricNames.UPLOADS, 1, { purpose: params.purpose });
+      recordIntegrationEvent("cloudinary", "cloudinary.upload.ok", {
+        purpose: params.purpose,
+        durationMs: Date.now() - started,
+        bytes: result.bytes,
+      });
+    }
+
+    return {
+      url: result.secure_url,
+      publicId: result.public_id,
+      sizeBytes: result.bytes,
+      mimeType: params.mimeType,
+      resourceType: result.resource_type ?? resourceTypeForMime(params.mimeType),
+      format: result.format,
+      originalFilename: result.original_filename ?? params.fileName,
+    };
+  } catch (error) {
+    if (isObservabilityFlagEnabled("integrationTelemetry")) {
+      trackMetric(MetricNames.UPLOAD_FAILURES, 1, { purpose: params.purpose });
+      recordIntegrationEvent("cloudinary", "cloudinary.upload.fail", {
+        purpose: params.purpose,
+        durationMs: Date.now() - started,
+      });
+    }
+    throw error;
+  }
 }

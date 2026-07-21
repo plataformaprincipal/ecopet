@@ -42,36 +42,36 @@ export function PublicProductCard({ product, detailHref }: PublicProductCardProp
 
   return (
     <>
-      <article className="group flex flex-col overflow-hidden rounded-[20px] border border-zinc-200/80 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl dark:border-white/10 dark:bg-zinc-900/60">
-        <Link href={href} className="relative block aspect-[4/3] bg-zinc-100 dark:bg-zinc-800">
+      <article className="group flex flex-col overflow-hidden rounded-[var(--radius-xl)] border border-ecopet-gray/12 bg-white shadow-[var(--shadow-sm)] transition hover:-translate-y-1 hover:shadow-[var(--shadow-md)] dark:border-white/10 dark:bg-ecopet-dark-card">
+        <Link href={href} className="relative block aspect-[4/3] bg-ecopet-cream/60 dark:bg-ecopet-dark">
           {img ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={img} alt={product.name} className="h-full w-full object-cover transition group-hover:scale-105" loading="lazy" />
           ) : (
-            <div className="flex h-full items-center justify-center text-zinc-400">
-              <Package className="h-12 w-12 opacity-40" aria-hidden />
+            <div className="flex h-full items-center justify-center text-ecopet-gray/50">
+              <Package className="h-12 w-12 opacity-40" strokeWidth={2} aria-hidden />
             </div>
           )}
           {product.featured ? (
-            <span className="absolute left-3 top-3 rounded-full bg-ecopet-yellow px-3 py-1 text-xs font-semibold text-ecopet-dark">
+            <span className="absolute left-3 top-3 rounded-full bg-ecopet-green px-3 py-1 text-xs font-semibold text-white shadow-[var(--shadow-xs)]">
               {t("pub.card.featured")}
             </span>
           ) : null}
           {!inStock ? (
-            <span className="absolute right-3 top-3 rounded-full bg-red-500/90 px-3 py-1 text-xs font-semibold text-white">
+            <span className="absolute right-3 top-3 rounded-full bg-ep-danger/90 px-3 py-1 text-xs font-semibold text-white">
               {t("pub.card.unavailable")}
             </span>
           ) : null}
         </Link>
         <div className="flex flex-1 flex-col p-5">
           <Link href={href}>
-            <h3 className="line-clamp-2 font-semibold text-zinc-900 dark:text-white">{product.name}</h3>
+            <h3 className="line-clamp-2 font-display font-semibold text-ecopet-dark dark:text-white">{product.name}</h3>
           </Link>
           <p className="mt-2 text-xl font-bold text-ecopet-green">{formatCurrency(product.price, locale)}</p>
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-ecopet-gray dark:text-white/60">
             {product.rating ? (
               <span className="inline-flex items-center gap-1">
-                <Star className="h-3.5 w-3.5 fill-ecopet-yellow text-ecopet-yellow" aria-hidden />
+                <Star className="h-3.5 w-3.5 fill-ecopet-green text-ecopet-green" strokeWidth={2} aria-hidden />
                 {product.rating.toFixed(1)}
                 {product.reviewCount ? ` (${product.reviewCount})` : ""}
               </span>
@@ -80,12 +80,12 @@ export function PublicProductCard({ product, detailHref }: PublicProductCardProp
             {product.catalogCategory ? <span>{product.catalogCategory}</span> : null}
           </div>
           <div className="mt-4 flex gap-2">
-            <Button asChild variant="outline" size="sm" className="flex-1 rounded-xl">
+            <Button asChild variant="outline" size="sm" className="flex-1 rounded-[var(--radius-button)]">
               <Link href={href}>{t("pub.card.viewDetails")}</Link>
             </Button>
             <Button
               size="sm"
-              className="flex-1 rounded-xl"
+              className="flex-1 rounded-[var(--radius-button)]"
               disabled={!inStock}
               onClick={() => {
                 if (isAuthenticated) {
@@ -95,7 +95,7 @@ export function PublicProductCard({ product, detailHref }: PublicProductCardProp
                 }
               }}
             >
-              <ShoppingCart className="mr-1 h-4 w-4" aria-hidden />
+              <ShoppingCart className="mr-1 h-4 w-4" strokeWidth={2} aria-hidden />
               {t("pub.card.buy")}
             </Button>
           </div>

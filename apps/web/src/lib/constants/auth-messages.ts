@@ -1,7 +1,12 @@
 /** Mensagens padronizadas de autenticação — EcoPet */
 
-export const LOGIN_USER_NOT_FOUND_MESSAGE = "E-mail ou nome de usuário não encontrado.";
-export const LOGIN_WRONG_PASSWORD_MESSAGE = "Senha incorreta.";
+/** Mensagem única para reduzir enumeração de contas. */
+export const LOGIN_INVALID_CREDENTIALS_MESSAGE =
+  "E-mail/usuário ou senha inválidos.";
+/** @deprecated Prefer LOGIN_INVALID_CREDENTIALS_MESSAGE */
+export const LOGIN_USER_NOT_FOUND_MESSAGE = LOGIN_INVALID_CREDENTIALS_MESSAGE;
+/** @deprecated Prefer LOGIN_INVALID_CREDENTIALS_MESSAGE */
+export const LOGIN_WRONG_PASSWORD_MESSAGE = LOGIN_INVALID_CREDENTIALS_MESSAGE;
 export const LOGIN_ACCOUNT_SUSPENDED_MESSAGE = "Esta conta encontra-se suspensa.";
 export const LOGIN_ACCOUNT_INACTIVE_MESSAGE = "Esta conta não está disponível para acesso.";
 

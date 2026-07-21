@@ -50,6 +50,19 @@ export async function runMercadoPagoWebhookPipeline(params: {
   });
 
   const secretConfigured = signature.reason !== "WEBHOOK_SECRET_MISSING";
+
+  // Produção: fail-closed sem secret — nunca processar eventos sem verificação.
+  if (!secretConfigured && process.env.NODE_ENV === "production") {
+    await writeIntegrationLog({
+      integrationName: "mercado_pago",
+      provider: "mercado_pago",
+      action: "webhook:signature",
+      status: "error",
+      message: "WEBHOOK_SECRET_MISSING",
+    }).catch(() => undefined);
+    return { ok: false, status: 503, code: "WEBHOOK_SECRET_MISSING" };
+  }
+
   if (secretConfigured && !signature.valid) {
     await writeIntegrationLog({
       integrationName: "mercado_pago",

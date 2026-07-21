@@ -92,7 +92,8 @@ export function FoundationLoginForm({ variant = "default" }: FoundationLoginForm
         } else if (
           parsed.code === "TURNSTILE_FAILED" ||
           parsed.code === "WRONG_PASSWORD" ||
-          parsed.code === "USER_NOT_FOUND"
+          parsed.code === "USER_NOT_FOUND" ||
+          parsed.code === "INVALID_CREDENTIALS"
         ) {
           turnstile.reset();
           if (parsed.code === "TURNSTILE_FAILED") {

@@ -1,5 +1,8 @@
 import { apiFailure, apiSuccess } from "@/lib/api-response";
 import { runMercadoPagoWebhookPipeline } from "@/lib/mercado-pago/webhooks/pipeline";
+import { withApiTelemetry } from "@/lib/observability/with-api-telemetry";
+import { recordWebhookTelemetry } from "@/lib/observability/integrations";
+import { captureSecurityEvent } from "@/lib/observability/error-capture";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,7 +22,8 @@ export async function GET() {
  * POST /api/webhooks/mercado-pago
  * Multi-tópico: Order, payment, fraude, claims, chargebacks, etc.
  */
-export async function POST(request: Request) {
+async function mercadoPagoWebhookHandler(request: Request) {
+  const started = Date.now();
   if (request.method !== "POST") {
     return apiFailure("METHOD_NOT_ALLOWED", "Método não permitido.", 405);
   }
@@ -36,8 +40,27 @@ export async function POST(request: Request) {
   });
 
   if (!result.ok) {
+    if (String(result.code).includes("SIGNATURE")) {
+      captureSecurityEvent("webhook_invalid_signature", { provider: "mercado_pago" });
+    }
+    recordWebhookTelemetry({
+      provider: "mercado_pago",
+      eventType: result.code,
+      outcome: "rejected",
+      durationMs: Date.now() - started,
+      statusCode: result.status,
+      errorCode: result.code,
+    });
     return apiFailure(result.code, "Webhook rejeitado.", result.status);
   }
+
+  recordWebhookTelemetry({
+    provider: "mercado_pago",
+    eventType: result.code,
+    outcome: result.duplicate ? "duplicate" : "processed",
+    durationMs: Date.now() - started,
+    statusCode: result.status === 201 ? 201 : 200,
+  });
 
   return apiSuccess(
     {
@@ -49,3 +72,5 @@ export async function POST(request: Request) {
     result.status === 201 ? 201 : 200
   );
 }
+
+export const POST = withApiTelemetry("mercado_pago", mercadoPagoWebhookHandler);

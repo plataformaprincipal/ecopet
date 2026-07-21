@@ -332,22 +332,39 @@ async function main() {
   console.log("✓ solicitação LGPD registrada");
 
   // --- rate limit login (por último, IP dedicado) ---
-  // Com AUTH_RATE_LIMIT_RELAXED=1 o limite sobe para 500; ainda deve bloquear.
+  // Limite padrão login = 10; RELAXED=1 sobe para 500. Cap evita hang em CI.
   let blocked = false;
   const rateIp = `203.0.113.${(ts % 200) + 1}`;
-  const maxAttempts = 520;
+  const relaxed = process.env.AUTH_RATE_LIMIT_RELAXED === "1";
+  const maxAttempts = relaxed ? 520 : 40;
+  let lastStatus = 0;
+  let timedOut = 0;
   for (let i = 0; i < maxAttempts; i++) {
-    const r = await fetch(`${WEB}/api/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-forwarded-for": rateIp },
-      body: JSON.stringify({ email: `rate.${ts}@test.ecopet.local`, password: "x" }),
-    });
-    if (r.status === 429) {
-      blocked = true;
-      break;
+    try {
+      const r = await fetch(`${WEB}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-forwarded-for": rateIp },
+        body: JSON.stringify({
+          identifier: `rate.${ts}@test.ecopet.local`,
+          password: "x",
+        }),
+        signal: AbortSignal.timeout(8000),
+      });
+      lastStatus = r.status;
+      if (r.status === 429) {
+        blocked = true;
+        break;
+      }
+    } catch {
+      timedOut += 1;
+      // Evita hang infinito se o pool/DB travar no fim da suíte
+      if (timedOut >= 3) break;
     }
   }
-  assert(blocked, "rate limit login");
+  assert(
+    blocked,
+    `rate limit login (último status ${lastStatus}, timeouts=${timedOut}, tentativas max=${maxAttempts})`
+  );
   console.log("✓ rate limit login");
 
   console.log("\n✓ Todos os testes de segurança passaram.");

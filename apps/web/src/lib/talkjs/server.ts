@@ -64,6 +64,17 @@ async function talkJsRequest(path: string, body: Record<string, unknown>) {
   if (!res.ok) {
     const text = await res.text().catch(() => "");
     console.warn(`[TalkJS] sync failed ${path}: ${res.status} ${text.slice(0, 200)}`);
+    try {
+      const { logStructured } = await import("@/lib/observability/logger");
+      logStructured("warn", "talkjs.sync_failed", {
+        module: "talkjs",
+        integration: "talkjs",
+        event: "talkjs.sync_failed",
+        statusCode: res.status,
+      });
+    } catch {
+      /* optional */
+    }
   }
 }
 

@@ -31,17 +31,17 @@ export function PublicProfilePagePremium() {
     },
   ];
   return (
-    <div className="space-y-10">
-      <header className="rounded-[20px] bg-gradient-to-br from-ecopet-dark to-emerald-900 p-8 text-white sm:p-12">
-        <Heart className="h-10 w-10 text-ecopet-yellow" aria-hidden />
-        <h1 className="mt-4 font-display text-3xl font-bold sm:text-4xl">{t("pub.profile.heroTitle")}</h1>
+    <div className="space-y-10 animate-fade-in">
+      <header className="rounded-[var(--radius-xl)] bg-gradient-to-br from-ecopet-dark via-ecopet-green-900 to-ecopet-green-800 p-8 text-white shadow-[var(--shadow-md)] sm:p-12">
+        <Heart className="h-10 w-10 text-ecopet-green-500" strokeWidth={2} aria-hidden />
+        <h1 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-4xl">{t("pub.profile.heroTitle")}</h1>
         <p className="mt-3 max-w-xl text-white/80">
           {t("pub.profile.heroSubtitle")}
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
-          <Button asChild size="lg" className="rounded-xl bg-white text-ecopet-dark hover:bg-ecopet-cream">
+          <Button asChild size="lg" className="rounded-[var(--radius-button)] bg-white text-ecopet-dark hover:bg-ecopet-cream">
             <Link href="/login">
-              <LogIn className="mr-2 h-4 w-4" aria-hidden />
+              <LogIn className="mr-2 h-4 w-4" strokeWidth={2} aria-hidden />
               {t("pub.profile.signIn")}
             </Link>
           </Button>
@@ -49,10 +49,10 @@ export function PublicProfilePagePremium() {
             asChild
             size="lg"
             variant="outline"
-            className="rounded-xl border-white/40 bg-white/10 text-white hover:bg-white/20"
+            className="rounded-[var(--radius-button)] border-white/40 bg-white/10 text-white hover:bg-white/20"
           >
             <Link href="/cadastro">
-              <UserPlus className="mr-2 h-4 w-4" aria-hidden />
+              <UserPlus className="mr-2 h-4 w-4" strokeWidth={2} aria-hidden />
               {t("pub.profile.createAccount")}
             </Link>
           </Button>
@@ -63,15 +63,15 @@ export function PublicProfilePagePremium() {
         {ACCOUNT_TYPES.map(({ icon: Icon, title, typeLabel, href, benefits }) => (
           <article
             key={title}
-            className="flex flex-col rounded-[20px] border border-zinc-200/80 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-zinc-900/60"
+            className="flex flex-col rounded-[var(--radius-xl)] border border-ecopet-gray/12 bg-white p-6 shadow-[var(--shadow-sm)] transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)] dark:border-white/10 dark:bg-ecopet-dark-card"
           >
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-ecopet-green/10">
-              <Icon className="h-6 w-6 text-ecopet-green" aria-hidden />
+            <div className="flex h-12 w-12 items-center justify-center rounded-[var(--radius-lg)] bg-ecopet-green/10">
+              <Icon className="h-6 w-6 text-ecopet-green" strokeWidth={2} aria-hidden />
             </div>
-            <h2 className="mt-4 font-display text-xl font-semibold text-zinc-900 dark:text-white">
+            <h2 className="mt-4 font-display text-xl font-semibold text-ecopet-dark dark:text-white">
               {t("pub.profile.createAccountFor", { type: typeLabel })}
             </h2>
-            <ul className="mt-4 flex-1 space-y-2 text-sm text-zinc-600 dark:text-zinc-300">
+            <ul className="mt-4 flex-1 space-y-2 text-sm text-ecopet-gray dark:text-white/70">
               {benefits.map((b) => (
                 <li key={b} className="flex items-start gap-2">
                   <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-ecopet-green" aria-hidden />
@@ -79,7 +79,7 @@ export function PublicProfilePagePremium() {
                 </li>
               ))}
             </ul>
-            <Button asChild className="mt-6 rounded-xl">
+            <Button asChild className="mt-6 rounded-[var(--radius-button)]">
               <Link href={href}>{t("pub.profile.createAccountFor", { type: typeLabel })}</Link>
             </Button>
           </article>

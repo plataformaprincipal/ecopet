@@ -29,10 +29,10 @@ export const EXTERNAL_BI_INTEGRATIONS: ExternalBiIntegration[] = [
   {
     id: "sentry",
     name: "Sentry",
-    status: process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN ? "ACTIVE" : "NOT_CONFIGURED",
-    description: "Monitoramento de erros em produção.",
-    requiredEnvVars: ["SENTRY_DSN"],
-    docsUrl: "https://docs.sentry.io",
+    status: "NOT_CONFIGURED",
+    description: "Deprecado no EcoPet — use Better Stack (observability).",
+    requiredEnvVars: [] as string[],
+    docsUrl: "https://betterstack.com/docs/logs/",
   },
   {
     id: "google_analytics",

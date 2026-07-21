@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { apiSuccess } from "@/lib/api-response";
-import { auditProductionEnv } from "@/lib/validate-production-env";
-import {
-  buildDatabaseBootDiagnostics,
-  logPrismaConnectFailure,
-} from "@ecopet/database/diagnostics";
-import { getResolvedDatabaseUrl } from "@ecopet/database/client";
+import { logPrismaConnectFailure } from "@ecopet/database/diagnostics";
 
+/**
+ * Health legado — resposta pública mínima.
+ * Preferir /api/health/live e /api/health/ready para probes.
+ * Em falha: sem hosts, lista de env ou mensagens Prisma detalhadas.
+ */
 export async function GET() {
   try {
     await prisma.$queryRaw`SELECT 1`;
@@ -18,10 +18,8 @@ export async function GET() {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
+    logPrismaConnectFailure("health check connection failed", error);
     const configured = Boolean(process.env.DATABASE_URL?.trim());
-    const envAudit = auditProductionEnv();
-    const prismaError = logPrismaConnectFailure("health check connection failed", error);
-    const boot = buildDatabaseBootDiagnostics(process.env.DATABASE_URL, getResolvedDatabaseUrl());
     return NextResponse.json(
       {
         success: false,
@@ -29,17 +27,13 @@ export async function GET() {
           code: "DATABASE_UNAVAILABLE",
           message: configured
             ? "Não foi possível conectar ao banco de dados."
-            : "DATABASE_URL não configurada no ambiente de produção.",
+            : "Banco de dados não configurado.",
         },
         data: {
-          databaseConfigured: configured,
-          databaseHost: boot.databaseHost,
-          resolvedHost: boot.resolvedHost,
-          vercelAugmentation: boot.vercelAugmentation,
-          prismaCode: prismaError.code,
-          prismaMessage: prismaError.message,
-          missingCritical: envAudit.critical,
-          missingRecommended: envAudit.recommended,
+          status: "unhealthy",
+          database: "unavailable",
+          service: "ecopet-web",
+          timestamp: new Date().toISOString(),
         },
       },
       { status: 503 }

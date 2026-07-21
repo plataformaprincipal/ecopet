@@ -14,6 +14,8 @@ import {
   clearResendOperationalError,
   recordResendOperationalError,
 } from "@/lib/email/resend-status";
+import { trackMetric, MetricNames } from "@/lib/observability/metrics";
+import { isObservabilityFlagEnabled } from "@/lib/observability/config";
 
 export type EmailAttachment = {
   filename: string;
@@ -121,6 +123,7 @@ export async function sendEmail(params: SendEmailParams): Promise<SendEmailResul
   const replyTo =
     normalizeList(params.replyTo) ?? normalizeList(getEmailReplyTo() ? [getEmailReplyTo()!] : undefined);
   const keyLoaded = Boolean(getResendApiKey());
+  const started = Date.now();
 
   logDev(prefix, "RESEND_API_KEY carregada:", keyLoaded);
   logDev(prefix, "EMAIL_FROM:", from);
@@ -197,6 +200,10 @@ export async function sendEmail(params: SendEmailParams): Promise<SendEmailResul
         to: maskRecipientsForLog(toList),
         subject,
       });
+      if (isObservabilityFlagEnabled("integrationTelemetry")) {
+        trackMetric(MetricNames.EMAILS_FAILED, 1, { code: mapped.code });
+        trackMetric(MetricNames.EMAIL_LATENCY_MS, Date.now() - started);
+      }
       return {
         sent: false,
         errorCode: mapped.code,
@@ -215,6 +222,10 @@ export async function sendEmail(params: SendEmailParams): Promise<SendEmailResul
       tags: params.tags?.map((t) => t.name),
       metadataKeys: params.metadata ? Object.keys(params.metadata) : undefined,
     });
+    if (isObservabilityFlagEnabled("integrationTelemetry")) {
+      trackMetric(MetricNames.EMAILS_SENT, 1);
+      trackMetric(MetricNames.EMAIL_LATENCY_MS, Date.now() - started);
+    }
     if (response.data?.id) {
       logDev(prefix, "E-mail id:", response.data.id);
     }
@@ -229,6 +240,9 @@ export async function sendEmail(params: SendEmailParams): Promise<SendEmailResul
       code: mapped.code,
       to: maskRecipientsForLog(toList),
     });
+    if (isObservabilityFlagEnabled("integrationTelemetry")) {
+      trackMetric(MetricNames.EMAILS_FAILED, 1, { code: mapped.code });
+    }
     return {
       sent: false,
       errorCode: mapped.code,

@@ -46,10 +46,11 @@ ok("ADMIN NÃO acessa /marketplace", !canAccessRoute("ADMIN", "/marketplace"));
 
 ok("isAdminOnlyPath /gestor", isAdminOnlyPath("/gestor/audit"));
 ok("getDefaultDashboardPath ADMIN → /admin", getDefaultDashboardPath("ADMIN") === "/admin");
-ok("getDefaultDashboardPath CLIENT → /client", getDefaultDashboardPath("CLIENT") === "/client");
+ok("getDefaultDashboardPath CLIENT → /cliente", getDefaultDashboardPath("CLIENT") === "/cliente");
 
-// Acesso à nova experiência unificada do cliente (/client/*)
+// Acesso à experiência do cliente (/client/* e /cliente/*)
 ok("CLIENT acessa /client", canAccessRoute("CLIENT", "/client"));
+ok("CLIENT acessa /cliente", canAccessRoute("CLIENT", "/cliente"));
 ok("CLIENT acessa /client/social", canAccessRoute("CLIENT", "/client/social"));
 ok("CLIENT acessa /client/marketplace", canAccessRoute("CLIENT", "/client/marketplace"));
 ok("PARTNER NÃO acessa /client", !canAccessRoute("PARTNER", "/client"));

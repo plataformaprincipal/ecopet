@@ -28,7 +28,7 @@ const QUICK_LINKS = [
 
 export function ClientProfileManagementPage() {
   return (
-    <div className="space-y-10">
+    <div className="space-y-10 animate-fade-in">
       <ClientPageHeader
         title="Perfil e Gestão"
         description="Dados pessoais, pedidos, preferências e configurações da sua conta."
@@ -40,37 +40,41 @@ export function ClientProfileManagementPage() {
           <Link
             key={href}
             href={href}
-            className="flex items-center gap-3 rounded-2xl border border-zinc-200/80 bg-white p-4 transition hover:shadow-md dark:border-white/10 dark:bg-zinc-900/60"
+            className="flex items-center gap-3 rounded-[var(--radius-xl)] border border-ecopet-gray/12 bg-white p-4 shadow-[var(--shadow-xs)] transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)] dark:border-white/10 dark:bg-ecopet-dark-card"
           >
-            <Icon className="h-5 w-5 text-emerald-600" aria-hidden />
-            <span className="text-sm font-medium">{label}</span>
+            <span className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-ecopet-green/10">
+              <Icon className="h-5 w-5 text-ecopet-green" strokeWidth={2} aria-hidden />
+            </span>
+            <span className="text-sm font-medium text-ecopet-dark dark:text-white">{label}</span>
           </Link>
         ))}
         <Link
           href="/dashboard/client/appointments"
-          className="flex items-center gap-3 rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60"
+          className="flex items-center gap-3 rounded-[var(--radius-xl)] border border-ecopet-gray/12 bg-white p-4 shadow-[var(--shadow-xs)] transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)] dark:border-white/10 dark:bg-ecopet-dark-card"
         >
-          <Star className="h-5 w-5 text-amber-500" aria-hidden />
-          <span className="text-sm font-medium">Minhas avaliações</span>
+          <span className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-ecopet-green/10">
+            <Star className="h-5 w-5 text-ecopet-green" strokeWidth={2} aria-hidden />
+          </span>
+          <span className="text-sm font-medium text-ecopet-dark dark:text-white">Minhas avaliações</span>
         </Link>
       </div>
 
       <ClientTranslationSettings />
       <ClientAccessibilitySettings />
 
-      <section className="rounded-2xl border border-zinc-200/80 bg-white p-6 dark:border-white/10 dark:bg-zinc-900/60">
-        <h2 className="text-lg font-semibold">Dados pessoais</h2>
-        <p className="mt-1 text-sm text-zinc-500">Atualize nome, contato e endereço.</p>
+      <section className="rounded-[var(--radius-xl)] border border-ecopet-gray/12 bg-white p-6 shadow-[var(--shadow-sm)] dark:border-white/10 dark:bg-ecopet-dark-card">
+        <h2 className="font-display text-lg font-semibold text-ecopet-dark dark:text-white">Dados pessoais</h2>
+        <p className="mt-1 text-sm text-ecopet-gray dark:text-white/70">Atualize nome, contato e endereço.</p>
         <div className="mt-6">
           <FoundationProfileForm dashboardPath="/cliente/perfil" />
         </div>
       </section>
 
       <div className="flex flex-wrap gap-2">
-        <Button asChild variant="outline" size="sm">
+        <Button asChild variant="outline" size="sm" className="rounded-[var(--radius-button)]">
           <Link href="/configuracoes">Configurações completas</Link>
         </Button>
-        <Button asChild variant="outline" size="sm">
+        <Button asChild variant="outline" size="sm" className="rounded-[var(--radius-button)]">
           <Link href="/dashboard/messages">Mensagens</Link>
         </Button>
       </div>

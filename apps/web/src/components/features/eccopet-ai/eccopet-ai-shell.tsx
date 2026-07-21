@@ -724,25 +724,25 @@ export function EccoPetAIShell() {
   }, [isAuthenticated]);
 
   return (
-    <div className="mx-auto flex h-[100dvh] w-full max-w-[1500px] flex-col px-3 pb-24 pt-3 sm:px-4 lg:px-6 lg:pb-4">
+    <div className="mx-auto flex h-[100dvh] w-full max-w-[1500px] flex-col bg-gradient-to-b from-ecopet-cream/30 to-transparent px-3 pb-24 pt-3 dark:from-ecopet-dark-bg sm:px-4 lg:px-6 lg:pb-4">
       {/* Top bar */}
-      <div className="mb-3 flex items-center justify-between gap-3">
+      <div className="mb-3 flex items-center justify-between gap-3 rounded-[var(--radius-lg)] border border-ecopet-gray/10 bg-white/80 px-3 py-2.5 shadow-[var(--shadow-xs)] backdrop-blur-md dark:border-white/10 dark:bg-ecopet-dark-card/80">
         <EcoPetLogo href="/eccopet" size="sm" showText />
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={handleSave}
-            className="hidden items-center gap-1.5 rounded-full border border-zinc-200/80 bg-white px-3 py-1.5 text-xs font-medium text-zinc-600 sm:flex dark:border-white/10 dark:bg-zinc-900"
+            className="hidden min-h-[36px] items-center gap-1.5 rounded-full border border-ecopet-gray/15 bg-white px-3 py-1.5 text-xs font-medium text-ecopet-gray sm:flex dark:border-white/10 dark:bg-ecopet-dark-bg dark:text-white/70"
           >
-            <Bookmark className="h-3.5 w-3.5" aria-hidden />
+            <Bookmark className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
             {t("ecopetAi.topbar.save")}
           </button>
           {!isAuthenticated ? (
             <>
-              <Link href="/login" className="hidden rounded-full px-3 py-1.5 text-sm font-medium text-zinc-600 hover:text-ecopet-green sm:inline-block dark:text-zinc-300">
+              <Link href="/login" className="hidden rounded-full px-3 py-1.5 text-sm font-medium text-ecopet-gray hover:text-ecopet-green sm:inline-block dark:text-white/70">
                 {t("ecopetAi.topbar.signIn")}
               </Link>
-              <Link href="/cadastro" className="rounded-full bg-ecopet-green px-3.5 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700">
+              <Link href="/cadastro" className="rounded-full bg-ecopet-green px-3.5 py-1.5 text-sm font-semibold text-white shadow-[var(--shadow-sm)] transition hover:bg-ecopet-green-700">
                 {t("ecopetAi.topbar.createAccount")}
               </Link>
             </>
@@ -752,7 +752,7 @@ export function EccoPetAIShell() {
       </div>
 
       {/* Mobile view switcher */}
-      <div className="mb-3 flex gap-1 rounded-2xl border border-zinc-200/80 bg-white p-1 shadow-sm lg:hidden dark:border-white/10 dark:bg-zinc-900/60">
+      <div className="mb-3 flex gap-1 rounded-[var(--radius-lg)] border border-ecopet-gray/12 bg-white p-1 shadow-[var(--shadow-xs)] lg:hidden dark:border-white/10 dark:bg-ecopet-dark-card">
         {([
           { id: "history", label: t("ecopetAi.mobile.conversations"), icon: MessageSquare },
           { id: "chat", label: t("ecopetAi.mobile.chat"), icon: Sparkles },
@@ -764,11 +764,11 @@ export function EccoPetAIShell() {
             onClick={() => setMobileView(v.id)}
             aria-current={mobileView === v.id ? "page" : undefined}
             className={cn(
-              "flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-medium transition",
-              mobileView === v.id ? "bg-ecopet-green text-white" : "text-zinc-500"
+              "flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-medium transition",
+              mobileView === v.id ? "bg-ecopet-green text-white" : "text-ecopet-gray"
             )}
           >
-            <v.icon className="h-4 w-4" aria-hidden />
+            <v.icon className="h-4 w-4" strokeWidth={2} aria-hidden />
             {v.label}
           </button>
         ))}
@@ -806,18 +806,18 @@ export function EccoPetAIShell() {
         {/* CENTER — chat */}
         <div
           className={cn(
-            "flex min-h-0 flex-col overflow-hidden rounded-3xl border border-zinc-200/70 bg-white/50 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-zinc-900/30",
+            "flex min-h-0 flex-col overflow-hidden rounded-[var(--radius-xl)] border border-ecopet-gray/12 bg-white/80 shadow-[var(--shadow-md)] backdrop-blur-md dark:border-white/10 dark:bg-ecopet-dark-card/60",
             mobileView !== "chat" && "hidden lg:flex"
           )}
         >
           {aiUnavailable && (
-            <div className="border-b border-zinc-200/60 p-3 dark:border-white/10">
+            <div className="border-b border-ecopet-gray/10 p-3 dark:border-white/10">
               <AiUnavailableBanner message={aiUnavailableMessage ?? undefined} />
             </div>
           )}
           {chatError && !aiUnavailable ? (
             <div
-              className="border-b border-amber-200/80 bg-amber-50 px-4 py-2 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-950/40 dark:text-amber-100"
+              className="border-b border-ep-warning/30 bg-ep-warning/10 px-4 py-2 text-sm text-ep-warning"
               role="alert"
             >
               {chatError}

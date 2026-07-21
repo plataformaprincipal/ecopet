@@ -29,25 +29,25 @@ export function ClientSidebar({ userName }: ClientSidebarProps) {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden w-72 shrink-0 border-r border-zinc-200/80 bg-white/80 backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/80 lg:flex lg:flex-col">
-      <div className="border-b border-zinc-200/80 px-5 py-6 dark:border-white/10">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-400">
+    <aside className="hidden w-72 shrink-0 border-r border-ecopet-gray/12 bg-white/90 backdrop-blur-xl dark:border-white/10 dark:bg-ecopet-dark/90 lg:flex lg:flex-col">
+      <div className="border-b border-ecopet-gray/12 px-5 py-6 dark:border-white/10">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ecopet-green">
           Área do Cliente
         </p>
-        <h2 className="mt-1 truncate font-display text-lg font-semibold text-zinc-900 dark:text-white">
+        <h2 className="mt-1 truncate font-display text-lg font-semibold text-ecopet-dark dark:text-white">
           Olá, {userName.split(" ")[0]}
         </h2>
       </div>
 
-      <div className="border-b border-zinc-200/80 p-3 dark:border-white/10">
-        <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+      <div className="border-b border-ecopet-gray/12 p-3 dark:border-white/10">
+        <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-ecopet-gray/80 dark:text-white/45">
           Principal
         </p>
         <PrimaryDesktopNav context="clientPt" orientation="vertical" />
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto p-3" aria-label="Mais funcionalidades do cliente">
-        <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+        <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-ecopet-gray/80 dark:text-white/45">
           Mais
         </p>
         {SECONDARY_ITEMS.map((item) => {
@@ -59,20 +59,20 @@ export function ClientSidebar({ userName }: ClientSidebarProps) {
               href={item.href}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "group flex items-start gap-3 rounded-xl px-3 py-2.5 transition-all duration-200",
+                "group flex items-start gap-3 rounded-[var(--radius-md)] px-3 py-2.5 transition-all duration-200",
                 "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ecopet-green",
                 active
-                  ? "bg-zinc-900 text-white shadow-sm dark:bg-white dark:text-zinc-900"
-                  : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-white/5"
+                  ? "bg-ecopet-green/10 text-ecopet-green shadow-[var(--shadow-xs)]"
+                  : "text-ecopet-gray hover:bg-ecopet-green/[0.06] hover:text-ecopet-dark dark:text-white/65 dark:hover:bg-white/5 dark:hover:text-white"
               )}
             >
-              <Icon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+              <Icon className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
               <span>
                 <span className="block text-sm font-medium">{item.label}</span>
                 <span
                   className={cn(
                     "mt-0.5 block text-xs",
-                    active ? "text-white/70 dark:text-zinc-600" : "text-zinc-400"
+                    active ? "text-ecopet-green/80" : "text-ecopet-gray/80 dark:text-white/45"
                   )}
                 >
                   {item.description}

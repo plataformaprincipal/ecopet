@@ -1,20 +1,26 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { BrandMark, type BrandMarkTone } from "./brand-mark";
 
+/** Mantido para OG/PWA/legacy — favicon SVG é preferido na fundação */
 export const ECOPET_LOGO_SRC = "/brand/ecopet-logo.png";
+export const ECOPET_FAVICON_SRC = "/brand/ecopet-mark.svg";
+export const ECOPET_ICON_192 = "/brand/ecopet-icon-192.svg";
+export const ECOPET_ICON_512 = "/brand/ecopet-icon-512.svg";
 
 export const BRAND_COLORS = {
   primary: "#003B16",
-  secondary: "#0F5A2A",
-  cream: "#F7F4DC",
+  secondary: "#128A3F",
+  cream: "#F4F7F4",
   textDark: "#102015",
-  textLight: "#F7F4DC",
+  textLight: "#FFFFFF",
+  white: "#FFFFFF",
+  accent: "#C9A227",
 } as const;
 
-export type EcoPetLogoVariant = "full" | "icon" | "horizontal" | "dark" | "light";
+export type EcoPetLogoVariant = "full" | "icon" | "horizontal" | "vertical" | "dark" | "light";
 export type EcoPetLogoSize = "sm" | "md" | "lg" | "xl" | number;
 
 const SIZE_MAP: Record<Exclude<EcoPetLogoSize, number>, number> = {
@@ -26,6 +32,11 @@ const SIZE_MAP: Record<Exclude<EcoPetLogoSize, number>, number> = {
 
 function resolveSize(size: EcoPetLogoSize = "md"): number {
   return typeof size === "number" ? size : SIZE_MAP[size];
+}
+
+function markTone(variant: EcoPetLogoVariant): BrandMarkTone {
+  if (variant === "light") return "on-light";
+  return "on-dark";
 }
 
 export interface EcoPetLogoProps {
@@ -40,24 +51,31 @@ export interface EcoPetLogoProps {
   animated?: boolean | "pulse" | "glow";
 }
 
-function Wordmark({ variant, compact }: { variant: EcoPetLogoVariant; compact?: boolean }) {
-  const lightText = variant === "dark" || variant === "full";
+function Wordmark({
+  variant,
+  compact,
+}: {
+  variant: EcoPetLogoVariant;
+  compact?: boolean;
+}) {
+  /** White pure only on dark/green brand surfaces — never grayish cream */
+  const onDarkSurface = variant === "dark" || variant === "full" || variant === "vertical";
   return (
     <div className={cn("flex flex-col leading-none", compact && "hidden sm:flex")}>
       <span
         className={cn(
-          "font-display font-extrabold tracking-tight",
+          "font-display font-bold tracking-tight",
           compact ? "text-lg" : "text-xl lg:text-2xl",
-          lightText ? "text-[#F7F4DC]" : "text-[#102015] dark:text-[#F7F4DC]"
+          onDarkSurface ? "text-white" : "text-ecopet-dark dark:text-white"
         )}
       >
-        ECOPET
+        EcoPet
       </span>
-      {!compact && (
+      {!compact && variant !== "icon" && (
         <span
           className={cn(
             "mt-0.5 text-[10px] uppercase tracking-widest",
-            lightText ? "text-[#F7F4DC]/70" : "text-ecopet-gray dark:text-white/60"
+            onDarkSurface ? "text-white/70" : "text-ecopet-gray dark:text-white/60"
           )}
         >
           Ecossistema Pet
@@ -71,7 +89,6 @@ function LogoMark({
   px,
   variant,
   animated,
-  priority,
 }: {
   px: number;
   variant: EcoPetLogoVariant;
@@ -85,31 +102,21 @@ function LogoMark({
         ? "animate-ecopet-glow"
         : "";
 
-  const onLight = variant === "light";
-  const bgStyle =
-    variant === "full" || variant === "icon" || variant === "dark" || variant === "horizontal"
-      ? { backgroundColor: BRAND_COLORS.primary }
-      : onLight
-        ? { backgroundColor: BRAND_COLORS.primary }
-        : undefined;
+  const onDarkSurface =
+    variant === "full" || variant === "icon" || variant === "dark" || variant === "horizontal" || variant === "vertical";
 
   return (
     <div
       className={cn(
         "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-2xl",
+        onDarkSurface && "bg-ecopet-dark",
+        !onDarkSurface && "bg-ecopet-green/10",
         animClass
       )}
-      style={{ width: px, height: px, ...bgStyle }}
+      style={{ width: px, height: px }}
       aria-hidden
     >
-      <Image
-        src={ECOPET_LOGO_SRC}
-        alt=""
-        width={px * 2}
-        height={px * 2}
-        className="h-full w-full object-contain p-0.5"
-        priority={priority}
-      />
+      <BrandMark size={Math.round(px * 0.92)} tone={markTone(variant)} className="p-[6%]" />
     </div>
   );
 }
@@ -119,17 +126,29 @@ function LogoContent({
   variant = "full",
   showText = false,
   className,
-  priority,
   animated,
-}: Omit<EcoPetLogoProps, "href" | "responsive">) {
+}: Omit<EcoPetLogoProps, "href" | "responsive" | "priority"> & { priority?: boolean }) {
   const px = resolveSize(size);
   const isHorizontal = variant === "horizontal" || showText;
-  const markVariant = variant === "horizontal" ? "icon" : variant;
+  const isVertical = variant === "vertical";
+  const markVariant = variant === "horizontal" || variant === "vertical" ? "icon" : variant;
+
+  if (isVertical) {
+    return (
+      <div className={cn("inline-flex flex-col items-center gap-2", className)}>
+        <LogoMark px={px} variant="icon" animated={animated} />
+        <Wordmark variant="dark" />
+      </div>
+    );
+  }
+
+  const wordVariant: EcoPetLogoVariant =
+    variant === "dark" || variant === "full" ? "dark" : variant === "light" ? "light" : "horizontal";
 
   return (
     <div className={cn("inline-flex items-center gap-3", className)}>
-      <LogoMark px={px} variant={markVariant} animated={animated} priority={priority} />
-      {isHorizontal && <Wordmark variant={variant} />}
+      <LogoMark px={px} variant={markVariant} animated={animated} />
+      {isHorizontal && <Wordmark variant={wordVariant} />}
     </div>
   );
 }
@@ -140,7 +159,7 @@ export function EcoPetLogo({
   showText = false,
   className,
   href = null,
-  priority = false,
+  priority: _priority = false,
   responsive = false,
   animated = false,
 }: EcoPetLogoProps) {
@@ -148,7 +167,7 @@ export function EcoPetLogo({
     const inner = (
       <>
         <div className="md:hidden">
-          <LogoContent size={size} variant="icon" className={className} priority={priority} animated={animated} />
+          <LogoContent size={size} variant="icon" className={className} animated={animated} />
         </div>
         <div className="hidden md:flex">
           <LogoContent
@@ -156,14 +175,13 @@ export function EcoPetLogo({
             variant="horizontal"
             showText
             className={className}
-            priority={priority}
             animated={animated}
           />
         </div>
       </>
     );
     return href ? (
-      <Link href={href} className="transition-opacity hover:opacity-90" aria-label="ECOPET — Início">
+      <Link href={href} className="transition-opacity hover:opacity-90" aria-label="EcoPet — Início">
         {inner}
       </Link>
     ) : (
@@ -177,13 +195,12 @@ export function EcoPetLogo({
       variant={variant}
       showText={showText}
       className={className}
-      priority={priority}
       animated={animated}
     />
   );
 
   return href ? (
-    <Link href={href} className="transition-opacity hover:opacity-90" aria-label="ECOPET — Início">
+    <Link href={href} className="transition-opacity hover:opacity-90" aria-label="EcoPet — Início">
       {content}
     </Link>
   ) : (

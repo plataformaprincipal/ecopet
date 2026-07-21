@@ -16,6 +16,8 @@ import {
 } from "./token-management";
 import { classifyFcmError, sanitizeErrorMessage } from "./errors";
 import type { FcmNotificationPayload, PushCategory, SendPushSummary } from "./types";
+import { isObservabilityFlagEnabled } from "@/lib/observability/config";
+import { trackMetric, MetricNames } from "@/lib/observability/metrics";
 
 const FCM_MULTICAST_LIMIT = 500;
 const MAX_RETRY_ATTEMPTS = 3;
@@ -270,6 +272,13 @@ export async function sendPushToUser(input: SendPushToUserInput): Promise<SendPu
         });
         summary.failed += 1;
       }
+    }
+  }
+
+  if (isObservabilityFlagEnabled("integrationTelemetry")) {
+    if (summary.sent > 0) trackMetric(MetricNames.PUSH_SENT, summary.sent);
+    if (summary.failed > 0 || summary.invalidTokens > 0) {
+      trackMetric(MetricNames.PUSH_FAILED, summary.failed + summary.invalidTokens);
     }
   }
 

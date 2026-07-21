@@ -41,10 +41,17 @@ async function waitForHealth(url, maxMs = 120000) {
   const start = Date.now();
   while (Date.now() - start < maxMs) {
     try {
-      const res = await fetch(`${url}/api/health`);
-      if (res.ok) {
-        const body = await res.json();
-        if (body?.success) return;
+      // Liveness first (no DB) — process up. Then readiness/legacy health for DB.
+      const live = await fetch(`${url}/api/health/live`);
+      if (live.ok) {
+        const ready = await fetch(`${url}/api/health/ready`).catch(() => null);
+        const legacy = await fetch(`${url}/api/health`).catch(() => null);
+        if (ready?.ok || legacy?.ok) return;
+        // Process is up; DB may still be warming — accept live after half timeout.
+        if (Date.now() - start > maxMs / 2) {
+          console.warn("⚠ /api/health/live OK mas DB ainda indisponível — seguindo para testes");
+          return;
+        }
       }
     } catch {
       /* retry */
@@ -83,7 +90,12 @@ async function main() {
     env: {
       ...process.env,
       PORT,
-      AUTH_RATE_LIMIT_RELAXED: process.env.AUTH_RATE_LIMIT_RELAXED ?? "1",
+      // Allows auth test flags under next start without failing validateProductionEnv.
+      // Never set on Vercel — validateProductionEnv rejects when VERCEL=1.
+      ECOPET_STABLE_TEST_SERVER: "1",
+      // Default OFF so test:security rate-limit finishes quickly (default window ~20).
+      // Set AUTH_RATE_LIMIT_RELAXED=1 explicitly for heavy foundation suites.
+      AUTH_RATE_LIMIT_RELAXED: process.env.AUTH_RATE_LIMIT_RELAXED ?? "0",
       AUTH_TEST_RESET_RATE_LIMIT: process.env.AUTH_TEST_RESET_RATE_LIMIT ?? "1",
       AUTH_TEST_EXPOSE_OTP: process.env.AUTH_TEST_EXPOSE_OTP ?? "1",
       PHONE_SMS_RECOVERY_ENABLED: process.env.PHONE_SMS_RECOVERY_ENABLED ?? "1",

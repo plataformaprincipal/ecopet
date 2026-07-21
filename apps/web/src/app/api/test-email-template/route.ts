@@ -55,7 +55,7 @@ function renderSample(template: EmailTemplateName, locale: ReturnType<typeof res
 }
 
 export async function GET(request: Request) {
-  if (process.env.NODE_ENV === "production" && process.env.ALLOW_TEST_RESEND !== "1") {
+  if (process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production") {
     return NextResponse.json(
       { success: false, error: "Rota de teste desabilitada em produção." },
       { status: 403 }

@@ -24,6 +24,10 @@ export async function POST(request: Request, provider: string) {
   }
 
   const sig = request.headers.get("x-signature") ?? request.headers.get("stripe-signature");
+  // Produção: se secret existe, exigir header de assinatura (HMAC real ainda depende do provider).
+  if (secret && process.env.NODE_ENV === "production" && !sig) {
+    return apiFailure("INVALID_SIGNATURE", "Assinatura ausente.", 401);
+  }
   if (secret && process.env.WEBHOOK_VERIFY === "1" && !sig) {
     return apiFailure("INVALID_SIGNATURE", "Assinatura ausente.", 401);
   }

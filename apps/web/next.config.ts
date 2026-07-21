@@ -7,6 +7,7 @@ import {
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@ecopet/database"],
+  serverExternalPackages: ["@logtail/node"],
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },

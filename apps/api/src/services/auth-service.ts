@@ -27,12 +27,24 @@ import {
   validateResetPasswordFields,
   resolveAppUrl,
 } from "../lib/password-reset-utils.js";
+import { createHash } from "node:crypto";
 import { resolveEmailProvider } from "./email-providers.js";
 import { createUserSessionTokens, revokeRefreshToken, refreshAccessToken as rotateAccessToken } from "../lib/session-tokens.js";
 
 const MAX_ATTEMPTS = 5;
 const LOCK_MINUTES = 30;
-const BOOTSTRAP_PASSWORD = "AASSSVVV@1972";
+
+/** SHA-256 de senhas de bootstrap históricas — impede reuso sem plaintext no repo. */
+const FORBIDDEN_PASSWORD_SHA256 = new Set([
+  "9417187db098e971a9fc43a1fbc8bf11bfaa8accd6e157eb1ea1e32b911f8f60",
+]);
+
+function isForbiddenBootstrapPassword(password: string): boolean {
+  const hash = createHash("sha256").update(password).digest("hex");
+  if (FORBIDDEN_PASSWORD_SHA256.has(hash)) return true;
+  const envList = process.env.BOOTSTRAP_FORBIDDEN_PASSWORDS?.split(",") ?? [];
+  return envList.map((s) => s.trim()).filter(Boolean).includes(password);
+}
 
 export function validatePasswordStrength(password: string) {
   const errors: string[] = [];
@@ -41,7 +53,7 @@ export function validatePasswordStrength(password: string) {
   if (!/[a-z]/.test(password)) errors.push("Letra minúscula");
   if (!/[0-9]/.test(password)) errors.push("Número");
   if (!/[^A-Za-z0-9]/.test(password)) errors.push("Caractere especial");
-  if (password === BOOTSTRAP_PASSWORD) errors.push("Senha temporária de bootstrap não permitida");
+  if (isForbiddenBootstrapPassword(password)) errors.push("Senha temporária de bootstrap não permitida");
   return { valid: errors.length === 0, errors };
 }
 
@@ -821,7 +833,7 @@ export function checkPasswordStrengthRealtime(password: string) {
     lowercase: /[a-z]/.test(password),
     number: /[0-9]/.test(password),
     special: /[^A-Za-z0-9]/.test(password),
-    notTemp: password !== BOOTSTRAP_PASSWORD,
+    notTemp: !isForbiddenBootstrapPassword(password),
     score: [password.length >= 12, /[A-Z]/.test(password), /[a-z]/.test(password), /[0-9]/.test(password), /[^A-Za-z0-9]/.test(password)].filter(Boolean).length,
   };
 }
