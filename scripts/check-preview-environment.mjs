@@ -65,9 +65,12 @@ function loadPreviewEnv() {
   const fromArg = process.argv[2];
   const fromEnv = process.env.PREVIEW_ENV_FILE;
   const file = fromArg || fromEnv || "";
-  const fileVars = file ? parseEnvFile(path.resolve(file)) : {};
-  // Arquivo tem precedência sobre process.env para chaves presentes
-  return { ...process.env, ...fileVars, __sourceFile: file || "(process.env)" };
+  if (file) {
+    // Arquivo é a única fonte — evita falsos positivos/negativos do process.env local
+    const fileVars = parseEnvFile(path.resolve(file));
+    return { ...fileVars, __sourceFile: file, VERCEL_ENV: fileVars.VERCEL_ENV || "preview" };
+  }
+  return { ...process.env, __sourceFile: "(process.env)" };
 }
 
 function loadProductionEnv() {

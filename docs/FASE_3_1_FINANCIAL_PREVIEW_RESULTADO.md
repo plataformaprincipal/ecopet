@@ -1,7 +1,8 @@
 # Fase 3.1 — Homologação financeira externa em Preview — Resultado
 
 **Branch:** `test/fase-3-1-financial-preview`  
-**Atualizado:** 2026-08-06 (estado Git corrigido + preparação de infraestrutura)  
+**Atualizado:** 2026-08-06 (revalidação de infraestrutura — migrate/deploy/E2E não iniciados)  
+**HEAD inicial da revalidação:** `b3b8d9a`  
 **Projeto canônico:** `ecopet-s-projects/ecopet-web`  
 **Produção:** `https://www.eccopet.com` (**não** alterada)
 
@@ -9,38 +10,10 @@
 
 ## 1. Resumo executivo
 
-A Fase 3.1 permanece **bloqueada** exclusivamente por **infraestrutura** (isolamento de banco e credenciais TEST não comprovados; URL Preview estável ainda não validada).
+A Fase 3.1 foi **retomada e permanece bloqueada** por infraestrutura.  
+`scripts/check-preview-environment.mjs` retornou **exit 2**. Por regra da fase, **não** foram executados: migrations, deploy Preview, smoke externo, E2E, cobrança sandbox nem webhook.
 
-O código da Fase 3 **já está commitado**. Nenhuma migration Preview, deploy Preview financeiro, cobrança sandbox ou webhook externo foi executado nesta preparação.
-
-## 2. Git e branch (corrigido)
-
-| Item | Estado |
-| ---- | ------ |
-| Branch | `test/fase-3-1-financial-preview` |
-| Working tree | **Limpo** (no momento da correção documental) |
-| Fase 3 | Commit **`84d1b67`** — `feat: implement financial ledger and reconciliation foundation` |
-| Higienização tsbuildinfo | Commit **`0c6a97b`** — `chore: ignore TypeScript build info files` |
-| Migration Fase 3 | **Rastreada** em `packages/database/prisma/migrations/20260806180000_fase3_financial_ledger/` |
-| Secrets / `.env*` / `.vercel` | Não versionados |
-| Merge `main` | Não |
-| Deploy Production | Não |
-| Credenciais de produção utilizadas | **Nenhuma** nesta fase |
-
-Pré-condições Git:
-
-| Check | Status |
-| ----- | ------ |
-| Working tree limpo | **Sim** |
-| Fase 3 commitada | **Sim** (`84d1b67`) |
-| Migration Fase 3 rastreada no Git | **Sim** |
-| `.tsbuildinfo` ignorado / fora do índice | **Sim** (`0c6a97b`) |
-
-## 3. Isolamento de ambientes
-
-Ver `docs/FASE_3_1_ENVIRONMENT_ISOLATION.md`.
-
-**Resultado:** isolamento Preview/Production **ainda não comprovado** → bloqueio duro.
+Código Fase 3 commitado (`84d1b67`); prep infra commitada (`b3b8d9a`).
 
 Motivos vigentes:
 
@@ -50,124 +23,259 @@ credenciais Mercado Pago TEST ainda não comprovadas;
 URL Preview estável ainda não validada.
 ```
 
-## 4. Configuração Vercel
+---
 
-Inspecionado anteriormente (`vercel project inspect ecopet-web`):
+## 2. Git e branch
 
-| Campo | Valor observado |
-| ----- | --------------- |
-| Project | `ecopet-web` |
-| Root Directory | `apps/web` |
-| Framework | Next.js |
-| Output Directory | automático (Next default) |
-| Node.js | 24.x |
+| Item | Estado |
+| ---- | ------ |
+| Branch | `test/fase-3-1-financial-preview` |
+| Working tree (início) | Limpo |
+| `b3b8d9a` | Presente — prep infra Preview |
+| `0c6a97b` | Presente — ignore tsbuildinfo |
+| `84d1b67` | Presente — ledger / Fase 3 |
+| Migration Fase 3 | Rastreada (`20260806180000_fase3_financial_ledger`) |
+| Secrets versionados | Não (apenas `.env*.example` / código de tokens) |
+| Merge `main` | Não |
+| Deploy Production | Não |
+| Credenciais Production usadas | Nenhuma |
 
-Projeto acidental `ecopet_github`: não usar.  
-Plano de URL estável: `docs/VERCEL_PREVIEW_STABLE_URL_PLAN.md` (**recomendado:** `homolog.eccopet.com`).
+Pré-checks:
 
-## 5. Variáveis e feature flags
+```text
+[x] working tree limpo (início)
+[x] branch correta
+[x] commit b3b8d9a presente
+[x] commit 84d1b67 presente
+[x] migration da Fase 3 rastreada
+[x] nenhum secret versionado
+```
 
-Estado observado no Vercel (antes da configuração manual):
+---
 
-| Item | Preview |
-| ---- | ------: |
-| `DATABASE_URL` / `DIRECT_URL` | Escopo compartilhado com Production (bloqueante) |
-| MP tokens TEST | Não comprovados (pull redigido) |
-| Flags financeiras | Ausentes |
-| `ALLOW_SIMULATED_PAYMENTS` | Ausente (adequado) |
+## 3. Isolamento do banco
 
-Checklist manual: `docs/FASE_3_1_MANUAL_INFRASTRUCTURE_CHECKLIST.md`.  
-Script de verificação (sem secrets): `scripts/check-preview-environment.mjs`.
+Ver `docs/FASE_3_1_ENVIRONMENT_ISOLATION.md`.
 
-## 6. Migrations
+| Check | Status |
+| ----- | ------ |
+| `DATABASE_URL` / `DIRECT_URL` só Preview | **Não** — escopo `Production, Preview` |
+| Fingerprint Preview ≠ Production | **Não comprovado** (pull `[SENSITIVE]`) |
+| Banco identificado como homologação | **Não** |
+| `migrate deploy` | **Não executado** |
+
+---
+
+## 4. Mercado Pago TEST
+
+| Check | Status |
+| ----- | ------ |
+| Access token prefixo TEST | **Não comprovado** (pull redigido) |
+| Public key prefixo TEST | **Não comprovado** |
+| Webhook secret homolog | Presente no Vercel, valor redigido; escopo compartilhado |
+| Escopo só Preview | **Não** — `Production, Preview` |
+| `ALLOW_SIMULATED_PAYMENTS` | Ausente no Preview (adequado) |
+
+---
+
+## 5. Feature flags
+
+| Flag | Preview Vercel |
+| ---- | -------------- |
+| `FINANCIAL_LEDGER_ENABLED` | **Ausente** |
+| `PAYOUTS_ENABLED` | **Ausente** |
+| `MANUAL_PAYOUT_APPROVAL_REQUIRED` | **Ausente** |
+| `RESERVE_ENABLED` | **Ausente** |
+| `CHARGEBACKS_ENABLED` | **Ausente** |
+| `DAILY_RECONCILIATION_ENABLED` | **Ausente** |
+
+---
+
+## 6. Configuração Vercel
+
+| Campo | Valor | OK |
+| ----- | ----- | -- |
+| Projeto | `ecopet-web` | Sim |
+| Root Directory | `apps/web` | Sim |
+| Framework | Next.js | Sim |
+| Output Directory | Next.js default | Sim (não `public`) |
+| Node | 24.x | Sim |
+| `homolog.eccopet.com` | **Não configurado** | Não |
+| Path `apps/web/apps/web` | Evitar no deploy CLI | Documentado |
+| Projeto `ecopet_github` | Existe — **não usar** | Atenção |
+
+Variáveis de homologação **não** estão isoladas no escopo Preview-only para DB/MP/URLs.
+
+---
+
+## 7. Migrations
 
 | Ação | Status |
 | ---- | ------ |
-| Migration Fase 3 no Git | Rastreada (`84d1b67`) |
-| `migrate deploy` no DB Preview/homologação | **Não executado** |
+| `npm run db:generate` | **Não executado** (bloqueio) |
+| `npm run db:migrate:deploy` | **Não executado** |
+| `prisma migrate status` | **Não executado** |
 | `migrate reset` | Não |
-| Migration em Production nesta fase | Não |
+| Acesso DB Production | Não |
 
-## 7. Deploy Preview financeiro
+---
+
+## 8. Deploy Preview
+
+**Não executado** (check exit ≠ 0).
+
+---
+
+## 9. Smoke tests externos
+
+**Não executados.**
+
+---
+
+## 10. E2E comercial externo
 
 **Não executado.**
 
-## 8–12. Smoke / E2E / cobrança / webhook
+---
 
-**Não executados** nesta preparação (aguardam infraestrutura).
+## 11. E2E financeiro externo
 
-E2E local Fase 3 (sessão anterior, 16/16) **não** substitui Preview.
+**Não executado.**
 
-## 13–26. Domínios financeiros externos / CSV / logs
+---
 
-Não homologados externamente enquanto bloqueado.
+## 12. Cobrança Mercado Pago sandbox
 
-### Incidentes / bloqueios
+**Não executada.**
 
-| ID | Severidade | Achado | Estado |
-| -- | ---------- | ------ | ------ |
-| B1 | Crítico | DB Preview/Production compartilhado ou não comprovado | **Aberto** |
-| B2 | Crítico | MP TEST não comprovado | **Aberto** |
-| B3 | Alto | Fase 3 não commitada | **Resolvido** (`84d1b67`) |
-| B4 | Alto | Flags financeiras ausentes no Preview | **Aberto** (checklist) |
-| B5 | Médio | Projeto `ecopet_github` acidental | Aberto (não usar) |
-| B6 | Médio | Risco path `apps/web/apps/web` | Documentado |
-| B7 | Médio | URL Preview estável não validada | **Aberto** (plano `homolog.eccopet.com`) |
+---
 
-## 27. Rollback
+## 13. Webhook externo
 
-Procedimento: `docs/FASE_3_ROLLBACK.md`. Exercício Preview não executado (sem deploy).
+**Não configurado / não validado.**  
+Rota alvo planejada (quando houver URL estável): conforme código em `/api/webhooks/mercado-pago` + `https://homolog.eccopet.com`.
 
-## 28. Preparação de infraestrutura (esta atualização)
+---
 
-| Entrega | Path |
-| ------- | ---- |
-| Checklist manual | `docs/FASE_3_1_MANUAL_INFRASTRUCTURE_CHECKLIST.md` |
-| Plano URL estável | `docs/VERCEL_PREVIEW_STABLE_URL_PLAN.md` |
-| Script verificação | `scripts/check-preview-environment.mjs` |
+## 14. Idempotência e concorrência
 
-Nenhuma operação externa (migrate / deploy / E2E / cobrança / webhook) executada.
+**Não testadas** em Preview.
 
-## 29. Falhas restantes (infra)
+---
 
-1. Banco de homologação exclusivo não comprovado.  
-2. Credenciais MP TEST no Preview não comprovadas.  
-3. URL Preview estável não validada / DNS não configurado.  
-4. Flags financeiras Preview não cadastradas.  
-5. Deploy Preview financeiro e E2E externo pendentes.
+## 15. Ledger / split / reserva / saldos
 
-## 30. Riscos financeiros
+**Não homologados** em Preview.  
+(E2E local Fase 3 histórico 16/16 **não** substitui Preview.)
 
-Inalterados: homologar sem isolamento pode escrever ledger no banco de Production; tokens MP compartilhados podem misturar sandbox e live.
+---
 
-## 31. Arquivos (preparação documental / infra)
+## 16. Payout lógico
 
-- `docs/FASE_3_1_FINANCIAL_PREVIEW_RESULTADO.md` (este — estado Git corrigido)
-- `docs/FASE_3_1_MANUAL_INFRASTRUCTURE_CHECKLIST.md`
-- `docs/VERCEL_PREVIEW_STABLE_URL_PLAN.md`
-- `scripts/check-preview-environment.mjs`
-- `docs/FASE_3_1_ENVIRONMENT_ISOLATION.md` (referência de bloqueio)
+**Não homologado** em Preview. Sem repasse bancário real.
 
-## 32. Veredito
+---
+
+## 17. Reembolso sandbox
+
+**Não executado.**
+
+---
+
+## 18. Chargeback
+
+**Não classificado nesta rodada** (sem teste sandbox).  
+Quando executado: marcar `EXTERNO REAL` / `INTERNO CONTROLADO` / `NÃO SUPORTADO PELO SANDBOX` sem confundir categorias.
+
+---
+
+## 19. Conciliação
+
+**Não homologada** em Preview.
+
+---
+
+## 20. Logs Vercel / rollback flag
+
+Revisão de logs de deploy financeiro: **N/A** (sem deploy).  
+Teste `PAYOUTS_ENABLED=false` em Preview: **não executado**.
+
+---
+
+## 21. Validação local (npm ci / lint / type-check / build / tests)
+
+**Não reexecutada nesta retomada** — bloqueio ocorreu na etapa 2 (infra).  
+Validação da prep anterior (`lint` / `type-check` / `node --check` do script) permanece como referência de código; não desbloqueia Preview.
+
+---
+
+## 22. Script de verificação
+
+```text
+node scripts/check-preview-environment.mjs apps/web/.env.preview.pull
+→ RESULTADO: BLOQUEADO
+→ exit code: 2
+```
+
+Ajuste local (working tree): quando um arquivo é passado, o script usa **somente** o arquivo (evita poluição do `process.env` local). Sem commit automático.
+
+---
+
+## 23. Falhas restantes
+
+1. Banco homologação isolado não comprovado (escopo DB compartilhado).  
+2. MP TEST não comprovado (pull redigido + escopo compartilhado).  
+3. `homolog.eccopet.com` não configurado.  
+4. Flags financeiras Preview ausentes.  
+5. Pull Vercel redige secrets — check exit 0 exige arquivo Preview com valores reais fornecidos com segurança pelo responsável (não versionar).  
+6. Migrations / deploy / E2E / sandbox / webhook pendentes.
+
+---
+
+## 24. Riscos
+
+| Risco | Impacto |
+| ----- | ------- |
+| Migrar/deploy com DB compartilhado | Ledger/payouts no banco de Production |
+| Tokens MP compartilhados | Mistura sandbox/live ou webhooks cruzados |
+| URL volátil / sem homolog | Webhook e auth frágeis |
+| Flags ausentes | Comportamento default do código ≠ contrato de homologação |
+
+---
+
+## 25. Veredito
 
 ```text
 FASE 3.1 BLOQUEADA
 PRONTO PARA HOMOLOGAÇÃO FINANCEIRA
 ```
 
-Motivo (inalterado):
+**Não** `PRONTO PARA PILOTO FINANCEIRO CONTROLADO` — checklist de piloto não atendido.
+
+### Critérios piloto (estado)
 
 ```text
-banco de homologação isolado ainda não comprovado;
-credenciais Mercado Pago TEST ainda não comprovadas;
-URL Preview estável ainda não validada.
+[ ] banco de homologação isolado
+[ ] deploy Preview funcional
+[ ] E2E comercial externo aprovado
+[ ] E2E financeiro externo aprovado
+[ ] cobrança sandbox real
+[ ] webhook externo real
+[ ] ledger idempotente
+[ ] split consistente
+[ ] reserva validada
+[ ] saldo derivado do ledger
+[ ] payout sem dinheiro real validado
+[ ] reembolso sandbox validado
+[ ] chargeback corretamente classificado
+[ ] conciliação validada
+[x] nenhuma credencial de produção utilizada nesta fase
+[x] nenhum pagamento ou repasse real
 ```
 
-Não avançar para `PRONTO PARA PILOTO FINANCEIRO CONTROLADO`.
-
-### Desbloqueio mínimo (manual → depois automatizado)
+### Próximo desbloqueio
 
 1. Completar `docs/FASE_3_1_MANUAL_INFRASTRUCTURE_CHECKLIST.md`.  
-2. Configurar DNS/`homolog.eccopet.com` conforme plano (manual).  
-3. `node scripts/check-preview-environment.mjs` com exit 0 (+ fingerprint ≠ Production).  
-4. Só então: `migrate deploy` no DB de homologação → deploy Preview → E2E.
+2. DNS `homolog.eccopet.com` + vars Preview-only.  
+3. `check-preview-environment.mjs` → exit 0.  
+4. Então: migrate homolog → deploy Preview `ecopet-web` → E2E → sandbox → webhook.
