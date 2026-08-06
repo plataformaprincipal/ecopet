@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "@ecopet/database";
 import type { AuthRequest } from "../middleware/auth.js";
+import { requireApprovedPartnerExpress } from "../middleware/partner-approval.js";
 import { paramString } from "../lib/request-utils.js";
 import { sendSuccess, sendFailure } from "../lib/express-api-response.js";
 import { serializeProduct } from "../lib/serialize.js";
@@ -21,6 +22,7 @@ function requirePartner(req: AuthRequest, res: import("express").Response, next:
 }
 
 router.use(requirePartner);
+router.use(requireApprovedPartnerExpress);
 
 const productSchema = z.object({
   name: z.string().min(2),

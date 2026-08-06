@@ -27,13 +27,38 @@ function isProductionBuild(): boolean {
   return process.env.NODE_ENV === "production";
 }
 
+function isVercelRuntime(): boolean {
+  return process.env.VERCEL === "1" || Boolean(process.env.VERCEL_ENV);
+}
+
+function looksLikeLocalhost(url: string): boolean {
+  try {
+    const host = new URL(url).hostname;
+    return host === "localhost" || host === "127.0.0.1" || host === "::1";
+  } catch {
+    return /localhost|127\.0\.0\.1/i.test(url);
+  }
+}
+
 /** Server-side (NextAuth, proxy route, RSC) */
 export function getServerApiUrl(): string {
-  if (process.env.API_INTERNAL_URL) return process.env.API_INTERNAL_URL.replace(/\/$/, "");
-  if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
+  const configured =
+    process.env.API_INTERNAL_URL?.replace(/\/$/, "") ||
+    process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ||
+    "";
+
+  // Never use localhost Express targets on Vercel / production builds.
+  if (configured) {
+    if ((isProductionBuild() || isVercelRuntime()) && looksLikeLocalhost(configured)) {
+      return "";
+    }
+    return configured;
+  }
+
+  if (isProductionBuild() || isVercelRuntime()) return "";
+
   const runtime = readRuntimeApiUrl();
   if (runtime) return runtime;
-  if (isProductionBuild()) return "";
   return "http://localhost:4000";
 }
 

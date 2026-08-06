@@ -48,6 +48,13 @@ export async function PATCH(request: Request, context: RouteContext) {
   if (!order) return apiFailure("NOT_FOUND", "Pedido não encontrado.", 404);
 
   const nextStatus = parsed.data.status;
+  if (nextStatus === OrderStatus.PAID) {
+    return apiFailure(
+      "FORBIDDEN",
+      "Pagamento só pode ser confirmado pelo webhook do provedor.",
+      403
+    );
+  }
   const shippingStatuses: OrderStatus[] = [
     OrderStatus.SHIPPED,
     OrderStatus.OUT_FOR_DELIVERY,

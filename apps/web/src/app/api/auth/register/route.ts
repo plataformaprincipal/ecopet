@@ -98,7 +98,7 @@ async function createPartnerUser(data: PartnerRegisterInput) {
         cpf: isAutonomous ? data.cpf : null,
         cnpj: isAutonomous ? null : data.cnpj,
         avatarUrl: data.logoUrl ?? undefined,
-        accountStatus: AccountStatus.ACTIVE,
+        accountStatus: AccountStatus.PENDING,
         termsAcceptedAt: new Date(),
         lgpdAcceptedAt: new Date(),
         zipCode: data.addressDetails.zipCode.replace(/\D/g, ""),
@@ -142,7 +142,7 @@ async function createLegacyPartnerUser(data: {
         role: UserRole.PARTNER,
         phone: data.phone,
         cnpj: data.cnpj,
-        accountStatus: AccountStatus.ACTIVE,
+        accountStatus: AccountStatus.PENDING,
         termsAcceptedAt: new Date(),
         lgpdAcceptedAt: new Date(),
         partnerProfile: {

@@ -1,31 +1,43 @@
 import type { AccountStatus, VerificationStatus } from "@prisma/client";
 import { pathMatchesPrefix } from "@/lib/permissions";
+import { partnerExperienceRouteRequiresApproval } from "@/lib/partner/experience-nav";
 
 export type PartnerAccessLevel = "limited" | "full";
 
 export type PartnerAccessContext = {
   accountStatus: AccountStatus;
   verificationStatus?: VerificationStatus | string | null;
+  approvedAt?: Date | string | null;
 };
 
-const APPROVAL_REQUIRED_PREFIXES = [
+/** Prefixos legados /parceiro/* que ainda exigem aprovação no shell antigo. */
+const LEGACY_APPROVAL_REQUIRED_PREFIXES = [
   "/parceiro/marketplace",
   "/parceiro/agenda-servicos",
   "/parceiro/atividades-ia",
 ] as const;
 
+/**
+ * Acesso comercial completo só com ACTIVE + APPROVED (+ approvedAt quando informado).
+ * Conta recém-cadastrada (PENDING) permanece limited.
+ */
 export function getPartnerAccessLevel(ctx: PartnerAccessContext): PartnerAccessLevel {
-  // Registration rule: ACTIVE partner has immediate commercial access.
-  // verificationStatus may stay PENDING for documents without locking the shell.
   if (ctx.accountStatus === "SUSPENDED" || ctx.accountStatus === "REJECTED") {
     return "limited";
   }
-  if (ctx.accountStatus === "ACTIVE") return "full";
+  const approved =
+    ctx.accountStatus === "ACTIVE" &&
+    ctx.verificationStatus === "APPROVED" &&
+    (ctx.approvedAt === undefined || ctx.approvedAt != null);
+  if (approved) return "full";
   return "limited";
 }
 
 export function partnerRouteRequiresApproval(pathname: string): boolean {
-  return APPROVAL_REQUIRED_PREFIXES.some((p) => pathMatchesPrefix(pathname, p));
+  if (pathname === "/partner" || pathname.startsWith("/partner/")) {
+    return partnerExperienceRouteRequiresApproval(pathname);
+  }
+  return LEGACY_APPROVAL_REQUIRED_PREFIXES.some((p) => pathMatchesPrefix(pathname, p));
 }
 
 export function canAccessPartnerRoute(

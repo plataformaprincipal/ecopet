@@ -726,6 +726,21 @@ export const ENV_REGISTRY: EnvVarDefinition[] = [
     example: "MERCADO_PAGO",
   },
   {
+    name: "ALLOW_SIMULATED_PAYMENTS",
+    tier: "optional",
+    scopes: ["web", "api"],
+    environments: ["Development"],
+    purpose:
+      "Permite IDs sim_* apenas fora de produção. Ignorado/rejeitado quando NODE_ENV ou VERCEL_ENV = production",
+    usedIn: [
+      "apps/web/src/lib/payments/simulated-payments.ts",
+      "apps/api/src/lib/simulated-payments.ts",
+      "apps/web/src/lib/validate-production-env.ts",
+    ],
+    example: "true",
+    secret: false,
+  },
+  {
     name: "MERCADO_PAGO_ACCESS_TOKEN",
     tier: "optional",
     scopes: ["web"],

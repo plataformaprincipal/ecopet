@@ -53,6 +53,12 @@ export function mapApiErrorMessage(message: string, code?: string): string {
   if (code === "UNEXPECTED") return USER_MESSAGES.UNEXPECTED;
   if (code === "SESSION") return USER_MESSAGES.SESSION;
   if (code === "PERMISSION") return USER_MESSAGES.PERMISSION;
+  if (code === "CONFIG" || code === "CONNECTION") {
+    return (
+      message ||
+      "Serviço temporariamente indisponível. Tente novamente em instantes."
+    );
+  }
 
   if (!message || TECHNICAL_PATTERNS.some((p) => p.test(message))) {
     return USER_MESSAGES.UNEXPECTED;

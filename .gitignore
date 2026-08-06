@@ -27,6 +27,8 @@ coverage
 apps/web/public/uploads/dev
 .ecopet/backups/
 *.sql
+# Prisma migrations must be versioned (exception to *.sql)
+!packages/database/prisma/migrations/**/*.sql
 *.dump
 *.bak
 *.pem

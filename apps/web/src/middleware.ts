@@ -78,7 +78,7 @@ export async function middleware(request: NextRequest) {
         jwt.role === "ADMIN"
           ? "/admin"
           : jwt.role === "CLIENT"
-            ? "/cliente"
+            ? "/client"
             : jwt.role === "PARTNER"
               ? "/partner"
               : jwt.role === "ONG"
@@ -133,7 +133,7 @@ export async function middleware(request: NextRequest) {
     }
     return applyRefreshedCookie(
       NextResponse.redirect(
-        new URL(role === "CLIENT" ? "/cliente" : "/feed", request.url)
+        new URL(role === "CLIENT" ? "/client" : "/feed", request.url)
       ),
       refreshedCookie
     );

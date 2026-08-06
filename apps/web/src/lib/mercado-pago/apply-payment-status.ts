@@ -12,6 +12,10 @@ import {
   isTerminalFailure,
   type InternalPaymentStatus,
 } from "@/lib/mercado-pago/status";
+import {
+  assertSimulatedPaymentAllowed,
+  isAuthorizedPaidSource,
+} from "@/lib/payments/simulated-payments";
 
 type PaymentMeta = {
   stockReleased?: boolean;
@@ -59,7 +63,43 @@ export async function applyInternalPaymentStatus(params: {
   providerOrderId?: string | null;
   providerPaymentId?: string | null;
   source: "api" | "webhook" | "poll";
+  /** External event id for audit (webhook/provider) — never a secret */
+  eventId?: string | null;
 }): Promise<{ changed: boolean }> {
+  const simCheck = assertSimulatedPaymentAllowed(
+    params.providerPaymentId ?? params.providerOrderId
+  );
+  if (!simCheck.ok && isTerminalApproved(params.internalStatus)) {
+    await writeAuditLog({
+      action: "UPDATE",
+      module: "payments",
+      resource: "Payment",
+      resourceId: params.paymentId,
+      observation: `${simCheck.code}: tentativa de PAID com identificador simulado bloqueada`,
+      entityAfter: {
+        source: params.source,
+        eventId: params.eventId ?? null,
+        blocked: true,
+      },
+    }).catch(() => undefined);
+    return { changed: false };
+  }
+
+  if (
+    isTerminalApproved(params.internalStatus) &&
+    !isAuthorizedPaidSource(params.source)
+  ) {
+    await writeAuditLog({
+      action: "UPDATE",
+      module: "payments",
+      resource: "Payment",
+      resourceId: params.paymentId,
+      observation: "Transição para APPROVED/PAID rejeitada: origem não autorizada",
+      entityAfter: { source: params.source, eventId: params.eventId ?? null },
+    }).catch(() => undefined);
+    return { changed: false };
+  }
+
   const payment = await prisma.payment.findUnique({
     where: { id: params.paymentId },
     include: {
@@ -115,7 +155,14 @@ export async function applyInternalPaymentStatus(params: {
         provider: "mercado_pago",
         eventType: `status:${params.source}`,
         status: params.internalStatus,
-        message: params.statusDetail?.slice(0, 280) ?? null,
+        message: [
+          params.statusDetail?.slice(0, 200) ?? null,
+          `source=${params.source}`,
+          params.eventId ? `eventId=${params.eventId}` : null,
+        ]
+          .filter(Boolean)
+          .join(" | ")
+          .slice(0, 280) || null,
       },
     });
 

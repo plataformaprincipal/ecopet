@@ -65,6 +65,7 @@ export function auditProductionEnv(env: NodeJS.ProcessEnv = process.env): Produc
     "ALLOW_TEST_RESEND",
     "TURNSTILE_DEV_BYPASS",
     "AUTH_TEST_RESET_RATE_LIMIT",
+    "ALLOW_SIMULATED_PAYMENTS",
   ] as const;
   // Harness local (`npm run test:server:start`) only — never on Vercel.
   const localStableTestHarness =

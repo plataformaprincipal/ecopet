@@ -23,12 +23,13 @@ export default async function PartnerExperienceLayout({
 
   const partnerProfile = await prisma.partnerProfile.findUnique({
     where: { userId: user.id },
-    select: { businessName: true, verificationStatus: true },
+    select: { businessName: true, verificationStatus: true, approvedAt: true },
   });
 
   const accessLevel = getPartnerAccessLevel({
     accountStatus: user.accountStatus,
     verificationStatus: partnerProfile?.verificationStatus,
+    approvedAt: partnerProfile?.approvedAt,
   });
 
   const statusTone = resolveStatusTone(user.accountStatus, partnerProfile?.verificationStatus);

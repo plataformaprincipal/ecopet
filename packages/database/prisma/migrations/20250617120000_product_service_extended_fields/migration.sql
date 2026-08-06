@@ -1,0 +1,19 @@
+-- Campos opcionais para formulários completos de produto e serviço (compatível com dados existentes)
+
+ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "shortDescription" TEXT;
+ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "subcategory" TEXT;
+ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "minStock" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "unit" TEXT;
+ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "tags" JSONB;
+ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "pickupAvailable" BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "deliveryAvailable" BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "extraDetails" JSONB;
+
+ALTER TABLE "Service" ADD COLUMN IF NOT EXISTS "shortDescription" TEXT;
+ALTER TABLE "Service" ADD COLUMN IF NOT EXISTS "subcategory" TEXT;
+ALTER TABLE "Service" ADD COLUMN IF NOT EXISTS "priceOnRequest" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "Service" ADD COLUMN IF NOT EXISTS "city" TEXT;
+ALTER TABLE "Service" ADD COLUMN IF NOT EXISTS "state" TEXT;
+ALTER TABLE "Service" ADD COLUMN IF NOT EXISTS "serviceLocation" TEXT;
+ALTER TABLE "Service" ADD COLUMN IF NOT EXISTS "tags" JSONB;
+ALTER TABLE "Service" ADD COLUMN IF NOT EXISTS "extraDetails" JSONB;

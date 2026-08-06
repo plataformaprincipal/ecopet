@@ -1,4 +1,6 @@
-import { UserRole } from "@prisma/client";
+import { AccountStatus, UserRole, VerificationStatus } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+import { apiFailure } from "@/lib/api-response";
 import {
   requireAuth as requireAuthenticatedUser,
   requireRole,
@@ -33,18 +35,43 @@ export async function requireAuth(allowedRoles?: UserRole[]): Promise<ApiGuardRe
   return requireAuthenticatedUser();
 }
 
-export async function requireActivePartner() {
-  return requirePartner();
+/**
+ * Parceiro com acesso operacional:
+ * role=PARTNER + accountStatus=ACTIVE + verificationStatus=APPROVED + approvedAt.
+ */
+export async function requireApprovedPartner(): Promise<ApiGuardResult> {
+  const base = await requirePartner();
+  if (base.error || !base.user) return base;
+
+  if (base.user.accountStatus !== AccountStatus.ACTIVE) {
+    return {
+      user: null,
+      error: apiFailure("FORBIDDEN", PARTNER_PENDING_APPROVAL_MESSAGE, 403),
+    };
+  }
+
+  const profile = await prisma.partnerProfile.findUnique({
+    where: { userId: base.user.id },
+    select: { verificationStatus: true, approvedAt: true },
+  });
+
+  if (
+    !profile ||
+    profile.verificationStatus !== VerificationStatus.APPROVED ||
+    !profile.approvedAt
+  ) {
+    return {
+      user: null,
+      error: apiFailure("FORBIDDEN", PARTNER_PENDING_APPROVAL_MESSAGE, 403),
+    };
+  }
+
+  return base;
 }
 
-/**
- * Parceiro autenticado com conta ACTIVE.
- * Document verification (PartnerProfile.verificationStatus) may remain PENDING
- * for KYC/docs without blocking commercial operations — registration rule:
- * PARTNER ACTIVE + immediate use, no mandatory manual approval.
- */
-export async function requireApprovedPartner() {
-  return requirePartner();
+/** Alias operacional — mesmas regras de aprovação (não basta ACTIVE). */
+export async function requireActivePartner() {
+  return requireApprovedPartner();
 }
 
 export async function requireClient() {

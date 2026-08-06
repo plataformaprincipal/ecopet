@@ -1,6 +1,11 @@
 import { prisma } from "@ecopet/database";
 import type { DeliveryMethod, OrderStatus, PaymentMethod, ServiceFulfillmentMode } from "@prisma/client";
 import { asInputJson, asOptionalInputJson } from "../lib/prisma-json.js";
+import { logStructured } from "../lib/logger.js";
+import {
+  assertSimulatedPaymentAllowed,
+  isSimulatedPaymentAllowed,
+} from "../lib/simulated-payments.js";
 import { createAuditLog } from "./audit-service.js";
 import { calculateShipping, generatePickupQrCode, resolvePartnerId } from "./logistics-service.js";
 import { debitWallet, debitWalletTx, processRefund } from "./wallet-service.js";
@@ -116,16 +121,43 @@ export async function createOrder(payload: CheckoutPayload) {
         data: { status: "PAID", walletTransactionId: transaction.id },
       });
       await tx.orderStatusHistory.create({
-        data: { orderId: created.id, status: "PAID", note: "Pago com Saldo ECOPET" },
+        data: {
+          orderId: created.id,
+          status: "PAID",
+          note: "Pago com Saldo ECOPET | source=wallet",
+        },
       });
     } else if (payload.paymentMethod !== "BOLETO") {
-      await tx.order.update({
-        where: { id: created.id },
-        data: { status: "PAID", stripePaymentId: `sim_${Date.now()}` },
-      });
-      await tx.orderStatusHistory.create({
-        data: { orderId: created.id, status: "PAID", note: `Pago via ${payload.paymentMethod}` },
-      });
+      const simulatedId = `sim_${Date.now()}`;
+      const simGuard = assertSimulatedPaymentAllowed(simulatedId);
+      if (simGuard.ok && isSimulatedPaymentAllowed()) {
+        await tx.order.update({
+          where: { id: created.id },
+          data: { status: "PAID", stripePaymentId: simulatedId },
+        });
+        await tx.orderStatusHistory.create({
+          data: {
+            orderId: created.id,
+            status: "PAID",
+            note: `Pago simulado (${payload.paymentMethod}) | source=simulation | id=${simulatedId}`,
+          },
+        });
+      } else {
+        logStructured("api", "simulated_payment_blocked", {
+          orderId: created.id,
+          orderNumber,
+          paymentMethod: payload.paymentMethod,
+          code: simGuard.ok ? "SIMULATED_PAYMENT_DISABLED" : simGuard.code,
+          // never log secrets — only method + codes
+        });
+        await tx.orderStatusHistory.create({
+          data: {
+            orderId: created.id,
+            status: "PENDING",
+            note: "Aguardando confirmação de pagamento (webhook). Simulação bloqueada.",
+          },
+        });
+      }
     }
 
     if (isPickup && pickupQrCode) {
