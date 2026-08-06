@@ -2,9 +2,13 @@
 
 **Data:** 2026-08-06  
 **Branch:** `test/fase-3-1-financial-preview`  
+**Git (atualizado):** Fase 3 em `84d1b67`; higienização tsbuildinfo em `0c6a97b`; working tree limpo; migration Fase 3 rastreada.  
+**Bloqueio vigente:** exclusivamente infraestrutura (DB isolado / MP TEST / URL estável não comprovados).  
 **Projeto Vercel inspecionado:** `ecopet-s-projects/ecopet-web`  
 **Método:** `vercel env ls` + `vercel env pull` (Preview e Production) + metadados sem secrets  
-**Regra:** isolamento só é aceito com evidência de valores diferentes — não só presença do nome da variável.
+**Regra:** isolamento só é aceito com evidência de valores diferentes — não só presença do nome da variável.  
+**Checklist manual:** `docs/FASE_3_1_MANUAL_INFRASTRUCTURE_CHECKLIST.md`  
+**Verificação:** `scripts/check-preview-environment.mjs`
 
 ---
 
@@ -64,12 +68,15 @@ Consequência obrigatória da especificação Fase 3.1:
 
 ## Ações necessárias para desbloquear
 
-1. Criar **projeto Supabase (ou Postgres) exclusivo de homologação**.
-2. No Vercel `ecopet-web`, criar `DATABASE_URL` / `DIRECT_URL` **somente Preview** com valores distintos (remover o vínculo Production+Preview do mesmo valor).
-3. Garantir credenciais MP **TEST** só no Preview; Production permanece intocada nesta fase.
-4. Definir flags financeiras Preview conforme especificação.
-5. Reexecutar este documento com fingerprints de host **diferentes** (sem imprimir secrets).
-6. Só então: `migrate deploy` no DB de homologação + deploy Preview + E2E.
+1. Seguir `docs/FASE_3_1_MANUAL_INFRASTRUCTURE_CHECKLIST.md`.
+2. Criar **projeto Supabase (ou Postgres) exclusivo de homologação**.
+3. No Vercel `ecopet-web`, criar `DATABASE_URL` / `DIRECT_URL` **somente Preview** com valores distintos (remover o vínculo Production+Preview do mesmo valor).
+4. Garantir credenciais MP **TEST** só no Preview; Production permanece intocada nesta fase.
+5. Definir flags financeiras Preview conforme especificação.
+6. URL estável (`docs/VERCEL_PREVIEW_STABLE_URL_PLAN.md` — recomendado `homolog.eccopet.com`).
+7. Validar com `scripts/check-preview-environment.mjs` (exit 0; fingerprints Preview ≠ Production).
+8. Só então: `migrate deploy` no DB de homologação + deploy Preview + E2E.  
+   (**Ainda não executar** enquanto este documento registrar isolamento não comprovado.)
 
 ---
 
