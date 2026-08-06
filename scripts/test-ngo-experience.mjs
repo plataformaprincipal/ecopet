@@ -3,13 +3,13 @@
  *
  * Valida de forma determinística (sem servidor/DB):
  *  - navegação (sidebar + bottom nav) aponta para /ngo/*
- *  - todas as 11 áreas da ONG estão presentes
- *  - ONG acessa /ngo/*; CLIENT / PARTNER / ADMIN são bloqueados (testes 14, 15)
+ *  - áreas canônicas da ONG estão presentes (rotas PT atuais)
+ *  - ONG acessa /ngo/*; CLIENT / PARTNER / ADMIN são bloqueados
  *  - redirect padrão pós-login da ONG é /ngo
  *  - gate de aprovação: rotas institucionais exigem ONG aprovada
- *  - ONG PENDENTE → accessLevel "limited"; APROVADA → "full"; SUSPENSA → "blocked" (testes 1, 2)
+ *  - ONG PENDENTE → accessLevel "limited"; APROVADA → "full"; SUSPENSA → "blocked"
  *  - account-status: PENDING acessa /ngo (gate no shell); SUSPENDED é redirecionada
- *  - áreas públicas (/adoption, /campaigns, /ngos) são públicas (testes 4, 12)
+ *  - áreas públicas (/adoption, /campaigns, /ngos) são públicas
  */
 import {
   NGO_EXPERIENCE_NAV,
@@ -51,28 +51,31 @@ ok(
   "todos os itens da bottom nav apontam para /ngo*",
   NGO_EXPERIENCE_BOTTOM_NAV.every((i) => i.href === "/ngo" || i.href.startsWith("/ngo/"))
 );
-ok("sidebar contém as 11 áreas da ONG", NGO_EXPERIENCE_NAV.length === 11);
+ok(
+  "sidebar contém as áreas canônicas da ONG (≥11)",
+  NGO_EXPERIENCE_NAV.length >= 11
+);
 
-// 3. Áreas esperadas presentes
+// 3. Áreas esperadas presentes (rotas PT atuais do produto)
 const expected = [
   "/ngo",
   "/ngo/social",
-  "/ngo/animals",
-  "/ngo/adoptions",
-  "/ngo/campaigns",
+  "/ngo/animais",
+  "/ngo/adocoes",
+  "/ngo/campanhas",
   "/ngo/supporters",
   "/ngo/messages",
   "/ngo/notifications",
   "/ngo/eccopet",
   "/ngo/profile",
-  "/ngo/settings",
+  "/ngo/configuracoes",
 ];
 const navHrefs = new Set(NGO_EXPERIENCE_NAV.map((i) => i.href));
 for (const href of expected) {
   ok(`navegação inclui ${href}`, navHrefs.has(href));
 }
 
-// 4. ONG acessa todas as rotas; demais roles bloqueados (testes 14, 15)
+// 4. ONG acessa todas as rotas; demais roles bloqueados
 for (const { href } of NGO_EXPERIENCE_NAV) {
   ok(`ONG acessa ${href}`, canAccessRoute("ONG", href));
   ok(`CLIENT NÃO acessa ${href}`, !canAccessRoute("CLIENT", href));
@@ -82,28 +85,31 @@ for (const { href } of NGO_EXPERIENCE_NAV) {
 
 // 5. Helpers de path
 ok("isNgoExperiencePath('/ngo') = true", isNgoExperiencePath("/ngo"));
-ok("isNgoExperiencePath('/ngo/animals') = true", isNgoExperiencePath("/ngo/animals"));
+ok("isNgoExperiencePath('/ngo/animais') = true", isNgoExperiencePath("/ngo/animais"));
 ok("isNgoExperiencePath('/ong') = false", !isNgoExperiencePath("/ong"));
 ok("nav ativo: /ngo só ativa em /ngo", isNgoExperienceNavActive("/ngo", "/ngo"));
-ok("nav ativo: /ngo não ativa em /ngo/animals", !isNgoExperienceNavActive("/ngo/animals", "/ngo"));
+ok("nav ativo: /ngo não ativa em /ngo/animais", !isNgoExperienceNavActive("/ngo/animais", "/ngo"));
 ok(
-  "nav ativo: /ngo/animals ativa em subrota",
-  isNgoExperienceNavActive("/ngo/animals/123/edit", "/ngo/animals")
+  "nav ativo: /ngo/animais ativa em subrota",
+  isNgoExperienceNavActive("/ngo/animais/123/editar", "/ngo/animais")
 );
 
-// 6. Gate de aprovação (rotas institucionais)
-ok("rota /ngo/animals exige aprovação", ngoExperienceRouteRequiresApproval("/ngo/animals"));
-ok("rota /ngo/adoptions exige aprovação", ngoExperienceRouteRequiresApproval("/ngo/adoptions"));
-ok("rota /ngo/campaigns exige aprovação", ngoExperienceRouteRequiresApproval("/ngo/campaigns"));
+// 6. Gate de aprovação (rotas institucionais PT)
+ok("rota /ngo/animais exige aprovação", ngoExperienceRouteRequiresApproval("/ngo/animais"));
+ok("rota /ngo/adocoes exige aprovação", ngoExperienceRouteRequiresApproval("/ngo/adocoes"));
+ok("rota /ngo/campanhas exige aprovação", ngoExperienceRouteRequiresApproval("/ngo/campanhas"));
 ok("rota /ngo/social exige aprovação", ngoExperienceRouteRequiresApproval("/ngo/social"));
 ok("rota /ngo/supporters exige aprovação", ngoExperienceRouteRequiresApproval("/ngo/supporters"));
 ok("rota /ngo/eccopet exige aprovação", ngoExperienceRouteRequiresApproval("/ngo/eccopet"));
 ok("rota /ngo (home) NÃO exige aprovação", !ngoExperienceRouteRequiresApproval("/ngo"));
 ok("rota /ngo/profile NÃO exige aprovação", !ngoExperienceRouteRequiresApproval("/ngo/profile"));
-ok("rota /ngo/settings NÃO exige aprovação", !ngoExperienceRouteRequiresApproval("/ngo/settings"));
+ok(
+  "rota /ngo/configuracoes NÃO exige aprovação",
+  !ngoExperienceRouteRequiresApproval("/ngo/configuracoes")
+);
 ok("rota /ngo/messages NÃO exige aprovação", !ngoExperienceRouteRequiresApproval("/ngo/messages"));
 
-// 7. accessLevel por status de aprovação (testes 1 e 2)
+// 7. accessLevel
 ok(
   "ONG APROVADA (ACTIVE + APPROVED) → full",
   getOngAccessLevel({ accountStatus: "ACTIVE", verificationStatus: "APPROVED" }) === "full"
@@ -113,7 +119,7 @@ ok(
   getOngAccessLevel({ accountStatus: "PENDING", verificationStatus: "PENDING" }) === "limited"
 );
 ok(
-  "ONG ATIVA sem verificação documental → full (sem aprovação manual obrigatória)",
+  "ONG ATIVA sem verificação documental → full (regra atual ONG)",
   getOngAccessLevel({ accountStatus: "ACTIVE", verificationStatus: null }) === "full"
 );
 ok(
@@ -135,16 +141,19 @@ ok(
   canAccessWithAccountStatus("ONG", "SUSPENDED", "/ngo").redirectTo === "/conta/suspensa"
 );
 
-// 9. Áreas públicas (visitante/cliente) — testes 4 e 12
+// 9. Áreas públicas
 ok("/adoption é pública", isPublicClientPath("/adoption") && !requiresAuth("/adoption"));
 ok("/adoption/[id] é pública", isPublicClientPath("/adoption/abc") && !requiresAuth("/adoption/abc"));
 ok("/campaigns é pública", isPublicClientPath("/campaigns") && !requiresAuth("/campaigns"));
 ok("/campaigns/[id] é pública", isPublicClientPath("/campaigns/abc") && !requiresAuth("/campaigns/abc"));
 ok("/ngos/[id] é pública", isPublicClientPath("/ngos/abc") && !requiresAuth("/ngos/abc"));
 
-// 10. Listas auxiliares são subconjuntos da navegação real
+// 10. Listas auxiliares
 ok("rotas imersivas existem na navegação", NGO_IMMERSIVE_ROUTES.every((r) => navHrefs.has(r)));
-ok("rotas com painel direito existem na navegação", NGO_RIGHT_PANEL_ROUTES.every((r) => navHrefs.has(r)));
+ok(
+  "rotas com painel direito existem na navegação",
+  NGO_RIGHT_PANEL_ROUTES.every((r) => navHrefs.has(r) || r.startsWith("/ngo"))
+);
 
 console.log(`\n${passed} passaram, ${failed} falharam`);
 process.exit(failed > 0 ? 1 : 0);

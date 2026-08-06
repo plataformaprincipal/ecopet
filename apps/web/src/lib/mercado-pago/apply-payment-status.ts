@@ -65,6 +65,8 @@ export async function applyInternalPaymentStatus(params: {
   source: "api" | "webhook" | "poll";
   /** External event id for audit (webhook/provider) — never a secret */
   eventId?: string | null;
+  /** Valor informado pelo gateway (comparado ao Payment.amount) */
+  receivedAmount?: number | null;
 }): Promise<{ changed: boolean }> {
   const simCheck = assertSimulatedPaymentAllowed(
     params.providerPaymentId ?? params.providerOrderId
@@ -116,6 +118,80 @@ export async function applyInternalPaymentStatus(params: {
     },
   });
   if (!payment) return { changed: false };
+
+  // Identificador externo já vinculado a outro pedido
+  if (params.providerPaymentId || params.providerOrderId) {
+    const conflict = await prisma.payment.findFirst({
+      where: {
+        id: { not: payment.id },
+        OR: [
+          ...(params.providerPaymentId
+            ? [{ providerPaymentId: params.providerPaymentId }]
+            : []),
+          ...(params.providerOrderId
+            ? [{ providerOrderId: params.providerOrderId }, { externalId: params.providerOrderId }]
+            : []),
+        ],
+      },
+      select: { id: true, orderId: true },
+    });
+    if (conflict && conflict.orderId !== payment.orderId) {
+      await writeAuditLog({
+        action: "UPDATE",
+        module: "payments",
+        resource: "Payment",
+        resourceId: payment.id,
+        observation: "Identificador externo já vinculado a outro pedido",
+        entityAfter: {
+          conflictPaymentId: conflict.id,
+          conflictOrderId: conflict.orderId,
+          source: params.source,
+        },
+      }).catch(() => undefined);
+      return { changed: false };
+    }
+  }
+
+  if (
+    isTerminalApproved(params.internalStatus) &&
+    typeof params.receivedAmount === "number" &&
+    Number.isFinite(params.receivedAmount)
+  ) {
+    const expected = Number(payment.amount);
+    const diff = Math.abs(params.receivedAmount - expected);
+    if (diff > 0.01) {
+      await writeAuditLog({
+        action: "UPDATE",
+        module: "payments",
+        resource: "Payment",
+        resourceId: payment.id,
+        observation: "Valor divergente entre gateway e Payment.amount",
+        entityAfter: {
+          expected,
+          received: params.receivedAmount,
+          source: params.source,
+          eventId: params.eventId ?? null,
+        },
+      }).catch(() => undefined);
+      return { changed: false };
+    }
+  }
+
+  // Não confirmar PAID em pagamento já cancelado
+  if (
+    isTerminalApproved(params.internalStatus) &&
+    (payment.status === "CANCELLED" || payment.status === "EXPIRED" || payment.order.status === OrderStatus.CANCELLED)
+  ) {
+    await writeAuditLog({
+      action: "UPDATE",
+      module: "payments",
+      resource: "Payment",
+      resourceId: payment.id,
+      observation: "PAID rejeitado: pagamento/pedido já cancelado",
+      entityAfter: { source: params.source, paymentStatus: payment.status, orderStatus: payment.order.status },
+    }).catch(() => undefined);
+    return { changed: false };
+  }
 
   if (payment.status === params.internalStatus) {
     return { changed: false };

@@ -11,6 +11,7 @@ import { RatingStars } from "./rating-stars";
 import { ProductCard } from "./product-card";
 import { MarketplaceGridSkeleton } from "./marketplace-skeleton";
 import { useMarketplaceStore } from "@/store/marketplace-store";
+import { useMarketplaceActions } from "@/hooks/use-marketplace-actions";
 import { fetchProduct, fetchReviews, fetchRelatedProducts } from "@/lib/marketplace/api";
 import { formatMpPrice, discountPct, AI_TAG_LABELS } from "@/lib/marketplace/config";
 import type { MarketplaceProduct, MarketplaceReview } from "@/lib/marketplace/types";
@@ -25,13 +26,15 @@ interface ProductDetailContentProps {
 
 export function ProductDetailContent({ id }: ProductDetailContentProps) {
   const { t } = useTranslation();
-  const { addToCart, toggleFavoriteProduct, isFavoriteProduct } = useMarketplaceStore();
+  const { isFavoriteProduct } = useMarketplaceStore();
+  const { addProductToCart, toggleProductFavorite, AuthModal } = useMarketplaceActions();
   const [product, setProduct] = useState<MarketplaceProduct | undefined>();
   const [reviews, setReviews] = useState<MarketplaceReview[]>([]);
   const [related, setRelated] = useState<MarketplaceProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(1);
   const [imgIdx, setImgIdx] = useState(0);
+  const [adding, setAdding] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -124,15 +127,24 @@ export function ProductDetailContent({ id }: ProductDetailContentProps) {
             <Button
               className="flex-1"
               size="lg"
-              disabled={!product.inStock}
-              onClick={() => addToCart({
-                type: "product", itemId: product.id, name: product.name, image: product.images[0],
-                price: product.price, quantity: qty, partnerId: product.partnerId, partnerName: product.partner.name,
-              })}
+              disabled={!product.inStock || adding}
+              onClick={async () => {
+                setAdding(true);
+                try {
+                  await addProductToCart(product, qty);
+                } finally {
+                  setAdding(false);
+                }
+              }}
             >
               <ShoppingCart className="h-5 w-5" /> Adicionar ao carrinho
             </Button>
-            <Button size="lg" variant="outline" className={cn(fav && "text-red-500")} onClick={() => toggleFavoriteProduct(product.id)}>
+            <Button
+              size="lg"
+              variant="outline"
+              className={cn(fav && "text-red-500")}
+              onClick={() => toggleProductFavorite(product)}
+            >
               <Heart className={cn("h-5 w-5", fav && "fill-red-500")} />
             </Button>
           </div>
@@ -220,6 +232,7 @@ export function ProductDetailContent({ id }: ProductDetailContentProps) {
           </div>
         </section>
       )}
+      {AuthModal}
     </div>
   );
 }

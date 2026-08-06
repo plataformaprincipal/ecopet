@@ -67,6 +67,7 @@ export const handleOrderWebhook: MpWebhookHandler = async ({ event, normalized }
   }
 
   const internal = mapMpOrderStatusToInternal(mp.status, mp.status_detail);
+  const receivedAmount = Number.parseFloat(String(mp.total_amount ?? ""));
   await applyInternalPaymentStatus({
     paymentId: payment.id,
     internalStatus: internal,
@@ -74,6 +75,8 @@ export const handleOrderWebhook: MpWebhookHandler = async ({ event, normalized }
     providerOrderId: mp.id,
     providerPaymentId: mp.transactions?.payments?.[0]?.id ?? null,
     source: "webhook",
+    eventId: event.id,
+    receivedAmount: Number.isFinite(receivedAmount) ? receivedAmount : null,
   });
 
   return {

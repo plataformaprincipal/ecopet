@@ -209,13 +209,17 @@ export async function createMercadoPagoCheckoutOrder(input: CreateCheckoutOrderI
   }
 
   const mp = result.data;
-  const internal = mapMpOrderStatusToInternal(mp.status, mp.status_detail);
+  const mapped = mapMpOrderStatusToInternal(mp.status, mp.status_detail);
   const providerPaymentId = mp.transactions?.payments?.[0]?.id ?? null;
+
+  // Fase 2: create/API NÃO confirma PAID — persiste IDs e aguarda webhook/poll.
+  // Status APPROVED do create response vira PROCESSING até confirmação assíncrona.
+  const persistedStatus = mapped === "APPROVED" ? "PROCESSING" : mapped;
 
   payment = await prisma.payment.update({
     where: { id: payment.id },
     data: {
-      status: internal,
+      status: persistedStatus,
       statusDetail: mp.status_detail ?? null,
       providerOrderId: mp.id,
       externalId: mp.id,
@@ -224,19 +228,33 @@ export async function createMercadoPagoCheckoutOrder(input: CreateCheckoutOrderI
     },
   });
 
-  await applyInternalPaymentStatus({
-    paymentId: payment.id,
-    internalStatus: internal,
-    statusDetail: mp.status_detail,
-    providerOrderId: mp.id,
-    providerPaymentId,
-    source: "api",
+  await prisma.paymentEvent.create({
+    data: {
+      paymentId: payment.id,
+      orderId: order.id,
+      provider: "mercado_pago",
+      eventType: "create_order_response",
+      status: persistedStatus,
+      message: `MP create mapped=${mapped}; persisted=${persistedStatus} (PAID apenas via webhook/poll)`,
+    },
   });
+
+  // Falhas/pendências do create atualizam Payment; APPROVED só via webhook/poll.
+  if (mapped !== "APPROVED") {
+    await applyInternalPaymentStatus({
+      paymentId: payment.id,
+      internalStatus: mapped,
+      statusDetail: mp.status_detail,
+      providerOrderId: mp.id,
+      providerPaymentId,
+      source: "api",
+    });
+  }
 
   return {
     paymentId: payment.id,
     providerOrderId: mp.id,
-    status: internal,
+    status: persistedStatus,
     statusDetail: mp.status_detail ?? null,
     mpOrder: sanitizeMpOrderForClient(mp),
   };

@@ -29,8 +29,8 @@ describe("web simulated-payments", () => {
   it("authorized paid sources exclude client/frontend", () => {
     assert.equal(isAuthorizedPaidSource("webhook"), true);
     assert.equal(isAuthorizedPaidSource("poll"), true);
-    assert.equal(isAuthorizedPaidSource("api"), true);
-    assert.equal(isAuthorizedPaidSource("wallet"), true);
+    assert.equal(isAuthorizedPaidSource("api"), false);
+    assert.equal(isAuthorizedPaidSource("wallet"), false);
     assert.equal(isAuthorizedPaidSource("frontend"), false);
     assert.equal(isAuthorizedPaidSource("client"), false);
   });

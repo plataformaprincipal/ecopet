@@ -42,6 +42,7 @@ import cartRoutes from "./routes/cart.js";
 import marketplacePartnerRoutes from "./routes/marketplace-partner.js";
 import { authMiddleware } from "./middleware/auth.js";
 import { errorHandler } from "./middleware/error.js";
+import { blockCommercialMutations } from "./middleware/commercial-legacy-disabled.js";
 import { logStructured } from "./lib/logger.js";
 import { sendSuccess } from "./lib/express-api-response.js";
 
@@ -122,8 +123,9 @@ app.use("/api/users", userRoutes);
 app.use("/api/pets", authMiddleware, petRoutes);
 app.use("/api/public/pets", publicPetRoutes);
 app.use("/api/posts", postRoutes);
-app.use("/api/products", productRoutes);
-app.use("/api/services", serviceRoutes);
+app.use("/api/products", blockCommercialMutations, productRoutes);
+app.use("/api/services", blockCommercialMutations, serviceRoutes);
+// Observação Fase 2.1: mutações comerciais bloqueadas antes/após auth via middleware próprio nas rotas abaixo.
 app.use("/api/ai", authMiddleware, aiRoutes);
 app.use("/api/adoption", adoptionRoutes);
 app.use("/api/translate", translationRoutes);
@@ -135,7 +137,8 @@ app.use("/api/conversations", authMiddleware, conversationRoutes);
 app.use("/api/tickets", authMiddleware, ticketRoutes);
 app.use("/api/integrations", authMiddleware, integrationRoutes);
 app.use("/api/wallet", authMiddleware, walletRoutes);
-app.use("/api/orders", authMiddleware, orderRoutes);
+// 410 em mutações comerciais ANTES do auth — evita 401 silencioso mascarando legado
+app.use("/api/orders", blockCommercialMutations, authMiddleware, orderRoutes);
 app.use("/api/logistics", logisticsRoutes);
 app.use("/api/advisory", authMiddleware, advisoryRoutes);
 app.use("/api/platform", platformRoutes);
@@ -143,8 +146,8 @@ app.use("/api/moderation", authMiddleware, moderationRoutes);
 app.use("/api/appointments", authMiddleware, appointmentRoutes);
 app.use("/api/iot", authMiddleware, iotRoutes);
 app.use("/api/robots", authMiddleware, robotsRoutes);
-app.use("/api/cart", authMiddleware, cartRoutes);
-app.use("/api/marketplace/partner", authMiddleware, marketplacePartnerRoutes);
+app.use("/api/cart", blockCommercialMutations, authMiddleware, cartRoutes);
+app.use("/api/marketplace/partner", blockCommercialMutations, authMiddleware, marketplacePartnerRoutes);
 
 app.use(errorHandler);
 

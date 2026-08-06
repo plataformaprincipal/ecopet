@@ -51,8 +51,9 @@ export async function runMercadoPagoWebhookPipeline(params: {
 
   const secretConfigured = signature.reason !== "WEBHOOK_SECRET_MISSING";
 
-  // Produção: fail-closed sem secret — nunca processar eventos sem verificação.
-  if (!secretConfigured && process.env.NODE_ENV === "production") {
+  // Fail-closed: sem secret nunca processar webhook (dev/test/prod).
+  // Homologação sandbox exige MERCADO_PAGO_WEBHOOK_SECRET configurado.
+  if (!secretConfigured) {
     await writeIntegrationLog({
       integrationName: "mercado_pago",
       provider: "mercado_pago",

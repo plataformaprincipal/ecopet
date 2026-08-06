@@ -39,6 +39,36 @@ const steps = [
     args: ["--import", "tsx", "scripts/test-admin-access.mjs"],
     env: { TSX_TSCONFIG_PATH: "apps/web/tsconfig.json" },
   },
+  {
+    name: "test:simulated-payments",
+    cmd: "node",
+    args: [
+      "--import",
+      "tsx",
+      "--test",
+      "apps/web/src/lib/payments/simulated-payments.test.ts",
+      "apps/api/src/lib/simulated-payments.test.ts",
+    ],
+    env: { TSX_TSCONFIG_PATH: "apps/web/tsconfig.json" },
+  },
+  {
+    name: "test:partner-access-gate",
+    cmd: "node",
+    args: ["--import", "tsx", "--test", "apps/web/src/lib/partner/access.test.ts"],
+    env: { TSX_TSCONFIG_PATH: "apps/web/tsconfig.json" },
+  },
+  {
+    name: "test:commerce-unit",
+    cmd: "node",
+    args: [
+      "--import",
+      "tsx",
+      "--test",
+      "apps/web/src/lib/commerce/pricing.test.ts",
+      "apps/web/src/lib/commerce/order-state-machine.test.ts",
+    ],
+    env: { TSX_TSCONFIG_PATH: "apps/web/tsconfig.json" },
+  },
 ];
 
 let failed = 0;

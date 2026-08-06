@@ -6,29 +6,17 @@ import { requireActivePartner } from "@/lib/auth/require-auth";
 import { createInternalNotification } from "@/lib/notifications/internal";
 import { emailOrderEvent } from "@/lib/mail/event-dispatch";
 import { getUserEmailLocale } from "@/lib/email/templates";
+import {
+  assertOrderTransition,
+  FINANCIAL_STATUSES,
+  InvalidOrderTransitionError,
+} from "@/lib/commerce/order-state-machine";
+import { writeAuditLog } from "@/lib/audit-log";
 
 const statusSchema = z.object({
   status: z.nativeEnum(OrderStatus),
   note: z.string().optional().nullable(),
 });
-
-const ALLOWED_TRANSITIONS: Partial<Record<OrderStatus, OrderStatus[]>> = {
-  PENDING_CONFIRMATION: [OrderStatus.CONFIRMED, OrderStatus.CANCELLED],
-  CONFIRMED: [OrderStatus.PREPARING, OrderStatus.CANCELLED],
-  PREPARING: [
-    OrderStatus.READY_FOR_PICKUP,
-    OrderStatus.READY_PICKUP,
-    OrderStatus.SHIPPED,
-    OrderStatus.OUT_FOR_DELIVERY,
-    OrderStatus.CANCELLED,
-  ],
-  READY_FOR_PICKUP: [OrderStatus.PICKED_UP, OrderStatus.CANCELLED],
-  READY_PICKUP: [OrderStatus.PICKED_UP, OrderStatus.CANCELLED],
-  SHIPPED: [OrderStatus.OUT_FOR_DELIVERY, OrderStatus.DELIVERED],
-  OUT_FOR_DELIVERY: [OrderStatus.DELIVERED],
-  DELIVERED: [OrderStatus.COMPLETED],
-  PICKED_UP: [OrderStatus.COMPLETED],
-};
 
 type RouteContext = { params: Promise<{ orderId: string }> };
 
@@ -48,13 +36,15 @@ export async function PATCH(request: Request, context: RouteContext) {
   if (!order) return apiFailure("NOT_FOUND", "Pedido não encontrado.", 404);
 
   const nextStatus = parsed.data.status;
-  if (nextStatus === OrderStatus.PAID) {
+
+  if (FINANCIAL_STATUSES.has(nextStatus) || nextStatus === OrderStatus.PAID) {
     return apiFailure(
       "FORBIDDEN",
-      "Pagamento só pode ser confirmado pelo webhook do provedor.",
+      "Status financeiro só pode ser alterado pelo gateway (webhook).",
       403
     );
   }
+
   const shippingStatuses: OrderStatus[] = [
     OrderStatus.SHIPPED,
     OrderStatus.OUT_FOR_DELIVERY,
@@ -75,13 +65,17 @@ export async function PATCH(request: Request, context: RouteContext) {
     );
   }
 
-  const allowed = ALLOWED_TRANSITIONS[order.status] ?? [];
-  if (!allowed.includes(nextStatus)) {
-    return apiFailure(
-      "VALIDATION",
-      `Transição inválida de ${order.status} para ${nextStatus}.`,
-      400
-    );
+  try {
+    assertOrderTransition(order.status, nextStatus, "partner");
+  } catch (e) {
+    if (e instanceof InvalidOrderTransitionError) {
+      return apiFailure(
+        "VALIDATION",
+        `Transição inválida de ${order.status} para ${nextStatus}.`,
+        400
+      );
+    }
+    throw e;
   }
 
   const updated = await prisma.$transaction(async (tx) => {
@@ -116,19 +110,32 @@ export async function PATCH(request: Request, context: RouteContext) {
         status: nextStatus,
         fulfillmentStatus: nextStatus,
         statusHistory: {
-          create: { status: nextStatus, note: parsed.data.note ?? `Status atualizado para ${nextStatus}` },
+          create: {
+            status: nextStatus,
+            note: parsed.data.note ?? `Status atualizado para ${nextStatus}`,
+          },
         },
       },
       include: { items: true, statusHistory: { orderBy: { createdAt: "asc" } } },
     });
   });
 
+  await writeAuditLog({
+    actorId: user!.id,
+    action: "UPDATE",
+    module: "commerce.partner.order_status",
+    resource: "Order",
+    resourceId: orderId,
+    entityBefore: { status: order.status },
+    entityAfter: { status: nextStatus },
+  }).catch(() => undefined);
+
   await createInternalNotification({
     userId: order.userId,
     title: "Atualização de pedido",
     body: `Seu pedido #${order.orderNumber} está ${nextStatus}.`,
     type: "ORDER_STATUS_UPDATED",
-    actionUrl: `/dashboard/client/orders/${orderId}`,
+    actionUrl: `/client/orders`,
     data: { orderId, status: nextStatus },
   });
 
@@ -136,11 +143,13 @@ export async function PATCH(request: Request, context: RouteContext) {
     where: { id: order.userId },
     select: { email: true, name: true, preferences: true },
   });
-  if (buyer?.email && ["CONFIRMED", "CANCELLED", "COMPLETED"].includes(nextStatus)) {
+  if (buyer?.email && ["CONFIRMED", "CANCELLED", "COMPLETED", "PREPARING"].includes(nextStatus)) {
     const event =
-      nextStatus === "CONFIRMED" ? "ORDER_CONFIRMED"
-      : nextStatus === "CANCELLED" ? "ORDER_CANCELLED"
-      : "ORDER_COMPLETED";
+      nextStatus === "CONFIRMED"
+        ? "ORDER_CONFIRMED"
+        : nextStatus === "CANCELLED"
+          ? "ORDER_CANCELLED"
+          : "ORDER_COMPLETED";
     void emailOrderEvent(event, buyer.email, order.orderNumber, {
       name: buyer.name,
       locale: getUserEmailLocale(buyer.preferences),

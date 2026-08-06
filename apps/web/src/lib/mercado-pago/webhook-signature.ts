@@ -15,8 +15,14 @@ export function verifyMercadoPagoWebhookSignature(params: {
   secret?: string | null;
   nowMs?: number;
 }): { valid: boolean; reason?: string; ts?: number } {
+  // Secret explícito (inclui "") tem precedência — testes passam secret: "".
+  // Caso omitido: lê config/env (permite webhook secret sem ACCESS_TOKEN).
   const secret =
-    params.secret?.trim() || getMercadoPagoServerConfig()?.webhookSecret || "";
+    params.secret !== undefined && params.secret !== null
+      ? String(params.secret).trim()
+      : getMercadoPagoServerConfig()?.webhookSecret ||
+        process.env.MERCADO_PAGO_WEBHOOK_SECRET?.trim() ||
+        "";
 
   if (!secret) {
     // Em teste sem secret: não rejeita automaticamente — caller decide (WEBHOOK_PENDING)

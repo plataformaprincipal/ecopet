@@ -120,8 +120,24 @@ ok(
   getPartnerAccessLevel({ accountStatus: "PENDING", verificationStatus: "PENDING" }) === "limited"
 );
 ok(
-  "parceiro ATIVO sem verificação documental → full (sem aprovação manual obrigatória)",
-  getPartnerAccessLevel({ accountStatus: "ACTIVE", verificationStatus: null }) === "full"
+  "parceiro ATIVO sem verificação documental → limited (exige APPROVED + approvedAt)",
+  getPartnerAccessLevel({ accountStatus: "ACTIVE", verificationStatus: null }) === "limited"
+);
+ok(
+  "parceiro ACTIVE + APPROVED sem approvedAt → limited",
+  getPartnerAccessLevel({
+    accountStatus: "ACTIVE",
+    verificationStatus: "APPROVED",
+    approvedAt: null,
+  }) === "limited"
+);
+ok(
+  "parceiro ACTIVE + APPROVED + approvedAt → full",
+  getPartnerAccessLevel({
+    accountStatus: "ACTIVE",
+    verificationStatus: "APPROVED",
+    approvedAt: new Date(),
+  }) === "full"
 );
 
 // 8. account-status middleware: PENDING acessa /partner (gate fica no shell)

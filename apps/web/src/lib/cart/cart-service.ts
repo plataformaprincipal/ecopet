@@ -56,7 +56,15 @@ export async function validateProductForCart(productId: string) {
       status: ProductCatalogStatus.ACTIVE,
       approvalStatus: "APPROVED",
       stock: { gt: 0 },
-      seller: { accountStatus: "ACTIVE", role: "PARTNER" },
+      price: { gte: 0 },
+      seller: {
+        accountStatus: "ACTIVE",
+        role: "PARTNER",
+        partnerProfile: {
+          verificationStatus: "APPROVED",
+          approvedAt: { not: null },
+        },
+      },
     },
   });
   return product;

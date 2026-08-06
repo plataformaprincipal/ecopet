@@ -24,7 +24,7 @@ interface ServiceDetailContentProps {
 
 export function ServiceDetailContent({ id }: ServiceDetailContentProps) {
   const { t } = useTranslation();
-  const { addToCart, toggleFavoriteService, isFavoriteService } = useMarketplaceStore();
+  const { toggleFavoriteService, isFavoriteService } = useMarketplaceStore();
   const [service, setService] = useState<MarketplaceService | undefined>();
   const [reviews, setReviews] = useState<MarketplaceReview[]>([]);
   const [related, setRelated] = useState<MarketplaceService[]>([]);
@@ -117,13 +117,11 @@ export function ServiceDetailContent({ id }: ServiceDetailContentProps) {
             <Button
               className="flex-1"
               size="lg"
-              onClick={() => addToCart({
-                type: "service", itemId: service.id, name: service.name, image: service.image,
-                price: service.price, quantity: 1, partnerId: service.partnerId, partnerName: service.partner.name,
-                scheduledAt: selectedDate,
-              })}
+              asChild
             >
-              <Calendar className="h-5 w-5" /> Agendar
+              <Link href={`/messages?context=SERVICE&id=${service.id}`}>
+                <Calendar className="h-5 w-5" /> Solicitar agendamento
+              </Link>
             </Button>
             <StartConversationButton
               variant="outline"

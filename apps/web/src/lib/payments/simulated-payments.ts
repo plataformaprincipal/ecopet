@@ -45,19 +45,13 @@ export function assertSimulatedPaymentAllowed(
 }
 
 /**
- * Authorized origins that may transition an order/payment to paid/approved.
- * - webhook / poll: async confirmation
- * - api: server-side Mercado Pago create/get response (never client body)
- * - wallet: internal wallet debit
- * Frontend / partner order status routes must NOT call this path for PAID.
+ * Origens autorizadas a confirmar PAID/APPROVED (Fase 2).
+ * - webhook: confirmação assíncrona validada (fonte oficial)
+ * - poll: reconciliação server-side consultando o gateway (não o browser)
+ * createPayment (source=api) NÃO pode marcar PAID — aguarda webhook.
+ * Frontend / partner NUNCA podem marcar PAID.
  */
-export const AUTHORIZED_PAID_SOURCES = [
-  "webhook",
-  "poll",
-  "api",
-  "wallet",
-  "admin_refund_reconcile",
-] as const;
+export const AUTHORIZED_PAID_SOURCES = ["webhook", "poll"] as const;
 export type AuthorizedPaidSource = (typeof AUTHORIZED_PAID_SOURCES)[number];
 
 export function isAuthorizedPaidSource(source: string): source is AuthorizedPaidSource {

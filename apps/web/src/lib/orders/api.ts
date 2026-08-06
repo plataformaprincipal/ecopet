@@ -1,40 +1,19 @@
-import { api } from "@/lib/api";
-import { useAppStore } from "@/store/app-store";
-
-function token() {
-  return useAppStore.getState().apiToken ?? undefined;
-}
+/**
+ * Cliente de pedidos — Fase 2: usa apenas Route Handlers Next.js.
+ * Não chama Express /api/ecopet/orders*.
+ */
 
 export type DeliveryMethod =
-  | "PICKUP_LOCAL" | "DELIVERY_LOCAL" | "DELIVERY_REGIONAL" | "DELIVERY_NATIONAL"
-  | "DELIVERY_OWN" | "DELIVERY_PARTNER_LOGISTICS" | "DELIVERY_SCHEDULED" | "PICKUP_SCHEDULED";
+  | "PICKUP_LOCAL"
+  | "DELIVERY_LOCAL"
+  | "DELIVERY_REGIONAL"
+  | "DELIVERY_NATIONAL"
+  | "DELIVERY_OWN"
+  | "DELIVERY_PARTNER_LOGISTICS"
+  | "DELIVERY_SCHEDULED"
+  | "PICKUP_SCHEDULED";
 
 export type PaymentMethod = "CARD" | "PIX" | "CASH" | "TRANSFER" | "WALLET" | "BOLETO";
-
-export interface CheckoutPayload {
-  items: {
-    productId?: string;
-    serviceId?: string;
-    quoteId?: string;
-    itemType?: string;
-    name: string;
-    quantity: number;
-    price: number;
-    partnerId?: string;
-  }[];
-  shippingAddress: Record<string, unknown>;
-  alternateAddress?: Record<string, unknown>;
-  billingAddress?: Record<string, unknown>;
-  deliveryMethod: DeliveryMethod;
-  paymentMethod: PaymentMethod;
-  scheduledAt?: string;
-  deliveryNotes?: string;
-  thirdPartyPickup?: { name: string; document: string };
-  serviceMode?: "IN_PERSON" | "HOME" | "ONLINE";
-  onlineLink?: string;
-  partnerId?: string;
-  discount?: number;
-}
 
 export interface OrderStatusHistory {
   id: string;
@@ -59,36 +38,91 @@ export interface Order {
   carrierName: string | null;
   items: { id: string; name: string; quantity: number; price: number }[];
   statusHistory: OrderStatusHistory[];
+  user?: { id: string; name: string; email: string };
 }
 
-export async function checkoutOrder(payload: CheckoutPayload) {
-  return api<Order>("/api/orders/checkout", {
-    method: "POST",
-    token: token(),
-    body: JSON.stringify(payload),
+async function nextJson<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(path, {
+    credentials: "include",
+    headers: { "Content-Type": "application/json", ...(init?.headers || {}) },
+    ...init,
   });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg =
+      body?.error?.message || body?.message || `Request failed (${res.status})`;
+    throw new Error(msg);
+  }
+  return (body?.data ?? body) as T;
+}
+
+/** Checkout oficial: carrinho servidor + /api/checkout (não aceita preços do cliente). */
+export async function checkoutFromServerCart(payload: {
+  deliveryMethod: "DELIVERY_LOCAL" | "PICKUP_LOCAL";
+  paymentMethod?: "PIX" | "CARD" | "CASH";
+  phone: string;
+  notes?: string | null;
+  address: {
+    street: string;
+    number?: string;
+    complement?: string;
+    district?: string;
+    city: string;
+    state: string;
+    zipCode?: string;
+  };
+  idempotencyKey?: string;
+}) {
+  const data = await nextJson<{ order: Order }>("/api/checkout", {
+    method: "POST",
+    headers: payload.idempotencyKey
+      ? { "Idempotency-Key": payload.idempotencyKey }
+      : undefined,
+    body: JSON.stringify({
+      deliveryMethod: payload.deliveryMethod,
+      paymentMethod: payload.paymentMethod ?? "PIX",
+      phone: payload.phone,
+      notes: payload.notes,
+      address: payload.address,
+    }),
+  });
+  return data.order;
+}
+
+/** @deprecated Use checkoutFromServerCart — payload com price do cliente foi removido. */
+export async function checkoutOrder(_payload: unknown): Promise<Order> {
+  throw new Error(
+    "CHECKOUT_LEGACY_DISABLED: use /api/checkout com carrinho do servidor (sem preço no payload)."
+  );
 }
 
 export async function fetchOrders() {
-  return api<Order[]>("/api/orders", { token: token() });
+  const data = await nextJson<{ orders: Order[] }>("/api/client/orders");
+  return data.orders ?? [];
 }
 
 export async function fetchOrder(id: string) {
-  return api<Order>(`/api/orders/${id}`, { token: token() });
+  const data = await nextJson<{ order: Order }>(`/api/client/orders/${id}`);
+  return data.order;
 }
 
 export async function confirmPickup(orderId: string, qrCode?: string) {
-  return api(`/api/orders/${orderId}/pickup/confirm`, {
-    method: "POST",
-    token: token(),
-    body: JSON.stringify({ qrCode }),
+  return nextJson(`/api/client/orders/${orderId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ action: "confirm_pickup", qrCode }),
   });
 }
 
 export async function requestOrderRefund(orderId: string, reason?: string) {
-  return api(`/api/orders/${orderId}/refund`, {
+  return nextJson(`/api/orders/${orderId}/refund`, {
     method: "POST",
-    token: token(),
-    body: JSON.stringify({ reason }),
+    body: JSON.stringify({ reason: reason ?? "Solicitação de reembolso" }),
+  });
+}
+
+export async function cancelOrder(orderId: string) {
+  return nextJson(`/api/client/orders/${orderId}/cancel`, {
+    method: "PATCH",
+    body: JSON.stringify({}),
   });
 }

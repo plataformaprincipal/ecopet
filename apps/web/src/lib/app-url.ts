@@ -27,6 +27,12 @@ export function resolvePublicAppUrl(): string {
     process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined
   );
 
+  // Preview: preferir VERCEL_URL do deployment (cookies/sessão no host correto).
+  // Evita que NEXTAUTH_URL/APP_URL de produção quebrem o Preview.
+  if (process.env.VERCEL_ENV === "preview" && vercelPreview) {
+    return vercelPreview;
+  }
+
   const candidates = [
     trimUrl(process.env.NEXTAUTH_URL),
     trimUrl(process.env.NEXT_PUBLIC_APP_URL),

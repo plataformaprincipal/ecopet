@@ -1396,6 +1396,17 @@ model Order {
   total             Float
   shippingCost      Float            @default(0)
   discount          Float            @default(0)
+  /// Valor bruto dos itens (antes de frete/desconto) — snapshot no checkout
+  grossAmount       Float            @default(0)
+  /// Taxa estimada da plataforma (contábil; NÃO é split/repasse)
+  platformFeeAmount Float            @default(0)
+  /// Valor contábil esperado do parceiro (NÃO prova de payout)
+  partnerAmount     Float            @default(0)
+  /// Versão da regra comercial usada no momento da compra
+  pricingVersion    String           @default("v1")
+  currency          String           @default("BRL")
+  /// Idempotência de checkout (cliente/header)
+  idempotencyKey    String?          @unique
   shippingAddress   Json
   alternateAddress  Json?
   deliveryMethod    DeliveryMethod @default(DELIVERY_LOCAL)
@@ -1467,21 +1478,29 @@ model OrderStatusHistory {
 }
 
 model OrderItem {
-  id        String  @id @default(cuid())
-  orderId   String
-  productId String?
-  serviceId String?
-  quoteId   String?
-  itemType  String  @default("product")
-  name      String
-  quantity  Int
-  price     Float
-  partnerId String?
-  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product   Product? @relation(fields: [productId], references: [id])
+  id                String  @id @default(cuid())
+  orderId           String
+  productId         String?
+  serviceId         String?
+  quoteId           String?
+  itemType          String  @default("product")
+  /// Snapshot do nome no momento da compra
+  name              String
+  quantity          Int
+  /// Snapshot do preço unitário no momento da compra
+  price             Float
+  /// quantity * price (snapshot)
+  grossAmount       Float   @default(0)
+  platformFeeAmount Float   @default(0)
+  partnerAmount     Float   @default(0)
+  pricingVersion    String  @default("v1")
+  partnerId         String?
+  order             Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product           Product? @relation(fields: [productId], references: [id])
 
   @@index([orderId])
   @@index([productId])
+  @@index([partnerId])
 }
 
 model Review {
@@ -3864,6 +3883,12 @@ model PlatformSettings {
   supportEmail       String?
   contactEmail       String?
   marketplaceEnabled Boolean  @default(true)
+  /// Versão da regra comercial vigente (gravada no pedido/item no checkout)
+  pricingVersion     String   @default("v1")
+  /// Percentual contábil da plataforma (0–100). NÃO é split/repasse automático.
+  platformFeePercent Float    @default(10)
+  /// Taxa fixa contábil por pedido (BRL). NÃO é split/repasse automático.
+  platformFixedFee   Float    @default(0)
   updatedAt          DateTime @updatedAt
   updatedById        String?
 }
