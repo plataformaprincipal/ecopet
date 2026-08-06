@@ -5,6 +5,7 @@ out
 .turbo
 .vercel
 tsconfig.tsbuildinfo
+**/*.tsbuildinfo
 
 # Environment & secrets
 .env
