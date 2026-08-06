@@ -20,6 +20,7 @@
     "test:vlibras": "node --import tsx --test src/lib/accessibility/vlibras-load-outcome.test.ts",
     "test:email": "tsx --tsconfig tsconfig.json --test src/lib/email/email-enterprise.test.ts",
     "test:mercado-pago": "tsx --tsconfig tsconfig.json --test src/lib/mercado-pago/mercado-pago.test.ts src/lib/mercado-pago/webhooks/webhooks.test.ts",
+    "test:finance": "tsx --tsconfig tsconfig.json --test src/lib/finance/money.test.ts src/lib/finance/allocation.test.ts src/lib/finance/finance-auth.test.ts src/lib/commerce/pricing.test.ts",
     "test:refunds": "node --require ./scripts/stub-server-only.cjs --import tsx --test src/lib/mercado-pago/refunds.test.ts",
     "test:turnstile": "node --require ./scripts/stub-server-only.cjs --import tsx --test src/lib/turnstile/turnstile.test.ts",
     "test:firebase": "node --require ./scripts/stub-server-only.cjs --import tsx --test src/lib/firebase/firebase.test.ts",

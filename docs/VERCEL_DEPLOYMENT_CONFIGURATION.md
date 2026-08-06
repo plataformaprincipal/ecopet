@@ -1,8 +1,31 @@
 # Configuração de Deploy Vercel — EccoPet
 
-**Atualizado:** Fase 2.2 (2026-08-06)  
-**Projeto Vercel:** `ecopet-web` (team `ecopet-s-projects`)  
-**Produção atual:** `https://www.eccopet.com` (não alterar nesta fase)
+**Atualizado:** Fase 3.1 (2026-08-06)  
+**Projeto Vercel canônico:** `ecopet-web` (team `ecopet-s-projects`, `prj_s0bPVSphC7jzVfodZswqxQ3nyL4u`)  
+**Produção atual:** `https://www.eccopet.com` (não alterar nesta fase)  
+**Não usar:** projeto acidental `ecopet_github`
+
+## Configuração efetivamente inspecionada (Fase 3.1)
+
+Comando: `vercel project inspect ecopet-web` (link em `apps/web/.vercel`).
+
+| Campo | Valor observado |
+| ----- | --------------- |
+| Root Directory | `apps/web` |
+| Framework Preset | Next.js |
+| Output Directory | Next.js default (**não** `public`) |
+| Node.js Version | 24.x |
+| Install / Build (painel) | Defaults do inspect; preferir overrides de `apps/web/vercel.json` |
+| Region (vercel.json) | `gru1` |
+
+### Como deployar Preview sem path duplicado
+
+Root Directory do projeto já é `apps/web`. Portanto:
+
+- Deploy CLI a partir da **raiz do monorepo** com projeto `ecopet-web`, **ou**
+- Ajustar Root Directory para `.` se o cwd/link for `apps/web`.
+
+Evitar: `cd apps/web && vercel deploy` enquanto Root Directory = `apps/web` → erro histórico `apps/web/apps/web`.
 
 ## Opções avaliadas
 

@@ -16,6 +16,8 @@ import {
   assertSimulatedPaymentAllowed,
   isAuthorizedPaidSource,
 } from "@/lib/payments/simulated-payments";
+import { postLedgerForApprovedPayment } from "@/lib/finance/ledger";
+import { getFinancialFlags } from "@/lib/finance/flags";
 
 type PaymentMeta = {
   stockReleased?: boolean;
@@ -113,6 +115,7 @@ export async function applyInternalPaymentStatus(params: {
           orderNumber: true,
           status: true,
           total: true,
+          financialLedgerPostedAt: true,
         },
       },
     },
@@ -194,6 +197,17 @@ export async function applyInternalPaymentStatus(params: {
   }
 
   if (payment.status === params.internalStatus) {
+    // Recuperação: PAID sem ledger (falha anterior / retry)
+    if (
+      isTerminalApproved(params.internalStatus) &&
+      getFinancialFlags().FINANCIAL_LEDGER_ENABLED &&
+      !payment.order.financialLedgerPostedAt
+    ) {
+      await postLedgerForApprovedPayment({
+        paymentId: payment.id,
+        source: `${params.source}:recovery`,
+      });
+    }
     return { changed: false };
   }
 
@@ -294,6 +308,21 @@ export async function applyInternalPaymentStatus(params: {
           note: `Pagamento ${params.internalStatus} — pedido cancelado (${params.source})`,
         },
       });
+    }
+
+    // Ledger na mesma transação quando habilitado (idempotente / recuperação externa se falhar)
+    if (
+      isTerminalApproved(params.internalStatus) &&
+      getFinancialFlags().FINANCIAL_LEDGER_ENABLED
+    ) {
+      const ledger = await postLedgerForApprovedPayment({
+        paymentId: payment.id,
+        source: params.source,
+        tx,
+      });
+      if (!ledger.ok && ledger.code !== "LEDGER_DISABLED") {
+        throw new Error(`LEDGER_POST_FAILED:${ledger.code}`);
+      }
     }
   });
 

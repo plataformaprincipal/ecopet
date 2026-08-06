@@ -1,5 +1,5 @@
 /**
- * Precificação comercial mínima (Fase 2).
+ * Precificação comercial (Fase 2) + parâmetros financeiros provisórios (Fase 3).
  * Valores são contábeis/esperados — NÃO representam split ou repasse automático.
  */
 import "server-only";
@@ -16,13 +16,26 @@ import {
 export type { PricingSettings, LineInput, LinePricing, OrderPricing };
 export { calculateLinePricing, calculateOrderPricing };
 
-const DEFAULTS: PricingSettings = {
+export type FinancialPricingSettings = PricingSettings & {
+  gatewayFeePercent: number;
+  reservePercent: number;
+  taxEstimatePercent: number;
+  gatewayFeeBearer: "PARTNER" | "PLATFORM";
+  reserveHoldDays: number;
+};
+
+const DEFAULTS: FinancialPricingSettings = {
   pricingVersion: "v1",
   platformFeePercent: 10,
   platformFixedFee: 0,
+  gatewayFeePercent: 2.5,
+  reservePercent: 2,
+  taxEstimatePercent: 0,
+  gatewayFeeBearer: "PARTNER",
+  reserveHoldDays: 7,
 };
 
-export async function loadPricingSettings(): Promise<PricingSettings> {
+export async function loadPricingSettings(): Promise<FinancialPricingSettings> {
   const row = await prisma.platformSettings.findUnique({ where: { id: "singleton" } });
   if (!row) return { ...DEFAULTS };
   return {
@@ -31,6 +44,24 @@ export async function loadPricingSettings(): Promise<PricingSettings> {
       typeof row.platformFeePercent === "number" ? row.platformFeePercent : DEFAULTS.platformFeePercent,
     platformFixedFee:
       typeof row.platformFixedFee === "number" ? row.platformFixedFee : DEFAULTS.platformFixedFee,
+    gatewayFeePercent:
+      typeof (row as { gatewayFeePercent?: number }).gatewayFeePercent === "number"
+        ? (row as { gatewayFeePercent: number }).gatewayFeePercent
+        : DEFAULTS.gatewayFeePercent,
+    reservePercent:
+      typeof (row as { reservePercent?: number }).reservePercent === "number"
+        ? (row as { reservePercent: number }).reservePercent
+        : DEFAULTS.reservePercent,
+    taxEstimatePercent:
+      typeof (row as { taxEstimatePercent?: number }).taxEstimatePercent === "number"
+        ? (row as { taxEstimatePercent: number }).taxEstimatePercent
+        : DEFAULTS.taxEstimatePercent,
+    gatewayFeeBearer:
+      (row as { gatewayFeeBearer?: string }).gatewayFeeBearer === "PLATFORM" ? "PLATFORM" : "PARTNER",
+    reserveHoldDays:
+      typeof (row as { reserveHoldDays?: number }).reserveHoldDays === "number"
+        ? (row as { reserveHoldDays: number }).reserveHoldDays
+        : DEFAULTS.reserveHoldDays,
   };
 }
 

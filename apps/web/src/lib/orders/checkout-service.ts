@@ -13,6 +13,7 @@ import { emailOrderEvent } from "@/lib/mail/event-dispatch";
 import { getUserEmailLocale } from "@/lib/email/templates";
 import { getOrCreateCart } from "@/lib/cart/cart-service";
 import { calculateOrderPricing, loadPricingSettings } from "@/lib/commerce/pricing";
+import { calculateCommercialAllocation } from "@/lib/finance/allocation";
 import { writeAuditLog } from "@/lib/audit-log";
 
 const PAYMENT_AT_DELIVERY_LABEL: Record<PaymentMethod, string> = {
@@ -115,6 +116,19 @@ export async function checkoutFromCart(params: {
     );
     if (priced.grossAmount <= 0) throw new Error("INVALID_TOTAL");
 
+    const allocation = calculateCommercialAllocation({
+      grossAmount: priced.grossAmount,
+      discountAmount: 0,
+      platformPercentage: pricingSettings.platformFeePercent,
+      platformFixedFee: pricingSettings.platformFixedFee,
+      gatewayFeePercent: pricingSettings.gatewayFeePercent,
+      gatewayFeeBearer: pricingSettings.gatewayFeeBearer,
+      reservePercent: pricingSettings.reservePercent,
+      taxEstimatePercent: pricingSettings.taxEstimatePercent,
+      pricingVersion: priced.pricingVersion,
+    });
+    const snap = allocation.asOrderFloats;
+
     for (const line of lines) {
       const updated = await tx.product.updateMany({
         where: { id: line.productId, stock: { gte: line.quantity }, deletedAt: null },
@@ -147,11 +161,17 @@ export async function checkoutFromCart(params: {
         partnerId,
         status: OrderStatus.PENDING_CONFIRMATION,
         fulfillmentStatus: OrderStatus.PENDING_CONFIRMATION,
-        total: priced.grossAmount,
-        grossAmount: priced.grossAmount,
-        platformFeeAmount: priced.platformFeeAmount,
-        partnerAmount: priced.partnerAmount,
-        pricingVersion: priced.pricingVersion,
+        total: snap.grossAmount,
+        grossAmount: snap.grossAmount,
+        discount: snap.discountAmount,
+        platformFeeAmount: snap.platformFeeAmount,
+        partnerAmount: snap.partnerAmount,
+        platformPercentage: snap.platformPercentage,
+        platformFixedFee: snap.platformFixedFee,
+        gatewayFeeEstimated: snap.gatewayFeeEstimated,
+        reserveAmount: snap.reserveAmount,
+        taxEstimate: snap.taxEstimate,
+        pricingVersion: snap.pricingVersion,
         currency: "BRL",
         idempotencyKey: params.idempotencyKey || null,
         shippingAddress: { ...(params.address as Record<string, unknown>), phone: params.phone },
@@ -182,7 +202,7 @@ export async function checkoutFromCart(params: {
           create: {
             provider: "pending",
             environment: process.env.MERCADO_PAGO_ENVIRONMENT === "production" ? "production" : "test",
-            amount: priced.grossAmount,
+            amount: snap.grossAmount,
             currency: "BRL",
             status: "PENDING",
             paymentMethod: paymentMethod,
@@ -190,10 +210,14 @@ export async function checkoutFromCart(params: {
             partnerId,
             metadata: {
               source: "checkout",
-              pricingVersion: priced.pricingVersion,
-              platformFeeAmount: priced.platformFeeAmount,
-              partnerAmount: priced.partnerAmount,
+              pricingVersion: snap.pricingVersion,
+              platformFeeAmount: snap.platformFeeAmount,
+              partnerAmount: snap.partnerAmount,
+              gatewayFeeEstimated: snap.gatewayFeeEstimated,
+              reserveAmount: snap.reserveAmount,
+              taxEstimate: snap.taxEstimate,
               splitReady: false,
+              logicalSplitOnly: true,
             },
           },
         },

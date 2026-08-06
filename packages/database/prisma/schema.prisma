@@ -1402,11 +1402,25 @@ model Order {
   platformFeeAmount Float            @default(0)
   /// Valor contábil esperado do parceiro (NÃO prova de payout)
   partnerAmount     Float            @default(0)
+  /// Snapshot: percentual de comissão aplicado no checkout (0–100)
+  platformPercentage Float?
+  /// Snapshot: taxa fixa da plataforma aplicada no checkout (BRL)
+  platformFixedFee  Float            @default(0)
+  /// Snapshot: taxa estimada do gateway (BRL) — NÃO é taxa real
+  gatewayFeeEstimated Float          @default(0)
+  /// Taxa real do gateway quando conhecida (BRL)
+  gatewayFeeActual  Float?
+  /// Snapshot: reserva financeira bloqueada (BRL)
+  reserveAmount     Float            @default(0)
+  /// Snapshot: imposto estimado operacional sobre receita plataforma (BRL)
+  taxEstimate       Float            @default(0)
   /// Versão da regra comercial usada no momento da compra
   pricingVersion    String           @default("v1")
   currency          String           @default("BRL")
   /// Idempotência de checkout (cliente/header)
   idempotencyKey    String?          @unique
+  /// Quando o ledger financeiro deste pedido foi postado (idempotência)
+  financialLedgerPostedAt DateTime?
   shippingAddress   Json
   alternateAddress  Json?
   deliveryMethod    DeliveryMethod @default(DELIVERY_LOCAL)
@@ -1441,6 +1455,11 @@ model Order {
   mpClaims          MpClaim[]
   mpDisputes        MpDispute[]
   mpShipments       MpShipment[]
+  financialLedgerEntries FinancialLedgerEntry[]
+  financialReserves FinancialReserve[]
+  financialChargebacks FinancialChargeback[]
+  financialReconciliations FinancialReconciliation[]
+  partnerPayouts    PartnerPayout[]
 
   @@index([userId])
   @@index([partnerId])
@@ -2341,6 +2360,9 @@ model Payment {
   order             Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
   events            PaymentEvent[]
   paymentRefunds    PaymentRefund[]
+  financialLedgerEntries FinancialLedgerEntry[]
+  financialChargebacks FinancialChargeback[]
+  financialReconciliations FinancialReconciliation[]
 
   @@index([orderId])
   @@index([userId])
@@ -3889,6 +3911,18 @@ model PlatformSettings {
   platformFeePercent Float    @default(10)
   /// Taxa fixa contábil por pedido (BRL). NÃO é split/repasse automático.
   platformFixedFee   Float    @default(0)
+  /// % estimado da taxa do gateway sobre o bruto (provisório; NÃO é taxa real)
+  gatewayFeePercent  Float    @default(2.5)
+  /// % de reserva sobre a base do parceiro (provisório)
+  reservePercent     Float    @default(2)
+  /// % estimado de imposto sobre receita da plataforma (provisório; NÃO é obrigação fiscal)
+  taxEstimatePercent Float    @default(0)
+  /// Quem absorve a taxa do gateway no split lógico: PARTNER | PLATFORM
+  gatewayFeeBearer   String   @default("PARTNER")
+  /// Dias mínimos de bloqueio da reserva após conclusão (provisório)
+  reserveHoldDays    Int      @default(7)
+  /// Limite (BRL) acima do qual ajuste manual exige dupla aprovação (0 = desabilitado)
+  manualAdjustmentDualApprovalLimit Float @default(500)
   updatedAt          DateTime @updatedAt
   updatedById        String?
 }
@@ -4876,4 +4910,282 @@ model AnalyticsTransactionalDedup {
   @@index([eventName, firstProcessedAt])
   @@index([expiresAt])
   @@index([entityType, entityReferenceHash])
+}
+
+// ─── Fase 3 — Ledger financeiro, contas, reservas, repasses, conciliação ───
+
+/// Contas do ledger Fase 3 (não confundir com FinancialAccount do Gestor interno).
+enum LedgerAccountType {
+  PLATFORM_REVENUE
+  PLATFORM_RECEIVABLE
+  PARTNER_PAYABLE
+  GATEWAY_FEES
+  RESERVE
+  REFUNDS
+  CHARGEBACKS
+  TAX_ESTIMATE
+}
+
+enum FinancialLedgerEntryType {
+  PAYMENT_RECEIVED
+  PLATFORM_COMMISSION
+  PLATFORM_FIXED_FEE
+  GATEWAY_FEE_ESTIMATED
+  GATEWAY_FEE_ACTUAL
+  GATEWAY_FEE_ADJUSTMENT
+  PARTNER_PAYABLE
+  RESERVE_HOLD
+  RESERVE_RELEASE
+  RESERVE_CONSUMPTION
+  REFUND
+  REVERSAL_PLATFORM_COMMISSION
+  REVERSAL_PLATFORM_FIXED_FEE
+  REVERSAL_PARTNER_PAYABLE
+  CHARGEBACK
+  PAYOUT
+  PAYOUT_REVERSAL
+  ADJUSTMENT
+  TAX_ESTIMATE
+}
+
+enum FinancialLedgerDirection {
+  DEBIT
+  CREDIT
+}
+
+enum FinancialLedgerStatus {
+  PENDING
+  POSTED
+  BLOCKED
+  AVAILABLE
+  SETTLED
+  REVERSED
+  CANCELLED
+}
+
+enum FinancialReserveStatus {
+  HELD
+  RELEASED
+  CONSUMED
+  CANCELLED
+}
+
+enum PartnerPayoutStatus {
+  PENDING
+  APPROVED
+  PROCESSING
+  PAID
+  FAILED
+  CANCELLED
+  REVERSED
+}
+
+enum FinancialChargebackStatus {
+  OPEN
+  UNDER_REVIEW
+  WON
+  LOST
+  CANCELLED
+}
+
+enum FinancialReconciliationStatus {
+  RECONCILED
+  VALUE_MISMATCH
+  STATUS_MISMATCH
+  MISSING_LEDGER
+  MISSING_EXTERNAL_PAYMENT
+  DUPLICATE_EVENT
+  REFUND_MISMATCH
+  MANUAL_REVIEW
+}
+
+/// Conta lógica do ledger (plataforma ou por parceiro).
+model LedgerAccount {
+  id          String            @id @default(cuid())
+  type        LedgerAccountType
+  /// null = conta da plataforma; preenchido = conta do parceiro
+  partnerId   String?
+  /// Chave estável de unicidade: "platform" ou partnerId (evita NULL em unique PG)
+  ownerKey    String
+  currency    String            @default("BRL")
+  name        String
+  isActive    Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  entries     FinancialLedgerEntry[]
+
+  @@unique([type, ownerKey, currency])
+  @@index([partnerId, type])
+  @@index([ownerKey, type])
+}
+
+/// Lançamento imutável do ledger (correções = novos lançamentos).
+model FinancialLedgerEntry {
+  id                 String                    @id @default(cuid())
+  accountId          String
+  orderId            String?
+  paymentId          String?
+  partnerId          String?
+  payoutId           String?
+  chargebackId       String?
+  entryType          FinancialLedgerEntryType
+  direction          FinancialLedgerDirection
+  /// Valor em centavos (inteiro) — nunca Float para operações críticas
+  amountCents        Int
+  currency           String                    @default("BRL")
+  status             FinancialLedgerStatus     @default(POSTED)
+  externalReference  String?
+  idempotencyKey     String                    @unique
+  description        String?
+  metadata           Json?
+  occurredAt         DateTime                  @default(now())
+  availableAt        DateTime?
+  createdAt          DateTime                  @default(now())
+
+  account            LedgerAccount             @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  order              Order?                    @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  payment            Payment?                  @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+  payout             PartnerPayout?            @relation(fields: [payoutId], references: [id], onDelete: SetNull)
+  chargeback         FinancialChargeback?      @relation(fields: [chargebackId], references: [id], onDelete: SetNull)
+
+  @@index([accountId, createdAt])
+  @@index([orderId])
+  @@index([paymentId])
+  @@index([partnerId, status, entryType])
+  @@index([payoutId])
+  @@index([status, availableAt])
+}
+
+model FinancialReserve {
+  id            String                 @id @default(cuid())
+  orderId       String
+  partnerId     String
+  paymentId     String?
+  amountCents   Int
+  currency      String                 @default("BRL")
+  reserveReason String
+  status        FinancialReserveStatus @default(HELD)
+  availableAt   DateTime?
+  releasedAt    DateTime?
+  consumedAt    DateTime?
+  idempotencyKey String                @unique
+  metadata      Json?
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+  order         Order                  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([partnerId, status])
+  @@index([orderId])
+  @@index([status, availableAt])
+}
+
+/// Repasse sandbox/administrativo — NÃO é transferência bancária real.
+model PartnerPayout {
+  id                 String              @id @default(cuid())
+  partnerId          String
+  orderId            String?
+  amountCents        Int
+  currency           String              @default("BRL")
+  status             PartnerPayoutStatus @default(PENDING)
+  requestedAt        DateTime            @default(now())
+  approvedAt         DateTime?
+  processedAt        DateTime?
+  paidAt             DateTime?
+  failedAt           DateTime?
+  cancelledAt        DateTime?
+  externalReference  String?
+  idempotencyKey     String              @unique
+  failureReason      String?
+  approvedById       String?
+  requestedById      String?
+  paidById           String?
+  metadata           Json?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  order              Order?              @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  entries            FinancialLedgerEntry[]
+
+  @@index([partnerId, status])
+  @@index([status, requestedAt])
+}
+
+model FinancialChargeback {
+  id                 String                    @id @default(cuid())
+  paymentId          String
+  orderId            String
+  partnerId          String?
+  amountCents        Int
+  currency           String                    @default("BRL")
+  reason             String?
+  externalReference  String?
+  status             FinancialChargebackStatus @default(OPEN)
+  openedAt           DateTime                  @default(now())
+  resolvedAt         DateTime?
+  resolution         String?
+  idempotencyKey     String                    @unique
+  metadata           Json?
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
+  payment            Payment                   @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  order              Order                     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  entries            FinancialLedgerEntry[]
+
+  @@index([paymentId])
+  @@index([orderId])
+  @@index([partnerId, status])
+  @@index([status, openedAt])
+}
+
+model FinancialReconciliation {
+  id                 String                         @id @default(cuid())
+  paymentId          String?
+  orderId            String?
+  runId              String?
+  status             FinancialReconciliationStatus
+  expectedAmountCents Int?
+  receivedAmountCents Int?
+  summary            String?
+  details            Json?
+  idempotencyKey     String                         @unique
+  createdAt          DateTime                       @default(now())
+  updatedAt          DateTime                       @updatedAt
+  payment            Payment?                       @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+  order              Order?                         @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([paymentId, createdAt])
+  @@index([runId])
+  @@index([status, createdAt])
+}
+
+model FinancialManualAdjustment {
+  id                 String                   @id @default(cuid())
+  partnerId          String?
+  accountId          String?
+  amountCents        Int
+  direction          FinancialLedgerDirection
+  reason             String
+  evidence           String?
+  actorId            String
+  approverId         String?
+  approvalStatus     String                   @default("APPROVED")
+  idempotencyKey     String                   @unique
+  ledgerEntryId      String?
+  metadata           Json?
+  createdAt          DateTime                 @default(now())
+
+  @@index([partnerId, createdAt])
+  @@index([actorId, createdAt])
+}
+
+model FinancialReconciliationRun {
+  id           String   @id @default(cuid())
+  startedAt    DateTime @default(now())
+  finishedAt   DateTime?
+  status       String   @default("RUNNING")
+  paymentsChecked Int   @default(0)
+  divergences  Int      @default(0)
+  triggeredBy  String?
+  idempotencyKey String @unique
+  report       Json?
+  createdAt    DateTime @default(now())
 }

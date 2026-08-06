@@ -263,6 +263,18 @@ export async function executePaymentRefund(input: ExecuteRefundInput): Promise<{
     }).catch(() => undefined);
 
     try {
+      const { postLedgerForRefund } = await import("@/lib/finance/refund-ledger");
+      await postLedgerForRefund({
+        paymentId: payment.id,
+        refundAmount: amount,
+        paymentRefundId: refundRow.id,
+        fullRefund: fullyRefunded,
+      });
+    } catch {
+      /* auditado dentro de postLedgerForRefund; não reverte estorno gateway */
+    }
+
+    try {
       await createInternalNotification({
         userId: payment.order.userId,
         title: isFull ? "Estorno concluído" : "Estorno parcial processado",
