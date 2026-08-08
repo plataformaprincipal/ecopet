@@ -19,7 +19,8 @@ import {
 } from "@/schemas/partner-register";
 import { validateStrongPassword, PASSWORD_MISMATCH_MESSAGE } from "@/lib/password/validate-strong-password";
 import { apiSuccess, apiFailure } from "@/lib/api-response";
-import { checkDistributedRateLimit, clientIp } from "@/lib/rate-limit";
+import { shouldSkipAuthRateLimitForE2e } from "@/lib/e2e-preview-auth";
+import { checkDistributedRateLimit, clientIpForRateLimit } from "@/lib/rate-limit";
 import { requireTurnstile, registerActionForRole } from "@/lib/turnstile/server";
 import { emailRegisterCompleted } from "@/lib/mail/event-dispatch";
 import { localeFromAcceptLanguage } from "@/lib/email/templates";
@@ -278,8 +279,11 @@ async function createOngUser(data: OngRegisterInput) {
 
 export async function POST(request: Request) {
   try {
-    const ip = clientIp(request);
-    if (!(await checkDistributedRateLimit(`register:${ip}`, 10, 60 * 60 * 1000))) {
+    const ip = clientIpForRateLimit(request);
+    if (
+      !shouldSkipAuthRateLimitForE2e(request) &&
+      !(await checkDistributedRateLimit(`register:${ip}`, 10, 60 * 60 * 1000))
+    ) {
       return apiFailure("RATE_LIMITED", "Muitas tentativas de cadastro. Tente novamente mais tarde.", 429);
     }
 

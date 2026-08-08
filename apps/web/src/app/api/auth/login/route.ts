@@ -12,7 +12,8 @@ import { findUserByLoginIdentifier } from "@/lib/auth/login-identifier";
 import { dashboardPathForRole } from "@/lib/auth/dashboard";
 import { loginSchema } from "@/schemas/auth";
 import { apiSuccess, apiFailure } from "@/lib/api-response";
-import { checkDistributedRateLimit, clientIp } from "@/lib/rate-limit";
+import { shouldSkipAuthRateLimitForE2e } from "@/lib/e2e-preview-auth";
+import { checkDistributedRateLimit, clientIpForRateLimit } from "@/lib/rate-limit";
 import { isInstitutionalCatalogUser } from "@/lib/catalog/constants";
 import {
   LOGIN_ACCOUNT_INACTIVE_MESSAGE,
@@ -32,8 +33,12 @@ const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 
 async function loginHandler(request: Request) {
   try {
-    const ip = clientIp(request);
-    if (!(await checkDistributedRateLimit(`login:${ip}`, LOGIN_LIMIT, LOGIN_WINDOW_MS))) {
+    const ip = clientIpForRateLimit(request);
+    const skipRl = shouldSkipAuthRateLimitForE2e(request);
+    if (
+      !skipRl &&
+      !(await checkDistributedRateLimit(`login:${ip}`, LOGIN_LIMIT, LOGIN_WINDOW_MS))
+    ) {
       trackMetric(MetricNames.RATE_LIMIT_HITS, 1, { module: "auth", route: "login" });
       captureSecurityEvent("rate_limit", { route: "login" });
       return apiFailure("RATE_LIMIT", "Muitas tentativas. Aguarde alguns minutos.", 429);
@@ -51,6 +56,7 @@ async function loginHandler(request: Request) {
     const userAgent = request.headers.get("user-agent") ?? undefined;
 
     if (
+      !skipRl &&
       !(await checkDistributedRateLimit(
         `login:id:${identifier.toLowerCase()}`,
         LOGIN_LIMIT,

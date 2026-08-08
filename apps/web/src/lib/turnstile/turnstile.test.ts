@@ -25,6 +25,32 @@ import {
 import { mapCloudflareErrorCodes, turnstilePublicMessage } from "./errors";
 import { turnstileTokenSchema } from "./schemas";
 
+describe("cloudflare official test keys gate", () => {
+  const prev = { ...process.env };
+
+  afterEach(() => {
+    process.env = { ...prev };
+  });
+
+  it("flag ausente → fail closed (não usa secret de teste)", async () => {
+    const { isCloudflareTurnstileTestKeysAllowed, resolveTurnstileSiteverifySecret } =
+      await import("./cloudflare-test-keys");
+    process.env.VERCEL_ENV = "preview";
+    delete process.env.TURNSTILE_ALLOW_CLOUDFLARE_TEST_KEYS;
+    assert.equal(isCloudflareTurnstileTestKeysAllowed(), false);
+    const r = resolveTurnstileSiteverifySecret("XXXX.DUMMY.TOKEN.XXXX", "real-secret");
+    assert.equal(r.usingOfficialTestSecret, false);
+    assert.equal(r.secret, "real-secret");
+  });
+
+  it("Production nunca permite test keys mesmo com flag", async () => {
+    const { isCloudflareTurnstileTestKeysAllowed } = await import("./cloudflare-test-keys");
+    process.env.VERCEL_ENV = "production";
+    process.env.TURNSTILE_ALLOW_CLOUDFLARE_TEST_KEYS = "true";
+    assert.equal(isCloudflareTurnstileTestKeysAllowed(), false);
+  });
+});
+
 describe("turnstile config", () => {
   const prev = { ...process.env };
 
@@ -281,6 +307,125 @@ describe("turnstile verify (fetch mock)", () => {
     });
     assert.equal(result.success, false);
     assert.equal(result.code, "BYPASS_FORBIDDEN");
+  });
+
+  it("Production sem token → TOKEN_MISSING", async () => {
+    const { verifyTurnstileToken } = await import("./verify");
+    const result = await verifyTurnstileToken({
+      token: null,
+      expectedAction: TURNSTILE_ACTIONS.REGISTER_CLIENT,
+    });
+    assert.equal(result.success, false);
+    assert.equal(result.code, "TOKEN_MISSING");
+  });
+
+  it("Production com token inválido (Cloudflare reject) → falha", async () => {
+    fetchMock = mock.method(globalThis, "fetch", async () =>
+      new Response(
+        JSON.stringify({ success: false, "error-codes": ["invalid-input-response"] }),
+        { status: 200 }
+      )
+    );
+    const { verifyTurnstileToken } = await import("./verify");
+    const result = await verifyTurnstileToken({
+      token: `INVPROD${Date.now()}ABCDEFGHIJKLMNOPQRST`,
+      expectedAction: TURNSTILE_ACTIONS.REGISTER_CLIENT,
+    });
+    assert.equal(result.success, false);
+    assert.equal(result.code, "TOKEN_INVALID");
+  });
+
+  it("Preview normal sem token → TOKEN_MISSING", async () => {
+    process.env.VERCEL_ENV = "preview";
+    delete process.env.TURNSTILE_ALLOW_CLOUDFLARE_TEST_KEYS;
+    const { verifyTurnstileToken } = await import("./verify");
+    const result = await verifyTurnstileToken({
+      token: "",
+      expectedAction: TURNSTILE_ACTIONS.REGISTER_CLIENT,
+    });
+    assert.equal(result.success, false);
+    assert.equal(result.code, "TOKEN_MISSING");
+  });
+
+  it("Preview E2E sem flag de teste → dummy rejeitado pelo secret real", async () => {
+    process.env.VERCEL_ENV = "preview";
+    delete process.env.TURNSTILE_ALLOW_CLOUDFLARE_TEST_KEYS;
+    fetchMock = mock.method(
+      globalThis,
+      "fetch",
+      async (_url: string | URL | Request, init?: RequestInit) => {
+        const body = String(init?.body || "");
+        assert.ok(body.includes(process.env.TURNSTILE_SECRET_KEY!));
+        return new Response(
+          JSON.stringify({ success: false, "error-codes": ["invalid-input-response"] }),
+          { status: 200 }
+        );
+      }
+    );
+    const { verifyTurnstileToken } = await import("./verify");
+    const { CLOUDFLARE_TURNSTILE_DUMMY_TOKEN } = await import("./cloudflare-test-keys");
+    const result = await verifyTurnstileToken({
+      token: CLOUDFLARE_TURNSTILE_DUMMY_TOKEN,
+      expectedAction: TURNSTILE_ACTIONS.REGISTER_CLIENT,
+    });
+    assert.equal(result.success, false);
+    assert.equal(result.code, "TOKEN_INVALID");
+  });
+
+  it("Preview E2E autorizado → dummy oficial passa (siteverify mock)", async () => {
+    process.env.VERCEL_ENV = "preview";
+    process.env.TURNSTILE_ALLOW_CLOUDFLARE_TEST_KEYS = "true";
+    const { CLOUDFLARE_TURNSTILE_DUMMY_TOKEN, CLOUDFLARE_TURNSTILE_TEST_SECRET_ALWAYS_PASS } =
+      await import("./cloudflare-test-keys");
+    fetchMock = mock.method(
+      globalThis,
+      "fetch",
+      async (_url: string | URL | Request, init?: RequestInit) => {
+        const body = String(init?.body || "");
+        assert.ok(body.includes(CLOUDFLARE_TURNSTILE_TEST_SECRET_ALWAYS_PASS));
+        assert.ok(!body.includes(process.env.TURNSTILE_SECRET_KEY!));
+        return new Response(
+          JSON.stringify({
+            success: true,
+            hostname: "example.com",
+            challenge_ts: new Date().toISOString(),
+          }),
+          { status: 200 }
+        );
+      }
+    );
+    const { verifyTurnstileToken } = await import("./verify");
+    const result = await verifyTurnstileToken({
+      token: CLOUDFLARE_TURNSTILE_DUMMY_TOKEN,
+      expectedAction: TURNSTILE_ACTIONS.REGISTER_CLIENT,
+    });
+    assert.equal(result.success, true);
+    assert.equal(result.code, "OK");
+  });
+
+  it("bypass/test keys impossível em Production (flag ignorada para dummy)", async () => {
+    process.env.VERCEL_ENV = "production";
+    process.env.TURNSTILE_ALLOW_CLOUDFLARE_TEST_KEYS = "true";
+    const { CLOUDFLARE_TURNSTILE_DUMMY_TOKEN } = await import("./cloudflare-test-keys");
+    fetchMock = mock.method(
+      globalThis,
+      "fetch",
+      async (_url: string | URL | Request, init?: RequestInit) => {
+        const body = String(init?.body || "");
+        // Production deve usar secret real, não o de teste Cloudflare.
+        assert.ok(body.includes(process.env.TURNSTILE_SECRET_KEY!));
+        return new Response(
+          JSON.stringify({ success: false, "error-codes": ["invalid-input-response"] }),
+          { status: 200 }
+        );
+      }
+    );
+    const { verifyTurnstileToken } = await import("./verify");
+    const result = await verifyTurnstileToken({
+      token: CLOUDFLARE_TURNSTILE_DUMMY_TOKEN,
+      expectedAction: TURNSTILE_ACTIONS.REGISTER_CLIENT,
+    });
+    assert.equal(result.success, false);
   });
 
   it("body siteverify nunca vazado no resultado", async () => {

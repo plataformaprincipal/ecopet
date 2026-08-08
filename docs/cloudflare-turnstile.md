@@ -26,8 +26,16 @@ apps/web/src/hooks/use-turnstile.ts
 | `TURNSTILE_TIMEOUT_MS` | default `5000` |
 | `TURNSTILE_PREVIEW_HOSTNAMES` | CSV opcional para previews |
 | `TURNSTILE_DEV_BYPASS` | **somente development** |
+| `TURNSTILE_ALLOW_CLOUDFLARE_TEST_KEYS` | **somente Preview/Development** — permite dummy token oficial Cloudflare (`XXXX.DUMMY.TOKEN.XXXX`) validado via siteverify real com secret de teste público. **Proibido em Production.** |
 
 Nunca versionar valores reais. Nunca logar a Secret Key.
+
+### E2E Preview (chaves oficiais Cloudflare)
+
+1. No Vercel Preview: `TURNSTILE_ALLOW_CLOUDFLARE_TEST_KEYS=true` (não criar em Production).
+2. Runner E2E envia `turnstileToken: XXXX.DUMMY.TOKEN.XXXX`.
+3. Servidor chama siteverify de verdade com o secret de teste público Cloudflare (não o secret de Production).
+4. Production continua exigindo token real; dummy + flag são fail-closed.
 
 ## Widget
 

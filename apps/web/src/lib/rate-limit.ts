@@ -1,3 +1,4 @@
+import { isAuthorizedE2ePreviewRequest } from "@/lib/e2e-preview-auth";
 import { prisma } from "@/lib/prisma";
 
 type Bucket = { count: number; resetAt: number };
@@ -157,4 +158,21 @@ export function clientIp(request: Request): string {
 
   const real = normalizeIp(headers.get("x-real-ip"));
   return real ?? "unknown";
+}
+
+/**
+ * IP usado para rate-limit de auth.
+ * Preview E2E autorizado: preferir x-forwarded-for injetado pelo runner
+ * (IPs sintéticos rotativos), senão o edge IP único da Vercel esgota o bucket.
+ * Production / Preview normal: mesmo comportamento de clientIp (edge IP).
+ */
+export function clientIpForRateLimit(request: Request): string {
+  if (isAuthorizedE2ePreviewRequest(request)) {
+    const forwarded = request.headers.get("x-forwarded-for");
+    if (forwarded) {
+      const first = normalizeIp(forwarded.split(",")[0]);
+      if (first) return first;
+    }
+  }
+  return clientIp(request);
 }

@@ -13,6 +13,9 @@ import {
   UserRole,
 } from "@prisma/client";
 import { generateValidCnpj } from "./cnpj-test-utils.mjs";
+import { fetchWithVercelBypass } from "./http-with-vercel-bypass.mjs";
+
+const TURNSTILE_DUMMY_TOKEN = "XXXX.DUMMY.TOKEN.XXXX";
 
 const require = createRequire(import.meta.url);
 require("../apps/web/scripts/stub-server-only.cjs");
@@ -56,7 +59,7 @@ async function req(path, opts = {}) {
     ...(opts.headers || {}),
   };
   if (jar.get("c") && !opts.noCookie) headers.Cookie = jar.get("c");
-  const res = await fetch(`${WEB}${path}`, { ...opts, headers });
+  const res = await fetchWithVercelBypass(`${WEB}${path}`, { ...opts, headers });
   const sc = res.headers.get("set-cookie");
   const setCookies =
     typeof res.headers.getSetCookie === "function" ? res.headers.getSetCookie() : sc ? [sc] : [];
@@ -72,7 +75,11 @@ async function login(email) {
   jar.clear();
   const res = await req("/api/auth/login", {
     method: "POST",
-    body: JSON.stringify({ email, password: pwd }),
+    body: JSON.stringify({
+      email,
+      password: pwd,
+      turnstileToken: TURNSTILE_DUMMY_TOKEN,
+    }),
   });
   assert(res.status === 200, `login ${email} → ${res.status}`);
   return res;
@@ -130,7 +137,7 @@ async function main() {
   console.log("=== Fase 3 financial E2E ===");
   console.log(`WEB_URL=${WEB}\n`);
 
-  const health = await fetch(`${WEB}/api/health`).catch(() => null);
+  const health = await fetchWithVercelBypass(`${WEB}/api/health`).catch(() => null);
   if (!health?.ok) {
     log("server_available", false, { message: "WEB_URL indisponível" });
     printSummary();
@@ -157,6 +164,7 @@ async function main() {
         gender: "MASCULINO",
         acceptTerms: true,
         acceptPrivacy: true,
+        turnstileToken: TURNSTILE_DUMMY_TOKEN,
       }),
     });
     assert(reg.status === 201, `client reg ${reg.status}`);
@@ -184,6 +192,7 @@ async function main() {
         state: "SP",
         acceptTerms: true,
         acceptPrivacy: true,
+        turnstileToken: TURNSTILE_DUMMY_TOKEN,
       }),
     });
     assert(reg.status === 201, `partner reg ${reg.status}`);
@@ -473,6 +482,7 @@ async function main() {
         state: "SP",
         acceptTerms: true,
         acceptPrivacy: true,
+        turnstileToken: TURNSTILE_DUMMY_TOKEN,
       }),
     });
     const partnerB = await prisma.user.findUnique({ where: { email: partnerBEmail } });

@@ -5,6 +5,11 @@ import type { NextResponse } from "next/server";
 import { clientIp } from "@/lib/rate-limit";
 import { TURNSTILE_SITEVERIFY_URL } from "./constants";
 import {
+  CLOUDFLARE_TURNSTILE_DUMMY_HOSTNAME,
+  isCloudflareTurnstileDummyToken,
+  resolveTurnstileSiteverifySecret,
+} from "./cloudflare-test-keys";
+import {
   getTurnstileServerConfig,
   isTurnstileConfigured,
   isTurnstileServerEnabled,
@@ -57,6 +62,9 @@ function logMetric(
  * - Produção sem configuração → fail-open de deploy (não bloqueia; documentado).
  * - TURNSTILE_ENABLED=false → skip explícito (todos ambientes).
  * - TURNSTILE_DEV_BYPASS=1 → somente development; proibido em production.
+ * - TURNSTILE_ALLOW_CLOUDFLARE_TEST_KEYS=true → Preview/dev: dummy token oficial
+ *   validado via siteverify real com secret de teste público Cloudflare
+ *   (nunca em Production).
  */
 export async function verifyTurnstileToken(
   input: TurnstileVerifyInput
@@ -102,12 +110,19 @@ export async function verifyTurnstileToken(
     return result;
   }
 
+  const { secret, usingOfficialTestSecret } = resolveTurnstileSiteverifySecret(
+    rawToken,
+    config.secretKey
+  );
+  const officialDummyPath =
+    usingOfficialTestSecret && isCloudflareTurnstileDummyToken(rawToken);
+
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), config.timeoutMs);
 
   try {
     const body = new URLSearchParams();
-    body.set("secret", config.secretKey);
+    body.set("secret", secret);
     body.set("response", rawToken);
     if (input.remoteIp && input.remoteIp !== "unknown") {
       body.set("remoteip", input.remoteIp);
@@ -146,18 +161,23 @@ export async function verifyTurnstileToken(
       return result;
     }
 
+    // Dummy oficial Cloudflare não ecoa `action` no siteverify.
     if (data.action !== input.expectedAction) {
-      // Exige action explícita e correspondente (widget deve enviar action).
-      const result = fail("ACTION_MISMATCH", {
-        action: data.action,
-        hostname: data.hostname,
-      });
-      logMetric(input, result);
-      return result;
+      if (!(officialDummyPath && (data.action === undefined || data.action === ""))) {
+        const result = fail("ACTION_MISMATCH", {
+          action: data.action,
+          hostname: data.hostname,
+        });
+        logMetric(input, result);
+        return result;
+      }
     }
 
     const hostname = data.hostname?.toLowerCase();
-    if (!isHostnameAllowed(hostname, config.allowedHostnames)) {
+    const hostnameOk =
+      isHostnameAllowed(hostname, config.allowedHostnames) ||
+      (officialDummyPath && hostname === CLOUDFLARE_TURNSTILE_DUMMY_HOSTNAME);
+    if (!hostnameOk) {
       const result = fail("HOSTNAME_MISMATCH", {
         action: data.action,
         hostname: data.hostname,
@@ -182,22 +202,26 @@ export async function verifyTurnstileToken(
       }
     }
 
-    const claim = await claimTurnstileTokenHash(rawToken, input.expectedAction);
-    if (!claim.claimed) {
-      const result = fail("TOKEN_REUSED", {
-        action: data.action,
-        hostname: data.hostname,
-      });
-      logMetric(input, result);
-      return result;
+    // Dummy token é constante — anti-replay por hash bloquearia o E2E.
+    if (!officialDummyPath) {
+      const claim = await claimTurnstileTokenHash(rawToken, input.expectedAction);
+      if (!claim.claimed) {
+        const result = fail("TOKEN_REUSED", {
+          action: data.action,
+          hostname: data.hostname,
+        });
+        logMetric(input, result);
+        return result;
+      }
     }
 
     const result: TurnstileVerifyResult = {
       success: true,
       code: "OK",
-      action: data.action,
+      action: data.action || input.expectedAction,
       hostname: data.hostname,
       challengeTimestamp: data.challenge_ts ? new Date(data.challenge_ts) : undefined,
+      sanitizedMessage: officialDummyPath ? "cloudflare_official_test_dummy" : undefined,
     };
     logMetric(input, result, null);
     return result;

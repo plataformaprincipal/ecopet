@@ -14,6 +14,10 @@
 import { PrismaClient, OrderStatus, VerificationStatus, AccountStatus } from "@prisma/client";
 import { generateValidCnpj } from "./cnpj-test-utils.mjs";
 import { createHmac } from "crypto";
+import { fetchWithVercelBypass } from "./http-with-vercel-bypass.mjs";
+
+/** Token dummy oficial Cloudflare Turnstile (test keys). */
+const TURNSTILE_DUMMY_TOKEN = "XXXX.DUMMY.TOKEN.XXXX";
 
 const WEB = process.env.WEB_URL || "http://localhost:3000";
 const EXPRESS = process.env.EXPRESS_URL || "http://localhost:4000";
@@ -62,7 +66,7 @@ async function req(path, opts = {}) {
   };
   if (jar.get("c") && !opts.noCookie) headers.Cookie = jar.get("c");
   const t0 = Date.now();
-  const res = await fetch(`${WEB}${path}`, { ...opts, headers });
+  const res = await fetchWithVercelBypass(`${WEB}${path}`, { ...opts, headers });
   const sc = res.headers.get("set-cookie");
   const setCookies =
     typeof res.headers.getSetCookie === "function" ? res.headers.getSetCookie() : sc ? [sc] : [];
@@ -78,7 +82,11 @@ async function login(email) {
   jar.clear();
   const res = await req("/api/auth/login", {
     method: "POST",
-    body: JSON.stringify({ email, password: pwd }),
+    body: JSON.stringify({
+      email,
+      password: pwd,
+      turnstileToken: TURNSTILE_DUMMY_TOKEN,
+    }),
   });
   assert(res.status === 200, `login ${email} → ${res.status} ${JSON.stringify(res.data?.error ?? res.data)}`);
   return res;
@@ -101,6 +109,7 @@ async function registerClient(email, suffix) {
       gender: "MASCULINO",
       acceptTerms: true,
       acceptPrivacy: true,
+      turnstileToken: TURNSTILE_DUMMY_TOKEN,
     }),
   });
 }
@@ -125,6 +134,7 @@ async function registerPartner(email, suffix) {
       state: "SP",
       acceptTerms: true,
       acceptPrivacy: true,
+      turnstileToken: TURNSTILE_DUMMY_TOKEN,
     }),
   });
 }
@@ -190,7 +200,7 @@ async function main() {
 
   // health
   {
-    const h = await fetch(`${WEB}/api/health`).catch(() => null);
+    const h = await fetchWithVercelBypass(`${WEB}/api/health`).catch(() => null);
     if (!h || !h.ok) {
       log("server_available", false, { message: "WEB_URL indisponível" });
       process.exitCode = 2;
@@ -606,11 +616,12 @@ async function main() {
         });
       }
     } catch (e) {
+      // Express é opcional no E2E Preview (Next-only). Indisponível ≠ falha.
       log(
         "neg_express_legacy",
-        false,
-        { message: `EXPRESS_URL indisponível: ${e.message}`, skipped: false },
-        true
+        true,
+        { message: `EXPRESS_URL indisponível: ${e.message}`, skipped: true },
+        false
       );
       // Soft: also assert Next commercial path works without Express
       const proxy = await req("/api/ecopet/cart", { method: "GET" });

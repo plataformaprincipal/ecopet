@@ -851,6 +851,17 @@ export const ENV_REGISTRY: EnvVarDefinition[] = [
     secret: false,
   },
   {
+    name: "TURNSTILE_ALLOW_CLOUDFLARE_TEST_KEYS",
+    tier: "optional",
+    scopes: ["web"],
+    environments: ["Preview", "Development"],
+    purpose:
+      "Preview/dev: permite dummy token oficial Cloudflare (XXXX.DUMMY.TOKEN.XXXX) via siteverify de teste. Nunca em Production.",
+    usedIn: ["apps/web/src/lib/turnstile/cloudflare-test-keys.ts", "apps/web/src/lib/turnstile/verify.ts"],
+    example: "true",
+    secret: false,
+  },
+  {
     name: "PAGARME_API_KEY",
     tier: "optional",
     scopes: ["web"],
@@ -1496,6 +1507,31 @@ export const ENV_REGISTRY: EnvVarDefinition[] = [
     purpose: "Desativa cookie Secure (debug local HTTP)",
     usedIn: ["apps/web/src/lib/auth-session.ts"],
     example: "1",
+  },
+  {
+    name: "E2E_TEST_MODE",
+    tier: "optional",
+    scopes: ["web", "scripts"],
+    environments: ["Preview"],
+    purpose:
+      "Preview-only: habilita gate E2E (junto com E2E_TEST_SECRET + header x-ecopet-e2e-test). Nunca em Production.",
+    usedIn: ["apps/web/src/lib/e2e-preview-auth.ts", "apps/web/src/lib/rate-limit.ts"],
+    example: "true",
+    secret: false,
+  },
+  {
+    name: "E2E_TEST_SECRET",
+    tier: "optional",
+    scopes: ["web", "scripts"],
+    environments: ["Preview"],
+    purpose:
+      "Secret Preview-only para header x-ecopet-e2e-test (rate-limit E2E). Separado do Vercel Protection bypass.",
+    usedIn: [
+      "apps/web/src/lib/e2e-preview-auth.ts",
+      "scripts/http-with-vercel-bypass.mjs",
+    ],
+    example: "(gerado; não reutilizar VERCEL_AUTOMATION_BYPASS_SECRET)",
+    secret: true,
   },
   {
     name: "AUTH_RATE_LIMIT_RELAXED",

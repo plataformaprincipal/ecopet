@@ -4,6 +4,7 @@ import {
   isEmailConfigured,
   isResendConfigured,
 } from "@/lib/integrations/env-check";
+import { usesOfficialCloudflareTestCredentials } from "@/lib/turnstile/cloudflare-test-keys";
 
 export type ProductionEnvReport = {
   critical: string[];
@@ -80,6 +81,26 @@ export function auditProductionEnv(env: NodeJS.ProcessEnv = process.env): Produc
     }
   }
 
+  // Preview Vercel tem NODE_ENV=production; a flag de teste Cloudflare é Preview-only.
+  const allowCfTest =
+    env.TURNSTILE_ALLOW_CLOUDFLARE_TEST_KEYS === "1" ||
+    env.TURNSTILE_ALLOW_CLOUDFLARE_TEST_KEYS?.toLowerCase() === "true";
+  if (allowCfTest && env.VERCEL_ENV === "production") {
+    critical.push("TURNSTILE_ALLOW_CLOUDFLARE_TEST_KEYS não permitido em Production");
+  }
+
+  // E2E Preview auth (rate-limit IP sintético) — nunca em Production.
+  const e2eMode =
+    env.E2E_TEST_MODE === "1" || env.E2E_TEST_MODE?.toLowerCase() === "true";
+  if (env.VERCEL_ENV === "production") {
+    if (e2eMode) {
+      critical.push("E2E_TEST_MODE não permitido em Production");
+    }
+    if (env.E2E_TEST_SECRET?.trim()) {
+      critical.push("E2E_TEST_SECRET não permitido em Production");
+    }
+  }
+
   if (env.MERCADO_PAGO_ACCESS_TOKEN?.trim() && !env.MERCADO_PAGO_WEBHOOK_SECRET?.trim()) {
     critical.push("MERCADO_PAGO_WEBHOOK_SECRET (obrigatório quando access token está configurado)");
   }
@@ -93,6 +114,15 @@ export function auditProductionEnv(env: NodeJS.ProcessEnv = process.env): Produc
         "TURNSTILE_SITE_KEY + TURNSTILE_SECRET_KEY — formulários públicos falham abertos sem Turnstile"
       );
     }
+  }
+
+  if (
+    (env.VERCEL_ENV === "production" || (env.NODE_ENV === "production" && env.VERCEL_ENV !== "preview")) &&
+    usesOfficialCloudflareTestCredentials(env)
+  ) {
+    critical.push(
+      "TURNSTILE site/secret oficiais de teste Cloudflare não permitidos em Production"
+    );
   }
 
   return { critical, recommended, warnings };
