@@ -36,16 +36,39 @@ function sanitizeMessage(raw: string): string {
 }
 
 function mapHttpError(status: number, body: MpApiErrorBody | null): MpClientResult<never> {
-  const raw = body?.message || body?.error || `HTTP ${status}`;
-  const message = sanitizeMessage(raw);
+  const errors = Array.isArray((body as { errors?: Array<{ code?: string; message?: string }> } | null)?.errors)
+    ? (body as { errors: Array<{ code?: string; message?: string }> }).errors
+    : [];
+  const firstErr = errors[0];
+  const raw =
+    (firstErr?.code && firstErr?.message
+      ? `${firstErr.code}: ${firstErr.message}`
+      : firstErr?.message || firstErr?.code || body?.message || body?.error || `HTTP ${status}`) ||
+    `HTTP ${status}`;
+  const message = sanitizeMessage(String(raw));
   if (status === 401) {
     return { ok: false, status, code: "MP_UNAUTHORIZED", message: "Credenciais Mercado Pago inválidas.", retryable: false };
   }
   if (status === 403) {
     return { ok: false, status, code: "MP_FORBIDDEN", message: "Operação não autorizada no Mercado Pago.", retryable: false };
   }
+  if (status === 402) {
+    return {
+      ok: false,
+      status,
+      code: "MP_PAYMENT_REQUIRED",
+      message: message || "Conta Mercado Pago sem permissão de cobrança (HTTP 402).",
+      retryable: false,
+    };
+  }
   if (status === 422 || status === 400) {
-    return { ok: false, status, code: "MP_VALIDATION", message, retryable: false };
+    return {
+      ok: false,
+      status,
+      code: firstErr?.code ? `MP_VALIDATION:${firstErr.code}` : "MP_VALIDATION",
+      message,
+      retryable: false,
+    };
   }
   if (status === 429) {
     return { ok: false, status, code: "MP_RATE_LIMIT", message: "Limite de requisições do Mercado Pago.", retryable: true };
@@ -196,6 +219,34 @@ export async function refundMercadoPagoLegacyPayment(
       ? { amount: Number(amount.toFixed(2)) }
       : {};
   return mpFetch<Record<string, unknown>>(`/v1/payments/${id}/refunds`, {
+    method: "POST",
+    body,
+    idempotencyKey,
+  });
+}
+
+/**
+ * POST /v1/orders/{order_id}/refund — estorno da API Orders (IDs ORD… / PAY…).
+ * Full refund: body vazio. Partial: transactions[{ id, amount }].
+ */
+export async function refundMercadoPagoOrder(
+  providerOrderId: string,
+  idempotencyKey: string,
+  partial?: { transactionId: string; amount: number }
+): Promise<MpClientResult<Record<string, unknown>>> {
+  const id = encodeURIComponent(providerOrderId);
+  const body =
+    partial && Number.isFinite(partial.amount)
+      ? {
+          transactions: [
+            {
+              id: partial.transactionId,
+              amount: Number(partial.amount).toFixed(2),
+            },
+          ],
+        }
+      : {};
+  return mpFetch<Record<string, unknown>>(`/v1/orders/${id}/refund`, {
     method: "POST",
     body,
     idempotencyKey,

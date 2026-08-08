@@ -14,15 +14,19 @@ function req(headers: Record<string, string>): Request {
   });
 }
 
+function envStub(partial: Record<string, string>): NodeJS.ProcessEnv {
+  return { NODE_ENV: "test", ...partial } as NodeJS.ProcessEnv;
+}
+
 describe("e2e preview auth gate (fail-closed)", () => {
   const secret = "preview-e2e-secret-test-only";
 
   it("Production ignora qualquer bypass E2E", () => {
-    const env = {
+    const env = envStub({
       VERCEL_ENV: "production",
       E2E_TEST_MODE: "true",
       E2E_TEST_SECRET: secret,
-    } as NodeJS.ProcessEnv;
+    });
     assert.equal(
       isAuthorizedE2ePreviewRequest(req({ [E2E_TEST_HEADER]: secret }), env),
       false
@@ -30,15 +34,15 @@ describe("e2e preview auth gate (fail-closed)", () => {
   });
 
   it("Preview normal sem modo/secret/header → não autorizado", () => {
-    const env = { VERCEL_ENV: "preview" } as NodeJS.ProcessEnv;
+    const env = envStub({ VERCEL_ENV: "preview" });
     assert.equal(isAuthorizedE2ePreviewRequest(req({}), env), false);
   });
 
   it("Preview com modo mas secret ausente → fail closed", () => {
-    const env = {
+    const env = envStub({
       VERCEL_ENV: "preview",
       E2E_TEST_MODE: "true",
-    } as NodeJS.ProcessEnv;
+    });
     assert.equal(
       isAuthorizedE2ePreviewRequest(req({ [E2E_TEST_HEADER]: "anything" }), env),
       false
@@ -46,20 +50,20 @@ describe("e2e preview auth gate (fail-closed)", () => {
   });
 
   it("Preview com modo+secret mas header ausente → fail closed", () => {
-    const env = {
+    const env = envStub({
       VERCEL_ENV: "preview",
       E2E_TEST_MODE: "true",
       E2E_TEST_SECRET: secret,
-    } as NodeJS.ProcessEnv;
+    });
     assert.equal(isAuthorizedE2ePreviewRequest(req({}), env), false);
   });
 
   it("Preview com header errado → fail closed", () => {
-    const env = {
+    const env = envStub({
       VERCEL_ENV: "preview",
       E2E_TEST_MODE: "true",
       E2E_TEST_SECRET: secret,
-    } as NodeJS.ProcessEnv;
+    });
     assert.equal(
       isAuthorizedE2ePreviewRequest(req({ [E2E_TEST_HEADER]: "wrong" }), env),
       false
@@ -67,11 +71,11 @@ describe("e2e preview auth gate (fail-closed)", () => {
   });
 
   it("Preview E2E autorizado com todas as condições", () => {
-    const env = {
+    const env = envStub({
       VERCEL_ENV: "preview",
       E2E_TEST_MODE: "true",
       E2E_TEST_SECRET: secret,
-    } as NodeJS.ProcessEnv;
+    });
     assert.equal(
       isAuthorizedE2ePreviewRequest(req({ [E2E_TEST_HEADER]: secret }), env),
       true
@@ -79,11 +83,11 @@ describe("e2e preview auth gate (fail-closed)", () => {
   });
 
   it("Development / sem VERCEL_ENV preview → não autorizado", () => {
-    const env = {
+    const env = envStub({
       VERCEL_ENV: "development",
       E2E_TEST_MODE: "true",
       E2E_TEST_SECRET: secret,
-    } as NodeJS.ProcessEnv;
+    });
     assert.equal(
       isAuthorizedE2ePreviewRequest(req({ [E2E_TEST_HEADER]: secret }), env),
       false

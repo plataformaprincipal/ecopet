@@ -75,6 +75,12 @@ export async function POST(request: Request) {
     };
     const mapped = map[code];
     if (mapped) return apiFailure(code, mapped.message, mapped.status);
+    if (code.startsWith("MP_VALIDATION")) {
+      return apiFailure(code, "Dados rejeitados pelo Mercado Pago.", 422);
+    }
+    if (code === "MP_PAYMENT_REQUIRED") {
+      return apiFailure(code, "Conta Mercado Pago sem permissão de cobrança.", 402);
+    }
     return apiFailure("INTERNAL", "Erro ao processar pagamento.", 500);
   }
 }

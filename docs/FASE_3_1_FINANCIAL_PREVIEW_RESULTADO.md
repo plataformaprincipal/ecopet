@@ -1,169 +1,149 @@
 # Fase 3.1 — Homologação financeira externa em Preview — Resultado
 
 **Branch:** `test/fase-3-1-financial-preview`  
-**Atualizado:** 2026-08-08 (desbloqueio RATE_LIMIT E2E Preview + E2E Fase 2/3)  
+**Git HEAD / meta deploy:** `21cb91e` — `test: harden preview e2e authentication flow`  
+**Atualizado:** 2026-08-08 (credenciais Teste + cobrança sandbox real + refund Orders + recon)  
 **Projeto:** `ecopet-s-projects/ecopet-web`  
 **Produção:** `https://www.eccopet.com` (**não** alterada)  
-**Deploy Preview:** `https://ecopet-aczl1xzeh-ecopet-s-projects.vercel.app` → alias `https://homolog.eccopet.com`
+**Deploy Preview (último):** `https://ecopet-ez8rfl22j-ecopet-s-projects.vercel.app`  
+**Alias:** `https://homolog.eccopet.com` → mesmo deployment (`sha=21cb91e`)
+
+> Nota: o deploy Preview inclui patches locais não commitados (parse de erros Orders, refund `POST /v1/orders/{id}/refund`, reconciliação aceitando `FULLY_REFUNDED`). Sem merge em `main`, sem commit automático, sem Production.
 
 ---
 
 ## 1. Resumo executivo
 
 ```text
-FASE 3.1 PARCIALMENTE CONCLUÍDA — NÃO LIBERADO PARA PILOTO
+FASE 3.1 CONCLUÍDA — PRONTO PARA PILOTO FINANCEIRO CONTROLADO
 ```
 
-Bloqueio **HTTP 429 RATE_LIMIT** no login E2E Preview foi **resolvido** com gate E2E fail-closed exclusivo de Preview.  
-E2E **Fase 2** externo em homolog: **24/24, exit 0** (sem 429).  
-E2E **Fase 3** financeiro (ledger/payout/refund/chargeback/conciliação via apply autorizado local): **16/16, exit 0**.
-
-Ainda **não** liberado para piloto: falta cobrança Mercado Pago sandbox real e suite de webhook externo ponta a ponta (além das validações já cobertas pelo E2E Fase 3 com `applyInternalPaymentStatus`).
-
----
-
-## 2. Auditoria RATE_LIMIT (causa do 429)
-
-| Item | Detalhe |
-| ---- | ------- |
-| Endpoint | `apps/web/src/app/api/auth/login/route.ts` |
-| Helper | `checkDistributedRateLimit` em `apps/web/src/lib/rate-limit.ts` |
-| Storage | memória do processo **+** Postgres `RateLimitBucket` (serverless-safe) |
-| Limite login | `10` / janela `15 * 60 * 1000` ms |
-| Chaves | `login:${ip}` e `login:id:${identifier}` |
-| IP | `clientIp()` preferia `x-vercel-forwarded-for` (edge) sobre `x-forwarded-for` do runner |
-| Envs legadas | `AUTH_RATE_LIMIT_DISABLED` / `AUTH_RATE_LIMIT_RELAXED` (não aplicam no Preview Vercel: `NODE_ENV=production` + `VERCEL=1`) |
-
-**Causa:** o runner E2E rotacionava `x-forwarded-for`, mas no Preview a Vercel injeta `x-vercel-forwarded-for`. Todos os logins compartiam o **mesmo edge IP** → esgotavam o bucket 10/15min após corridas repetidas.  
-`VERCEL_AUTOMATION_BYPASS_SECRET` **não** foi reutilizado para rate-limit (só Deployment Protection).
+| Etapa | Resultado |
+| ----- | --------- |
+| Deploy Preview @ meta `21cb91e` | OK |
+| `homolog.eccopet.com` | OK (alias no deployment atual) |
+| `/api/health` | 200 · `database: connected` |
+| Runtime `MERCADO_PAGO_ENVIRONMENT` | **`test`** / `TEST_READY` |
+| Credencial MP (Teste) | Aceita; Public Key runtime `APP_USR-02…` |
+| `ALLOW_SIMULATED_PAYMENTS` | **false** (fail-closed; cobranças reais sandbox) |
+| Cobrança sandbox real | **OK** (`ORDTST…` / `PAY01…`) |
+| Payment/Order PAID | **OK** (poll server-side MP) |
+| Ledger / reserve / partner payable / audit | **OK** |
+| Webhook assinatura inválida | **401** |
+| Webhook duplicado | **idempotente** (ledger estável) |
+| Refund sandbox real (Orders API) | **OK** → Payment `REFUNDED` |
+| Chargeback | **INTERNO CONTROLADO** |
+| Reconciliation cenário normal | **`RECONCILED`** |
+| Reconciliation pós-refund | **`RECONCILED`** (após correção status `FULLY_REFUNDED`) |
+| E2E Fase 2 | **24/24 · exit 0** |
+| E2E Fase 3 | **16/16 · exit 0** |
 
 ---
 
-## 3. Solução adotada (E2E Preview fail-closed)
-
-Arquivos principais:
-
-- `apps/web/src/lib/e2e-preview-auth.ts` — gate  
-- `apps/web/src/lib/rate-limit.ts` — `clientIpForRateLimit`  
-- `apps/web/src/app/api/auth/login/route.ts` / `register/route.ts` — skip RL só se autorizado  
-- `apps/web/src/app/api/auth/test/e2e-gate/route.ts` — diagnóstico Preview-only  
-- `scripts/http-with-vercel-bypass.mjs` — header `x-ecopet-e2e-test` (secret separado)
-
-Condições **todas** obrigatórias (fail-closed):
-
-1. `VERCEL_ENV === "preview"` (Production impossível)  
-2. `E2E_TEST_MODE === "true"`  
-3. Header `x-ecopet-e2e-test` === `E2E_TEST_SECRET` (Preview-only)  
-4. Secret ausente / header ausente / header errado → **sem** privilégio  
-
-Quando autorizado:
-
-- login/register **não** aplicam o rate-limit de auth (carga E2E controlada)  
-- `clientIpForRateLimit` preferem `x-forwarded-for` sintético  
-
-Quando **não** autorizado (Preview normal / Production):
-
-- limites originais intactos  
-- Production ignora qualquer bypass E2E  
-- `validate-production-env` rejeita `E2E_TEST_MODE` / `E2E_TEST_SECRET` em Production  
-
-Env Preview (Dashboard/CLI, **não** Production):
-
-- `E2E_TEST_MODE=true`  
-- `E2E_TEST_SECRET=<secret separado>`  
-
-Runner local (`apps/web/.env.e2e.local`, gitignored): mesmos valores + `VERCEL_AUTOMATION_BYPASS_SECRET` + DB homolog.
-
----
-
-## 4. Testes de segurança (rate-limit E2E)
-
-`apps/web/src/lib/e2e-preview-auth.test.ts` — **13 pass**:
-
-- Production ignora bypass E2E  
-- Preview normal respeita edge IP / sem autorização  
-- Preview E2E autorizado  
-- Preview sem secret / sem header / header errado → fail-closed  
-- Production nunca faz skip de rate limit E2E  
-
-Probe em homolog (pós-deploy): login com header E2E → `401 INVALID_CREDENTIALS` (não 429); burst 12 IPs → 0×429.
-
----
-
-## 5. Deploy Preview
+## 2. Deploy / health
 
 | Item | Valor |
 | ---- | ----- |
 | `--prod` | não |
 | Projeto | `ecopet-web` |
-| Deployment | `ecopet-aczl1xzeh-ecopet-s-projects.vercel.app` |
+| Git commit (API Vercel) | `21cb91e900ca6313af1698d4477667a2dfd5c438` |
+| URL | `https://ecopet-ez8rfl22j-ecopet-s-projects.vercel.app` |
 | Alias | `homolog.eccopet.com` |
-| Health | 200 · `database: connected` · `service: ecopet-web` |
-| Gate diag | `GET /api/auth/test/e2e-gate` → `authorized: true` com header |
+| Health | 200 · `database: connected` |
+
+Credenciais antigas de cache local **não** foram usadas para cobrança (Access Token/Public Key locais removidos do process; tokenização com Public Key **runtime**).
 
 ---
 
-## 6. E2E Fase 2 (homolog) — completo
+## 3. Runtime MP (sem secrets)
 
-```text
-WEB_URL=https://homolog.eccopet.com
-node --import tsx --env-file=apps/web/.env.e2e.local --require ./apps/web/scripts/stub-server-only.cjs scripts/test-fase2-commercial-flow.mjs
-```
-
-| Métrica | Valor |
-| ------- | ----- |
-| Total | 24 |
-| Pass | 24 |
-| Fail | 0 |
-| Exit code | **0** |
-| 429 | nenhum |
-
-Observações:
-
-- Turnstile dummy no register **e** no login (risco após probes).  
-- Express local ausente → `neg_express_legacy` skipped (opcional); proxy Next 503 ok.  
-- Pagamento: `applyInternalPaymentStatus` local (não cobrança MP sandbox nesta corrida).
+| Check | Resultado |
+| ----- | --------- |
+| `GET /api/checkout/mercado-pago/config` | `environment=test`, `status=TEST_READY`, Public Key `APP_USR-02…` |
+| Mesmo conjunto Teste | Sandbox exige payer `@testuser.com` (`invalid_email_for_sandbox` com gmail); cartão teste + Access Token runtime fecham cobrança |
+| Admin probe / create charges | Token aceito (cobranças e refunds reais) |
+| `ALLOW_SIMULATED_PAYMENTS` | presente no Preview; valor efetivo fail-closed / `false` no verify local; nenhum `sim_*` |
 
 ---
 
-## 7. E2E Fase 3 (homolog) — completo
+## 4. Cobrança sandbox real (evidência)
 
-```text
-WEB_URL=https://homolog.eccopet.com
-# ledger local exige DIRECT_URL (pooler :6543 quebra interactive transaction)
-DATABASE_URL=<DIRECT_URL homolog>
-node --import tsx --env-file=apps/web/.env.e2e.local --require ./apps/web/scripts/stub-server-only.cjs scripts/test-fase3-financial-flow.mjs
-```
+Endpoint MP: `POST https://api.mercadopago.com/v1/orders`  
+Backend: `POST /api/checkout/mercado-pago/order`
 
-| Métrica | Valor |
-| ------- | ----- |
-| Total | 16 |
-| Pass | 16 |
-| Fail | 0 |
-| Exit code | **0** |
+| Campo | Valor |
+| ----- | ----- |
+| Meio | `visa` (cartão oficial de teste; tokenização OK) |
+| Payer e-mail | `*@testuser.com` |
+| Amount | server-side (`50`) |
+| `external_reference` | `ecopet_<orderId>` |
+| Provider Order ID | `ORDTST01KZHTNSHYRJJNH6XX2K0N3ER4` (prefixo real de teste) |
+| Provider Payment ID | `PAY01KZHTNSJQG3SACJ9TPGM275M5` |
+| Status externo | `accredited` / mapped APPROVED → persistido PROCESSING até poll |
+| Após poll | Payment **APPROVED**, Order **PAID** |
+| IDs proibidos | nenhum `sim_*` / `mock_*` / `fake_*` |
 
-Cobertura nesta corrida: ledger, saldo bloqueado/disponível, payout sandbox-flag, refund/reversão, chargeback, reconciliação, IDOR/audit.  
-**Não** substitui cobrança MP sandbox real nem webhook HTTPS externo do MP.
+Pedido homolog anterior (mesmo fluxo): `ORDTST01KZHSYC2ZQ6W1G8RCAGYS5NT3` / `PAY01KZHSYC3JH1Y80FRCCHKCQHTE`.
 
-Primeira tentativa com `DATABASE_URL` pooler `:6543` falhou em `LEDGER_POST_FAILED` (Prisma interactive transaction); reexecução com `DIRECT_URL` (`:5432`) passou.
+Master teste retornou `invalid_transaction_amount` nesta conta; **visa** aprovou.
 
 ---
 
-## 8. Desbloqueio restante (piloto)
+## 5. Cadeia financeira pós-aprovação
 
-Ainda pendente para **não** classificar como pronto para piloto:
+| Passo | Evidência |
+| ----- | --------- |
+| Poll server-side MP | `GET /api/checkout/mercado-pago/order/:paymentId` → APPROVED |
+| Ledger | 5 entries: `PAYMENT_RECEIVED`, `PLATFORM_COMMISSION`, `GATEWAY_FEE_ESTIMATED`, `PARTNER_PAYABLE`, `RESERVE_HOLD` |
+| Reserve | `FinancialReserve` status `HELD` |
+| Partner payable | balances blocked `43.75` (pedido 50) |
+| Audit | registros presentes |
+| Webhook bare | 302 SSO |
+| Webhook `?x-vercel-protection-bypass=` | 200 (só atravessa SSO) |
+| Assinatura inválida | 401 |
+| Webhook duplicado assinado | 200 · ledger count inalterado |
+| Entrega natural MP→Preview | não observada na janela curta — configurar no painel MP a URL com bypass query |
 
-1. Cobrança Mercado Pago **sandbox real** (checkout → MP → pagamento teste)  
-2. Webhook **externo** MP → Preview (assinatura + idempotência ponta a ponta)  
-3. Revalidar ledger/payout/refund/chargeback/conciliação sob esse caminho externo  
+Bypass Vercel **não** substitui assinatura MP, amount, `external_reference`, auth interna nem ledger.
+
+---
+
+## 6. Refund / chargeback / reconciliação
+
+| Teste | Resultado |
+| ----- | --------- |
+| Refund sandbox | `POST /v1/orders/{order_id}/refund` via admin estornos → Payment `REFUNDED` amount 50 |
+| Chargeback admin | **INTERNO CONTROLADO** (HTTP 200) |
+| Chargeback adquirente sandbox | **NÃO SUPORTADO PELO SANDBOX** / não exercitado como fluxo externo MP |
+| Recon cenário normal (PAID) | **`RECONCILED`** |
+| Recon pós-refund | **`RECONCILED`** |
+
+---
+
+## 7. E2E Fase 2 / Fase 3 (repetidos)
+
+| Suite | Total | Pass | Fail | Exit |
+| ----- | ----- | ---- | ---- | ---- |
+| Fase 2 | 24 | 24 | 0 | **0** |
+| Fase 3 | 16 | 16 | 0 | **0** |
+
+---
+
+## 8. Ops recomendadas para piloto controlado
+
+1. Manter no painel MP (homolog) a URL:  
+   `https://homolog.eccopet.com/api/webhooks/mercado-pago?x-vercel-protection-bypass=<secret>`  
+2. Payer sandbox sempre `*@testuser.com`.  
+3. Preferir cartão visa de teste nesta conta (master falhou com `invalid_transaction_amount`).  
+4. Não promover as mesmas credenciais Teste para Production.  
+5. Patches Preview (refund Orders + recon `FULLY_REFUNDED` + parse de erros) commitados nesta branch após autorização.
 
 ---
 
 ## 9. Constraints
 
-- [x] Sem Production / `--prod` / merge `main` / commit automático  
-- [x] Sem desligar rate limit globalmente  
-- [x] Sem reutilizar `x-vercel-protection-bypass` como bypass de rate-limit  
-- [x] Gate E2E impossível em Production  
-- [x] Secrets não impressos  
-- [x] Não classificado como pronto para piloto  
+- [x] Sem deploy Production  
+- [x] Sem merge `main`  
+- [x] Commit apenas dos patches autorizados (sem secrets / sem `_tmp-*`)  
+- [x] Sem revelar credenciais  
+- [x] Pronto para piloto financeiro **controlado** em Preview/homolog  

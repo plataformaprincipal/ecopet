@@ -4,8 +4,10 @@ import { OrderStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
   getMercadoPagoLegacyPayment,
+  getMercadoPagoOrder,
   newIdempotencyKey,
   refundMercadoPagoLegacyPayment,
+  refundMercadoPagoOrder,
 } from "@/lib/mercado-pago/client";
 import { writeAuditLog } from "@/lib/audit-log";
 import { createInternalNotification } from "@/lib/notifications/internal";
@@ -124,22 +126,52 @@ export async function executePaymentRefund(input: ExecuteRefundInput): Promise<{
       };
     }
 
-    // Consulta oficial antes de estornar
-    const remote = await getMercadoPagoLegacyPayment(payment.providerPaymentId);
-    if (!remote.ok) {
-      return {
-        ok: false,
-        code: remote.code,
-        message: remote.message || "Falha ao consultar pagamento no Mercado Pago.",
-      };
-    }
-    const remoteStatus = String(remote.data.status ?? "");
-    if (remoteStatus !== "approved") {
-      return {
-        ok: false,
-        code: "REMOTE_NOT_APPROVED",
-        message: `Pagamento remoto não está aprovado (status: ${remoteStatus}).`,
-      };
+    const isOrdersApiId = (id: string | null | undefined) =>
+      Boolean(id && /^(ORD|PAY|ORDTST|PAYTST)/i.test(id));
+    const useOrdersRefund =
+      isOrdersApiId(payment.providerOrderId) || isOrdersApiId(payment.providerPaymentId);
+
+    // Consulta oficial antes de estornar (Orders API ou Payments legado)
+    let remoteStatus = "";
+    if (useOrdersRefund && payment.providerOrderId) {
+      const remoteOrder = await getMercadoPagoOrder(payment.providerOrderId);
+      if (!remoteOrder.ok) {
+        return {
+          ok: false,
+          code: remoteOrder.code,
+          message: remoteOrder.message || "Falha ao consultar order no Mercado Pago.",
+        };
+      }
+      const pay0 = remoteOrder.data.transactions?.payments?.[0];
+      remoteStatus = String(pay0?.status ?? remoteOrder.data.status ?? "").toLowerCase();
+      const approved =
+        remoteStatus === "approved" ||
+        remoteStatus === "processed" ||
+        String(remoteOrder.data.status_detail ?? "").toLowerCase() === "accredited";
+      if (!approved) {
+        return {
+          ok: false,
+          code: "REMOTE_NOT_APPROVED",
+          message: `Pagamento remoto não está aprovado (status: ${remoteStatus || remoteOrder.data.status}).`,
+        };
+      }
+    } else {
+      const remote = await getMercadoPagoLegacyPayment(payment.providerPaymentId);
+      if (!remote.ok) {
+        return {
+          ok: false,
+          code: remote.code,
+          message: remote.message || "Falha ao consultar pagamento no Mercado Pago.",
+        };
+      }
+      remoteStatus = String(remote.data.status ?? "");
+      if (remoteStatus !== "approved") {
+        return {
+          ok: false,
+          code: "REMOTE_NOT_APPROVED",
+          message: `Pagamento remoto não está aprovado (status: ${remoteStatus}).`,
+        };
+      }
     }
 
     const isFull = amount >= balance - MONEY_EPS;
@@ -180,11 +212,23 @@ export async function executePaymentRefund(input: ExecuteRefundInput): Promise<{
       });
     }
 
-    const mpResult = await refundMercadoPagoLegacyPayment(
-      payment.providerPaymentId,
-      refundRow.idempotencyKey || idempotencyKey,
-      isFull ? undefined : amount
-    );
+    const mpResult =
+      useOrdersRefund && payment.providerOrderId
+        ? await refundMercadoPagoOrder(
+            payment.providerOrderId,
+            refundRow.idempotencyKey || idempotencyKey,
+            isFull
+              ? undefined
+              : {
+                  transactionId: payment.providerPaymentId,
+                  amount,
+                }
+          )
+        : await refundMercadoPagoLegacyPayment(
+            payment.providerPaymentId,
+            refundRow.idempotencyKey || idempotencyKey,
+            isFull ? undefined : amount
+          );
 
     if (!mpResult.ok) {
       await prisma.paymentRefund.update({
@@ -199,7 +243,14 @@ export async function executePaymentRefund(input: ExecuteRefundInput): Promise<{
       return { ok: false, code: mpResult.code, message: mpResult.message, paymentRefundId: refundRow.id };
     }
 
+    const ordersRefundId = (() => {
+      const refunds = (mpResult.data as { transactions?: { refunds?: Array<{ id?: string }> } })
+        ?.transactions?.refunds;
+      const first = Array.isArray(refunds) ? refunds[0] : null;
+      return first?.id ? String(first.id) : null;
+    })();
     const providerRefundId =
+      ordersRefundId ||
       (mpResult.data.id != null ? String(mpResult.data.id) : null) ||
       (typeof mpResult.data === "object" && mpResult.data && "id" in mpResult.data
         ? String((mpResult.data as { id: unknown }).id)

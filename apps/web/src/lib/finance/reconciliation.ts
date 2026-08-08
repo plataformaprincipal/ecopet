@@ -53,7 +53,9 @@ export async function reconcilePayment(paymentId: string, opts?: { runId?: strin
 
   const refundedCents = toCents(payment.refundedAmount ?? 0);
   const refundSum = payment.paymentRefunds
-    .filter((r) => r.status === "COMPLETED" || r.status === "APPROVED")
+    .filter((r) =>
+      ["COMPLETED", "APPROVED", "FULLY_REFUNDED", "PROCESSED", "SUCCESS"].includes(r.status)
+    )
     .reduce((s, r) => s + toCents(r.amount), 0);
   if (refundedCents > 0 && Math.abs(refundedCents - refundSum) > 1) {
     status = "REFUND_MISMATCH";

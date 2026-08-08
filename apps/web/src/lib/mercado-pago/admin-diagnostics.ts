@@ -123,7 +123,12 @@ export async function getMercadoPagoAdminDiagnostics(options?: {
         message: "Access Token rejeitado pela API.",
         charged: false,
       };
-    } else if (result.status === 404 || result.code === "MP_VALIDATION" || result.code === "MP_ERROR") {
+    } else if (
+      result.status === 404 ||
+      result.code === "MP_VALIDATION" ||
+      result.code.startsWith("MP_VALIDATION:") ||
+      result.code === "MP_ERROR"
+    ) {
       // 404/validation em id fake = token aceito
       probe = {
         ok: true,
