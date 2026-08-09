@@ -25,6 +25,8 @@ const MAX_BODY = 256_000;
 export async function runMercadoPagoWebhookPipeline(params: {
   rawBody: string;
   headers: Headers;
+  /** Prefira query `data.id` (docs oficiais MP) quando presente */
+  queryDataId?: string | null;
 }): Promise<PipelineResult> {
   if (params.rawBody.length > MAX_BODY) {
     return { ok: false, status: 413, code: "PAYLOAD_TOO_LARGE" };
@@ -38,6 +40,7 @@ export async function runMercadoPagoWebhookPipeline(params: {
   const xSignature = params.headers.get("x-signature");
   const xRequestId = params.headers.get("x-request-id");
   const dataIdForSig =
+    (params.queryDataId && String(params.queryDataId).trim()) ||
     normalized.parsed.resourceId ||
     (normalized.parsed.data.payment_id != null
       ? String(normalized.parsed.data.payment_id)

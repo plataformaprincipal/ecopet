@@ -34,9 +34,21 @@ async function mercadoPagoWebhookHandler(request: Request) {
   }
 
   const rawBody = await request.text();
+  // Docs MP: data.id para assinatura vem da query (?data.id=...), não só do body.
+  let queryDataId: string | null = null;
+  try {
+    const url = new URL(request.url);
+    queryDataId =
+      url.searchParams.get("data.id") ||
+      url.searchParams.get("data_id") ||
+      null;
+  } catch {
+    queryDataId = null;
+  }
   const result = await runMercadoPagoWebhookPipeline({
     rawBody,
     headers: request.headers,
+    queryDataId,
   });
 
   if (!result.ok) {

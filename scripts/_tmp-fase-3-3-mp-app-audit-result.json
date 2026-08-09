@@ -1,0 +1,121 @@
+{
+  "web": "https://homolog.eccopet.com",
+  "bypassPresent": true,
+  "whSecretPresent": true,
+  "tokenPresent": true,
+  "tokenPrefix": "APP_USR-",
+  "pubPrefix": "APP_USR-3d",
+  "mpEnvLocal": "test",
+  "mpApp": {
+    "usersMe": {
+      "status": 200,
+      "id": 652366957,
+      "nickname": "VRASARTHUR",
+      "siteId": "MLB",
+      "emailDomain": "gmail.com"
+    }
+  },
+  "webhookProbes": {
+    "getBare": {
+      "status": 302,
+      "kind": "VERCEL_BLOCK",
+      "locationPrefix": "https://vercel.com/sso-api?url=https%3A%2F%2Fhomolog.eccopet",
+      "server": "Vercel",
+      "bodySnippet": "Redirecting...\n"
+    },
+    "getWithBypassQuery": {
+      "status": 200,
+      "kind": "APP_OK",
+      "locationPrefix": null,
+      "server": "Vercel",
+      "bodySnippet": "{\"success\":true,\"data\":{\"status\":\"ok\",\"provider\":\"mercado_pago\",\"path\":\"/api/webhooks/mercado-pago\",\"multiTopic\":true,\"note\":\"Cadastre esta URL no painel Mercado Pago. Futuro: https://eccopet.com/api/"
+    },
+    "headWithBypass": {
+      "status": 200,
+      "kind": "APP_OK"
+    },
+    "postBare": {
+      "status": 401,
+      "kind": "VERCEL_BLOCK",
+      "locationPrefix": null,
+      "server": "Vercel",
+      "bodySnippet": "{\"error\":{\"message\":\"Protected deployment\",\"code\":\"401\"},\"protection\":{\"password_enabled\":false,\"vercel_auth_enabled\":true,\"***\":\"https:\\/\\/vercel.com\\/sso-api?url=https%3A%2F%2Fhomol"
+    },
+    "postBypassInvalidSig": {
+      "status": 401,
+      "kind": "ECCOPET_401",
+      "locationPrefix": null,
+      "server": "Vercel",
+      "bodySnippet": "{\"success\":false,\"error\":{\"code\":\"TIMESTAMP_SKEW\",\"message\":\"Webhook rejeitado.\"}}"
+    },
+    "postBypassHeaderInvalidSig": {
+      "status": 401,
+      "kind": "ECCOPET_401",
+      "locationPrefix": null,
+      "server": "Vercel",
+      "bodySnippet": "{\"success\":false,\"error\":{\"code\":\"TIMESTAMP_SKEW\",\"message\":\"Webhook rejeitado.\"}}"
+    }
+  },
+  "apiProbes": {
+    "/applications": {
+      "status": 403,
+      "keys": null,
+      "count": null
+    },
+    "/v1/applications": {
+      "status": 404,
+      "keys": [
+        "error",
+        "message"
+      ],
+      "count": null
+    },
+    "/oauth/applications": {
+      "status": 404,
+      "keys": [
+        "error",
+        "message"
+      ],
+      "count": null
+    },
+    "/v1/orders/search": {
+      "status": 400,
+      "hasResults": false
+    },
+    "lastOrder": {
+      "status": 404,
+      "id": null,
+      "statusMp": null,
+      "statusDetail": null,
+      "externalReferencePrefix": null,
+      "hasNotificationUrl": false,
+      "notificationUrlHost": null,
+      "liveMode": null
+    }
+  },
+  "health": {
+    "status": 200,
+    "database": "connected"
+  },
+  "expectedWebhookUrlShape": {
+    "host": "homolog.eccopet.com",
+    "path": "/api/webhooks/mercado-pago",
+    "requiresBypassQuery": true,
+    "bypassQueryParam": "x-vercel-protection-bypass",
+    "bypassSecretPrinted": false,
+    "note": "URL no painel MP (modo teste) deve incluir query de bypass; secret não documentado"
+  },
+  "ordersTopicRequirement": {
+    "product": "Checkout Transparente / API Orders",
+    "requiredPanelEvent": "Order (Mercado Pago)",
+    "requiredTopic": "orders",
+    "legacyPaymentTopic": "payment",
+    "legacySufficientForOrders": false,
+    "appHandlerSupports": [
+      "order",
+      "orders",
+      "payment"
+    ],
+    "evidence": "MP docs: Orders API notifications use topic orders; payment is legacy Checkout API"
+  }
+}

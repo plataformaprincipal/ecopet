@@ -1,0 +1,57 @@
+{
+  "naturalWebhookProven": true,
+  "classification": "NATURAL_WEBHOOK_OBSERVED",
+  "waitMs": 15969,
+  "timeline": {
+    "T0_orderCreatedAt": "2026-08-09T02:52:45.963Z",
+    "T1_chargeAt": "2026-08-09T02:52:47.590Z",
+    "T2_providerApprovedAt": "2026-08-09T02:52:50.052Z",
+    "watchStart": "2026-08-09T02:52:50.053Z",
+    "firstNaturalAt": "2026-08-09T02:52:53.978Z",
+    "watchEnd": "2026-08-09T02:53:05.742Z"
+  },
+  "providerOrderId": "ORDTST01KZJ6ZWKN4QY7EM8V812GSMPQ",
+  "providerPaymentId": "PAY01KZJ6ZWM62XVJ2K93X6PQ9A16",
+  "providerOrderIdSanitized": "ORDTST01…SMPQ",
+  "providerPaymentIdSanitized": "PAY01KZJ…9A16",
+  "finalOrderStatus": "PENDING_CONFIRMATION",
+  "finalPaymentStatus": "PROCESSING",
+  "ledgerCount": 0,
+  "paidWithoutPoll": false,
+  "naturalEvents": [
+    {
+      "id": "cmsl7jja…if3h",
+      "eventType": "order",
+      "resourceId": "ORDTST01…SMPQ",
+      "processingStatus": "FAILED",
+      "signatureValid": false,
+      "failureCode": "SIGNATURE_MISMATCH",
+      "createdAt": "2026-08-09T02:52:53.978Z"
+    },
+    {
+      "id": "cmsl7jjt…e4tq",
+      "eventType": "order",
+      "resourceId": "ORDTST01…SMPQ",
+      "processingStatus": "FAILED",
+      "signatureValid": false,
+      "failureCode": "SIGNATURE_MISMATCH",
+      "createdAt": "2026-08-09T02:52:54.674Z"
+    }
+  ],
+  "ticks": [
+    {
+      "tMs": 380,
+      "naturalCount": 0,
+      "orderStatus": "PENDING_CONFIRMATION",
+      "paymentStatus": "PROCESSING"
+    },
+    {
+      "tMs": 15688,
+      "naturalCount": 2,
+      "orderStatus": "PENDING_CONFIRMATION",
+      "paymentStatus": "PROCESSING"
+    }
+  ],
+  "runtimePublicKeyPrefix": "APP_USR-02",
+  "note": "Nenhum polling e nenhum webhook assinado durante a janela"
+}

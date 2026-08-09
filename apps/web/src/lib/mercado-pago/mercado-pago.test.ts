@@ -140,6 +140,18 @@ describe("mercado-pago webhook signature", () => {
     });
     assert.equal(skew.valid, false);
     assert.equal(skew.reason, "TIMESTAMP_SKEW");
+
+    // Docs MP: ts em segundos Unix — deve passar no skew e no HMAC
+    const tsSec = String(Math.floor(Date.now() / 1000));
+    const secManifest = `id:${dataId};request-id:${requestId};ts:${tsSec};`;
+    const secV1 = createHmac("sha256", secret).update(secManifest).digest("hex");
+    const okSec = verifyMercadoPagoWebhookSignature({
+      xSignature: `ts=${tsSec},v1=${secV1}`,
+      xRequestId: requestId,
+      dataId,
+      secret,
+    });
+    assert.equal(okSec.valid, true, "ts em segundos Unix (formato oficial MP)");
   });
 });
 

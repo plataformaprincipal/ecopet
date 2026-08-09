@@ -4,6 +4,15 @@ import { getMercadoPagoServerConfig } from "@/lib/mercado-pago/config";
 const MAX_SKEW_MS = 5 * 60 * 1000;
 
 /**
+ * Mercado Pago envia `ts` em segundos Unix (docs oficiais).
+ * Testes internos / replays podem usar milissegundos (`Date.now()`).
+ * Normaliza só para a janela de skew; o manifest HMAC usa o `ts` literal do header.
+ */
+export function mercadoPagoTsToMs(tsNum: number): number {
+  return tsNum < 1e12 ? tsNum * 1000 : tsNum;
+}
+
+/**
  * Valida assinatura oficial de webhooks Mercado Pago (x-signature + x-request-id + data.id).
  * Manifest: id:[data.id];request-id:[x-request-id];ts:[ts];
  */
@@ -51,7 +60,8 @@ export function verifyMercadoPagoWebhookSignature(params: {
   }
 
   const now = params.nowMs ?? Date.now();
-  if (Math.abs(now - tsNum) > MAX_SKEW_MS) {
+  const tsMs = mercadoPagoTsToMs(tsNum);
+  if (Math.abs(now - tsMs) > MAX_SKEW_MS) {
     return { valid: false, reason: "TIMESTAMP_SKEW", ts: tsNum };
   }
 
