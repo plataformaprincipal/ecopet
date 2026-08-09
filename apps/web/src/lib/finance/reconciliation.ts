@@ -3,10 +3,93 @@ import "server-only";
 import type { FinancialReconciliationStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { writeAuditLog } from "@/lib/audit-log";
+import {
+  getMercadoPagoLegacyPayment,
+  getMercadoPagoOrder,
+} from "@/lib/mercado-pago/client";
 import { getFinancialFlags } from "./flags";
 import { toCents } from "./money";
+import { classifyAmountReconciliation } from "./reconciliation-classify";
+import { emitFinancialAlert } from "./financial-alerts";
 
-export async function reconcilePayment(paymentId: string, opts?: { runId?: string }) {
+export { classifyAmountReconciliation } from "./reconciliation-classify";
+
+export type ProviderAmountFetchResult =
+  | { ok: true; providerAmountCents: number; source: "orders" | "payments" }
+  | { ok: false; code: "PROVIDER_UNAVAILABLE" | "PROVIDER_AMOUNT_MISSING"; message: string };
+
+/**
+ * Obtém amount efetivo do provider (Orders API ou Payments legado).
+ * Não altera estado local.
+ */
+export async function fetchProviderReportedAmountCents(payment: {
+  providerOrderId?: string | null;
+  providerPaymentId?: string | null;
+  externalId?: string | null;
+}): Promise<ProviderAmountFetchResult> {
+  const orderId = payment.providerOrderId || payment.externalId;
+  if (orderId && /^ORD/i.test(String(orderId))) {
+    const remote = await getMercadoPagoOrder(String(orderId));
+    if (!remote.ok) {
+      return {
+        ok: false,
+        code: "PROVIDER_UNAVAILABLE",
+        message: `${remote.status}:${remote.code}`,
+      };
+    }
+    const total = remote.data.total_amount;
+    const payAmt = remote.data.transactions?.payments?.[0]?.amount;
+    const raw = total ?? payAmt;
+    if (raw == null || raw === "" || !Number.isFinite(Number(raw))) {
+      return {
+        ok: false,
+        code: "PROVIDER_AMOUNT_MISSING",
+        message: "orders.total_amount/payments[0].amount ausente",
+      };
+    }
+    return {
+      ok: true,
+      providerAmountCents: toCents(Number(raw)),
+      source: "orders",
+    };
+  }
+
+  const legacyId = payment.providerPaymentId || payment.externalId;
+  if (legacyId) {
+    const remote = await getMercadoPagoLegacyPayment(String(legacyId));
+    if (!remote.ok) {
+      return {
+        ok: false,
+        code: "PROVIDER_UNAVAILABLE",
+        message: `${remote.status}:${remote.code}`,
+      };
+    }
+    const raw = remote.data.transaction_amount ?? remote.data.total_paid_amount;
+    if (raw == null || !Number.isFinite(Number(raw))) {
+      return {
+        ok: false,
+        code: "PROVIDER_AMOUNT_MISSING",
+        message: "payments.transaction_amount ausente",
+      };
+    }
+    return {
+      ok: true,
+      providerAmountCents: toCents(Number(raw)),
+      source: "payments",
+    };
+  }
+
+  return {
+    ok: false,
+    code: "PROVIDER_AMOUNT_MISSING",
+    message: "sem providerOrderId/providerPaymentId",
+  };
+}
+
+export async function reconcilePayment(
+  paymentId: string,
+  opts?: { runId?: string; skipProviderFetch?: boolean }
+) {
   const payment = await prisma.payment.findUnique({
     where: { id: paymentId },
     include: {
@@ -20,7 +103,24 @@ export async function reconcilePayment(paymentId: string, opts?: { runId?: strin
   }
 
   const expectedAmountCents = toCents(payment.amount);
-  const receivedAmountCents = toCents(payment.amount);
+  let receivedAmountCents = expectedAmountCents;
+  let providerAmountCents: number | null = null;
+  let providerSource: string | null = null;
+  let providerFetchOk = false;
+  let providerUnavailable = false;
+
+  if (!opts?.skipProviderFetch && payment.provider === "mercado_pago") {
+    const remote = await fetchProviderReportedAmountCents(payment);
+    if (remote.ok) {
+      providerFetchOk = true;
+      providerAmountCents = remote.providerAmountCents;
+      receivedAmountCents = remote.providerAmountCents;
+      providerSource = remote.source;
+    } else if (remote.code === "PROVIDER_UNAVAILABLE") {
+      providerUnavailable = true;
+    }
+  }
+
   const ledgerCount = await prisma.financialLedgerEntry.count({
     where: { paymentId: payment.id },
   });
@@ -36,6 +136,13 @@ export async function reconcilePayment(paymentId: string, opts?: { runId?: strin
     refundCount: payment.paymentRefunds.length,
     chargebacks,
     eventCount: payment.events.length,
+    expectedAmountCents,
+    providerAmountCents,
+    differenceCents:
+      providerAmountCents != null ? providerAmountCents - expectedAmountCents : null,
+    providerSource,
+    providerFetchOk,
+    providerUnavailable,
   };
 
   if (
@@ -64,6 +171,21 @@ export async function reconcilePayment(paymentId: string, opts?: { runId?: strin
   const orderTotalCents = toCents(payment.order.total);
   if (Math.abs(orderTotalCents - expectedAmountCents) > 1) {
     status = "VALUE_MISMATCH";
+  }
+
+  const amountClass = classifyAmountReconciliation({
+    expectedAmountCents,
+    providerAmountCents,
+    providerFetchOk,
+    providerUnavailable,
+  });
+  if (amountClass === "VALUE_MISMATCH") {
+    status = "VALUE_MISMATCH";
+  } else if (amountClass === "MANUAL_REVIEW" && status === "RECONCILED") {
+    // Provider indisponível / sem amount — não marcar RECONCILED silenciosamente
+    if (payment.status === "APPROVED" || payment.status === "PAID") {
+      status = "MANUAL_REVIEW";
+    }
   }
 
   const duplicateEvents = await prisma.paymentEvent.groupBy({
@@ -115,11 +237,54 @@ export async function reconcilePayment(paymentId: string, opts?: { runId?: strin
       resource: "FinancialReconciliation",
       resourceId: row.id,
       observation: "reconciliation.failed",
-      entityAfter: { status, paymentId },
+      entityAfter: {
+        status,
+        paymentId,
+        expectedAmountCents,
+        providerAmountCents,
+        differenceCents: details.differenceCents,
+      },
     }).catch(() => undefined);
+
+    if (status === "VALUE_MISMATCH") {
+      await emitFinancialAlert({
+        code: "PROVIDER_AMOUNT_MISMATCH",
+        severity: "P0",
+        message: "reconciliation VALUE_MISMATCH",
+        meta: {
+          paymentId,
+          expectedAmountCents,
+          providerAmountCents: providerAmountCents ?? null,
+          differenceCents:
+            typeof details.differenceCents === "number" ? details.differenceCents : null,
+        },
+      }).catch(() => undefined);
+    } else if (status === "MISSING_LEDGER") {
+      await emitFinancialAlert({
+        code: "LEDGER_POST_FAILURE",
+        severity: "P0",
+        message: "reconciliation MISSING_LEDGER",
+        meta: { paymentId },
+      }).catch(() => undefined);
+    } else {
+      await emitFinancialAlert({
+        code: "RECONCILIATION_MISMATCH",
+        severity: "P1",
+        message: `reconciliation ${status}`,
+        meta: { paymentId, status },
+      }).catch(() => undefined);
+    }
   }
 
-  return { status, paymentId, reconciliationId: row.id, details };
+  return {
+    status,
+    paymentId,
+    reconciliationId: row.id,
+    details,
+    expectedAmountCents,
+    providerAmountCents,
+    receivedAmountCents,
+  };
 }
 
 export async function runDailyFinancialReconciliation(params: {

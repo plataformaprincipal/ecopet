@@ -1,0 +1,130 @@
+{
+  "credentialContext": {
+    "mercadoPagoEnvironment": "test",
+    "accessTokenPrefix": "APP_USR-3863",
+    "accessTokenKind": "APP_USR",
+    "publicKeyPrefix": "APP_USR-3d",
+    "webhookSecretPresent": true,
+    "webhookSecretSha8": "9d2804a9",
+    "note": "Valores locais de .env.e2e.local / .env.preview.verify — runtime Preview deve espelhar Preview env"
+  },
+  "simulator": {
+    "eventId": "cmsldhwj…m8am",
+    "createdAt": "2026-08-09T05:39:35.565Z",
+    "application_id": "3863741237237502",
+    "user_id": "652366957",
+    "live_mode": true,
+    "type": "order",
+    "api_version": null,
+    "action": "order.processed",
+    "data_id": "123456",
+    "signatureValid": true,
+    "failureCode": "MP_VALIDATION:invalid_path_param"
+  },
+  "natural": {
+    "eventId": "cmsleg59…cw1a",
+    "createdAt": "2026-08-09T06:06:13.167Z",
+    "application_id": "2558117866767882",
+    "user_id": "3549381009",
+    "live_mode": false,
+    "type": "order",
+    "api_version": null,
+    "action": "order.processed",
+    "data_id": "ORDTST01…A1MH",
+    "signatureValid": false,
+    "failureCode": "SIGNATURE_MISMATCH",
+    "requestId": "02a3c7b6…bec6",
+    "failureReason": "SIGNATURE_MISMATCH source=NATURAL rawQueryKeys=data.external_reference,data.id,type,x-vercel-protection-bypass queryDataDotId=ORDTST01…A1MH queryDataUnderscoreId=none bodyDataId=ORDTST01…A1MH typeQuery=order bodyType=order queryDataIdPresent=1 bodyDataIdPresent=1 secretLen=64 secretSha8=9d2804a9 ts=1786255572 v1=1 v1Len=64 reqId=1 reqLen=36 reqSha8=be8176cb dataIdPresent=1 dataIdLen=32 dataIdCase=upper dataIdSrc=QUERY_DATA_DOT_ID dataId=ORDTST01…A1MH recvV1Sha8=cfb1e265 manifestSha8=452a5ff2 expHmacSha8=ae98369f recvHmacSha8=cfb1e265 candidate=NONE candidates=2",
+    "sigDiag": {
+      "ts": "1786255572",
+      "source": "NATURAL",
+      "typeQuery": "order",
+      "bodyDataId": "ORDTST01…A1MH",
+      "secretSha8": "9d2804a9",
+      "dataIdSource": "QUERY_DATA_DOT_ID",
+      "manifestSha8": "452a5ff2",
+      "rawQueryKeys": [
+        "data.external_reference",
+        "data.id",
+        "type",
+        "x-vercel-protection-bypass"
+      ],
+      "candidateUsed": "NONE",
+      "queryDataDotId": "ORDTST01…A1MH",
+      "receivedV1Sha8": "cfb1e265",
+      "xRequestIdSha8": "be8176cb",
+      "expectedHmacSha8": "ae98369f",
+      "receivedHmacSha8": "cfb1e265",
+      "queryDataUnderscoreId": null
+    }
+  },
+  "paymentLocal": {
+    "paymentId": "cmsleg1s…stvo",
+    "providerOrderId": "ORDTST01…A1MH",
+    "providerPaymentId": "PAY01KZJ…AA67",
+    "externalReference": "ecopet_cmsleg0ib0011jx04eqjvx6s7",
+    "environment": "test",
+    "amount": 50,
+    "status": "PROCESSING",
+    "metadataKeys": [
+      "items",
+      "splitReady",
+      "partnerNetEstimated",
+      "platformFeeEstimated"
+    ],
+    "metadataAppId": null
+  },
+  "snapshots": [],
+  "recentSignatureLogs": [
+    {
+      "createdAt": "2026-08-09T06:00:53.754Z",
+      "status": "success",
+      "message": "SIGNATURE_OK source=SIMULATOR rawQueryKeys=x-vercel-protection-bypass,data.id,type queryDataDotId=123456 queryDataUnderscoreId=none bodyDataId=123456 typeQuery=order bodyType=order queryDataIdPresent=1 bodyDataIdPresent=1 secretLen=64 secretSha8=9d2804a9 ts=1786255252 v1=1 v1Len=64 reqId=1 reqLen=36 reqSha8=4e859657 dataIdPresent=1 dataIdLen=6 dataIdCase=numeric dataIdSrc=QUERY_DATA_DOT_ID dataId=123456 recvV1Sha8=7d551f2c manifestSha8=128201f7 expHmacSha8=7d551f2c recvHmacSha8=7d551f2c candidate=SDK_ORIGINAL candidates=1"
+    },
+    {
+      "createdAt": "2026-08-09T06:06:13.083Z",
+      "status": "error",
+      "message": "SIGNATURE_MISMATCH source=NATURAL rawQueryKeys=data.external_reference,data.id,type,x-vercel-protection-bypass queryDataDotId=ORDTST01…A1MH queryDataUnderscoreId=none bodyDataId=ORDTST01…A1MH typeQuery=order bodyType=order queryDataIdPresent=1 bodyDataIdPresent=1 secretLen=64 secretSha8=9d2804a9 ts=1786255572 v1=1 v1Len=64 reqId=1 reqLen=36 reqSha8=be8176cb dataIdPresent=1 dataIdLen=32 dataIdCase=upper dataIdSrc=QUERY_DATA_DOT_ID dataId=ORDTST01…A1MH recvV1Sha8=cfb1e265 manifestSha8=452a5ff2 expHmacSha8=ae98369f recvHmacSha8=cfb1e265 candidate=NONE candidates=2"
+    },
+    {
+      "createdAt": "2026-08-09T06:06:13.895Z",
+      "status": "error",
+      "message": "SIGNATURE_MISMATCH source=NATURAL rawQueryKeys=data.external_reference,data.id,type,x-vercel-protection-bypass queryDataDotId=ORDTST01…A1MH queryDataUnderscoreId=none bodyDataId=ORDTST01…A1MH typeQuery=order bodyType=order queryDataIdPresent=1 bodyDataIdPresent=1 secretLen=64 secretSha8=9d2804a9 ts=1786255573 v1=1 v1Len=64 reqId=1 reqLen=36 reqSha8=b169e7c0 dataIdPresent=1 dataIdLen=32 dataIdCase=upper dataIdSrc=QUERY_DATA_DOT_ID dataId=ORDTST01…A1MH recvV1Sha8=e4bfb6e9 manifestSha8=f914864d expHmacSha8=15882e8e recvHmacSha8=e4bfb6e9 candidate=NONE candidates=2"
+    }
+  ],
+  "allNaturalEvents": [
+    {
+      "createdAt": "2026-08-09T06:06:13.167Z",
+      "applicationId": "2558117866767882",
+      "mpUserId": "3549381009",
+      "liveMode": false,
+      "signatureValid": false,
+      "failureCode": "SIGNATURE_MISMATCH",
+      "action": "order.processed",
+      "api_version": null
+    },
+    {
+      "createdAt": "2026-08-09T06:06:13.973Z",
+      "applicationId": "2558117866767882",
+      "mpUserId": "3549381009",
+      "liveMode": false,
+      "signatureValid": false,
+      "failureCode": "SIGNATURE_MISMATCH",
+      "action": "order.processed",
+      "api_version": null
+    }
+  ],
+  "allSimEventsSample": [
+    {
+      "createdAt": "2026-08-09T05:39:35.565Z",
+      "resourceId": "123456",
+      "applicationId": "3863741237237502",
+      "mpUserId": "652366957",
+      "liveMode": true,
+      "signatureValid": true,
+      "failureCode": "MP_VALIDATION:invalid_path_param",
+      "action": "order.processed",
+      "api_version": null
+    }
+  ]
+}

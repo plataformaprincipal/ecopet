@@ -36,6 +36,7 @@
     "sync:env": "node scripts/sync-web-env.mjs",
     "test:sync-env": "node scripts/test-sync-env.mjs",
     "validate:env": "node scripts/validate-production-env.mjs",
+    "check:production-env": "node scripts/check-production-environment.mjs",
     "test:auth": "node scripts/test-auth-flow.mjs",
     "test:register": "node scripts/test-register-duplicates.mjs",
     "test:foundation": "node scripts/run-foundation-tests.mjs",

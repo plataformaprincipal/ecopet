@@ -152,6 +152,194 @@ describe("mercado-pago webhook signature", () => {
       secret,
     });
     assert.equal(okSec.valid, true, "ts em segundos Unix (formato oficial MP)");
+
+    // Orders API: data.id alfanumérico uppercase — MP assina com case original
+    const ordId = "ORDTST01EXAMPLEUPPERCASEID0001";
+    const ordTs = String(Math.floor(Date.now() / 1000));
+    const ordManifest = `id:${ordId};request-id:${requestId};ts:${ordTs};`;
+    const ordV1 = createHmac("sha256", secret).update(ordManifest).digest("hex");
+    const okOrd = verifyMercadoPagoWebhookSignature({
+      xSignature: `ts=${ordTs},v1=${ordV1}`,
+      xRequestId: requestId,
+      dataId: ordId,
+      secret,
+    });
+    assert.equal(okOrd.valid, true, "data.id uppercase preservado no manifest");
+
+    // SDK: omitir id do manifest quando data.id ausente na notificação
+    const omitTs = String(Math.floor(Date.now() / 1000));
+    const omitManifest = `request-id:${requestId};ts:${omitTs};`;
+    const omitV1 = createHmac("sha256", secret).update(omitManifest).digest("hex");
+    const okOmit = verifyMercadoPagoWebhookSignature({
+      xSignature: `ts=${omitTs},v1=${omitV1}`,
+      xRequestId: requestId,
+      dataId: null,
+      secret,
+    });
+    assert.equal(okOmit.valid, true, "manifest sem id quando data.id ausente");
+  });
+
+  it("vetores determinísticos: ts/request-id/data.id/secret errados", () => {
+    const dataId = "ORDTST01VECTORCASE0001";
+    const requestId = "req-vector-001";
+    const ts = "1700000000";
+    const manifest = `id:${dataId};request-id:${requestId};ts:${ts};`;
+    const v1 = createHmac("sha256", secret).update(manifest).digest("hex");
+    const nowMs = Number(ts) * 1000;
+
+    assert.equal(
+      verifyMercadoPagoWebhookSignature({
+        xSignature: `ts=${ts},v1=${v1}`,
+        xRequestId: requestId,
+        dataId,
+        secret,
+        nowMs,
+      }).valid,
+      true
+    );
+
+    assert.equal(
+      verifyMercadoPagoWebhookSignature({
+        xSignature: `ts=${Number(ts) + 1},v1=${v1}`,
+        xRequestId: requestId,
+        dataId,
+        secret,
+        nowMs: (Number(ts) + 1) * 1000,
+      }).reason,
+      "SIGNATURE_MISMATCH"
+    );
+
+    assert.equal(
+      verifyMercadoPagoWebhookSignature({
+        xSignature: `ts=${ts},v1=${v1}`,
+        xRequestId: "other-req",
+        dataId,
+        secret,
+        nowMs,
+      }).reason,
+      "SIGNATURE_MISMATCH"
+    );
+
+    assert.equal(
+      verifyMercadoPagoWebhookSignature({
+        xSignature: `ts=${ts},v1=${v1}`,
+        xRequestId: requestId,
+        dataId: "ORDTST01VECTORCASE0002",
+        secret,
+        nowMs,
+      }).reason,
+      "SIGNATURE_MISMATCH"
+    );
+
+    assert.equal(
+      verifyMercadoPagoWebhookSignature({
+        xSignature: `ts=${ts},v1=${v1}`,
+        xRequestId: requestId,
+        dataId,
+        secret: "wrong_secret_value_xxx",
+        nowMs,
+      }).reason,
+      "SIGNATURE_MISMATCH"
+    );
+
+    // Docs Orders legadas: assinatura gerada com lowercase; dataId uppercase ainda aceita via DOCS_LOWERCASE
+    const lowerManifest = `id:${dataId.toLowerCase()};request-id:${requestId};ts:${ts};`;
+    const lowerV1 = createHmac("sha256", secret).update(lowerManifest).digest("hex");
+    const lowerOk = verifyMercadoPagoWebhookSignature({
+      xSignature: `ts=${ts},v1=${lowerV1}`,
+      xRequestId: requestId,
+      dataId,
+      secret,
+      nowMs,
+    });
+    assert.equal(lowerOk.valid, true, "candidato DOCS_LOWERCASE");
+    assert.equal(lowerOk.diagnostics?.candidateUsed, "DOCS_LOWERCASE");
+  });
+
+  it("data.id na query / Order alfanumérico / body diferente / query ausente", async () => {
+    const { extractMercadoPagoWebhookQuery } = await import("./webhook-query");
+    const secret = "whsec_test_secret_value_123";
+    const ordId = "ORDTST01REALORDERID0001ABCD";
+    const requestId = "req-order-query-1";
+    const ts = "1700000000";
+    const nowMs = Number(ts) * 1000;
+
+    const q = extractMercadoPagoWebhookQuery(
+      `https://homolog.eccopet.com/api/webhooks/mercado-pago?data.id=${ordId}&type=order`
+    );
+    assert.deepEqual(q.rawQueryKeys.sort(), ["data.id", "type"].sort());
+    assert.equal(q.queryDataDotId, ordId);
+    assert.equal(q.preferredQueryDataId, ordId);
+
+    const manifest = `id:${ordId};request-id:${requestId};ts:${ts};`;
+    const v1 = createHmac("sha256", secret).update(manifest).digest("hex");
+    const ok = verifyMercadoPagoWebhookSignature({
+      xSignature: `ts=${ts},v1=${v1}`,
+      xRequestId: requestId,
+      dataId: q.preferredQueryDataId,
+      dataIdSource: "QUERY_DATA_DOT_ID",
+      secret,
+      nowMs,
+    });
+    assert.equal(ok.valid, true);
+    assert.equal(ok.diagnostics?.dataIdSource, "QUERY_DATA_DOT_ID");
+    assert.equal(ok.diagnostics?.candidateUsed, "SDK_ORIGINAL");
+
+    // body data.id diferente da query — HMAC deve usar a query (valor passado)
+    const bodyDifferent = "ORDTST01DIFFERENTBODY0000001";
+    assert.notEqual(ordId, bodyDifferent);
+    const withQuery = verifyMercadoPagoWebhookSignature({
+      xSignature: `ts=${ts},v1=${v1}`,
+      xRequestId: requestId,
+      dataId: ordId,
+      secret,
+      nowMs,
+    });
+    assert.equal(withQuery.valid, true);
+    const withBody = verifyMercadoPagoWebhookSignature({
+      xSignature: `ts=${ts},v1=${v1}`,
+      xRequestId: requestId,
+      dataId: bodyDifferent,
+      secret,
+      nowMs,
+    });
+    assert.equal(withBody.valid, false);
+    assert.equal(withBody.reason, "SIGNATURE_MISMATCH");
+
+    // query ausente → manifest sem id (SDK omite)
+    const omitManifest = `request-id:${requestId};ts:${ts};`;
+    const omitV1 = createHmac("sha256", secret).update(omitManifest).digest("hex");
+    const omitOk = verifyMercadoPagoWebhookSignature({
+      xSignature: `ts=${ts},v1=${omitV1}`,
+      xRequestId: requestId,
+      dataId: null,
+      secret,
+      nowMs,
+    });
+    assert.equal(omitOk.valid, true);
+
+    // x-request-id ausente
+    const noReqManifest = `id:${ordId};ts:${ts};`;
+    const noReqV1 = createHmac("sha256", secret).update(noReqManifest).digest("hex");
+    const noReqOk = verifyMercadoPagoWebhookSignature({
+      xSignature: `ts=${ts},v1=${noReqV1}`,
+      xRequestId: null,
+      dataId: ordId,
+      secret,
+      nowMs,
+    });
+    assert.equal(noReqOk.valid, true);
+
+    // 1 caractere a menos no data.id → inválida
+    const oneChar = verifyMercadoPagoWebhookSignature({
+      xSignature: `ts=${ts},v1=${v1}`,
+      xRequestId: requestId,
+      dataId: ordId.slice(0, -1) + "X",
+      secret,
+      nowMs,
+    });
+    assert.equal(oneChar.valid, false);
+    assert.equal(oneChar.reason, "SIGNATURE_MISMATCH");
   });
 });
 

@@ -1,0 +1,59 @@
+{
+  "startedAt": "2026-08-09T03:58:03.526Z",
+  "checks": [
+    {
+      "name": "schema_idempotency_keys_documented",
+      "ok": true,
+      "uniques": [
+        "FinancialLedgerEntry_idempotencyKey_key",
+        "FinancialReserve_idempotencyKey_key",
+        "PartnerPayout_idempotencyKey_key",
+        "MpWebhookEvent_providerEventId_eventType_resourceId_key"
+      ]
+    },
+    {
+      "name": "no_duplicate_ledger_keys_on_paid_sample",
+      "ok": true,
+      "count": 9,
+      "unique": 9,
+      "paymentPrefix": "cmsl3j8l"
+    },
+    {
+      "name": "concurrent_insert_same_idempotency_10x",
+      "ok": true,
+      "fulfilled": 1,
+      "rejectedDup": 9,
+      "rows": 1
+    },
+    {
+      "name": "paid_sample_ledger_stable_after_probe",
+      "ok": true,
+      "before": 9,
+      "after": 9
+    },
+    {
+      "name": "refund_sum_not_over_paid_sample",
+      "ok": true,
+      "samples": 3,
+      "over": 0
+    },
+    {
+      "name": "no_approved_without_provider_ids",
+      "ok": true,
+      "count": 0
+    },
+    {
+      "name": "no_duplicate_payment_received",
+      "ok": true,
+      "dupCount": 0
+    }
+  ],
+  "blockers": [],
+  "notes": [
+    "GAP: reconcilePayment receivedAmountCents = payment.amount (não consulta provider)",
+    "CRITICAL GAP: FASE 3.3 webhook natural SIGNATURE_MISMATCH — FIN-001 canal externo não comprovado"
+  ],
+  "finishedAt": "2026-08-09T03:58:06.677Z",
+  "passed": 7,
+  "failed": 0
+}

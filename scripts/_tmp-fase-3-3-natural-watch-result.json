@@ -1,52 +1,134 @@
 {
   "naturalWebhookProven": true,
   "classification": "NATURAL_WEBHOOK_OBSERVED",
-  "waitMs": 15969,
+  "waitMs": 16491,
   "timeline": {
-    "T0_orderCreatedAt": "2026-08-09T02:52:45.963Z",
-    "T1_chargeAt": "2026-08-09T02:52:47.590Z",
-    "T2_providerApprovedAt": "2026-08-09T02:52:50.052Z",
-    "watchStart": "2026-08-09T02:52:50.053Z",
-    "firstNaturalAt": "2026-08-09T02:52:53.978Z",
-    "watchEnd": "2026-08-09T02:53:05.742Z"
+    "T0_orderCreatedAt": "2026-08-09T06:06:04.859Z",
+    "T1_chargeAt": "2026-08-09T06:06:06.862Z",
+    "T2_providerApprovedAt": "2026-08-09T06:06:09.307Z",
+    "watchStart": "2026-08-09T06:06:09.344Z",
+    "firstNaturalAt": "2026-08-09T06:06:13.167Z",
+    "watchEnd": "2026-08-09T06:06:25.011Z"
   },
-  "providerOrderId": "ORDTST01KZJ6ZWKN4QY7EM8V812GSMPQ",
-  "providerPaymentId": "PAY01KZJ6ZWM62XVJ2K93X6PQ9A16",
-  "providerOrderIdSanitized": "ORDTST01…SMPQ",
-  "providerPaymentIdSanitized": "PAY01KZJ…9A16",
+  "providerOrderId": "ORDTST01KZJJ1W6BXHNN3X9EFMR1A1MH",
+  "providerPaymentId": "PAY01KZJJ1W775QK4DQPTFC20AA67",
+  "providerOrderIdSanitized": "ORDTST01…A1MH",
+  "providerPaymentIdSanitized": "PAY01KZJ…AA67",
+  "externalReference": "ecopet_cmsleg0ib0011jx04eqjvx6s7",
+  "amount": 50,
   "finalOrderStatus": "PENDING_CONFIRMATION",
   "finalPaymentStatus": "PROCESSING",
   "ledgerCount": 0,
+  "reserveHeldCount": 0,
+  "reserves": [],
+  "partnerPayableLedgerCount": 0,
+  "auditCount": 1,
   "paidWithoutPoll": false,
   "naturalEvents": [
     {
-      "id": "cmsl7jja…if3h",
+      "id": "cmsleg59…cw1a",
       "eventType": "order",
-      "resourceId": "ORDTST01…SMPQ",
+      "action": "order.processed",
+      "resourceId": "ORDTST01…A1MH",
       "processingStatus": "FAILED",
       "signatureValid": false,
       "failureCode": "SIGNATURE_MISMATCH",
-      "createdAt": "2026-08-09T02:52:53.978Z"
+      "failureReason": "SIGNATURE_MISMATCH source=NATURAL rawQueryKeys=data.external_reference,data.id,type,x-vercel-protection-bypass queryDataDotId=ORDTST01…A1MH queryDataUnderscoreId=none bodyDataId=ORDTST01…A1MH typeQuery=order bodyType=order queryDataIdPresent=1 bodyDataIdPresent=1 secretLen=64 secretSha8=9d2804a9 ts=1786255572 v1=1 v1Len=64 reqId=1 reqLen=36 reqSha8=be8176cb dataIdPresent=1 dataIdLen=32 dataIdCase=upper dataIdSrc=QUERY_DATA_DOT_ID dataId=ORDTST01…A1MH recvV1Sha8=cfb1e265 manifestSha8=452a5ff2 expHmacSha8=ae98369f recvHmacSha8=cfb1e265 candidate=NONE candidates=2",
+      "createdAt": "2026-08-09T06:06:13.167Z",
+      "sigDiag": {
+        "ts": "1786255572",
+        "source": "NATURAL",
+        "typeQuery": "order",
+        "bodyDataId": "ORDTST01…A1MH",
+        "secretSha8": "9d2804a9",
+        "dataIdSource": "QUERY_DATA_DOT_ID",
+        "manifestSha8": "452a5ff2",
+        "rawQueryKeys": [
+          "data.external_reference",
+          "data.id",
+          "type",
+          "x-vercel-protection-bypass"
+        ],
+        "candidateUsed": "NONE",
+        "queryDataDotId": "ORDTST01…A1MH",
+        "receivedV1Sha8": "cfb1e265",
+        "xRequestIdSha8": "be8176cb",
+        "expectedHmacSha8": "ae98369f",
+        "receivedHmacSha8": "cfb1e265",
+        "queryDataUnderscoreId": null
+      },
+      "parsed": {
+        "source": "NATURAL",
+        "rawQueryKeys": "data.external_reference,data.id,type,x-vercel-protection-bypass",
+        "queryDataDotId": "ORDTST01…A1MH",
+        "bodyDataId": "ORDTST01…A1MH",
+        "candidate": "NONE",
+        "ts": "1786255572",
+        "manifestSha8": "452a5ff2",
+        "expHmacSha8": "ae98369f",
+        "recvHmacSha8": "cfb1e265",
+        "secretSha8": "9d2804a9",
+        "dataIdSrc": "QUERY_DATA_DOT_ID",
+        "reqSha8": "be8176cb"
+      }
     },
     {
-      "id": "cmsl7jjt…e4tq",
+      "id": "cmsleg5w…sebq",
       "eventType": "order",
-      "resourceId": "ORDTST01…SMPQ",
+      "action": "order.processed",
+      "resourceId": "ORDTST01…A1MH",
       "processingStatus": "FAILED",
       "signatureValid": false,
       "failureCode": "SIGNATURE_MISMATCH",
-      "createdAt": "2026-08-09T02:52:54.674Z"
+      "failureReason": "SIGNATURE_MISMATCH source=NATURAL rawQueryKeys=data.external_reference,data.id,type,x-vercel-protection-bypass queryDataDotId=ORDTST01…A1MH queryDataUnderscoreId=none bodyDataId=ORDTST01…A1MH typeQuery=order bodyType=order queryDataIdPresent=1 bodyDataIdPresent=1 secretLen=64 secretSha8=9d2804a9 ts=1786255573 v1=1 v1Len=64 reqId=1 reqLen=36 reqSha8=b169e7c0 dataIdPresent=1 dataIdLen=32 dataIdCase=upper dataIdSrc=QUERY_DATA_DOT_ID dataId=ORDTST01…A1MH recvV1Sha8=e4bfb6e9 manifestSha8=f914864d expHmacSha8=15882e8e recvHmacSha8=e4bfb6e9 candidate=NONE candidates=2",
+      "createdAt": "2026-08-09T06:06:13.973Z",
+      "sigDiag": {
+        "ts": "1786255573",
+        "source": "NATURAL",
+        "typeQuery": "order",
+        "bodyDataId": "ORDTST01…A1MH",
+        "secretSha8": "9d2804a9",
+        "dataIdSource": "QUERY_DATA_DOT_ID",
+        "manifestSha8": "f914864d",
+        "rawQueryKeys": [
+          "data.external_reference",
+          "data.id",
+          "type",
+          "x-vercel-protection-bypass"
+        ],
+        "candidateUsed": "NONE",
+        "queryDataDotId": "ORDTST01…A1MH",
+        "receivedV1Sha8": "e4bfb6e9",
+        "xRequestIdSha8": "b169e7c0",
+        "expectedHmacSha8": "15882e8e",
+        "receivedHmacSha8": "e4bfb6e9",
+        "queryDataUnderscoreId": null
+      },
+      "parsed": {
+        "source": "NATURAL",
+        "rawQueryKeys": "data.external_reference,data.id,type,x-vercel-protection-bypass",
+        "queryDataDotId": "ORDTST01…A1MH",
+        "bodyDataId": "ORDTST01…A1MH",
+        "candidate": "NONE",
+        "ts": "1786255573",
+        "manifestSha8": "f914864d",
+        "expHmacSha8": "15882e8e",
+        "recvHmacSha8": "e4bfb6e9",
+        "secretSha8": "9d2804a9",
+        "dataIdSrc": "QUERY_DATA_DOT_ID",
+        "reqSha8": "b169e7c0"
+      }
     }
   ],
   "ticks": [
     {
-      "tMs": 380,
+      "tMs": 357,
       "naturalCount": 0,
       "orderStatus": "PENDING_CONFIRMATION",
       "paymentStatus": "PROCESSING"
     },
     {
-      "tMs": 15688,
+      "tMs": 15666,
       "naturalCount": 2,
       "orderStatus": "PENDING_CONFIRMATION",
       "paymentStatus": "PROCESSING"

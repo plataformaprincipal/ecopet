@@ -1,0 +1,51 @@
+{
+  "captureWindowSince": "2026-08-09T06:00:35.873Z",
+  "latestSignatureLog": {
+    "createdAt": "2026-08-09T06:29:14.991Z",
+    "status": "success",
+    "message": "SIGNATURE_OK source=SIMULATOR rawQueryKeys=x-vercel-protection-bypass,data.id,type queryDataDotId=123456 queryDataUnderscoreId=none bodyDataId=123456 typeQuery=order bodyType=order queryDataIdPresent=1 bodyDataIdPresent=1 secretLen=64 secretSha8=9d2804a9 ts=1786256954 v1=1 v1Len=64 reqId=1 reqLen=36 reqSha8=4bbd3afd dataIdPresent=1 dataIdLen=6 dataIdCase=numeric dataIdSrc=QUERY_DATA_DOT_ID dataId=123456 recvV1Sha8=3030667b manifestSha8=14315560 expHmacSha8=3030667b recvHmacSha8=3030667b candidate=SDK_ORIGINAL candidates=1"
+  },
+  "latestEvent": null,
+  "fields": {
+    "signatureValid": true,
+    "failureCode": null,
+    "queryDataId": "123456",
+    "bodyDataId": "123456",
+    "candidate": "SDK_ORIGINAL",
+    "ts": "1786256954",
+    "manifestSha8": "14315560",
+    "expectedHmacSha8": "3030667b",
+    "receivedHmacSha8": "3030667b",
+    "secretSha8": "9d2804a9",
+    "source": "SIMULATOR",
+    "rawQueryKeys": "x-vercel-protection-bypass,data.id,type",
+    "dataIdSrc": "QUERY_DATA_DOT_ID"
+  },
+  "recentLogs": [
+    {
+      "createdAt": "2026-08-09T06:29:14.991Z",
+      "status": "success",
+      "head": "SIGNATURE_OK source=SIMULATOR rawQueryKeys=x-vercel-protection-bypass,data.id,type queryDataDotId=123456 queryDataUnders"
+    },
+    {
+      "createdAt": "2026-08-09T06:27:47.473Z",
+      "status": "success",
+      "head": "SIGNATURE_OK source=SIMULATOR rawQueryKeys=x-vercel-protection-bypass,data.id,type queryDataDotId=123456 queryDataUnders"
+    },
+    {
+      "createdAt": "2026-08-09T06:25:10.894Z",
+      "status": "error",
+      "head": "SIGNATURE_MISMATCH source=NATURAL rawQueryKeys=data.external_reference,data.id,type,x-vercel-protection-bypass queryData"
+    },
+    {
+      "createdAt": "2026-08-09T06:25:08.895Z",
+      "status": "error",
+      "head": "SIGNATURE_MISMATCH source=NATURAL rawQueryKeys=data.external_reference,data.id,type,x-vercel-protection-bypass queryData"
+    },
+    {
+      "createdAt": "2026-08-09T06:16:03.866Z",
+      "status": "error",
+      "head": "SIGNATURE_MISMATCH source=NATURAL rawQueryKeys=data.external_reference,data.id,type,x-vercel-protection-bypass queryData"
+    }
+  ]
+}

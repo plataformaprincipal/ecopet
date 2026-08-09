@@ -360,6 +360,19 @@ while (Date.now() - started < NATURAL_WAIT_MS) {
   log("watch_tick", tick);
   if (natural.length) {
     timeline.firstNaturalAt = natural[0].createdAt?.toISOString?.() || new Date().toISOString();
+    // Se assinatura OK, continuar observando DB (sem poll MP) até PAID ou +90s
+    if (natural.some((ev) => ev.signatureValid)) {
+      const paidDeadline = Date.now() + 90_000;
+      while (Date.now() < paidDeadline) {
+        pay = await prisma.payment.findUnique({ where: { id: paymentId } });
+        const ordPaid = await prisma.order.findUnique({ where: { id: orderId } });
+        const led = await prisma.financialLedgerEntry.count({ where: { paymentId } });
+        if (ordPaid?.status === "PAID" && (pay?.status === "APPROVED" || pay?.status === "PAID") && led > 0) {
+          break;
+        }
+        await new Promise((r) => setTimeout(r, TICK_MS));
+      }
+    }
     break;
   }
   await new Promise((r) => setTimeout(r, TICK_MS));
@@ -369,6 +382,65 @@ timeline.watchEnd = new Date().toISOString();
 const finalPay = await prisma.payment.findUnique({ where: { id: paymentId } });
 const finalOrd = await prisma.order.findUnique({ where: { id: orderId } });
 const ledgerCount = await prisma.financialLedgerEntry.count({ where: { paymentId } });
+const reserves = await prisma.financialReserve
+  .findMany({ where: { orderId }, select: { id: true, status: true, paymentId: true } })
+  .catch(() => []);
+const reserveHeldCount = reserves.filter((r) => r.status === "HELD").length;
+const partnerPayableEntries = await prisma.financialLedgerEntry.count({
+  where: { paymentId, entryType: "PARTNER_PAYABLE" },
+});
+const auditCount = await prisma.auditLog
+  .count({
+    where: {
+      OR: [{ resourceId: orderId }, { resourceId: paymentId }],
+      createdAt: { gte: observeSince },
+    },
+  })
+  .catch(() => 0);
+
+function parseKv(s) {
+  const out = {};
+  for (const part of String(s || "").split(/\s+/)) {
+    const eq = part.indexOf("=");
+    if (eq <= 0) continue;
+    out[part.slice(0, eq)] = part.slice(eq + 1);
+  }
+  return out;
+}
+
+const naturalEvents = natural.map((ev) => {
+  const kv = parseKv(ev.failureReason);
+  const sig =
+    ev.sanitizedPayload && typeof ev.sanitizedPayload === "object"
+      ? ev.sanitizedPayload._sigDiag || null
+      : null;
+  return {
+    id: sanitizeId(ev.id),
+    eventType: ev.eventType,
+    action: ev.action,
+    resourceId: sanitizeId(ev.resourceId),
+    processingStatus: ev.processingStatus,
+    signatureValid: ev.signatureValid,
+    failureCode: ev.failureCode,
+    failureReason: ev.failureReason,
+    createdAt: ev.createdAt,
+    sigDiag: sig,
+    parsed: {
+      source: kv.source || sig?.source || null,
+      rawQueryKeys: kv.rawQueryKeys || (sig?.rawQueryKeys || []).join(",") || null,
+      queryDataDotId: kv.queryDataDotId || sig?.queryDataDotId || null,
+      bodyDataId: kv.bodyDataId || sig?.bodyDataId || null,
+      candidate: kv.candidate || sig?.candidateUsed || null,
+      ts: kv.ts || sig?.ts || null,
+      manifestSha8: kv.manifestSha8 || sig?.manifestSha8 || null,
+      expHmacSha8: kv.expHmacSha8 || sig?.expectedHmacSha8 || null,
+      recvHmacSha8: kv.recvHmacSha8 || sig?.receivedHmacSha8 || null,
+      secretSha8: kv.secretSha8 || sig?.secretSha8 || null,
+      dataIdSrc: kv.dataIdSrc || sig?.dataIdSource || null,
+      reqSha8: kv.reqSha8 || sig?.xRequestIdSha8 || null,
+    },
+  };
+});
 
 const out = {
   naturalWebhookProven: natural.length > 0,
@@ -381,21 +453,21 @@ const out = {
   providerPaymentId: finalPay?.providerPaymentId || null,
   providerOrderIdSanitized: sanitizeId(providerOrderId),
   providerPaymentIdSanitized: sanitizeId(finalPay?.providerPaymentId),
+  externalReference: finalPay?.externalReference || finalOrd?.id || null,
+  amount: finalPay?.amount ?? null,
   finalOrderStatus: finalOrd?.status,
   finalPaymentStatus: finalPay?.status,
   ledgerCount,
+  reserveHeldCount,
+  reserves: reserves.map((r) => ({ id: sanitizeId(r.id), status: r.status })),
+  partnerPayableLedgerCount: partnerPayableEntries,
+  auditCount,
   // financial chain without poll must stay unpaid if webhook missing
   paidWithoutPoll:
-    finalOrd?.status === "PAID" && finalPay?.status === "APPROVED" && ledgerCount > 0,
-  naturalEvents: natural.map((ev) => ({
-    id: sanitizeId(ev.id),
-    eventType: ev.eventType,
-    resourceId: sanitizeId(ev.resourceId),
-    processingStatus: ev.processingStatus,
-    signatureValid: ev.signatureValid,
-    failureCode: ev.failureCode,
-    createdAt: ev.createdAt,
-  })),
+    finalOrd?.status === "PAID" &&
+    (finalPay?.status === "APPROVED" || finalPay?.status === "PAID") &&
+    ledgerCount > 0,
+  naturalEvents,
   ticks,
   runtimePublicKeyPrefix: String(cfg.publicKey).slice(0, 10),
   note: "Nenhum polling e nenhum webhook assinado durante a janela",

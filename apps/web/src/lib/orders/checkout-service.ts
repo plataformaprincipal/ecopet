@@ -15,6 +15,7 @@ import { getOrCreateCart } from "@/lib/cart/cart-service";
 import { calculateOrderPricing, loadPricingSettings } from "@/lib/commerce/pricing";
 import { calculateCommercialAllocation } from "@/lib/finance/allocation";
 import { writeAuditLog } from "@/lib/audit-log";
+import { assertCheckoutEnabled } from "@/lib/commerce/checkout-flags";
 
 const PAYMENT_AT_DELIVERY_LABEL: Record<PaymentMethod, string> = {
   PIX: "PIX na entrega",
@@ -34,6 +35,8 @@ export async function checkoutFromCart(params: {
   address: Prisma.InputJsonValue;
   idempotencyKey?: string | null;
 }) {
+  assertCheckoutEnabled();
+
   if (params.idempotencyKey) {
     const existing = await prisma.order.findUnique({
       where: { idempotencyKey: params.idempotencyKey },

@@ -1,12 +1,12 @@
 # Fase 3.3 — Fechamento definitivo do webhook Mercado Pago — Resultado
 
 **Branch:** `test/fase-3-1-financial-preview`  
-**Commits base:** `b0b2335` (+ patches Preview locais de assinatura, não commitados)  
-**Deployment Preview:** `ecopet-55jom955v-ecopet-s-projects.vercel.app`  
+**Base:** `5afc072` (+ patches locais de assinatura / recon / docs — não commitados)  
+**Deployment:** `ecopet-mm3co6q98-ecopet-s-projects.vercel.app`  
 **Alias:** `https://homolog.eccopet.com`  
 **Projeto:** `ecopet-web`  
-**Produção:** **não** alterada (código/deploy)  
-**Atualizado:** 2026-08-08 (BRT) — retomada após separação Preview/Production do secret
+**Produção:** **não** alterada  
+**Atualizado:** 2026-08-09T04:28Z
 
 ---
 
@@ -16,108 +16,76 @@
 FASE 3.3 BLOQUEADA — ASSINATURA/ENTREGA NÃO VALIDADA
 ```
 
-FASE 3.4: **NÃO EXECUTADA**.
-
----
-
-## 1. Metadata do secret (sem valores)
-
-| Check | Resultado |
-| ----- | --------- |
-| Escopos separados Preview vs Production | **sim** — 2 entradas distintas no `env ls` |
-| Registro único compartilhado Preview+Production | **não** (removido) |
-| Duplicatas no mesmo escopo | **não** |
-| Preview atualizado recentemente | **sim** (~10m no `env ls`) |
-| Production atualizado recentemente | **sim** (~9m no `env ls`) |
-
-### Fingerprints (`env pull`, só metadata)
-
-| Escopo | present | length | charset | sha256[:8] |
-| ------ | ------- | -----: | ------- | ---------- |
-| Preview | sim | **11** | mixed | `3930fb7a` |
-| Production | sim | **11** | mixed | `3930fb7a` |
-| Arquivo local `.env.preview.verify` | sim | **64** | hex | `bfcd6920` |
-
-| Comparação | Resultado |
-| ---------- | --------- |
-| Preview == Production (fingerprint) | **sim** (mesmo valor nos dois escopos) |
-| Preview == local verify (fingerprint) | **não** |
-
-**Interpretação:** a separação de escopos funcionou, mas o **conteúdo** do Preview continua o secret antigo (11 chars), idêntico ao de Production — **não** o secret longo do painel MP modo teste (formato típico hex ~64).
-
-Nenhuma alteração na lógica HMAC nesta retomada.
-
----
-
-## 2. Redeploy Preview
-
-| Item | Valor |
-| ---- | ----- |
-| Deploy | `dpl_3ker73ab…` / `ecopet-55jom955v…` |
-| Target | Preview only |
-| Alias | homolog → deployment acima |
-| Health | 200 · `database=connected` |
-| MP | `test` / `TEST_READY` |
-
----
-
-## 3. Cobrança + webhook natural (sem poll)
-
-| Marco | UTC |
-| ----- | --- |
-| T0 order | `2026-08-09T02:52:45.963Z` |
-| T1 charge | `2026-08-09T02:52:47.590Z` |
-| T2 accredited | `2026-08-09T02:52:50.052Z` |
-| T3 natural | `2026-08-09T02:52:53.978Z` (~4s) |
-
-| Campo | Resultado |
-| ----- | --------- |
-| Provider Order | `ORDTST01…SMPQ` (real) |
-| Provider Payment | `PAY01KZJ…9A16` |
-| Natural events | 2 × `order` / `order.processed` |
-| `signatureValid` | **false** |
-| `failureCode` | **`SIGNATURE_MISMATCH`** |
-| Order final | `PENDING_CONFIRMATION` |
-| Payment final | `PROCESSING` |
-| Ledger | **0** |
-| Reserve / partner payable | ausentes |
-| Polling | **não usado** |
-
----
-
-## 4. Causa raiz
+Classificação P0:
 
 ```text
-ASSINATURA — Preview e Production separados, porém ambos com o MESMO secret antigo (fingerprint 3930fb7a / length 11).
-O secret do painel MP modo teste (fingerprint local bfcd6920 / length 64) NÃO está no Preview.
+P0 EXTERNO/INTEGRAÇÃO — SECRET DO PAINEL MP ≠ SECRET NO PREVIEW
+(manifest SDK-aligned; HMAC natural diverge com 2 fingerprints distintos)
 ```
 
-Entrega: **C — chega; assinatura rejeitada**.
+---
+
+## O que foi fechado neste ciclo (código)
+
+| Item | Status |
+| ---- | ------ |
+| Auditoria vs SDK `mercadopago@3.3.0` `WebhookSignatureValidator` | OK — template `id:;request-id:;ts:;`, omit missing, HMAC-SHA256 hex |
+| `query data.id` (+ fallback URL raw) | OK |
+| Case original / lower / upper | OK (5 candidatos) |
+| Diagnostics sanitizados (`secretLen/sha8`, `expHmacSha8`, `recvHmacSha8`, …) | OK |
+| Vetores unitários (válida / ts / req / data.id / secret / case) | OK — `test:mercado-pago` 21/21 |
+| Fail-closed (assinatura não desativada) | OK |
 
 ---
 
-## 5. Ação manual obrigatória
+## Secrets runtime (sanitizado)
 
-1. Painel MP (modo teste) → Webhooks → **revelar** secret.  
-2. Vercel → `ecopet-web` → `MERCADO_PAGO_WEBHOOK_SECRET` → escopo **Preview only**: colar o valor **exato** do painel.  
-3. Confirmar fingerprint Preview pós-update:  
-   - `length` ≈ 64 e `charset=hex` (ou formato do painel),  
-   - `sha8` **diferente** de `3930fb7a`,  
-   - `previewEqualsProduction` = **false** (se Production mantém o antigo).  
-4. Redeploy Preview + nova cobrança **sem poll**.
+| Momento | secretLen | secretSha8 | Resultado natural |
+| ------- | --------- | ---------- | ----------------- |
+| Pré-sync | 64 | `9d2804a9` | SIGNATURE_MISMATCH |
+| Pós-sync (`.env.preview.verify` → Vercel Preview) + redeploy | 64 | `bfcd6920` | SIGNATURE_MISMATCH |
 
-Não alterar HMAC. Não desativar assinatura. Não iniciar FASE 3.4 até passar.
+`vercel env pull` continua redigindo Sensitive como `[SENSITIVE]` (`sha8=3930fb7a`) — **não** usar como prova.
 
 ---
 
-## 6. Constraints
+## Prova natural (último ciclo — sem poll)
 
-- [x] Sem Production deploy  
+| Campo | Valor |
+| ----- | ----- |
+| Charge | sandbox Orders `accredited` |
+| Provider Order | `ORDTST01…YHGD` |
+| Natural T3 | ~2s após charge (`2026-08-09T04:28:17.610Z`) |
+| `signatureValid` | **false** |
+| `failureCode` | **SIGNATURE_MISMATCH** |
+| Diagnostics (exemplo) | `queryDataId=1 bodyDataId=1 dataCase=upper candidates=5 expHmacSha8=482fb3ca recvHmacSha8=a54f4a24` |
+| Order/Payment PAID | **não** |
+| Ledger / reserve / payable | **não** |
+| Polling | **não usado** |
+
+Conclusão: entrega natural **comprovada**; autenticidade HMAC **não** — o canal chega, mas o secret usado no Preview **não** reproduz o `v1` do Mercado Pago.
+
+---
+
+## Ação manual obrigatória (bloqueador)
+
+1. Abrir **Suas integrações** da **mesma** app TEST que emite `APP_USR-02…` / token Preview.  
+2. Webhooks → **revelar** Assinatura secreta **atual** (se Reset, copiar o novo).  
+3. Atualizar Preview `MERCADO_PAGO_WEBHOOK_SECRET` com esse valor exato.  
+4. Redeploy Preview; confirmar no reject que `secretSha8` mudou.  
+5. Nova cobrança sandbox + webhook natural → exigir `signatureValid=true` + Payment/Order PAID + ledger.
+
+Não desativar assinatura. Não usar polling como substituto.
+
+---
+
+## Constraints
+
+- [x] Sem Production deploy / DB / MP prod  
 - [x] Sem merge `main`  
 - [x] Sem commit automático  
 - [x] Sem polling como prova  
-- [x] Sem mudança de lógica HMAC nesta rodada  
-- [x] FASE 3.4 não iniciada  
+- [x] Assinatura permanece obrigatória  
 
 ---
 

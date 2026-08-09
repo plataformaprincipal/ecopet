@@ -741,6 +741,22 @@ export const ENV_REGISTRY: EnvVarDefinition[] = [
     secret: false,
   },
   {
+    name: "CHECKOUT_ENABLED",
+    tier: "optional",
+    scopes: ["web"],
+    environments: ["Production", "Preview", "Development"],
+    purpose:
+      "Kill switch de checkout. false/0/off bloqueia novos checkouts e cobranças MP. Valor inválido = fail-closed (bloqueado). Default true se ausente.",
+    usedIn: [
+      "apps/web/src/lib/commerce/checkout-flags.ts",
+      "apps/web/src/lib/orders/checkout-service.ts",
+      "apps/web/src/app/api/checkout/route.ts",
+      "apps/web/src/app/api/checkout/mercado-pago/order/route.ts",
+    ],
+    example: "true",
+    secret: false,
+  },
+  {
     name: "MERCADO_PAGO_ACCESS_TOKEN",
     tier: "optional",
     scopes: ["web"],

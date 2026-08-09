@@ -1,5 +1,6 @@
 import { apiFailure, apiSuccess } from "@/lib/api-response";
 import { runMercadoPagoWebhookPipeline } from "@/lib/mercado-pago/webhooks/pipeline";
+import { extractMercadoPagoWebhookQuery } from "@/lib/mercado-pago/webhook-query";
 import { withApiTelemetry } from "@/lib/observability/with-api-telemetry";
 import { recordWebhookTelemetry } from "@/lib/observability/integrations";
 import { captureSecurityEvent } from "@/lib/observability/error-capture";
@@ -34,21 +35,13 @@ async function mercadoPagoWebhookHandler(request: Request) {
   }
 
   const rawBody = await request.text();
-  // Docs MP: data.id para assinatura vem da query (?data.id=...), não só do body.
-  let queryDataId: string | null = null;
-  try {
-    const url = new URL(request.url);
-    queryDataId =
-      url.searchParams.get("data.id") ||
-      url.searchParams.get("data_id") ||
-      null;
-  } catch {
-    queryDataId = null;
-  }
+  // Docs MP Orders: data.id para assinatura vem da query (?data.id=...).
+  const query = extractMercadoPagoWebhookQuery(request.url);
+
   const result = await runMercadoPagoWebhookPipeline({
     rawBody,
     headers: request.headers,
-    queryDataId,
+    query,
   });
 
   if (!result.ok) {

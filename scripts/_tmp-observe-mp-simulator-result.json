@@ -1,0 +1,46 @@
+{
+  "observed": true,
+  "observeSince": "2026-08-09T05:38:57.753Z",
+  "firstEventAt": "2026-08-09T05:39:35.565Z",
+  "waitMs": 38263,
+  "httpReceived": {
+    "method": "POST",
+    "path": "/api/webhooks/mercado-pago",
+    "status": null,
+    "statusNote": "failed_unknown_http",
+    "host": "homolog.eccopet.com"
+  },
+  "topicOrType": "order",
+  "panelTopic": "order",
+  "action": "order.processed",
+  "dataIdQuery": {
+    "present": false,
+    "valueSanitized": null,
+    "note": "absent_or_unparsed"
+  },
+  "dataIdBody": {
+    "present": true,
+    "valueSanitized": "123456",
+    "resourceType": "order"
+  },
+  "xRequestIdPresent": true,
+  "xRequestIdSanitized": "0e5ec834…e140",
+  "xSignaturePresent": false,
+  "ts": null,
+  "signatureValid": true,
+  "failureCode": "MP_VALIDATION:invalid_path_param",
+  "expectedHmacSha8": null,
+  "receivedHmacSha8": null,
+  "secretSha8Runtime": null,
+  "processingStatus": "FAILED",
+  "environment": "test",
+  "liveMode": true,
+  "eventIdSanitized": "cmsldhwj…m8am",
+  "extras": {
+    "secretLen": null,
+    "dataLen": null,
+    "dataCase": null,
+    "candidates": null,
+    "totalNewEventsInWindow": 1
+  }
+}

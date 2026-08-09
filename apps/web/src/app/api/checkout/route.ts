@@ -42,6 +42,11 @@ export async function POST(request: Request) {
       INVALID_UNIT_PRICE: ["VALIDATION", "Preço inválido.", 400],
       INVALID_QUANTITY: ["VALIDATION", "Quantidade inválida.", 400],
       IDEMPOTENCY_CONFLICT: ["CONFLICT", "Chave de idempotência já utilizada.", 409],
+      CHECKOUT_DISABLED: [
+        "CHECKOUT_DISABLED",
+        "Checkout temporariamente indisponível.",
+        503,
+      ],
     };
     const hit = map[message];
     if (hit) return apiFailure(hit[0], hit[1], hit[2]);

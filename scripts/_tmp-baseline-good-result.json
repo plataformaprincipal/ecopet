@@ -1,0 +1,23 @@
+{
+  "label": "BASELINE_GOOD",
+  "observeSince": "2026-08-09T05:59:32.066Z",
+  "eventFound": true,
+  "note": "MpWebhookEvent não recriado (DUPLICATE do simulador 123456); prova via PlatformIntegrationLog SIGNATURE_OK + HTTP 200 do painel",
+  "http": "200 OK",
+  "rawQueryKeys": ["x-vercel-protection-bypass", "data.id", "type"],
+  "queryDataId": "123456",
+  "bodyDataId": "123456",
+  "candidate": "SDK_ORIGINAL",
+  "xRequestIdPresent": true,
+  "xRequestIdSha8": "4e859657",
+  "ts": "1786255252",
+  "manifestSha8": "128201f7",
+  "signatureValid": true,
+  "failureCode": null,
+  "expHmacSha8": "7d551f2c",
+  "recvHmacSha8": "7d551f2c",
+  "secretSha8": "9d2804a9",
+  "dataIdSource": "QUERY_DATA_DOT_ID",
+  "source": "SIMULATOR",
+  "loggedAt": "2026-08-09T06:00:53.754Z"
+}

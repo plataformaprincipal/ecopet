@@ -3,7 +3,16 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { hashPayload } from "@/lib/mercado-pago/crypto-utils";
 import { getMercadoPagoEnvironment } from "@/lib/mercado-pago/config";
-import { verifyMercadoPagoWebhookSignature } from "@/lib/mercado-pago/webhooks/verify-signature";
+import {
+  formatSignatureDiagnostics,
+  normalizeMercadoPagoDataId,
+  verifyMercadoPagoWebhookSignature,
+  type MercadoPagoSignatureCandidate,
+} from "@/lib/mercado-pago/webhooks/verify-signature";
+import {
+  sanitizeIdForDiag,
+  type MercadoPagoWebhookQueryExtract,
+} from "@/lib/mercado-pago/webhook-query";
 import { normalizeMercadoPagoWebhook } from "@/lib/mercado-pago/webhooks/normalize-event";
 import { findDuplicateMpWebhook } from "@/lib/mercado-pago/webhooks/idempotency";
 import { getWebhookHandler } from "@/lib/mercado-pago/webhooks/event-router";
@@ -11,6 +20,7 @@ import { writeIntegrationLog } from "@/lib/integrations/log";
 import { enqueueJob } from "@/lib/jobs/job-queue";
 import type { MpWebhookProcessingStatus } from "@prisma/client";
 import { asJson } from "@/lib/mercado-pago/webhooks/link-payment";
+import { emitFinancialAlert } from "@/lib/finance/financial-alerts";
 
 export type PipelineResult = {
   ok: boolean;
@@ -22,10 +32,61 @@ export type PipelineResult = {
 
 const MAX_BODY = 256_000;
 
+function classifyWebhookSource(params: {
+  queryDataId: string | null;
+  bodyDataId: string | null;
+}): "SIMULATOR" | "NATURAL" {
+  // Simulador oficial usa Data ID numérico curto (ex.: 123456).
+  const id = params.queryDataId || params.bodyDataId || "";
+  if (/^\d{1,12}$/.test(id)) return "SIMULATOR";
+  return "NATURAL";
+}
+
+function resolveDataIdForSignature(params: {
+  query: MercadoPagoWebhookQueryExtract;
+  bodyDataId: string | null;
+}): { dataId: string | null; source: MercadoPagoSignatureCandidate } {
+  const dot = normalizeMercadoPagoDataId(params.query.queryDataDotId);
+  if (dot) return { dataId: dot, source: "QUERY_DATA_DOT_ID" };
+  const under = normalizeMercadoPagoDataId(params.query.queryDataUnderscoreId);
+  if (under) return { dataId: under, source: "QUERY_DATA_UNDERSCORE_ID" };
+  // Fallback só body.data.id (nunca body.id do envelope — evita HMAC com "123456" de notificação).
+  const body = normalizeMercadoPagoDataId(params.bodyDataId);
+  if (body) return { dataId: body, source: "BODY_DATA_ID" };
+  return { dataId: null, source: "OMITTED" };
+}
+
+function buildSignatureAudit(params: {
+  source: "SIMULATOR" | "NATURAL";
+  query: MercadoPagoWebhookQueryExtract;
+  bodyDataId: string | null;
+  bodyType: string | null;
+  signatureReason: string;
+  diagnostics?: ReturnType<typeof verifyMercadoPagoWebhookSignature>["diagnostics"];
+}): string {
+  const q = params.query;
+  return [
+    params.signatureReason,
+    `source=${params.source}`,
+    `rawQueryKeys=${q.rawQueryKeys.join(",") || "none"}`,
+    `queryDataDotId=${sanitizeIdForDiag(q.queryDataDotId) ?? "none"}`,
+    `queryDataUnderscoreId=${sanitizeIdForDiag(q.queryDataUnderscoreId) ?? "none"}`,
+    `bodyDataId=${sanitizeIdForDiag(params.bodyDataId) ?? "none"}`,
+    `typeQuery=${q.typeQuery ?? "none"}`,
+    `bodyType=${params.bodyType ?? "none"}`,
+    // Legado: NÃO usar queryDataId=1 como se fosse o id — flags explícitas:
+    `queryDataIdPresent=${q.preferredQueryDataId ? 1 : 0}`,
+    `bodyDataIdPresent=${params.bodyDataId ? 1 : 0}`,
+    formatSignatureDiagnostics(params.diagnostics),
+  ].join(" ");
+}
+
 export async function runMercadoPagoWebhookPipeline(params: {
   rawBody: string;
   headers: Headers;
-  /** Prefira query `data.id` (docs oficiais MP) quando presente */
+  /** Extração completa da query (preferido). */
+  query?: MercadoPagoWebhookQueryExtract | null;
+  /** @deprecated use `query` — mantido para testes legados */
   queryDataId?: string | null;
 }): Promise<PipelineResult> {
   if (params.rawBody.length > MAX_BODY) {
@@ -37,19 +98,37 @@ export async function runMercadoPagoWebhookPipeline(params: {
     return { ok: false, status: 400, code: "INVALID_PAYLOAD" };
   }
 
+  const query: MercadoPagoWebhookQueryExtract =
+    params.query ??
+    ({
+      rawQueryKeys: params.queryDataId ? ["data.id"] : [],
+      queryDataDotId: params.queryDataId ?? null,
+      queryDataUnderscoreId: null,
+      queryId: null,
+      typeQuery: null,
+      preferredQueryDataId: params.queryDataId ?? null,
+    } satisfies MercadoPagoWebhookQueryExtract);
+
+  // Assinatura: body.data.id apenas (nunca body.id do envelope da notificação).
+  const bodyDataIdForSig =
+    normalized.parsed.data.id != null ? String(normalized.parsed.data.id) : null;
+
   const xSignature = params.headers.get("x-signature");
   const xRequestId = params.headers.get("x-request-id");
-  const dataIdForSig =
-    (params.queryDataId && String(params.queryDataId).trim()) ||
-    normalized.parsed.resourceId ||
-    (normalized.parsed.data.payment_id != null
-      ? String(normalized.parsed.data.payment_id)
-      : null);
+  const resolved = resolveDataIdForSignature({
+    query,
+    bodyDataId: bodyDataIdForSig,
+  });
+  const source = classifyWebhookSource({
+    queryDataId: query.preferredQueryDataId,
+    bodyDataId: bodyDataIdForSig,
+  });
 
   const signature = verifyMercadoPagoWebhookSignature({
     xSignature,
     xRequestId,
-    dataId: dataIdForSig,
+    dataId: resolved.dataId,
+    dataIdSource: resolved.source,
   });
 
   const secretConfigured = signature.reason !== "WEBHOOK_SECRET_MISSING";
@@ -68,12 +147,38 @@ export async function runMercadoPagoWebhookPipeline(params: {
   }
 
   if (secretConfigured && !signature.valid) {
+    const auditMsg = buildSignatureAudit({
+      source,
+      query,
+      bodyDataId: bodyDataIdForSig,
+      bodyType: normalized.parsed.rawType,
+      signatureReason: signature.reason ?? "INVALID_SIGNATURE",
+      diagnostics: signature.diagnostics,
+    });
+
     await writeIntegrationLog({
       integrationName: "mercado_pago",
       provider: "mercado_pago",
       action: "webhook:signature",
       status: "error",
+      message: auditMsg,
+    }).catch(() => undefined);
+
+    await emitFinancialAlert({
+      code: "WEBHOOK_SIGNATURE_FAILURE",
+      severity: "P0",
       message: signature.reason ?? "INVALID_SIGNATURE",
+      meta: {
+        source,
+        queryDataIdPresent: query.preferredQueryDataId ? 1 : 0,
+        bodyDataIdPresent: bodyDataIdForSig ? 1 : 0,
+        dataIdSrc: resolved.source,
+        dataId: sanitizeIdForDiag(resolved.dataId),
+        secretLen: signature.diagnostics?.secretLen ?? 0,
+        secretSha8: signature.diagnostics?.secretSha8 ?? null,
+        candidates: signature.diagnostics?.candidatesTried ?? 0,
+        candidate: signature.diagnostics?.candidateUsed ?? null,
+      },
     }).catch(() => undefined);
 
     // Persist rejected attempt for admin visibility (no financial effect)
@@ -95,8 +200,27 @@ export async function runMercadoPagoWebhookPipeline(params: {
           liveMode: normalized.parsed.liveMode,
           processingStatus: "FAILED",
           failureCode: signature.reason ?? "INVALID_SIGNATURE",
-          failureReason: "Assinatura inválida — evento rejeitado",
-          sanitizedPayload: asJson(normalized.sanitizedPayload),
+          failureReason: auditMsg,
+          sanitizedPayload: asJson({
+            ...normalized.sanitizedPayload,
+            _sigDiag: {
+              source,
+              rawQueryKeys: query.rawQueryKeys,
+              queryDataDotId: sanitizeIdForDiag(query.queryDataDotId),
+              queryDataUnderscoreId: sanitizeIdForDiag(query.queryDataUnderscoreId),
+              bodyDataId: sanitizeIdForDiag(bodyDataIdForSig),
+              typeQuery: query.typeQuery,
+              dataIdSource: resolved.source,
+              candidateUsed: signature.diagnostics?.candidateUsed ?? null,
+              manifestSha8: signature.diagnostics?.manifestSha8Primary ?? null,
+              xRequestIdSha8: signature.diagnostics?.xRequestIdSha8 ?? null,
+              ts: signature.diagnostics?.ts ?? null,
+              receivedV1Sha8: signature.diagnostics?.receivedV1Sha8 ?? null,
+              expectedHmacSha8: signature.diagnostics?.expectedHmacSha8Primary ?? null,
+              receivedHmacSha8: signature.diagnostics?.receivedHmacSha8 ?? null,
+              secretSha8: signature.diagnostics?.secretSha8 ?? null,
+            },
+          }),
           processedAt: new Date(),
         },
       })
@@ -104,6 +228,42 @@ export async function runMercadoPagoWebhookPipeline(params: {
 
     return { ok: false, status: 401, code: signature.reason ?? "INVALID_SIGNATURE" };
   }
+
+  // Diagnóstico temporário também no caminho válido (simulator baseline)
+  const okAudit = buildSignatureAudit({
+    source,
+    query,
+    bodyDataId: bodyDataIdForSig,
+    bodyType: normalized.parsed.rawType,
+    signatureReason: "SIGNATURE_OK",
+    diagnostics: signature.diagnostics,
+  });
+  await writeIntegrationLog({
+    integrationName: "mercado_pago",
+    provider: "mercado_pago",
+    action: "webhook:signature",
+    status: "success",
+    message: okAudit,
+  }).catch(() => undefined);
+
+  const sigDiagPayload = {
+    source,
+    rawQueryKeys: query.rawQueryKeys,
+    queryDataDotId: sanitizeIdForDiag(query.queryDataDotId),
+    queryDataUnderscoreId: sanitizeIdForDiag(query.queryDataUnderscoreId),
+    bodyDataId: sanitizeIdForDiag(bodyDataIdForSig),
+    typeQuery: query.typeQuery,
+    dataIdSource: resolved.source,
+    candidateUsed: signature.diagnostics?.candidateUsed ?? null,
+    manifestSha8: signature.diagnostics?.manifestSha8Primary ?? null,
+    xRequestIdSha8: signature.diagnostics?.xRequestIdSha8 ?? null,
+    ts: signature.diagnostics?.ts ?? null,
+    receivedV1Sha8: signature.diagnostics?.receivedV1Sha8 ?? null,
+    expectedHmacSha8: signature.diagnostics?.expectedHmacSha8Primary ?? null,
+    receivedHmacSha8: signature.diagnostics?.receivedHmacSha8 ?? null,
+    secretSha8: signature.diagnostics?.secretSha8 ?? null,
+    signatureValid: true,
+  };
 
   // Ambiente: rejeitar live_mode=true quando EcoPet está em test (e vice-versa soft)
   const env = getMercadoPagoEnvironment();
@@ -147,7 +307,11 @@ export async function runMercadoPagoWebhookPipeline(params: {
         liveMode: normalized.parsed.liveMode,
         processingStatus: "VALIDATED",
         validatedAt: new Date(),
-        sanitizedPayload: asJson(normalized.sanitizedPayload),
+        failureReason: okAudit.slice(0, 480),
+        sanitizedPayload: asJson({
+          ...normalized.sanitizedPayload,
+          _sigDiag: sigDiagPayload,
+        }),
       },
     });
   } catch {

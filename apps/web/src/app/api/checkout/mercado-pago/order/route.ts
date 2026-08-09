@@ -4,6 +4,7 @@ import { requireClient } from "@/lib/auth/require-auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { createMercadoPagoCheckoutOrder } from "@/lib/mercado-pago/create-checkout-order";
 import { isMercadoPagoConfigured } from "@/lib/mercado-pago/config";
+import { assertCheckoutEnabled } from "@/lib/commerce/checkout-flags";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,12 @@ export async function POST(request: Request) {
 
   if (!checkRateLimit(`mp-checkout:${user!.id}`, 10, 60_000)) {
     return apiFailure("RATE_LIMIT", "Muitas tentativas. Aguarde um momento.", 429);
+  }
+
+  try {
+    assertCheckoutEnabled();
+  } catch {
+    return apiFailure("CHECKOUT_DISABLED", "Checkout temporariamente indisponível.", 503);
   }
 
   if (!isMercadoPagoConfigured()) {

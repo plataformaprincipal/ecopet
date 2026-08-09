@@ -1,0 +1,146 @@
+{
+  "ord": "ORDTST01…A1MH",
+  "latestOrdLog": {
+    "createdAt": "2026-08-09T06:32:15.622Z",
+    "status": "success",
+    "message": "SIGNATURE_OK source=NATURAL rawQueryKeys=x-vercel-protection-bypass,data.id,type queryDataDotId=ORDTST01…A1MH queryDataUnderscoreId=none bodyDataId=ORDTST01…A1MH typeQuery=order bodyType=order queryDataIdPresent=1 bodyDataIdPresent=1 secretLen=64 secretSha8=9d2804a9 ts=1786257135 v1=1 v1Len=64 reqId=1 reqLen=36 reqSha8=20e420a9 dataIdPresent=1 dataIdLen=32 dataIdCase=upper dataIdSrc=QUERY_DATA_DOT_ID dataId=ORDTST01…A1MH recvV1Sha8=54a39d9a manifestSha8=2731634f expHmacSha8=54a39d9a recvHmacSha8=54a39d9a candidate=SDK_ORIGINAL candidates=2"
+  },
+  "latestSimEvent": {
+    "createdAt": "2026-08-09T06:32:15.702Z",
+    "signatureValid": true,
+    "failureCode": null,
+    "processingStatus": "PROCESSED",
+    "applicationId": "3863741237237502",
+    "mpUserId": "652366957",
+    "liveMode": true,
+    "requestId": "de20d497…04e9",
+    "failureReason": "SIGNATURE_OK source=NATURAL rawQueryKeys=x-vercel-protection-bypass,data.id,type queryDataDotId=ORDTST01…A1MH queryDataUnderscoreId=none bodyDataId=ORDTST01…A1MH typeQuery=order bodyType=order queryDataIdPresent=1 bodyDataIdPresent=1 secretLen=64 secretSha8=9d2804a9 ts=1786257135 v1=1 v1Len=64 reqId=1 reqLen=36 reqSha8=20e420a9 dataIdPresent=1 dataIdLen=32 dataIdCase=upper dataIdSrc=QUERY_DATA_DOT_ID dataId=ORDTST01…A1MH recvV1Sha8=54a39d9a manifestSha8=2731634f expHmacSha8=5",
+    "sigDiag": {
+      "ts": "1786257135",
+      "source": "NATURAL",
+      "typeQuery": "order",
+      "bodyDataId": "ORDTST01…A1MH",
+      "secretSha8": "9d2804a9",
+      "dataIdSource": "QUERY_DATA_DOT_ID",
+      "manifestSha8": "2731634f",
+      "rawQueryKeys": [
+        "x-vercel-protection-bypass",
+        "data.id",
+        "type"
+      ],
+      "candidateUsed": "SDK_ORIGINAL",
+      "queryDataDotId": "ORDTST01…A1MH",
+      "receivedV1Sha8": "54a39d9a",
+      "signatureValid": true,
+      "xRequestIdSha8": "20e420a9",
+      "expectedHmacSha8": "54a39d9a",
+      "receivedHmacSha8": "54a39d9a",
+      "queryDataUnderscoreId": null
+    },
+    "bodyDataId": "ORDTST01KZJJ1W6BXHNN3X9EFMR1A1MH"
+  },
+  "fields": {
+    "http": "200 OK (painel + assinatura aceita ou log success)",
+    "signatureValid": true,
+    "failureCode": null,
+    "queryDataId": "ORDTST01…A1MH",
+    "bodyDataId": "ORDTST01…A1MH",
+    "dataIdSrc": "QUERY_DATA_DOT_ID",
+    "candidate": "SDK_ORIGINAL",
+    "xRequestIdPresent": true,
+    "ts": "1786257135",
+    "manifestSha8": "2731634f",
+    "expectedHmacSha8": "54a39d9a",
+    "receivedHmacSha8": "54a39d9a",
+    "secretSha8": "9d2804a9",
+    "source": "NATURAL",
+    "rawQueryKeys": "x-vercel-protection-bypass,data.id,type",
+    "reqSha8": "20e420a9"
+  },
+  "naturalCompare": {
+    "createdAt": "2026-08-09T06:25:08.989Z",
+    "signatureValid": false,
+    "failureCode": "SIGNATURE_MISMATCH",
+    "requestId": "e2f6b583…7b3d",
+    "rawQueryKeys": "data.external_reference,data.id,type,x-vercel-protection-bypass",
+    "queryDataId": "ORDTST01…A1MH",
+    "bodyDataId": "ORDTST01…A1MH",
+    "dataIdSrc": "QUERY_DATA_DOT_ID",
+    "candidate": "NONE",
+    "ts": "1786256706",
+    "manifestSha8": "f55e5006",
+    "expectedHmacSha8": "f361e0e4",
+    "receivedHmacSha8": "eb596093",
+    "secretSha8": "9d2804a9",
+    "reqSha8": "07fe7027",
+    "source": "NATURAL",
+    "hasExternalReferenceInQuery": true,
+    "failureReason": "SIGNATURE_MISMATCH source=NATURAL rawQueryKeys=data.external_reference,data.id,type,x-vercel-protection-bypass queryDataDotId=ORDTST01…A1MH queryDataUnderscoreId=none bodyDataId=ORDTST01…A1MH typeQuery=order bodyType=order queryDataIdPresent=1 bodyDataIdPresent=1 secretLen=64 secretSha8=9d2804a9 ts=1786256706 v1=1 v1Len=64 reqId=1 reqLen=36 reqSha8=07fe7027 dataIdPresent=1 dataIdLen=32 dataIdCase=upper dataIdSrc=QUERY_DATA_DOT_ID dataId=ORDTST01…A1MH recvV1Sha8=eb596093 manifestSha8=f55e5006 expHmacSha8=f361e0e4 recvHmacSha8=eb596093 candidate=NONE candidates=2"
+  },
+  "recentOrdLogs": [
+    {
+      "createdAt": "2026-08-09T06:32:15.622Z",
+      "status": "success",
+      "source": "NATURAL",
+      "queryDataDotId": "ORDTST01…A1MH",
+      "candidate": "SDK_ORIGINAL",
+      "head": "SIGNATURE_OK source=NATURAL rawQueryKeys=x-vercel-protection-bypass,data.id,type queryDataDotId=ORDTST01…A1MH queryDataUnderscoreId=none bodyDataId=ORDTST01…A1M"
+    },
+    {
+      "createdAt": "2026-08-09T06:25:10.894Z",
+      "status": "error",
+      "source": "NATURAL",
+      "queryDataDotId": "ORDTST01…RC5J",
+      "candidate": "NONE",
+      "head": "SIGNATURE_MISMATCH source=NATURAL rawQueryKeys=data.external_reference,data.id,type,x-vercel-protection-bypass queryDataDotId=ORDTST01…RC5J queryDataUnderscoreI"
+    },
+    {
+      "createdAt": "2026-08-09T06:25:08.895Z",
+      "status": "error",
+      "source": "NATURAL",
+      "queryDataDotId": "ORDTST01…A1MH",
+      "candidate": "NONE",
+      "head": "SIGNATURE_MISMATCH source=NATURAL rawQueryKeys=data.external_reference,data.id,type,x-vercel-protection-bypass queryDataDotId=ORDTST01…A1MH queryDataUnderscoreI"
+    },
+    {
+      "createdAt": "2026-08-09T06:16:03.866Z",
+      "status": "error",
+      "source": "NATURAL",
+      "queryDataDotId": "ORDTST01…5NT3",
+      "candidate": "NONE",
+      "head": "SIGNATURE_MISMATCH source=NATURAL rawQueryKeys=data.external_reference,data.id,type,x-vercel-protection-bypass queryDataDotId=ORDTST01…5NT3 queryDataUnderscoreI"
+    },
+    {
+      "createdAt": "2026-08-09T06:15:58.347Z",
+      "status": "error",
+      "source": "NATURAL",
+      "queryDataDotId": "ORDTST01…3ER4",
+      "candidate": "NONE",
+      "head": "SIGNATURE_MISMATCH source=NATURAL rawQueryKeys=data.external_reference,data.id,type,x-vercel-protection-bypass queryDataDotId=ORDTST01…3ER4 queryDataUnderscoreI"
+    },
+    {
+      "createdAt": "2026-08-09T06:15:25.977Z",
+      "status": "error",
+      "source": "NATURAL",
+      "queryDataDotId": "ORDTST01…5D14",
+      "candidate": "NONE",
+      "head": "SIGNATURE_MISMATCH source=NATURAL rawQueryKeys=data.external_reference,data.id,type,x-vercel-protection-bypass queryDataDotId=ORDTST01…5D14 queryDataUnderscoreI"
+    },
+    {
+      "createdAt": "2026-08-09T06:06:13.895Z",
+      "status": "error",
+      "source": "NATURAL",
+      "queryDataDotId": "ORDTST01…A1MH",
+      "candidate": "NONE",
+      "head": "SIGNATURE_MISMATCH source=NATURAL rawQueryKeys=data.external_reference,data.id,type,x-vercel-protection-bypass queryDataDotId=ORDTST01…A1MH queryDataUnderscoreI"
+    },
+    {
+      "createdAt": "2026-08-09T06:06:13.083Z",
+      "status": "error",
+      "source": "NATURAL",
+      "queryDataDotId": "ORDTST01…A1MH",
+      "candidate": "NONE",
+      "head": "SIGNATURE_MISMATCH source=NATURAL rawQueryKeys=data.external_reference,data.id,type,x-vercel-protection-bypass queryDataDotId=ORDTST01…A1MH queryDataUnderscoreI"
+    }
+  ]
+}
