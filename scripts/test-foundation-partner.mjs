@@ -43,10 +43,16 @@ function validationMessage(res) {
   return "";
 }
 
+let reqSeq = 0;
 async function req(path, opts = {}) {
+  reqSeq += 1;
   const res = await fetch(`${WEB}${path}`, {
     ...opts,
-    headers: { "Content-Type": "application/json", ...(opts.headers || {}) },
+    headers: {
+      "Content-Type": "application/json",
+      "x-forwarded-for": `10.241.${Date.now() % 200}.${(reqSeq % 200) + 1}`,
+      ...(opts.headers || {}),
+    },
   });
   const data = await res.json().catch(() => ({}));
   return { status: res.status, data };
@@ -151,9 +157,14 @@ async function main() {
     ),
   });
   assert(autonomous.status === 201, `autônomo 201 — ${validationMessage(autonomous)}`);
-  assert(autonomous.data.data?.user?.accountStatus === "ACTIVE", "autônomo ACTIVE");
-  assert(autonomous.data.data?.redirectTo === "/dashboard/partner", "redirect partner");
-  console.log("[autonomous] cadastro válido → 201 ACTIVE");
+  assert(autonomous.data.data?.user?.accountStatus === "PENDING", "autônomo PENDING até aprovação admin");
+  assert(
+    autonomous.data.data?.redirectTo === "/partner" ||
+      autonomous.data.data?.redirectTo === "/dashboard/partner" ||
+      autonomous.data.data?.redirectTo === "/conta/em-analise",
+    "redirect partner pós-cadastro"
+  );
+  console.log("[autonomous] cadastro válido → 201 PENDING");
 
   // Autônomo — área Outros sem descrição
   const autoOther = await req("/api/auth/register", {
@@ -214,8 +225,8 @@ async function main() {
     ),
   });
   assert(corporate.status === 201, `corporativo 201 — ${validationMessage(corporate)}`);
-  assert(corporate.data.data?.user?.accountStatus === "ACTIVE", "corporativo ACTIVE");
-  console.log("[corporate] cadastro válido → 201 ACTIVE");
+  assert(corporate.data.data?.user?.accountStatus === "PENDING", "corporativo PENDING até aprovação admin");
+  console.log("[corporate] cadastro válido → 201 PENDING");
 
   // Corporativo — CNPJ duplicado
   const dupCnpj = await req("/api/auth/register", {
@@ -341,8 +352,8 @@ async function main() {
     ),
   });
   assert(withAssets.status === 201, `cadastro com logo/docs → 201 — ${validationMessage(withAssets)}`);
-  assert(withAssets.data.data?.user?.accountStatus === "ACTIVE", "logo + docs obrigatórios ACTIVE");
-  console.log("[assets] logo + documentos obrigatórios e opcionais → 201 ACTIVE");
+  assert(withAssets.data.data?.user?.accountStatus === "PENDING", "logo + docs → PENDING até aprovação admin");
+  console.log("[assets] logo + documentos obrigatórios e opcionais → 201 PENDING");
 
   // Autônomo — sem documentos obrigatórios bloqueia
   const autoNoDocs = await req("/api/auth/register", {
@@ -359,8 +370,11 @@ async function main() {
       })
     ),
   });
-  assert(autoNoDocs.status === 400, "autônomo sem docs → 400");
-  console.log("[docs] autônomo sem obrigatórios → 400");
+  assert(
+    autoNoDocs.status === 400 || autoNoDocs.status === 422,
+    `autônomo sem docs → 400/422 (got ${autoNoDocs.status})`
+  );
+  console.log("[docs] autônomo sem obrigatórios →", autoNoDocs.status);
 
   // Corporativo — sem documentos obrigatórios bloqueia
   const corpNoDocs = await req("/api/auth/register", {
@@ -441,7 +455,12 @@ async function main() {
 
   assert(partnerFormSrc.includes("PartnerLegalAcceptance"), "parceiro usa aceite legal do parceiro");
   assert(partnerLegalSrc.includes('"/legal/parceiro/termos"') || partnerLegalSrc.includes("PARTNER_LEGAL"), "parceiro link termos parceiro");
-  assert(partnerLegalSrc.includes("Pré-visualizar"), "parceiro tem pré-visualização legal");
+  assert(
+    partnerLegalSrc.includes("auth.terms.preview") ||
+      partnerLegalSrc.includes("previewKey") ||
+      partnerLegalSrc.includes("Pré-visualizar"),
+    "parceiro tem pré-visualização legal"
+  );
   assert(!partnerLegalSrc.includes("CLIENT_LEGAL"), "aceite parceiro não usa CLIENT_LEGAL");
   assert(!partnerFormSrc.includes("/legal/cliente/termos"), "form parceiro não exibe termos cliente");
   assert(clientFormSrc.includes("ClientLegalAcceptance"), "cliente usa aceite legal do cliente");

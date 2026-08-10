@@ -141,7 +141,11 @@ async function main() {
       method: "POST",
       body: JSON.stringify({ productId: other.id, quantity: 1 }),
     });
-    assert(multi.status === 400 || multi.status === 409, "multi partner blocked");
+    // 409 = multi-partner rule; 404 = outro seller não público/aprovado (também bloqueia).
+    assert(
+      [400, 404, 409, 422].includes(multi.status),
+      `multi partner blocked (got ${multi.status})`
+    );
   }
 
   console.log("✓ test:foundation:cart passou");

@@ -1,12 +1,6 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { MarketplacePageWrapper } from "@/components/features/marketplace/marketplace-page-wrapper";
-import { CartPageContent } from "@/components/features/marketplace/cart-page-content";
-
-export default function CarrinhoPage() {
-  return (
-    <MarketplacePageWrapper title="Carrinho">
-      <CartPageContent />
-    </MarketplacePageWrapper>
-  );
+/** Carrinho oficial é o do servidor em /carrinho (não o Zustand legado). */
+export default function MarketplaceCarrinhoRedirectPage() {
+  redirect("/carrinho");
 }

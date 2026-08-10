@@ -1,4 +1,4 @@
-import { AccountStatus, PartnerServiceStatus } from "@prisma/client";
+import { AccountStatus, PartnerServiceStatus, VerificationStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiFailure } from "@/lib/api-response";
 
@@ -14,7 +14,16 @@ export async function GET(_req: Request, context: RouteContext) {
       status: PartnerServiceStatus.ACTIVE,
       isActive: true,
       approvalStatus: "APPROVED",
-      provider: { accountStatus: AccountStatus.ACTIVE, role: "PARTNER" },
+      provider: {
+        accountStatus: AccountStatus.ACTIVE,
+        role: "PARTNER",
+        partnerProfile: {
+          is: {
+            verificationStatus: VerificationStatus.APPROVED,
+            approvedAt: { not: null },
+          },
+        },
+      },
     },
     include: {
       provider: {

@@ -110,15 +110,42 @@ export function getMercadoPagoServerConfig(
   };
 }
 
+/** PAYMENT_PROVIDER deve ser mercado_pago; none|manual desliga o canal online. */
+export function isMercadoPagoPaymentEnabled(source: NodeJS.ProcessEnv = process.env): boolean {
+  const preferred = (env("PAYMENT_PROVIDER", source) || "").toLowerCase();
+  // COD / manual: nunca expor checkout MP (mesmo com keys residuais no env).
+  if (!preferred || preferred === "none" || preferred === "manual") return false;
+  if (preferred !== "mercado_pago" && preferred !== "mercadopago") return false;
+  return true;
+}
+
+/** Pronto para criar cobrança / expor Brick: provider + keys + não-TEST em Production. */
+export function isMercadoPagoCheckoutAvailable(source: NodeJS.ProcessEnv = process.env): boolean {
+  return getMercadoPagoPublicConfig(source).configured;
+}
+
+/**
+ * Config pública do Brick/SDK. Em Production Vercel, modo TEST nunca é exposto ao cliente.
+ */
 export function getMercadoPagoPublicConfig(
   source: NodeJS.ProcessEnv = process.env
 ): MercadoPagoPublicConfig {
+  const environment = getMercadoPagoEnvironment(source);
   const publicKey = getMercadoPagoPublicKey(source);
+  const keysOk = Boolean(
+    publicKey && !isPlaceholder(publicKey) && isMercadoPagoConfigured(source)
+  );
+  const enabled = isMercadoPagoPaymentEnabled(source);
+  const isVercelProduction = source.VERCEL_ENV === "production";
+  // Bloqueia checkout de teste para usuários de Production (homologação só no Preview).
+  const allowEnvironment = !(isVercelProduction && environment === "test");
+  const configured = enabled && keysOk && allowEnvironment;
+
   return {
-    publicKey: publicKey && !isPlaceholder(publicKey) ? publicKey : "",
-    environment: getMercadoPagoEnvironment(source),
+    publicKey: configured ? publicKey! : "",
+    environment,
     apiOrders: true,
-    configured: Boolean(publicKey && !isPlaceholder(publicKey) && isMercadoPagoConfigured(source)),
+    configured,
   };
 }
 

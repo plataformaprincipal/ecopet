@@ -7,12 +7,10 @@ import { CheckoutPayAgain } from "@/components/features/marketplace/checkout-pay
 
 type PageProps = {
   params: Promise<{ orderId: string }>;
-  searchParams: Promise<{ payment?: string; status?: string }>;
 };
 
-export default async function CheckoutSuccessPage({ params, searchParams }: PageProps) {
+export default async function CheckoutSuccessPage({ params }: PageProps) {
   const { orderId } = await params;
-  const sp = await searchParams;
   const user = await getCurrentUser();
 
   const order = user
@@ -40,15 +38,13 @@ export default async function CheckoutSuccessPage({ params, searchParams }: Page
     : null;
 
   const payment = order?.payments[0];
-  const statusLabel = sp.status || payment?.status || order?.status || "PENDING";
+  // Query ?status= só é dica de UI; confirmação de pago vem apenas do banco.
+  const statusLabel = payment?.status || order?.status || "PENDING";
   const confirming =
     order?.status === "PENDING_CONFIRMATION" ||
     payment?.status === "PROCESSING" ||
-    payment?.status === "IN_PROCESS" ||
-    statusLabel === "PROCESSING" ||
-    statusLabel === "IN_PROCESS" ||
-    statusLabel === "PENDING_CONFIRMATION";
-  const paid = statusLabel === "APPROVED" || order?.status === "PAID";
+    payment?.status === "IN_PROCESS";
+  const paid = order?.status === "PAID";
   const failed = ["REJECTED", "CANCELLED", "EXPIRED", "ERROR"].includes(
     String(payment?.status || statusLabel)
   );

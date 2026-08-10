@@ -32,8 +32,14 @@ export async function queryPublicServices(filters: PublicServiceFilters) {
     provider: {
       accountStatus: AccountStatus.ACTIVE,
       role: "PARTNER" as const,
-      ...(filters.city ? { partnerProfile: { city: { contains: filters.city, mode: "insensitive" } } } : {}),
-      ...(filters.state ? { partnerProfile: { state: { equals: filters.state, mode: "insensitive" } } } : {}),
+      partnerProfile: {
+        is: {
+          verificationStatus: VerificationStatus.APPROVED,
+          approvedAt: { not: null },
+          ...(filters.city ? { city: { contains: filters.city, mode: "insensitive" as const } } : {}),
+          ...(filters.state ? { state: { equals: filters.state, mode: "insensitive" as const } } : {}),
+        },
+      },
     },
     ...(filters.category ? { category: filters.category as never } : {}),
     ...(filters.species ? { speciesTarget: filters.species as never } : {}),
@@ -127,8 +133,14 @@ export async function queryPublicProducts(filters: PublicProductFilters) {
     seller: {
       accountStatus: AccountStatus.ACTIVE,
       role: "PARTNER" as const,
-      ...(filters.city ? { partnerProfile: { city: { contains: filters.city, mode: "insensitive" } } } : {}),
-      ...(filters.state ? { partnerProfile: { state: { equals: filters.state, mode: "insensitive" } } } : {}),
+      partnerProfile: {
+        is: {
+          verificationStatus: VerificationStatus.APPROVED,
+          approvedAt: { not: null },
+          ...(filters.city ? { city: { contains: filters.city, mode: "insensitive" as const } } : {}),
+          ...(filters.state ? { state: { equals: filters.state, mode: "insensitive" as const } } : {}),
+        },
+      },
     },
     ...(filters.category ? { catalogCategory: filters.category as never } : {}),
     ...(filters.species ? { speciesTarget: filters.species as never } : {}),
@@ -192,7 +204,12 @@ export async function getPublicPartner(partnerId: string) {
       id: partnerId,
       role: "PARTNER",
       accountStatus: AccountStatus.ACTIVE,
-      partnerProfile: { isNot: null },
+      partnerProfile: {
+        is: {
+          verificationStatus: VerificationStatus.APPROVED,
+          approvedAt: { not: null },
+        },
+      },
     },
     select: {
       id: true,

@@ -14,6 +14,7 @@ import { SmartRecommendations } from "./smart-recommendations";
 import { CustomServiceForm } from "./custom-service-form";
 import { MarketplaceGridSkeleton } from "./marketplace-skeleton";
 import { useMarketplaceStore } from "@/store/marketplace-store";
+import { useServerCart } from "@/hooks/use-server-cart";
 import {
   fetchProducts,
   fetchServices,
@@ -28,7 +29,8 @@ const FILTER_TAG_KEYS = ["freeShipping", "verified", "promos", "nearMe"] as cons
 export function MarketplaceHub() {
   const router = useRouter();
   const { t } = useTranslation();
-  const { setSearchPanelOpen, setAiModalOpen, setCartOpen, cartCount, setFilters, addSearchHistory } = useMarketplaceStore();
+  const { setSearchPanelOpen, setAiModalOpen, setCartOpen, setFilters, addSearchHistory } = useMarketplaceStore();
+  const { itemCount: cartItemCount, refresh: refreshCart } = useServerCart();
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState("produtos");
   const [loading, setLoading] = useState(true);
@@ -66,11 +68,18 @@ export function MarketplaceHub() {
         </div>
         <Button onClick={handleSearch}>{t("marketplace.searchButton")}</Button>
         <Button variant="outline" onClick={() => setSearchPanelOpen(true)}><SlidersHorizontal className="h-5 w-5" /></Button>
-        <Button variant="outline" className="relative" onClick={() => setCartOpen(true)}>
+        <Button
+          variant="outline"
+          className="relative"
+          onClick={() => {
+            void refreshCart();
+            setCartOpen(true);
+          }}
+        >
           <ShoppingCart className="h-5 w-5" />
-          {cartCount() > 0 && (
+          {cartItemCount > 0 && (
             <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-ecopet-yellow text-[9px] font-bold">
-              {cartCount()}
+              {cartItemCount}
             </span>
           )}
         </Button>

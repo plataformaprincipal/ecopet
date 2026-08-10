@@ -16,6 +16,8 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      { source: "/register", destination: "/cadastro", permanent: false },
+      { source: "/marketplace/checkout", destination: "/checkout", permanent: false },
       { source: "/partner/dashboard", destination: "/dashboard/partner", permanent: false },
       { source: "/partner/products", destination: "/dashboard/partner/products", permanent: false },
       { source: "/partner/products/new", destination: "/dashboard/partner/products/new", permanent: false },

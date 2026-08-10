@@ -33,11 +33,15 @@ const REQUIRED = [
   "APP_URL",
   "NEXT_PUBLIC_APP_URL",
   "WEB_URL",
+  "PAYMENT_PROVIDER",
+];
+
+/** Só obrigatórias quando PAYMENT_PROVIDER=mercado_pago (Live). COD/manual: omitir tokens TEST. */
+const REQUIRED_IF_MERCADO_PAGO = [
   "MERCADO_PAGO_ACCESS_TOKEN",
   "NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY",
   "MERCADO_PAGO_WEBHOOK_SECRET",
   "MERCADO_PAGO_ENVIRONMENT",
-  "PAYMENT_PROVIDER",
 ];
 
 const FORBIDDEN_PRESENT = [
@@ -154,6 +158,35 @@ for (const key of REQUIRED) {
   }
 }
 
+const paymentProvider = String(env.PAYMENT_PROVIDER || "")
+  .trim()
+  .toLowerCase();
+const mpOnline =
+  paymentProvider === "mercado_pago" || paymentProvider === "mercadopago";
+meta.checks.paymentMode = mpOnline ? "MERCADO_PAGO" : paymentProvider || "UNSET";
+
+if (mpOnline) {
+  for (const key of REQUIRED_IF_MERCADO_PAGO) {
+    const v = env[key]?.trim?.() || env[key];
+    const present = Boolean(v && String(v).trim());
+    meta.checks[`requiredIfMp:${key}`] = present ? "PRESENT" : "MISSING";
+    if (!present) blockers.push(`MISSING:${key}`);
+    else if (PLACEHOLDER_RE.test(String(v).trim())) blockers.push(`PLACEHOLDER:${key}`);
+  }
+} else {
+  for (const key of REQUIRED_IF_MERCADO_PAGO) {
+    meta.checks[`requiredIfMp:${key}`] = "SKIPPED_COD_MANUAL";
+  }
+  // Tokens TEST/sandbox em Production com COD são risco de UI residual — bloquear.
+  const mpTok = env.MERCADO_PAGO_ACCESS_TOKEN;
+  const testTok = looksLikeTestMpToken(mpTok);
+  if (testTok === true) blockers.push("MP_TEST_TOKEN_PRESENT_WITH_COD_MODE");
+  const mpPub = env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY || env.MERCADO_PAGO_PUBLIC_KEY;
+  if (mpPub && /^TEST-/i.test(String(mpPub))) {
+    blockers.push("MP_TEST_PUBLIC_KEY_PRESENT_WITH_COD_MODE");
+  }
+}
+
 for (const key of FORBIDDEN_PRESENT) {
   if (env[key] != null && String(env[key]).trim() !== "") {
     blockers.push(`FORBIDDEN_PRESENT:${key}`);
@@ -192,22 +225,24 @@ for (const key of urlKeys) {
   }
 }
 
-const mpEnv = env.MERCADO_PAGO_ENVIRONMENT;
-if (mpEnv && looksLikeSandboxEnv(mpEnv)) {
-  blockers.push("MP_ENVIRONMENT_NOT_PRODUCTION");
-}
-if (mpEnv && String(mpEnv).toLowerCase() !== "production") {
-  blockers.push(`MP_ENVIRONMENT_VALUE:${String(mpEnv)}`);
-}
+if (mpOnline) {
+  const mpEnv = env.MERCADO_PAGO_ENVIRONMENT;
+  if (mpEnv && looksLikeSandboxEnv(mpEnv)) {
+    blockers.push("MP_ENVIRONMENT_NOT_PRODUCTION");
+  }
+  if (mpEnv && String(mpEnv).toLowerCase() !== "production") {
+    blockers.push(`MP_ENVIRONMENT_VALUE:${String(mpEnv)}`);
+  }
 
-const mpTok = env.MERCADO_PAGO_ACCESS_TOKEN;
-const testTok = looksLikeTestMpToken(mpTok);
-if (testTok === true) blockers.push("MP_ACCESS_TOKEN_LOOKS_TEST");
-if (testTok === null) warnings.push("MP_ACCESS_TOKEN_REDACTED_CANNOT_CLASSIFY");
+  const mpTok = env.MERCADO_PAGO_ACCESS_TOKEN;
+  const testTok = looksLikeTestMpToken(mpTok);
+  if (testTok === true) blockers.push("MP_ACCESS_TOKEN_LOOKS_TEST");
+  if (testTok === null) warnings.push("MP_ACCESS_TOKEN_REDACTED_CANNOT_CLASSIFY");
 
-const mpPub = env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY || env.MERCADO_PAGO_PUBLIC_KEY;
-if (mpPub && /^TEST-/i.test(String(mpPub))) {
-  blockers.push("MP_PUBLIC_KEY_LOOKS_TEST");
+  const mpPub = env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY || env.MERCADO_PAGO_PUBLIC_KEY;
+  if (mpPub && /^TEST-/i.test(String(mpPub))) {
+    blockers.push("MP_PUBLIC_KEY_LOOKS_TEST");
+  }
 }
 
 const dbHost = hostOf(env.DATABASE_URL || "");
@@ -252,8 +287,11 @@ for (const [k, expected] of Object.entries(flagExpectations)) {
   }
 }
 
-if (env.PAYMENT_PROVIDER && !/mercado.?pago|mercadopago/i.test(String(env.PAYMENT_PROVIDER))) {
+if (paymentProvider && !mpOnline && !/^(none|manual)$/i.test(paymentProvider)) {
   warnings.push(`PAYMENT_PROVIDER:${env.PAYMENT_PROVIDER}`);
+}
+if (paymentProvider === "none" || paymentProvider === "manual") {
+  warnings.push("PAYMENT_MODE_COD_MANUAL_ONLINE_DISABLED");
 }
 
 const ready = blockers.length === 0;

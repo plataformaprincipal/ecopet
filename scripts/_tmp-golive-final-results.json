@@ -1,0 +1,68 @@
+﻿[
+    {
+        "cmd":  "type-check",
+        "code":  0,
+        "ms":  120012,
+        "tail":  "\u003e @ecopet/web@1.0.0 type-check | \u003e tsc --noEmit |  | npm warn Unknown env config \"devdir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options. |  | \u003e @ecopet/api@1.0.0 type-check | \u003e tsc --noEmit | "
+    },
+    {
+        "cmd":  "lint",
+        "code":  0,
+        "ms":  22147,
+        "tail":  "\u003e next lint |  | `next lint` is deprecated and will be removed in Next.js 16. | For new projects, use create-next-app to choose your preferred linter. | For existing projects, migrate to the ESLint CLI: | npx @next/codemod@canary next-lint-to-eslint-cli . | System.Management.Automation.RemoteException | Ô£ö No ESLint warnings or errors"
+    },
+    {
+        "cmd":  "test:no-mocks",
+        "code":  0,
+        "ms":  2081,
+        "tail":  " | === EcoPet ÔÇö test:no-mocks === |  | Ô£ô nenhum arquivo mock-data no app runtime | Ô£ô tests/fixtures ausente (ok se n├úo houver fixtures) | Ô£ô seed.ts n├úo cria usu├írios/pets/produtos/posts/notifica├º├Áes fake |  | 3 passaram, 0 falharam"
+    },
+    {
+        "cmd":  "test:foundation:auth",
+        "code":  1,
+        "ms":  18116,
+        "tail":  "[register] data futura ÔåÆ 400 | [register] idade \u003c 1 ano ÔåÆ 400 | [register] idade \u003e 130 anos ÔåÆ 400 | [register] g├¬nero Outro sem complemento ÔåÆ 400 | [register] valida├º├úo senha @ e dados pessoais ÔåÆ OK | [register CLIENT] 201 | System.Management.Automation.RemoteException | Ô£ù mensagem senha incorreta"
+    },
+    {
+        "cmd":  "test:foundation:products",
+        "code":  -1073740791,
+        "ms":  1411,
+        "tail":  "npm warn Unknown env config \"devdir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options. |  | \u003e ecopet@1.0.0 test:foundation:products | \u003e node scripts/test-foundation-products.mjs |  | Ô£ù register partner | Assertion failed: !(handle-\u003eflags \u0026 UV_HANDLE_CLOSING), file src\\win\\async.c, line 94"
+    },
+    {
+        "cmd":  "test:foundation:services",
+        "code":  -1073740791,
+        "ms":  1022,
+        "tail":  "npm warn Unknown env config \"devdir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options. |  | \u003e ecopet@1.0.0 test:foundation:services | \u003e node scripts/test-foundation-services.mjs |  | Ô£ù register partner | Assertion failed: !(handle-\u003eflags \u0026 UV_HANDLE_CLOSING), file src\\win\\async.c, line 94"
+    },
+    {
+        "cmd":  "test:foundation:cart",
+        "code":  1,
+        "ms":  971,
+        "tail":  "npm warn Unknown env config \"devdir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options. |  | \u003e ecopet@1.0.0 test:foundation:cart | \u003e node scripts/test-foundation-cart.mjs |  | Ô£ù precisa de produto ACTIVE com estoque"
+    },
+    {
+        "cmd":  "test:foundation:orders",
+        "code":  0,
+        "ms":  24764,
+        "tail":  "npm warn Unknown env config \"devdir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options. |  | \u003e ecopet@1.0.0 test:foundation:orders | \u003e node scripts/test-foundation-orders.mjs |  | Ô£ô test:foundation:orders passou"
+    },
+    {
+        "cmd":  "test:foundation:partner",
+        "code":  1,
+        "ms":  8654,
+        "tail":  "[corporate] CNPJ duplicado ÔåÆ 409 | [legacy] cadastro simplificado ÔåÆ 201 | [cpf] sincroniza├º├úo preparada ÔåÆ OK | [cnpj] consulta inv├ílida ÔåÆ 400 | [cnpj] consulta autom├ítica ÔåÆ CNPJ n├úo encontrado (rede/API), estrutura OK | [assets] logo + documentos obrigat├│rios e opcionais ÔåÆ 201 PENDING | System.Management.Automation.RemoteException | Ô£ù aut├┤nomo sem docs ÔåÆ 400"
+    },
+    {
+        "cmd":  "test:foundation:notifications",
+        "code":  1,
+        "ms":  1474,
+        "tail":  " | \u003e ecopet@1.0.0 test:foundation:notifications | \u003e node scripts/test-foundation-notifications.mjs |  | === EcoPet Foundation Notifications Tests === |  | System.Management.Automation.RemoteException | ÔØî CLIENT register: 429 {\"success\":false,\"error\":{\"code\":\"RATE_LIMITED\",\"message\":\"Muitas tentativas de cadastro. Tente novamente mais tarde.\"}}"
+    },
+    {
+        "cmd":  "test:security",
+        "code":  1,
+        "ms":  22220,
+        "tail":  "Ô£ô ADMIN acessa gestor overview (rota auditada) | Ô£ô API sem passwordHash | Ô£ô sem secrets na resposta | Ô£ô IDOR: usu├írio n├úo acessa pet de terceiro | Ô£ô IDOR: usu├írio n├úo edita pet de terceiro | Ô£ô IDOR: usu├írio n├úo acessa pedido de terceiro | System.Management.Automation.RemoteException | Ô£ù IDOR order partner read (403)"
+    }
+]

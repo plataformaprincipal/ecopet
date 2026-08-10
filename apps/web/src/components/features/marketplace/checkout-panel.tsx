@@ -25,12 +25,14 @@ export function CheckoutPanel() {
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [mpAvailable, setMpAvailable] = useState(false);
+  const [mpEnvironment, setMpEnvironment] = useState<"test" | "production" | "">("");
   const [payMode, setPayMode] = useState<PayMode>("delivery");
   const [pendingOrder, setPendingOrder] = useState<{
     id: string;
     total: number;
   } | null>(null);
   const [payerEmail, setPayerEmail] = useState("");
+  const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
   const [form, setForm] = useState({
     deliveryMethod: "PICKUP_LOCAL",
     paymentMethod: "PIX" as PaymentMethod,
@@ -59,22 +61,35 @@ export function CheckoutPanel() {
     fetch("/api/checkout/mercado-pago/config", { credentials: "include" })
       .then((r) => r.json())
       .then((d) => {
-        if (d.success && d.data?.publicKey) setMpAvailable(true);
+        if (d.success && d.data?.publicKey) {
+          setMpAvailable(true);
+          const env = String(d.data.environment || "").toLowerCase();
+          setMpEnvironment(env === "production" ? "production" : env === "test" ? "test" : "");
+        }
       })
       .catch(() => undefined);
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (saving) return;
     setSaving(true);
     setError("");
+    if (payMode === "online" && mpAvailable && !payerEmail.trim()) {
+      setSaving(false);
+      setError("Faça login com um e-mail válido para pagar online.");
+      return;
+    }
     analyticsService.track(OrderEvents.BEGIN_CHECKOUT, {
       params: { payment_method: form.paymentMethod, delivery_method: form.deliveryMethod },
     });
     const res = await fetch("/api/checkout", {
       method: "POST",
       credentials: "include",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Idempotency-Key": idempotencyKey,
+      },
       body: JSON.stringify({
         deliveryMethod: form.deliveryMethod,
         paymentMethod: form.paymentMethod,
@@ -96,6 +111,7 @@ export function CheckoutPanel() {
       return;
     }
 
+    setIdempotencyKey(crypto.randomUUID());
     const order = data.data.order as { id: string; total: number };
     analyticsService.track(OrderEvents.ORDER_COMPLETE, {
       value: Number(order.total),
@@ -121,7 +137,7 @@ export function CheckoutPanel() {
         <MercadoPagoCheckout
           orderId={pendingOrder.id}
           amount={pendingOrder.total}
-          payerEmail={payerEmail || "cliente@testuser.com"}
+          payerEmail={payerEmail}
           onPaid={async (result) => {
             const approved = String(result.status).toUpperCase() === "APPROVED";
             analyticsService.track(
@@ -265,7 +281,13 @@ export function CheckoutPanel() {
                     <span>
                       <span className="font-medium">Pagar agora (Mercado Pago)</span>
                       <span className="block text-xs text-muted-foreground">
-                        Checkout transparente · ambiente de teste · cartão / PIX / boleto.
+                        Checkout transparente
+                        {mpEnvironment === "production"
+                          ? " · produção"
+                          : mpEnvironment === "test"
+                            ? " · ambiente de teste"
+                            : ""}
+                        {" · cartão / PIX / boleto."}
                       </span>
                     </span>
                   </label>

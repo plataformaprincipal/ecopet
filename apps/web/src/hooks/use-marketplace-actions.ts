@@ -25,6 +25,7 @@ export function useMarketplaceActions() {
       requireAuth(async () => {
         if (session?.user?.role === "PARTNER" && session.user.id === product.partnerId) return;
         await addProductToServerCart(product.id, quantity);
+        // Drawer lê o carrinho do servidor ao abrir (useServerCart / CartDrawer).
         setCartOpen(true);
       });
     },

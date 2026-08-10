@@ -1,7 +1,8 @@
 /**
- * Testes Etapa — Produtos do parceiro (acesso imediato, sem aprovação admin)
+ * Testes Etapa — Produtos do parceiro (após aprovação operacional).
  */
-import { PrismaClient } from "@prisma/client";
+import { AccountStatus, PrismaClient, VerificationStatus } from "@prisma/client";
+import { generateValidCnpj } from "./cnpj-test-utils.mjs";
 
 const WEB = process.env.WEB_URL || "http://localhost:3000";
 const prisma = new PrismaClient();
@@ -9,16 +10,37 @@ const jar = new Map();
 const pwd = "Ecopet@Forte2026";
 
 function assert(c, m) { if (!c) throw new Error(m); }
-function cnpj() { return String(Date.now()).slice(-10).padEnd(14, "0").slice(0, 14); }
-function phone(s) { return `119${String(s).padStart(8, "0").slice(-8)}`; }
+function cnpj() { return generateValidCnpj(Date.now() + Math.floor(Math.random() * 1000)); }
+function phone(s) { return `+55119${String(s).padStart(8, "0").slice(-8)}`; }
 
+let reqSeq = 0;
 async function req(path, opts = {}) {
-  const headers = { "Content-Type": "application/json", ...(opts.headers || {}) };
+  reqSeq += 1;
+  const headers = {
+    "Content-Type": "application/json",
+    "x-forwarded-for": `10.243.${Date.now() % 200}.${(reqSeq % 200) + 1}`,
+    ...(opts.headers || {}),
+  };
   if (jar.get("c")) headers.Cookie = jar.get("c");
   const res = await fetch(`${WEB}${path}`, { ...opts, headers });
   const sc = res.headers.get("set-cookie");
   if (sc?.includes("ecopet-session")) jar.set("c", sc.split(";")[0]);
   return { status: res.status, data: await res.json().catch(() => ({})) };
+}
+
+async function approvePartner(email) {
+  await prisma.user.update({
+    where: { email },
+    data: {
+      accountStatus: AccountStatus.ACTIVE,
+      partnerProfile: {
+        update: {
+          verificationStatus: VerificationStatus.APPROVED,
+          approvedAt: new Date(),
+        },
+      },
+    },
+  });
 }
 
 async function registerPartner(email, suffix) {
@@ -32,7 +54,17 @@ async function registerPartner(email, suffix) {
     }),
   });
   assert(reg.status === 201, "register partner");
-  assert(reg.data.data?.user?.accountStatus === "ACTIVE", "partner ACTIVE sem aprovação");
+  assert(reg.data.data?.user?.accountStatus === "PENDING", "partner PENDING até aprovação");
+  await approvePartner(email);
+  jar.clear();
+  const login = await req("/api/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password: pwd }),
+  });
+  assert(
+    login.status === 200,
+    `partner login após aprovação → ${login.status} ${JSON.stringify(login.data?.error ?? login.data)}`
+  );
 }
 
 async function main() {

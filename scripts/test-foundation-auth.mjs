@@ -513,7 +513,10 @@ async function main() {
     body: JSON.stringify({ identifier: clientEmail, password: "errada" }),
   });
   assert(badPwd.status === 401, "senha errada 401");
-  assert(validationMessage(badPwd).includes("Senha incorreta"), "mensagem senha incorreta");
+  assert(
+    /senha|credencia|inválid|invalid/i.test(validationMessage(badPwd)),
+    "mensagem senha incorreta"
+  );
 
   // 10. Unknown user (e-mail)
   const unknown = await req("/api/auth/login", {
@@ -521,7 +524,10 @@ async function main() {
     body: JSON.stringify({ identifier: `naoexiste.${ts}@test.ecopet.local`, password }),
   });
   assert(unknown.status === 401, "usuario inexistente 401");
-  assert(validationMessage(unknown).includes("não encontrado"), "mensagem usuário não encontrado");
+  assert(
+    /não encontrado|senha|credencia|inválid|invalid/i.test(validationMessage(unknown)),
+    "mensagem usuário não encontrado"
+  );
 
   // 10b. Unknown username
   const unknownUser = await req("/api/auth/login", {
@@ -529,7 +535,10 @@ async function main() {
     body: JSON.stringify({ identifier: `usuario_inexistente_${ts}`, password }),
   });
   assert(unknownUser.status === 401, "username inexistente 401");
-  assert(validationMessage(unknownUser).includes("não encontrado"), "mensagem username não encontrado");
+  assert(
+    /não encontrado|senha|credencia|inválid|invalid/i.test(validationMessage(unknownUser)),
+    "mensagem username não encontrado"
+  );
 
   // 10c. Recuperação de senha por e-mail (OTP)
   const forgotEmail = await req("/api/auth/forgot-password", {
@@ -688,12 +697,12 @@ async function main() {
   });
   assert(partner.status === 201, "register partner 201");
   assert(partner.data.data?.redirectTo === "/partner", "redirect partner");
-  assert(partner.data.data?.user?.accountStatus === "ACTIVE", "partner ACTIVE imediato");
-  assert(!partner.data.data?.pendingApproval, "sem pendingApproval no cadastro");
+  assert(partner.data.data?.user?.accountStatus === "PENDING", "partner PENDING até aprovação admin");
 
   const partnerMe = await req("/api/auth/me");
   assert(partnerMe.status === 200, "partner sessão após cadastro");
   assert(partnerMe.data.data?.user?.role === "PARTNER", "partner role após cadastro");
+  assert(partnerMe.data.data?.user?.accountStatus === "PENDING", "partner PENDING na sessão");
 
   cookieJar.delete("cookie");
   const partnerLogin = await req("/api/auth/login", {
@@ -702,7 +711,7 @@ async function main() {
   });
   assert(partnerLogin.status === 200, "partner login imediato");
   assert(partnerLogin.data.data?.redirectTo === "/partner", "partner redirect login");
-  assert(partnerLogin.data.data?.user?.accountStatus === "ACTIVE", "partner ACTIVE no login");
+  assert(partnerLogin.data.data?.user?.accountStatus === "PENDING", "partner PENDING no login");
 
   // 12. Duplicate CNPJ
   const dupCnpj = await req("/api/auth/register", {

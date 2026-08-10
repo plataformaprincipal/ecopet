@@ -13,13 +13,15 @@ import { SmartRecommendations } from "./smart-recommendations";
 import { SubscriptionCard } from "./subscription-card";
 import { MarketplaceGridSkeleton } from "./marketplace-skeleton";
 import { useMarketplaceStore } from "@/store/marketplace-store";
+import { useServerCart } from "@/hooks/use-server-cart";
 import { HOME_CATEGORIES } from "@/lib/marketplace/config";
 import { fetchProducts, fetchServices, fetchPartners, fetchAiRecommendations, fetchSubscriptions } from "@/lib/marketplace/api";
 import type { MarketplaceProduct, MarketplaceService, MarketplacePartner, AiRecommendation, SubscriptionPlan } from "@/lib/marketplace/types";
 import { cn } from "@/lib/utils";
 
 export function MarketplaceHome() {
-  const { setSearchPanelOpen, setAiModalOpen, setCartOpen, cartCount, setFilters, addSearchHistory } = useMarketplaceStore();
+  const { setSearchPanelOpen, setAiModalOpen, setCartOpen, setFilters, addSearchHistory } = useMarketplaceStore();
+  const { itemCount: cartItemCount, refresh: refreshCart } = useServerCart();
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<MarketplaceProduct[]>([]);
@@ -101,11 +103,19 @@ export function MarketplaceHome() {
             <SlidersHorizontal className="h-5 w-5" />
             <span className="hidden sm:inline">Filtros</span>
           </Button>
-          <Button size="lg" variant="outline" className="relative" onClick={() => setCartOpen(true)}>
+          <Button
+            size="lg"
+            variant="outline"
+            className="relative"
+            onClick={() => {
+              void refreshCart();
+              setCartOpen(true);
+            }}
+          >
             <ShoppingCart className="h-5 w-5" />
-            {cartCount() > 0 && (
+            {cartItemCount > 0 && (
               <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-ecopet-yellow text-[10px] font-bold text-ecopet-dark">
-                {cartCount()}
+                {cartItemCount}
               </span>
             )}
           </Button>

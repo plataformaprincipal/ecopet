@@ -1,0 +1,38 @@
+﻿[
+    {
+        "cmd":  "test:foundation:services",
+        "code":  -1073740791,
+        "ms":  1495,
+        "tail":  "node.exe : npm warn Unknown env config \"devdir\". This will stop working in the next major version of npm. See `npm \r\nhelp npmrc` for supported config options.\r\nNo linha:1 caractere:1\r\n+ \u0026 \"C:\\Program Files\\nodejs/node.exe\" \"C:\\Program Files\\nodejs/node_mo ...\r\n+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (npm warn Unknow...config options.:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n\r\n\u003e ecopet@1.0.0 test:foundation:services\r\n\u003e node scripts/test-foundation-services.mjs\r\n\r\nÔ£ù register partner\r\nAssertion failed: !(handle-\u003eflags \u0026 UV_HANDLE_CLOSING), file src\\win\\async.c, line 94\r\n"
+    },
+    {
+        "cmd":  "test:foundation:cart",
+        "code":  1,
+        "ms":  3634,
+        "tail":  "node.exe : npm warn Unknown env config \"devdir\". This will stop working in the next major version of npm. See `npm \r\nhelp npmrc` for supported config options.\r\nNo linha:1 caractere:1\r\n+ \u0026 \"C:\\Program Files\\nodejs/node.exe\" \"C:\\Program Files\\nodejs/node_mo ...\r\n+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (npm warn Unknow...config options.:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n\r\n\u003e ecopet@1.0.0 test:foundation:cart\r\n\u003e node scripts/test-foundation-cart.mjs\r\n\r\nÔ£ù precisa de produto ACTIVE com estoque\r\n"
+    },
+    {
+        "cmd":  "test:foundation:orders",
+        "code":  1,
+        "ms":  3747,
+        "tail":  "node.exe : npm warn Unknown env config \"devdir\". This will stop working in the next major version of npm. See `npm \r\nhelp npmrc` for supported config options.\r\nNo linha:1 caractere:1\r\n+ \u0026 \"C:\\Program Files\\nodejs/node.exe\" \"C:\\Program Files\\nodejs/node_mo ...\r\n+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (npm warn Unknow...config options.:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n\r\n\u003e ecopet@1.0.0 test:foundation:orders\r\n\u003e node scripts/test-foundation-orders.mjs\r\n\r\nÔ£ù parceiro cria produto ÔåÆ 403 {\"code\":\"FORBIDDEN\",\"message\":\"Sua conta de parceiro est├í em an├ílise. Voc├¬ \r\npoder├í cadastrar produtos e servi├ºos ap├│s a aprova├º├úo.\"}\r\n"
+    },
+    {
+        "cmd":  "test:foundation:partner",
+        "code":  1,
+        "ms":  1751,
+        "tail":  "node.exe : npm warn Unknown env config \"devdir\". This will stop working in the next major version of npm. See `npm \r\nhelp npmrc` for supported config options.\r\nNo linha:1 caractere:1\r\n+ \u0026 \"C:\\Program Files\\nodejs/node.exe\" \"C:\\Program Files\\nodejs/node_mo ...\r\n+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (npm warn Unknow...config options.:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n\r\n\u003e ecopet@1.0.0 test:foundation:partner\r\n\u003e node scripts/test-foundation-partner.mjs\r\n\r\n=== EcoPet Partner Registration Tests ===\r\n\r\n[autonomous] CPF inv├ílido ÔåÆ 400\r\n\r\nÔ£ù aut├┤nomo ACTIVE\r\n"
+    },
+    {
+        "cmd":  "test:foundation:notifications",
+        "code":  1,
+        "ms":  20282,
+        "tail":  "node.exe : npm warn Unknown env config \"devdir\". This will stop working in the next major version of npm. See `npm \r\nhelp npmrc` for supported config options.\r\nNo linha:1 caractere:1\r\n+ \u0026 \"C:\\Program Files\\nodejs/node.exe\" \"C:\\Program Files\\nodejs/node_mo ...\r\n+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (npm warn Unknow...config options.:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n\r\n\u003e ecopet@1.0.0 test:foundation:notifications\r\n\u003e node scripts/test-foundation-notifications.mjs\r\n\r\n=== EcoPet Foundation Notifications Tests ===\r\n\r\n\r\nÔØî 18 prefs get\r\n"
+    },
+    {
+        "cmd":  "test:security",
+        "code":  1,
+        "ms":  16364,
+        "tail":  "node.exe : npm warn Unknown env config \"devdir\". This will stop working in the next major version of npm. See `npm \r\nhelp npmrc` for supported config options.\r\nNo linha:1 caractere:1\r\n+ \u0026 \"C:\\Program Files\\nodejs/node.exe\" \"C:\\Program Files\\nodejs/node_mo ...\r\n+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (npm warn Unknow...config options.:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n\r\n\u003e ecopet@1.0.0 test:security\r\n\u003e node scripts/test-security.mjs\r\n\r\n=== EcoPet Security Tests ===\r\n\r\nÔ£ô CLIENT bloqueado no admin\r\nÔ£ô CLIENT bloqueado em rotas admin LGPD\r\nÔ£ô ADMIN acessa privacy-requests (rota auditada)\r\n\r\nÔ£ù admin gestor overview (500)\r\n"
+    }
+]

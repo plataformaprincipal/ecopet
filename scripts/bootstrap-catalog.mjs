@@ -243,10 +243,12 @@ async function ensurePartner(db) {
       description: "Catálogo oficial operacional da plataforma EcoPet.",
       businessHours: "Segunda a sábado, 08:00 às 18:00",
       verificationStatus: VerificationStatus.APPROVED,
+      approvedAt: new Date(),
     },
     update: {
       businessName: CATALOG_BUSINESS,
       verificationStatus: VerificationStatus.APPROVED,
+      approvedAt: new Date(),
       description: "Catálogo oficial operacional da plataforma EcoPet.",
       businessHours: "Segunda a sábado, 08:00 às 18:00",
     },

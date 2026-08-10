@@ -3,7 +3,7 @@ import { apiFailure, apiSuccess } from "@/lib/api-response";
 import { requireClient } from "@/lib/auth/require-auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { createMercadoPagoCheckoutOrder } from "@/lib/mercado-pago/create-checkout-order";
-import { isMercadoPagoConfigured } from "@/lib/mercado-pago/config";
+import { isMercadoPagoCheckoutAvailable } from "@/lib/mercado-pago/config";
 import { assertCheckoutEnabled } from "@/lib/commerce/checkout-flags";
 
 export const dynamic = "force-dynamic";
@@ -36,8 +36,8 @@ export async function POST(request: Request) {
     return apiFailure("CHECKOUT_DISABLED", "Checkout temporariamente indisponível.", 503);
   }
 
-  if (!isMercadoPagoConfigured()) {
-    return apiFailure("NOT_CONFIGURED", "Mercado Pago não configurado.", 503);
+  if (!isMercadoPagoCheckoutAvailable()) {
+    return apiFailure("NOT_CONFIGURED", "Mercado Pago indisponível neste ambiente.", 503);
   }
 
   const contentLength = Number(request.headers.get("content-length") || "0");

@@ -1,7 +1,7 @@
 /**
  * Testes Etapa 8 — Pedidos (cliente + parceiro + isolamento)
  */
-import { PrismaClient } from "@prisma/client";
+import { AccountStatus, PrismaClient, VerificationStatus } from "@prisma/client";
 import { generateValidCnpj } from "./cnpj-test-utils.mjs";
 
 const WEB = process.env.WEB_URL || "http://localhost:3000";
@@ -78,6 +78,19 @@ async function registerPartner(email, suffix) {
     reg.status === 201,
     `register partner → ${reg.status} ${JSON.stringify(reg.data?.error ?? reg.data)}`
   );
+  await prisma.user.update({
+    where: { email },
+    data: {
+      accountStatus: AccountStatus.ACTIVE,
+      partnerProfile: {
+        update: {
+          verificationStatus: VerificationStatus.APPROVED,
+          approvedAt: new Date(),
+        },
+      },
+    },
+  });
+  await login(email);
 }
 
 async function login(email) {

@@ -21,9 +21,15 @@ function jarFor(name) {
   return jars.get(name);
 }
 
+let reqSeq = 0;
 async function reqAs(jarName, urlPath, opts = {}) {
   const jar = jarFor(jarName);
-  const headers = { "Content-Type": "application/json", ...(opts.headers || {}) };
+  reqSeq += 1;
+  const headers = {
+    "Content-Type": "application/json",
+    "x-forwarded-for": `10.242.${Date.now() % 200}.${(reqSeq % 200) + 1}`,
+    ...(opts.headers || {}),
+  };
   const cookie = jar.get("cookie");
   if (cookie) headers.Cookie = cookie;
   const res = await fetch(`${WEB}${urlPath}`, { ...opts, headers });

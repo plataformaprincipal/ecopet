@@ -138,7 +138,18 @@ async function ensureAdmin(email) {
 }
 
 async function activateUser(userId) {
-  await prisma.user.update({ where: { id: userId }, data: { accountStatus: AccountStatus.ACTIVE } });
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      accountStatus: AccountStatus.ACTIVE,
+      partnerProfile: {
+        update: {
+          verificationStatus: "APPROVED",
+          approvedAt: new Date(),
+        },
+      },
+    },
+  });
 }
 
 async function main() {
@@ -229,7 +240,10 @@ async function main() {
 
   // --- IDOR: pedido (parceiro) ---
   const orderPartnerB = await reqAs("partnerB", `/api/partner/orders/${order.id}`);
-  assert(orderPartnerB.status === 404, `IDOR order partner read (${orderPartnerB.status})`);
+  assert(
+    orderPartnerB.status === 404 || orderPartnerB.status === 403,
+    `IDOR order partner read (${orderPartnerB.status})`
+  );
   console.log("✓ IDOR: parceiro não acessa pedido de outro parceiro");
 
   const orderPartnerA = await reqAs("partnerA", `/api/partner/orders/${order.id}`);

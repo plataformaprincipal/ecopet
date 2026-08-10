@@ -6,7 +6,10 @@ import {
   getMercadoPagoOrder,
   newIdempotencyKey,
 } from "@/lib/mercado-pago/client";
-import { getMercadoPagoEnvironment, isMercadoPagoConfigured } from "@/lib/mercado-pago/config";
+import {
+  getMercadoPagoEnvironment,
+  isMercadoPagoCheckoutAvailable,
+} from "@/lib/mercado-pago/config";
 import { mapMpOrderStatusToInternal } from "@/lib/mercado-pago/status";
 import { applyInternalPaymentStatus } from "@/lib/mercado-pago/apply-payment-status";
 import type { CreateMpOrderRequest } from "@/lib/mercado-pago/types";
@@ -34,7 +37,7 @@ function formatAmount(value: number): string {
  * Recalcula total no servidor; nunca confia no valor do cliente.
  */
 export async function createMercadoPagoCheckoutOrder(input: CreateCheckoutOrderInput) {
-  if (!isMercadoPagoConfigured()) {
+  if (!isMercadoPagoCheckoutAvailable()) {
     throw new Error("MP_NOT_CONFIGURED");
   }
 
