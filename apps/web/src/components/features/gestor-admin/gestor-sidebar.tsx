@@ -52,7 +52,7 @@ export function GestorSidebar() {
     <aside className="w-64 shrink-0 border-r bg-white dark:bg-gray-950">
       <div className="border-b p-4">
         <Link href="/dashboard/admin/gestor" className="font-display text-lg font-bold text-ecopet-green">
-          Gestor EcoPet
+          Gestor EccoPet
         </Link>
         <p className="text-xs text-muted-foreground">BI e relatórios operacionais</p>
       </div>

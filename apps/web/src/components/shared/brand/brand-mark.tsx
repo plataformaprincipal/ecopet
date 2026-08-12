@@ -10,7 +10,7 @@ export interface BrandMarkProps {
 }
 
 /**
- * Símbolo oficial ECOPET — abstração de ecossistema (nodo + folha + conexão).
+ * Símbolo EccoPet — “E” minimalista com nodo de conexão (tecnologia + cuidado).
  * Escalável para favicon, PWA e sidebar.
  */
 export function BrandMark({
@@ -21,10 +21,10 @@ export function BrandMark({
 }: BrandMarkProps) {
   const fills =
     tone === "on-dark" || tone === "mono-light"
-      ? { primary: "#FFFFFF", accent: "#34D399", soft: "rgba(255,255,255,0.22)" }
+      ? { primary: "#FFFFFF", accent: "#34D399", soft: "rgba(255,255,255,0.14)" }
       : tone === "mono-dark"
-        ? { primary: "#003B16", accent: "#003B16", soft: "rgba(0,59,22,0.18)" }
-        : { primary: "#003B16", accent: "#128A3F", soft: "rgba(18,138,63,0.16)" };
+        ? { primary: "#003B16", accent: "#003B16", soft: "rgba(0,59,22,0.12)" }
+        : { primary: "#003B16", accent: "#128A3F", soft: "rgba(18,138,63,0.12)" };
 
   return (
     <svg
@@ -39,27 +39,18 @@ export function BrandMark({
     >
       <title>{title}</title>
       <rect width="64" height="64" rx="16" fill={fills.soft} />
-      {/* Outer ecosystem ring */}
-      <circle cx="32" cy="32" r="22" stroke={fills.primary} strokeWidth="2.5" opacity="0.9" />
-      {/* Circuit nodes */}
-      <circle cx="32" cy="14" r="3" fill={fills.accent} />
-      <circle cx="48" cy="32" r="3" fill={fills.accent} />
-      <circle cx="32" cy="50" r="3" fill={fills.accent} />
-      <circle cx="16" cy="32" r="3" fill={fills.accent} />
-      {/* Leaf / care petal */}
+      {/* Letter E — geometric wordmark core */}
       <path
-        d="M32 22c6.5 2.5 10 7.2 10 12.5 0 5.8-4.5 9.5-10 9.5s-10-3.7-10-9.5C22 29.2 25.5 24.5 32 22Z"
+        d="M20 18h24v5.5H27.5v5H40v5.5H27.5v6H44V46H20V18Z"
         fill={fills.primary}
-        opacity="0.95"
       />
-      {/* Center AI node */}
-      <circle cx="32" cy="34.5" r="4.5" fill={fills.accent} />
+      {/* Connection node — tech accent */}
+      <circle cx="48" cy="32" r="4" fill={fills.accent} />
       <path
-        d="M32 22v8.5M42 34.5H36.5M32 47V41.5M22 34.5h5.5"
-        stroke={fills.primary}
-        strokeWidth="1.75"
+        d="M40 32h4"
+        stroke={fills.accent}
+        strokeWidth="2.5"
         strokeLinecap="round"
-        opacity="0.85"
       />
     </svg>
   );

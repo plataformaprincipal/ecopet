@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Menu, ShoppingCart } from "lucide-react";
 import { useTranslation } from "@/providers/i18n-provider";
 import { LanguageSelector } from "@/components/features/i18n/language-selector";
+import { ThemeToggle } from "@/components/shared/theme/theme-toggle";
 import { NotificationBell } from "@/components/features/notifications/notification-bell";
 
 type Props = {
@@ -21,7 +22,7 @@ export function ClientTopbar({ userName, onMenuClick }: Props) {
     .toUpperCase();
 
   return (
-    <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-zinc-200/80 bg-white/85 px-4 py-3 backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/85">
+    <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-ecopet-gray/10 bg-ecopet-cream/90 px-4 py-3 backdrop-blur-xl dark:border-white/10 dark:bg-ecopet-dark-bg/90">
       <button
         type="button"
         onClick={onMenuClick}
@@ -37,6 +38,7 @@ export function ClientTopbar({ userName, onMenuClick }: Props) {
 
       <div className="ml-auto flex items-center gap-1.5">
         <LanguageSelector compact />
+        <ThemeToggle size="sm" />
         <NotificationBell variant="header" />
         <Link
           href="/client/cart"

@@ -51,7 +51,7 @@
   }
 
   body {
-    @apply bg-white text-ecopet-gray antialiased dark:bg-ecopet-dark-bg dark:text-white;
+    @apply bg-ecopet-cream text-ecopet-gray antialiased dark:bg-ecopet-dark-bg dark:text-white;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 

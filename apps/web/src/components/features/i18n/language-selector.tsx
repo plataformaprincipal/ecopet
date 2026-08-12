@@ -8,10 +8,10 @@ import { useTranslation } from "@/providers/i18n-provider";
 import { cn } from "@/lib/utils";
 
 /** Idiomas principais exibidos no header global — nomes completos fixos. */
-export const HEADER_LOCALES: { code: LocaleCode; label: string }[] = [
-  { code: "pt-BR", label: "Português" },
-  { code: "en", label: "English" },
-  { code: "es", label: "Español" },
+export const HEADER_LOCALES: { code: LocaleCode; label: string; short: string }[] = [
+  { code: "pt-BR", label: "Português", short: "PT" },
+  { code: "en", label: "English", short: "EN" },
+  { code: "es", label: "Español", short: "ES" },
 ];
 
 interface LanguageSelectorProps {
@@ -86,7 +86,7 @@ export function LanguageSelector({ className, compact }: LanguageSelectorProps) 
         ref={triggerRef}
         id={triggerId}
         type="button"
-        aria-label={t("lang.selector.label")}
+        aria-label={`${t("lang.selector.label")}: ${active.label}`}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={menuId}
@@ -104,19 +104,22 @@ export function LanguageSelector({ className, compact }: LanguageSelectorProps) 
           }
         }}
         className={cn(
-          "inline-flex items-center gap-1 rounded-xl border border-ecopet-gray/15",
-          "bg-white/80 font-medium text-ecopet-dark shadow-sm backdrop-blur-md",
-          "transition-colors duration-200 hover:border-ecopet-green/30 hover:bg-white hover:shadow-md",
+          "inline-flex items-center gap-1.5 rounded-xl border border-ecopet-gray/15",
+          "bg-white/70 font-medium text-ecopet-dark shadow-sm backdrop-blur-md",
+          "transition-all duration-200 hover:border-ecopet-green/30 hover:bg-white",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ecopet-green/35 focus-visible:ring-offset-2",
-          "dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:border-emerald-500/40",
-          compact ? "px-2.5 py-1.5 text-xs" : "px-3 py-2 text-sm"
+          "dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:border-emerald-500/40 dark:hover:bg-white/10",
+          compact ? "px-2 py-1.5 text-xs" : "px-3 py-2 text-sm"
         )}
       >
-        <Globe className={cn("shrink-0 text-ecopet-green", compact ? "h-3.5 w-3.5" : "h-4 w-4")} aria-hidden />
-        <span className="whitespace-nowrap">{active.label}</span>
+        <Globe
+          className={cn("shrink-0 text-ecopet-green", compact ? "h-3.5 w-3.5" : "h-4 w-4")}
+          aria-hidden
+        />
+        <span className="font-semibold tracking-wide">{active.short}</span>
         <ChevronDown
           className={cn(
-            "h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-200",
+            "h-3.5 w-3.5 shrink-0 text-ecopet-gray/70 transition-transform duration-200 dark:text-white/50",
             open && "rotate-180"
           )}
           aria-hidden
@@ -130,7 +133,7 @@ export function LanguageSelector({ className, compact }: LanguageSelectorProps) 
         aria-label={t("lang.selector.openMenu")}
         aria-hidden={!open}
         className={cn(
-          "absolute right-0 top-[calc(100%+0.375rem)] z-50 min-w-[10.5rem] overflow-hidden rounded-xl",
+          "absolute right-0 top-[calc(100%+0.375rem)] z-50 min-w-[12rem] overflow-hidden rounded-xl",
           "border border-ecopet-gray/12 bg-white shadow-lg",
           "dark:border-white/10 dark:bg-ecopet-dark-card",
           "origin-top transition-all duration-200 ease-out",
@@ -159,15 +162,23 @@ export function LanguageSelector({ className, compact }: LanguageSelectorProps) 
                   handleMenuKeyDown(e, index);
                 }}
                 className={cn(
-                  "flex w-full items-center px-3.5 py-2.5 text-left text-sm transition-colors duration-150",
+                  "flex w-full items-center justify-between gap-4 px-3.5 text-left transition-colors duration-150",
                   "focus-visible:outline-none focus-visible:bg-emerald-50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ecopet-green/30",
                   selected
                     ? "bg-emerald-50/90 font-semibold text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200"
-                    : "text-ecopet-dark hover:bg-gray-50 dark:text-white dark:hover:bg-white/5",
+                    : "text-ecopet-dark hover:bg-ecopet-cream dark:text-white dark:hover:bg-white/5",
                   compact ? "py-2 text-xs" : "py-2.5 text-sm"
                 )}
               >
-                {loc.label}
+                <span>{loc.label}</span>
+                <span
+                  className={cn(
+                    "font-semibold tracking-wide",
+                    selected ? "text-emerald-700 dark:text-emerald-300" : "text-ecopet-gray/70 dark:text-white/45"
+                  )}
+                >
+                  {loc.short}
+                </span>
               </button>
             </li>
           );

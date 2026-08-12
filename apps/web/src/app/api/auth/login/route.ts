@@ -21,9 +21,6 @@ import {
   LOGIN_INVALID_CREDENTIALS_MESSAGE,
 } from "@/lib/constants/auth-messages";
 import { auditLogin, auditLoginFailed } from "@/lib/auth/auth-audit";
-import { isLoginTurnstileRequired } from "@/lib/turnstile/login-risk";
-import { requireTurnstile, TURNSTILE_ACTIONS } from "@/lib/turnstile/server";
-import { turnstilePublicMessage } from "@/lib/turnstile/errors";
 import { withApiTelemetry } from "@/lib/observability/with-api-telemetry";
 import { captureSecurityEvent } from "@/lib/observability/error-capture";
 import { trackMetric, MetricNames } from "@/lib/observability/metrics";
@@ -64,25 +61,6 @@ async function loginHandler(request: Request) {
       ))
     ) {
       return apiFailure("RATE_LIMIT", "Muitas tentativas. Aguarde alguns minutos.", 429);
-    }
-
-    const turnstileRequired = await isLoginTurnstileRequired({ ip, identifier });
-    if (turnstileRequired) {
-      if (!body?.turnstileToken) {
-        return apiFailure(
-          "TURNSTILE_REQUIRED",
-          turnstilePublicMessage("TOKEN_MISSING"),
-          403
-        );
-      }
-      const turnstileError = await requireTurnstile({
-        token: body.turnstileToken,
-        expectedAction: TURNSTILE_ACTIONS.LOGIN_RISK,
-        request,
-        remoteIp: ip,
-        flow: "login_risk",
-      });
-      if (turnstileError) return turnstileError;
     }
 
     const user = await findUserByLoginIdentifier(prisma, identifier);
