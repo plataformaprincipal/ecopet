@@ -30,29 +30,56 @@ function setBodyInactive(inactive: boolean): void {
   document.body.classList.toggle(VW_BODY_INACTIVE_CLASS, inactive);
 }
 
-/** Oculta overlays Unity (ex.: tooltip "Interagir") que ficam acima do painel EcoPet. */
+let interactObserver: MutationObserver | null = null;
+let interactHideTimer: ReturnType<typeof setTimeout> | null = null;
+
+function neutralizeElement(el: HTMLElement): void {
+  el.style.setProperty("pointer-events", "none", "important");
+  el.style.setProperty("visibility", "hidden", "important");
+  el.style.setProperty("opacity", "0", "important");
+  el.style.setProperty("z-index", "-1", "important");
+  el.setAttribute("aria-hidden", "true");
+  el.setAttribute("data-ecopet-vlibras-suppressed", "1");
+}
+
+/** Oculta overlays Unity (ex.: tooltip "Interagir") que ficam acima do painel EccoPet. */
 function hideInteractOverlays(): void {
   if (typeof document === "undefined") return;
 
-  const root = getVLibrasRoot();
-  const scope = root ?? document.body;
+  document
+    .querySelectorAll<HTMLElement>("#gameContainer, #unity-container, #unity-footer, [vw] canvas")
+    .forEach((el) => neutralizeElement(el));
 
-  scope.querySelectorAll<HTMLElement>("#gameContainer, #unity-container, #unity-footer, canvas").forEach((el) => {
-    el.style.setProperty("pointer-events", "none", "important");
-    el.style.setProperty("visibility", "hidden", "important");
-    el.style.setProperty("opacity", "0", "important");
-  });
-
-  scope.querySelectorAll<HTMLElement>("div, span, button, p, label").forEach((el) => {
+  document.querySelectorAll<HTMLElement>("div, span, button, p, label, a").forEach((el) => {
     const text = el.textContent?.trim();
-    if (!text || !/interagir/i.test(text)) return;
-    const host = el.closest("[vw], [vw-plugin-wrapper], #gameContainer") ?? el;
-    if (!(host instanceof HTMLElement)) return;
-    host.style.setProperty("pointer-events", "none", "important");
-    host.style.setProperty("visibility", "hidden", "important");
-    host.style.setProperty("opacity", "0", "important");
-    host.style.setProperty("z-index", "-1", "important");
+    if (!text || text.length > 24 || !/^interagir$/i.test(text)) return;
+    const host =
+      (el.closest("#gameContainer, [vw], [vw-plugin-wrapper], [vw-access-button]") as HTMLElement | null) ??
+      el;
+    neutralizeElement(host);
   });
+}
+
+function startInteractObserver(): void {
+  if (typeof document === "undefined" || interactObserver) return;
+  interactObserver = new MutationObserver(() => {
+    if (!document.body.classList.contains(VW_BODY_INACTIVE_CLASS)) return;
+    if (interactHideTimer) clearTimeout(interactHideTimer);
+    interactHideTimer = setTimeout(() => {
+      interactHideTimer = null;
+      hideInteractOverlays();
+    }, 50);
+  });
+  interactObserver.observe(document.body, { childList: true, subtree: true, characterData: true });
+}
+
+function stopInteractObserver(): void {
+  interactObserver?.disconnect();
+  interactObserver = null;
+  if (interactHideTimer) {
+    clearTimeout(interactHideTimer);
+    interactHideTimer = null;
+  }
 }
 
 function clearInteractOverlayStyles(): void {
@@ -178,6 +205,7 @@ function scheduleOpenPanel(): void {
 export function activateVLibras(): boolean {
   if (typeof window === "undefined" || !window.VLibras) return false;
 
+  stopInteractObserver();
   initVLibras();
   showVLibras();
 
@@ -205,6 +233,10 @@ export function deactivateVLibras(): void {
   const accessHost = getVLibrasRoot()?.querySelector("[vw-access-button]");
   accessHost?.classList.remove("active");
   hideInteractOverlays();
+  startInteractObserver();
+  // Segunda passagem — Unity pode reinjetar "Interagir" após o close.
+  setTimeout(hideInteractOverlays, 120);
+  setTimeout(hideInteractOverlays, 400);
 }
 
 /** Sincroniza visibilidade do DOM com o estado do store (sem recriar Widget). */

@@ -1,0 +1,32 @@
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
+import {
+  isPublicSocialPath,
+  isPublicPath,
+  requiresAuth,
+  AUTH_REQUIRED_EXACT,
+} from "@/lib/edge/routes";
+
+describe("visitor public routes", () => {
+  it("exposes /social as public read path", () => {
+    assert.equal(isPublicSocialPath("/social"), true);
+    assert.equal(isPublicPath("/social"), true);
+    assert.equal(requiresAuth("/social"), false);
+    assert.equal(AUTH_REQUIRED_EXACT.has("/social"), false);
+  });
+
+  it("keeps private account routes protected", () => {
+    assert.equal(requiresAuth("/perfil"), true);
+    assert.equal(requiresAuth("/meu-pet"), true);
+    assert.equal(requiresAuth("/pedidos"), true);
+    assert.equal(requiresAuth("/checkout"), true);
+  });
+
+  it("keeps marketplace browse and cart public, checkout private via marketplace rules", () => {
+    assert.equal(requiresAuth("/marketplace"), false);
+    assert.equal(requiresAuth("/carrinho"), false);
+    assert.equal(requiresAuth("/adocao"), false);
+    assert.equal(requiresAuth("/explorar"), false);
+    assert.equal(requiresAuth("/servicos"), false);
+  });
+});

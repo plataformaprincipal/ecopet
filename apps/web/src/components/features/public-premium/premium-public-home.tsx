@@ -11,7 +11,6 @@ import {
   Network,
   ShoppingBag,
   Sparkles,
-  Star,
   Users,
   Zap,
 } from "lucide-react";
@@ -355,33 +354,6 @@ export function PremiumPublicHome() {
             <Link href="/eccopet">{t("pub.home.aiCta")}</Link>
           </Button>
         </div>
-      </Section>
-
-      {/* Testimonials */}
-      <Section id="depoimentos" title={t("pub.home.testimonialsTitle")} subtitle={t("pub.home.testimonialsSubtitle")}>
-        <StaggerChildren className="grid gap-4 md:grid-cols-3">
-          {[
-            { name: "Marina", text: t("pub.home.t1Text"), pet: t("pub.home.t1Pet") },
-            { name: "Ricardo", text: t("pub.home.t2Text"), pet: t("pub.home.t2Pet") },
-            { name: "Ana", text: t("pub.home.t3Text"), pet: t("pub.home.t3Pet") },
-          ].map((item) => (
-            <StaggerItem key={item.name}>
-              <blockquote className="h-full rounded-[var(--radius-xl)] border border-ecopet-gray/10 bg-white p-6 shadow-[var(--shadow-sm)] dark:border-white/10 dark:bg-ecopet-dark-card">
-                <div className="flex gap-1 text-ecopet-green" aria-hidden>
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star key={i} className="h-4 w-4 fill-current" />
-                  ))}
-                </div>
-                <p className="mt-4 text-sm leading-relaxed text-ecopet-gray dark:text-white/80">
-                  &ldquo;{item.text}&rdquo;
-                </p>
-                <footer className="mt-4 text-sm font-semibold text-ecopet-dark dark:text-white">
-                  {item.name} · <span className="font-normal text-ecopet-gray">{item.pet}</span>
-                </footer>
-              </blockquote>
-            </StaggerItem>
-          ))}
-        </StaggerChildren>
       </Section>
 
       {/* Final CTA */}

@@ -279,8 +279,6 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
     }
     setStepFeedback([]);
 
-    setStep("conclusion");
-
     const normalizedPhone = resolveRegistrationPhoneE164(
       form.phone,
       phoneCountry,
@@ -293,7 +291,21 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
       return;
     }
 
-    const turnstileToken = turnstile.consumeToken();
+    // Captura o token ANTES de trocar de passo (evita unmount do widget sem token).
+    let turnstileToken: string | null = null;
+    if (turnstileEnabled) {
+      turnstileToken = turnstile.ensureToken();
+      if (!turnstileToken) {
+        setError(t("turnstile.incomplete"));
+        setStep("security");
+        setLoading(false);
+        return;
+      }
+      turnstileToken = turnstile.consumeToken();
+    }
+
+    setStep("conclusion");
+
     const payload = {
       role: "CLIENT" as const,
       name: normalizeFullName(form.name),

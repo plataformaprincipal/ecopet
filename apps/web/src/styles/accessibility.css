@@ -262,10 +262,12 @@ html.a11y-colorblind body [data-status]::after {
   font-weight: 700;
 }
 
-/* Toolbar container — avoid layout shift */
+/* AccessibilityDock — inferior direita, sem conflitar com suporte/nav mobile */
 .a11y-toolbar-root {
   position: fixed;
   z-index: 9990;
+  right: 1rem;
+  left: auto;
 }
 
 html[dir="rtl"] body {
@@ -274,8 +276,8 @@ html[dir="rtl"] body {
 }
 
 html[dir="rtl"] .a11y-toolbar-root {
-  left: auto;
-  right: 1rem;
+  right: auto;
+  left: 1rem;
 }
 
 /* VLibras — botão oficial no centro da lateral direita (somente quando ativo) */

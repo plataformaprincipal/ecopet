@@ -2209,24 +2209,26 @@ model ApprovalRequest {
 }
 
 model SupportTicket {
-  id           String            @id @default(cuid())
-  number       Int               @unique
-  subject      String
-  description  String
-  category     SupportCategory   @default(OTHER)
-  priority     TicketPriority    @default(NORMAL)
-  status       TicketStatus      @default(OPEN)
-  requesterId  String
-  assigneeId   String?
-  aiSuggested  String?
-  metadata     Json?
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
-  resolvedAt   DateTime?
-  closedAt     DateTime?
-  requester    User              @relation("TicketRequester", fields: [requesterId], references: [id])
-  assignee     User?             @relation("TicketAssignee", fields: [assigneeId], references: [id])
-  conversation Conversation?
+  id             String            @id @default(cuid())
+  number         Int               @unique
+  subject        String
+  description    String
+  category       SupportCategory   @default(OTHER)
+  priority       TicketPriority    @default(NORMAL)
+  status         TicketStatus      @default(OPEN)
+  requesterId    String?
+  guestSessionId String?           @unique
+  assigneeId     String?
+  aiSuggested    String?
+  metadata       Json?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  resolvedAt     DateTime?
+  closedAt       DateTime?
+  requester      User?             @relation("TicketRequester", fields: [requesterId], references: [id])
+  guestSession   GuestChatSession? @relation(fields: [guestSessionId], references: [id], onDelete: SetNull)
+  assignee       User?             @relation("TicketAssignee", fields: [assigneeId], references: [id])
+  conversation   Conversation?
 
   @@index([status, priority])
   @@index([status])
@@ -3518,6 +3520,7 @@ model GuestChatSession {
   messages        GuestMessage[]
   conversation    Conversation?   @relation(fields: [conversationId], references: [id])
   convertedUser   User?           @relation("GuestConvertedUser", fields: [convertedUserId], references: [id])
+  supportTicket   SupportTicket?
 
   @@index([status, expiresAt])
 }

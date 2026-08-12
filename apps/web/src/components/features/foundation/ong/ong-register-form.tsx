@@ -458,11 +458,21 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
     }
 
     try {
+      let turnstileToken: string | null = null;
+      if (turnstileEnabled) {
+        turnstileToken = turnstile.ensureToken();
+        if (!turnstileToken) {
+          setError(t("turnstile.incomplete"));
+          setLoading(false);
+          return;
+        }
+        turnstileToken = turnstile.consumeToken();
+      }
       const payload = {
         ...formToOngRegisterPayload(form, phoneE164, {
           providedDocumentTypes: documents.filter((d) => d.status === "uploaded").map((d) => d.type),
         }),
-        turnstileToken: turnstile.consumeToken(),
+        turnstileToken,
         turnstileAction: TURNSTILE_ACTIONS.REGISTER_NGO,
       };
       const res = await fetch("/api/auth/register", {

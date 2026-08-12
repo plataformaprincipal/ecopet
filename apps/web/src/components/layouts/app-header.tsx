@@ -13,10 +13,11 @@ import { LogoutButton } from "@/components/shared/auth/logout-button";
 import type { TranslationKey } from "@/lib/i18n/types";
 
 export function AppHeader({ title, titleKey }: { title?: string; titleKey?: TranslationKey }) {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const { t } = useTranslation();
   const { isAuthenticated, loading } = useFoundationSession();
   const heading = titleKey ? t(titleKey) : title;
+  const isDark = resolvedTheme === "dark";
 
   return (
     <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-ecopet-gray/10 bg-white/90 px-4 backdrop-blur-md dark:border-white/10 dark:bg-ecopet-dark-bg/90 lg:px-8">
@@ -35,10 +36,10 @@ export function AppHeader({ title, titleKey }: { title?: string; titleKey?: Tran
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          onClick={() => setTheme(isDark ? "light" : "dark")}
           aria-label={t("a11y.themeToggle")}
         >
-          {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </Button>
         {!loading && isAuthenticated && <LogoutButton variant="header" />}
       </div>

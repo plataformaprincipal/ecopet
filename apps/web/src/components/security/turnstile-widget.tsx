@@ -73,7 +73,7 @@ export function TurnstileWidget({
         onExpire={() => onExpire?.()}
         onError={() => onError?.()}
         onWidgetLoad={() => onLoad?.()}
-        aria-label={t("turnstile.required")}
+        aria-label={t("turnstile.label")}
       />
     </div>
   );

@@ -50,7 +50,8 @@ export function AccessibilityToolbar() {
   const [minimized, setMinimized] = useState(false);
   const announce = useAriaAnnounce();
   const { t } = useTranslation();
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
+  const isDarkTheme = resolvedTheme === "dark";
 
   const fontScale = useAccessibilityStore((s) => s.fontScale);
   const brailleEnabled = useAccessibilityStore((s) => s.brailleEnabled);
@@ -136,11 +137,12 @@ export function AccessibilityToolbar() {
 
   return (
     <div
-      className="a11y-toolbar-root bottom-28 left-4 lg:bottom-6"
+      className="a11y-toolbar-root bottom-[calc(5.75rem+env(safe-area-inset-bottom))] right-4 left-auto lg:bottom-6 lg:right-4"
       style={{ paddingBottom: "max(0px, env(safe-area-inset-bottom))" }}
       role="region"
       aria-label={t("a11y.title")}
       data-ecopet-a11y-root="true"
+      data-ecopet-accessibility-dock="true"
     >
       {open && !minimized && (
         <div
@@ -209,11 +211,19 @@ export function AccessibilityToolbar() {
 
             <Section title={t("a11y.sections.preferences")} icon={Settings2}>
               <ToolBtn
-                icon={theme === "dark" ? Sun : Moon}
-                label={theme === "dark" ? t("a11y.themeLight") : t("a11y.themeDark")}
+                icon={isDarkTheme ? Sun : Moon}
+                label={isDarkTheme ? t("a11y.themeLight") : t("a11y.themeDark")}
                 onClick={() => {
-                  setTheme(theme === "dark" ? "light" : "dark");
-                  announce(theme === "dark" ? t("a11y.themeLightActivated") : t("a11y.themeDarkActivated"), "polite");
+                  setTheme(isDarkTheme ? "light" : "dark");
+                  announce(isDarkTheme ? t("a11y.themeLightActivated") : t("a11y.themeDarkActivated"), "polite");
+                }}
+              />
+              <ToolBtn
+                icon={Settings2}
+                label={t("a11y.themeSystem")}
+                onClick={() => {
+                  setTheme("system");
+                  announce(t("a11y.themeSystemActivated"), "polite");
                 }}
               />
               <ToolBtn

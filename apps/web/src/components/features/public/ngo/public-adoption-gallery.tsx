@@ -54,6 +54,20 @@ export function PublicAdoptionGallery() {
         <div className="rounded-3xl border border-zinc-200/80 bg-white p-12 text-center dark:border-white/10 dark:bg-zinc-900/60">
           <PawPrint className="mx-auto h-12 w-12 text-zinc-300" aria-hidden />
           <p className="mt-4 text-zinc-500">{t("ngoArea.public.emptyAnimals")}</p>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <Link
+              href="/ngos"
+              className="rounded-xl bg-ecopet-green px-4 py-2 text-sm font-semibold text-white hover:bg-ecopet-green-700"
+            >
+              {t("ngoArea.public.exploreNgos")}
+            </Link>
+            <Link
+              href="/explorar"
+              className="rounded-xl border border-zinc-200 px-4 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 dark:border-white/15 dark:text-white dark:hover:bg-white/5"
+            >
+              {t("ngoArea.public.adjustFilters")}
+            </Link>
+          </div>
         </div>
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

@@ -20,7 +20,7 @@ export function TurnstileField({
   ...widgetProps
 }: TurnstileFieldProps) {
   const { t } = useTranslation();
-  const fieldLabel = label ?? t("turnstile.required");
+  const fieldLabel = label ?? t("turnstile.label");
 
   return (
     <fieldset className={cn("space-y-2", className)}>

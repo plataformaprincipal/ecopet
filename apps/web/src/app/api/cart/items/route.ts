@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { apiSuccess, apiFailure } from "@/lib/api-response";
-import { requireClient } from "@/lib/auth/require-auth";
 import {
   serializeCart,
   resolveCartForRequest,
@@ -13,10 +12,8 @@ const addItemSchema = z.object({
   quantity: z.number().int().positive().optional(),
 });
 
+/** Visitante pode montar carrinho; autenticação só no checkout. */
 export async function POST(request: Request) {
-  const { error } = await requireClient();
-  if (error) return error;
-
   const { cart, newSessionId } = await resolveCartForRequest();
 
   const parsed = addItemSchema.safeParse(await request.json());

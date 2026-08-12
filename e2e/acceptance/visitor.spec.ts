@@ -29,9 +29,28 @@ test.describe("Acceptance VISITOR", () => {
     await expect(page.locator("body")).toBeVisible();
   });
 
-  test("social público abre", async ({ page }) => {
+  test("social público abre sem redirect para login", async ({ page }) => {
     await page.goto("/social");
+    await expect(page).not.toHaveURL(/\/login/i);
     await expect(page.locator("body")).toBeVisible();
+  });
+
+  test("adocao sem mensagem de seed/desenvolvimento", async ({ page }) => {
+    await page.goto("/adocao");
+    await expect(page.locator("body")).toBeVisible();
+    await expect(page.locator("body")).not.toContainText(/npm run db:seed|PostgreSQL/i);
+  });
+
+  test("guest cart API permite adicionar sem login", async ({ request }) => {
+    const products = await request.get("/api/public/products");
+    expect(products.ok()).toBeTruthy();
+    const json = await products.json();
+    const productId = json?.data?.products?.[0]?.id as string | undefined;
+    test.skip(!productId, "sem produto público para testar carrinho guest");
+    const add = await request.post("/api/cart/items", {
+      data: { productId, quantity: 1 },
+    });
+    expect([200, 201]).toContain(add.status());
   });
 
   test("EcoPet IA pública abre shell", async ({ page }) => {

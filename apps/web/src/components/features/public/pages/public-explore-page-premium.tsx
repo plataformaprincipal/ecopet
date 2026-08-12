@@ -28,6 +28,7 @@ type ExploreData = {
   products: Array<{ id: string; name: string; price: number; catalogCategory?: string | null }>;
   services: Array<{ id: string; name: string; price: number; category: string }>;
   partners: Array<{ id: string; name: string; category?: string | null; city?: string | null; productCount?: number; serviceCount?: number }>;
+  adoptions?: Array<{ id: string; name: string; species: string }>;
 };
 
 export function PublicExplorePagePremium() {
@@ -37,9 +38,11 @@ export function PublicExplorePagePremium() {
   const [data, setData] = useState<ExploreData | null>(null);
   const [trending, setTrending] = useState<PublicTrendingData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError(false);
     try {
       const [explore, trend] = await Promise.all([
         fetchPublicExplore({ q: query || undefined, category: category || undefined }),
@@ -47,6 +50,9 @@ export function PublicExplorePagePremium() {
       ]);
       setData(explore);
       setTrending(trend);
+    } catch {
+      setLoadError(true);
+      setData(null);
     } finally {
       setLoading(false);
     }
@@ -70,7 +76,11 @@ export function PublicExplorePagePremium() {
   );
 
   const hasResults =
-    (data?.products.length ?? 0) + (data?.services.length ?? 0) + (data?.partners.length ?? 0) > 0;
+    (data?.products.length ?? 0) +
+      (data?.services.length ?? 0) +
+      (data?.partners.length ?? 0) +
+      (data?.adoptions?.length ?? 0) >
+    0;
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -133,6 +143,14 @@ export function PublicExplorePagePremium() {
 
       {loading ? (
         <SkeletonGrid count={6} />
+      ) : loadError ? (
+        <EmptyStatePremium
+          icon={ShoppingBag}
+          title={t("pub.explore.emptyTitle")}
+          description={t("common.error")}
+          actionLabel={t("turnstile.retry")}
+          onAction={load}
+        />
       ) : !hasResults ? (
         <EmptyStatePremium
           icon={ShoppingBag}
@@ -142,12 +160,34 @@ export function PublicExplorePagePremium() {
           actionHref="/marketplace"
         />
       ) : (
-        <ExploreMasonryGrid
-          partners={data?.partners ?? []}
-          services={data?.services ?? []}
-          products={data?.products ?? []}
-          formatPrice={(v) => formatCurrency(v, locale)}
-        />
+        <div className="space-y-8">
+          {(data?.adoptions?.length ?? 0) > 0 ? (
+            <section aria-labelledby="explore-adoptions" className="space-y-3">
+              <h2 id="explore-adoptions" className="flex items-center gap-2 text-lg font-semibold">
+                <Heart className="h-5 w-5 text-ecopet-green" aria-hidden />
+                {t("pub.explore.catAdoption")}
+              </h2>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {data!.adoptions!.map((animal) => (
+                  <Link
+                    key={animal.id}
+                    href={`/adocao`}
+                    className="rounded-[20px] border border-zinc-200/80 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900/60"
+                  >
+                    <p className="font-medium">{animal.name}</p>
+                    <p className="text-xs text-zinc-500">{animal.species}</p>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          ) : null}
+          <ExploreMasonryGrid
+            partners={data?.partners ?? []}
+            services={data?.services ?? []}
+            products={data?.products ?? []}
+            formatPrice={(v) => formatCurrency(v, locale)}
+          />
+        </div>
       )}
     </div>
   );

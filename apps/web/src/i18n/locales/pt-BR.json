@@ -29,6 +29,34 @@
     "continueShopping": "Continuar comprando",
     "emptyCart": "Seu carrinho está vazio"
   },
+  "support": {
+    "title": "Suporte EccoPet",
+    "welcome": "Olá. Sou o suporte EccoPet. Como posso ajudar?",
+    "statusGuest": "Visitante · suporte da plataforma",
+    "statusAuth": "Online · suporte da plataforma",
+    "placeholder": "Digite sua mensagem...",
+    "send": "Enviar mensagem",
+    "open": "Abrir suporte EccoPet",
+    "close": "Fechar suporte",
+    "newConversation": "Nova conversa",
+    "thinking": "Preparando resposta...",
+    "loadError": "Não foi possível carregar o chat. Tente novamente em instantes.",
+    "sendError": "Falha ao enviar mensagem. Verifique sua conexão e tente novamente.",
+    "guestHint": "Você pode tirar dúvidas antes de criar conta.",
+    "escalate": "Falar com atendimento humano",
+    "escalatePrompt": "Quero registrar um atendimento humano.",
+    "protocol": "Protocolo {protocol}",
+    "suggestionsLabel": "Sugestões rápidas",
+    "suggestions": {
+      "cadastro": "Problema no cadastro",
+      "pagamento": "Problema com pagamento",
+      "parceiro": "Sou parceiro",
+      "ong": "Sou ONG",
+      "pedido": "Problema com pedido",
+      "servico": "Problema com serviço",
+      "tecnico": "Problema técnico"
+    }
+  },
   "ecopetAi": {
     "disclaimer": "A IA EcoPet não substitui médicos-veterinários, zootecnistas, adestradores, especialistas ou outros profissionais qualificados. As informações fornecidas possuem caráter informativo e de apoio à tomada de decisão.",
     "fullDisclaimer": "A EccoPet AI auxilia na organização de informações e recomendações gerais, mas não substitui avaliação veterinária.",
@@ -274,14 +302,17 @@
     }
   },
   "turnstile": {
+    "label": "Verificação de segurança",
     "verifying": "Verificando...",
     "verified": "Verificação concluída",
-    "required": "Verificação necessária",
+    "required": "Conclua a verificação de segurança para continuar",
+    "incomplete": "Não foi possível concluir a verificação de segurança. Tente novamente.",
     "waiting": "Aguardando verificação",
-    "expired": "Verificação expirada. Tente novamente.",
-    "failed": "Não foi possível verificar. Tente novamente.",
+    "expired": "Verificação expirada. Conclua o desafio novamente.",
+    "failed": "Não foi possível concluir a verificação de segurança. Tente novamente.",
+    "error": "Não foi possível concluir a verificação de segurança. Tente novamente.",
     "retry": "Tente novamente",
-    "unavailable": "Serviço temporariamente indisponível",
+    "unavailable": "Serviço de verificação temporariamente indisponível. Tente novamente.",
     "suspicious": "Atividade suspeita detectada",
     "tooManyAttempts": "Muitas tentativas",
     "waitBeforeRetry": "Aguarde antes de tentar novamente"
@@ -830,7 +861,7 @@
     },
     "layout": {
       "headline": "Cuidado, comunidade e inteligência em um só lugar.",
-      "subtitle": "Junte-se a milhares de tutores, veterinários e pet shops na maior plataforma pet do Brasil.",
+      "subtitle": "Compras, serviços, saúde, comunidade, adoção e inteligência artificial conectados pela EccoPet.",
       "copyright": "© 2026 ECOPET"
     },
     "forgotPassword": {
@@ -1309,8 +1340,10 @@
     "brailleDeactivated": "Modo Braille desativado.",
     "themeLight": "Ativar tema claro",
     "themeDark": "Ativar tema escuro",
+    "themeSystem": "Usar tema do sistema",
     "themeLightActivated": "Tema claro ativado.",
     "themeDarkActivated": "Tema escuro ativado.",
+    "themeSystemActivated": "Tema do sistema ativado.",
     "themeToggle": "Alternar tema claro/escuro",
     "language": {
       "title": "Idioma da interface",
@@ -1935,7 +1968,7 @@
       "t3Text": "Marketplace confiável e comunidade que realmente ajuda.",
       "t3Pet": "Mimi, gata",
       "finalTitle": "Comece hoje. Seu pet merece.",
-      "finalSubtitle": "Junte-se a milhares de tutores que já transformaram a forma de cuidar dos seus animais.",
+      "finalSubtitle": "Crie sua conta e conecte compras, serviços, saúde, comunidade e adoção na EccoPet.",
       "finalCta": "Criar conta gratuita"
     },
     "explore": {
@@ -2488,7 +2521,9 @@
       "loginToAdopt": "Entre para solicitar adoção",
       "adopted": "Adotado",
       "by": "por",
-      "emptyAnimals": "Nenhum animal disponível no momento.",
+      "emptyAnimals": "Nenhum pet disponível para adoção nesta busca.",
+      "exploreNgos": "Explorar ONGs",
+      "adjustFilters": "Ajustar filtros",
       "emptyCampaigns": "Nenhuma campanha ativa no momento.",
       "aboutAnimal": "Sobre o animal",
       "requirements": "Requisitos",

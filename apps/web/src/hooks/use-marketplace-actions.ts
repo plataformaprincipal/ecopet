@@ -21,15 +21,13 @@ export function useMarketplaceActions() {
   } = useMarketplaceStore();
 
   const addProductToCart = useCallback(
-    (product: MarketplaceProduct, quantity = 1) => {
-      requireAuth(async () => {
-        if (session?.user?.role === "PARTNER" && session.user.id === product.partnerId) return;
-        await addProductToServerCart(product.id, quantity);
-        // Drawer lê o carrinho do servidor ao abrir (useServerCart / CartDrawer).
-        setCartOpen(true);
-      });
+    async (product: MarketplaceProduct, quantity = 1) => {
+      if (session?.user?.role === "PARTNER" && session.user.id === product.partnerId) return;
+      // Visitante monta carrinho guest; login só no checkout.
+      await addProductToServerCart(product.id, quantity);
+      setCartOpen(true);
     },
-    [requireAuth, session, setCartOpen]
+    [session, setCartOpen]
   );
 
   const toggleProductFavorite = useCallback(

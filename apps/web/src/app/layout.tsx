@@ -27,26 +27,26 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
   title: {
-    default: "ECOPET — Ecossistema Inteligente para Pets",
-    template: "%s | ECOPET",
+    default: "EccoPet — Tudo para a vida do seu pet, em um só lugar",
+    template: "%s | EccoPet",
   },
   description:
-    "Marketplace pet, saúde animal, rede social, adoção e IA assistiva. Plataforma premium para tutores, parceiros, ONGs e AgroPet.",
-  keywords: ["pets", "marketplace pet", "veterinário", "adoção", "pet shop", "ECOPET"],
+    "Compras, serviços, saúde, comunidade, adoção e inteligência artificial conectados pela EccoPet.",
+  keywords: ["pets", "marketplace pet", "veterinário", "adoção", "pet shop", "EccoPet"],
   openGraph: {
     type: "website",
     locale: "pt_BR",
     url: APP_URL,
-    siteName: "ECOPET",
-    title: "ECOPET — Ecossistema Inteligente para Pets",
+    siteName: "EccoPet",
+    title: "EccoPet — Tudo para a vida do seu pet, em um só lugar",
     description:
-      "Marketplace, saúde animal, rede social e IA em uma plataforma premium para tutores e parceiros.",
-    images: [{ url: "/brand/ecopet-logo.png", width: 512, height: 512, alt: "ECOPET" }],
+      "Compras, serviços, saúde, comunidade, adoção e inteligência artificial conectados pela EccoPet.",
+    images: [{ url: "/brand/ecopet-logo.png", width: 512, height: 512, alt: "EccoPet" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "ECOPET — Ecossistema Inteligente para Pets",
-    description: "Marketplace, saúde animal, rede social e IA para quem ama pets.",
+    title: "EccoPet — Tudo para a vida do seu pet, em um só lugar",
+    description: "Compras, serviços, saúde, comunidade, adoção e IA conectados pela EccoPet.",
     images: ["/brand/ecopet-logo.png"],
   },
   robots: { index: true, follow: true },
@@ -61,7 +61,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "ECOPET",
+    title: "EccoPet",
   },
   other: {
     "mobile-web-app-capable": "yes",

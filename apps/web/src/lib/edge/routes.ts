@@ -74,6 +74,7 @@ export function isPublicClientPath(pathname: string): boolean {
 }
 
 export function isPublicSocialPath(pathname: string): boolean {
+  if (pathname === "/social" || pathname.startsWith("/social/")) return true;
   if (pathname === "/feed") return true;
   if (pathname.startsWith("/feed/post/")) return true;
   if (/^\/feed\/profile\/[^/]+$/.test(pathname)) return true;
@@ -85,7 +86,6 @@ export function isPublicSocialPath(pathname: string): boolean {
 export const AUTH_REQUIRED_EXACT = new Set([
   "/perfil",
   "/profile",
-  "/social",
   "/pedidos",
   "/meu-pet",
   "/meupet",

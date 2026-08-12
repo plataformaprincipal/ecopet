@@ -131,7 +131,8 @@ const VALIDATION_MESSAGE_KEYS: Record<string, TranslationKey> = {
   "Informe a visão da instituição.": "auth.register.ong.validation.visionRequired",
   [FORGOT_PASSWORD_GENERIC_MESSAGE]: "auth.forgotPassword.success",
   // Turnstile (mensagens públicas genéricas → chaves i18n)
-  "Verificação necessária. Conclua o desafio para continuar.": "turnstile.required",
+  "Verificação necessária. Conclua o desafio para continuar.": "turnstile.incomplete",
+  "Não foi possível concluir a verificação de segurança. Tente novamente.": "turnstile.failed",
   "Não foi possível verificar. Tente novamente.": "turnstile.failed",
   "Verificação expirada. Conclua o desafio novamente.": "turnstile.expired",
   "Serviço temporariamente indisponível. Tente novamente.": "turnstile.unavailable",
@@ -189,6 +190,15 @@ const API_ERROR_CODE_KEYS: Record<string, TranslationKey> = {
   EMAIL_NOT_VERIFIED: "auth.login.errors.accountUnavailable",
   DUPLICATE_REGISTRATION: "auth.validation.userAlreadyRegistered",
   USER_ALREADY_EXISTS: "auth.validation.userAlreadyRegistered",
+  TURNSTILE_REQUIRED: "turnstile.incomplete",
+  TURNSTILE_FAILED: "turnstile.failed",
+  TOKEN_MISSING: "turnstile.incomplete",
+  TOKEN_EXPIRED: "turnstile.expired",
+  TOKEN_INVALID: "turnstile.failed",
+  TOKEN_REUSED: "turnstile.failed",
+  HOSTNAME_MISMATCH: "turnstile.failed",
+  CLOUDFLARE_UNAVAILABLE: "turnstile.unavailable",
+  TIMEOUT: "turnstile.unavailable",
 };
 
 export function translateAuthMessage(message: string | undefined, t: AuthTranslator): string {

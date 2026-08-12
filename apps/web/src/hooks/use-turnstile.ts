@@ -51,11 +51,27 @@ export function useTurnstile(options: UseTurnstileOptions) {
     setResetKey((k) => k + 1);
   }, [clearToken]);
 
+  const peekToken = useCallback(() => tokenRef.current, []);
+
   const consumeToken = useCallback(() => {
     const current = tokenRef.current;
     clearToken();
     return current;
   }, [clearToken]);
+
+  /**
+   * Obtém token válido sem consumir cedo demais.
+   * Se expirado/ausente e required, dispara reset do widget.
+   */
+  const ensureToken = useCallback((): string | null => {
+    const current = tokenRef.current?.trim() || null;
+    if (current) return current;
+    if (options.required === false) return null;
+    setState((prev) => (prev === "expired" || prev === "error" ? prev : "ready"));
+    setResetKey((k) => k + 1);
+    setError("turnstile.incomplete");
+    return null;
+  }, [options.required]);
 
   const isReady =
     options.required === false || state === "verified" || Boolean(tokenRef.current);
@@ -66,7 +82,7 @@ export function useTurnstile(options: UseTurnstileOptions) {
     state,
     error,
     resetKey,
-    isVerified: state === "verified" && Boolean(token),
+    isVerified: state === "verified" && Boolean(tokenRef.current || token),
     isReady,
     onVerify,
     onExpire,
@@ -74,6 +90,8 @@ export function useTurnstile(options: UseTurnstileOptions) {
     onLoad,
     reset,
     clearToken,
+    peekToken,
+    ensureToken,
     consumeToken,
     setLoading: () => setState("loading"),
     setUnavailable: () => setState("unavailable"),

@@ -17,6 +17,7 @@
     "test:username": "node --import tsx --test src/lib/validation/username.test.ts",
     "test:partner:rules": "node --import tsx --test src/lib/partner/operation-rules.test.ts src/lib/partner/document-validation.test.ts",
     "test:registration:rules": "node --import tsx --test src/lib/registration/collect-step-errors.test.ts",
+    "test:visitor:routes": "node --import tsx --test src/lib/edge/routes.visitor.test.ts src/lib/i18n/turnstile-auth-translations.test.ts",
     "test:vlibras": "node --import tsx --test src/lib/accessibility/vlibras-load-outcome.test.ts",
     "test:email": "tsx --tsconfig tsconfig.json --test src/lib/email/email-enterprise.test.ts",
     "test:mercado-pago": "tsx --tsconfig tsconfig.json --test src/lib/mercado-pago/mercado-pago.test.ts src/lib/mercado-pago/webhooks/webhooks.test.ts",

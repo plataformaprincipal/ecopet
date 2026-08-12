@@ -69,16 +69,16 @@ function Wordmark({
           onDarkSurface ? "text-white" : "text-ecopet-dark dark:text-white"
         )}
       >
-        EcoPet
+        EccoPet
       </span>
       {!compact && variant !== "icon" && (
         <span
           className={cn(
-            "mt-0.5 text-[10px] uppercase tracking-widest",
-            onDarkSurface ? "text-white/70" : "text-ecopet-gray dark:text-white/60"
+            "mt-0.5 max-w-[16rem] text-[10px] font-medium tracking-wide",
+            onDarkSurface ? "text-white/80" : "text-ecopet-gray dark:text-white/70"
           )}
         >
-          Ecossistema Pet
+          Tudo para a vida do seu pet, em um só lugar.
         </span>
       )}
     </div>
@@ -181,7 +181,7 @@ export function EcoPetLogo({
       </>
     );
     return href ? (
-      <Link href={href} className="transition-opacity hover:opacity-90" aria-label="EcoPet — Início">
+      <Link href={href} className="transition-opacity hover:opacity-90" aria-label="EccoPet — Início">
         {inner}
       </Link>
     ) : (
@@ -200,7 +200,7 @@ export function EcoPetLogo({
   );
 
   return href ? (
-    <Link href={href} className="transition-opacity hover:opacity-90" aria-label="EcoPet — Início">
+    <Link href={href} className="transition-opacity hover:opacity-90" aria-label="EccoPet — Início">
       {content}
     </Link>
   ) : (
