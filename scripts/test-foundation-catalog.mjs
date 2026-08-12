@@ -121,7 +121,7 @@ async function main() {
       email: clientEmail,
       password: pwd,
       confirmPassword: pwd,
-      phone: `119${String(ts).slice(-8)}`,
+      phone: `+55119${String(ts).slice(-8)}`,
       birthDate: "1990-01-01",
       username: `cat${String(ts).slice(-8)}`,
       gender: "MASCULINO",
@@ -163,7 +163,8 @@ async function main() {
   while (tomorrow.getDay() === 0) tomorrow.setDate(tomorrow.getDate() + 1);
   const dateIso = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, "0")}-${String(tomorrow.getDate()).padStart(2, "0")}`;
 
-  const todayIso = new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
   const todaySlots = await req(`/api/public/services/${banho.id}/availability?date=${todayIso}`);
   assert((todaySlots.data.data?.slots?.length ?? 0) === 0, "hoje sem slots");
 

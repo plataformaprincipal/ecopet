@@ -1,5 +1,5 @@
 /**
- * Testes Etapa 8 — Carrinho (cliente autenticado; visitante bloqueado)
+ * Testes Etapa 8 — Carrinho (visitante pode adicionar; checkout exige autenticação)
  */
 import { PrismaClient, ProductCatalogStatus } from "@prisma/client";
 
@@ -101,7 +101,29 @@ async function main() {
     method: "POST",
     body: JSON.stringify({ productId: product.id, quantity: 1 }),
   });
-  assert(visitorAdd.status === 401, "visitante não adiciona ao carrinho");
+  assert(
+    visitorAdd.status === 200 || visitorAdd.status === 201,
+    `visitante adiciona ao carrinho → ${visitorAdd.status}`
+  );
+  assert(jar.get("cart"), "cookie ecopet-cart-session persistido para visitante");
+
+  const visitorCart = await req("/api/cart");
+  assert(visitorCart.status === 200, `visitante consulta carrinho → ${visitorCart.status}`);
+  const visitorItems = visitorCart.data.data?.cart?.items ?? visitorCart.data.cart?.items ?? [];
+  assert(visitorItems.length >= 1, "item do visitante persiste no carrinho");
+
+  const visitorCheckout = await req("/api/checkout", {
+    method: "POST",
+    body: JSON.stringify({
+      deliveryMethod: "PICKUP_LOCAL",
+      phone: "11999999999",
+      address: { street: "Rua Teste", city: "São Paulo", state: "SP" },
+    }),
+  });
+  assert(
+    visitorCheckout.status === 401 || visitorCheckout.status === 403,
+    `checkout visitante continua protegido → ${visitorCheckout.status}`
+  );
 
   const ts = Date.now();
   await loginClient(ts);

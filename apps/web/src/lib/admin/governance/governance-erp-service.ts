@@ -322,8 +322,8 @@ export async function getAdminSuporteModule(filters: GestorFilters) {
     items: items.map((t) => ({
       id: t.id,
       numero: t.number,
-      solicitante: t.requester.name,
-      perfil: t.requester.role,
+      solicitante: t.requester?.name ?? t.requester?.email ?? "Visitante",
+      perfil: t.requester?.role ?? "GUEST",
       assunto: t.subject,
       categoria: t.category,
       prioridade: t.priority,
