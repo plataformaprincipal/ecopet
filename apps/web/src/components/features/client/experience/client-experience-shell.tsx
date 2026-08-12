@@ -88,7 +88,7 @@ export function ClientExperienceShell({ userName, primaryPet, children }: Props)
           />
           <div className="absolute inset-y-0 left-0 flex w-72 max-w-[80vw] flex-col bg-white shadow-xl dark:bg-zinc-950">
             <div className="flex items-center justify-between border-b border-zinc-200/80 px-4 py-4 dark:border-white/10">
-              <span className="font-display text-lg font-semibold text-zinc-900 dark:text-white">EcoPet</span>
+              <span className="font-display text-lg font-semibold text-zinc-900 dark:text-white">EccoPet</span>
               <button
                 type="button"
                 onClick={() => setMenuOpen(false)}

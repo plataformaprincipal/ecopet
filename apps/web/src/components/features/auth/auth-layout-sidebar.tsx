@@ -27,7 +27,7 @@ export function AuthLayoutSidebar() {
         aria-hidden
       />
       <div className="relative flex h-full min-h-screen flex-col justify-between p-10 xl:p-14">
-        <EcoPetLogo href="/" variant="dark" showText size="xl" />
+        <EcoPetLogo href="/" variant="dark" showText showTagline size="xl" />
         <FadeIn>
           <p className="overline-text text-white/50">{t("auth.layout.copyright")}</p>
           <h2 className="mt-3 max-w-md font-display text-4xl font-bold leading-tight tracking-tight text-white xl:text-5xl">

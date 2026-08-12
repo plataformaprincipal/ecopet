@@ -34,7 +34,7 @@ export function SocialHome() {
 
   return (
     <>
-      <AppHeader title="ECOPET" />
+      <AppHeader title="EccoPet" />
       <main className="mx-auto max-w-2xl flex-1 pb-4">
         {!loading && stories.length > 0 && (
           <div className="border-b border-ecopet-gray/10 px-4 py-3">

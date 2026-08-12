@@ -329,8 +329,8 @@
   "auth": {
     "login": {
       "title": "Bienvenido de nuevo",
-      "subtitle": "Inicia sesión en tu cuenta ECOPET",
-      "pageTitle": "Entrar en EcoPet",
+      "subtitle": "Inicia sesión en tu cuenta EccoPet",
+      "pageTitle": "Entrar en EccoPet",
       "pageDescription": "Usa tu correo o nombre de usuario y contraseña para acceder.",
       "email": "Correo electrónico",
       "identifier": "Correo o nombre de usuario",
@@ -362,7 +362,7 @@
       }
     },
     "register": {
-      "title": "Crear cuenta ECOPET",
+      "title": "Crear cuenta EccoPet",
       "submit": "Crear cuenta",
       "hasAccount": "¿Ya tienes cuenta?",
       "submitting": "Enviando registro...",
@@ -861,8 +861,8 @@
     },
     "layout": {
       "headline": "Cuidado, comunidad e inteligencia en un solo lugar.",
-      "subtitle": "Únete a miles de tutores, veterinarios y pet shops en la mayor plataforma pet de Brasil.",
-      "copyright": "© 2026 ECOPET"
+      "subtitle": "Compras, servicios, salud, comunidad, adopción e inteligencia artificial conectados por EccoPet.",
+      "copyright": "© 2026 EccoPet"
     },
     "forgotPassword": {
       "title": "Recuperar Contraseña",
@@ -1190,7 +1190,7 @@
     "tagline": "Ecosistema Inteligente para Mascotas, ONGs, Protectores, Socios y AgroPet.",
     "chatHint": "Chat interno con historial y respuesta del equipo.",
     "about": "Plataforma completa para tutores, socios, ONGs y AgroPet — marketplace, salud animal, red social e inteligencia integrada.",
-    "copyright": "© {year} ECOPET — Todos los derechos reservados.",
+    "copyright": "© {year} EccoPet — Todos los derechos reservados.",
     "newMessage": "Nuevo mensaje"
   },
   "marketplace": {
@@ -1918,7 +1918,7 @@
       "createAccount": "Crear cuenta",
       "signIn": "Iniciar sesión",
       "exploreNow": "Explorar ahora",
-      "areasTitle": "Conoce EcoPet",
+      "areasTitle": "Conoce EccoPet",
       "areasSubtitle": "Cinco áreas para explorar incluso antes de crear tu cuenta.",
       "areaSocial": "Red Social",
       "areaSocialDesc": "Comunidad Pet",
@@ -1955,7 +1955,7 @@
       "ngosTitle": "ONG",
       "ngosSubtitle": "Historias de adopción, voluntariado y donaciones que cambian vidas.",
       "ngosCta": "Conocer animales en adopción",
-      "aiTitle": "EcoPet AI",
+      "aiTitle": "EccoPet AI",
       "aiSubtitle": "Tu asistente inteligente para rutina, alimentación y bienestar — pronto, con la misma experiencia premium.",
       "aiText": "Dudas veterinarias, recomendaciones personalizadas y recordatorios inteligentes — todo pensado para el vínculo con tu mascota.",
       "aiCta": "Conocer EccoPet",
@@ -1968,7 +1968,7 @@
       "t3Text": "Marketplace confiable y una comunidad que realmente ayuda.",
       "t3Pet": "Mimi, gata",
       "finalTitle": "Empieza hoy. Tu mascota lo merece.",
-      "finalSubtitle": "Únete a miles de tutores que ya transformaron la forma de cuidar a sus animales.",
+      "finalSubtitle": "Crea tu cuenta y conecta compras, servicios, salud, comunidad y adopción en EccoPet.",
       "finalCta": "Crear cuenta gratis"
     },
     "explore": {

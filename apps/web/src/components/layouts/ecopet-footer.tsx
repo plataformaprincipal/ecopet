@@ -52,7 +52,7 @@ export function EcopetFooter() {
       <div className="ep-container relative max-w-6xl py-14 sm:py-16">
         <div className="grid gap-12 lg:grid-cols-12">
           <div className="lg:col-span-4">
-            <EcoPetLogo href="/" variant="dark" size="lg" showText />
+            <EcoPetLogo href="/" variant="dark" size="lg" showText showTagline />
             <p className="mt-5 max-w-sm text-sm leading-relaxed text-white/70">{t("footer.tagline")}</p>
             <div className="mt-6 flex items-center gap-2">
               {[
@@ -93,7 +93,7 @@ export function EcopetFooter() {
             </div>
 
             <div>
-              <h3 className="overline-text text-white/50">EcoPet</h3>
+              <h3 className="overline-text text-white/50">EccoPet</h3>
               <ul className="mt-4 space-y-2.5 text-sm">
                 {ACCOUNT_LINKS.map((link) => (
                   <li key={link.href}>

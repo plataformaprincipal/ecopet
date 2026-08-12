@@ -137,15 +137,6 @@ export function PremiumPublicHome() {
     { icon: Lock, title: t("pub.home.how3Title"), text: t("pub.home.how3Text") },
   ];
 
-  const stats = [
-    { value: "1.2k+", label: t("pub.explore.catPetShops") },
-    { value: "340+", label: t("pub.home.ngosTitle") },
-    { value: "8k+", label: t("pub.explore.catProducts") },
-    { value: "5k+", label: t("pub.explore.catAdoption") },
-    { value: "2.1k+", label: t("pub.explore.catServices") },
-    { value: "12k+", label: t("pub.home.communityTitle") },
-  ];
-
   return (
     <div className="overflow-x-hidden pb-4">
       {/* Hero */}
@@ -173,7 +164,7 @@ export function PremiumPublicHome() {
             <div className="mb-8 inline-flex items-center gap-3">
               <BrandMark size={48} tone="on-dark" />
               <span className="font-display text-2xl font-bold tracking-tight text-white sm:text-3xl">
-                EcoPet
+                EccoPet
               </span>
             </div>
             <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-sm text-white/90 backdrop-blur-md">
@@ -272,23 +263,6 @@ export function PremiumPublicHome() {
           </StaggerChildren>
         </Section>
       </FullBleed>
-
-      {/* Stats */}
-      <Section id="indicadores" title={t("pub.home.areasTitle")} subtitle={t("pub.home.finalSubtitle")}>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          {stats.map((stat) => (
-            <div
-              key={stat.label}
-              className="rounded-[var(--radius-lg)] border border-ecopet-green/15 bg-gradient-to-b from-ecopet-green/[0.06] to-transparent px-3 py-5 text-center dark:from-ecopet-green/15"
-            >
-              <p className="font-display text-2xl font-bold tracking-tight text-ecopet-green sm:text-3xl">
-                {stat.value}
-              </p>
-              <p className="mt-1 text-xs font-medium text-ecopet-gray dark:text-white/65">{stat.label}</p>
-            </div>
-          ))}
-        </div>
-      </Section>
 
       {/* Marketplace strip */}
       <Section id="marketplace" title={t("pub.home.marketTitle")} subtitle={t("pub.home.marketSubtitle")}>
