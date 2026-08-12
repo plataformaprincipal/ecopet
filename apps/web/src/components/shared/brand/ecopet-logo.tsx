@@ -82,7 +82,7 @@ function Wordmark({
             onDarkSurface ? "text-white/80" : "text-ecopet-gray dark:text-white/70"
           )}
         >
-          Tudo para a vida do seu pet, em um só lugar.
+          Tecnologia para uma vida pet melhor
         </span>
       )}
     </div>

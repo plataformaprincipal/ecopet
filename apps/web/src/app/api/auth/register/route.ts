@@ -21,7 +21,6 @@ import { validateStrongPassword, PASSWORD_MISMATCH_MESSAGE } from "@/lib/passwor
 import { apiSuccess, apiFailure } from "@/lib/api-response";
 import { shouldSkipAuthRateLimitForE2e } from "@/lib/e2e-preview-auth";
 import { checkDistributedRateLimit, clientIpForRateLimit } from "@/lib/rate-limit";
-import { requireTurnstile, registerActionForRole } from "@/lib/turnstile/server";
 import { emailRegisterCompleted } from "@/lib/mail/event-dispatch";
 import { localeFromAcceptLanguage } from "@/lib/email/templates";
 import {
@@ -282,30 +281,25 @@ export async function POST(request: Request) {
     const ip = clientIpForRateLimit(request);
     if (
       !shouldSkipAuthRateLimitForE2e(request) &&
-      !(await checkDistributedRateLimit(`register:${ip}`, 10, 60 * 60 * 1000))
+      !(await checkDistributedRateLimit(`register:${ip}`, 5, 10 * 60 * 1000))
     ) {
       return apiFailure("RATE_LIMITED", "Muitas tentativas de cadastro. Tente novamente mais tarde.", 429);
     }
 
     const body = await request.json();
 
-    const roleHint =
-      body?.role === UserRole.PARTNER
-        ? "PARTNER"
-        : body?.role === UserRole.ONG
-          ? "ONG"
-          : "CLIENT";
-    const turnstileAction = registerActionForRole(roleHint);
-    const turnstileError = await requireTurnstile({
-      token: body?.turnstileToken,
-      expectedAction: turnstileAction,
-      request,
-      remoteIp: ip,
-      flow: `register_${roleHint.toLowerCase()}`,
-    });
-    if (turnstileError) return turnstileError;
+    // Anti-abuse adicional por e-mail (sem CAPTCHA): limita tentativas no mesmo identificador.
+    const emailHint =
+      typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
+    if (
+      emailHint &&
+      !shouldSkipAuthRateLimitForE2e(request) &&
+      !(await checkDistributedRateLimit(`register:email:${emailHint}`, 5, 10 * 60 * 1000))
+    ) {
+      return apiFailure("RATE_LIMITED", "Muitas tentativas de cadastro. Tente novamente mais tarde.", 429);
+    }
 
-    let partnerData: PartnerRegisterInput | null = null;
+    let partnerData: PartnerRegisterInput | null = null
     let legacyPartner = false;
     let ongData: OngRegisterInput | null = null;
     let legacyOng = false;

@@ -187,7 +187,7 @@ try {
 
   // --- Teste 13: ONG publica post na rede social ---
   const post = await prisma.socialPost.create({
-    data: { authorId: ongA.id, authorRole: "ONG", content: "Novo resgate hoje! 🐾", status: "PUBLISHED" },
+    data: { authorId: ongA.id, authorRole: "ONG", content: "Novo resgate hoje!", status: "PUBLISHED" },
   });
   created.posts.push(post.id);
   const ongPosts = await prisma.socialPost.count({ where: { authorId: ongA.id, status: "PUBLISHED" } });

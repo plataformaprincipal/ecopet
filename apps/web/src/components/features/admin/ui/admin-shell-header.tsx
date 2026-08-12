@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Search, Menu } from "lucide-react";
 import { useState } from "react";
 import { useAuthSession } from "@/hooks/use-auth-session";
+import { LanguageSelector } from "@/components/features/i18n/language-selector";
+import { ThemeToggle } from "@/components/shared/theme/theme-toggle";
 
 type Props = {
   onMenuToggle?: () => void;
@@ -18,7 +20,7 @@ export function AdminShellHeader({ onMenuToggle }: Props) {
   const [q, setQ] = useState("");
 
   return (
-    <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-ecopet-gray/12 bg-white/95 px-4 py-3 backdrop-blur-xl dark:border-white/10 dark:bg-ecopet-dark/95 sm:px-6">
+    <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-ecopet-gray/12 bg-ecopet-cream/95 px-4 py-3 backdrop-blur-xl dark:border-white/10 dark:bg-ecopet-dark-bg/95 sm:px-6">
       <Button
         type="button"
         variant="ghost"
@@ -50,6 +52,8 @@ export function AdminShellHeader({ onMenuToggle }: Props) {
         </div>
       </form>
       <div className="ml-auto flex items-center gap-2">
+        <LanguageSelector compact />
+        <ThemeToggle size="sm" />
         <ErpAssistantDrawer />
         <ErpNotificationCenter />
         <Link

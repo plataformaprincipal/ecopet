@@ -33,8 +33,8 @@ export function PrimaryDesktopNav({
     <nav
       className={cn(
         orientation === "horizontal"
-          ? "hidden items-center gap-1 lg:flex"
-          : "hidden flex-col gap-1 lg:flex",
+          ? "hidden items-center gap-1 xl:flex"
+          : "hidden flex-col gap-1 xl:flex",
         className
       )}
       aria-label={t("landing.mainNav")}
@@ -56,7 +56,7 @@ export function PrimaryDesktopNav({
               orientation === "vertical" && "w-full",
               active
                 ? "bg-ecopet-green/10 text-ecopet-green"
-                : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-white/5 dark:hover:text-white"
+                : "text-ecopet-gray hover:bg-ecopet-green/10 hover:text-ecopet-dark dark:text-white/70 dark:hover:bg-white/5 dark:hover:text-white"
             )}
           >
             <Icon className="h-5 w-5 shrink-0" aria-hidden />

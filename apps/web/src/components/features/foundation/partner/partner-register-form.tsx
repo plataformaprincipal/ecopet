@@ -7,10 +7,6 @@ import type { CountryCode } from "libphonenumber-js";
 import { Check, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { TurnstileField } from "@/components/security/turnstile-field";
-import { useTurnstile } from "@/hooks/use-turnstile";
-import { TURNSTILE_ACTIONS } from "@/lib/turnstile/actions";
-import { getTurnstilePublicConfig } from "@/lib/turnstile/config";
 import { RegisterProgress } from "@/components/features/foundation/register-progress";
 import { FoundationPasswordField, FoundationConfirmPasswordField } from "@/components/features/foundation/password-field";
 import { InternationalPhoneField } from "@/components/features/foundation/international-phone-field";
@@ -146,12 +142,6 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
   const [cnpjLookupLoading, setCnpjLookupLoading] = useState(false);
   const [cnpjWarnings, setCnpjWarnings] = useState<string[]>([]);
   const [cnpjLookupInfo, setCnpjLookupInfo] = useState("");
-  const turnstileEnabled = useMemo(() => getTurnstilePublicConfig().enabled, []);
-  const turnstile = useTurnstile({
-    action: TURNSTILE_ACTIONS.REGISTER_PARTNER,
-    required: turnstileEnabled,
-  });
-
   useEffect(() => {
     try {
       const raw = localStorage.getItem(PARTNER_DRAFT_KEY);
@@ -172,8 +162,7 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
   const steps = stepLabels(form.partnerType, p.steps);
   const currentIndex = steps.findIndex((s) => s.id === step);
   const progressSteps = steps.map((s) => s.label);
-  const canSubmitPartner =
-    acceptTerms && acceptPrivacy && !loading && (!turnstileEnabled || turnstile.isVerified);
+  const canSubmitPartner = acceptTerms && acceptPrivacy && !loading;
 
   const passwordContext = useMemo(
     () => ({
@@ -447,7 +436,10 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
   }
 
   function goBack() {
-    if (step === "security") turnstile.reset();
+    if (step === "security") {
+      setError("");
+      setStepFeedback([]);
+    }
     const idx = steps.findIndex((s) => s.id === step);
     if (idx > 0) setStep(steps[idx - 1].id);
   }
@@ -475,23 +467,9 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
       return;
     }
     try {
-      let turnstileToken: string | null = null;
-      if (turnstileEnabled) {
-        turnstileToken = turnstile.ensureToken();
-        if (!turnstileToken) {
-          setError(t("turnstile.incomplete"));
-          setLoading(false);
-          return;
-        }
-        turnstileToken = turnstile.consumeToken();
-      }
-      const payload = {
-        ...formToRegisterPayload(form, phoneE164, {
-          providedDocumentTypes: documents.filter((d) => d.status === "uploaded").map((d) => d.type),
-        }),
-        turnstileToken,
-        turnstileAction: TURNSTILE_ACTIONS.REGISTER_PARTNER,
-      };
+      const payload = formToRegisterPayload(form, phoneE164, {
+        providedDocumentTypes: documents.filter((d) => d.status === "uploaded").map((d) => d.type),
+      });
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -502,7 +480,6 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
       if (!res.ok || data.success === false) {
         const { code, message } = parseApiFailureError(data);
         setError(res.status === 409 ? mapRegisterConflictMessage(code, message) : tApi(message, code) || p.validation.registerError);
-        turnstile.reset();
         return;
       }
       localStorage.removeItem(PARTNER_DRAFT_KEY);
@@ -521,7 +498,6 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
         cnpjDetails: form.cnpjDetails,
       });
     } catch {
-      turnstile.reset();
       setError(t("auth.login.connectionError"));
     } finally {
       setLoading(false);
@@ -888,17 +864,6 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
             onAcceptPrivacyChange={setAcceptPrivacy}
             error={termsError || fieldErrors.legal}
           />
-          {turnstileEnabled ? (
-            <TurnstileField
-              action={TURNSTILE_ACTIONS.REGISTER_PARTNER}
-              state={turnstile.state}
-              resetKey={turnstile.resetKey}
-              onVerify={turnstile.onVerify}
-              onExpire={turnstile.onExpire}
-              onError={turnstile.onError}
-              onLoad={turnstile.onLoad}
-            />
-          ) : null}
         </section>
       )}
 

@@ -52,9 +52,9 @@
   --ep-info-bg: #eff6ff;
 
   /* Surfaces / text / border (light defaults) */
-  --ep-bg: var(--ep-white);
+  --ep-bg: #f4f7f4;
   --ep-bg-elevated: #ffffff;
-  --ep-bg-muted: #f3f6f4;
+  --ep-bg-muted: #eef2ef;
   --ep-bg-inverse: var(--ep-green-900);
   --ep-fg: #1a221c;
   --ep-fg-muted: #4a5560;

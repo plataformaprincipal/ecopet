@@ -27,7 +27,10 @@
     "registerLink": "Regístrate",
     "signInLink": "Entrar",
     "continueShopping": "Continuar comprando",
-    "emptyCart": "Tu carrito está vacío"
+    "emptyCart": "Tu carrito está vacío",
+    "menu": "Menú",
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú"
   },
   "support": {
     "title": "Soporte EccoPet",
@@ -58,7 +61,7 @@
     }
   },
   "ecopetAi": {
-    "disclaimer": "La IA de EcoPet no sustituye a veterinarios, zootecnistas, adiestradores, especialistas u otros profesionales calificados. La información proporcionada tiene carácter informativo y de apoyo a la toma de decisiones.",
+    "disclaimer": "La IA de EccoPet no sustituye a veterinarios, zootecnistas, adiestradores, especialistas u otros profesionales calificados. La información proporcionada tiene carácter informativo y de apoyo a la toma de decisiones.",
     "fullDisclaimer": "EccoPet AI ayuda a organizar información y ofrecer recomendaciones generales, pero no sustituye la atención veterinaria.",
     "topbar": {
       "save": "Guardar conversación",
@@ -229,7 +232,7 @@
       "signIn": "Entrar",
       "createAccount": "Crear cuenta",
       "buyTitle": "Inicia sesión para comprar",
-      "buyDescription": "Crea tu cuenta gratuita para finalizar compras y seguir pedidos en EcoPet.",
+      "buyDescription": "Crea tu cuenta gratuita para finalizar compras y seguir pedidos en EccoPet.",
       "bookTitle": "Inicia sesión para agendar",
       "bookDescription": "Crea tu cuenta gratuita para agendar servicios con socios verificados."
     }
@@ -288,7 +291,7 @@
     "internal": "Error interno. Inténtalo de nuevo."
   },
   "dashboard": {
-    "title": "Panel EcoPet",
+    "title": "Panel EccoPet",
     "greeting": "Hola, {name}",
     "email": "Correo",
     "role": "Perfil",
@@ -352,6 +355,7 @@
       "sessionError": "Inicio de sesión realizado, pero no se pudo iniciar la sesión. Inténtalo de nuevo.",
       "connectionError": "No fue posible conectar al servidor.",
       "genericError": "Error al iniciar sesión",
+      "invalidCredentials": "Correo o contraseña incorrectos.",
       "errors": {
         "wrongPassword": "Contraseña incorrecta",
         "userNotFound": "Correo o nombre de usuario no encontrado",
@@ -371,7 +375,7 @@
       "validationSummary": "Corrige los campos resaltados antes de continuar.",
       "errorGeneric": "Error en el registro. Inténtalo de nuevo.",
       "loginAfterRegisterError": "Cuenta creada, pero no se pudo iniciar sesión. Inicia sesión manualmente.",
-      "pendingNote": "Tras el envío, tu cuenta será revisada por el equipo EcoPet.",
+      "pendingNote": "Tras el envío, tu cuenta será revisada por el equipo EccoPet.",
       "successActive": "¡Cuenta creada con éxito!",
       "successPending": "¡Registro recibido! Redirigiendo...",
       "successRedirecting": "Redirigiendo a tu panel...",
@@ -892,7 +896,7 @@
     },
     "resetPassword": {
       "title": "Restablecer contraseña",
-      "description": "Crea una nueva contraseña para tu cuenta EcoPet (mínimo 8 caracteres)",
+      "description": "Crea una nueva contraseña para tu cuenta EccoPet (mínimo 8 caracteres)",
       "newPassword": "Nueva contraseña",
       "confirmPassword": "Confirmar nueva contraseña",
       "submit": "Restablecer contraseña",
@@ -1009,7 +1013,7 @@
       }
     },
     "role": {
-      "legend": "¿Cómo deseas usar EcoPet?",
+      "legend": "¿Cómo deseas usar EccoPet?",
       "ariaLabel": "Tipo de cuenta",
       "CLIENT": {
         "label": "Cliente",
@@ -1027,34 +1031,34 @@
     "terms": {
       "acceptanceRequired": "Debes aceptar los Términos de Uso y la Política de Privacidad para continuar.",
       "legalHeading": "Protección y transparencia",
-      "legalHint": "Lee y acepta los documentos exclusivos del Cliente EcoPet para completar tu registro con seguridad.",
+      "legalHint": "Lee y acepta los documentos exclusivos del Cliente EccoPet para completar tu registro con seguridad.",
       "readFull": "Leer documento completo",
       "preview": "Vista previa",
       "previewSummary": "Resumen introductorio. Para el texto completo, abre la página oficial.",
       "openFullPage": "Abrir página completa",
       "client": {
-        "terms": "Acepto los Términos de Uso y de Servicio del Cliente EcoPet",
-        "privacy": "Acepto la Política de Privacidad del Cliente EcoPet",
-        "termsPreview": "Estos términos regulan el uso de EcoPet por tutores y responsables de mascotas, incluyendo compras, servicios, citas, telemedicina, bienestar animal y responsabilidades del Cliente.",
-        "privacyPreview": "Esta política describe cómo EcoPet recopila, utiliza, almacena y protege tus datos personales, mascotas, pedidos y citas, conforme a la legislación aplicable."
+        "terms": "Acepto los Términos de Uso y de Servicio del Cliente EccoPet",
+        "privacy": "Acepto la Política de Privacidad del Cliente EccoPet",
+        "termsPreview": "Estos términos regulan el uso de EccoPet por tutores y responsables de mascotas, incluyendo compras, servicios, citas, telemedicina, bienestar animal y responsabilidades del Cliente.",
+        "privacyPreview": "Esta política describe cómo EccoPet recopila, utiliza, almacena y protege tus datos personales, mascotas, pedidos y citas, conforme a la legislación aplicable."
       },
       "partner": {
-        "terms": "Acepto los Términos de Uso y de Asociación del Socio EcoPet",
-        "privacy": "Acepto la Política de Privacidad del Socio EcoPet",
-        "legalHint": "Lee y acepta los documentos exclusivos del Socio EcoPet para completar tu registro con seguridad.",
-        "legalHeading": "Términos del Socio EcoPet",
-        "legalSubheading": "Documentos jurídicos exclusivos para socios — independientes de los términos del Cliente EcoPet.",
-        "termsPreview": "Estos Términos regulan exclusivamente la asociación comercial en EcoPet: registro, productos, servicios, citas, entregas, recogida, transporte de animales, reputación, verificación documental, protección animal y responsabilidades del Socio.",
-        "privacyPreview": "Esta Política describe exclusivamente cómo EcoPet trata los datos de Socios — CPF, CNPJ, contacto, dirección, financiero, documentos, fotos, logotipo, acceso e historial — conforme a la legislación aplicable."
+        "terms": "Acepto los Términos de Uso y de Asociación del Socio EccoPet",
+        "privacy": "Acepto la Política de Privacidad del Socio EccoPet",
+        "legalHint": "Lee y acepta los documentos exclusivos del Socio EccoPet para completar tu registro con seguridad.",
+        "legalHeading": "Términos del Socio EccoPet",
+        "legalSubheading": "Documentos jurídicos exclusivos para socios — independientes de los términos del Cliente EccoPet.",
+        "termsPreview": "Estos Términos regulan exclusivamente la asociación comercial en EccoPet: registro, productos, servicios, citas, entregas, recogida, transporte de animales, reputación, verificación documental, protección animal y responsabilidades del Socio.",
+        "privacyPreview": "Esta Política describe exclusivamente cómo EccoPet trata los datos de Socios — CPF, CNPJ, contacto, dirección, financiero, documentos, fotos, logotipo, acceso e historial — conforme a la legislación aplicable."
       },
       "ong": {
-        "terms": "Acepto los Términos de Uso y de Colaboración de la ONG EcoPet",
-        "privacy": "Acepto la Política de Privacidad de la ONG EcoPet",
-        "legalHint": "Lee y acepta los documentos exclusivos de la ONG EcoPet para completar tu registro con seguridad.",
-        "legalHeading": "Términos de la ONG EcoPet",
-        "legalSubheading": "Documentos jurídicos exclusivos para ONGs y protectores — independientes de los términos del Cliente EcoPet.",
-        "termsPreview": "Estos Términos regulan exclusivamente la colaboración de ONGs y protectores individuales en EcoPet: rescate, adopción responsable, hogares temporales, campañas, recaudaciones, ferias de adopción, divulgación de animales, uso ético de la plataforma, combate al fraude y maltrato, además de las responsabilidades del registrado y limitaciones de EcoPet.",
-        "privacyPreview": "Esta Política describe exclusivamente cómo EcoPet trata los datos de ONGs y protectores individuales — CPF, CNPJ, representante legal, contacto, dirección, documentos, comprobantes, fotografías, imágenes de animales, autenticación, cookies e historial — conforme a la legislación aplicable."
+        "terms": "Acepto los Términos de Uso y de Colaboración de la ONG EccoPet",
+        "privacy": "Acepto la Política de Privacidad de la ONG EccoPet",
+        "legalHint": "Lee y acepta los documentos exclusivos de la ONG EccoPet para completar tu registro con seguridad.",
+        "legalHeading": "Términos de la ONG EccoPet",
+        "legalSubheading": "Documentos jurídicos exclusivos para ONGs y protectores — independientes de los términos del Cliente EccoPet.",
+        "termsPreview": "Estos Términos regulan exclusivamente la colaboración de ONGs y protectores individuales en EccoPet: rescate, adopción responsable, hogares temporales, campañas, recaudaciones, ferias de adopción, divulgación de animales, uso ético de la plataforma, combate al fraude y maltrato, además de las responsabilidades del registrado y limitaciones de EccoPet.",
+        "privacyPreview": "Esta Política describe exclusivamente cómo EccoPet trata los datos de ONGs y protectores individuales — CPF, CNPJ, representante legal, contacto, dirección, documentos, comprobantes, fotografías, imágenes de animales, autenticación, cookies e historial — conforme a la legislación aplicable."
       }
     },
     "progress": {
@@ -1064,14 +1068,14 @@
       "conclusion": "Conclusión"
     },
     "registerFoundation": {
-      "title": "Crear cuenta EcoPet",
+      "title": "Crear cuenta EccoPet",
       "description": "Elige cómo deseas usar la plataforma y completa tus datos.",
       "selectRoleHint": "Selecciona una opción arriba para continuar el registro.",
-      "roleRequired": "Elige cómo deseas usar EcoPet."
+      "roleRequired": "Elige cómo deseas usar EccoPet."
     },
     "client": {
       "title": "Crear cuenta — Cliente",
-      "description": "Completa tus datos para acceder a EcoPet.",
+      "description": "Completa tus datos para acceder a EccoPet.",
       "fullName": "Nombre completo",
       "fullNamePlaceholder": "Ingresa tu nombre completo",
       "emailPlaceholder": "Ingresa tu correo",
@@ -1479,7 +1483,7 @@
     "title": "Feed ECOPET",
     "authModal": {
       "title": "Inicia sesión o crea tu cuenta",
-      "description": "Para interactuar en EcoPet, inicia sesión o regístrate gratis.",
+      "description": "Para interactuar en EccoPet, inicia sesión o regístrate gratis.",
       "signIn": "Entrar",
       "createAccount": "Crear cuenta"
     },
@@ -1765,7 +1769,7 @@
     "talkAboutCampaign": "Hablar sobre campaña",
     "authModal": {
       "title": "Inicia sesión o crea tu cuenta",
-      "description": "Para enviar mensajes en EcoPet, inicia sesión o regístrate gratis.",
+      "description": "Para enviar mensajes en EccoPet, inicia sesión o regístrate gratis.",
       "signIn": "Entrar",
       "createAccount": "Crear cuenta"
     }
@@ -1809,7 +1813,7 @@
       "pinnedCta": "Ver animales en adopción",
       "endOfFeed": "Has llegado al final del feed.",
       "emptyTitle": "Nada por aquí todavía",
-      "emptyDesc": "Sé el primero en compartir un momento de tu mascota con la comunidad EcoPet.",
+      "emptyDesc": "Sé el primero en compartir un momento de tu mascota con la comunidad EccoPet.",
       "explore": "Explorar",
       "error": "Error al cargar el feed.",
       "askAi": "Resume y comenta de forma útil esta publicación de la comunidad de mascotas: \"{snippet}\""
@@ -1975,7 +1979,7 @@
       "title": "Explorar",
       "subtitle": "Descubre lo que está pasando en el ecosistema pet — tendencias, socios, productos y adopción.",
       "searchPlaceholder": "Buscar productos, servicios, ONG, hashtags...",
-      "searchAria": "Buscar en el ecosistema EcoPet",
+      "searchAria": "Buscar en el ecosistema EccoPet",
       "trending": "Tendencias",
       "emptyTitle": "No se encontraron resultados",
       "emptyDesc": "No hay elementos públicos para los filtros seleccionados. Prueba otra búsqueda o explora el marketplace.",
@@ -1988,7 +1992,7 @@
       "catServices": "Servicios"
     },
     "marketplace": {
-      "title": "Marketplace EcoPet",
+      "title": "Marketplace EccoPet",
       "subtitle": "Navega, compara y descubre productos y servicios de socios verificados — sin necesidad de cuenta para explorar.",
       "searchPlaceholder": "Buscar productos y servicios...",
       "searchAria": "Buscar en el marketplace",
@@ -2004,7 +2008,7 @@
       "products": "Productos",
       "services": "Servicios",
       "emptyTitle": "No se encontraron artículos",
-      "emptyDesc": "Ajusta los filtros o explora otras categorías del ecosistema EcoPet.",
+      "emptyDesc": "Ajusta los filtros o explora otras categorías del ecosistema EccoPet.",
       "explore": "Explorar",
       "loading": "Cargando...",
       "results": "{count} resultado(s)",
@@ -2017,7 +2021,7 @@
     },
     "profile": {
       "heroTitle": "Tu mundo pet empieza aquí.",
-      "heroSubtitle": "Inicia sesión o crea una cuenta gratis para desbloquear todo el ecosistema EcoPet.",
+      "heroSubtitle": "Inicia sesión o crea una cuenta gratis para desbloquear todo el ecosistema EccoPet.",
       "signIn": "Iniciar sesión",
       "createAccount": "Crear cuenta",
       "createAccountFor": "Crear cuenta de {type}",
@@ -2041,7 +2045,7 @@
       "ngoB4": "Organizar adopciones"
     },
     "search": {
-      "default": "Buscar en EcoPet..."
+      "default": "Buscar en EccoPet..."
     }
   },
   "hub": {
@@ -2096,7 +2100,7 @@
       "who": "¿Quién eres?",
       "continue": "Continuar",
       "back": "Volver",
-      "welcomeTitle": "¡Bienvenido a EcoPet!",
+      "welcomeTitle": "¡Bienvenido a EccoPet!",
       "welcomeDesc": "Tu cuenta fue creada. Ahora puedes explorar todo lo que la plataforma ofrece para tu mascota.",
       "goDashboard": "Ir al panel",
       "firstPet": "Tu primera mascota",
@@ -2149,7 +2153,7 @@
       "profile": "Perfil"
     },
     "home": {
-      "title": "Hoy en EcoPet",
+      "title": "Hoy en EccoPet",
       "greeting": "Hola, {name}",
       "subtitle": "Todo sobre tus mascotas, compras, servicios y comunidad en un solo lugar.",
       "registerPet": "Agregar mascota",
@@ -2220,7 +2224,7 @@
     }
   },
   "partnerArea": {
-    "area": "Socio EcoPet",
+    "area": "Socio EccoPet",
     "status": {
       "pending": "Pendiente",
       "approved": "Aprobado",
@@ -2302,7 +2306,7 @@
     },
     "locked": {
       "title": "Disponible tras la aprobación",
-      "description": "Completa tu registro y espera la revisión del equipo EcoPet para acceder a esta área.",
+      "description": "Completa tu registro y espera la revisión del equipo EccoPet para acceder a esta área.",
       "cta": "Ir a Perfil comercial"
     },
     "right": {
@@ -2348,7 +2352,7 @@
     }
   },
   "ngoArea": {
-    "area": "ONG EcoPet",
+    "area": "ONG EccoPet",
     "status": {
       "pending": "Pendiente",
       "approved": "Aprobada",
@@ -2411,7 +2415,7 @@
     },
     "locked": {
       "title": "Disponible tras la aprobación",
-      "description": "Completa el registro y espera la revisión del equipo EcoPet para acceder a esta área.",
+      "description": "Completa el registro y espera la revisión del equipo EccoPet para acceder a esta área.",
       "cta": "Ir al Perfil de la ONG"
     },
     "blocked": {
@@ -2514,7 +2518,7 @@
     },
     "public": {
       "adoptionTitle": "Adopta un amigo",
-      "adoptionSubtitle": "Animales disponibles para adopción en las ONG de EcoPet.",
+      "adoptionSubtitle": "Animales disponibles para adopción en las ONG de EccoPet.",
       "campaignsTitle": "Campañas",
       "campaignsSubtitle": "Ayuda a las ONG a cuidar de quien más lo necesita.",
       "adopt": "Quiero adoptar",

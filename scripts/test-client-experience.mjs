@@ -36,7 +36,7 @@ function ok(label, cond) {
 console.log("=== EcoPet — test:client-experience ===\n");
 
 // 1. Redirect pós-login
-ok("CLIENT cai em /client após login", getDefaultDashboardPath("CLIENT") === "/client");
+ok("CLIENT cai em /cliente após login", getDefaultDashboardPath("CLIENT") === "/cliente");
 
 // 2. Navegação aponta para /client/*
 ok(

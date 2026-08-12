@@ -310,7 +310,13 @@ body.ecopet-vlibras-inactive [vw-access-button],
 body.ecopet-vlibras-inactive [vw-plugin-wrapper],
 body.ecopet-vlibras-inactive [vw-plugin-wrapper] *,
 body.ecopet-vlibras-inactive #gameContainer,
-body.ecopet-vlibras-inactive #gameContainer * {
+body.ecopet-vlibras-inactive #gameContainer *,
+body.ecopet-vlibras-inactive #unity-container,
+body.ecopet-vlibras-inactive #unity-container *,
+body.ecopet-vlibras-inactive #unity-footer,
+body.ecopet-vlibras-inactive [data-ecopet-vlibras-suppressed="1"],
+body.ecopet-vlibras-inactive [data-ecopet-vlibras-suppressed="1"] * {
+  display: none !important;
   visibility: hidden !important;
   opacity: 0 !important;
   pointer-events: none !important;
