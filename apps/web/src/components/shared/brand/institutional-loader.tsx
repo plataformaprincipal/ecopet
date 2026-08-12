@@ -16,7 +16,7 @@ export function InstitutionalLoader({
   className,
   surface = "dark",
   fullScreen = true,
-  label = "EcoPet",
+  label = "EccoPet",
 }: InstitutionalLoaderProps) {
   return (
     <div

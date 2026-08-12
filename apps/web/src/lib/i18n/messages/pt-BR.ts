@@ -24,7 +24,7 @@ const messages: MessageTree = {
   auth: {
     login: {
       title: "Bem-vindo de volta",
-      subtitle: "Entre na sua conta ECOPET",
+      subtitle: "Entre na sua conta EccoPet",
       email: "E-mail",
       password: "Senha",
       submit: "Entrar",
@@ -32,13 +32,13 @@ const messages: MessageTree = {
       noAccount: "Não tem conta?",
     },
     register: {
-      title: "Criar conta ECOPET",
+      title: "Criar conta EccoPet",
       submit: "Criar conta",
       hasAccount: "Já tem conta?",
     },
   },
   a11y: {
-    title: "Acessibilidade ECOPET",
+    title: "Acessibilidade EccoPet",
     open: "Abrir barra de acessibilidade",
     close: "Fechar barra de acessibilidade",
     reset: "Restaurar padrão",

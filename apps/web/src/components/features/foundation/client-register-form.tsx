@@ -368,6 +368,7 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
       notifySessionChanged();
       router.refresh();
     } catch {
+      turnstile.reset();
       setError(t("auth.login.connectionError"));
       setStep("security");
     } finally {
@@ -566,7 +567,15 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
             )}
 
             <div className="flex gap-2">
-              <Button type="button" variant="outline" className="flex-1" onClick={() => setStep("personal")}>
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  turnstile.reset();
+                  setStep("personal");
+                }}
+              >
                 {t("auth.client.back")}
               </Button>
               <Button type="submit" className="flex-1" disabled={!canSubmit}>

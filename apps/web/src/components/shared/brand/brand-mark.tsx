@@ -17,7 +17,7 @@ export function BrandMark({
   size = 40,
   tone = "on-dark",
   className,
-  title = "ECOPET",
+  title = "EccoPet",
 }: BrandMarkProps) {
   const fills =
     tone === "on-dark" || tone === "mono-light"
@@ -79,7 +79,7 @@ export function BrandLockupVertical({
   return (
     <div className={cn("inline-flex flex-col items-center gap-2", className)}>
       <BrandMark size={56} tone={tone} />
-      <span className={cn("font-display text-xl font-bold tracking-tight", word)}>EcoPet</span>
+      <span className={cn("font-display text-xl font-bold tracking-tight", word)}>EccoPet</span>
     </div>
   );
 }

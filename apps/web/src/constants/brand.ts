@@ -16,6 +16,6 @@ export const ECOPET_BRAND = {
     input: "12px",
     button: "12px",
   },
-  name: "ECOPET",
+  name: "EccoPet",
   tagline: "Ecossistema Inteligente para Pets",
 } as const;

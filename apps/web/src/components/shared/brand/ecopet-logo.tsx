@@ -43,6 +43,8 @@ export interface EcoPetLogoProps {
   size?: EcoPetLogoSize;
   variant?: EcoPetLogoVariant;
   showText?: boolean;
+  /** Tagline longa — off por padrão para não sobrepor header/nav. */
+  showTagline?: boolean;
   className?: string;
   href?: string | null;
   priority?: boolean;
@@ -54,14 +56,16 @@ export interface EcoPetLogoProps {
 function Wordmark({
   variant,
   compact,
+  showTagline = false,
 }: {
   variant: EcoPetLogoVariant;
   compact?: boolean;
+  showTagline?: boolean;
 }) {
   /** White pure only on dark/green brand surfaces — never grayish cream */
   const onDarkSurface = variant === "dark" || variant === "full" || variant === "vertical";
   return (
-    <div className={cn("flex flex-col leading-none", compact && "hidden sm:flex")}>
+    <div className={cn("flex min-w-0 flex-col leading-none", compact && "hidden sm:flex")}>
       <span
         className={cn(
           "font-display font-bold tracking-tight",
@@ -71,7 +75,7 @@ function Wordmark({
       >
         EccoPet
       </span>
-      {!compact && variant !== "icon" && (
+      {showTagline && !compact && variant !== "icon" && (
         <span
           className={cn(
             "mt-0.5 max-w-[16rem] text-[10px] font-medium tracking-wide",
@@ -125,6 +129,7 @@ function LogoContent({
   size = "md",
   variant = "full",
   showText = false,
+  showTagline = false,
   className,
   animated,
 }: Omit<EcoPetLogoProps, "href" | "responsive" | "priority"> & { priority?: boolean }) {
@@ -137,7 +142,7 @@ function LogoContent({
     return (
       <div className={cn("inline-flex flex-col items-center gap-2", className)}>
         <LogoMark px={px} variant="icon" animated={animated} />
-        <Wordmark variant="dark" />
+        <Wordmark variant="dark" showTagline={showTagline} />
       </div>
     );
   }
@@ -146,9 +151,9 @@ function LogoContent({
     variant === "dark" || variant === "full" ? "dark" : variant === "light" ? "light" : "horizontal";
 
   return (
-    <div className={cn("inline-flex items-center gap-3", className)}>
+    <div className={cn("inline-flex min-w-0 items-center gap-2 sm:gap-3", className)}>
       <LogoMark px={px} variant={markVariant} animated={animated} />
-      {isHorizontal && <Wordmark variant={wordVariant} />}
+      {isHorizontal && <Wordmark variant={wordVariant} showTagline={showTagline} />}
     </div>
   );
 }
@@ -157,6 +162,7 @@ export function EcoPetLogo({
   size = "md",
   variant = "full",
   showText = false,
+  showTagline = false,
   className,
   href = null,
   priority: _priority = false,
@@ -174,6 +180,7 @@ export function EcoPetLogo({
             size={size}
             variant="horizontal"
             showText
+            showTagline={showTagline}
             className={className}
             animated={animated}
           />
@@ -194,13 +201,14 @@ export function EcoPetLogo({
       size={size}
       variant={variant}
       showText={showText}
+      showTagline={showTagline}
       className={className}
       animated={animated}
     />
   );
 
   return href ? (
-    <Link href={href} className="transition-opacity hover:opacity-90" aria-label="EccoPet — Início">
+    <Link href={href} className="min-w-0 transition-opacity hover:opacity-90" aria-label="EccoPet — Início">
       {content}
     </Link>
   ) : (

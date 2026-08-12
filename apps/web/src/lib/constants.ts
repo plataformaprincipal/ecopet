@@ -1,5 +1,5 @@
 export const BRAND = {
-  name: "ECOPET",
+  name: "EccoPet",
   tagline: "Ecossistema pet inteligente",
   colors: {
     dark: "#1A3A2A",
@@ -16,7 +16,7 @@ export const API_URL = getClientApiUrl();
 
 /** @deprecated Use i18n key `ecopetAi.disclaimer` in componentes React. */
 export const AI_DISCLAIMER =
-  "A IA EcoPet não substitui médicos-veterinários, zootecnistas, adestradores, especialistas ou outros profissionais qualificados. As informações fornecidas possuem caráter informativo e de apoio à tomada de decisão.";
+  "A IA EccoPet não substitui médicos-veterinários, zootecnistas, adestradores, especialistas ou outros profissionais qualificados. As informações fornecidas possuem caráter informativo e de apoio à tomada de decisão.";
 
 export const USER_ROLES = {
   TUTOR: "Tutor",

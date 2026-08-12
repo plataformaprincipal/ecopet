@@ -16,7 +16,7 @@ export function ClientShell({ userName, children }: ClientShellProps) {
       <ClientSidebar userName={userName} />
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="glass sticky top-0 z-30 border-b border-ecopet-gray/10 px-4 py-3 lg:hidden dark:border-white/10">
-          <p className="overline-text text-ecopet-gray/70">EcoPet</p>
+          <p className="overline-text text-ecopet-gray/70">EccoPet</p>
           <p className="truncate font-display text-base font-semibold text-ecopet-dark dark:text-white">
             Olá, {userName.split(" ")[0]}
           </p>

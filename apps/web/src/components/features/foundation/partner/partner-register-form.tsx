@@ -447,6 +447,7 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
   }
 
   function goBack() {
+    if (step === "security") turnstile.reset();
     const idx = steps.findIndex((s) => s.id === step);
     if (idx > 0) setStep(steps[idx - 1].id);
   }
@@ -520,6 +521,7 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
         cnpjDetails: form.cnpjDetails,
       });
     } catch {
+      turnstile.reset();
       setError(t("auth.login.connectionError"));
     } finally {
       setLoading(false);

@@ -329,8 +329,8 @@
   "auth": {
     "login": {
       "title": "Bem-vindo de volta",
-      "subtitle": "Entre na sua conta ECOPET",
-      "pageTitle": "Entrar no EcoPet",
+      "subtitle": "Entre na sua conta EccoPet",
+      "pageTitle": "Entrar no EccoPet",
       "pageDescription": "Use seu e-mail ou nome de usuário e senha para acessar.",
       "email": "E-mail",
       "identifier": "E-mail ou Nome de Usuário",
@@ -362,7 +362,7 @@
       }
     },
     "register": {
-      "title": "Criar conta ECOPET",
+      "title": "Criar conta EccoPet",
       "submit": "Criar conta",
       "hasAccount": "Já tem conta?",
       "submitting": "Enviando cadastro...",
@@ -862,7 +862,7 @@
     "layout": {
       "headline": "Cuidado, comunidade e inteligência em um só lugar.",
       "subtitle": "Compras, serviços, saúde, comunidade, adoção e inteligência artificial conectados pela EccoPet.",
-      "copyright": "© 2026 ECOPET"
+      "copyright": "© 2026 EccoPet"
     },
     "forgotPassword": {
       "title": "Recuperar Senha",
@@ -1190,7 +1190,7 @@
     "tagline": "Ecossistema Inteligente para Pets, ONGs, Protetores, Parceiros e AgroPet.",
     "chatHint": "Chat interno com histórico e resposta da equipe.",
     "about": "Plataforma completa para tutores, parceiros, ONGs e AgroPet — marketplace, saúde animal, rede social e inteligência integrada.",
-    "copyright": "© {year} ECOPET — Todos os direitos reservados.",
+    "copyright": "© {year} EccoPet — Todos os direitos reservados.",
     "newMessage": "Nova mensagem"
   },
   "marketplace": {
@@ -1918,7 +1918,7 @@
       "createAccount": "Criar Conta",
       "signIn": "Entrar",
       "exploreNow": "Explorar agora",
-      "areasTitle": "Conheça o EcoPet",
+      "areasTitle": "Conheça a EccoPet",
       "areasSubtitle": "Cinco áreas para explorar antes mesmo de criar sua conta.",
       "areaSocial": "Rede Social",
       "areaSocialDesc": "Comunidade Pet",
@@ -1955,7 +1955,7 @@
       "ngosTitle": "ONGs",
       "ngosSubtitle": "Histórias de adoção, voluntariado e doações que mudam vidas.",
       "ngosCta": "Conhecer animais para adoção",
-      "aiTitle": "EcoPet AI",
+      "aiTitle": "EccoPet AI",
       "aiSubtitle": "Seu assistente inteligente para rotina, alimentação e bem-estar — em breve, com a mesma experiência premium.",
       "aiText": "Dúvidas veterinárias, recomendações personalizadas e lembretes inteligentes — tudo pensado para o vínculo com seu pet.",
       "aiCta": "Conhecer EccoPet",

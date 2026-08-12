@@ -32,7 +32,7 @@ export function ClientTopbar({ userName, onMenuClick }: Props) {
       </button>
 
       <Link href="/client" className="font-display text-base font-semibold text-zinc-900 dark:text-white lg:hidden">
-        EcoPet
+        EccoPet
       </Link>
 
       <div className="ml-auto flex items-center gap-1.5">

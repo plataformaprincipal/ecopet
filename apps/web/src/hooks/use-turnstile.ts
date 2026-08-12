@@ -56,6 +56,8 @@ export function useTurnstile(options: UseTurnstileOptions) {
   const consumeToken = useCallback(() => {
     const current = tokenRef.current;
     clearToken();
+    // Evita UI "verified" mentindo após consumir sem reset do widget.
+    setState((prev) => (prev === "verified" ? "ready" : prev));
     return current;
   }, [clearToken]);
 
