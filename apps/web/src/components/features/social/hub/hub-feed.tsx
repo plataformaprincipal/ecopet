@@ -132,7 +132,16 @@ export function HubFeed() {
       ) : (
         <div className="space-y-4">
           {posts.map((post) => (
-            <PostCard key={post.id} post={post} onUpdate={() => load(active, true)} onAskAi={handleAskAi} />
+            <PostCard
+              key={post.id}
+              post={post}
+              onUpdate={() => load(active, true)}
+              onPostUpdated={(updated) =>
+                setPosts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
+              }
+              onPostDeleted={(postId) => setPosts((prev) => prev.filter((p) => p.id !== postId))}
+              onAskAi={handleAskAi}
+            />
           ))}
           {cursor ? (
             <Button variant="outline" className="w-full rounded-xl" disabled={loading} onClick={() => load(active, false)}>

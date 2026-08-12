@@ -21,12 +21,12 @@ const SHORTCUTS = [
 ];
 
 export function SocialSidebar({ active, onSelect, className }: SocialSidebarProps) {
-  const { user } = useCurrentUser();
+  const { user, loading } = useCurrentUser();
   const { t } = useTranslation();
 
   return (
     <aside className={cn("space-y-4", className)} aria-label={t("social.sidebarNav")}>
-      {user ? (
+      {loading ? null : user ? (
         <Link
           href="/perfil"
           className="flex items-center gap-3 rounded-3xl border border-zinc-200/70 bg-white/70 p-4 shadow-sm backdrop-blur-md transition hover:shadow-md dark:border-white/10 dark:bg-zinc-900/50"

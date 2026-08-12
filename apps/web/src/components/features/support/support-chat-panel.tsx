@@ -140,7 +140,7 @@ export function SupportChatPanel() {
 
   return (
     <div
-      className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] right-4 z-[70] flex w-[min(100vw-2rem,380px)] flex-col overflow-hidden rounded-2xl border border-ecopet-gray/15 bg-white shadow-2xl dark:border-white/10 dark:bg-ecopet-dark-card lg:bottom-6"
+      className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-4 z-[70] flex w-[min(100vw-2rem,380px)] flex-col overflow-hidden rounded-2xl border border-ecopet-gray/15 bg-white shadow-2xl dark:border-white/10 dark:bg-ecopet-dark-card lg:bottom-6"
       role="dialog"
       aria-modal="true"
       aria-label={t("support.title")}
@@ -304,7 +304,7 @@ export function SupportChatLauncher() {
     <button
       type="button"
       onClick={openChat}
-      className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] right-20 z-[55] flex h-12 w-12 items-center justify-center rounded-full bg-ecopet-green text-white shadow-lg transition hover:scale-105 lg:bottom-6 lg:right-20"
+      className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-4 z-[55] flex h-12 w-12 items-center justify-center rounded-full bg-ecopet-green text-white shadow-lg transition hover:scale-105 lg:bottom-6"
       aria-label={t("support.open")}
     >
       <MessageCircle className="h-5 w-5" />

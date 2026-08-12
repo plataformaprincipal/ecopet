@@ -136,7 +136,16 @@ export function SocialFeedStream({ activeFilter }: { activeFilter: SocialFilterI
       ) : (
         <div className="space-y-5">
           {posts.map((post) => (
-            <PostCard key={post.id} post={post} onUpdate={() => load(true)} onAskAi={handleAskAi} />
+            <PostCard
+              key={post.id}
+              post={post}
+              onUpdate={() => load(true)}
+              onPostUpdated={(updated) =>
+                setPosts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
+              }
+              onPostDeleted={(postId) => setPosts((prev) => prev.filter((p) => p.id !== postId))}
+              onAskAi={handleAskAi}
+            />
           ))}
           <div ref={sentinelRef} aria-hidden className="h-px" />
           {loadingMore ? (

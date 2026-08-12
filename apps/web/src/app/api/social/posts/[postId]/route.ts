@@ -1,4 +1,4 @@
-import { apiSuccess } from "@/lib/api-response";
+import { apiSuccess, apiFailure } from "@/lib/api-response";
 import { requireAuth } from "@/lib/auth/require-auth";
 import { handleSocialRouteError } from "@/lib/social/api-handler";
 import { getPost, updatePost, deletePost } from "@/lib/social/posts";
@@ -21,7 +21,11 @@ export async function PATCH(req: Request, { params }: Params) {
     const { user, error } = await requireAuth();
     if (error) return error;
     const { postId } = await params;
-    const body = await req.json();
+    const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+    if (!body || typeof body !== "object" || typeof body.content !== "string") {
+      return apiFailure("VALIDATION", "Conteúdo inválido.", 400);
+    }
+    // authorId/userId do payload são ignorados — autorização usa apenas a sessão
     const post = await updatePost({ postId, authorId: user!.id, content: body.content });
     return apiSuccess({ post });
   } catch (e) {

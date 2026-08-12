@@ -100,7 +100,7 @@ export function EcopetAIAssistant() {
             exit={{ scale: 0, opacity: 0 }}
             type="button"
             onClick={() => setOpen(true)}
-            className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-4 z-50 flex h-14 w-14 items-center justify-center rounded-2xl shadow-xl shadow-ecopet-dark/30 transition-transform hover:scale-105 lg:bottom-6"
+            className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] left-4 z-50 flex h-14 w-14 items-center justify-center rounded-2xl shadow-xl shadow-ecopet-dark/30 transition-transform hover:scale-105 lg:bottom-6"
             aria-label={t("empty.ai.openLabel")}
           >
             <EcopetSymbol variant="accent" size={56} animated="glow" className="rounded-2xl shadow-lg" />
@@ -122,7 +122,7 @@ export function EcopetAIAssistant() {
               initial={{ opacity: 0, y: 40, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 40, scale: 0.95 }}
-              className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-4 z-50 flex h-[min(520px,calc(100vh-8rem))] w-[min(400px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-ecopet-gray/10 bg-white shadow-2xl dark:bg-[#0f1419] lg:bottom-6"
+              className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] left-4 z-50 flex h-[min(520px,calc(100vh-8rem))] w-[min(400px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-ecopet-gray/10 bg-white shadow-2xl dark:bg-[#0f1419] lg:bottom-6"
             >
               <header className="flex items-center justify-between border-b px-4 py-3">
                 <div className="flex items-center gap-2">

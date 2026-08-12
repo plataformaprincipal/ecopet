@@ -1505,7 +1505,20 @@
       "shared": "Link copiado!",
       "report": "Denunciar",
       "follow": "Seguir",
-      "unfollow": "Deixar de seguir"
+      "unfollow": "Deixar de seguir",
+      "more": "Mais ações",
+      "edit": "Editar publicação",
+      "editHint": "Altere o texto da publicação e salve para atualizar.",
+      "editSuccess": "Publicação atualizada.",
+      "editFailed": "Não foi possível editar a publicação.",
+      "delete": "Excluir publicação",
+      "deleteSuccess": "Publicação excluída.",
+      "deleteFailed": "Não foi possível excluir a publicação.",
+      "copyLink": "Copiar link",
+      "linkCopied": "Link copiado!",
+      "copyFailed": "Não foi possível copiar o link.",
+      "shareTitle": "Publicação EccoPet",
+      "shareFailed": "Não foi possível compartilhar."
     },
     "stats": {
       "likes": "{count} curtidas",

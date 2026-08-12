@@ -6,6 +6,7 @@ import { Sparkles } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PostMediaGrid } from "./post-media-grid";
 import { PostActions } from "./post-actions";
+import { PostOverflowMenu } from "./post-overflow-menu";
 import { CommentList } from "./comment-list";
 import { HashtagLink } from "./hashtag-link";
 import { PersonaBadge, PostTypeBadge } from "./persona-badge";
@@ -17,10 +18,14 @@ import { useTranslation } from "@/providers/i18n-provider";
 export function PostCard({
   post,
   onUpdate,
+  onPostUpdated,
+  onPostDeleted,
   onAskAi,
 }: {
   post: ApiSocialPost;
   onUpdate?: () => void;
+  onPostUpdated?: (post: ApiSocialPost) => void;
+  onPostDeleted?: (postId: string) => void;
   onAskAi?: (post: ApiSocialPost) => void;
 }) {
   const { t } = useTranslation();
@@ -37,7 +42,7 @@ export function PostCard({
             <AvatarFallback>{post.author.name.slice(0, 2).toUpperCase()}</AvatarFallback>
           </Avatar>
         </Link>
-        <div className="flex-1">
+        <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <Link href={`/feed/profile/${post.author.id}`} className="font-display font-semibold text-ecopet-dark hover:underline dark:text-white">
               {post.author.name}
@@ -50,6 +55,14 @@ export function PostCard({
             {post.editedAt && ` · ${t("socialFeed.post.edited")}`}
           </p>
         </div>
+        {!removed ? (
+          <PostOverflowMenu
+            post={post}
+            onUpdated={onPostUpdated}
+            onDeleted={onPostDeleted}
+            onReported={onUpdate}
+          />
+        ) : null}
       </header>
 
       {removed ? (

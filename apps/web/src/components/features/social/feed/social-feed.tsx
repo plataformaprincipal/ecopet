@@ -81,7 +81,17 @@ export function SocialFeed({ hashtag, authorId }: { hashtag?: string; authorId?:
           }
         />
       ) : (
-        posts.map((post) => <PostCard key={post.id} post={post} onUpdate={() => load(true)} />)
+        posts.map((post) => (
+          <PostCard
+            key={post.id}
+            post={post}
+            onUpdate={() => load(true)}
+            onPostUpdated={(updated) =>
+              setPosts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
+            }
+            onPostDeleted={(postId) => setPosts((prev) => prev.filter((p) => p.id !== postId))}
+          />
+        ))
       )}
 
       {cursor && !loading && (

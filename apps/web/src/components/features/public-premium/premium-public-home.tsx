@@ -161,16 +161,18 @@ export function PremiumPublicHome() {
 
         <div className="relative mx-auto flex min-h-[min(92vh,920px)] max-w-6xl flex-col justify-center px-4 pb-16 pt-28 sm:px-6 lg:pb-24">
           <FadeIn>
-            <div className="mb-8 inline-flex items-center gap-3">
-              <BrandMark size={48} tone="on-dark" />
-              <span className="font-display text-2xl font-bold tracking-tight text-white sm:text-3xl">
-                EccoPet
-              </span>
+            <div className="mb-8 flex w-full max-w-3xl flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-8 md:gap-10">
+              <div className="inline-flex shrink-0 items-center gap-3">
+                <BrandMark size={48} tone="on-dark" />
+                <span className="font-display text-2xl font-bold tracking-tight text-white sm:text-3xl">
+                  EccoPet
+                </span>
+              </div>
+              <p className="inline-flex max-w-full items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-sm text-white/90 backdrop-blur-md sm:ml-2 md:ml-4">
+                <Zap className="h-4 w-4 shrink-0 text-ecopet-green-500" strokeWidth={2} aria-hidden />
+                <span className="min-w-0">{t("pub.home.heroBadge")}</span>
+              </p>
             </div>
-            <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-sm text-white/90 backdrop-blur-md">
-              <Zap className="h-4 w-4 text-ecopet-green-500" strokeWidth={2} aria-hidden />
-              {t("pub.home.heroBadge")}
-            </p>
             <h1 className="max-w-3xl font-display text-[clamp(2rem,5vw,3.75rem)] font-bold leading-[1.08] tracking-tight text-white">
               {t("pub.home.heroTitle")}
             </h1>

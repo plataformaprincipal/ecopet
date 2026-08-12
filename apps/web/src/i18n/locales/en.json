@@ -1505,7 +1505,20 @@
       "shared": "Link copied!",
       "report": "Report",
       "follow": "Follow",
-      "unfollow": "Unfollow"
+      "unfollow": "Unfollow",
+      "more": "More actions",
+      "edit": "Edit post",
+      "editHint": "Update the post text and save your changes.",
+      "editSuccess": "Post updated.",
+      "editFailed": "Could not edit the post.",
+      "delete": "Delete post",
+      "deleteSuccess": "Post deleted.",
+      "deleteFailed": "Could not delete the post.",
+      "copyLink": "Copy link",
+      "linkCopied": "Link copied!",
+      "copyFailed": "Could not copy the link.",
+      "shareTitle": "EccoPet post",
+      "shareFailed": "Could not share."
     },
     "stats": {
       "likes": "{count} likes",

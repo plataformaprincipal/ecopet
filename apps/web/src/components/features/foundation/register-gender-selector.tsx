@@ -53,7 +53,7 @@ export function RegisterGenderSelector({
         aria-label={t("auth.gender.label")}
         aria-invalid={!!error}
         aria-describedby={error ? `${id}-error` : undefined}
-        className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5"
+        className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
       >
         {CLIENT_GENDER_OPTIONS.map((opt) => {
           const selected = value === opt.value;
@@ -67,11 +67,11 @@ export function RegisterGenderSelector({
               key={opt.value}
               htmlFor={inputId}
               className={cn(
-                "group relative flex min-h-[7.5rem] min-w-0 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 px-3 py-4 text-center transition-all duration-300",
+                "group relative flex min-h-[6.5rem] min-w-0 cursor-pointer flex-col items-center justify-center gap-2 overflow-visible rounded-xl border-2 px-3 py-4 text-center transition-all duration-300",
                 "hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md",
                 "focus-within:ring-2 focus-within:ring-emerald-500 focus-within:ring-offset-2",
                 selected
-                  ? "scale-[1.02] border-emerald-600 bg-gradient-to-b from-emerald-50 to-white shadow-md ring-2 ring-emerald-500/20 dark:from-emerald-950/40 dark:to-ecopet-dark-card"
+                  ? "border-emerald-600 bg-gradient-to-b from-emerald-50 to-white shadow-md ring-2 ring-emerald-500/20 dark:from-emerald-950/40 dark:to-ecopet-dark-card"
                   : "border-gray-200 bg-white dark:border-white/10 dark:bg-ecopet-dark-card"
               )}
             >
@@ -87,7 +87,7 @@ export function RegisterGenderSelector({
               />
               <span
                 className={cn(
-                  "flex h-10 w-10 items-center justify-center rounded-full transition-colors duration-300",
+                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors duration-300",
                   selected
                     ? "bg-emerald-600 text-white"
                     : "bg-gray-100 text-gray-600 group-hover:bg-emerald-100 group-hover:text-emerald-700 dark:bg-white/10 dark:text-white/70"
@@ -96,10 +96,10 @@ export function RegisterGenderSelector({
               >
                 <Icon className="h-5 w-5" />
               </span>
-              <span className="block text-sm font-semibold leading-tight text-ecopet-dark dark:text-white">
+              <span className="block w-full break-words text-sm font-semibold leading-tight text-ecopet-dark dark:text-white">
                 {labelKey ? t(labelKey) : opt.label}
               </span>
-              <span className="block text-xs leading-snug text-muted-foreground">
+              <span className="block w-full break-words text-xs leading-snug text-muted-foreground">
                 {meta ? t(meta.descriptionKey) : ""}
               </span>
               {selected && (

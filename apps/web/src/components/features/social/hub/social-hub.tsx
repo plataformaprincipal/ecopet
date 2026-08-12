@@ -40,7 +40,7 @@ function GuestPanelCTA({ title, description, signIn }: { title: string; descript
 }
 
 export function SocialHub() {
-  const { requireAuth, isAuthenticated } = useAuthGate();
+  const { requireAuth, isAuthenticated, isLoading: authLoading } = useAuthGate();
   const { t } = useTranslation();
   const [activeChat, setActiveChat] = useState<ConversationItem | null>(null);
   const [mobileTab, setMobileTab] = useState<MobileTab>("feed");
@@ -68,7 +68,7 @@ export function SocialHub() {
             <Filter className="h-3.5 w-3.5" aria-hidden />
             {t("social.topbar.filters")}
           </button>
-          {!isAuthenticated ? (
+          {!authLoading && !isAuthenticated ? (
             <>
               <a
                 href="/login"
@@ -143,7 +143,7 @@ export function SocialHub() {
             <HubAssistantPanel />
           </div>
           <div className={cn(mobileTab !== "notifications" && "hidden lg:block")}>
-            {isAuthenticated ? (
+            {authLoading ? null : isAuthenticated ? (
               <HubNotificationsPanel />
             ) : (
               <GuestPanelCTA
@@ -154,7 +154,7 @@ export function SocialHub() {
             )}
           </div>
           <div className={cn(mobileTab !== "messages" && "hidden lg:block")}>
-            {isAuthenticated ? (
+            {authLoading ? null : isAuthenticated ? (
               <HubMessagesPanel onOpenConversation={setActiveChat} />
             ) : (
               <GuestPanelCTA
@@ -174,7 +174,7 @@ export function SocialHub() {
       </div>
 
       {/* Mobile floating actions */}
-      <div className="fixed bottom-24 right-4 z-30 flex flex-col gap-3 lg:hidden">
+      <div className="fixed bottom-24 left-4 z-30 flex flex-col gap-3 lg:hidden">
         <button
           type="button"
           onClick={() => setMobileTab("ai")}
