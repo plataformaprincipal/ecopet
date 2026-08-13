@@ -140,6 +140,7 @@ export function HubFeed() {
                 setPosts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
               }
               onPostDeleted={(postId) => setPosts((prev) => prev.filter((p) => p.id !== postId))}
+              onPostHidden={(postId) => setPosts((prev) => prev.filter((p) => p.id !== postId))}
               onAskAi={handleAskAi}
             />
           ))}

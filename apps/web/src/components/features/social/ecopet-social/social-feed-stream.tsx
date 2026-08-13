@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Megaphone, Users, Loader2 } from "lucide-react";
 import { PostComposer } from "@/components/features/social/feed/post-composer";
@@ -11,6 +11,7 @@ import { EmptyStatePremium } from "@/components/features/public/empty-state-prem
 import { fetchFeed, type ApiSocialPost } from "@/lib/social/client-api";
 import { fetchPublicPosts } from "@/lib/public/client-api";
 import { useAssistantStore } from "@/store/assistant-store";
+import { useFeedPreferencesStore } from "@/store/feed-preferences-store";
 import { useAuthGate } from "@/providers/auth-gate-provider";
 import { useTranslation } from "@/providers/i18n-provider";
 import type { TranslateFn } from "@/lib/i18n";
@@ -43,6 +44,8 @@ export function SocialFeedStream({ activeFilter }: { activeFilter: SocialFilterI
   const { isAuthenticated } = useAuthGate();
   const { t } = useTranslation();
   const ask = useAssistantStore((s) => s.ask);
+  const hiddenPostIds = useFeedPreferencesStore((s) => s.hiddenPostIds);
+  const notInterestedAuthorIds = useFeedPreferencesStore((s) => s.notInterestedAuthorIds);
   const [posts, setPosts] = useState<ApiSocialPost[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -106,6 +109,17 @@ export function SocialFeedStream({ activeFilter }: { activeFilter: SocialFilterI
     ask(t("social.feed.askAi", { snippet }));
   }
 
+  const visiblePosts = useMemo(
+    () =>
+      posts.filter(
+        (p) =>
+          !hiddenPostIds.includes(p.id) &&
+          !notInterestedAuthorIds.includes(p.authorId) &&
+          !notInterestedAuthorIds.includes(p.author.id)
+      ),
+    [posts, hiddenPostIds, notInterestedAuthorIds]
+  );
+
   return (
     <div className="space-y-5">
       <StoriesRail />
@@ -125,7 +139,7 @@ export function SocialFeedStream({ activeFilter }: { activeFilter: SocialFilterI
           <SkeletonCard variant="post" />
           <SkeletonCard variant="post" />
         </div>
-      ) : posts.length === 0 ? (
+      ) : visiblePosts.length === 0 ? (
         <EmptyStatePremium
           icon={Users}
           title={t("social.feed.emptyTitle")}
@@ -135,7 +149,7 @@ export function SocialFeedStream({ activeFilter }: { activeFilter: SocialFilterI
         />
       ) : (
         <div className="space-y-5">
-          {posts.map((post) => (
+          {visiblePosts.map((post) => (
             <PostCard
               key={post.id}
               post={post}
@@ -144,6 +158,7 @@ export function SocialFeedStream({ activeFilter }: { activeFilter: SocialFilterI
                 setPosts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
               }
               onPostDeleted={(postId) => setPosts((prev) => prev.filter((p) => p.id !== postId))}
+              onPostHidden={(postId) => setPosts((prev) => prev.filter((p) => p.id !== postId))}
               onAskAi={handleAskAi}
             />
           ))}

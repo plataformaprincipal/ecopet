@@ -1,23 +1,44 @@
 /**
  * ECOPET themes — light / dark semantic surfaces
+ * Single source with next-themes (`html.dark` via storageKey ecopet-theme).
  */
 
+:root {
+  --color-ecopet-surface: #ffffff;
+  --color-ecopet-dark-bg: #f4f7f4;
+  --color-ecopet-dark-card: #ffffff;
+  --color-ecopet-gray: #5c6b62;
+
+  --ep-bg: #f4f7f4;
+  --ep-bg-elevated: #ffffff;
+  --ep-bg-muted: #e8efe9;
+  --ep-bg-inverse: #003b16;
+  --ep-fg: #102015;
+  --ep-fg-muted: #5c6b62;
+  --ep-fg-subtle: #7a8a80;
+  --ep-fg-inverse: #ffffff;
+  --ep-border: rgba(16, 32, 21, 0.12);
+  --ep-border-strong: rgba(16, 32, 21, 0.22);
+  --ep-ring: #128a3f;
+}
+
 .dark {
+  color-scheme: dark;
   --color-ecopet-surface: #1c2420;
-  --color-ecopet-dark-bg: #121816;
-  --color-ecopet-dark-card: #1c2420;
+  --color-ecopet-dark-bg: #0e1411;
+  --color-ecopet-dark-card: #1a221e;
   --color-ecopet-gray: #a8b2ab;
 
-  --ep-bg: #121816;
-  --ep-bg-elevated: #1c2420;
+  --ep-bg: #0e1411;
+  --ep-bg-elevated: #1a221e;
   --ep-bg-muted: #24302a;
   --ep-bg-inverse: #0a4f26;
   --ep-fg: #f5f7f6;
   --ep-fg-muted: #a8b2ab;
-  --ep-fg-subtle: #7d8982;
+  --ep-fg-subtle: #8a9590;
   --ep-fg-inverse: #ffffff;
-  --ep-border: rgba(255, 255, 255, 0.1);
-  --ep-border-strong: rgba(255, 255, 255, 0.2);
+  --ep-border: rgba(255, 255, 255, 0.12);
+  --ep-border-strong: rgba(255, 255, 255, 0.22);
   --ep-ring: var(--ep-green-400);
 
   --ep-success-bg: rgba(21, 128, 61, 0.18);
@@ -25,13 +46,31 @@
   --ep-danger-bg: rgba(220, 38, 38, 0.18);
   --ep-info-bg: rgba(37, 99, 235, 0.18);
 
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.25);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.35);
-  --shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.45);
-  --shadow-floating: 0 20px 48px rgba(0, 0, 0, 0.55);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.55);
+  --shadow-floating: 0 20px 48px rgba(0, 0, 0, 0.6);
   --shadow-premium: var(--shadow-md);
   --shadow-premium-lg: var(--shadow-lg);
+}
+
+.dark body {
+  background-color: var(--ep-bg);
+  color: var(--ep-fg);
+}
+
+.dark input,
+.dark textarea,
+.dark select {
+  color: var(--ep-fg);
+  background-color: var(--ep-bg-muted);
+  border-color: var(--ep-border);
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: var(--ep-fg-subtle);
 }
 
 html.a11y-high-contrast {

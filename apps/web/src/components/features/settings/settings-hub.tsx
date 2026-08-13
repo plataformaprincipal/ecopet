@@ -1,10 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import {
-  User, Shield, Bell, Eye, Globe, Palette, Plug,
-  ChevronRight, Mail, Phone,
+  User, Shield, Bell, Eye, Plug,
 } from "lucide-react";
 import { AppHeader } from "@/components/layouts/app-header";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,9 +20,6 @@ const SETTINGS_MODULES: ProfileModule[] = [
   { id: "seguranca", label: "Segurança", icon: Shield, group: "Principal" },
   { id: "privacidade", label: "Privacidade", icon: Eye, group: "Principal" },
   { id: "notificacoes", label: "Notificações", icon: Bell, group: "Preferências" },
-  { id: "acessibilidade", label: "Acessibilidade", icon: Eye, group: "Preferências" },
-  { id: "idiomas", label: "Idiomas", icon: Globe, group: "Preferências" },
-  { id: "personalizacao", label: "Personalização", icon: Palette, group: "Preferências" },
   { id: "integracoes", label: "Integrações", icon: Plug, group: "Avançado" },
 ];
 
@@ -121,52 +116,6 @@ export function SettingsHub() {
             )}
 
             {active === "notificacoes" && <NotificationPreferencesPanel />}
-
-            {active === "acessibilidade" && (
-              <Card className="card-premium">
-                <CardContent className="p-6">
-                  <h2 className="heading-3 mb-4">Acessibilidade</h2>
-                  <SettingRow label="Alto contraste" action={<Toggle />} />
-                  <SettingRow label="VLibras" action={<Toggle defaultChecked />} />
-                  <SettingRow label="Modo dislexia" action={<Toggle />} />
-                  <SettingRow label="Leitor de tela otimizado" value="Ativo" />
-                  <Link href="/configuracoes" className="mt-4 inline-flex items-center gap-1 text-sm text-ecopet-green">
-                    Barra de acessibilidade global <ChevronRight className="h-4 w-4" />
-                  </Link>
-                </CardContent>
-              </Card>
-            )}
-
-            {active === "idiomas" && (
-              <Card className="card-premium">
-                <CardContent className="p-6">
-                  <h2 className="heading-3 mb-4">Idiomas</h2>
-                  {["Português (BR)", "English", "Español"].map((lang) => (
-                    <label key={lang} className="flex cursor-pointer items-center gap-3 border-b border-ecopet-gray/10 py-3 last:border-0">
-                      <input type="radio" name="lang" defaultChecked={lang.includes("Português")} className="h-4 w-4 accent-ecopet-green" />
-                      <span className="text-sm font-medium">{lang}</span>
-                    </label>
-                  ))}
-                </CardContent>
-              </Card>
-            )}
-
-            {active === "personalizacao" && (
-              <Card className="card-premium">
-                <CardContent className="p-6">
-                  <h2 className="heading-3 mb-4">Personalização</h2>
-                  <SettingRow label="Tema" value="Sistema" action={
-                    <select className="rounded-lg border px-2 py-1 text-sm dark:bg-ecopet-dark-card">
-                      <option>Claro</option>
-                      <option>Escuro</option>
-                      <option>Sistema</option>
-                    </select>
-                  } />
-                  <SettingRow label="Layout compacto" action={<Toggle />} />
-                  <SettingRow label="Widgets na home" action={<Toggle defaultChecked />} />
-                </CardContent>
-              </Card>
-            )}
 
             {active === "integracoes" && (
               <Card className="card-premium">

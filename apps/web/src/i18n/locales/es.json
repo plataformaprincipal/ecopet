@@ -1518,7 +1518,14 @@
       "linkCopied": "¡Enlace copiado!",
       "copyFailed": "No se pudo copiar el enlace.",
       "shareTitle": "Publicación EccoPet",
-      "shareFailed": "No se pudo compartir."
+      "shareFailed": "No se pudo compartir.",
+      "hide": "Ocultar publicación",
+      "hiddenFeedback": "Publicación ocultada de tu feed.",
+      "notInterested": "No me interesa",
+      "notInterestedFeedback": "Mostraremos menos contenido así.",
+      "savedFeedback": "Publicación guardada.",
+      "unsavedFeedback": "Eliminada de guardados.",
+      "saveFailed": "No se pudo guardar la publicación."
     },
     "stats": {
       "likes": "{count} me gusta",
@@ -1537,7 +1544,10 @@
     "comments": {
       "placeholder": "Escribe un comentario...",
       "send": "Enviar",
-      "empty": "Aún no hay comentarios."
+      "sent": "Comentario enviado.",
+      "empty": "Aún no hay comentarios. ¡Sé el primero!",
+      "sendError": "No se pudo enviar el comentario.",
+      "loadError": "No se pudieron cargar los comentarios."
     },
     "filters": {
       "all": "Todos",
@@ -2030,7 +2040,25 @@
       "catHygiene": "Higiene",
       "catToys": "Juguetes",
       "catAccessories": "Accesorios",
-      "catHealth": "Salud"
+      "catHealth": "Salud",
+      "sort": "Ordenar",
+      "sortRelevance": "Relevancia",
+      "sortNewest": "Más recientes",
+      "sortPriceAsc": "Menor precio",
+      "sortPriceDesc": "Mayor precio",
+      "sortPopular": "Más populares",
+      "sortRating": "Mejor valorados",
+      "rating": "Valoración",
+      "ratingAny": "Cualquiera",
+      "rating4": "4 estrellas o más",
+      "rating3": "3 estrellas o más",
+      "clearFilters": "Limpiar filtros",
+      "applyFilters": "Aplicar",
+      "activeFilters": "Filtros activos",
+      "priceRange": "Rango de precio",
+      "availability": "Disponibilidad",
+      "filtersCount": "{count} filtro(s)",
+      "clearSearch": "Limpiar búsqueda"
     },
     "profile": {
       "heroTitle": "Tu mundo pet empieza aquí.",

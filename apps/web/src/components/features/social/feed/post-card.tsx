@@ -20,12 +20,14 @@ export function PostCard({
   onUpdate,
   onPostUpdated,
   onPostDeleted,
+  onPostHidden,
   onAskAi,
 }: {
   post: ApiSocialPost;
   onUpdate?: () => void;
   onPostUpdated?: (post: ApiSocialPost) => void;
   onPostDeleted?: (postId: string) => void;
+  onPostHidden?: (postId: string) => void;
   onAskAi?: (post: ApiSocialPost) => void;
 }) {
   const { t } = useTranslation();
@@ -60,6 +62,7 @@ export function PostCard({
             post={post}
             onUpdated={onPostUpdated}
             onDeleted={onPostDeleted}
+            onHidden={onPostHidden}
             onReported={onUpdate}
           />
         ) : null}

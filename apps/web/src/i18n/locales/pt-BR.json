@@ -1518,7 +1518,14 @@
       "linkCopied": "Link copiado!",
       "copyFailed": "Não foi possível copiar o link.",
       "shareTitle": "Publicação EccoPet",
-      "shareFailed": "Não foi possível compartilhar."
+      "shareFailed": "Não foi possível compartilhar.",
+      "hide": "Ocultar publicação",
+      "hiddenFeedback": "Publicação ocultada do seu feed.",
+      "notInterested": "Não tenho interesse",
+      "notInterestedFeedback": "Vamos mostrar menos conteúdo assim.",
+      "savedFeedback": "Publicação salva.",
+      "unsavedFeedback": "Removida dos salvos.",
+      "saveFailed": "Não foi possível salvar a publicação."
     },
     "stats": {
       "likes": "{count} curtidas",
@@ -1537,7 +1544,10 @@
     "comments": {
       "placeholder": "Escreva um comentário...",
       "send": "Enviar",
-      "empty": "Nenhum comentário ainda."
+      "sent": "Comentário enviado.",
+      "empty": "Nenhum comentário ainda. Seja o primeiro!",
+      "sendError": "Não foi possível enviar o comentário.",
+      "loadError": "Não foi possível carregar os comentários."
     },
     "filters": {
       "all": "Todos",
@@ -2030,7 +2040,25 @@
       "catHygiene": "Higiene",
       "catToys": "Brinquedos",
       "catAccessories": "Acessórios",
-      "catHealth": "Saúde"
+      "catHealth": "Saúde",
+      "sort": "Ordenar",
+      "sortRelevance": "Relevância",
+      "sortNewest": "Mais recentes",
+      "sortPriceAsc": "Menor preço",
+      "sortPriceDesc": "Maior preço",
+      "sortPopular": "Mais populares",
+      "sortRating": "Melhor avaliados",
+      "rating": "Avaliação",
+      "ratingAny": "Qualquer",
+      "rating4": "4 estrelas ou mais",
+      "rating3": "3 estrelas ou mais",
+      "clearFilters": "Limpar filtros",
+      "applyFilters": "Aplicar",
+      "activeFilters": "Filtros ativos",
+      "priceRange": "Faixa de preço",
+      "availability": "Disponibilidade",
+      "filtersCount": "{count} filtro(s)",
+      "clearSearch": "Limpar busca"
     },
     "profile": {
       "heroTitle": "Seu mundo pet começa aqui.",

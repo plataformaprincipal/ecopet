@@ -1,7 +1,17 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
-import { Copy, Flag, MoreHorizontal, Pencil, Share2, Trash2 } from "lucide-react";
+import { useState } from "react";
+import {
+  Bookmark,
+  Copy,
+  EyeOff,
+  Flag,
+  MoreHorizontal,
+  Pencil,
+  Share2,
+  ThumbsDown,
+  Trash2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,16 +20,26 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ReportPostModal } from "./report-post-modal";
 import {
   deletePost,
+  savePost,
+  sharePost,
+  unsavePost,
   updatePost,
   type ApiSocialPost,
 } from "@/lib/social/client-api";
+import { useFeedPreferencesStore } from "@/store/feed-preferences-store";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { useAuthGate } from "@/providers/auth-gate-provider";
 import { useTranslation } from "@/providers/i18n-provider";
-import { cn } from "@/lib/utils";
 
 function postAbsoluteUrl(postId: string) {
   if (typeof window === "undefined") return `/feed/post/${postId}`;
@@ -31,18 +51,20 @@ export function PostOverflowMenu({
   onUpdated,
   onDeleted,
   onReported,
+  onHidden,
 }: {
   post: ApiSocialPost;
   onUpdated?: (post: ApiSocialPost) => void;
   onDeleted?: (postId: string) => void;
   onReported?: () => void;
+  onHidden?: (postId: string) => void;
 }) {
   const { t } = useTranslation();
   const { user } = useCurrentUser();
   const { requireAuth } = useAuthGate();
-  const menuId = useId();
-  const rootRef = useRef<HTMLDivElement>(null);
-  const [open, setOpen] = useState(false);
+  const hidePost = useFeedPreferencesStore((s) => s.hidePost);
+  const markNotInterestedAuthor = useFeedPreferencesStore((s) => s.markNotInterestedAuthor);
+
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
@@ -50,61 +72,80 @@ export function PostOverflowMenu({
   const [pending, setPending] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(Boolean(post.viewerState?.saved));
 
   const isAuthor = Boolean(user && (user.id === post.authorId || user.id === post.author.id));
 
-  useEffect(() => {
-    if (!open) return;
-    function onPointerDown(e: MouseEvent) {
-      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
-    }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
-    }
-    document.addEventListener("mousedown", onPointerDown);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onPointerDown);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-
   function showFeedback(message: string) {
     setFeedback(message);
-    window.setTimeout(() => setFeedback(null), 2000);
+    window.setTimeout(() => setFeedback(null), 2200);
   }
 
   async function copyLink() {
-    const url = postAbsoluteUrl(post.id);
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(postAbsoluteUrl(post.id));
       showFeedback(t("socialFeed.actions.linkCopied"));
     } catch {
       setError(t("socialFeed.actions.copyFailed"));
     }
-    setOpen(false);
   }
 
-  async function sharePostAction() {
+  async function shareAction() {
     const url = postAbsoluteUrl(post.id);
-    const title = t("socialFeed.actions.shareTitle");
     try {
-      if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
-        await navigator.share({ title, url, text: post.content?.slice(0, 120) || title });
-      } else {
-        await navigator.clipboard.writeText(url);
-        showFeedback(t("socialFeed.actions.linkCopied"));
-      }
-    } catch (err) {
-      if ((err as Error)?.name === "AbortError") return;
-      try {
-        await navigator.clipboard.writeText(url);
-        showFeedback(t("socialFeed.actions.linkCopied"));
-      } catch {
-        setError(t("socialFeed.actions.shareFailed"));
-      }
+      requireAuth(async () => {
+        try {
+          const data = await sharePost(post.id);
+          const link = data.link || url;
+          if (typeof navigator.share === "function") {
+            try {
+              await navigator.share({
+                title: t("socialFeed.actions.shareTitle"),
+                url: link,
+                text: post.content?.slice(0, 120) || undefined,
+              });
+              return;
+            } catch (err) {
+              if ((err as Error)?.name === "AbortError") return;
+            }
+          }
+          await navigator.clipboard.writeText(link);
+          showFeedback(t("socialFeed.actions.linkCopied"));
+        } catch {
+          await navigator.clipboard.writeText(url);
+          showFeedback(t("socialFeed.actions.linkCopied"));
+        }
+      });
+    } catch {
+      setError(t("socialFeed.actions.shareFailed"));
     }
-    setOpen(false);
+  }
+
+  async function toggleSave() {
+    requireAuth(async () => {
+      try {
+        const data = saved ? await unsavePost(post.id) : await savePost(post.id);
+        setSaved(data.saved);
+        showFeedback(data.saved ? t("socialFeed.actions.savedFeedback") : t("socialFeed.actions.unsavedFeedback"));
+      } catch (e) {
+        setError(e instanceof Error ? e.message : t("socialFeed.actions.saveFailed"));
+      }
+    });
+  }
+
+  function hideFromFeed() {
+    hidePost(post.id);
+    onHidden?.(post.id);
+    showFeedback(t("socialFeed.actions.hiddenFeedback"));
+  }
+
+  function notInterested() {
+    requireAuth(() => {
+      markNotInterestedAuthor(post.author.id);
+      hidePost(post.id);
+      onHidden?.(post.id);
+      showFeedback(t("socialFeed.actions.notInterestedFeedback"));
+    });
   }
 
   async function saveEdit() {
@@ -138,71 +179,90 @@ export function PostOverflowMenu({
   }
 
   return (
-    <div className="relative" ref={rootRef}>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        className="h-9 w-9 shrink-0"
-        aria-label={t("socialFeed.actions.more")}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-controls={menuId}
-        onClick={() => setOpen((v) => !v)}
-      >
-        <MoreHorizontal className="h-5 w-5" aria-hidden />
-      </Button>
-
-      {open && (
-        <div
-          id={menuId}
-          role="menu"
-          className="absolute right-0 top-full z-30 mt-1 w-56 rounded-xl border border-ecopet-gray/15 bg-white py-1 shadow-lg dark:border-white/10 dark:bg-ecopet-dark-card"
-        >
+    <div className="relative">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-11 w-11 shrink-0 rounded-xl text-ecopet-gray hover:bg-ecopet-green/10 hover:text-ecopet-dark dark:text-white/70 dark:hover:text-white"
+            aria-label={t("socialFeed.actions.more")}
+          >
+            <MoreHorizontal className="h-5 w-5" aria-hidden />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" side="bottom">
           {isAuthor ? (
             <>
-              <MenuItem
-                icon={Pencil}
-                label={t("socialFeed.actions.edit")}
-                onClick={() => {
+              <DropdownMenuItem
+                onSelect={() => {
                   setEditContent(post.content ?? "");
                   setError(null);
-                  setOpen(false);
                   setEditOpen(true);
                 }}
-              />
-              <MenuItem
-                icon={Trash2}
-                label={t("socialFeed.actions.delete")}
+              >
+                <Pencil className="h-4 w-4" aria-hidden />
+                {t("socialFeed.actions.edit")}
+              </DropdownMenuItem>
+              <DropdownMenuItem
                 danger
-                onClick={() => {
+                onSelect={() => {
                   setError(null);
-                  setOpen(false);
                   setDeleteOpen(true);
                 }}
-              />
+              >
+                <Trash2 className="h-4 w-4" aria-hidden />
+                {t("socialFeed.actions.delete")}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
             </>
           ) : null}
-          <MenuItem icon={Copy} label={t("socialFeed.actions.copyLink")} onClick={() => void copyLink()} />
-          <MenuItem icon={Share2} label={t("socialFeed.actions.share")} onClick={() => void sharePostAction()} />
+
+          <DropdownMenuItem onSelect={() => void toggleSave()}>
+            <Bookmark className="h-4 w-4" aria-hidden />
+            {saved ? t("socialFeed.actions.unsave") : t("socialFeed.actions.save")}
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => void copyLink()}>
+            <Copy className="h-4 w-4" aria-hidden />
+            {t("socialFeed.actions.copyLink")}
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => void shareAction()}>
+            <Share2 className="h-4 w-4" aria-hidden />
+            {t("socialFeed.actions.share")}
+          </DropdownMenuItem>
+
           {!isAuthor ? (
-            <MenuItem
-              icon={Flag}
-              label={t("socialFeed.actions.report")}
-              onClick={() => requireAuth(() => {
-                setOpen(false);
-                setReportOpen(true);
-              })}
-            />
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={hideFromFeed}>
+                <EyeOff className="h-4 w-4" aria-hidden />
+                {t("socialFeed.actions.hide")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={notInterested}>
+                <ThumbsDown className="h-4 w-4" aria-hidden />
+                {t("socialFeed.actions.notInterested")}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() =>
+                  requireAuth(() => {
+                    setReportOpen(true);
+                  })
+                }
+              >
+                <Flag className="h-4 w-4" aria-hidden />
+                {t("socialFeed.actions.report")}
+              </DropdownMenuItem>
+            </>
           ) : null}
-        </div>
-      )}
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       {feedback ? (
         <span
           role="status"
           aria-live="polite"
-          className="absolute right-0 top-[calc(100%+0.25rem)] z-40 whitespace-nowrap rounded-md bg-ecopet-dark px-2 py-1 text-xs text-white shadow-md"
+          className="absolute right-0 top-[calc(100%+0.35rem)] z-40 whitespace-nowrap rounded-md bg-ecopet-dark px-2.5 py-1 text-xs text-white shadow-md dark:bg-white dark:text-ecopet-dark"
         >
           {feedback}
         </span>
@@ -218,7 +278,7 @@ export function PostOverflowMenu({
             value={editContent}
             onChange={(e) => setEditContent(e.target.value)}
             rows={5}
-            className="w-full rounded-xl border border-ecopet-gray/20 bg-transparent p-3 text-sm text-ecopet-dark outline-none focus:ring-2 focus:ring-ecopet-green dark:border-white/15 dark:text-white"
+            className="w-full rounded-xl border border-ecopet-gray/20 bg-white p-3 text-sm text-ecopet-dark outline-none focus:ring-2 focus:ring-ecopet-green dark:border-white/15 dark:bg-ecopet-dark-bg dark:text-white"
             aria-label={t("socialFeed.actions.edit")}
           />
           {error ? (
@@ -255,7 +315,7 @@ export function PostOverflowMenu({
               Cancelar
             </Button>
             <Button type="button" variant="destructive" onClick={() => void confirmDelete()} disabled={pending}>
-              Excluir
+              Excluir publicação
             </Button>
           </div>
         </DialogContent>
@@ -268,32 +328,5 @@ export function PostOverflowMenu({
         onReported={onReported}
       />
     </div>
-  );
-}
-
-function MenuItem({
-  icon: Icon,
-  label,
-  onClick,
-  danger,
-}: {
-  icon: typeof Pencil;
-  label: string;
-  onClick: () => void;
-  danger?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      role="menuitem"
-      className={cn(
-        "flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm transition hover:bg-ecopet-green/10",
-        danger ? "text-red-600" : "text-ecopet-dark dark:text-white"
-      )}
-      onClick={onClick}
-    >
-      <Icon className="h-4 w-4 shrink-0" aria-hidden />
-      {label}
-    </button>
   );
 }

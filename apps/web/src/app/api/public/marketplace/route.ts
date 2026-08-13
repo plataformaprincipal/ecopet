@@ -1,5 +1,5 @@
 import { apiSuccess } from "@/lib/api-response";
-import { queryPublicProducts, queryPublicServices } from "@/lib/marketplace/public-query";
+import { queryPublicProducts, queryPublicServices, type PublicSort } from "@/lib/marketplace/public-query";
 
 function numParam(value: string | null) {
   if (!value) return undefined;
@@ -13,27 +13,43 @@ function boolParam(value: string | null) {
   return undefined;
 }
 
+const SORTS: PublicSort[] = ["relevance", "newest", "price_asc", "price_desc", "popular", "rating"];
+
+function sortParam(value: string | null): PublicSort | undefined {
+  if (!value) return undefined;
+  return SORTS.includes(value as PublicSort) ? (value as PublicSort) : undefined;
+}
+
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const q = url.searchParams.get("q") ?? undefined;
   const category = url.searchParams.get("category") ?? undefined;
   const tab = url.searchParams.get("tab") ?? "all";
+  const sort = sortParam(url.searchParams.get("sort"));
+  const minRating = numParam(url.searchParams.get("minRating"));
+  const minPrice = numParam(url.searchParams.get("minPrice"));
+  const maxPrice = numParam(url.searchParams.get("maxPrice"));
+  const pageSize = numParam(url.searchParams.get("pageSize")) ?? 24;
 
   const productFilters = {
     q,
     category,
-    minPrice: numParam(url.searchParams.get("minPrice")),
-    maxPrice: numParam(url.searchParams.get("maxPrice")),
+    minPrice,
+    maxPrice,
+    minRating,
     inStock: boolParam(url.searchParams.get("inStock")),
-    pageSize: numParam(url.searchParams.get("pageSize")) ?? 24,
+    sort,
+    pageSize,
   };
 
   const serviceFilters = {
     q,
     category: url.searchParams.get("serviceCategory") ?? undefined,
-    minPrice: numParam(url.searchParams.get("minPrice")),
-    maxPrice: numParam(url.searchParams.get("maxPrice")),
-    pageSize: numParam(url.searchParams.get("pageSize")) ?? 12,
+    minPrice,
+    maxPrice,
+    minRating,
+    sort,
+    pageSize: Math.min(pageSize, 12),
   };
 
   const [products, services] = await Promise.all([

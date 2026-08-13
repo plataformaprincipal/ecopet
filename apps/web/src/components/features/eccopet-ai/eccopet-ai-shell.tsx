@@ -724,7 +724,7 @@ export function EccoPetAIShell() {
   }, [isAuthenticated]);
 
   return (
-    <div className="mx-auto flex h-[100dvh] w-full max-w-[1500px] flex-col bg-gradient-to-b from-ecopet-cream/30 to-transparent px-3 pb-24 pt-3 dark:from-ecopet-dark-bg sm:px-4 lg:px-6 lg:pb-4">
+    <div className="mx-auto flex h-[100dvh] w-full max-w-[1500px] flex-col bg-gradient-to-b from-ecopet-cream/30 to-transparent px-3 pb-24 pt-3 dark:from-ecopet-dark-bg sm:px-4 lg:px-6 lg:pb-4 lg:pr-20">
       {/* Top bar */}
       <div className="mb-3 flex items-center justify-between gap-3 rounded-[var(--radius-lg)] border border-ecopet-gray/10 bg-white/80 px-3 py-2.5 shadow-[var(--shadow-xs)] backdrop-blur-md dark:border-white/10 dark:bg-ecopet-dark-card/80">
         <EcoPetLogo href="/eccopet" size="sm" showText />

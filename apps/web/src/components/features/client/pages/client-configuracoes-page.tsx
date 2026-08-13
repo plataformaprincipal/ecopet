@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Bell, Download, Settings, ShieldCheck } from "lucide-react";
 import { ClientPageHeader } from "../client-page-header";
-import { ClientTranslationSettings, ClientAccessibilitySettings } from "../client-settings-panels";
 
 const LINKS = [
   { href: "/configuracoes", label: "Configurações completas", description: "Preferências gerais da conta", icon: Settings },
@@ -17,7 +16,7 @@ export function ClientConfiguracoesPage() {
     <div className="space-y-6">
       <ClientPageHeader
         title="Configurações"
-        description="Idioma, acessibilidade, notificações, privacidade e segurança."
+        description="Notificações, privacidade, segurança e dados da conta. Idioma e acessibilidade ficam no topo e na barra global."
       />
 
       <div className="grid gap-3 sm:grid-cols-2">
@@ -31,14 +30,11 @@ export function ClientConfiguracoesPage() {
             <Icon className="mt-0.5 h-5 w-5 text-emerald-600" aria-hidden />
             <div>
               <p className="text-sm font-medium text-zinc-900 dark:text-white">{label}</p>
-              <p className="text-xs text-zinc-500">{description}</p>
+              <p className="text-xs text-zinc-500 dark:text-white/60">{description}</p>
             </div>
           </Link>
         ))}
       </div>
-
-      <ClientTranslationSettings />
-      <ClientAccessibilitySettings />
     </div>
   );
 }

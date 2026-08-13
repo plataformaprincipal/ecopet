@@ -13,10 +13,6 @@ import { Button } from "@/components/ui/button";
 import { LogoutButton } from "@/components/shared/auth/logout-button";
 import { FoundationProfileForm } from "@/components/features/foundation/profile-form";
 import { ClientPageHeader } from "../client-page-header";
-import {
-  ClientAccessibilitySettings,
-  ClientTranslationSettings,
-} from "../client-settings-panels";
 
 const QUICK_LINKS = [
   { href: "/dashboard/client/orders", label: "Meus pedidos", icon: ClipboardList },
@@ -58,9 +54,6 @@ export function ClientProfileManagementPage() {
           <span className="text-sm font-medium text-ecopet-dark dark:text-white">Minhas avaliações</span>
         </Link>
       </div>
-
-      <ClientTranslationSettings />
-      <ClientAccessibilitySettings />
 
       <section className="rounded-[var(--radius-xl)] border border-ecopet-gray/12 bg-white p-6 shadow-[var(--shadow-sm)] dark:border-white/10 dark:bg-ecopet-dark-card">
         <h2 className="font-display text-lg font-semibold text-ecopet-dark dark:text-white">Dados pessoais</h2>

@@ -1518,7 +1518,14 @@
       "linkCopied": "Link copied!",
       "copyFailed": "Could not copy the link.",
       "shareTitle": "EccoPet post",
-      "shareFailed": "Could not share."
+      "shareFailed": "Could not share.",
+      "hide": "Hide post",
+      "hiddenFeedback": "Post hidden from your feed.",
+      "notInterested": "Not interested",
+      "notInterestedFeedback": "We'll show less content like this.",
+      "savedFeedback": "Post saved.",
+      "unsavedFeedback": "Removed from saved.",
+      "saveFailed": "Could not save the post."
     },
     "stats": {
       "likes": "{count} likes",
@@ -1537,7 +1544,10 @@
     "comments": {
       "placeholder": "Write a comment...",
       "send": "Send",
-      "empty": "No comments yet."
+      "sent": "Comment sent.",
+      "empty": "No comments yet. Be the first!",
+      "sendError": "Could not send the comment.",
+      "loadError": "Could not load comments."
     },
     "filters": {
       "all": "All",
@@ -2030,7 +2040,25 @@
       "catHygiene": "Hygiene",
       "catToys": "Toys",
       "catAccessories": "Accessories",
-      "catHealth": "Health"
+      "catHealth": "Health",
+      "sort": "Sort",
+      "sortRelevance": "Relevance",
+      "sortNewest": "Newest",
+      "sortPriceAsc": "Lowest price",
+      "sortPriceDesc": "Highest price",
+      "sortPopular": "Most popular",
+      "sortRating": "Top rated",
+      "rating": "Rating",
+      "ratingAny": "Any",
+      "rating4": "4 stars or more",
+      "rating3": "3 stars or more",
+      "clearFilters": "Clear filters",
+      "applyFilters": "Apply",
+      "activeFilters": "Active filters",
+      "priceRange": "Price range",
+      "availability": "Availability",
+      "filtersCount": "{count} filter(s)",
+      "clearSearch": "Clear search"
     },
     "profile": {
       "heroTitle": "Your pet world starts here.",

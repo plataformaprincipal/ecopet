@@ -7,7 +7,7 @@ import { Accessibility } from "lucide-react";
 function AccessibilityFabShell() {
   return (
     <div
-      className="a11y-toolbar-root bottom-28 right-4 left-auto lg:bottom-6"
+      className="a11y-toolbar-root bottom-[calc(5.75rem+env(safe-area-inset-bottom))] right-4 left-auto lg:bottom-6"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       role="region"
       aria-label="Acessibilidade"

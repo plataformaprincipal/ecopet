@@ -3,6 +3,14 @@ import { prisma } from "@/lib/prisma";
 import { haversineDistanceKm } from "@/lib/google-maps/distance";
 import { isValidLatLng } from "@/lib/google-maps/validation";
 
+export type PublicSort =
+  | "relevance"
+  | "newest"
+  | "price_asc"
+  | "price_desc"
+  | "popular"
+  | "rating";
+
 export type PublicServiceFilters = {
   q?: string;
   category?: string;
@@ -15,6 +23,7 @@ export type PublicServiceFilters = {
   minRating?: number;
   telehealth?: boolean;
   emergency24h?: boolean;
+  sort?: PublicSort;
   page?: number;
   pageSize?: number;
 };
@@ -83,7 +92,7 @@ export async function queryPublicServices(filters: PublicServiceFilters) {
           select: { rating: true },
         },
       },
-      orderBy: [{ rating: "desc" }, { createdAt: "desc" }],
+      orderBy: serviceOrderBy(filters.sort),
       skip,
       take: pageSize,
     }),
@@ -116,9 +125,46 @@ export type PublicProductFilters = {
   maxPrice?: number;
   minRating?: number;
   inStock?: boolean;
+  sort?: PublicSort;
   page?: number;
   pageSize?: number;
 };
+
+function productOrderBy(sort?: PublicSort): Prisma.ProductOrderByWithRelationInput[] {
+  switch (sort) {
+    case "newest":
+      return [{ createdAt: "desc" }];
+    case "price_asc":
+      return [{ price: "asc" }];
+    case "price_desc":
+      return [{ price: "desc" }];
+    case "popular":
+      return [{ reviewCount: "desc" }, { rating: "desc" }];
+    case "rating":
+      return [{ rating: "desc" }, { reviewCount: "desc" }];
+    case "relevance":
+    default:
+      return [{ isFeatured: "desc" }, { rating: "desc" }, { createdAt: "desc" }];
+  }
+}
+
+function serviceOrderBy(sort?: PublicSort): Prisma.ServiceOrderByWithRelationInput[] {
+  switch (sort) {
+    case "newest":
+      return [{ createdAt: "desc" }];
+    case "price_asc":
+      return [{ price: "asc" }];
+    case "price_desc":
+      return [{ price: "desc" }];
+    case "popular":
+      return [{ reviewCount: "desc" }, { rating: "desc" }];
+    case "rating":
+      return [{ rating: "desc" }, { reviewCount: "desc" }];
+    case "relevance":
+    default:
+      return [{ rating: "desc" }, { createdAt: "desc" }];
+  }
+}
 
 export async function queryPublicProducts(filters: PublicProductFilters) {
   const page = Math.max(1, filters.page ?? 1);
@@ -179,7 +225,7 @@ export async function queryPublicProducts(filters: PublicProductFilters) {
         },
         reviews: { where: { moderationStatus: "VISIBLE" }, select: { rating: true } },
       },
-      orderBy: [{ isFeatured: "desc" }, { rating: "desc" }, { createdAt: "desc" }],
+      orderBy: productOrderBy(filters.sort),
       skip,
       take: pageSize,
     }),

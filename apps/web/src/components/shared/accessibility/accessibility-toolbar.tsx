@@ -147,7 +147,7 @@ export function AccessibilityToolbar() {
       {open && !minimized && (
         <div
           id="ecopet-a11y-toolbar"
-          className="mb-3 flex max-h-[min(75vh,620px)] w-[min(calc(100vw-2rem),360px)] flex-col overflow-hidden rounded-2xl border border-ecopet-green/25 bg-white shadow-2xl animate-fade-in dark:border-white/10 dark:bg-[#0f1419]"
+          className="mb-3 flex max-h-[min(75vh,620px)] w-[min(calc(100vw-2rem),360px)] flex-col overflow-hidden rounded-2xl border border-ecopet-green/25 bg-white shadow-2xl animate-fade-in motion-reduce:animate-none dark:border-white/10 dark:bg-ecopet-dark-card"
         >
           <div className="flex shrink-0 items-center justify-between bg-ecopet-dark px-4 py-3 text-white">
             <div className="flex items-center gap-2">
@@ -319,7 +319,9 @@ const ToolBtn = memo(function ToolBtn({
         "flex w-full items-center gap-3 px-3 py-2 text-left text-sm transition-colors",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ecopet-green",
         disabled && "cursor-not-allowed opacity-40",
-        variant === "reset" ? "text-red-600 hover:bg-red-50" : "hover:bg-ecopet-green/5"
+        variant === "reset"
+          ? "text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40"
+          : "text-ecopet-dark hover:bg-ecopet-green/5 dark:text-white"
       )}
     >
       <Icon className="h-4 w-4 shrink-0 text-ecopet-green" aria-hidden />

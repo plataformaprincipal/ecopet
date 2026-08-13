@@ -60,22 +60,27 @@ export function ClientExperienceShell({ userName, primaryPet, children }: Props)
       <ClientBottomNav />
 
       {/* Floating actions above bottom nav (mobile) */}
-      <div className="fixed bottom-[calc(5.25rem+env(safe-area-inset-bottom))] right-4 z-40 flex flex-col gap-2 lg:hidden">
-        <Link
-          href="/client/eccopet"
-          aria-label={t("clientArea.shell.assistant")}
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-ecopet-green text-white shadow-lg"
+      {!immersive ? (
+        <div
+          className="fixed bottom-[calc(5.25rem+env(safe-area-inset-bottom))] left-4 z-40 flex flex-col gap-2 lg:hidden"
+          data-ecopet-fab-stack="secondary"
         >
-          <Sparkles className="h-5 w-5" aria-hidden />
-        </Link>
-        <Link
-          href="/client/social"
-          aria-label={t("clientArea.shell.newPost")}
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-900 text-white shadow-lg dark:bg-white dark:text-zinc-900"
-        >
-          <Plus className="h-5 w-5" aria-hidden />
-        </Link>
-      </div>
+          <Link
+            href="/client/eccopet"
+            aria-label={t("clientArea.shell.assistant")}
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-ecopet-green text-white shadow-lg transition hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ecopet-green focus-visible:ring-offset-2"
+          >
+            <Sparkles className="h-5 w-5" aria-hidden />
+          </Link>
+          <Link
+            href="/client/social"
+            aria-label={t("clientArea.shell.newPost")}
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-900 text-white shadow-lg transition hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ecopet-green focus-visible:ring-offset-2 dark:bg-white dark:text-zinc-900"
+          >
+            <Plus className="h-5 w-5" aria-hidden />
+          </Link>
+        </div>
+      ) : null}
 
       {/* Mobile nav drawer */}
       {menuOpen ? (

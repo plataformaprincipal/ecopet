@@ -132,18 +132,21 @@ export function NgoExperienceShell({ ngoName, accessLevel, statusTone, children 
       <NgoBottomNav />
 
       {accessLevel === "full" ? (
-        <div className="fixed bottom-20 right-4 z-40 flex flex-col gap-2 lg:hidden">
+        <div
+          className="fixed bottom-[calc(5.25rem+env(safe-area-inset-bottom))] left-4 z-40 flex flex-col gap-2 lg:hidden"
+          data-ecopet-fab-stack="secondary"
+        >
           <Link
             href="/ngo/eccopet"
             aria-label={t("ngoArea.shell.ai")}
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-500 text-white shadow-lg"
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-500 text-white shadow-lg transition hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-2"
           >
             <Sparkles className="h-5 w-5" aria-hidden />
           </Link>
           <Link
             href="/ngo/animals/new"
             aria-label={t("ngoArea.shell.newAnimal")}
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-900 text-white shadow-lg dark:bg-white dark:text-zinc-900"
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-900 text-white shadow-lg transition hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ecopet-green focus-visible:ring-offset-2 dark:bg-white dark:text-zinc-900"
           >
             <Plus className="h-5 w-5" aria-hidden />
           </Link>

@@ -7,7 +7,6 @@ import { FoundationProfileForm } from "@/components/features/foundation/profile-
 import { LogoutButton } from "@/components/shared/auth/logout-button";
 import { OngPageHeader } from "../ong-page-header";
 import { OngStatusBadge } from "../ong-status-badge";
-import { OngAccessibilitySettings, OngTranslationSettings } from "../ong-settings-panels";
 import type { OngAccessLevel } from "@/lib/ong/access";
 
 type OngProfileManagementPageProps = {
@@ -114,10 +113,6 @@ export function OngProfileManagementPage({
         <FoundationProfileForm dashboardPath="/ong/perfil-gestao" />
       </section>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <OngTranslationSettings />
-        <OngAccessibilitySettings />
-      </div>
     </div>
   );
 }
