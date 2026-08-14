@@ -37,6 +37,11 @@ export async function queryPublicServices(filters: PublicServiceFilters) {
   const pageSize = Math.min(50, Math.max(1, filters.pageSize ?? 12));
   const skip = (page - 1) * pageSize;
 
+  const origin =
+    filters.lat != null && filters.lng != null && isValidLatLng({ lat: filters.lat, lng: filters.lng })
+      ? { lat: filters.lat, lng: filters.lng }
+      : null;
+
   const where: Prisma.ServiceWhereInput = {
     deletedAt: null,
     status: PartnerServiceStatus.ACTIVE,
@@ -87,7 +92,14 @@ export async function queryPublicServices(filters: PublicServiceFilters) {
             id: true,
             name: true,
             partnerProfile: {
-              select: { businessName: true, city: true, state: true, description: true },
+              select: {
+                businessName: true,
+                city: true,
+                state: true,
+                description: true,
+                latitude: true,
+                longitude: true,
+              },
             },
           },
         },
@@ -96,24 +108,54 @@ export async function queryPublicServices(filters: PublicServiceFilters) {
           select: { rating: true },
         },
       },
-      orderBy: serviceOrderBy(filters.sort),
-      skip,
-      take: pageSize,
+      orderBy: serviceOrderBy(filters.sort === "near_me" ? "relevance" : filters.sort),
+      skip: origin ? 0 : skip,
+      take: origin ? Math.min(200, pageSize * 5) : pageSize,
     }),
     prisma.service.count({ where }),
   ]);
 
+  let mapped = services.map((s) => {
+    const ratings = s.serviceReviews.map((r) => r.rating);
+    const avg = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : s.rating;
+    const lat = s.provider.partnerProfile?.latitude ?? null;
+    const lng = s.provider.partnerProfile?.longitude ?? null;
+    const distanceKm =
+      origin && lat != null && lng != null
+        ? Math.round(haversineDistanceKm(origin, { lat, lng }) * 100) / 100
+        : null;
+    const { serviceReviews: _r, ...rest } = s;
+    return {
+      ...rest,
+      rating: avg,
+      reviewCount: ratings.length || s.reviewCount,
+      distanceKm,
+      city: s.city ?? s.provider.partnerProfile?.city ?? null,
+    };
+  });
+
+  if (origin && filters.radiusKm && filters.radiusKm > 0) {
+    mapped = mapped.filter((s) => s.distanceKm == null || s.distanceKm <= filters.radiusKm!);
+  }
+
+  if (origin && (filters.sort === "near_me" || filters.lat != null)) {
+    mapped = mapped.sort((a, b) => {
+      const da = a.distanceKm ?? Number.POSITIVE_INFINITY;
+      const db = b.distanceKm ?? Number.POSITIVE_INFINITY;
+      if (da !== db) return da - db;
+      return b.rating - a.rating;
+    });
+  }
+
+  const pageSlice = origin ? mapped.slice(skip, skip + pageSize) : mapped;
+  const filteredTotal = origin ? mapped.length : total;
+
   return {
-    services: services.map((s) => {
-      const ratings = s.serviceReviews.map((r) => r.rating);
-      const avg = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : s.rating;
-      const { serviceReviews: _r, ...rest } = s;
-      return { ...rest, rating: avg, reviewCount: ratings.length || s.reviewCount };
-    }),
-    total,
+    services: pageSlice,
+    total: filteredTotal,
     page,
     pageSize,
-    totalPages: Math.ceil(total / pageSize),
+    totalPages: Math.ceil(filteredTotal / pageSize),
   };
 }
 

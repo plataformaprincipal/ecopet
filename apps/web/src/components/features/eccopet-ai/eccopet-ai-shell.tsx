@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -28,12 +29,14 @@ import {
   AiUnavailableBanner,
   isAiNotConfiguredErrorCode,
 } from "@/components/features/ai/ai-unavailable-banner";
+import { useAiClientActions } from "@/hooks/use-ai-client-actions";
+import { geoPayloadForRequest } from "@/lib/ai/client-geo";
 import { AIConversationSidebar, type AIPreset } from "./ai-conversation-sidebar";
 import { AIChatWindow } from "./ai-chat-window";
 import { AIContextPanel } from "./ai-context-panel";
-import type { AIConversation, AIMessage, AIRecommendation } from "./types";
+import type { AIConfirmation, AIConversation, AIMessage, AIRecommendation, AIStructuredBlock } from "./types";
 
-const DEMO_LIMIT = 4;
+const GUEST_MESSAGE_LIMIT = 12;
 
 function uid() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -83,6 +86,25 @@ function isTimeoutCode(code?: string): boolean {
 
 type MobileView = "history" | "chat" | "context";
 
+type StreamEvent = {
+  type?: string;
+  text?: string;
+  content?: string;
+  code?: string;
+  message?: string;
+  messageId?: string;
+  conversationId?: string;
+  phase?: string;
+  tools?: string[];
+  action?: string;
+  payload?: Record<string, unknown>;
+  toolName?: string;
+  preview?: unknown;
+  params?: Record<string, unknown>;
+  kind?: string;
+  items?: unknown[];
+};
+
 type ChatApiJson = {
   success?: boolean;
   data?: {
@@ -101,6 +123,9 @@ export function EccoPetAIShell() {
   const { isAuthenticated } = useAuthGate();
   const { data: session } = useAuthSession();
   const { t, locale } = useTranslation();
+  const searchParams = useSearchParams();
+  const { apply: applyClientAction } = useAiClientActions();
+  const promptConsumedRef = useRef(false);
   const persona: AssistantPersona = (() => {
     const role = session?.user?.role;
     if (role === "ADMIN") return "ADMIN";
@@ -259,7 +284,7 @@ export function EccoPetAIShell() {
       const clean = text.trim();
       if (!clean || loading || aiUnavailable) return;
 
-      if (!isAuthenticated && demoCount >= DEMO_LIMIT) {
+      if (!isAuthenticated && demoCount >= GUEST_MESSAGE_LIMIT) {
         setGateOpen(true);
         return;
       }
@@ -289,8 +314,47 @@ export function EccoPetAIShell() {
 
       try {
         if (!isAuthenticated) {
-          // Guest demo: local reply only — never call OpenAI / authenticated AI routes
-          const reply = t("ecopetAi.demoReply");
+          const res = await fetch("/api/ai/public-chat", {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            signal: controller.signal,
+            body: JSON.stringify({
+              message: clean,
+              locale,
+              pagePath: typeof window !== "undefined" ? window.location.pathname : "/eccopet",
+              ...geoPayloadForRequest(),
+            }),
+          });
+          const json = (await res.json().catch(() => ({}))) as {
+            success?: boolean;
+            data?: {
+              reply?: string;
+              available?: boolean;
+              requiresSignIn?: boolean;
+            };
+            error?: { code?: string; message?: string };
+          };
+          if (!res.ok || json.success === false) {
+            applyChatError(json.error?.code, json.error?.message, convId, pendingId, userMsg.id);
+            return;
+          }
+          if (json.data?.available === false) {
+            setAiUnavailable(true);
+            setAiUnavailableMessage(json.data.reply || t("empty.ai.unavailable"));
+            updateConversation(convId, (c) => ({
+              ...c,
+              messages: c.messages.filter(
+                (m) => m.id !== pendingId && m.id !== userMsg.id
+              ),
+            }));
+            return;
+          }
+          const reply = json.data?.reply?.trim() ?? "";
+          if (!reply) {
+            applyChatError("AI_UNAVAILABLE", t("empty.ai.unavailable"), convId, pendingId);
+            return;
+          }
           updateConversation(convId, (c) => ({
             ...c,
             messages: c.messages.map((m) =>
@@ -304,6 +368,9 @@ export function EccoPetAIShell() {
                 : m
             ),
           }));
+          if (json.data?.requiresSignIn) {
+            setGateOpen(true);
+          }
           return;
         }
 
@@ -318,6 +385,7 @@ export function EccoPetAIShell() {
             conversationId: convId,
             pagePath: typeof window !== "undefined" ? window.location.pathname : "/eccopet",
             module: "ecopet-ai",
+            ...geoPayloadForRequest(),
           }),
         });
 
@@ -375,6 +443,8 @@ export function EccoPetAIShell() {
         let assembled = "";
         let serverMessageId: string | undefined;
         let serverConv = convId;
+        let pendingConfirmation: AIConfirmation | undefined;
+        const structuredBlocks: AIStructuredBlock[] = [];
 
         while (true) {
           const { done, value } = await reader.read();
@@ -385,19 +455,9 @@ export function EccoPetAIShell() {
           for (const part of parts) {
             const line = part.split("\n").find((l) => l.startsWith("data: "));
             if (!line) continue;
-            let event: {
-              type?: string;
-              text?: string;
-              content?: string;
-              code?: string;
-              message?: string;
-              messageId?: string;
-              conversationId?: string;
-              phase?: string;
-              tools?: string[];
-            };
+            let event: StreamEvent;
             try {
-              event = JSON.parse(line.slice(6)) as typeof event;
+              event = JSON.parse(line.slice(6)) as StreamEvent;
             } catch {
               continue;
             }
@@ -433,6 +493,49 @@ export function EccoPetAIShell() {
                     : m
                 ),
               }));
+            } else if (event.type === "client_action" && event.action) {
+              applyClientAction({
+                action: event.action,
+                payload: event.payload ?? {},
+              });
+            } else if (event.type === "confirmation" && event.toolName) {
+              pendingConfirmation = {
+                toolName: event.toolName,
+                preview: event.preview,
+                message: event.message,
+                params: event.params ?? {},
+                status: "pending",
+              };
+              updateConversation(convId, (c) => ({
+                ...c,
+                messages: c.messages.map((m) =>
+                  m.id === pendingId
+                    ? {
+                        ...m,
+                        role: "assistant",
+                        content: assembled,
+                        pending: false,
+                        confirmation: pendingConfirmation,
+                      }
+                    : m
+                ),
+              }));
+            } else if (event.type === "structured" && event.kind && Array.isArray(event.items)) {
+              structuredBlocks.push({ kind: event.kind, items: event.items });
+              updateConversation(convId, (c) => ({
+                ...c,
+                messages: c.messages.map((m) =>
+                  m.id === pendingId
+                    ? {
+                        ...m,
+                        role: "assistant",
+                        content: assembled,
+                        pending: true,
+                        structured: [...structuredBlocks],
+                      }
+                    : m
+                ),
+              }));
             } else if (event.type === "error") {
               applyChatError(event.code, event.message, convId, pendingId, userMsg.id);
               return;
@@ -458,6 +561,8 @@ export function EccoPetAIShell() {
                   role: "assistant",
                   content: assembled,
                   recommendations: deriveRecommendations(`${clean} ${assembled}`, t),
+                  confirmation: pendingConfirmation ?? m.confirmation,
+                  structured: structuredBlocks.length ? structuredBlocks : m.structured,
                 }
               : m
           ),
@@ -483,6 +588,7 @@ export function EccoPetAIShell() {
     [
       aiUnavailable,
       applyChatError,
+      applyClientAction,
       demoCount,
       ensureConversationId,
       isAuthenticated,
@@ -707,11 +813,120 @@ export function EccoPetAIShell() {
 
   const handleSelectTool = useCallback(
     (tool: EccoPetTool) => {
-      if (tool.status === "coming_soon") return;
-      void send(tool.demoPrompt ?? t(`ecopetAi.tools.${tool.id}.title`));
+      void send(tool.prompt);
     },
-    [send, t]
+    [send]
   );
+
+  const handleConfirmAction = useCallback(
+    async (messageId: string) => {
+      if (!activeId || !isAuthenticated) return;
+      const conv = conversations.find((c) => c.id === activeId);
+      const msg = conv?.messages.find((m) => m.id === messageId);
+      const conf = msg?.confirmation;
+      if (!conf || conf.status !== "pending") return;
+
+      updateConversation(activeId, (c) => ({
+        ...c,
+        messages: c.messages.map((m) =>
+          m.id === messageId
+            ? { ...m, confirmation: { ...conf, status: "running" as const } }
+            : m
+        ),
+      }));
+
+      try {
+        const res = await api<{
+          success?: boolean;
+          data?: { ok?: boolean; error?: string; data?: { message?: string } };
+          error?: { code?: string; message?: string };
+        }>("/api/ai/tools/confirm", {
+          method: "POST",
+          body: JSON.stringify({
+            tool: conf.toolName,
+            params: conf.params,
+            locale,
+            idempotencyKey: `confirm:${activeId}:${messageId}:${conf.toolName}`,
+          }),
+        });
+
+        const ok = res.success !== false && res.data?.ok !== false;
+        const duplicate = Boolean((res.data as { duplicate?: boolean } | undefined)?.duplicate);
+        const nested = res.data?.data;
+        const resultMsg =
+          (nested && typeof nested === "object" && "message" in nested
+            ? String((nested as { message?: string }).message ?? "")
+            : "") ||
+          res.data?.error ||
+          res.error?.message ||
+          (duplicate ? t("ecopetAi.confirm.confirm") : ok ? t("ecopetAi.confirm.confirm") : t("ecopetAi.errors.generic"));
+
+        updateConversation(activeId, (c) => ({
+          ...c,
+          messages: c.messages.map((m) =>
+            m.id === messageId
+              ? {
+                  ...m,
+                  confirmation: {
+                    ...conf,
+                    status: ok ? ("confirmed" as const) : ("error" as const),
+                    resultMessage: resultMsg,
+                  },
+                }
+              : m
+          ),
+        }));
+      } catch (err) {
+        const msgText =
+          err instanceof ApiRequestError ? err.message : t("ecopetAi.errors.generic");
+        updateConversation(activeId, (c) => ({
+          ...c,
+          messages: c.messages.map((m) =>
+            m.id === messageId
+              ? {
+                  ...m,
+                  confirmation: {
+                    ...conf,
+                    status: "error" as const,
+                    resultMessage: msgText,
+                  },
+                }
+              : m
+          ),
+        }));
+      }
+    },
+    [activeId, conversations, isAuthenticated, locale, t, updateConversation]
+  );
+
+  const handleCancelAction = useCallback(
+    (messageId: string) => {
+      if (!activeId) return;
+      updateConversation(activeId, (c) => ({
+        ...c,
+        messages: c.messages.map((m) =>
+          m.id === messageId && m.confirmation
+            ? {
+                ...m,
+                confirmation: {
+                  ...m.confirmation,
+                  status: "cancelled" as const,
+                  resultMessage: t("ecopetAi.confirm.cancelled"),
+                },
+              }
+            : m
+        ),
+      }));
+    },
+    [activeId, t, updateConversation]
+  );
+
+  useEffect(() => {
+    const prompt = searchParams.get("prompt")?.trim();
+    if (!prompt || promptConsumedRef.current) return;
+    promptConsumedRef.current = true;
+    void send(prompt);
+  }, [searchParams, send]);
 
   const handleSave = useCallback(() => {
     if (!isAuthenticated) {
@@ -835,6 +1050,16 @@ export function EccoPetAIShell() {
               }
               onSelectTool={aiUnavailable ? () => undefined : handleSelectTool}
               onAttachAttempt={handleAttach}
+              onConfirmAction={
+                aiUnavailable || !isAuthenticated
+                  ? undefined
+                  : (messageId) => void handleConfirmAction(messageId)
+              }
+              onCancelAction={
+                aiUnavailable || !isAuthenticated
+                  ? undefined
+                  : (messageId) => handleCancelAction(messageId)
+              }
               suggestions={smartSuggestions}
             />
           </div>

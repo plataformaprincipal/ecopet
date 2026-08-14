@@ -76,12 +76,12 @@
     "greeting": "¿Cómo puedo ayudarte a cuidar mejor de tu mascota hoy?",
     "greetingSub": "Pregunta sobre alimentación, rutina, salud, productos, servicios o adopción. EccoPet AI lo organiza todo para ti.",
     "suggestions": {
-      "s1": "Mi mascota se comporta de forma extraña",
-      "s2": "¿Qué alimento le conviene más?",
-      "s3": "Crea una rutina para mi perro",
-      "s4": "Quiero preparar una consulta veterinaria",
-      "s5": "Compara productos del marketplace",
-      "s6": "Quiero adoptar una mascota de forma segura"
+      "s1": "¿Qué mascotas tengo?",
+      "s2": "¿Tengo alguna vacuna atrasada?",
+      "s3": "Busca alimento para perro hasta R$150.",
+      "s4": "Busca baño y peluquería cerca de mí.",
+      "s5": "¿Qué tengo en la agenda?",
+      "s6": "Quiero adoptar un gato."
     },
     "promptPlaceholder": "Pregunta algo sobre tu mascota...",
     "attachImage": "Adjuntar imagen",
@@ -105,49 +105,52 @@
     },
     "toolsTitle": "Herramientas de IA",
     "toolStatus": {
-      "comingSoon": "Próximamente",
       "ai": "IA"
     },
     "tools": {
-      "assistant": {
-        "title": "Asistente Pet",
-        "description": "Resuelve dudas sobre la rutina, el comportamiento y el bienestar de tu mascota."
-      },
-      "nutrition": {
-        "title": "Guía de Alimentación",
-        "description": "Orientación general sobre porciones, frecuencia y tipos de alimento."
-      },
-      "reminders": {
-        "title": "Recordatorios Inteligentes",
-        "description": "Organiza vacunas, baños, consultas y medicamentos."
-      },
-      "compare": {
-        "title": "Comparador de Productos",
-        "description": "Compara alimentos, accesorios y artículos del marketplace."
-      },
-      "routine": {
-        "title": "Sugerencia de Rutina",
-        "description": "Crea una rutina equilibrada de paseos, descanso y estímulo."
-      },
-      "needs": {
-        "title": "Detector de Necesidades",
-        "description": "Identifica señales de atención en el comportamiento y la rutina."
-      },
-      "vet-prep": {
-        "title": "Preparador de Consulta Veterinaria",
-        "description": "Organiza síntomas, historial y preguntas antes de la consulta."
-      },
-      "profile": {
-        "title": "Analizador de Perfil de la Mascota",
-        "description": "Resumen inteligente del perfil, preferencias e historial."
-      },
-      "adoption": {
-        "title": "Planificador de Adopción",
-        "description": "Prepara tu hogar y tu rutina para recibir una nueva mascota."
+      "pets": {
+        "title": "Mis mascotas",
+        "description": "Resumen de las mascotas registradas, recordatorios y cuidados pendientes."
       },
       "vaccines": {
-        "title": "Organizador de Vacunas",
-        "description": "Sigue el calendario de vacunación y los refuerzos importantes."
+        "title": "Vacunas",
+        "description": "Estado del calendario de vacunación y refuerzos atrasados."
+      },
+      "marketplace": {
+        "title": "Marketplace",
+        "description": "Búsqueda de productos reales del marketplace por tipo y precio."
+      },
+      "services": {
+        "title": "Servicios",
+        "description": "Servicios de socios verificados, como baño y peluquería."
+      },
+      "agenda": {
+        "title": "Agenda",
+        "description": "Compromisos y atenciones ya reservadas."
+      },
+      "orders": {
+        "title": "Pedidos",
+        "description": "Estado de tus pedidos en el marketplace."
+      },
+      "loyalty": {
+        "title": "EccoPontos",
+        "description": "Saldo, nivel y movimientos del programa de fidelidad."
+      },
+      "adoption": {
+        "title": "Adopción",
+        "description": "Animales disponibles en ONG verificadas."
+      },
+      "social": {
+        "title": "Tendencias",
+        "description": "Temas, perfiles y destacados en tendencia en la plataforma."
+      },
+      "support": {
+        "title": "Soporte",
+        "description": "Apertura de atención con el equipo EccoPet."
+      },
+      "a11y": {
+        "title": "Accesibilidad",
+        "description": "Ajusta tema, fuente y lenguaje sencillo por comando."
       }
     },
     "sidebar": {
@@ -158,37 +161,45 @@
       "delete": "Eliminar conversación"
     },
     "presets": {
-      "assistant": {
-        "title": "Asistente Pet",
-        "prompt": "Quiero hablar sobre los cuidados generales de mi mascota."
-      },
-      "food": {
-        "title": "Alimentación",
-        "prompt": "Ayúdame con la alimentación ideal de mi mascota."
-      },
-      "routine": {
-        "title": "Rutina",
-        "prompt": "Crea una rutina equilibrada para mi mascota."
+      "pets": {
+        "title": "Mis mascotas",
+        "prompt": "¿Qué mascotas tengo?"
       },
       "vaccines": {
         "title": "Vacunas",
-        "prompt": "¿Qué vacunas y refuerzos debe seguir mi mascota?"
+        "prompt": "Muestra las vacunas de mis mascotas."
       },
-      "products": {
+      "marketplace": {
         "title": "Productos",
-        "prompt": "Recomienda productos del marketplace para mi mascota."
-      },
-      "adoption": {
-        "title": "Adopción",
-        "prompt": "Quiero adoptar una mascota de forma segura. ¿Por dónde empiezo?"
+        "prompt": "Busca alimento para perro hasta R$150."
       },
       "services": {
         "title": "Servicios",
-        "prompt": "Encuentra servicios cercanos como baño, peluquería y veterinario."
+        "prompt": "Busca baño y peluquería cerca de mí."
       },
-      "consultations": {
-        "title": "Consultas",
-        "prompt": "Ayúdame a preparar una consulta veterinaria."
+      "agenda": {
+        "title": "Agenda",
+        "prompt": "¿Qué tengo en la agenda?"
+      },
+      "orders": {
+        "title": "Pedidos",
+        "prompt": "¿Cuáles son mis pedidos?"
+      },
+      "loyalty": {
+        "title": "EccoPontos",
+        "prompt": "¿Cuántos EccoPontos tengo?"
+      },
+      "adoption": {
+        "title": "Adopción",
+        "prompt": "Quiero adoptar un gato."
+      },
+      "social": {
+        "title": "Tendencias",
+        "prompt": "¿Qué está en tendencia en EccoPet?"
+      },
+      "support": {
+        "title": "Soporte",
+        "prompt": "Necesito hablar con el soporte."
       }
     },
     "context": {
@@ -223,7 +234,20 @@
       "signIn": "Iniciar sesión",
       "createAccount": "Crear cuenta gratis"
     },
-    "demoReply": "Estoy en el modo demostración de EccoPet AI. Puedo dar orientación general sobre cuidados, alimentación, rutina y organización de la salud de tu mascota, además de sugerir productos y servicios. Crea tu cuenta para respuestas personalizadas según tus mascotas.\n\nEccoPet AI ayuda a organizar información y ofrecer recomendaciones generales, pero no sustituye la atención veterinaria."
+    "confirm": {
+      "title": "Confirma antes de ejecutar",
+      "confirm": "Confirmar",
+      "cancel": "Cancelar",
+      "cancelled": "Acción cancelada. No se cambió nada.",
+      "add_to_cart": "Añadir al carrito",
+      "create_support_ticket": "Abrir atención en soporte",
+      "prepare_appointment": "Crear cita"
+    },
+    "structured": {
+      "products": "Productos encontrados",
+      "services": "Servicios encontrados",
+      "adoptions": "Mascotas en adopción"
+    }
   },
   "public": {
     "authModal": {
@@ -1459,6 +1483,7 @@
       "noMapDataHint": "Los datos geoespaciales aparecerán cuando haya sensores registrados."
     },
     "ai": {
+      "title": "Asistente EccoPet",
       "noHistory": "Ninguna interacción encontrada.",
       "placeholder": "Pregunta sobre el cuidado de mascotas...",
       "unavailable": "IA no disponible en este momento. Inténtalo más tarde.",
@@ -1525,7 +1550,35 @@
       "notInterestedFeedback": "Mostraremos menos contenido así.",
       "savedFeedback": "Publicación guardada.",
       "unsavedFeedback": "Eliminada de guardados.",
-      "saveFailed": "No se pudo guardar la publicación."
+      "saveFailed": "No se pudo guardar la publicación.",
+      "visibilityPublic": "Hacer pública",
+      "visibilityFollowers": "Solo seguidores",
+      "visibilityPrivate": "Hacer privada",
+      "visibilityPublicDone": "La publicación ahora es pública.",
+      "visibilityFollowersDone": "Visible solo para seguidores.",
+      "visibilityPrivateDone": "Solo tú podrás ver esta publicación.",
+      "disableComments": "Desactivar comentarios",
+      "enableComments": "Activar comentarios",
+      "commentsDisabledDone": "Comentarios desactivados.",
+      "commentsEnabledDone": "Comentarios activados.",
+      "pin": "Fijar en el perfil",
+      "unpin": "Desfijar",
+      "pinDone": "Publicación fijada.",
+      "unpinDone": "Publicación desfijada.",
+      "archive": "Archivar",
+      "unarchive": "Restaurar del archivo",
+      "archiveDone": "Publicación archivada.",
+      "unarchiveDone": "Publicación restaurada.",
+      "deleteConfirmTitle": "¿Eliminar publicación?",
+      "deleteConfirmBody": "Esta acción eliminará permanentemente la publicación y no se podrá deshacer.",
+      "unfollowDone": "Dejaste de seguir este perfil.",
+      "unfollowFailed": "No se pudo dejar de seguir.",
+      "block": "Bloquear usuario",
+      "blockDone": "Usuario bloqueado.",
+      "blockFailed": "No se pudo bloquear.",
+      "mute": "Silenciar",
+      "muteDone": "Autor silenciado en tu feed.",
+      "muteFailed": "No se pudo silenciar."
     },
     "stats": {
       "likes": "{count} me gusta",

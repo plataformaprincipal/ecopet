@@ -42,6 +42,7 @@ import { useTranslation } from "@/providers/i18n-provider";
 import { deactivateVLibras } from "@/lib/accessibility/vlibras-loader";
 import { useAriaAnnounce } from "./aria-live-region";
 import { useSimpleLanguage } from "@/hooks/use-simple-language";
+import { ACCESSIBILITY_OPEN_EVENT } from "@/lib/accessibility/open-event";
 type BooleanKey = {
   [K in keyof AccessibilityPreferences]: AccessibilityPreferences[K] extends boolean ? K : never;
 }[keyof AccessibilityPreferences];
@@ -136,6 +137,15 @@ export function AccessibilityToolbar() {
       setOpen((v) => !v);
     }
   }, [minimized]);
+
+  useEffect(() => {
+    const onOpenRequest = () => {
+      setMinimized(false);
+      setOpen(true);
+    };
+    window.addEventListener(ACCESSIBILITY_OPEN_EVENT, onOpenRequest);
+    return () => window.removeEventListener(ACCESSIBILITY_OPEN_EVENT, onOpenRequest);
+  }, []);
 
   return (
     <div

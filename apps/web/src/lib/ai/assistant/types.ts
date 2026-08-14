@@ -28,6 +28,18 @@ export type AssistantStreamEvent =
     }
   | { type: "tools"; tools: string[] }
   | { type: "delta"; text: string }
+  /** Ação da allowlist para o frontend executar (tema, a11y, navegação). */
+  | { type: "client_action"; action: string; payload: Record<string, unknown> }
+  /** Prévia de mutação aguardando confirmação explícita do usuário. */
+  | {
+      type: "confirmation";
+      toolName: string;
+      preview: unknown;
+      message?: string;
+      params?: Record<string, unknown>;
+    }
+  /** Resultado tabular de consultas (produtos, serviços, adoções). */
+  | { type: "structured"; kind: string; items: unknown[] }
   | {
       type: "done";
       conversationId: string;

@@ -17,6 +17,8 @@ export function AIChatWindow({
   onRegenerate,
   onSelectTool,
   onAttachAttempt,
+  onConfirmAction,
+  onCancelAction,
   suggestions,
 }: {
   messages: AIMessage[];
@@ -27,6 +29,8 @@ export function AIChatWindow({
   onRegenerate?: () => void;
   onSelectTool: (tool: EccoPetTool) => void;
   onAttachAttempt?: () => void;
+  onConfirmAction?: (messageId: string) => void;
+  onCancelAction?: (messageId: string) => void;
   suggestions?: string[];
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -56,6 +60,8 @@ export function AIChatWindow({
                 conversationId={conversationId ?? undefined}
                 showRegenerate={Boolean(onRegenerate) && m.id === lastAssistantId && !loading}
                 onRegenerate={onRegenerate}
+                onConfirmAction={onConfirmAction}
+                onCancelAction={onCancelAction}
               />
             ))}
           </div>

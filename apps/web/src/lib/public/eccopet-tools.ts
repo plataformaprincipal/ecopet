@@ -1,19 +1,21 @@
 import type { LucideIcon } from "lucide-react";
 import {
-  Apple,
-  Bell,
-  Brain,
-  Calendar,
-  ClipboardList,
-  GitCompare,
+  Accessibility,
+  CalendarClock,
+  Coins,
   Heart,
-  MessageCircle,
-  ScanSearch,
+  Headset,
+  PawPrint,
+  Package,
+  Scissors,
+  ShoppingBag,
   Sparkles,
-  Stethoscope,
+  Syringe,
+  TrendingUp,
 } from "lucide-react";
 
-export type EccoPetToolStatus = "demo" | "coming_soon" | "available";
+/** Somente ferramentas reais entram no catálogo — nada de demonstração. */
+export type EccoPetToolStatus = "available";
 
 export type EccoPetTool = {
   id: string;
@@ -21,8 +23,8 @@ export type EccoPetTool = {
   description: string;
   icon: LucideIcon;
   status: EccoPetToolStatus;
-  demoPrompt?: string;
-  demoReply?: string;
+  /** Prompt real enviado ao assistente ao clicar na ferramenta. */
+  prompt: string;
 };
 
 export const ECCOPET_AI_DISCLAIMER =
@@ -30,89 +32,92 @@ export const ECCOPET_AI_DISCLAIMER =
 
 export const ECCOPET_TOOLS: EccoPetTool[] = [
   {
-    id: "assistant",
-    title: "Assistente Pet",
-    description: "Tire dúvidas sobre rotina, comportamento e bem-estar do seu pet.",
-    icon: MessageCircle,
-    status: "demo",
-    demoPrompt: "Meu cão está muito agitado à noite. O que posso fazer?",
-    demoReply:
-      "Modo demonstração: mantenha horários regulares de passeio, enriquecimento ambiental e evite telas antes de dormir. Se persistir, consulte um veterinário comportamentalista.",
-  },
-  {
-    id: "nutrition",
-    title: "Guia de Alimentação",
-    description: "Orientações gerais sobre porções, frequência e tipos de alimento.",
-    icon: Apple,
-    status: "demo",
-    demoPrompt: "Quantas vezes devo alimentar um filhote de gato?",
-    demoReply:
-      "Modo demonstração: filhotes geralmente comem 3–4 refeições/dia. Ajuste conforme peso, raça e orientação do médico veterinário.",
-  },
-  {
-    id: "reminders",
-    title: "Lembretes Inteligentes",
-    description: "Organize vacinas, banho, consultas e medicamentos.",
-    icon: Bell,
-    status: "coming_soon",
-  },
-  {
-    id: "compare",
-    title: "Comparador de Produtos",
-    description: "Compare rações, acessórios e itens do marketplace.",
-    icon: GitCompare,
-    status: "coming_soon",
-  },
-  {
-    id: "routine",
-    title: "Sugestão de Rotina",
-    description: "Monte uma rotina equilibrada de passeios, descanso e estímulo.",
-    icon: Calendar,
-    status: "demo",
-    demoPrompt: "Rotina para cachorro adulto em apartamento",
-    demoReply:
-      "Modo demonstração: 2 passeios/dia (15–30 min), brincadeiras mentais, horários fixos de refeição e descanso. Personalize com seu veterinário.",
-  },
-  {
-    id: "needs",
-    title: "Detector de Necessidades",
-    description: "Identifique sinais de atenção em comportamento e rotina.",
-    icon: ScanSearch,
-    status: "coming_soon",
-  },
-  {
-    id: "vet-prep",
-    title: "Preparador de Consulta Veterinária",
-    description: "Organize sintomas, histórico e perguntas antes da consulta.",
-    icon: Stethoscope,
-    status: "demo",
-    demoPrompt: "Checklist para consulta de check-up anual",
-    demoReply:
-      "Modo demonstração: anote vacinas, vermífugo, alimentação, peso, mudanças de comportamento e medicamentos. Leve exames recentes, se houver.",
-  },
-  {
-    id: "profile",
-    title: "Analisador de Perfil do Pet",
-    description: "Resumo inteligente do perfil, preferências e histórico.",
-    icon: Brain,
-    status: "coming_soon",
-  },
-  {
-    id: "adoption",
-    title: "Planejador de Adoção",
-    description: "Prepare sua casa e rotina para receber um novo pet.",
-    icon: Heart,
-    status: "demo",
-    demoPrompt: "Primeiros passos para adotar um gato adulto",
-    demoReply:
-      "Modo demonstração: ambiente seguro, caixa de areia, alimentação adequada, visita veterinária inicial e paciência na adaptação.",
+    id: "pets",
+    title: "Meus pets",
+    description: "Resumo dos pets cadastrados, lembretes e cuidados em aberto.",
+    icon: PawPrint,
+    status: "available",
+    prompt: "Quais pets eu tenho?",
   },
   {
     id: "vaccines",
-    title: "Organizador de Vacinas",
-    description: "Acompanhe calendário vacinal e reforços importantes.",
-    icon: ClipboardList,
-    status: "coming_soon",
+    title: "Vacinas",
+    description: "Situação do calendário vacinal e reforços atrasados.",
+    icon: Syringe,
+    status: "available",
+    prompt: "Tenho alguma vacina atrasada?",
+  },
+  {
+    id: "marketplace",
+    title: "Marketplace",
+    description: "Busca de produtos reais do marketplace por tipo e preço.",
+    icon: ShoppingBag,
+    status: "available",
+    prompt: "Procure ração para cachorro até R$150.",
+  },
+  {
+    id: "services",
+    title: "Serviços",
+    description: "Serviços de parceiros verificados, como banho e tosa.",
+    icon: Scissors,
+    status: "available",
+    prompt: "Procure banho e tosa perto de mim.",
+  },
+  {
+    id: "agenda",
+    title: "Agenda",
+    description: "Compromissos e atendimentos já marcados.",
+    icon: CalendarClock,
+    status: "available",
+    prompt: "O que tenho marcado na agenda?",
+  },
+  {
+    id: "orders",
+    title: "Pedidos",
+    description: "Status dos seus pedidos no marketplace.",
+    icon: Package,
+    status: "available",
+    prompt: "Quais são meus pedidos?",
+  },
+  {
+    id: "loyalty",
+    title: "EccoPontos",
+    description: "Saldo, nível e movimentações do programa de fidelidade.",
+    icon: Coins,
+    status: "available",
+    prompt: "Quantos EccoPontos eu tenho?",
+  },
+  {
+    id: "adoption",
+    title: "Adoção",
+    description: "Animais disponíveis em ONGs verificadas.",
+    icon: Heart,
+    status: "available",
+    prompt: "Quero adotar um gato.",
+  },
+  {
+    id: "social",
+    title: "Em alta",
+    description: "Assuntos, perfis e destaques em alta na plataforma.",
+    icon: TrendingUp,
+    status: "available",
+    prompt: "O que está em alta na EccoPet?",
+  },
+  {
+    id: "support",
+    title: "Suporte",
+    description: "Abertura de atendimento com a equipe EccoPet.",
+    icon: Headset,
+    status: "available",
+    prompt: "Preciso falar com o suporte.",
+  },
+  {
+    id: "a11y",
+    title: "Acessibilidade",
+    description: "Ajuste tema, fonte e linguagem simples por comando.",
+    icon: Accessibility,
+    status: "available",
+    prompt: "Ative linguagem simples.",
   },
 ];
 

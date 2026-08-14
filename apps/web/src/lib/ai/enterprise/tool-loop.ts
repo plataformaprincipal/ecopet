@@ -36,6 +36,8 @@ export async function runFunctionCallingLoop(input: {
   messages: AiChatMessage[];
   conversationId?: string;
   confirmed?: boolean;
+  lat?: number;
+  lng?: number;
 }): Promise<ToolLoopResult> {
   const started = Date.now();
   const schemas = listFunctionCallingSchemas(input.role);
@@ -81,6 +83,8 @@ export async function runFunctionCallingLoop(input: {
           persona: input.persona,
           locale: input.locale,
           confirmed: input.confirmed,
+          lat: input.lat,
+          lng: input.lng,
         }
       );
 

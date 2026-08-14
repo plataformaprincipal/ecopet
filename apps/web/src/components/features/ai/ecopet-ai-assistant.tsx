@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Send, Sparkles, PawPrint, ShoppingBag, Stethoscope,
@@ -9,26 +10,55 @@ import {
 } from "lucide-react";
 import { EcopetSymbol } from "@/components/shared/brand/ecopet-symbol";
 import { Button } from "@/components/ui/button";
-import { api } from "@/lib/api";
-import { ApiRequestError } from "@/lib/api-errors";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/providers/i18n-provider";
+import { useAiClientActions } from "@/hooks/use-ai-client-actions";
+import { geoPayloadForRequest } from "@/lib/ai/client-geo";
 import {
   AiUnavailableBanner,
   isAiNotConfiguredErrorCode,
 } from "@/components/features/ai/ai-unavailable-banner";
 import { AI_SAFETY_DISCLAIMER } from "@/lib/ai/ai-disclaimer";
 
-const QUICK_COMMANDS = [
-  { labelKey: "empty.ai.quickProducts", icon: ShoppingBag, href: "/marketplace" },
-  { labelKey: "empty.ai.quickVet", icon: Stethoscope, href: "/veterinarios" },
-  { labelKey: "empty.ai.quickExplore", icon: Compass, href: "/explorar" },
-  { labelKey: "empty.ai.quickPet", icon: PawPrint, href: "/meu-pet" },
-  { labelKey: "empty.ai.quickSchedule", icon: Calendar, href: "/agenda" },
-] as const;
+type QuickCommand = { labelKey: string; icon: typeof ShoppingBag; prompt: string };
+
+const BASE_QUICK: QuickCommand[] = [
+  { labelKey: "empty.ai.quickProducts", icon: ShoppingBag, prompt: "Procure ração para cachorro até R$150." },
+  { labelKey: "empty.ai.quickVet", icon: Stethoscope, prompt: "Procure banho e tosa perto de mim." },
+  { labelKey: "empty.ai.quickExplore", icon: Compass, prompt: "O que está em alta na EccoPet?" },
+  { labelKey: "empty.ai.quickPet", icon: PawPrint, prompt: "Quais pets eu tenho?" },
+  { labelKey: "empty.ai.quickSchedule", icon: Calendar, prompt: "O que tenho marcado na agenda?" },
+];
+
+function quickCommandsForPath(pathname: string): QuickCommand[] {
+  if (pathname.includes("/marketplace")) {
+    return [
+      { labelKey: "empty.ai.quickProducts", icon: ShoppingBag, prompt: "Mostre produtos para meu pet." },
+      { labelKey: "empty.ai.quickVet", icon: Stethoscope, prompt: "Encontre serviços perto de mim." },
+      ...BASE_QUICK.slice(2, 3),
+    ];
+  }
+  if (pathname.includes("/meu-pet") || pathname.includes("/cliente/pets")) {
+    return [
+      { labelKey: "empty.ai.quickPet", icon: PawPrint, prompt: "Tenho alguma vacina atrasada?" },
+      { labelKey: "empty.ai.quickSchedule", icon: Calendar, prompt: "Próximos compromissos do meu pet." },
+      ...BASE_QUICK.slice(0, 2),
+    ];
+  }
+  if (pathname.includes("/adocao")) {
+    return [
+      { labelKey: "empty.ai.quickExplore", icon: Compass, prompt: "Quero adotar um gato." },
+      ...BASE_QUICK.slice(0, 2),
+    ];
+  }
+  return BASE_QUICK;
+}
 
 export function EcopetAIAssistant() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const pathname = usePathname();
+  const { apply: applyClientAction } = useAiClientActions();
+  const quickCommands = useMemo(() => quickCommandsForPath(pathname), [pathname]);
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
@@ -37,58 +67,145 @@ export function EcopetAIAssistant() {
   const [unavailable, setUnavailable] = useState(false);
   const [unavailableMessage, setUnavailableMessage] = useState<string | null>(null);
 
+  const sendText = useCallback(
+    async (raw: string) => {
+      const userMsg = raw.trim();
+      if (!userMsg || loading || unavailable) return;
+      setError(null);
+      setMessages((m) => [...m, { role: "user", content: userMsg }]);
+      setLoading(true);
+
+      try {
+        const res = await fetch("/api/ai/chat/stream", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
+          body: JSON.stringify({
+            message: userMsg,
+            locale,
+            pagePath: pathname,
+            module: "assistant",
+            ...geoPayloadForRequest(),
+          }),
+        });
+
+        if (res.status === 501 || !res.ok || !res.body) {
+          const fallback = await fetch("/api/ai/chat", {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              message: userMsg,
+              type: "general",
+              locale,
+              module: "ecopet-ai",
+            }),
+          });
+          const json = (await fallback.json().catch(() => ({}))) as {
+            success?: boolean;
+            data?: { content?: string; reply?: string };
+            error?: { code?: string; message?: string };
+          };
+          if (!fallback.ok || json.success === false || isAiNotConfiguredErrorCode(json.error?.code)) {
+            setUnavailable(true);
+            setUnavailableMessage(json.error?.message ?? t("empty.ai.unavailable"));
+            setMessages((m) => m.slice(0, -1));
+            setMessage(userMsg);
+            return;
+          }
+          const content = (json.data?.content ?? json.data?.reply)?.trim();
+          if (!content) {
+            setError(t("empty.ai.unavailable"));
+            setMessages((m) => m.slice(0, -1));
+            setMessage(userMsg);
+            return;
+          }
+          setMessages((m) => [...m, { role: "assistant", content }]);
+          return;
+        }
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        let assembled = "";
+        setMessages((m) => [...m, { role: "assistant", content: "" }]);
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const parts = buffer.split("\n\n");
+          buffer = parts.pop() ?? "";
+          for (const part of parts) {
+            const line = part.split("\n").find((l) => l.startsWith("data: "));
+            if (!line) continue;
+            let event: {
+              type?: string;
+              text?: string;
+              content?: string;
+              code?: string;
+              message?: string;
+              action?: string;
+              payload?: Record<string, unknown>;
+            };
+            try {
+              event = JSON.parse(line.slice(6)) as typeof event;
+            } catch {
+              continue;
+            }
+            if (event.type === "delta" && event.text) {
+              assembled += event.text;
+              setMessages((m) => {
+                const copy = [...m];
+                copy[copy.length - 1] = { role: "assistant", content: assembled };
+                return copy;
+              });
+            } else if (event.type === "client_action" && event.action) {
+              applyClientAction({ action: event.action, payload: event.payload ?? {} });
+            } else if (event.type === "error") {
+              if (isAiNotConfiguredErrorCode(event.code)) {
+                setUnavailable(true);
+                setUnavailableMessage(event.message ?? t("empty.ai.unavailable"));
+              } else {
+                setError(event.message ?? t("empty.ai.unavailable"));
+              }
+              setMessages((m) => m.slice(0, -2));
+              setMessage(userMsg);
+              return;
+            } else if (event.type === "done") {
+              assembled = event.content?.trim() || assembled;
+            }
+          }
+        }
+
+        if (!assembled.trim()) {
+          setError(t("empty.ai.unavailable"));
+          setMessages((m) => m.slice(0, -2));
+          setMessage(userMsg);
+          return;
+        }
+        setMessages((m) => {
+          const copy = [...m];
+          copy[copy.length - 1] = { role: "assistant", content: assembled };
+          return copy;
+        });
+      } catch (err) {
+        setError(err instanceof Error ? err.message : t("empty.ai.unavailable"));
+        setMessages((m) => m.slice(0, -1));
+        setMessage(userMsg);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [applyClientAction, loading, locale, pathname, t, unavailable]
+  );
+
   const send = useCallback(async () => {
-    if (!message.trim() || loading || unavailable) return;
     const userMsg = message.trim();
+    if (!userMsg) return;
     setMessage("");
-    setError(null);
-    setMessages((m) => [...m, { role: "user", content: userMsg }]);
-    setLoading(true);
-    try {
-      const res = await api<{
-        success?: boolean;
-        data?: { reply?: string; content?: string };
-        reply?: string;
-        content?: string;
-        error?: { code?: string; message?: string };
-      }>("/api/ai/chat", {
-        method: "POST",
-        body: JSON.stringify({ message: userMsg, type: "general" }),
-      });
-
-      if (res.success === false || isAiNotConfiguredErrorCode(res.error?.code)) {
-        setUnavailable(true);
-        setUnavailableMessage(res.error?.message ?? t("empty.ai.unavailable"));
-        setMessages((m) => m.slice(0, -1));
-        setMessage(userMsg);
-        return;
-      }
-
-      const content = (res.data?.content ?? res.data?.reply ?? res.content ?? res.reply)?.trim();
-      if (!content) {
-        setError(t("empty.ai.unavailable"));
-        setMessages((m) => m.slice(0, -1));
-        setMessage(userMsg);
-        return;
-      }
-      setMessages((m) => [...m, { role: "assistant", content }]);
-    } catch (err) {
-      const code = err instanceof ApiRequestError ? err.code : undefined;
-      const msg = err instanceof Error ? err.message : t("empty.ai.unavailable");
-      if (isAiNotConfiguredErrorCode(code)) {
-        setUnavailable(true);
-        setUnavailableMessage(msg);
-        setMessages((m) => m.slice(0, -1));
-        setMessage(userMsg);
-      } else {
-        setError(msg);
-        setMessages((m) => m.slice(0, -1));
-        setMessage(userMsg);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [message, loading, unavailable, t]);
+    await sendText(userMsg);
+  }, [message, sendText]);
 
   return (
     <>
@@ -124,10 +241,10 @@ export function EcopetAIAssistant() {
               exit={{ opacity: 0, y: 40, scale: 0.95 }}
               className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] left-4 z-50 flex h-[min(520px,calc(100vh-8rem))] w-[min(400px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-ecopet-gray/10 bg-white shadow-2xl dark:bg-[#0f1419] lg:bottom-6"
             >
-              <header className="flex items-center justify-between border-b px-4 py-3">
+              <header className="flex items-center justify-between border-b px-4 py-3 dark:border-white/10">
                 <div className="flex items-center gap-2">
                   <Sparkles className="h-5 w-5 text-ecopet-green" />
-                  <span className="font-display font-bold">ECOPET IA</span>
+                  <span className="font-display font-bold">{t("empty.ai.title")}</span>
                 </div>
                 <button type="button" onClick={() => setOpen(false)} aria-label={t("common.cancel")}>
                   <X className="h-5 w-5" />
@@ -145,15 +262,10 @@ export function EcopetAIAssistant() {
                   </div>
                 ) : (
                   messages.map((m, i) => (
-                    <div key={i} className={cn("rounded-xl px-3 py-2 text-sm", m.role === "user" ? "ml-8 bg-ecopet-green/10" : "mr-8 bg-ecopet-gray/10")}>
-                      {m.content}
+                    <div key={i} className={cn("rounded-xl px-3 py-2 text-sm", m.role === "user" ? "ml-8 bg-ecopet-green/10 dark:bg-ecopet-green/20" : "mr-8 bg-ecopet-gray/10 dark:bg-white/5")}>
+                      {m.content || (loading && i === messages.length - 1 ? t("social.assistant.thinking") : "")}
                     </div>
                   ))
-                )}
-                {loading && (
-                  <p className="text-sm text-ecopet-gray" role="status">
-                    Gerando resposta…
-                  </p>
                 )}
                 {error && (
                   <p className="text-xs text-red-600" role="alert">
@@ -162,15 +274,21 @@ export function EcopetAIAssistant() {
                 )}
               </div>
 
-              <div className="border-t p-3 space-y-2">
+              <div className="border-t p-3 space-y-2 dark:border-white/10">
                 <p className="text-[10px] leading-snug text-ecopet-gray">
-                  {AI_SAFETY_DISCLAIMER["pt-BR"]}
+                  {AI_SAFETY_DISCLAIMER[locale as keyof typeof AI_SAFETY_DISCLAIMER] ?? AI_SAFETY_DISCLAIMER["pt-BR"]}
                 </p>
                 <div className="flex flex-wrap gap-1">
-                  {QUICK_COMMANDS.map(({ labelKey, icon: Icon, href }) => (
-                    <Link key={labelKey} href={href} className="flex items-center gap-1 rounded-full bg-ecopet-green/10 px-2 py-1 text-[10px] font-semibold text-ecopet-green">
+                  {quickCommands.map(({ labelKey, icon: Icon, prompt }) => (
+                    <button
+                      key={labelKey}
+                      type="button"
+                      disabled={loading || unavailable}
+                      onClick={() => void sendText(prompt)}
+                      className="flex items-center gap-1 rounded-full bg-ecopet-green/10 px-2 py-1 text-[10px] font-semibold text-ecopet-green disabled:opacity-50"
+                    >
                       <Icon className="h-3 w-3" /> {t(labelKey)}
-                    </Link>
+                    </button>
                   ))}
                 </div>
                 <div className="flex gap-2">
@@ -178,15 +296,15 @@ export function EcopetAIAssistant() {
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && void send()}
-                    placeholder={unavailable ? "IA indisponível" : t("empty.ai.placeholder")}
+                    placeholder={unavailable ? t("empty.ai.unavailable") : t("empty.ai.placeholder")}
                     disabled={loading || unavailable}
-                    className="flex-1 rounded-xl border px-3 py-2 text-sm disabled:opacity-60"
+                    className="flex-1 rounded-xl border px-3 py-2 text-sm disabled:opacity-60 dark:border-white/10 dark:bg-zinc-950"
                   />
                   <Button size="icon" onClick={() => void send()} disabled={loading || unavailable || !message.trim()}>
                     <Send className="h-4 w-4" />
                   </Button>
                 </div>
-                <Link href="/ia" className="flex items-center justify-center gap-1 text-xs text-ecopet-green">
+                <Link href="/eccopet" className="flex items-center justify-center gap-1 text-xs text-ecopet-green">
                   {t("empty.ai.fullPage")} <ChevronRight className="h-3 w-3" />
                 </Link>
               </div>

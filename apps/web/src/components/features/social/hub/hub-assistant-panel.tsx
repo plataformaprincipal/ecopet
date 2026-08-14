@@ -5,9 +5,14 @@ import Link from "next/link";
 import { Send, Sparkles, ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
+import { ApiRequestError } from "@/lib/api-errors";
 import { cn } from "@/lib/utils";
 import { useAssistantStore } from "@/store/assistant-store";
 import { useTranslation } from "@/providers/i18n-provider";
+import {
+  AiUnavailableBanner,
+  isAiNotConfiguredErrorCode,
+} from "@/components/features/ai/ai-unavailable-banner";
 
 type ChatTurn = { role: "user" | "assistant"; content: string };
 
@@ -19,10 +24,12 @@ export function HubAssistantPanel({ className }: { className?: string }) {
     t("social.assistant.s3"),
     t("social.assistant.s4"),
   ];
-  const DEMO_REPLY = t("social.assistant.demoReply");
   const [messages, setMessages] = useState<ChatTurn[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [unavailable, setUnavailable] = useState(false);
+  const [unavailableMessage, setUnavailableMessage] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const pendingPrompt = useAssistantStore((s) => s.pendingPrompt);
   const consumePrompt = useAssistantStore((s) => s.consumePrompt);
@@ -30,8 +37,9 @@ export function HubAssistantPanel({ className }: { className?: string }) {
   const send = useCallback(
     async (raw?: string) => {
       const text = (raw ?? input).trim();
-      if (!text || loading) return;
+      if (!text || loading || unavailable) return;
       setInput("");
+      setError(null);
       setMessages((m) => [...m, { role: "user", content: text }]);
       setLoading(true);
       try {
@@ -40,19 +48,51 @@ export function HubAssistantPanel({ className }: { className?: string }) {
           data?: { reply?: string; content?: string };
           reply?: string;
           content?: string;
+          error?: { code?: string; message?: string };
         }>("/api/ai/chat", {
           method: "POST",
-          body: JSON.stringify({ message: text, type: "general" }),
+          body: JSON.stringify({
+            message: text,
+            type: "general",
+            module: "ecopet-ai",
+            pagePath: typeof window !== "undefined" ? window.location.pathname : undefined,
+          }),
         });
-        const content = res.data?.content ?? res.data?.reply ?? res.content ?? res.reply ?? DEMO_REPLY;
+
+        if (res.success === false || isAiNotConfiguredErrorCode(res.error?.code)) {
+          setUnavailable(true);
+          setUnavailableMessage(res.error?.message ?? t("empty.ai.unavailable"));
+          setMessages((m) => m.slice(0, -1));
+          setInput(text);
+          return;
+        }
+
+        const content = (res.data?.content ?? res.data?.reply ?? res.content ?? res.reply)?.trim();
+        if (!content) {
+          setError(t("empty.ai.unavailable"));
+          setMessages((m) => m.slice(0, -1));
+          setInput(text);
+          return;
+        }
         setMessages((m) => [...m, { role: "assistant", content }]);
-      } catch {
-        setMessages((m) => [...m, { role: "assistant", content: DEMO_REPLY }]);
+      } catch (err) {
+        const code = err instanceof ApiRequestError ? err.code : undefined;
+        const msg = err instanceof Error ? err.message : t("empty.ai.unavailable");
+        if (isAiNotConfiguredErrorCode(code)) {
+          setUnavailable(true);
+          setUnavailableMessage(msg);
+          setMessages((m) => m.slice(0, -1));
+          setInput(text);
+        } else {
+          setError(msg);
+          setMessages((m) => m.slice(0, -1));
+          setInput(text);
+        }
       } finally {
         setLoading(false);
       }
     },
-    [input, loading, DEMO_REPLY]
+    [input, loading, unavailable, t]
   );
 
   useEffect(() => {
@@ -91,7 +131,10 @@ export function HubAssistantPanel({ className }: { className?: string }) {
       </header>
 
       <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-4" aria-live="polite">
-        {messages.length === 0 ? (
+        {unavailable ? (
+          <AiUnavailableBanner message={unavailableMessage ?? undefined} />
+        ) : null}
+        {messages.length === 0 && !unavailable ? (
           <div className="space-y-3">
             <p className="text-sm text-zinc-500">
               {t("social.assistant.greeting")}
@@ -130,6 +173,11 @@ export function HubAssistantPanel({ className }: { className?: string }) {
             {t("social.assistant.thinking")}
           </div>
         ) : null}
+        {error ? (
+          <p className="text-xs text-red-600" role="alert">
+            {error}
+          </p>
+        ) : null}
       </div>
 
       <div className="border-t border-zinc-100 p-3 dark:border-white/5">
@@ -142,10 +190,11 @@ export function HubAssistantPanel({ className }: { className?: string }) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && void send()}
-            placeholder={t("social.assistant.placeholder")}
-            className="flex-1 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm focus:border-ecopet-green focus:outline-none dark:border-white/10 dark:bg-zinc-950"
+            placeholder={unavailable ? t("empty.ai.unavailable") : t("social.assistant.placeholder")}
+            disabled={loading || unavailable}
+            className="flex-1 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm focus:border-ecopet-green focus:outline-none disabled:opacity-60 dark:border-white/10 dark:bg-zinc-950"
           />
-          <Button size="icon" className="rounded-xl" onClick={() => void send()} disabled={loading || !input.trim()}>
+          <Button size="icon" className="rounded-xl" onClick={() => void send()} disabled={loading || unavailable || !input.trim()}>
             <Send className="h-4 w-4" aria-hidden />
           </Button>
         </div>

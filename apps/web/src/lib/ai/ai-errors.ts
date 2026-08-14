@@ -51,7 +51,6 @@ export class AiRuntimeError extends Error {
   }
 }
 
-/** Mensagens seguras para o usuário — sem stack, chave ou prompt interno. */
 export function userFacingAiMessage(code: string, locale: "pt-BR" | "en-US" | "es-ES" = "pt-BR"): string {
   const messages: Record<string, Record<"pt-BR" | "en-US" | "es-ES", string>> = {
     AI_NOT_CONFIGURED: {
@@ -112,4 +111,43 @@ export function userFacingAiMessage(code: string, locale: "pt-BR" | "en-US" | "e
   };
 
   return messages[code]?.[locale] ?? messages.AI_UNAVAILABLE[locale];
+}
+
+/** Nunca repassar mensagens brutas do provider (podem conter fragmentos de API key). */
+export function sanitizeAiErrorForClient(
+  message: string,
+  locale: "pt-BR" | "en-US" | "es-ES" = "pt-BR"
+): string {
+  const lower = message.toLowerCase();
+  if (
+    lower.includes("incorrect api key") ||
+    lower.includes("invalid api key") ||
+    lower.includes("authentication") ||
+    /sk-[a-z0-9_-]{8,}/i.test(message)
+  ) {
+    return userFacingAiMessage(AI_RUNTIME_ERROR_CODES.UNAVAILABLE, locale);
+  }
+  return message.replace(/sk-[a-zA-Z0-9_-]+/g, "[redacted]").slice(0, 160);
+}
+
+/** Diagnóstico interno — nunca logar message bruta se contiver sk-*. */
+export function classifyProviderErrorForLog(error: unknown): {
+  provider: string;
+  status: number | null;
+  code: string;
+  message: string;
+} {
+  const rec = error && typeof error === "object" ? (error as Record<string, unknown>) : null;
+  const status = typeof rec?.status === "number" ? rec.status : null;
+  const rawMessage = error instanceof Error ? error.message : String(error ?? "unknown");
+  const message = sanitizeAiErrorForClient(rawMessage);
+
+  let code = typeof rec?.code === "string" ? rec.code : "UNKNOWN";
+  if (status === 401) code = "OPENAI_AUTH_401";
+  else if (status === 429) code = "OPENAI_RATE_429";
+  else if (status === 404) code = "OPENAI_MODEL_404";
+  else if (/timeout|abort|timed out/i.test(rawMessage)) code = "OPENAI_TIMEOUT";
+  else if (error instanceof Error && error.name === "SyntaxError") code = "PARSE_ERROR";
+
+  return { provider: "openai", status, code, message };
 }

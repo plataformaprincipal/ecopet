@@ -76,12 +76,12 @@
     "greeting": "How can I help you take better care of your pet today?",
     "greetingSub": "Ask about food, routine, health, products, services or adoption. EccoPet AI organizes everything for you.",
     "suggestions": {
-      "s1": "My pet is behaving strangely",
-      "s2": "Which food fits best?",
-      "s3": "Build a routine for my dog",
-      "s4": "I want to prepare a vet appointment",
-      "s5": "Compare marketplace products",
-      "s6": "I want to adopt a pet safely"
+      "s1": "Which pets do I have?",
+      "s2": "Do I have any overdue vaccines?",
+      "s3": "Find dog food up to R$150.",
+      "s4": "Find grooming services near me.",
+      "s5": "What's on my schedule?",
+      "s6": "I want to adopt a cat."
     },
     "promptPlaceholder": "Ask something about your pet...",
     "attachImage": "Attach image",
@@ -105,49 +105,52 @@
     },
     "toolsTitle": "AI tools",
     "toolStatus": {
-      "comingSoon": "Coming soon",
       "ai": "AI"
     },
     "tools": {
-      "assistant": {
-        "title": "Pet Assistant",
-        "description": "Get answers about your pet's routine, behavior and well-being."
-      },
-      "nutrition": {
-        "title": "Feeding Guide",
-        "description": "General guidance on portions, frequency and food types."
-      },
-      "reminders": {
-        "title": "Smart Reminders",
-        "description": "Organize vaccines, baths, appointments and medication."
-      },
-      "compare": {
-        "title": "Product Comparator",
-        "description": "Compare food, accessories and marketplace items."
-      },
-      "routine": {
-        "title": "Routine Suggestion",
-        "description": "Build a balanced routine of walks, rest and stimulation."
-      },
-      "needs": {
-        "title": "Needs Detector",
-        "description": "Spot warning signs in behavior and routine."
-      },
-      "vet-prep": {
-        "title": "Vet Visit Prep",
-        "description": "Organize symptoms, history and questions before the visit."
-      },
-      "profile": {
-        "title": "Pet Profile Analyzer",
-        "description": "Smart summary of profile, preferences and history."
-      },
-      "adoption": {
-        "title": "Adoption Planner",
-        "description": "Prepare your home and routine to welcome a new pet."
+      "pets": {
+        "title": "My pets",
+        "description": "Summary of registered pets, reminders and open care items."
       },
       "vaccines": {
-        "title": "Vaccine Organizer",
-        "description": "Track the vaccination schedule and important boosters."
+        "title": "Vaccines",
+        "description": "Vaccination schedule status and overdue boosters."
+      },
+      "marketplace": {
+        "title": "Marketplace",
+        "description": "Search real marketplace products by type and price."
+      },
+      "services": {
+        "title": "Services",
+        "description": "Services from verified partners, such as grooming."
+      },
+      "agenda": {
+        "title": "Schedule",
+        "description": "Appointments and services already booked."
+      },
+      "orders": {
+        "title": "Orders",
+        "description": "Status of your marketplace orders."
+      },
+      "loyalty": {
+        "title": "EccoPontos",
+        "description": "Balance, tier and history of the loyalty program."
+      },
+      "adoption": {
+        "title": "Adoption",
+        "description": "Animals available at verified NGOs."
+      },
+      "social": {
+        "title": "Trending",
+        "description": "Topics, profiles and highlights trending on the platform."
+      },
+      "support": {
+        "title": "Support",
+        "description": "Open a ticket with the EccoPet team."
+      },
+      "a11y": {
+        "title": "Accessibility",
+        "description": "Adjust theme, font size and plain language by command."
       }
     },
     "sidebar": {
@@ -158,37 +161,45 @@
       "delete": "Delete chat"
     },
     "presets": {
-      "assistant": {
-        "title": "Pet Assistant",
-        "prompt": "I want to talk about my pet's general care."
-      },
-      "food": {
-        "title": "Food",
-        "prompt": "Help me with my pet's ideal diet."
-      },
-      "routine": {
-        "title": "Routine",
-        "prompt": "Build a balanced routine for my pet."
+      "pets": {
+        "title": "My pets",
+        "prompt": "Which pets do I have?"
       },
       "vaccines": {
         "title": "Vaccines",
-        "prompt": "Which vaccines and boosters should my pet keep up with?"
+        "prompt": "Show my pets' vaccines."
       },
-      "products": {
+      "marketplace": {
         "title": "Products",
-        "prompt": "Recommend marketplace products for my pet."
-      },
-      "adoption": {
-        "title": "Adoption",
-        "prompt": "I want to adopt a pet safely. Where do I start?"
+        "prompt": "Find dog food up to R$150."
       },
       "services": {
         "title": "Services",
-        "prompt": "Find nearby services like grooming and vet care."
+        "prompt": "Find grooming services near me."
       },
-      "consultations": {
-        "title": "Appointments",
-        "prompt": "Help me prepare a vet appointment."
+      "agenda": {
+        "title": "Schedule",
+        "prompt": "What's on my schedule?"
+      },
+      "orders": {
+        "title": "Orders",
+        "prompt": "What are my orders?"
+      },
+      "loyalty": {
+        "title": "EccoPontos",
+        "prompt": "How many EccoPontos do I have?"
+      },
+      "adoption": {
+        "title": "Adoption",
+        "prompt": "I want to adopt a cat."
+      },
+      "social": {
+        "title": "Trending",
+        "prompt": "What's trending on EccoPet?"
+      },
+      "support": {
+        "title": "Support",
+        "prompt": "I need to talk to support."
       }
     },
     "context": {
@@ -223,7 +234,20 @@
       "signIn": "Sign in",
       "createAccount": "Create free account"
     },
-    "demoReply": "I'm in EccoPet AI demo mode. I can give general guidance on care, food, routine and organizing your pet's health, and suggest products and services. Create your account for personalized answers based on your pets.\n\nEccoPet AI helps organize information and provide general recommendations, but it does not replace veterinary care."
+    "confirm": {
+      "title": "Confirm before running",
+      "confirm": "Confirm",
+      "cancel": "Cancel",
+      "cancelled": "Action cancelled. Nothing was changed.",
+      "add_to_cart": "Add to cart",
+      "create_support_ticket": "Open a support ticket",
+      "prepare_appointment": "Create appointment"
+    },
+    "structured": {
+      "products": "Products found",
+      "services": "Services found",
+      "adoptions": "Pets for adoption"
+    }
   },
   "public": {
     "authModal": {
@@ -1459,6 +1483,7 @@
       "noMapDataHint": "Geospatial data will appear when sensors are registered."
     },
     "ai": {
+      "title": "EccoPet Assistant",
       "noHistory": "No interactions found.",
       "placeholder": "Ask about pet care...",
       "unavailable": "AI unavailable at the moment. Please try again later.",
@@ -1525,7 +1550,35 @@
       "notInterestedFeedback": "We'll show less content like this.",
       "savedFeedback": "Post saved.",
       "unsavedFeedback": "Removed from saved.",
-      "saveFailed": "Could not save the post."
+      "saveFailed": "Could not save the post.",
+      "visibilityPublic": "Make public",
+      "visibilityFollowers": "Followers only",
+      "visibilityPrivate": "Make private",
+      "visibilityPublicDone": "Post is now public.",
+      "visibilityFollowersDone": "Visible to followers only.",
+      "visibilityPrivateDone": "Only you can see this post.",
+      "disableComments": "Disable comments",
+      "enableComments": "Enable comments",
+      "commentsDisabledDone": "Comments disabled.",
+      "commentsEnabledDone": "Comments enabled.",
+      "pin": "Pin to profile",
+      "unpin": "Unpin",
+      "pinDone": "Post pinned.",
+      "unpinDone": "Post unpinned.",
+      "archive": "Archive",
+      "unarchive": "Restore from archive",
+      "archiveDone": "Post archived.",
+      "unarchiveDone": "Post restored.",
+      "deleteConfirmTitle": "Delete post?",
+      "deleteConfirmBody": "This will permanently remove the post and cannot be undone.",
+      "unfollowDone": "You unfollowed this profile.",
+      "unfollowFailed": "Could not unfollow.",
+      "block": "Block user",
+      "blockDone": "User blocked.",
+      "blockFailed": "Could not block.",
+      "mute": "Mute",
+      "muteDone": "Author muted in your feed.",
+      "muteFailed": "Could not mute."
     },
     "stats": {
       "likes": "{count} likes",

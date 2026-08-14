@@ -37,6 +37,8 @@ export async function POST(request: Request) {
     petId?: string;
     pagePath?: string;
     module?: string;
+    lat?: number;
+    lng?: number;
   };
   try {
     body = await request.json();
@@ -62,6 +64,9 @@ export async function POST(request: Request) {
     })
     .catch(() => null);
 
+  const lat = typeof body.lat === "number" && Number.isFinite(body.lat) ? body.lat : undefined;
+  const lng = typeof body.lng === "number" && Number.isFinite(body.lng) ? body.lng : undefined;
+
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
@@ -80,6 +85,8 @@ export async function POST(request: Request) {
           module: typeof body.module === "string" ? body.module.slice(0, 64) : undefined,
           ip: clientIp(request),
           displayName: profile?.name?.split(/\s+/)[0] ?? null,
+          lat,
+          lng,
         })) {
           if (request.signal.aborted) break;
           send(event);

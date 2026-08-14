@@ -76,12 +76,12 @@
     "greeting": "Como posso ajudar a cuidar melhor do seu pet hoje?",
     "greetingSub": "Pergunte sobre alimentação, rotina, saúde, produtos, serviços ou adoção. A EccoPet AI organiza tudo para você.",
     "suggestions": {
-      "s1": "Meu pet está com comportamento estranho",
-      "s2": "Qual ração combina melhor?",
-      "s3": "Monte uma rotina para meu cachorro",
-      "s4": "Quero preparar uma consulta veterinária",
-      "s5": "Compare produtos do marketplace",
-      "s6": "Quero adotar um pet com segurança"
+      "s1": "Quais pets eu tenho?",
+      "s2": "Tenho alguma vacina atrasada?",
+      "s3": "Procure ração para cachorro até R$150.",
+      "s4": "Procure banho e tosa perto de mim.",
+      "s5": "O que tenho marcado na agenda?",
+      "s6": "Quero adotar um gato."
     },
     "promptPlaceholder": "Pergunte algo sobre o seu pet...",
     "attachImage": "Anexar imagem",
@@ -105,49 +105,52 @@
     },
     "toolsTitle": "Ferramentas de IA",
     "toolStatus": {
-      "comingSoon": "Em breve",
       "ai": "IA"
     },
     "tools": {
-      "assistant": {
-        "title": "Assistente Pet",
-        "description": "Tire dúvidas sobre rotina, comportamento e bem-estar do seu pet."
-      },
-      "nutrition": {
-        "title": "Guia de Alimentação",
-        "description": "Orientações gerais sobre porções, frequência e tipos de alimento."
-      },
-      "reminders": {
-        "title": "Lembretes Inteligentes",
-        "description": "Organize vacinas, banho, consultas e medicamentos."
-      },
-      "compare": {
-        "title": "Comparador de Produtos",
-        "description": "Compare rações, acessórios e itens do marketplace."
-      },
-      "routine": {
-        "title": "Sugestão de Rotina",
-        "description": "Monte uma rotina equilibrada de passeios, descanso e estímulo."
-      },
-      "needs": {
-        "title": "Detector de Necessidades",
-        "description": "Identifique sinais de atenção em comportamento e rotina."
-      },
-      "vet-prep": {
-        "title": "Preparador de Consulta Veterinária",
-        "description": "Organize sintomas, histórico e perguntas antes da consulta."
-      },
-      "profile": {
-        "title": "Analisador de Perfil do Pet",
-        "description": "Resumo inteligente do perfil, preferências e histórico."
-      },
-      "adoption": {
-        "title": "Planejador de Adoção",
-        "description": "Prepare sua casa e rotina para receber um novo pet."
+      "pets": {
+        "title": "Meus pets",
+        "description": "Resumo dos pets cadastrados, lembretes e cuidados em aberto."
       },
       "vaccines": {
-        "title": "Organizador de Vacinas",
-        "description": "Acompanhe calendário vacinal e reforços importantes."
+        "title": "Vacinas",
+        "description": "Situação do calendário vacinal e reforços atrasados."
+      },
+      "marketplace": {
+        "title": "Marketplace",
+        "description": "Busca de produtos reais do marketplace por tipo e preço."
+      },
+      "services": {
+        "title": "Serviços",
+        "description": "Serviços de parceiros verificados, como banho e tosa."
+      },
+      "agenda": {
+        "title": "Agenda",
+        "description": "Compromissos e atendimentos já marcados."
+      },
+      "orders": {
+        "title": "Pedidos",
+        "description": "Status dos seus pedidos no marketplace."
+      },
+      "loyalty": {
+        "title": "EccoPontos",
+        "description": "Saldo, nível e movimentações do programa de fidelidade."
+      },
+      "adoption": {
+        "title": "Adoção",
+        "description": "Animais disponíveis em ONGs verificadas."
+      },
+      "social": {
+        "title": "Em alta",
+        "description": "Assuntos, perfis e destaques em alta na plataforma."
+      },
+      "support": {
+        "title": "Suporte",
+        "description": "Abertura de atendimento com a equipe EccoPet."
+      },
+      "a11y": {
+        "title": "Acessibilidade",
+        "description": "Ajuste tema, fonte e linguagem simples por comando."
       }
     },
     "sidebar": {
@@ -158,37 +161,45 @@
       "delete": "Excluir conversa"
     },
     "presets": {
-      "assistant": {
-        "title": "Assistente Pet",
-        "prompt": "Quero conversar sobre os cuidados gerais do meu pet."
-      },
-      "food": {
-        "title": "Alimentação",
-        "prompt": "Me ajude com a alimentação ideal do meu pet."
-      },
-      "routine": {
-        "title": "Rotina",
-        "prompt": "Monte uma rotina equilibrada para o meu pet."
+      "pets": {
+        "title": "Meus pets",
+        "prompt": "Quais pets eu tenho?"
       },
       "vaccines": {
         "title": "Vacinas",
-        "prompt": "Quais vacinas e reforços meu pet precisa acompanhar?"
+        "prompt": "Veja as vacinas dos meus pets."
       },
-      "products": {
+      "marketplace": {
         "title": "Produtos",
-        "prompt": "Recomende produtos do marketplace para o meu pet."
-      },
-      "adoption": {
-        "title": "Adoção",
-        "prompt": "Quero adotar um pet com segurança. Por onde começar?"
+        "prompt": "Procure ração para cachorro até R$150."
       },
       "services": {
         "title": "Serviços",
-        "prompt": "Encontre serviços próximos como banho, tosa e veterinário."
+        "prompt": "Procure banho e tosa perto de mim."
       },
-      "consultations": {
-        "title": "Consultas",
-        "prompt": "Me ajude a preparar uma consulta veterinária."
+      "agenda": {
+        "title": "Agenda",
+        "prompt": "O que tenho marcado na agenda?"
+      },
+      "orders": {
+        "title": "Pedidos",
+        "prompt": "Quais são meus pedidos?"
+      },
+      "loyalty": {
+        "title": "EccoPontos",
+        "prompt": "Quantos EccoPontos eu tenho?"
+      },
+      "adoption": {
+        "title": "Adoção",
+        "prompt": "Quero adotar um gato."
+      },
+      "social": {
+        "title": "Em alta",
+        "prompt": "O que está em alta na EccoPet?"
+      },
+      "support": {
+        "title": "Suporte",
+        "prompt": "Preciso falar com o suporte."
       }
     },
     "context": {
@@ -223,7 +234,20 @@
       "signIn": "Entrar",
       "createAccount": "Criar conta grátis"
     },
-    "demoReply": "Estou no modo demonstração da EccoPet AI. Posso dar orientações gerais sobre cuidados, alimentação, rotina e organização da saúde do seu pet, além de indicar produtos e serviços. Crie sua conta para respostas personalizadas com base nos seus pets.\n\nA EccoPet AI auxilia na organização de informações e recomendações gerais, mas não substitui avaliação veterinária."
+    "confirm": {
+      "title": "Confirme antes de executar",
+      "confirm": "Confirmar",
+      "cancel": "Cancelar",
+      "cancelled": "Ação cancelada. Nada foi alterado.",
+      "add_to_cart": "Adicionar ao carrinho",
+      "create_support_ticket": "Abrir atendimento no suporte",
+      "prepare_appointment": "Criar agendamento"
+    },
+    "structured": {
+      "products": "Produtos encontrados",
+      "services": "Serviços encontrados",
+      "adoptions": "Pets para adoção"
+    }
   },
   "public": {
     "authModal": {
@@ -1459,6 +1483,7 @@
       "noMapDataHint": "Dados geoespaciais aparecerão quando houver sensores cadastrados."
     },
     "ai": {
+      "title": "Assistente EccoPet",
       "noHistory": "Nenhuma interação encontrada.",
       "placeholder": "Pergunte sobre cuidados com pets...",
       "unavailable": "IA indisponível no momento. Tente novamente mais tarde.",

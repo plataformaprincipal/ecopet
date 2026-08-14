@@ -1,24 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { AlertTriangle, Sparkles } from "lucide-react";
 import { AIToolCard } from "../ai-tool-card";
-import { LoginRequiredModal } from "../login-required-modal";
 import { ECCOPET_AI_DISCLAIMER, ECCOPET_TOOLS } from "@/lib/public/eccopet-tools";
-import { useAuthGate } from "@/providers/auth-gate-provider";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 
 export function PublicEccoPetPage() {
-  const { isAuthenticated, requireAuth } = useAuthGate();
-  const [demoTool, setDemoTool] = useState<(typeof ECCOPET_TOOLS)[number] | null>(null);
-  const [fullModal, setFullModal] = useState(false);
+  const router = useRouter();
 
   return (
     <div className="space-y-8">
@@ -33,7 +21,8 @@ export function PublicEccoPetPage() {
             Inteligência para cuidar melhor do seu pet
           </h1>
           <p className="mt-3 max-w-2xl text-white/80">
-            Ferramentas inteligentes para rotina, alimentação, adoção e organização — com transparência e responsabilidade.
+            Consulte produtos, serviços, adoções e organize a rotina do seu pet conversando com a
+            EccoPet AI — com transparência e responsabilidade.
           </p>
         </div>
       </header>
@@ -54,41 +43,11 @@ export function PublicEccoPetPage() {
             description={tool.description}
             icon={tool.icon}
             status={tool.status}
-            onTry={() => setDemoTool(tool)}
-            onFullUse={() => {
-              if (!requireAuth()) setFullModal(true);
-            }}
+            actionLabel="Abrir no chat"
+            onUse={() => router.push(`/eccopet?prompt=${encodeURIComponent(tool.prompt)}`)}
           />
         ))}
       </div>
-
-      <Dialog open={Boolean(demoTool)} onOpenChange={(o) => !o && setDemoTool(null)}>
-        <DialogContent className="rounded-[20px]">
-          <DialogHeader>
-            <DialogTitle>{demoTool?.title} — demonstração</DialogTitle>
-            <DialogDescription>{ECCOPET_AI_DISCLAIMER}</DialogDescription>
-          </DialogHeader>
-          {demoTool?.demoPrompt ? (
-            <div className="space-y-3 text-sm">
-              <p className="rounded-xl bg-ecopet-green/10 p-3 font-medium text-ecopet-dark dark:text-white">
-                {demoTool.demoPrompt}
-              </p>
-              <p className="rounded-xl bg-zinc-100 p-3 dark:bg-zinc-800">{demoTool.demoReply}</p>
-            </div>
-          ) : null}
-          <Button
-            className="rounded-xl"
-            onClick={() => {
-              setDemoTool(null);
-              if (!isAuthenticated) setFullModal(true);
-            }}
-          >
-            Salvar resultado / usar completo
-          </Button>
-        </DialogContent>
-      </Dialog>
-
-      <LoginRequiredModal open={fullModal} onOpenChange={setFullModal} />
     </div>
   );
 }

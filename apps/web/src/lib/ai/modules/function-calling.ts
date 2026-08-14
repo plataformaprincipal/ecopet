@@ -50,6 +50,8 @@ export async function handleFunctionCall(
     persona: ctx.persona ?? personaForRole(ctx.role),
     locale: ctx.locale,
     confirmed: ctx.confirmed,
+    lat: ctx.lat,
+    lng: ctx.lng,
   }, validated.params);
   return result;
 }

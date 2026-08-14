@@ -6,6 +6,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/providers/i18n-provider";
 import { AIFeedbackButtons } from "@/components/features/ai/ai-feedback-buttons";
+import { AIConfirmationCard } from "./ai-confirmation-card";
+import { AIStructuredResults } from "./ai-structured-results";
 import type { AIMessage } from "./types";
 
 /** Lightweight markdown: paragraphs, **bold**, and "- " bullet lists. */
@@ -60,11 +62,15 @@ export function AIMessageBubble({
   conversationId,
   showRegenerate,
   onRegenerate,
+  onConfirmAction,
+  onCancelAction,
 }: {
   message: AIMessage;
   conversationId?: string;
   showRegenerate?: boolean;
   onRegenerate?: () => void;
+  onConfirmAction?: (messageId: string) => void;
+  onCancelAction?: (messageId: string) => void;
 }) {
   const { t } = useTranslation();
   const isUser = message.role === "user";
@@ -99,6 +105,18 @@ export function AIMessageBubble({
             <div className="space-y-1.5">{renderRich(message.content)}</div>
           )}
         </div>
+
+        {message.confirmation ? (
+          <AIConfirmationCard
+            confirmation={message.confirmation}
+            onConfirm={onConfirmAction ? () => onConfirmAction(message.id) : undefined}
+            onCancel={onCancelAction ? () => onCancelAction(message.id) : undefined}
+          />
+        ) : null}
+
+        {message.structured?.length ? (
+          <AIStructuredResults blocks={message.structured} />
+        ) : null}
 
         {message.recommendations && message.recommendations.length > 0 ? (
           <div className="flex flex-wrap gap-2">

@@ -17,6 +17,10 @@ export type BusinessModule =
   | "orders"
   | "cart"
   | "support"
+  | "loyalty"
+  | "adoption"
+  | "vaccination"
+  | "accessibility"
   | "general";
 
 export type BusinessToolName =
@@ -31,7 +35,28 @@ export type BusinessToolName =
   | "consult_partner_summary"
   | "consult_ngo_summary"
   | "consult_social"
-  | "consult_partners_public";
+  | "consult_partners_public"
+  | "consult_adoptions"
+  | "consult_loyalty"
+  | "consult_trending"
+  | "consult_pet_vaccinations"
+  | "request_client_action"
+  | "add_to_cart"
+  | "create_support_ticket"
+  | "prepare_appointment";
+
+export type ClientActionName =
+  | "SET_THEME"
+  | "SET_FONT_SCALE"
+  | "ENABLE_SIMPLE_LANGUAGE"
+  | "ENABLE_SIMPLIFIED_UI"
+  | "ENABLE_STRONG_FOCUS"
+  | "OPEN_ACCESSIBILITY"
+  | "OPEN_CART"
+  | "NAVIGATE"
+  | "OPEN_ADOPTION_FILTERS"
+  | "OPEN_MARKETPLACE_FILTERS"
+  | "REQUEST_GEOLOCATION";
 
 export type JsonSchemaProperty = {
   type: "string" | "number" | "boolean" | "object" | "array";
@@ -61,6 +86,9 @@ export type ToolExecutionContext = {
   persona: AssistantPersona;
   locale: AiLocale;
   confirmed?: boolean;
+  /** Coordenadas temporárias enviadas pelo cliente após consentimento explícito. */
+  lat?: number;
+  lng?: number;
 };
 
 export type ToolExecutionResult = {
@@ -68,6 +96,8 @@ export type ToolExecutionResult = {
   executed: boolean;
   ok: boolean;
   requiresConfirmation?: boolean;
+  /** Parâmetros validados — presentes quando a execução aguarda confirmação. */
+  params?: Record<string, unknown>;
   error?: string;
   data: unknown;
   latencyMs: number;
@@ -84,6 +114,8 @@ export type BusinessContextInput = {
   petId?: string;
   conversationId?: string;
   displayName?: string | null;
+  lat?: number;
+  lng?: number;
 };
 
 export type BusinessContext = {

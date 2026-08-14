@@ -4,13 +4,16 @@ import { useMemo, useState } from "react";
 import {
   Plus,
   MessageCircle,
-  Apple,
+  Coins,
   CalendarClock,
   Syringe,
   ShoppingBag,
   Heart,
+  Headset,
+  PawPrint,
+  Package,
   Scissors,
-  Stethoscope,
+  TrendingUp,
   History,
   Trash2,
   Pin,
@@ -26,14 +29,16 @@ import type { AIConversation } from "./types";
 export type AIPreset = { id: string; title: string; prompt: string; icon: LucideIcon };
 
 const PRESET_DEFS: { id: string; icon: LucideIcon }[] = [
-  { id: "assistant", icon: MessageCircle },
-  { id: "food", icon: Apple },
-  { id: "routine", icon: CalendarClock },
+  { id: "pets", icon: PawPrint },
   { id: "vaccines", icon: Syringe },
-  { id: "products", icon: ShoppingBag },
-  { id: "adoption", icon: Heart },
+  { id: "marketplace", icon: ShoppingBag },
   { id: "services", icon: Scissors },
-  { id: "consultations", icon: Stethoscope },
+  { id: "agenda", icon: CalendarClock },
+  { id: "orders", icon: Package },
+  { id: "loyalty", icon: Coins },
+  { id: "adoption", icon: Heart },
+  { id: "social", icon: TrendingUp },
+  { id: "support", icon: Headset },
 ];
 
 export function AIConversationSidebar({

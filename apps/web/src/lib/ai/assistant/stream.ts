@@ -16,6 +16,7 @@ import {
   AiRuntimeError,
   AI_RUNTIME_ERROR_CODES,
   userFacingAiMessage,
+  sanitizeAiErrorForClient,
 } from "@/lib/ai/ai-errors";
 import { bootstrapOpenAIProvider } from "@/lib/ai/bootstrap-openai";
 import { prisma } from "@/lib/prisma";
@@ -24,6 +25,7 @@ import {
   loadActiveConversationMemory,
   updateConversationSummary,
 } from "@/lib/ai/modules";
+import type { ToolExecutionResult } from "@/lib/ai/modules/types";
 import {
   runPromptFirewall,
   recordFirewallEvent,
@@ -40,6 +42,68 @@ import { assertAssistantAccess } from "./permissions";
 import type { AssistantStreamEvent } from "./types";
 import { isAiFlagEnabled, resolveEcoPetAgent } from "@/lib/ai/operational";
 
+const STRUCTURED_TOOL_KINDS: Partial<Record<ToolExecutionResult["toolName"], string>> = {
+  consult_products: "products",
+  consult_services: "services",
+  consult_adoptions: "adoptions",
+};
+
+/**
+ * Converte resultados de ferramentas em eventos que o frontend sabe renderizar:
+ * ações no cliente, confirmações pendentes e listas estruturadas.
+ */
+function deriveToolEvents(results: ToolExecutionResult[]): AssistantStreamEvent[] {
+  const events: AssistantStreamEvent[] = [];
+
+  for (const result of results) {
+    if (!result.ok) continue;
+
+    const data = result.data;
+    const record = data && typeof data === "object" ? (data as Record<string, unknown>) : null;
+
+    if (record?.type === "CLIENT_ACTION" || result.toolName === "request_client_action") {
+      const action = typeof record?.action === "string" ? record.action : null;
+      if (action) {
+        const payload = record?.payload;
+        events.push({
+          type: "client_action",
+          action,
+          payload:
+            payload && typeof payload === "object" && !Array.isArray(payload)
+              ? (payload as Record<string, unknown>)
+              : {},
+        });
+      }
+      continue;
+    }
+
+    if (result.requiresConfirmation) {
+      events.push({
+        type: "confirmation",
+        toolName: result.toolName,
+        preview: record?.preview ?? data,
+        message: typeof record?.message === "string" ? record.message : undefined,
+        params: result.params,
+      });
+      continue;
+    }
+
+    const kind = STRUCTURED_TOOL_KINDS[result.toolName];
+    if (kind && result.executed) {
+      const items = Array.isArray(data)
+        ? data
+        : Array.isArray(record?.animals)
+          ? (record.animals as unknown[])
+          : null;
+      if (items?.length) {
+        events.push({ type: "structured", kind, items });
+      }
+    }
+  }
+
+  return events;
+}
+
 /**
  * Streaming do Assistente — business context (Prompt 3) + Enterprise (Prompt 4).
  * Responses API via enterpriseStream; FC loop operacional; Prompt Firewall.
@@ -55,6 +119,8 @@ export async function* streamAssistantChat(input: {
   displayName?: string | null;
   pagePath?: string;
   module?: string;
+  lat?: number;
+  lng?: number;
 }): AsyncGenerator<AssistantStreamEvent> {
   const started = Date.now();
   const locale: AiLocale = normalizeLocale(input.locale);
@@ -146,6 +212,8 @@ export async function* streamAssistantChat(input: {
       petId: input.petId,
       conversationId: input.conversationId,
       displayName: input.displayName,
+      lat: input.lat,
+      lng: input.lng,
     });
 
     if (business.toolResults.length) {
@@ -196,6 +264,7 @@ export async function* streamAssistantChat(input: {
     yield { type: "status", phase: "tools" };
     let fcEnrichment = "";
     let fcTools: string[] = [];
+    let fcResults: ToolExecutionResult[] = [];
     if (agentPlan.flags.tools && isAiFlagEnabled("tools")) {
       try {
         const loop = await runFunctionCallingLoop({
@@ -204,6 +273,8 @@ export async function* streamAssistantChat(input: {
           persona,
           locale,
           conversationId,
+          lat: input.lat,
+          lng: input.lng,
           messages: [
             { role: "system", content: business.systemPrompt },
             ...history,
@@ -221,6 +292,7 @@ export async function* streamAssistantChat(input: {
         });
         fcEnrichment = loop.enrichmentBlock;
         fcTools = loop.toolsUsed;
+        fcResults = loop.toolResults;
       } catch {
         // FC falhou — segue com contexto intent-only
       }
@@ -229,6 +301,10 @@ export async function* streamAssistantChat(input: {
     const toolsUsed = [...new Set([...business.toolsUsed, ...fcTools])];
     if (toolsUsed.length) {
       yield { type: "tools", tools: toolsUsed };
+    }
+
+    for (const event of deriveToolEvents([...business.toolResults, ...fcResults])) {
+      yield event;
     }
 
     const systemPrompt = [
@@ -381,7 +457,10 @@ export async function* streamAssistantChat(input: {
     yield {
       type: "error",
       code: "AI_ERROR",
-      message: e instanceof Error ? e.message.slice(0, 160) : "Falha no assistente.",
+      message: sanitizeAiErrorForClient(
+        e instanceof Error ? e.message : "Falha no assistente.",
+        locale
+      ),
     };
   }
 }

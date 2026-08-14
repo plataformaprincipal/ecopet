@@ -6,6 +6,7 @@ export type {
   BusinessContextInput,
   ToolExecutionResult,
   OpenAiToolSchema,
+  ClientActionName,
 } from "./types";
 
 export { buildBusinessContext } from "./context-builder";

@@ -26,6 +26,7 @@ interface AccessibilityState extends AccessibilityPreferences {
   setVlibrasStatus: (status: VLibrasStatus) => void;
   increaseFont: () => void;
   decreaseFont: () => void;
+  setFontScale: (scale: number) => void;
   resetFont: () => void;
   increaseLetterSpacing: () => void;
   decreaseLetterSpacing: () => void;
@@ -48,6 +49,10 @@ export const useAccessibilityStore = create<AccessibilityState>()(
         set({ fontScale: Math.min(FONT_SCALE_MAX, get().fontScale + FONT_SCALE_STEP) }),
       decreaseFont: () =>
         set({ fontScale: Math.max(FONT_SCALE_MIN, get().fontScale - FONT_SCALE_STEP) }),
+      setFontScale: (scale) => {
+        if (!Number.isFinite(scale)) return;
+        set({ fontScale: Math.min(FONT_SCALE_MAX, Math.max(FONT_SCALE_MIN, scale)) });
+      },
       resetFont: () => set({ fontScale: FONT_SCALE_DEFAULT, letterSpacing: 0, lineHeight: 0 }),
       increaseLetterSpacing: () =>
         set({ letterSpacing: Math.min(SPACING_MAX, get().letterSpacing + SPACING_STEP) }),

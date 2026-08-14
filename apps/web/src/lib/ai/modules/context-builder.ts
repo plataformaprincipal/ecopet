@@ -80,6 +80,8 @@ export async function buildBusinessContext(
           role: input.role,
           persona: input.persona,
           locale: input.locale,
+          lat: input.lat,
+          lng: input.lng,
         })
       : Promise.resolve([]),
     buildSemanticContextStub({
