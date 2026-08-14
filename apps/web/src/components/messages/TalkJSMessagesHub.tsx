@@ -98,7 +98,7 @@ function TalkJSMessagesInner({ initialConversationId }: { initialConversationId?
     <div className="mx-auto flex h-[calc(100vh-8rem)] max-w-6xl flex-col gap-4 p-4 lg:flex-row">
       <aside
         className={cn(
-          "flex w-full flex-col overflow-hidden rounded-2xl border bg-white dark:bg-[#0f1419] lg:w-96",
+          "flex w-full flex-col overflow-hidden rounded-2xl border border-ecopet-gray/12 bg-white dark:border-white/10 dark:bg-zinc-900/60 lg:w-96",
           selectedTalkJsId && "hidden lg:flex"
         )}
         aria-label={t("messagesModule.title")}
@@ -123,7 +123,7 @@ function TalkJSMessagesInner({ initialConversationId }: { initialConversationId?
 
       <main
         className={cn(
-          "flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border bg-white dark:bg-[#0f1419]",
+          "flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-ecopet-gray/12 bg-white dark:border-white/10 dark:bg-zinc-900/60",
           !selectedTalkJsId && "hidden lg:flex"
         )}
       >

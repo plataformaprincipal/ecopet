@@ -12,7 +12,6 @@ import {
   ShoppingBag,
   Sparkles,
   Users,
-  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BrandMark } from "@/components/shared/brand/brand-mark";
@@ -169,7 +168,7 @@ export function PremiumPublicHome() {
                 </span>
               </div>
               <p className="inline-flex max-w-full items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-sm text-white/90 backdrop-blur-md sm:ml-2 md:ml-4">
-                <Zap className="h-4 w-4 shrink-0 text-ecopet-green-500" strokeWidth={2} aria-hidden />
+                <Heart className="h-4 w-4 shrink-0 text-ecopet-green-500" strokeWidth={2} aria-hidden fill="currentColor" fillOpacity={0.2} />
                 <span className="min-w-0">{t("pub.home.heroBadge")}</span>
               </p>
             </div>

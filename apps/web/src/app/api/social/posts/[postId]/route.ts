@@ -1,3 +1,4 @@
+import type { SocialPostVisibility } from "@prisma/client";
 import { apiSuccess, apiFailure } from "@/lib/api-response";
 import { requireAuth } from "@/lib/auth/require-auth";
 import { handleSocialRouteError } from "@/lib/social/api-handler";
@@ -22,11 +23,40 @@ export async function PATCH(req: Request, { params }: Params) {
     if (error) return error;
     const { postId } = await params;
     const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
-    if (!body || typeof body !== "object" || typeof body.content !== "string") {
-      return apiFailure("VALIDATION", "Conteúdo inválido.", 400);
+    if (!body || typeof body !== "object") {
+      return apiFailure("VALIDATION", "Payload inválido.", 400);
     }
-    // authorId/userId do payload são ignorados — autorização usa apenas a sessão
-    const post = await updatePost({ postId, authorId: user!.id, content: body.content });
+
+    const content = typeof body.content === "string" ? body.content : undefined;
+    const visibility =
+      typeof body.visibility === "string" ? (body.visibility as SocialPostVisibility) : undefined;
+    const commentsEnabled =
+      typeof body.commentsEnabled === "boolean" ? body.commentsEnabled : undefined;
+    const isPinned = typeof body.isPinned === "boolean" ? body.isPinned : undefined;
+    const archive = body.archive === true;
+    const unarchive = body.unarchive === true;
+
+    if (
+      content === undefined &&
+      visibility === undefined &&
+      commentsEnabled === undefined &&
+      isPinned === undefined &&
+      !archive &&
+      !unarchive
+    ) {
+      return apiFailure("VALIDATION", "Nenhuma alteração informada.", 400);
+    }
+
+    const post = await updatePost({
+      postId,
+      authorId: user!.id,
+      content,
+      visibility,
+      commentsEnabled,
+      isPinned,
+      archive: archive || undefined,
+      unarchive: unarchive || undefined,
+    });
     return apiSuccess({ post });
   } catch (e) {
     return handleSocialRouteError(e);

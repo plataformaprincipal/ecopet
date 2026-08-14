@@ -3,18 +3,15 @@ import { persist } from "zustand/middleware";
 
 interface AppState {
   apiToken: string | null;
-  darkMode: boolean;
   setApiToken: (token: string | null) => void;
-  setDarkMode: (v: boolean) => void;
 }
 
+/** Tema claro/escuro é controlado exclusivamente por next-themes (ThemeProvider / ecopet-theme). */
 export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
       apiToken: null,
-      darkMode: false,
       setApiToken: (apiToken) => set({ apiToken }),
-      setDarkMode: (darkMode) => set({ darkMode }),
     }),
     { name: "ecopet-store" }
   )

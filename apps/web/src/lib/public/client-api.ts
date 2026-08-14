@@ -29,6 +29,16 @@ export async function fetchPublicPosts(params?: {
 
 export type PublicTrendingData = {
   hashtags: Array<{ id: string; name: string; slug: string; usageCount: number }>;
+  trends?: Array<{
+    position: number;
+    topic: string;
+    slug: string;
+    publications: number;
+    publicationsLabel: string;
+    category?: string;
+    score?: number;
+  }>;
+  window?: string;
   popularPosts: ApiSocialPost[];
   featuredPartners: Array<{ id: string; name: string; category?: string | null; city?: string | null }>;
   featuredProducts: Array<{ id: string; name: string; price: number }>;

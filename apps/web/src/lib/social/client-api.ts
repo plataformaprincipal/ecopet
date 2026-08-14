@@ -21,6 +21,8 @@ export type ApiSocialPost = {
   adoptionMeta?: Record<string, unknown> | null;
   isPinned?: boolean;
   isFeatured?: boolean;
+  commentsEnabled?: boolean;
+  archivedAt?: string | null;
   media: { id: string; fileUrl: string; fileName: string; mimeType: string; mediaType: string; sortOrder: number }[];
   hashtags: { id: string; name: string; slug: string }[];
   counts: { likes: number; comments: number; shares: number; saves: number };
@@ -96,8 +98,24 @@ export async function fetchPost(postId: string) {
   return socialFetch<{ post: ApiSocialPost }>(`/api/social/posts/${postId}`);
 }
 
-export async function updatePost(postId: string, content: string) {
-  return socialFetch<{ post: ApiSocialPost }>(`/api/social/posts/${postId}`, { method: "PATCH", body: JSON.stringify({ content }) });
+export async function updatePost(
+  postId: string,
+  payload:
+    | string
+    | {
+        content?: string;
+        visibility?: string;
+        commentsEnabled?: boolean;
+        isPinned?: boolean;
+        archive?: boolean;
+        unarchive?: boolean;
+      }
+) {
+  const body = typeof payload === "string" ? { content: payload } : payload;
+  return socialFetch<{ post: ApiSocialPost }>(`/api/social/posts/${postId}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
 }
 
 export async function deletePost(postId: string) {
@@ -171,6 +189,14 @@ export async function unfollowUser(userId: string) {
 
 export async function blockUser(userId: string, reason?: string) {
   return socialFetch<{ blocked: boolean }>(`/api/social/profiles/${userId}/block`, { method: "POST", body: JSON.stringify({ reason }) });
+}
+
+export async function muteUser(userId: string) {
+  return socialFetch<{ muted: boolean }>(`/api/social/profiles/${userId}/mute`, { method: "POST" });
+}
+
+export async function unmuteUser(userId: string) {
+  return socialFetch<{ muted: boolean }>(`/api/social/profiles/${userId}/mute`, { method: "DELETE" });
 }
 
 export async function searchSocial(q: string, type?: string) {

@@ -118,8 +118,11 @@ async function serializeComment(comment: CommentRecord, viewerId?: string) {
 async function assertPostCommentable(postId: string) {
   const post = await prisma.socialPost.findUnique({ where: { id: postId } });
   if (!post) throw new SocialError("Publicação não encontrada.", "NOT_FOUND", 404);
-  if (post.deletedAt || post.status === "REMOVED" || post.status === "HIDDEN") {
+  if (post.deletedAt || post.status === "REMOVED" || post.status === "HIDDEN" || post.archivedAt) {
     throw new SocialError("Não é possível comentar nesta publicação.", "FORBIDDEN", 403);
+  }
+  if (post.commentsEnabled === false) {
+    throw new SocialError("Comentários desativados nesta publicação.", "FORBIDDEN", 403);
   }
   return post;
 }

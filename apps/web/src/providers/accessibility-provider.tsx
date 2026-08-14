@@ -42,6 +42,9 @@ function applyPreferences(prefs: AccessibilityPreferences) {
     root.classList.toggle(className, Boolean(prefs[key]));
   });
 
+  root.setAttribute("data-enhanced-focus", prefs.strongFocus ? "true" : "false");
+  root.setAttribute("data-font-scale", String(prefs.fontScale));
+
   body.classList.toggle("ecopet-braille-mode", prefs.brailleEnabled);
 
   const pauseAnim = prefs.pauseAnimations || prefs.dyslexiaMode || prefs.calmMode;

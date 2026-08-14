@@ -21,12 +21,16 @@ export function MessageBubble({
     <div className={cn("group flex", mine ? "justify-end" : "justify-start")}>
       <div
         className={cn(
-          "max-w-[80%] rounded-2xl px-4 py-2 text-sm",
-          mine ? "bg-ecopet-green text-white" : "bg-muted",
+          "max-w-[min(80%,28rem)] px-3.5 py-2.5 text-sm leading-relaxed shadow-sm",
+          mine
+            ? "rounded-2xl rounded-br-md bg-ecopet-green text-white"
+            : "rounded-2xl rounded-bl-md border border-ecopet-gray/10 bg-zinc-100 text-zinc-900 dark:border-white/10 dark:bg-white/10 dark:text-zinc-100",
           message.isDeleted && "italic opacity-70"
         )}
       >
-        {!mine && <p className="mb-1 text-[10px] font-semibold opacity-70">{message.sender.name}</p>}
+        {!mine && (
+          <p className="mb-1 text-[10px] font-semibold text-zinc-500 dark:text-zinc-400">{message.sender.name}</p>
+        )}
         <p>{message.content}</p>
         {message.attachments?.length > 0 && (
           <div className="mt-2 space-y-2">

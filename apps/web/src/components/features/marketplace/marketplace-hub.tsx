@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, SlidersHorizontal, Sparkles, ShoppingCart } from "lucide-react";
+import { Search, SlidersHorizontal, Sparkles, ShoppingCart, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,6 +15,7 @@ import { CustomServiceForm } from "./custom-service-form";
 import { MarketplaceGridSkeleton } from "./marketplace-skeleton";
 import { useMarketplaceStore } from "@/store/marketplace-store";
 import { useServerCart } from "@/hooks/use-server-cart";
+import { useGeolocation } from "@/hooks/use-geolocation";
 import {
   fetchProducts,
   fetchServices,
@@ -23,14 +24,18 @@ import {
 } from "@/lib/marketplace/api";
 import type { MarketplaceProduct, MarketplaceService, MarketplacePartner, AiRecommendation } from "@/lib/marketplace/types";
 import { useTranslation } from "@/providers/i18n-provider";
+import { cn } from "@/lib/utils";
+import { useSimpleLanguage } from "@/hooks/use-simple-language";
 
 const FILTER_TAG_KEYS = ["freeShipping", "verified", "promos", "nearMe"] as const;
 
 export function MarketplaceHub() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { s } = useSimpleLanguage();
   const { setSearchPanelOpen, setAiModalOpen, setCartOpen, setFilters, addSearchHistory } = useMarketplaceStore();
   const { itemCount: cartItemCount, refresh: refreshCart } = useServerCart();
+  const geo = useGeolocation();
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState("produtos");
   const [loading, setLoading] = useState(true);
@@ -38,12 +43,48 @@ export function MarketplaceHub() {
   const [services, setServices] = useState<MarketplaceService[]>([]);
   const [partners, setPartners] = useState<MarketplacePartner[]>([]);
   const [aiRecs, setAiRecs] = useState<AiRecommendation[]>([]);
+  const [nearMeActive, setNearMeActive] = useState(false);
+  const [geoHint, setGeoHint] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([fetchProducts(), fetchServices(), fetchPartners(), fetchAiRecommendations()]).then(([p, s, pt, ai]) => {
       setProducts(p); setServices(s); setPartners(pt); setAiRecs(ai);
     }).finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (!nearMeActive || !geo.position) return;
+    let active = true;
+    setLoading(true);
+    setGeoHint(null);
+    const loc = {
+      lat: geo.position.lat,
+      lng: geo.position.lng,
+      radiusKm: 50,
+      sort: "distance" as const,
+    };
+    Promise.all([
+      fetchProducts(loc),
+      fetchServices(loc),
+      fetchPartners(loc),
+    ])
+      .then(([p, s, pt]) => {
+        if (!active) return;
+        setProducts(p);
+        setServices(s);
+        setPartners(pt);
+        setTab("parceiros");
+      })
+      .catch(() => {
+        if (active) setGeoHint("Não foi possível ordenar por proximidade agora.");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [nearMeActive, geo.position]);
 
   function handleSearch() {
     if (query.trim()) {
@@ -52,6 +93,32 @@ export function MarketplaceHub() {
       router.push(`/marketplace/busca?q=${encodeURIComponent(query.trim())}`);
     }
   }
+
+  function handleFilterTag(key: (typeof FILTER_TAG_KEYS)[number]) {
+    if (key === "nearMe") {
+      setGeoHint(
+        "Usamos sua localização só para ordenar parceiros e produtos próximos. Não armazenamos coordenadas permanentes neste fluxo."
+      );
+      setNearMeActive(true);
+      geo.request();
+      return;
+    }
+    if (key === "verified") {
+      setFilters({ verifiedOnly: true });
+      router.push("/marketplace/busca?verified=1");
+      return;
+    }
+    if (key === "promos") {
+      setFilters({ promoOnly: true });
+      router.push("/marketplace/busca?promo=1");
+      return;
+    }
+    // freeShipping: sem dados reais de frete — não inventar; ir para busca
+    router.push("/marketplace/busca");
+  }
+
+  const nearMeOrdering =
+    "Ordenando por proximidade (raio ~50 km quando houver coordenadas do parceiro).";
 
   return (
     <div className="space-y-6">
@@ -87,12 +154,40 @@ export function MarketplaceHub() {
 
       <div className="flex flex-wrap gap-2">
         {FILTER_TAG_KEYS.map((key) => (
-          <button key={key} type="button" className="rounded-full bg-ecopet-gray/10 px-3 py-1 text-xs font-medium hover:bg-ecopet-green/10">
-            {t(`marketplace.filterTags.${key}`)}
+          <button
+            key={key}
+            type="button"
+            onClick={() => handleFilterTag(key)}
+            className={cn(
+              "rounded-full bg-ecopet-gray/10 px-3 py-1 text-xs font-medium text-ecopet-dark hover:bg-ecopet-green/10 dark:bg-white/10 dark:text-white dark:hover:bg-white/15",
+              key === "nearMe" && nearMeActive && "bg-ecopet-green/15 text-ecopet-green dark:bg-ecopet-green/20"
+            )}
+          >
+            {key === "nearMe" ? (
+              <span className="inline-flex items-center gap-1">
+                <MapPin className="h-3 w-3" aria-hidden />
+                {s(t(`marketplace.filterTags.${key}`))}
+              </span>
+            ) : (
+              s(t(`marketplace.filterTags.${key}`))
+            )}
           </button>
         ))}
         <Button size="sm" variant="ghost" onClick={() => setAiModalOpen(true)}><Sparkles className="h-4 w-4" /> IA</Button>
       </div>
+
+      {geoHint ? <p className="text-xs text-zinc-500 dark:text-zinc-400">{s(geoHint)}</p> : null}
+      {geo.state === "requesting" ? (
+        <p className="text-xs text-zinc-500 dark:text-zinc-400">{s("Solicitando permissão de localização…")}</p>
+      ) : null}
+      {geo.state === "denied" ? (
+        <p className="text-xs text-amber-700 dark:text-amber-300">
+          {s("Localização negada no navegador. Você pode liberar a permissão e tentar novamente.")}
+        </p>
+      ) : null}
+      {nearMeActive && geo.position ? (
+        <p className="text-xs text-ecopet-green">{s(nearMeOrdering)}</p>
+      ) : null}
 
       {aiRecs.length > 0 && <SmartRecommendations recommendations={aiRecs} />}
 

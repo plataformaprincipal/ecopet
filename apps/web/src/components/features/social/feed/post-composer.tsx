@@ -30,7 +30,7 @@ export function PostComposer({ onPublished }: { onPublished?: () => void }) {
       <button
         type="button"
         onClick={() => requireAuth()}
-        className="w-full rounded-xl border border-ecopet-gray/15 bg-white p-4 text-left text-sm text-muted-foreground shadow-sm transition hover:border-ecopet-green/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ecopet-green"
+        className="w-full rounded-xl border border-ecopet-gray/15 bg-white p-4 text-left text-sm text-muted-foreground shadow-sm transition hover:border-ecopet-green/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ecopet-green dark:border-white/10 dark:bg-zinc-900/60 dark:text-zinc-300"
         aria-label={t("socialFeed.composer.loginToPost")}
       >
         {t("socialFeed.composer.loginToPost")}
@@ -73,7 +73,7 @@ export function PostComposer({ onPublished }: { onPublished?: () => void }) {
   }
 
   return (
-    <div className="rounded-xl border border-ecopet-gray/15 bg-white p-4 shadow-sm">
+    <div className="rounded-xl border border-ecopet-gray/15 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900/60">
       {allowedTypes.length > 1 && (
         <div className="mb-3">
           <label htmlFor="post-type" className="mb-1 block text-xs font-medium text-muted-foreground">
@@ -83,7 +83,7 @@ export function PostComposer({ onPublished }: { onPublished?: () => void }) {
             id="post-type"
             value={postType}
             onChange={(e) => setPostType(e.target.value as SocialPostType)}
-            className="w-full rounded-lg border border-ecopet-gray/20 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ecopet-green"
+            className="w-full rounded-lg border border-ecopet-gray/20 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ecopet-green dark:border-white/15 dark:bg-zinc-950 dark:text-white"
           >
             {allowedTypes.map((type) => (
               <option key={type} value={type}>

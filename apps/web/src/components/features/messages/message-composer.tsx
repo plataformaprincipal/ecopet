@@ -78,9 +78,9 @@ export function MessageComposer({
   }
 
   return (
-    <div className="border-t">
-      {uploadError && <p className="px-3 pt-2 text-xs text-red-600">{uploadError}</p>}
-      <form onSubmit={submit} className="flex items-center gap-2 p-3">
+    <div className="border-t border-ecopet-gray/10 bg-white/80 dark:border-white/10 dark:bg-zinc-950/40">
+      {uploadError && <p className="px-4 pt-2 text-xs text-red-600 dark:text-red-400">{uploadError}</p>}
+      <form onSubmit={submit} className="flex items-end gap-2 px-3 py-3 sm:px-4">
         <MessageAttachmentUploader
           pending={pending}
           uploading={uploading}
@@ -89,14 +89,20 @@ export function MessageComposer({
           disabled={disabled}
         />
         <Input
-          className="flex-1"
+          className="min-h-[44px] flex-1 rounded-2xl"
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Digite sua mensagem..."
           disabled={disabled || uploading}
           maxLength={4000}
         />
-        <Button type="submit" disabled={disabled || uploading || (!text.trim() && !pending)}>
+        <Button
+          type="submit"
+          size="icon"
+          className="h-11 w-11 shrink-0 rounded-2xl"
+          disabled={disabled || uploading || (!text.trim() && !pending)}
+          aria-label="Enviar mensagem"
+        >
           <Send className="h-4 w-4" />
         </Button>
       </form>

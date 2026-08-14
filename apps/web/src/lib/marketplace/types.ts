@@ -72,7 +72,7 @@ export interface MarketplaceProduct {
   partnerId: string;
   partner: Pick<MarketplacePartner, "id" | "name" | "avatar" | "isVerified" | "location">;
   inStock: boolean;
-  deliveryDays: number;
+  deliveryDays?: number;
   freeShipping: boolean;
   isPromo: boolean;
   isSponsored?: boolean;
@@ -208,6 +208,9 @@ export interface MarketplaceFilters {
   inPersonOnly?: boolean;
   homeServiceOnly?: boolean;
   qualityMin?: number;
+  lat?: number;
+  lng?: number;
+  radiusKm?: number;
 }
 
 export const DEFAULT_FILTERS: MarketplaceFilters = {

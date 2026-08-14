@@ -40,13 +40,13 @@ export function NewConversationModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-[#0f1419]">
-        <h2 className="text-lg font-bold">Nova conversa</h2>
+      <div className="w-full max-w-md rounded-2xl border border-ecopet-gray/12 bg-white p-6 shadow-xl dark:border-white/10 dark:bg-zinc-900/95">
+        <h2 className="text-lg font-bold text-ecopet-dark dark:text-white">Nova conversa</h2>
         <form onSubmit={handleCreate} className="mt-4 space-y-3">
           <div>
             <label className="text-sm font-medium">Tipo</label>
             <select
-              className="mt-1 flex h-10 w-full rounded-md border px-3 text-sm"
+              className="mt-1 flex h-10 w-full rounded-md border border-ecopet-gray/20 bg-white px-3 text-sm dark:border-white/15 dark:bg-zinc-950 dark:text-white"
               value={type}
               onChange={(e) => setType(e.target.value)}
             >

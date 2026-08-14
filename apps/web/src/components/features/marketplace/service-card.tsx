@@ -42,8 +42,8 @@ export function ServiceCard({ service, compact }: ServiceCardProps) {
 
   return (
     <>
-    <article className="group flex flex-col overflow-hidden rounded-2xl border border-ecopet-gray/10 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg dark:bg-white/5">
-      <Link href={`/marketplace/servico/${service.id}`} className="relative block aspect-video overflow-hidden bg-gray-100">
+    <article className="group flex flex-col overflow-hidden rounded-2xl border border-ecopet-gray/10 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg dark:border-white/10 dark:bg-zinc-900/60">
+      <Link href={`/marketplace/servico/${service.id}`} className="relative block aspect-video overflow-hidden bg-gray-100 dark:bg-white/5">
         <Image src={service.image} alt={serviceImageAlt(service.name)} fill className="object-cover transition-transform group-hover:scale-105" sizes="(max-width:768px) 100vw, 33vw" />
         <div className="absolute left-2 top-2 flex flex-wrap gap-1">
           <Badge className="bg-ecopet-dark text-white">{t("marketplace.serviceBadge")}</Badge>

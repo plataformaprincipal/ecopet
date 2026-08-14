@@ -33,6 +33,9 @@ export function PartnerCard({ partner }: { partner: MarketplacePartner }) {
               <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
                 <MapPin className="h-3 w-3" aria-hidden />
                 {partner.location}
+                {partner.distanceKm != null && partner.distanceKm > 0
+                  ? ` · ${partner.distanceKm.toFixed(1)} km`
+                  : ""}
               </p>
             )}
             <p className="mt-1 flex items-center gap-1 text-xs">

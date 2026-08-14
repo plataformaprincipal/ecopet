@@ -34,8 +34,8 @@ export function MessageReportModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 dark:bg-[#0f1419]">
-        <h2 className="font-bold">Denunciar mensagem</h2>
+      <div className="w-full max-w-md rounded-2xl border border-ecopet-gray/12 bg-white p-6 dark:border-white/10 dark:bg-zinc-900/95">
+        <h2 className="font-bold text-ecopet-dark dark:text-white">Denunciar mensagem</h2>
         {done ? (
           <p className="mt-4 text-sm text-green-700">Denúncia enviada. Nossa equipe irá revisar.</p>
         ) : (

@@ -82,6 +82,8 @@ function mapPost(post: PostRecord, profile: AuthorProfile, viewerState?: ViewerS
     adoptionMeta: post.adoptionMeta,
     isPinned: post.isPinned,
     isFeatured: post.isFeatured,
+    commentsEnabled: post.commentsEnabled,
+    archivedAt: post.archivedAt,
     media: post.media,
     hashtags: post.hashtags.map((h) => ({ id: h.hashtag.id, name: h.hashtag.name, slug: h.hashtag.slug })),
     counts: {
@@ -298,7 +300,12 @@ export async function createPost(params: {
 export async function updatePost(params: {
   postId: string;
   authorId: string;
-  content: string;
+  content?: string;
+  visibility?: SocialPostVisibility;
+  commentsEnabled?: boolean;
+  isPinned?: boolean;
+  archive?: boolean;
+  unarchive?: boolean;
 }) {
   await requireActiveSocialUser(params.authorId);
   const post = await prisma.socialPost.findUnique({ where: { id: params.postId } });
@@ -310,18 +317,67 @@ export async function updatePost(params: {
     throw new SocialError("Publicação removida não pode ser editada.", "FORBIDDEN", 403);
   }
 
-  const content = params.content.trim();
-  if (!content) throw new SocialError("Conteúdo obrigatório.", "VALIDATION", 400);
-  if (content.length > SOCIAL_POST_MAX_CONTENT) {
-    throw new SocialError(`Texto excede ${SOCIAL_POST_MAX_CONTENT} caracteres.`, "VALIDATION", 400);
+  const data: Prisma.SocialPostUpdateInput = {};
+
+  if (typeof params.content === "string") {
+    const content = params.content.trim();
+    if (!content) throw new SocialError("Conteúdo obrigatório.", "VALIDATION", 400);
+    if (content.length > SOCIAL_POST_MAX_CONTENT) {
+      throw new SocialError(`Texto excede ${SOCIAL_POST_MAX_CONTENT} caracteres.`, "VALIDATION", 400);
+    }
+    data.content = content;
+    data.editedAt = new Date();
+  }
+
+  if (params.visibility) {
+    if (!["PUBLIC", "FOLLOWERS", "PRIVATE"].includes(params.visibility)) {
+      throw new SocialError("Visibilidade inválida.", "VALIDATION", 400);
+    }
+    data.visibility = params.visibility;
+  }
+
+  if (typeof params.commentsEnabled === "boolean") {
+    data.commentsEnabled = params.commentsEnabled;
+  }
+
+  if (typeof params.isPinned === "boolean") {
+    if (params.isPinned) {
+      const pinnedCount = await prisma.socialPost.count({
+        where: {
+          authorId: params.authorId,
+          isPinned: true,
+          deletedAt: null,
+          archivedAt: null,
+          id: { not: params.postId },
+        },
+      });
+      if (pinnedCount >= 3) {
+        throw new SocialError("Você pode fixar no máximo 3 publicações.", "VALIDATION", 400);
+      }
+    }
+    data.isPinned = params.isPinned;
+  }
+
+  if (params.archive) {
+    data.archivedAt = new Date();
+    data.isPinned = false;
+  }
+  if (params.unarchive) {
+    data.archivedAt = null;
+  }
+
+  if (Object.keys(data).length === 0) {
+    throw new SocialError("Nenhuma alteração informada.", "VALIDATION", 400);
   }
 
   const updated = await prisma.socialPost.update({
     where: { id: params.postId },
-    data: { content, editedAt: new Date() },
+    data,
     include: postInclude(),
   });
-  await syncHashtags(params.postId, content);
+  if (typeof params.content === "string") {
+    await syncHashtags(params.postId, params.content.trim());
+  }
   return serializePost(updated, params.authorId);
 }
 
@@ -407,14 +463,30 @@ export async function listFeed(params: {
 }) {
   const limit = Math.min(params.limit ?? SOCIAL_FEED_DEFAULT_LIMIT, 50);
   const blockedIds = params.viewerId ? await getBlockedUserIds(params.viewerId) : [];
+  const mutedIds = params.viewerId
+    ? (
+        await prisma.userSocialMute.findMany({
+          where: { muterId: params.viewerId },
+          select: { mutedId: true },
+        })
+      ).map((m) => m.mutedId)
+    : [];
+  const excludedAuthorIds = [...new Set([...blockedIds, ...mutedIds])];
 
   const where: Prisma.SocialPostWhereInput = {
     status: { in: VISIBLE_STATUSES },
     deletedAt: null,
-    authorId: blockedIds.length ? { notIn: blockedIds } : undefined,
+    archivedAt: null,
+    authorId: excludedAuthorIds.length ? { notIn: excludedAuthorIds } : undefined,
   };
 
-  if (params.authorId) where.authorId = params.authorId;
+  // Perfil do autor: incluir arquivados apenas para o próprio autor
+  if (params.authorId) {
+    where.authorId = params.authorId;
+    if (params.viewerId === params.authorId) {
+      delete where.archivedAt;
+    }
+  }
   if (params.petId) where.petId = params.petId;
   if (params.hashtag) {
     where.hashtags = { some: { hashtag: { slug: params.hashtag } } };

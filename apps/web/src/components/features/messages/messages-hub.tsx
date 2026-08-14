@@ -39,10 +39,10 @@ export function MessagesHub({ initialConversationId }: { initialConversationId?:
 
   return (
     <div className="mx-auto flex h-[calc(100vh-8rem)] max-w-6xl flex-col gap-4 p-4 lg:flex-row">
-      <aside className={cn("flex w-full flex-col rounded-2xl border bg-white dark:bg-[#0f1419] lg:w-96", selectedId && "hidden lg:flex")}>
-        <div className="border-b p-4">
+      <aside className={cn("flex w-full flex-col rounded-2xl border border-ecopet-gray/12 bg-white dark:border-white/10 dark:bg-zinc-900/60 lg:w-96", selectedId && "hidden lg:flex")}>
+        <div className="border-b border-ecopet-gray/10 p-4 dark:border-white/10">
           <div className="mb-3 flex items-center justify-between">
-            <h1 className="text-lg font-bold">Mensagens</h1>
+            <h1 className="text-lg font-bold text-ecopet-dark dark:text-white">Mensagens</h1>
             <div className="flex gap-2">
               <Button size="icon" variant="ghost" onClick={() => void refresh()} aria-label="Atualizar">
                 <RefreshCw className="h-4 w-4" />
@@ -97,12 +97,12 @@ export function MessagesHub({ initialConversationId }: { initialConversationId?:
           ))}
         </div>
 
-        <div className="border-t p-3 text-center text-xs">
+        <div className="border-t border-ecopet-gray/10 p-3 text-center text-xs dark:border-white/10">
           <Link href="/dashboard/support" className="text-ecopet-green hover:underline">Abrir suporte</Link>
         </div>
       </aside>
 
-      <main className={cn("flex min-h-0 flex-1 flex-col rounded-2xl border bg-white dark:bg-[#0f1419]", !selectedId && "hidden lg:flex")}>
+      <main className={cn("flex min-h-0 flex-1 flex-col rounded-2xl border border-ecopet-gray/12 bg-white dark:border-white/10 dark:bg-zinc-900/60", !selectedId && "hidden lg:flex")}>
         {selectedId ? (
           <ConversationView conversationId={selectedId} onBack={() => { setSelectedId(""); router.push("/dashboard/messages"); }} />
         ) : (

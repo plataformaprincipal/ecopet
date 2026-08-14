@@ -31,7 +31,7 @@ export function ConversationItemRow({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex w-full items-start gap-3 border-b px-4 py-3 text-left transition hover:bg-muted/50",
+        "flex w-full items-start gap-3 border-b border-ecopet-gray/10 px-4 py-3 text-left transition hover:bg-muted/50 dark:border-white/10 dark:hover:bg-white/5",
         active && "bg-ecopet-green/10"
       )}
     >

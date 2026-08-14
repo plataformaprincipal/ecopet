@@ -115,7 +115,11 @@ export function ProductDetailContent({ id }: ProductDetailContentProps) {
 
           <div className="mt-4 flex items-center gap-4 text-sm text-ecopet-gray">
             {product.freeShipping && <span className="flex items-center gap-1"><Truck className="h-4 w-4 text-ecopet-green" /> Frete grátis</span>}
-            {product.inStock && <span>Entrega em ~{product.deliveryDays} dias</span>}
+            {product.inStock && product.deliveryDays != null ? (
+              <span>Entrega em ~{product.deliveryDays} dias</span>
+            ) : product.inStock ? (
+              <span>Prazo calculado no checkout</span>
+            ) : null}
           </div>
 
           <div className="mt-6 flex flex-wrap items-center gap-3">

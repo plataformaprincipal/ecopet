@@ -1,3 +1,4 @@
+import { productImageFallback, serviceImageFallback, resolveMediaUrl } from "@/lib/media/fallbacks";
 import { marketplaceFetch } from "@/lib/marketplace/fetch-api";
 import type {
   MarketplaceProduct,
@@ -82,6 +83,10 @@ function mapProduct(p: PublicProductRow): MarketplaceProduct {
   const images = parseImages(p.images);
   const partnerName = p.seller.partnerProfile?.businessName ?? p.seller.name;
   const location = [p.seller.partnerProfile?.city, p.seller.partnerProfile?.state].filter(Boolean).join(", ");
+  const fallback = productImageFallback(p.catalogCategory);
+  const resolvedImages = images.length
+    ? images.map((url) => resolveMediaUrl(url, fallback))
+    : [fallback];
   return {
     id: p.id,
     name: p.name,
@@ -93,7 +98,7 @@ function mapProduct(p: PublicProductRow): MarketplaceProduct {
     brand: p.brand ?? undefined,
     price: p.price,
     comparePrice: p.comparePrice ?? undefined,
-    images: images.length ? images : ["/images/placeholder-product.png"],
+    images: resolvedImages,
     rating: p.rating,
     reviewCount: p.reviewCount,
     partnerId: p.sellerId,
@@ -105,8 +110,8 @@ function mapProduct(p: PublicProductRow): MarketplaceProduct {
       location,
     },
     inStock: p.stock > 0,
-    deliveryDays: 3,
-    freeShipping: p.price >= 99,
+    deliveryDays: undefined,
+    freeShipping: false,
     isPromo: !!p.comparePrice && p.comparePrice > p.price,
     isSponsored: p.isFeatured ?? false,
   };
@@ -124,7 +129,7 @@ function mapService(s: PublicServiceRow): MarketplaceService {
     description: s.description,
     category: s.category.toLowerCase(),
     price: s.price,
-    image: s.image ?? "/images/placeholder-service.png",
+    image: resolveMediaUrl(s.image, serviceImageFallback(s.category)),
     rating: s.rating,
     reviewCount: s.reviewCount,
     partnerId: s.providerId,
@@ -183,6 +188,15 @@ function buildQuery(filters?: Partial<MarketplaceFilters>, extra?: Record<string
   if (filters?.inStock) params.set("inStock", "true");
   if (filters?.telehealth || filters?.onlineOnly) params.set("telehealth", "true");
   if (filters?.emergency24h) params.set("emergency24h", "true");
+  if (filters?.lat != null) params.set("lat", String(filters.lat));
+  if (filters?.lng != null) params.set("lng", String(filters.lng));
+  if (filters?.radiusKm != null) params.set("radiusKm", String(filters.radiusKm));
+  if (filters?.maxDistance && filters.lat != null) params.set("radiusKm", String(filters.maxDistance));
+  if (filters?.sort === "distance" || (filters?.lat != null && filters?.sort === "relevance")) {
+    params.set("sort", "near_me");
+  } else if (filters?.sort) {
+    params.set("sort", filters.sort);
+  }
   if (extra) {
     for (const [k, v] of Object.entries(extra)) params.set(k, v);
   }

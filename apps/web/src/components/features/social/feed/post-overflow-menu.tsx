@@ -2,15 +2,23 @@
 
 import { useState } from "react";
 import {
+  Archive,
   Bookmark,
   Copy,
   EyeOff,
   Flag,
+  Lock,
+  MessageSquareOff,
   MoreHorizontal,
   Pencil,
+  Pin,
   Share2,
   ThumbsDown,
   Trash2,
+  UserMinus,
+  Users,
+  Ban,
+  VolumeX,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,9 +37,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ReportPostModal } from "./report-post-modal";
 import {
+  blockUser,
   deletePost,
+  muteUser,
   savePost,
   sharePost,
+  unfollowUser,
   unsavePost,
   updatePost,
   type ApiSocialPost,
@@ -40,6 +51,7 @@ import { useFeedPreferencesStore } from "@/store/feed-preferences-store";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { useAuthGate } from "@/providers/auth-gate-provider";
 import { useTranslation } from "@/providers/i18n-provider";
+import { useSimpleLanguage } from "@/hooks/use-simple-language";
 
 function postAbsoluteUrl(postId: string) {
   if (typeof window === "undefined") return `/feed/post/${postId}`;
@@ -60,6 +72,7 @@ export function PostOverflowMenu({
   onHidden?: (postId: string) => void;
 }) {
   const { t } = useTranslation();
+  const { s } = useSimpleLanguage();
   const { user } = useCurrentUser();
   const { requireAuth } = useAuthGate();
   const hidePost = useFeedPreferencesStore((s) => s.hidePost);
@@ -75,6 +88,9 @@ export function PostOverflowMenu({
   const [saved, setSaved] = useState(Boolean(post.viewerState?.saved));
 
   const isAuthor = Boolean(user && (user.id === post.authorId || user.id === post.author.id));
+  const commentsEnabled = post.commentsEnabled !== false;
+  const isArchived = Boolean(post.archivedAt);
+  const isPinned = Boolean(post.isPinned);
 
   function showFeedback(message: string) {
     setFeedback(message);
@@ -148,6 +164,20 @@ export function PostOverflowMenu({
     });
   }
 
+  async function patchPost(payload: Parameters<typeof updatePost>[1], successMsg: string) {
+    setPending(true);
+    setError(null);
+    try {
+      const data = await updatePost(post.id, payload);
+      onUpdated?.(data.post);
+      showFeedback(successMsg);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("socialFeed.actions.editFailed"));
+    } finally {
+      setPending(false);
+    }
+  }
+
   async function saveEdit() {
     setPending(true);
     setError(null);
@@ -206,6 +236,78 @@ export function PostOverflowMenu({
                 {t("socialFeed.actions.edit")}
               </DropdownMenuItem>
               <DropdownMenuItem
+                onSelect={() =>
+                  void patchPost(
+                    { visibility: "PUBLIC" },
+                    s(t("socialFeed.actions.visibilityPublicDone"))
+                  )
+                }
+              >
+                <Users className="h-4 w-4" aria-hidden />
+                {s(t("socialFeed.actions.visibilityPublic"))}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() =>
+                  void patchPost(
+                    { visibility: "FOLLOWERS" },
+                    s(t("socialFeed.actions.visibilityFollowersDone"))
+                  )
+                }
+              >
+                <Users className="h-4 w-4" aria-hidden />
+                {s(t("socialFeed.actions.visibilityFollowers"))}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() =>
+                  void patchPost(
+                    { visibility: "PRIVATE" },
+                    s(t("socialFeed.actions.visibilityPrivateDone"))
+                  )
+                }
+              >
+                <Lock className="h-4 w-4" aria-hidden />
+                {s(t("socialFeed.actions.visibilityPrivate"))}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() =>
+                  void patchPost(
+                    { commentsEnabled: !commentsEnabled },
+                    commentsEnabled
+                      ? t("socialFeed.actions.commentsDisabledDone")
+                      : t("socialFeed.actions.commentsEnabledDone")
+                  )
+                }
+              >
+                <MessageSquareOff className="h-4 w-4" aria-hidden />
+                {commentsEnabled
+                  ? t("socialFeed.actions.disableComments")
+                  : t("socialFeed.actions.enableComments")}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() =>
+                  void patchPost(
+                    { isPinned: !isPinned },
+                    isPinned ? t("socialFeed.actions.unpinDone") : t("socialFeed.actions.pinDone")
+                  )
+                }
+              >
+                <Pin className="h-4 w-4" aria-hidden />
+                {isPinned ? t("socialFeed.actions.unpin") : t("socialFeed.actions.pin")}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() =>
+                  void patchPost(
+                    isArchived ? { unarchive: true } : { archive: true },
+                    isArchived
+                      ? t("socialFeed.actions.unarchiveDone")
+                      : t("socialFeed.actions.archiveDone")
+                  )
+                }
+              >
+                <Archive className="h-4 w-4" aria-hidden />
+                {isArchived ? t("socialFeed.actions.unarchive") : t("socialFeed.actions.archive")}
+              </DropdownMenuItem>
+              <DropdownMenuItem
                 danger
                 onSelect={() => {
                   setError(null);
@@ -243,6 +345,65 @@ export function PostOverflowMenu({
                 <ThumbsDown className="h-4 w-4" aria-hidden />
                 {t("socialFeed.actions.notInterested")}
               </DropdownMenuItem>
+              {post.viewerState?.followingAuthor ? (
+                <DropdownMenuItem
+                  onSelect={() =>
+                    requireAuth(async () => {
+                      try {
+                        await unfollowUser(post.author.id);
+                        showFeedback(t("socialFeed.actions.unfollowDone"));
+                        onUpdated?.({
+                          ...post,
+                          viewerState: {
+                            liked: Boolean(post.viewerState?.liked),
+                            saved: Boolean(post.viewerState?.saved),
+                            followingAuthor: false,
+                          },
+                        });
+                      } catch (e) {
+                        setError(e instanceof Error ? e.message : t("socialFeed.actions.unfollowFailed"));
+                      }
+                    })
+                  }
+                >
+                  <UserMinus className="h-4 w-4" aria-hidden />
+                  {t("socialFeed.actions.unfollow")}
+                </DropdownMenuItem>
+              ) : null}
+              <DropdownMenuItem
+                onSelect={() =>
+                  requireAuth(async () => {
+                    try {
+                      await muteUser(post.author.id);
+                      hidePost(post.id);
+                      onHidden?.(post.id);
+                      showFeedback(t("socialFeed.actions.muteDone"));
+                    } catch (e) {
+                      setError(e instanceof Error ? e.message : t("socialFeed.actions.muteFailed"));
+                    }
+                  })
+                }
+              >
+                <VolumeX className="h-4 w-4" aria-hidden />
+                {t("socialFeed.actions.mute")}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() =>
+                  requireAuth(async () => {
+                    try {
+                      await blockUser(post.author.id);
+                      hidePost(post.id);
+                      onHidden?.(post.id);
+                      showFeedback(t("socialFeed.actions.blockDone"));
+                    } catch (e) {
+                      setError(e instanceof Error ? e.message : t("socialFeed.actions.blockFailed"));
+                    }
+                  })
+                }
+              >
+                <Ban className="h-4 w-4" aria-hidden />
+                {t("socialFeed.actions.block")}
+              </DropdownMenuItem>
               <DropdownMenuItem
                 onSelect={() =>
                   requireAuth(() => {
@@ -266,6 +427,11 @@ export function PostOverflowMenu({
         >
           {feedback}
         </span>
+      ) : null}
+      {error && !editOpen && !deleteOpen ? (
+        <p className="absolute right-0 top-[calc(100%+0.35rem)] z-40 max-w-[16rem] text-xs text-red-600" role="alert">
+          {error}
+        </p>
       ) : null}
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
@@ -300,10 +466,8 @@ export function PostOverflowMenu({
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t("socialFeed.actions.delete")}</DialogTitle>
-            <DialogDescription>
-              Tem certeza de que deseja excluir esta publicação? Esta ação não poderá ser desfeita.
-            </DialogDescription>
+            <DialogTitle>{t("socialFeed.actions.deleteConfirmTitle")}</DialogTitle>
+            <DialogDescription>{t("socialFeed.actions.deleteConfirmBody")}</DialogDescription>
           </DialogHeader>
           {error ? (
             <p className="text-sm text-red-600" role="alert">
@@ -312,10 +476,10 @@ export function PostOverflowMenu({
           ) : null}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setDeleteOpen(false)} disabled={pending}>
-              Cancelar
+              {t("common.cancel")}
             </Button>
             <Button type="button" variant="destructive" onClick={() => void confirmDelete()} disabled={pending}>
-              Excluir publicação
+              {t("socialFeed.actions.delete")}
             </Button>
           </div>
         </DialogContent>

@@ -9,7 +9,8 @@ export type PublicSort =
   | "price_asc"
   | "price_desc"
   | "popular"
-  | "rating";
+  | "rating"
+  | "near_me";
 
 export type PublicServiceFilters = {
   q?: string;
@@ -23,6 +24,9 @@ export type PublicServiceFilters = {
   minRating?: number;
   telehealth?: boolean;
   emergency24h?: boolean;
+  lat?: number;
+  lng?: number;
+  radiusKm?: number;
   sort?: PublicSort;
   page?: number;
   pageSize?: number;
@@ -125,6 +129,9 @@ export type PublicProductFilters = {
   maxPrice?: number;
   minRating?: number;
   inStock?: boolean;
+  lat?: number;
+  lng?: number;
+  radiusKm?: number;
   sort?: PublicSort;
   page?: number;
   pageSize?: number;
@@ -212,6 +219,11 @@ export async function queryPublicProducts(filters: PublicProductFilters) {
       : {}),
   };
 
+  const origin =
+    filters.lat != null && filters.lng != null && isValidLatLng({ lat: filters.lat, lng: filters.lng })
+      ? { lat: filters.lat, lng: filters.lng }
+      : null;
+
   const [products, total] = await Promise.all([
     prisma.product.findMany({
       where,
@@ -220,27 +232,66 @@ export async function queryPublicProducts(filters: PublicProductFilters) {
           select: {
             id: true,
             name: true,
-            partnerProfile: { select: { businessName: true, city: true, state: true } },
+            partnerProfile: {
+              select: {
+                businessName: true,
+                city: true,
+                state: true,
+                latitude: true,
+                longitude: true,
+              },
+            },
           },
         },
         reviews: { where: { moderationStatus: "VISIBLE" }, select: { rating: true } },
       },
-      orderBy: productOrderBy(filters.sort),
-      skip,
-      take: pageSize,
+      orderBy: productOrderBy(filters.sort === "near_me" ? "relevance" : filters.sort),
+      skip: origin ? 0 : skip,
+      take: origin ? Math.min(200, pageSize * 5) : pageSize,
     }),
     prisma.product.count({ where }),
   ]);
 
+  let mapped = products.map((p) => {
+    const { reviews: _r, ...rest } = p;
+    const lat = p.seller.partnerProfile?.latitude ?? null;
+    const lng = p.seller.partnerProfile?.longitude ?? null;
+    const distanceKm =
+      origin && lat != null && lng != null
+        ? Math.round(haversineDistanceKm(origin, { lat, lng }) * 100) / 100
+        : null;
+    // logisticsScore MVP: distância (menor melhor). Sem inventar frete/prazo.
+    const distanceScore = distanceKm == null ? 0 : Math.max(0, 100 - distanceKm);
+    return {
+      ...rest,
+      distanceKm,
+      logisticsScore: distanceScore,
+      shippingEtaLabel: "Prazo calculado no checkout" as const,
+    };
+  });
+
+  if (origin && filters.radiusKm && filters.radiusKm > 0) {
+    mapped = mapped.filter((p) => p.distanceKm == null || p.distanceKm <= filters.radiusKm!);
+  }
+
+  if (origin && (filters.sort === "near_me" || filters.lat != null)) {
+    mapped.sort((a, b) => {
+      const da = a.distanceKm ?? Number.POSITIVE_INFINITY;
+      const db = b.distanceKm ?? Number.POSITIVE_INFINITY;
+      if (da !== db) return da - db;
+      return (b.logisticsScore ?? 0) - (a.logisticsScore ?? 0);
+    });
+  }
+
+  const pageSlice = origin ? mapped.slice(skip, skip + pageSize) : mapped;
+  const filteredTotal = origin ? mapped.length : total;
+
   return {
-    products: products.map((p) => {
-      const { reviews: _r, ...rest } = p;
-      return rest;
-    }),
-    total,
+    products: pageSlice,
+    total: filteredTotal,
     page,
     pageSize,
-    totalPages: Math.ceil(total / pageSize),
+    totalPages: Math.ceil(filteredTotal / pageSize),
   };
 }
 

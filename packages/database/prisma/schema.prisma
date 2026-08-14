@@ -605,6 +605,9 @@ model User {
   userFollowsAsFollowing UserFollow[] @relation("UserFollowing")
   socialBlocksInitiated UserSocialBlock[] @relation("SocialBlocker")
   socialBlocksReceived UserSocialBlock[] @relation("SocialBlockBlocked")
+  socialMutesInitiated UserSocialMute[] @relation("SocialMuter")
+  socialMutesReceived UserSocialMute[] @relation("SocialMuted")
+  loyaltyAccount      LoyaltyAccount?
   integrations        Integration[]
   operationalRobots   OperationalRobot[]
   customQuotesSent    CustomQuote[] @relation("QuoteRequester")
@@ -3636,6 +3639,8 @@ model SocialPost {
   adoptionMeta      Json?
   isPinned          Boolean              @default(false)
   isFeatured        Boolean              @default(false)
+  commentsEnabled   Boolean              @default(true)
+  archivedAt        DateTime?
   createdAt         DateTime             @default(now())
   updatedAt         DateTime             @updatedAt
   editedAt          DateTime?
@@ -3662,6 +3667,7 @@ model SocialPost {
   @@index([petId])
   @@index([type])
   @@index([authorRole])
+  @@index([archivedAt])
 }
 
 model SocialPostMedia {
@@ -5191,4 +5197,134 @@ model FinancialReconciliationRun {
   idempotencyKey String @unique
   report       Json?
   createdAt    DateTime @default(now())
+}
+
+model UserSocialMute {
+  id        String   @id @default(cuid())
+  muterId   String
+  mutedId   String
+  createdAt DateTime @default(now())
+  muter     User     @relation("SocialMuter", fields: [muterId], references: [id], onDelete: Cascade)
+  muted     User     @relation("SocialMuted", fields: [mutedId], references: [id], onDelete: Cascade)
+
+  @@unique([muterId, mutedId])
+  @@index([muterId])
+  @@index([mutedId])
+}
+
+enum LoyaltyTxnType {
+  EARN
+  REDEEM
+  EXPIRE
+  ADJUSTMENT
+}
+
+enum LoyaltyTier {
+  ECCO
+  ECCO_PLUS
+  ECCO_PREMIUM
+}
+
+model LoyaltyAccount {
+  id             String              @id @default(cuid())
+  userId         String              @unique
+  pointsBalance  Int                 @default(0)
+  lifetimePoints Int                 @default(0)
+  tier           LoyaltyTier         @default(ECCO)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions   LoyaltyTransaction[]
+
+  @@index([tier])
+}
+
+model LoyaltyTransaction {
+  id               String        @id @default(cuid())
+  loyaltyAccountId String
+  type             LoyaltyTxnType
+  points           Int
+  sourceType       String?
+  sourceId         String?
+  description      String?
+  idempotencyKey   String?       @unique
+  expiresAt        DateTime?
+  createdAt        DateTime      @default(now())
+  account          LoyaltyAccount @relation(fields: [loyaltyAccountId], references: [id], onDelete: Cascade)
+
+  @@index([loyaltyAccountId, createdAt])
+  @@index([sourceType, sourceId])
+}
+
+model MembershipPlan {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  description String?
+  priceCents  Int
+  currency    String   @default("BRL")
+  interval    String   @default("month")
+  isActive    Boolean  @default(true)
+  benefitsJson Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  subscriptions MembershipSubscription[]
+  benefits    MembershipBenefit[]
+}
+
+model MembershipBenefit {
+  id          String @id @default(cuid())
+  planId      String
+  code        String
+  title       String
+  description String?
+  plan        MembershipPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, code])
+  @@index([planId])
+}
+
+model MembershipSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  planId    String
+  status    String   @default("ACTIVE")
+  startedAt DateTime @default(now())
+  endsAt    DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  plan      MembershipPlan @relation(fields: [planId], references: [id])
+
+  @@index([userId, status])
+  @@index([planId])
+}
+
+model Coupon {
+  id              String   @id @default(cuid())
+  code            String   @unique
+  description     String?
+  discountType    String
+  discountValue   Float
+  minOrderCents   Int?
+  maxRedemptions  Int?
+  redemptionCount Int      @default(0)
+  startsAt        DateTime?
+  endsAt          DateTime?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  redemptions     CouponRedemption[]
+}
+
+model CouponRedemption {
+  id        String   @id @default(cuid())
+  couponId  String
+  userId    String
+  orderId   String?
+  createdAt DateTime @default(now())
+  coupon    Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+
+  @@unique([couponId, userId, orderId])
+  @@index([userId])
+  @@index([couponId])
 }

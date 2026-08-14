@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WeightChart } from "./weight-chart";
+import { VaccinationBooklet } from "./vaccination-booklet";
 import { petsApi } from "@/lib/pets/api";
 import type { PetDetail } from "@/lib/pets/types";
 import {
@@ -228,24 +229,18 @@ export function PetDetailView({ pet, token, onRefresh }: PetDetailViewProps) {
           </SectionForm>
         </TabsContent>
 
-        <TabsContent value="vacinas">
-          <Card>
-            <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-base"><Syringe className="h-4 w-4" /> Carteira de Vacinação</CardTitle></CardHeader>
-            <CardContent className="space-y-2">
-              {pet.vaccinations.map((v) => (
-                <div key={v.id} className="flex justify-between border-b border-ecopet-gray/10 pb-2 text-sm">
-                  <div>
-                    <p className="font-medium">{v.name}</p>
-                    <p className="text-ecopet-gray">{v.manufacturer} · Lote {v.batch ?? "—"}</p>
-                  </div>
-                  <div className="text-right text-ecopet-gray">
-                    <p>{new Date(v.date).toLocaleDateString("pt-BR")}</p>
-                    {v.nextDue && <p className={cn(new Date(v.nextDue) < new Date() && "text-red-500")}>Próx: {new Date(v.nextDue).toLocaleDateString("pt-BR")}</p>}
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+        <TabsContent value="vacinas" className="space-y-4">
+          <VaccinationBooklet
+            pet={{
+              name: pet.name,
+              photo: pet.photo,
+              species: SPECIES_LABELS[pet.species] ?? pet.species,
+              breed: pet.breed,
+              birthDate: pet.birthDate,
+              age: pet.age,
+            }}
+            vaccinations={pet.vaccinations}
+          />
           <SectionForm title="Registrar vacina" loading={loading} onSubmit={() => run(() => api.addVaccination(pet.id, vaccine))}>
             <select className="flex h-11 w-full rounded-xl border px-3 text-sm" value={vaccine.name} onChange={(e) => setVaccine({ ...vaccine, name: e.target.value })}>
               {VACCINE_PRESETS.map((v) => <option key={v} value={v}>{v}</option>)}

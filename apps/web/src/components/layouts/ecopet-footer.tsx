@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useAuthSession } from "@/hooks/use-auth-session";
-import { Github, Instagram, Linkedin, MessageCircle, Phone } from "lucide-react";
+import { MessageCircle, Phone } from "lucide-react";
 import { EcoPetLogo } from "@/components/shared/brand/ecopet-logo";
 import { useSupportChat } from "@/providers/support-chat-provider";
+import { useAuthSession } from "@/hooks/use-auth-session";
 import { useTranslation } from "@/providers/i18n-provider";
 import type { TranslationKey } from "@/lib/i18n/types";
 
@@ -16,8 +16,8 @@ type NavLink = { href: string; labelKey: TranslationKey; authRequired?: boolean 
 
 const PRODUCT_LINKS: NavLink[] = [
   { href: "/marketplace", labelKey: "nav.marketplace" },
-  { href: "/explorar", labelKey: "nav.explore" },
   { href: "/marketplace/servicos", labelKey: "nav.services" },
+  { href: "/adocao", labelKey: "nav.adoption" },
   { href: "/social", labelKey: "nav.socialNetwork" },
   { href: "/eccopet", labelKey: "nav.ia" },
 ];
@@ -25,7 +25,6 @@ const PRODUCT_LINKS: NavLink[] = [
 const ACCOUNT_LINKS: NavLink[] = [
   { href: "/meu-pet", labelKey: "nav.petRegistration" },
   { href: "/perfil", labelKey: "nav.profile" },
-  { href: "/adocao", labelKey: "nav.adoption" },
   { href: "/termos-de-uso", labelKey: "nav.termsOfUse" },
   { href: "/politica-de-privacidade", labelKey: "nav.privacyPolicy" },
 ];
@@ -54,25 +53,16 @@ export function EcopetFooter() {
           <div className="lg:col-span-4">
             <EcoPetLogo href="/" variant="dark" size="lg" showText showTagline />
             <p className="mt-5 max-w-sm text-sm leading-relaxed text-white/70">{t("footer.tagline")}</p>
-            <div className="mt-6 flex items-center gap-2">
-              {[
-                { href: WHATSAPP_URL, label: "WhatsApp", icon: MessageCircle },
-                { href: "https://instagram.com", label: "Instagram", icon: Instagram },
-                { href: "https://linkedin.com", label: "LinkedIn", icon: Linkedin },
-                { href: "https://github.com", label: "GitHub", icon: Github },
-              ].map((s) => (
-                <a
-                  key={s.label}
-                  href={s.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={s.label}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/80 transition hover:border-white/25 hover:bg-white/10 hover:text-white"
-                >
-                  <s.icon className="h-4 w-4" strokeWidth={2} aria-hidden />
-                </a>
-              ))}
-            </div>
+            <a
+              href={WHATSAPP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="WhatsApp EccoPet"
+              className="mt-6 inline-flex h-10 items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 text-sm text-white/80 transition hover:border-white/25 hover:bg-white/10 hover:text-white"
+            >
+              <MessageCircle className="h-4 w-4" strokeWidth={2} aria-hidden />
+              WhatsApp
+            </a>
           </div>
 
           <div className="grid gap-10 sm:grid-cols-3 lg:col-span-8">
@@ -109,7 +99,7 @@ export function EcopetFooter() {
             </div>
 
             <div>
-              <h3 className="overline-text text-white/50">{t("common.contact")}</h3>
+              <h3 className="overline-text text-white/50">{t("common.support")}</h3>
               <ul className="mt-4 space-y-4 text-sm text-white/75">
                 <li>
                   <span className="block text-xs uppercase tracking-wide text-white/45">{t("common.phone")}</span>
@@ -128,7 +118,7 @@ export function EcopetFooter() {
                     className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-ecopet-green px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-ecopet-green-700 sm:w-auto"
                   >
                     <MessageCircle className="h-4 w-4" strokeWidth={2} aria-hidden />
-                    {t("common.support")}
+                    {t("support.title")}
                     {hasUnread ? (
                       <span className="ml-1 h-2 w-2 rounded-full bg-red-500" aria-label={t("footer.newMessage")} />
                     ) : null}
@@ -140,9 +130,8 @@ export function EcopetFooter() {
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col gap-3 border-t border-white/10 pt-6 text-xs text-white/45 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-12 border-t border-white/10 pt-6 text-xs text-white/45">
           <p>{t("footer.copyright", { year: String(new Date().getFullYear()) })}</p>
-          <p className="max-w-md text-white/40">{t("footer.about")}</p>
         </div>
       </div>
     </footer>

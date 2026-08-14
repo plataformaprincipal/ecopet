@@ -46,8 +46,8 @@ export function ProductCard({ product, compact }: ProductCardProps) {
 
   return (
     <>
-    <article className="group relative flex flex-col overflow-hidden rounded-[20px] border border-ecopet-gray/10 bg-white shadow-[var(--shadow-premium)] transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-premium-lg)] dark:bg-white/5">
-      <Link href={`/marketplace/produto/${product.id}`} className="relative block aspect-square overflow-hidden bg-gray-100">
+    <article className="group relative flex flex-col overflow-hidden rounded-[20px] border border-ecopet-gray/10 bg-white shadow-[var(--shadow-premium)] transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-premium-lg)] dark:border-white/10 dark:bg-zinc-900/60">
+      <Link href={`/marketplace/produto/${product.id}`} className="relative block aspect-square overflow-hidden bg-gray-100 dark:bg-white/5">
         <Image src={product.images[0]} alt={productImageAlt(product.name, { shortDescription: product.description })} fill className="object-cover transition-transform group-hover:scale-105" sizes="(max-width:768px) 50vw, 25vw" />
         <div className="absolute left-2 top-2 flex flex-wrap gap-1">
           {product.isPromo && discount > 0 && (
@@ -63,7 +63,7 @@ export function ProductCard({ product, compact }: ProductCardProps) {
         </div>
         {!product.inStock && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-            <span className="rounded-full bg-white px-3 py-1 text-xs font-bold">{t("marketplace.outOfStock")}</span>
+            <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-ecopet-dark dark:bg-zinc-900 dark:text-white">{t("marketplace.outOfStock")}</span>
           </div>
         )}
       </Link>
@@ -94,9 +94,11 @@ export function ProductCard({ product, compact }: ProductCardProps) {
               <Truck className="h-3 w-3" /> {t("marketplace.freeShipping")}
             </span>
           )}
-          {product.inStock && (
+          {product.inStock && product.deliveryDays != null ? (
             <span>{t("marketplace.deliveryDays", { days: String(product.deliveryDays) })}</span>
-          )}
+          ) : product.inStock ? (
+            <span>Prazo no checkout</span>
+          ) : null}
         </div>
 
         {!compact && (

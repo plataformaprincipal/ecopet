@@ -41,6 +41,7 @@ import type { AccessibilityPreferences } from "@/lib/accessibility/types";
 import { useTranslation } from "@/providers/i18n-provider";
 import { deactivateVLibras } from "@/lib/accessibility/vlibras-loader";
 import { useAriaAnnounce } from "./aria-live-region";
+import { useSimpleLanguage } from "@/hooks/use-simple-language";
 type BooleanKey = {
   [K in keyof AccessibilityPreferences]: AccessibilityPreferences[K] extends boolean ? K : never;
 }[keyof AccessibilityPreferences];
@@ -50,6 +51,7 @@ export function AccessibilityToolbar() {
   const [minimized, setMinimized] = useState(false);
   const announce = useAriaAnnounce();
   const { t } = useTranslation();
+  const { s } = useSimpleLanguage();
   const { resolvedTheme, setTheme } = useTheme();
   const isDarkTheme = resolvedTheme === "dark";
 
@@ -152,7 +154,7 @@ export function AccessibilityToolbar() {
           <div className="flex shrink-0 items-center justify-between bg-ecopet-dark px-4 py-3 text-white">
             <div className="flex items-center gap-2">
               <Accessibility className="h-5 w-5 text-ecopet-yellow" aria-hidden />
-              <span className="font-display text-sm font-bold">{t("a11y.title")}</span>
+              <span className="font-display text-sm font-bold">{s(t("a11y.title"))}</span>
             </div>
             <div className="flex gap-1">
               <IconBtn icon={Minimize2} label={t("common.minimize")} onClick={() => setMinimized(true)} />
@@ -161,7 +163,7 @@ export function AccessibilityToolbar() {
           </div>
 
           <div className="flex-1 overflow-y-auto overscroll-contain p-2">
-            <Section title={t("a11y.sections.visual")} icon={Eye} defaultOpen>
+            <Section title={s(t("a11y.sections.visual"))} icon={Eye} defaultOpen>
               <ToolBtn icon={Plus} label={t("a11y.labels.increaseFont")} onClick={increaseFont} disabled={atMax} />
               <ToolBtn icon={Minus} label={t("a11y.labels.decreaseFont")} onClick={decreaseFont} disabled={atMin} />
               <ToolBtn icon={RotateCcw} label={t("a11y.labels.resetFont")} onClick={resetFont} />
@@ -176,32 +178,32 @@ export function AccessibilityToolbar() {
               <ToggleBtn icon={MousePointer2} label={t("a11y.labels.largeCursor")} active={largeCursor} onClick={() => handleToggle("largeCursor", t("a11y.labels.largeCursor"))} />
             </Section>
 
-            <Section title={t("a11y.sections.auditory")} icon={Volume2}>
+            <Section title={s(t("a11y.sections.auditory"))} icon={Volume2}>
               <ToggleBtn icon={VolumeX} label={t("a11y.labels.visualAlerts")} active={visualAlerts} onClick={() => handleToggle("visualAlerts", t("a11y.labels.visualAlerts"))} />
               <ToggleBtn icon={VolumeX} label={t("a11y.labels.reduceNotifications")} active={reduceVisualNotifications} onClick={() => handleToggle("reduceVisualNotifications", t("a11y.labels.reduceNotifications"))} />
             </Section>
 
-            <Section title={t("a11y.sections.cognitive")} icon={Brain}>
-              <ToggleBtn icon={Brain} label={t("a11y.labels.cognitive")} active={cognitiveMode} onClick={() => handleToggle("cognitiveMode", t("a11y.labels.cognitive"))} />
-              <ToggleBtn icon={Minimize2} label={t("a11y.labels.simplified")} active={simplifiedUI} onClick={() => handleToggle("simplifiedUI", t("a11y.labels.simplified"))} />
+            <Section title={s(t("a11y.sections.cognitive"))} icon={Brain}>
+              <ToggleBtn icon={Brain} label={s(t("a11y.labels.cognitive"))} active={cognitiveMode} onClick={() => handleToggle("cognitiveMode", t("a11y.labels.cognitive"))} />
+              <ToggleBtn icon={Minimize2} label={s(t("a11y.labels.simplified"))} active={simplifiedUI} onClick={() => handleToggle("simplifiedUI", t("a11y.labels.simplified"))} />
             </Section>
 
-            <Section title={t("a11y.sections.motor")} icon={Hand}>
+            <Section title={s(t("a11y.sections.motor"))} icon={Hand}>
               <ToggleBtn icon={Hand} label={t("a11y.labels.motor")} active={motorMode} onClick={() => handleToggle("motorMode", t("a11y.labels.motor"))} />
             </Section>
 
-            <Section title={t("a11y.sections.neuro")} icon={Sparkles}>
+            <Section title={s(t("a11y.sections.neuro"))} icon={Sparkles}>
               <ToggleBtn icon={Sparkles} label={t("a11y.labels.calm")} active={calmMode} onClick={() => handleToggle("calmMode", t("a11y.labels.calm"))} />
               <ToggleBtn icon={BookOpen} label={t("a11y.labels.dyslexia")} active={dyslexiaMode} onClick={() => handleToggle("dyslexiaMode", t("a11y.labels.dyslexia"))} />
               <ToggleBtn icon={PauseCircle} label={t("a11y.labels.pauseAnimations")} active={pauseAnimations} onClick={() => handleToggle("pauseAnimations", t("a11y.labels.pauseAnimations"))} />
             </Section>
 
-            <Section title={t("a11y.sections.libras")} icon={HandMetal}>
+            <Section title={s(t("a11y.sections.libras"))} icon={HandMetal}>
               <ToggleBtn icon={HandMetal} label={t("a11y.labels.libras")} active={librasEnabled} onClick={() => handleToggle("librasEnabled", t("a11y.labels.libras"))} />
               <p className="px-3 pb-2 text-[11px] leading-relaxed text-ecopet-gray">{t("a11y.librasNote")}</p>
             </Section>
 
-            <Section title={t("a11y.sections.braille")} icon={BookOpen}>
+            <Section title={s(t("a11y.sections.braille"))} icon={BookOpen}>
               <ToggleBtn icon={BookOpen} label={t("a11y.labels.braille")} active={brailleEnabled} onClick={handleBrailleToggle} />
               <ToggleBtn icon={Accessibility} label={t("a11y.labels.screenReader")} active={screenReaderMode} onClick={() => handleToggle("screenReaderMode", t("a11y.labels.screenReader"))} />
               <ToggleBtn icon={ScanEye} label={t("a11y.labels.readingMask")} active={readingMask} onClick={() => handleToggle("readingMask", t("a11y.labels.readingMask"))} />
@@ -209,7 +211,7 @@ export function AccessibilityToolbar() {
               <p className="px-3 pb-2 text-[11px] leading-relaxed text-ecopet-gray">{t("a11y.brailleNote")}</p>
             </Section>
 
-            <Section title={t("a11y.sections.preferences")} icon={Settings2}>
+            <Section title={s(t("a11y.sections.preferences"))} icon={Settings2}>
               <ToolBtn
                 icon={isDarkTheme ? Sun : Moon}
                 label={isDarkTheme ? t("a11y.themeLight") : t("a11y.themeDark")}
@@ -352,7 +354,7 @@ const ToggleBtn = memo(function ToggleBtn({
       className={cn(
         "flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm transition-colors",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ecopet-green",
-        active ? "bg-ecopet-green/10 font-semibold" : "hover:bg-ecopet-green/5"
+        active ? "bg-ecopet-green/10 font-semibold text-ecopet-dark dark:text-white" : "text-ecopet-dark hover:bg-ecopet-green/5 dark:text-white"
       )}
     >
       <span className="flex items-center gap-3">

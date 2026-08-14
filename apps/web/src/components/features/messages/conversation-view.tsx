@@ -61,12 +61,12 @@ export function ConversationView({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header className="flex items-center gap-2 border-b px-4 py-3">
-        <Button size="icon" variant="ghost" className="lg:hidden" onClick={onBack}>
+      <header className="flex items-center gap-2 border-b border-ecopet-gray/10 px-4 py-3 dark:border-white/10">
+        <Button size="icon" variant="ghost" className="lg:hidden" onClick={onBack} aria-label="Voltar">
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1">
-          <h2 className="font-semibold">Conversa</h2>
+          <h2 className="font-semibold text-ecopet-dark dark:text-white">Conversa</h2>
           <p className="text-xs text-muted-foreground">Atualização automática a cada 5s</p>
         </div>
       </header>
