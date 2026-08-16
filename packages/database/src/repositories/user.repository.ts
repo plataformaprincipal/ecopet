@@ -1,4 +1,4 @@
-import { prisma } from "../client";
+import { prisma } from "../client.js";
 import type { Prisma, User, UserRole } from "@prisma/client";
 
 export const userRepository = {

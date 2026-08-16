@@ -22,7 +22,7 @@ export {
 } from "@prisma/client";
 export type * from "@prisma/client";
 
-export { prisma, createPrismaClient, getResolvedDatabaseUrl } from "./client";
+export { prisma, createPrismaClient, getResolvedDatabaseUrl } from "./client.js";
 export {
   buildDatabaseBootDiagnostics,
   extractPrismaConnectError,
@@ -31,5 +31,5 @@ export {
   parseDatabaseUrlHost,
   type DatabaseBootDiagnostics,
   type PrismaConnectErrorDetails,
-} from "./diagnostics";
-export * from "./repositories/index";
+} from "./diagnostics.js";
+export * from "./repositories/index.js";

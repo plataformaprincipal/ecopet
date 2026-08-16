@@ -6,7 +6,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "npm run generate -w @ecopet/database && tsc",
+    "build": "npm run build -w @ecopet/database && tsc",
     "postinstall": "npm run generate -w @ecopet/database",
     "type-check": "tsc --noEmit",
     "start": "node dist/index.js",
