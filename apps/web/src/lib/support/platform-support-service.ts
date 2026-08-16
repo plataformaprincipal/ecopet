@@ -229,7 +229,15 @@ export async function runPlatformSupportChat(params: {
         completion.choices[0]?.message?.content?.trim() ||
         "Não consegui gerar uma resposta agora. Posso registrar um atendimento humano.";
     } catch (error) {
-      console.error("[support:chat]", { correlationId: cid, error });
+      console.error(
+        JSON.stringify({
+          scope: "AI_SUPPORT",
+          event: "openai_error",
+          correlationId: cid,
+          provider: "openai",
+          message: error instanceof Error ? error.message.slice(0, 120).replace(/sk-[a-zA-Z0-9_-]+/g, "[redacted]") : "unknown",
+        })
+      );
       available = false;
       reply =
         "Não consegui resolver automaticamente neste momento. Posso registrar um atendimento para a equipe humana.";

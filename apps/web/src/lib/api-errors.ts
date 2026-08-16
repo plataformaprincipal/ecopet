@@ -51,7 +51,7 @@ export function mapApiErrorMessage(message: string, code?: string): string {
   if (code === "VALIDATION") return message || USER_MESSAGES.VALIDATION;
   if (code === "DATABASE") return USER_MESSAGES.DATABASE;
   if (code === "UNEXPECTED") return USER_MESSAGES.UNEXPECTED;
-  if (code === "SESSION") return USER_MESSAGES.SESSION;
+  if (code === "SESSION" || code === "UNAUTHORIZED") return USER_MESSAGES.SESSION;
   if (code === "PERMISSION") return USER_MESSAGES.PERMISSION;
   if (code === "CONFIG" || code === "CONNECTION") {
     return (

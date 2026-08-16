@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Send, Sparkles, ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { api } from "@/lib/api";
+import { localApi } from "@/lib/local-api.client";
 import { ApiRequestError } from "@/lib/api-errors";
 import { cn } from "@/lib/utils";
 import { useAssistantStore } from "@/store/assistant-store";
@@ -43,7 +43,7 @@ export function HubAssistantPanel({ className }: { className?: string }) {
       setMessages((m) => [...m, { role: "user", content: text }]);
       setLoading(true);
       try {
-        const res = await api<{
+        const res = await localApi<{
           success?: boolean;
           data?: { reply?: string; content?: string };
           reply?: string;

@@ -7,10 +7,48 @@ const CONNECTION_ERROR = {
   code: "CONNECTION",
 };
 
+const HOP_BY_HOP = new Set([
+  "connection",
+  "keep-alive",
+  "proxy-authenticate",
+  "proxy-authorization",
+  "te",
+  "trailers",
+  "transfer-encoding",
+  "upgrade",
+  "host",
+  "content-length",
+]);
+
 function logProxy(event: string, data: Record<string, unknown>) {
   if (process.env.NODE_ENV === "development" || process.env.ECOPET_PROXY_LOG === "1") {
-    console.log(JSON.stringify({ scope: "ecopet-proxy", event, ...data, ts: new Date().toISOString() }));
+    console.log(
+      JSON.stringify({
+        scope: "ecopet-proxy",
+        event,
+        ...data,
+        ts: new Date().toISOString(),
+      })
+    );
   }
+}
+
+function buildForwardHeaders(req: NextRequest): Headers {
+  const headers = new Headers();
+  const allow = [
+    "content-type",
+    "accept",
+    "authorization",
+    "cookie",
+    "user-agent",
+    "x-request-id",
+    "x-correlation-id",
+  ];
+  for (const name of allow) {
+    const value = req.headers.get(name);
+    if (value) headers.set(name, value);
+  }
+  return headers;
 }
 
 async function proxyRequest(req: NextRequest, pathSegments: string[]) {
@@ -27,33 +65,36 @@ async function proxyRequest(req: NextRequest, pathSegments: string[]) {
   const targetPath = normalized.join("/");
   const url = `${backend.replace(/\/$/, "")}/api/${targetPath}${req.nextUrl.search}`;
 
-  const headers = new Headers();
-  const contentType = req.headers.get("content-type");
-  if (contentType) headers.set("Content-Type", contentType);
-  const authorization = req.headers.get("authorization");
-  if (authorization) headers.set("Authorization", authorization);
-  const cookie = req.headers.get("cookie");
-  if (cookie) headers.set("Cookie", cookie);
+  const headers = buildForwardHeaders(req);
+  const init: RequestInit & { duplex?: "half" } = {
+    method: req.method,
+    headers,
+  };
 
-  const init: RequestInit = { method: req.method, headers };
-  if (req.method !== "GET" && req.method !== "HEAD") {
-    init.body = await req.text();
+  if (req.method !== "GET" && req.method !== "HEAD" && req.body) {
+    init.body = req.body;
+    init.duplex = "half";
   }
 
   logProxy("forward", {
     incoming: `/api/ecopet/${pathSegments.join("/")}`,
-    target: url,
+    targetPath: `/api/${targetPath}`,
     method: req.method,
+    cookiePresent: Boolean(req.headers.get("cookie")),
+    authorizationPresent: Boolean(req.headers.get("authorization")),
   });
 
   try {
     const res = await fetch(url, init);
-    const body = await res.text();
     const responseHeaders = new Headers();
-    const resContentType = res.headers.get("content-type");
-    if (resContentType) responseHeaders.set("Content-Type", resContentType);
+    res.headers.forEach((value, key) => {
+      if (HOP_BY_HOP.has(key.toLowerCase())) return;
+      if (key.toLowerCase() === "set-cookie") return;
+      responseHeaders.append(key, value);
+    });
 
-    const setCookies = typeof res.headers.getSetCookie === "function" ? res.headers.getSetCookie() : [];
+    const setCookies =
+      typeof res.headers.getSetCookie === "function" ? res.headers.getSetCookie() : [];
     for (const c of setCookies) {
       responseHeaders.append("Set-Cookie", c);
     }
@@ -62,11 +103,22 @@ async function proxyRequest(req: NextRequest, pathSegments: string[]) {
       responseHeaders.append("Set-Cookie", legacySetCookie);
     }
 
-    logProxy("response", { target: url, status: res.status });
+    logProxy("response", {
+      targetPath: `/api/${targetPath}`,
+      backendStatus: res.status,
+      contentType: res.headers.get("content-type"),
+    });
 
-    return new NextResponse(body, { status: res.status, headers: responseHeaders });
+    // Streaming / binary: não materializar o body
+    return new NextResponse(res.body, {
+      status: res.status,
+      headers: responseHeaders,
+    });
   } catch (err) {
-    logProxy("error", { target: url, message: (err as Error).message });
+    logProxy("error", {
+      targetPath: `/api/${targetPath}`,
+      message: (err as Error).message,
+    });
     return NextResponse.json(CONNECTION_ERROR, { status: 503 });
   }
 }

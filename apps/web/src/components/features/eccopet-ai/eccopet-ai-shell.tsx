@@ -18,7 +18,7 @@ import { useAuthGate } from "@/providers/auth-gate-provider";
 import { useAuthSession } from "@/hooks/use-auth-session";
 import { useTranslation } from "@/providers/i18n-provider";
 import type { TranslateFn } from "@/lib/i18n";
-import { api } from "@/lib/api";
+import { localApi } from "@/lib/local-api.client";
 import { ApiRequestError, parseApiFailureError } from "@/lib/api-errors";
 import { cn } from "@/lib/utils";
 import type { EccoPetTool } from "@/lib/public/eccopet-tools";
@@ -161,7 +161,7 @@ export function EccoPetAIShell() {
   const loadConversations = useCallback(async () => {
     if (!isAuthenticated) return;
     try {
-      const res = await api<{
+      const res = await localApi<{
         success?: boolean;
         data?: {
           conversations?: Array<{
@@ -212,7 +212,7 @@ export function EccoPetAIShell() {
         return localId;
       }
 
-      const res = await api<{
+      const res = await localApi<{
         success?: boolean;
         data?: { conversation?: { id: string; title?: string | null; createdAt?: string } };
       }>("/api/ai/conversations", {
@@ -715,7 +715,7 @@ export function EccoPetAIShell() {
       if (!isAuthenticated) return;
 
       try {
-        const res = await api<{
+        const res = await localApi<{
           success?: boolean;
           data?: {
             conversation?: {
@@ -751,7 +751,7 @@ export function EccoPetAIShell() {
         return;
       }
       try {
-        await api(`/api/ai/conversations/${id}`, { method: "DELETE" });
+        await localApi(`/api/ai/conversations/${id}`, { method: "DELETE" });
         setConversations((prev) => prev.filter((c) => c.id !== id));
         if (activeId === id) setActiveId(null);
       } catch (err) {
@@ -772,7 +772,7 @@ export function EccoPetAIShell() {
     ) => {
       if (!isAuthenticated) return;
       try {
-        await api(`/api/ai/conversations/${id}`, {
+        await localApi(`/api/ai/conversations/${id}`, {
           method: "PATCH",
           body: JSON.stringify(patch),
         });
@@ -836,7 +836,7 @@ export function EccoPetAIShell() {
       }));
 
       try {
-        const res = await api<{
+        const res = await localApi<{
           success?: boolean;
           data?: { ok?: boolean; error?: string; data?: { message?: string } };
           error?: { code?: string; message?: string };

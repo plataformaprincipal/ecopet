@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import { AppHeader } from "@/components/layouts/app-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { api } from "@/lib/api";
+import { localApi } from "@/lib/local-api.client";
 import { useAppStore } from "@/store/app-store";
 import { useTranslation } from "@/providers/i18n-provider";
 
@@ -33,12 +33,17 @@ export default function IAPage() {
     setMessages((m) => [...m, { role: "user", content: userMsg }]);
     setLoading(true);
     try {
-      const res = await api<{ reply: string }>("/api/ai/chat", {
+      const res = await localApi<{
+        reply?: string;
+        data?: { reply?: string; content?: string };
+      }>("/api/ai/chat", {
         method: "POST",
         token: token || undefined,
-        body: JSON.stringify({ message: userMsg, type: mode }),
+        body: JSON.stringify({ message: userMsg, type: mode, module: "ecopet-ai" }),
       });
-      setMessages((m) => [...m, { role: "assistant", content: res.reply }]);
+      const content =
+        res.data?.content ?? res.data?.reply ?? res.reply ?? t("empty.ai.unavailable");
+      setMessages((m) => [...m, { role: "assistant", content }]);
     } catch {
       setMessages((m) => [
         ...m,

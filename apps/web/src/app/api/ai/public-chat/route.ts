@@ -55,7 +55,7 @@ export async function POST(request: Request) {
   }
 
   const envSnapshot = nextPublicChatEnvSnapshot();
-  console.log("[public-chat] env", envSnapshot);
+  console.info(JSON.stringify({ scope: "AI_PUBLIC_CHAT", ...envSnapshot }));
 
   const result = await runPublicGuestChat({
     message: parsed.data.message,
@@ -65,13 +65,16 @@ export async function POST(request: Request) {
     lng: parsed.data.lng,
   });
 
-  console.log("[public-chat] result", {
-    available: result.available,
-    requiresSignIn: result.requiresSignIn,
-    providerErrorStatus: result._diag?.providerStatus ?? null,
-    fallbackReason: result._diag?.fallbackReason ?? null,
-    providerCode: result._diag?.providerCode ?? null,
-  });
+  console.info(
+    JSON.stringify({
+      scope: "AI_PUBLIC_CHAT",
+      available: result.available,
+      requiresSignIn: result.requiresSignIn,
+      providerErrorStatus: result._diag?.providerStatus ?? null,
+      fallbackReason: result._diag?.fallbackReason ?? null,
+      providerCode: result._diag?.providerCode ?? null,
+    })
+  );
 
   const { _diag: _ignored, ...clientResult } = result;
   return apiSuccess(clientResult);
