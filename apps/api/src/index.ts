@@ -46,18 +46,15 @@ import { blockCommercialMutations } from "./middleware/commercial-legacy-disable
 import { logStructured } from "./lib/logger.js";
 import { sendSuccess } from "./lib/express-api-response.js";
 
+/** Vercel serverless — não abrir porta / Socket.IO persistente. */
+const isVercel = process.env.VERCEL === "1";
+
 const app = express();
-const httpServer = createServer(app);
-const preferredPort = Number(process.env.API_PORT || process.env.PORT || 4000);
 
 const webOrigins = (process.env.WEB_URL || "http://localhost:3000")
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean);
-
-const io = new Server(httpServer, {
-  cors: { origin: webOrigins, credentials: true },
-});
 
 app.use(helmet());
 app.use(cors({ origin: webOrigins, credentials: true }));
@@ -151,67 +148,83 @@ app.use("/api/marketplace/partner", blockCommercialMutations, authMiddleware, ma
 
 app.use(errorHandler);
 
-// Autenticação obrigatória do socket: verifica o JWT e deriva o usuário do token.
-// O cliente NUNCA define seu próprio userId/senderId.
-io.use((socket, next) => {
-  const token = socket.handshake.auth?.token as string | undefined;
-  if (!token) return next(new Error("Unauthorized"));
-  try {
-    const payload = jwt.verify(token, apiEnv.jwtSecret) as { userId: string; role?: string };
-    if (!payload?.userId) return next(new Error("Unauthorized"));
-    socket.data.userId = payload.userId;
-    next();
-  } catch {
-    next(new Error("Unauthorized"));
-  }
-});
+/** Socket.IO — somente runtime local (HTTP tradicional). Null na Vercel. */
+let io: Server | null = null;
 
-async function isConversationMember(conversationId: string, userId: string): Promise<boolean> {
-  if (!conversationId || !userId) return false;
-  const participant = await prisma.conversationParticipant.findFirst({
-    where: { conversationId, userId, leftAt: null },
-    select: { id: true },
+function attachSocketIo(httpServer: ReturnType<typeof createServer>): Server {
+  const socketServer = new Server(httpServer, {
+    cors: { origin: webOrigins, credentials: true },
   });
-  return Boolean(participant);
+
+  // Autenticação obrigatória do socket: verifica o JWT e deriva o usuário do token.
+  // O cliente NUNCA define seu próprio userId/senderId.
+  socketServer.use((socket, next) => {
+    const token = socket.handshake.auth?.token as string | undefined;
+    if (!token) return next(new Error("Unauthorized"));
+    try {
+      const payload = jwt.verify(token, apiEnv.jwtSecret) as { userId: string; role?: string };
+      if (!payload?.userId) return next(new Error("Unauthorized"));
+      socket.data.userId = payload.userId;
+      next();
+    } catch {
+      next(new Error("Unauthorized"));
+    }
+  });
+
+  async function isConversationMember(conversationId: string, userId: string): Promise<boolean> {
+    if (!conversationId || !userId) return false;
+    const participant = await prisma.conversationParticipant.findFirst({
+      where: { conversationId, userId, leftAt: null },
+      select: { id: true },
+    });
+    return Boolean(participant);
+  }
+
+  socketServer.on("connection", (socket) => {
+    const userId = socket.data.userId as string;
+    socket.join(`user:${userId}`);
+
+    socket.on("join:conversation", async (conversationId: string) => {
+      if (await isConversationMember(conversationId, userId)) {
+        socket.join(`conversation:${conversationId}`);
+      } else {
+        socket.emit("message:error", { error: "Forbidden" });
+      }
+    });
+
+    socket.on("message:send", async (data: { conversationId: string; content: string }) => {
+      try {
+        if (!(await isConversationMember(data.conversationId, userId))) {
+          socket.emit("message:error", { error: "Forbidden" });
+          return;
+        }
+        const message = await prisma.message.create({
+          data: {
+            conversationId: data.conversationId,
+            senderId: userId,
+            content: data.content,
+          },
+          include: { sender: { select: { id: true, name: true, avatar: true } } },
+        });
+        socketServer.to(`conversation:${data.conversationId}`).emit("message:new", message);
+      } catch {
+        socket.emit("message:error", { error: "Failed to send message" });
+      }
+    });
+
+    socket.on("disconnect", () => {});
+  });
+
+  return socketServer;
 }
 
-io.on("connection", (socket) => {
-  const userId = socket.data.userId as string;
-  socket.join(`user:${userId}`);
-
-  socket.on("join:conversation", async (conversationId: string) => {
-    if (await isConversationMember(conversationId, userId)) {
-      socket.join(`conversation:${conversationId}`);
-    } else {
-      socket.emit("message:error", { error: "Forbidden" });
-    }
-  });
-
-  socket.on("message:send", async (data: { conversationId: string; content: string }) => {
-    try {
-      if (!(await isConversationMember(data.conversationId, userId))) {
-        socket.emit("message:error", { error: "Forbidden" });
-        return;
-      }
-      const message = await prisma.message.create({
-        data: {
-          conversationId: data.conversationId,
-          senderId: userId,
-          content: data.content,
-        },
-        include: { sender: { select: { id: true, name: true, avatar: true } } },
-      });
-      io.to(`conversation:${data.conversationId}`).emit("message:new", message);
-    } catch {
-      socket.emit("message:error", { error: "Failed to send message" });
-    }
-  });
-
-  socket.on("disconnect", () => {});
-});
-
+/** Inicialização local/tradicional — não executa na Vercel. */
 async function startServer() {
   validateApiProductionEnv();
+  const preferredPort = Number(process.env.API_PORT || process.env.PORT || 4000);
+  const httpServer = createServer(app);
+  io = attachSocketIo(httpServer);
+
   let port: number;
   try {
     port = await resolveAvailablePort(preferredPort);
@@ -251,6 +264,11 @@ async function startServer() {
   });
 }
 
-startServer();
+if (isVercel) {
+  validateApiProductionEnv();
+} else {
+  void startServer();
+}
 
-export { io };
+export default app;
+export { app, io };
