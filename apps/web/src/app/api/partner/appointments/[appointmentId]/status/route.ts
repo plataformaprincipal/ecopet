@@ -84,6 +84,10 @@ export async function PATCH(request: Request, context: RouteContext) {
     }
   }
 
+  void import("@/lib/loyalty/events")
+    .then(({ onAppointmentStatusForRewards }) => onAppointmentStatusForRewards(appointmentId))
+    .catch(() => undefined);
+
   return apiSuccess({ appointment: updated });
 }
 

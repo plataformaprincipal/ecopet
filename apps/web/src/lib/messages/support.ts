@@ -2,7 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { requireActiveChatUser, assertAdmin } from "@/lib/messages/permissions";
 import { ChatError } from "@/lib/messages/utils";
 import { auditChatAction, notifySupportTicket } from "@/lib/messages/notifications";
-import type { SupportCategory, TicketPriority, TicketStatus } from "@prisma/client";
+import type { SupportCategory, TicketPriority } from "@prisma/client";
+import { TicketStatus } from "@prisma/client";
 
 async function nextTicketNumber() {
   const last = await prisma.supportTicket.findFirst({ orderBy: { number: "desc" }, select: { number: true } });
@@ -190,16 +191,27 @@ export async function updateSupportTicketStatus(
   if (!isAdmin && ticket.requesterId !== actorId) {
     throw new ChatError("Sem permissão.", "FORBIDDEN", 403);
   }
-  if (!isAdmin && status !== "CLOSED") {
-    throw new ChatError("Usuário só pode fechar o ticket.", "FORBIDDEN", 403);
+  if (!isAdmin) {
+    const allowed = new Set<TicketStatus>(["CLOSED", "OPEN"]);
+    if (!allowed.has(status)) {
+      throw new ChatError("Usuário só pode fechar ou reabrir o ticket.", "FORBIDDEN", 403);
+    }
+    if (status === "OPEN" && ticket.status !== "CLOSED" && ticket.status !== "RESOLVED") {
+      throw new ChatError("Só é possível reabrir chamado encerrado.", "FORBIDDEN", 403);
+    }
   }
 
   const updated = await prisma.supportTicket.update({
     where: { id: ticketId },
     data: {
       status,
-      closedAt: status === "CLOSED" ? new Date() : undefined,
-      resolvedAt: status === "RESOLVED" || status === "CLOSED" ? new Date() : undefined,
+      closedAt: status === "CLOSED" ? new Date() : status === "OPEN" ? null : undefined,
+      resolvedAt:
+        status === "RESOLVED" || status === "CLOSED"
+          ? new Date()
+          : status === "OPEN"
+            ? null
+            : undefined,
     },
   });
 

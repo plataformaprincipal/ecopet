@@ -40,11 +40,10 @@ if (fs.existsSync(PID_FILE)) {
     process.kill(Number(pid));
     console.log(`✓ Processo ${pid} encerrado`);
   } catch {
-    killPort(PORT);
-    console.log(`✓ Porta ${PORT} liberada`);
+    console.log(`✓ PID ${pid} já ausente`);
   }
   fs.unlinkSync(PID_FILE);
-} else {
-  killPort(PORT);
-  console.log(`✓ Porta ${PORT} liberada`);
 }
+
+killPort(PORT);
+console.log(`✓ Porta ${PORT} liberada`);

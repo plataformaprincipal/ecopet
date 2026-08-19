@@ -27,7 +27,7 @@ export function PublicProfilePage({ userId }: { userId: string }) {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border bg-white p-6">
+      <div className="rounded-xl border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] p-6">
         {profile.coverUrl && (
           <div className="mb-4 h-32 overflow-hidden rounded-lg bg-muted">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -56,9 +56,14 @@ export function PublicProfilePage({ userId }: { userId: string }) {
             </div>
           )}
           {profile.viewerState?.isSelf && (
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/feed/profile/me">Editar perfil</Link>
-            </Button>
+            <div className="flex flex-col gap-2">
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/feed/profile/me">Editar perfil</Link>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/feed/trash">Lixeira</Link>
+              </Button>
+            </div>
           )}
         </div>
       </div>

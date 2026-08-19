@@ -2,10 +2,12 @@ import "server-only";
 
 import { randomUUID } from "crypto";
 import { prisma } from "@/lib/prisma";
+import { createSupportTicket } from "@/lib/messages/support";
+import { notifySupportTicket } from "@/lib/messages/notifications";
 import { getOpenAIClient } from "@/lib/ai/openai-client";
 import { AI_CONFIG } from "@/lib/ai/ai-config";
 import { PLATFORM_SUPPORT_SYSTEM_PROMPT } from "@/lib/support/platform-support-knowledge";
-import type { SupportCategory } from "@prisma/client";
+import type { SupportCategory, TicketPriority } from "@prisma/client";
 
 const GUEST_DAILY_LIMIT = 20;
 const AUTH_DAILY_LIMIT = 40;
@@ -159,7 +161,7 @@ export async function runPlatformSupportChat(params: {
       context: params.context,
       correlationId: cid,
     });
-    const reply = `Registrei seu atendimento. Protocolo: ${protocol}. Nossa equipe analisará em breve.`;
+    const reply = `Mensagem recebida pela equipe EccoPet. Protocolo: ${protocol}. Em análise pela nossa equipe.`;
     if (session) {
       await prisma.guestMessage.create({
         data: {
@@ -282,6 +284,35 @@ export async function runPlatformSupportChat(params: {
   };
 }
 
+function inferSupportPriority(category: SupportCategory, message: string): TicketPriority {
+  const text = `${category} ${message}`.toLowerCase();
+  if (/fraude|fraud|segurança|security|invas|hack|vazamento/.test(text)) return "URGENT";
+  if (/perdid|lost.?pet|maus.?trato|abuso|abuse|pagamento|payment|reembolso|estorno/.test(text)) {
+    return "HIGH";
+  }
+  if (category === "PAYMENT" || category === "PET") return "HIGH";
+  return "NORMAL";
+}
+
+async function notifyAdminsOfTicket(ticket: { id: string; number: number; subject: string }) {
+  const admins = await prisma.user.findMany({
+    where: { role: "ADMIN", accountStatus: "ACTIVE" },
+    select: { id: true },
+    take: 20,
+  });
+  await Promise.all(
+    admins.map((a) =>
+      notifySupportTicket({
+        recipientId: a.id,
+        title: "Novo ticket de suporte",
+        body: `#${ticket.number} — ${ticket.subject}`,
+        ticketId: ticket.id,
+        type: "SUPPORT_TICKET_CREATED",
+      }).catch(() => undefined)
+    )
+  );
+}
+
 async function createSupportEscalation(params: {
   userId?: string | null;
   guestSessionId?: string | null;
@@ -290,6 +321,20 @@ async function createSupportEscalation(params: {
   context?: SupportChatContext;
   correlationId: string;
 }): Promise<string> {
+  const priority = inferSupportPriority(params.category, params.message);
+  const subject = `Suporte EccoPet — ${params.context?.pathname || "geral"}`;
+
+  if (params.userId) {
+    const ticket = await createSupportTicket({
+      userId: params.userId,
+      subject,
+      description: params.message,
+      category: params.category,
+      priority,
+    });
+    return `EP-${ticket.number}`;
+  }
+
   if (params.guestSessionId) {
     const existing = await prisma.supportTicket.findUnique({
       where: { guestSessionId: params.guestSessionId },
@@ -302,12 +347,12 @@ async function createSupportEscalation(params: {
   const ticket = await prisma.supportTicket.create({
     data: {
       number,
-      subject: `Suporte automático — ${params.context?.pathname || "geral"}`,
+      subject,
       description: params.message,
       category: params.category,
-      priority: "NORMAL",
+      priority,
       status: "OPEN",
-      requesterId: params.userId ?? null,
+      requesterId: null,
       guestSessionId: params.guestSessionId ?? null,
       metadata: {
         source: "platform-support",
@@ -318,13 +363,14 @@ async function createSupportEscalation(params: {
       },
     },
   });
+  await notifyAdminsOfTicket(ticket);
   return `EP-${ticket.number}`;
 }
 
 export async function getOrCreateGuestSupportBootstrap(guestId: string, sessionId?: string | null) {
   const session = await ensureGuestSession(guestId, sessionId);
   const welcome =
-    "Olá. Sou o suporte EccoPet. Como posso ajudar?";
+    "Suporte EccoPet. Fale diretamente com nossa equipe. Como podemos ajudar?";
   if (session.messages.length === 0) {
     await prisma.guestMessage.create({
       data: { sessionId: session.id, role: "assistant", content: welcome },

@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import type { Prisma, SocialPostStatus, SocialPostType, SocialPostVisibility } from "@prisma/client";
+import type { Prisma, SocialPostType, SocialPostVisibility } from "@prisma/client";
 import { SocialError } from "@/lib/social/errors";
 import {
   requireActiveSocialUser,
@@ -18,6 +18,15 @@ import { extractHashtags, slugifyHashtag } from "@/lib/social/utils";
 import { writeAuditLog } from "@/lib/audit-log";
 import { canCreateSocialPost } from "@/lib/social/persona-permissions";
 import type { SocialUser } from "@/lib/social/permissions";
+import {
+  SOCIAL_VISIBLE_STATUSES,
+  SOCIAL_MAX_PINNED_POSTS,
+  canViewPost,
+  canEditPost,
+  canDeletePost,
+  canPinPost,
+  visibilityWhereForViewer,
+} from "@/lib/social/post-authorization";
 
 export type AdoptionMetaInput = {
   animalName?: string;
@@ -41,7 +50,7 @@ export type PostMediaInput = {
   sortOrder?: number;
 };
 
-const VISIBLE_STATUSES = ["PUBLISHED", "REPORTED"] as SocialPostStatus[];
+const VISIBLE_STATUSES = SOCIAL_VISIBLE_STATUSES;
 
 function postInclude() {
   return {
@@ -58,7 +67,9 @@ type ViewerState = { liked: boolean; saved: boolean; followingAuthor: boolean };
 type AuthorProfile = { displayName: string | null; avatarUrl: string | null } | null;
 
 /** Mapeamento puro (sem I/O) do registro do post para o DTO da API. */
-function mapPost(post: PostRecord, profile: AuthorProfile, viewerState?: ViewerState) {
+function mapPost(post: PostRecord, profile: AuthorProfile, viewerState?: ViewerState, viewerId?: string) {
+  const isOwner = Boolean(viewerId && viewerId === post.authorId);
+  const likesVisible = !post.hideLikeCount || isOwner;
   return {
     id: post.id,
     authorId: post.authorId,
@@ -71,7 +82,7 @@ function mapPost(post: PostRecord, profile: AuthorProfile, viewerState?: ViewerS
       role: post.author.role,
     },
     pet: post.pet,
-    content: post.deletedAt ? null : post.content,
+    content: post.deletedAt && !isOwner ? null : post.content,
     visibility: post.visibility,
     status: post.status,
     locationText: post.locationText,
@@ -83,11 +94,13 @@ function mapPost(post: PostRecord, profile: AuthorProfile, viewerState?: ViewerS
     isPinned: post.isPinned,
     isFeatured: post.isFeatured,
     commentsEnabled: post.commentsEnabled,
+    hideLikeCount: post.hideLikeCount,
+    likesVisible,
     archivedAt: post.archivedAt,
     media: post.media,
     hashtags: post.hashtags.map((h) => ({ id: h.hashtag.id, name: h.hashtag.name, slug: h.hashtag.slug })),
     counts: {
-      likes: post._count.likes,
+      likes: likesVisible ? post._count.likes : 0,
       comments: post._count.comments,
       shares: post._count.shares,
       saves: post._count.saves,
@@ -123,7 +136,7 @@ export async function serializePost(post: PostRecord, viewerId?: string) {
     ? { liked: Boolean(liked), saved: Boolean(saved), followingAuthor: Boolean(followingAuthor) }
     : undefined;
 
-  return mapPost(post, profile, viewerState);
+  return mapPost(post, profile, viewerState, viewerId);
 }
 
 /**
@@ -176,7 +189,8 @@ export async function serializePosts(posts: PostRecord[], viewerId?: string) {
             saved: savedSet.has(post.id),
             followingAuthor: followSet.has(post.authorId),
           }
-        : undefined
+        : undefined,
+      viewerId
     )
   );
 }
@@ -303,16 +317,31 @@ export async function updatePost(params: {
   content?: string;
   visibility?: SocialPostVisibility;
   commentsEnabled?: boolean;
+  hideLikeCount?: boolean;
   isPinned?: boolean;
   archive?: boolean;
   unarchive?: boolean;
+  restore?: boolean;
 }) {
   await requireActiveSocialUser(params.authorId);
   const post = await prisma.socialPost.findUnique({ where: { id: params.postId } });
   if (!post) throw new SocialError("Publicação não encontrada.", "NOT_FOUND", 404);
-  if (post.authorId !== params.authorId) {
+  if (!canEditPost(params.authorId, post.authorId)) {
     throw new SocialError("Você só pode editar suas publicações.", "FORBIDDEN", 403);
   }
+
+  if (params.restore) {
+    if (!post.deletedAt) {
+      throw new SocialError("Publicação não está na lixeira.", "VALIDATION", 400);
+    }
+    const restored = await prisma.socialPost.update({
+      where: { id: params.postId },
+      data: { deletedAt: null, status: "PUBLISHED" },
+      include: postInclude(),
+    });
+    return serializePost(restored, params.authorId);
+  }
+
   if (post.deletedAt || post.status === "REMOVED") {
     throw new SocialError("Publicação removida não pode ser editada.", "FORBIDDEN", 403);
   }
@@ -340,6 +369,10 @@ export async function updatePost(params: {
     data.commentsEnabled = params.commentsEnabled;
   }
 
+  if (typeof params.hideLikeCount === "boolean") {
+    data.hideLikeCount = params.hideLikeCount;
+  }
+
   if (typeof params.isPinned === "boolean") {
     if (params.isPinned) {
       const pinnedCount = await prisma.socialPost.count({
@@ -351,8 +384,8 @@ export async function updatePost(params: {
           id: { not: params.postId },
         },
       });
-      if (pinnedCount >= 3) {
-        throw new SocialError("Você pode fixar no máximo 3 publicações.", "VALIDATION", 400);
+      if (!canPinPost(pinnedCount, true)) {
+        throw new SocialError(`Você pode fixar no máximo ${SOCIAL_MAX_PINNED_POSTS} publicações.`, "VALIDATION", 400);
       }
     }
     data.isPinned = params.isPinned;
@@ -397,6 +430,7 @@ export async function deletePost(params: {
       data: {
         status: "REMOVED",
         deletedAt: new Date(),
+        isPinned: false,
         moderatedAt: new Date(),
         moderatedById: params.userId,
         moderationReason: params.reason,
@@ -416,38 +450,118 @@ export async function deletePost(params: {
     return serializePost(updated, params.userId);
   }
 
-  if (post.authorId !== params.userId) {
+  if (!canDeletePost(params.userId, post.authorId, false)) {
     throw new SocialError("Você só pode remover suas publicações.", "FORBIDDEN", 403);
   }
   await requireActiveSocialUser(params.userId);
 
   const updated = await prisma.socialPost.update({
     where: { id: params.postId },
-    data: { status: "REMOVED", deletedAt: new Date() },
+    data: { deletedAt: new Date(), isPinned: false },
     include: postInclude(),
   });
   return serializePost(updated, params.userId);
 }
 
+export async function restorePost(params: { postId: string; userId: string }) {
+  return updatePost({ postId: params.postId, authorId: params.userId, restore: true });
+}
+
+export async function hardDeletePost(params: { postId: string; userId: string }) {
+  await requireActiveSocialUser(params.userId);
+  const post = await prisma.socialPost.findUnique({ where: { id: params.postId } });
+  if (!post) throw new SocialError("Publicação não encontrada.", "NOT_FOUND", 404);
+  if (post.authorId !== params.userId) {
+    throw new SocialError("Você só pode apagar suas publicações.", "FORBIDDEN", 403);
+  }
+  if (!post.deletedAt) {
+    throw new SocialError("Mova a publicação para a lixeira antes de apagar definitivamente.", "VALIDATION", 400);
+  }
+
+  const snapshot = {
+    postId: post.id,
+    authorId: post.authorId,
+    content: post.content.slice(0, 2000),
+    visibility: post.visibility,
+    type: post.type,
+    deletedAt: post.deletedAt.toISOString(),
+    hardDeletedAt: new Date().toISOString(),
+  };
+
+  await prisma.socialReport.updateMany({
+    where: { postId: post.id },
+    data: { targetSnapshot: snapshot as Prisma.InputJsonValue },
+  });
+
+  await prisma.socialPost.delete({ where: { id: post.id } });
+  return { deleted: true, id: params.postId };
+}
+
+export async function listTrash(params: { userId: string; cursor?: string; limit?: number }) {
+  await requireActiveSocialUser(params.userId);
+  const limit = Math.min(params.limit ?? SOCIAL_FEED_DEFAULT_LIMIT, 50);
+  const posts = await prisma.socialPost.findMany({
+    where: { authorId: params.userId, deletedAt: { not: null } },
+    include: postInclude(),
+    orderBy: { deletedAt: "desc" },
+    take: limit + 1,
+    ...(params.cursor ? { cursor: { id: params.cursor }, skip: 1 } : {}),
+  });
+  const hasMore = posts.length > limit;
+  const slice = hasMore ? posts.slice(0, limit) : posts;
+  const items = await serializePosts(slice, params.userId);
+  return { posts: items, nextCursor: hasMore ? slice[slice.length - 1]?.id : null };
+}
+
+export async function hidePostForViewer(params: {
+  postId: string;
+  userId: string;
+  kind: "HIDE" | "NOT_INTERESTED";
+}) {
+  await requireActiveSocialUser(params.userId);
+  const post = await prisma.socialPost.findUnique({ where: { id: params.postId } });
+  if (!post || post.deletedAt) throw new SocialError("Publicação não encontrada.", "NOT_FOUND", 404);
+  if (post.authorId === params.userId) {
+    throw new SocialError("Você não pode ocultar a própria publicação.", "VALIDATION", 400);
+  }
+
+  await prisma.socialHiddenPost.upsert({
+    where: { userId_postId: { userId: params.userId, postId: params.postId } },
+    create: { userId: params.userId, postId: params.postId, kind: params.kind },
+    update: { kind: params.kind },
+  });
+
+  return { hidden: true, kind: params.kind, persisted: true };
+}
+
 export async function getPost(postId: string, viewerId?: string) {
   const post = await fetchPostRecord(postId);
-  if (post.status === "REMOVED" && post.authorId !== viewerId) {
+  let followsAuthor = false;
+  let isBlocked = false;
+  if (viewerId) {
+    const [follow, blockedIds] = await Promise.all([
+      prisma.userFollow.findUnique({
+        where: { followerId_followingId: { followerId: viewerId, followingId: post.authorId } },
+      }),
+      getBlockedUserIds(viewerId),
+    ]);
+    followsAuthor = Boolean(follow);
+    isBlocked = blockedIds.includes(post.authorId);
+  }
+
+  const visible = canViewPost(post, {
+    viewerId,
+    followsAuthor,
+    isBlocked,
+    includeOwnTrash: Boolean(viewerId && viewerId === post.authorId),
+  });
+  if (!visible) {
+    if (!viewerId && post.visibility !== "PUBLIC") {
+      throw new SocialError("Autenticação necessária.", "UNAUTHORIZED", 401);
+    }
     throw new SocialError("Publicação não encontrada.", "NOT_FOUND", 404);
   }
-  if (viewerId) {
-    await assertNotBlocked(viewerId, post.authorId);
-    if (post.visibility === "PRIVATE" && post.authorId !== viewerId) {
-      throw new SocialError("Publicação privada.", "FORBIDDEN", 403);
-    }
-    if (post.visibility === "FOLLOWERS" && post.authorId !== viewerId) {
-      const follows = await prisma.userFollow.findUnique({
-        where: { followerId_followingId: { followerId: viewerId, followingId: post.authorId } },
-      });
-      if (!follows) throw new SocialError("Publicação visível apenas para seguidores.", "FORBIDDEN", 403);
-    }
-  } else if (post.visibility !== "PUBLIC") {
-    throw new SocialError("Autenticação necessária.", "UNAUTHORIZED", 401);
-  }
+  if (viewerId) await assertNotBlocked(viewerId, post.authorId);
   return serializePost(post, viewerId);
 }
 
@@ -473,11 +587,31 @@ export async function listFeed(params: {
     : [];
   const excludedAuthorIds = [...new Set([...blockedIds, ...mutedIds])];
 
+  const hiddenIds = params.viewerId
+    ? (
+        await prisma.socialHiddenPost.findMany({
+          where: { userId: params.viewerId },
+          select: { postId: true },
+        })
+      ).map((h) => h.postId)
+    : [];
+
+  const followingIds = params.viewerId
+    ? (
+        await prisma.userFollow.findMany({
+          where: { followerId: params.viewerId },
+          select: { followingId: true },
+        })
+      ).map((f) => f.followingId)
+    : [];
+
   const where: Prisma.SocialPostWhereInput = {
     status: { in: VISIBLE_STATUSES },
     deletedAt: null,
     archivedAt: null,
     authorId: excludedAuthorIds.length ? { notIn: excludedAuthorIds } : undefined,
+    id: hiddenIds.length ? { notIn: hiddenIds } : undefined,
+    ...visibilityWhereForViewer({ viewerId: params.viewerId, followingIds }),
   };
 
   // Perfil do autor: incluir arquivados apenas para o próprio autor
@@ -498,25 +632,12 @@ export async function listFeed(params: {
     where.type = params.type;
   }
 
-  if (!params.viewerId) {
-    where.visibility = "PUBLIC";
-  } else {
-    const following = await prisma.userFollow.findMany({
-      where: { followerId: params.viewerId },
-      select: { followingId: true },
-    });
-    const followingIds = following.map((f) => f.followingId);
-    where.OR = [
-      { visibility: "PUBLIC" },
-      { authorId: params.viewerId },
-      { visibility: "FOLLOWERS", authorId: { in: followingIds } },
-    ];
-  }
-
   const posts = await prisma.socialPost.findMany({
     where,
     include: postInclude(),
-    orderBy: { createdAt: "desc" },
+    orderBy: params.authorId
+      ? [{ isPinned: "desc" }, { createdAt: "desc" }]
+      : { createdAt: "desc" },
     take: limit + 1,
     ...(params.cursor ? { cursor: { id: params.cursor }, skip: 1 } : {}),
   });

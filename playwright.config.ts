@@ -1,4 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
+import { loadWebRuntimeEnv } from "./e2e/helpers/load-web-env";
+
+loadWebRuntimeEnv();
 
 const baseURL = process.env.WEB_URL || "http://localhost:3000";
 

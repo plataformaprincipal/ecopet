@@ -39,6 +39,7 @@ export async function POST(request: Request) {
     module?: string;
     lat?: number;
     lng?: number;
+    capabilityId?: string;
   };
   try {
     body = await request.json();
@@ -87,6 +88,8 @@ export async function POST(request: Request) {
           displayName: profile?.name?.split(/\s+/)[0] ?? null,
           lat,
           lng,
+          capabilityId:
+            typeof body.capabilityId === "string" ? body.capabilityId.slice(0, 64) : undefined,
         })) {
           if (request.signal.aborted) break;
           send(event);

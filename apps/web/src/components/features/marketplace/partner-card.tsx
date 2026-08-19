@@ -2,11 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { MapPin, Star, Package, Scissors } from "lucide-react";
+import { MapPin, Star, Package, Scissors, BadgeCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { StartConversationButton } from "@/components/messages/StartConversationButton";
 import type { MarketplacePartner } from "@/lib/marketplace/types";
+import { formatDistanceKm } from "@/lib/marketplace/query-model";
 import { useTranslation } from "@/providers/i18n-provider";
 
 export function PartnerCard({ partner }: { partner: MarketplacePartner }) {
@@ -26,22 +27,25 @@ export function PartnerCard({ partner }: { partner: MarketplacePartner }) {
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <Link href={`/parceiros/${partner.id}`} className="font-semibold hover:text-ecopet-green">
+            <Link href={`/marketplace/parceiro/${partner.id}`} className="inline-flex items-center gap-1 font-semibold hover:text-ecopet-green">
+              {partner.isVerified ? <BadgeCheck className="h-4 w-4 text-blue-500" aria-hidden /> : null}
               {partner.name}
             </Link>
             {partner.location && (
               <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
                 <MapPin className="h-3 w-3" aria-hidden />
                 {partner.location}
-                {partner.distanceKm != null && partner.distanceKm > 0
-                  ? ` · ${partner.distanceKm.toFixed(1)} km`
-                  : ""}
+                {partner.distanceKm != null && partner.distanceKm > 0 ? ` · ${formatDistanceKm(partner.distanceKm)}` : ""}
               </p>
             )}
-            <p className="mt-1 flex items-center gap-1 text-xs">
-              <Star className="h-3 w-3 fill-amber-400 text-amber-400" aria-hidden />
-              {partner.rating.toFixed(1)} ({partner.reviewCount})
-            </p>
+            {partner.reviewCount > 0 ? (
+              <p className="mt-1 flex items-center gap-1 text-xs">
+                <Star className="h-3 w-3 fill-amber-400 text-amber-400" aria-hidden />
+                {partner.rating.toFixed(1)} ({partner.reviewCount})
+              </p>
+            ) : (
+              <p className="mt-1 text-xs text-muted-foreground">{t("marketplace.noReviews")}</p>
+            )}
           </div>
         </div>
         {partner.description && (
@@ -57,7 +61,7 @@ export function PartnerCard({ partner }: { partner: MarketplacePartner }) {
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
           <Button asChild size="sm" variant="outline">
-            <Link href={`/parceiros/${partner.id}`}>{t("marketplace.viewPartner")}</Link>
+            <Link href={`/marketplace/parceiro/${partner.id}`}>{t("marketplace.viewPartner")}</Link>
           </Button>
           <StartConversationButton
             size="sm"

@@ -80,4 +80,5 @@ export const checkoutSchema = z.object({
     state: z.string().length(2),
     zipCode: z.string().optional(),
   }),
+  couponCode: z.string().trim().min(3).max(40).optional().nullable(),
 });

@@ -16,6 +16,7 @@ export const ROLE_ROUTE_PREFIXES: Record<AppRole, readonly string[]> = {
     "/cliente/marketplace",
     "/cliente/meu-pet",
     "/cliente/perfil",
+    "/cliente/rewards",
     "/dashboard/client/profile",
     "/dashboard/client/pets",
     "/dashboard/client/services",

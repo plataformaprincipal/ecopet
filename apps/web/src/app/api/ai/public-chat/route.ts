@@ -3,6 +3,7 @@ import { apiFailure, apiSuccess } from "@/lib/api-response";
 import { checkDistributedRateLimit, clientIp } from "@/lib/rate-limit";
 import { AI_CONFIG } from "@/lib/ai/ai-config";
 import { guestMaxMessageChars, runPublicGuestChat } from "@/lib/ai/public-guest-chat";
+import { resolveServerCapability } from "@/lib/ai/capabilities/orchestrate";
 
 function nextPublicChatEnvSnapshot() {
   const aiEnabledRaw = process.env.AI_ENABLED;
@@ -25,6 +26,7 @@ const bodySchema = z.object({
   pagePath: z.string().max(200).optional(),
   lat: z.number().finite().min(-90).max(90).optional(),
   lng: z.number().finite().min(-180).max(180).optional(),
+  capabilityId: z.string().max(64).optional(),
 });
 
 /**
@@ -56,6 +58,34 @@ export async function POST(request: Request) {
 
   const envSnapshot = nextPublicChatEnvSnapshot();
   console.info(JSON.stringify({ scope: "AI_PUBLIC_CHAT", ...envSnapshot }));
+
+  if (parsed.data.capabilityId) {
+    const decision = resolveServerCapability({
+      capabilityId: parsed.data.capabilityId,
+      role: "GUEST",
+      isGuest: true,
+      hasPet: false,
+      hasGeo: parsed.data.lat != null && parsed.data.lng != null,
+      aiConfigured: envSnapshot.isConfigured,
+      locale: parsed.data.locale,
+    });
+    if (decision.status === "denied") {
+      console.info(
+        JSON.stringify({
+          scope: "AI_PUBLIC_CHAT",
+          capabilityId: parsed.data.capabilityId,
+          code: decision.code,
+          lockReason: decision.lockReason ?? null,
+        })
+      );
+      return apiSuccess({
+        reply: decision.message,
+        available: true,
+        requiresSignIn: decision.lockReason === "login",
+        topics: [],
+      });
+    }
+  }
 
   const result = await runPublicGuestChat({
     message: parsed.data.message,

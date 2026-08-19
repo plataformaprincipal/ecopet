@@ -21,27 +21,34 @@ export function PostActions({
   const { t } = useTranslation();
 
   return (
-    <div className="border-t border-ecopet-gray/10 px-3 py-1.5 dark:border-white/10 sm:px-4">
-      <div
-        className="flex items-center gap-1 px-1 pt-1 text-xs text-ecopet-gray dark:text-white/55"
-        aria-live="polite"
-      >
-        <span>{t("socialFeed.stats.likes", { count: String(post.counts.likes) })}</span>
-        <span className="mx-1" aria-hidden>
-          ·
-        </span>
-        <span>{t("socialFeed.stats.comments", { count: String(post.counts.comments) })}</span>
-        <span className="mx-1" aria-hidden>
-          ·
-        </span>
-        <span>{t("socialFeed.stats.shares", { count: String(post.counts.shares) })}</span>
-      </div>
+    <div className="px-1 py-1">
+      {post.likesVisible !== false || post.counts.comments || post.counts.shares ? (
+        <div
+          className="flex items-center gap-1 px-1 pt-1 text-xs text-[var(--ep-fg-muted)]"
+          aria-live="polite"
+        >
+          {post.likesVisible !== false ? (
+            <span>{t("socialFeed.stats.likes", { count: String(post.counts.likes) })}</span>
+          ) : null}
+          {post.likesVisible !== false ? (
+            <span className="mx-1" aria-hidden>
+              ·
+            </span>
+          ) : null}
+          <span>{t("socialFeed.stats.comments", { count: String(post.counts.comments) })}</span>
+          <span className="mx-1" aria-hidden>
+            ·
+          </span>
+          <span>{t("socialFeed.stats.shares", { count: String(post.counts.shares) })}</span>
+        </div>
+      ) : null}
       <div className="mt-0.5 flex items-center justify-between gap-0.5">
         <div className="flex min-w-0 flex-1 items-center">
           <LikeButton
             postId={post.id}
             initialLiked={post.viewerState?.liked}
             initialCount={post.counts.likes}
+            likesVisible={post.likesVisible !== false}
           />
           <PostActionButton
             icon={MessageCircle}

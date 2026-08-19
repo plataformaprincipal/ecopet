@@ -30,13 +30,64 @@
     "emptyCart": "Seu carrinho está vazio",
     "menu": "Menu",
     "openMenu": "Abrir menu",
-    "closeMenu": "Fechar menu"
+    "closeMenu": "Fechar menu",
+    "saving": "Salvando...",
+    "edit": "Editar"
+  },
+  "pets": {
+    "title": "Meu Pet",
+    "subtitle": "Identidade persistente do seu animal — cadastro, caderneta e lembretes.",
+    "register": "Cadastrar pet",
+    "registerFirst": "Cadastrar meu primeiro pet",
+    "new": "Novo pet",
+    "edit": "Editar pet",
+    "name": "Nome",
+    "species": "Espécie",
+    "speciesDog": "Cão",
+    "speciesCat": "Gato",
+    "speciesBird": "Ave",
+    "speciesOther": "Outro",
+    "breed": "Raça",
+    "sex": "Sexo",
+    "sexUnknown": "Não informado",
+    "sexMale": "Macho",
+    "sexFemale": "Fêmea",
+    "birthDate": "Data de nascimento",
+    "weight": "Peso (kg)",
+    "color": "Cor",
+    "microchip": "Microchip",
+    "neutered": "Castrado",
+    "notes": "Observações",
+    "created": "Pet cadastrado com sucesso.",
+    "updated": "Pet atualizado.",
+    "removed": "Pet removido.",
+    "saveError": "Erro ao cadastrar pet.",
+    "removeError": "Erro ao remover.",
+    "removeConfirm": "Remover {name}? Esta ação não pode ser desfeita.",
+    "emptyTitle": "Nenhum pet cadastrado",
+    "emptyDescription": "Cadastre seu primeiro pet para organizar vacinas, histórico e agenda.",
+    "active": "Pet ativo",
+    "viewing": "Visualizando",
+    "useActive": "Usar como ativo",
+    "addVaccine": "Registrar vacina",
+    "vaccineName": "Vacina",
+    "appliedAt": "Data aplicada",
+    "nextDue": "Próxima dose registrada",
+    "veterinarian": "Veterinário (se registrado)",
+    "batch": "Lote (opcional)",
+    "saveVaccine": "Salvar vacina",
+    "vaccineAdded": "Vacina registrada.",
+    "vaccineError": "Não foi possível registrar a vacina.",
+    "allergies": "Alergias registradas",
+    "reminders": "Lembretes",
+    "documents": "Documentos"
   },
   "support": {
     "title": "Suporte EccoPet",
-    "welcome": "Olá. Sou o suporte EccoPet. Como posso ajudar?",
-    "statusGuest": "Visitante · suporte da plataforma",
-    "statusAuth": "Online · suporte da plataforma",
+    "subtitle": "Fale diretamente com nossa equipe.",
+    "welcome": "Olá. Como podemos ajudar?",
+    "statusGuest": "Mensagem recebida pela equipe EccoPet.",
+    "statusAuth": "Canal com a administração EccoPet.",
     "placeholder": "Digite sua mensagem...",
     "send": "Enviar mensagem",
     "open": "Abrir suporte EccoPet",
@@ -75,6 +126,16 @@
     },
     "greeting": "Como posso ajudar a cuidar melhor do seu pet hoje?",
     "greetingSub": "Pergunte sobre alimentação, rotina, saúde, produtos, serviços ou adoção. A EccoPet AI organiza tudo para você.",
+    "hero": {
+      "nearMe": "Encontrar algo perto de mim",
+      "health": "Cuidar da saúde do meu pet",
+      "shop": "Comprar melhor",
+      "routine": "Organizar minha rotina",
+      "travel": "Planejar uma viagem",
+      "lost": "Procurar pet perdido",
+      "adoption": "Adoção",
+      "content": "Criar conteúdo"
+    },
     "suggestions": {
       "s1": "Quais pets eu tenho?",
       "s2": "Tenho alguma vacina atrasada?",
@@ -96,12 +157,17 @@
       "context": "Montando contexto…",
       "tools": "Consultando dados da plataforma…",
       "generating": "Gerando resposta…",
-      "summary": "Atualizando memória…"
+      "summary": "Atualizando memória…",
+      "routing": "Direcionando sua solicitação…",
+      "received": "Recebendo mensagem…"
     },
     "errors": {
       "quota": "Você atingiu o limite de uso da IA. Tente novamente mais tarde.",
       "timeout": "A resposta demorou demais. Tente novamente.",
-      "generic": "Não foi possível obter a resposta. Tente novamente."
+      "generic": "Não foi possível obter a resposta. Tente novamente.",
+      "capabilityDisabled": "Esta função não está disponível no momento.",
+      "capabilityLockedLogin": "Entre para acessar seus dados e continuar.",
+      "capabilityLockedPet": "Cadastre um pet para usar esta função."
     },
     "toolsTitle": "Ferramentas de IA",
     "toolStatus": {
@@ -221,7 +287,11 @@
       "blockPurchases": "Últimas compras",
       "blockAppointments": "Próximos agendamentos",
       "blockReminders": "Lembretes",
-      "blockRecommendations": "Recomendações personalizadas"
+      "blockRecommendations": "Recomendações personalizadas",
+      "activeCapability": "Capacidade ativa",
+      "location": "Localização",
+      "locationGranted": "Localização disponível para buscas próximas.",
+      "locationUnknown": "Localização não definida — buscas usarão região padrão."
     },
     "rec": {
       "products": "Ver produtos",
@@ -246,7 +316,264 @@
     "structured": {
       "products": "Produtos encontrados",
       "services": "Serviços encontrados",
-      "adoptions": "Pets para adoção"
+      "adoptions": "Pets para adoção",
+      "sponsored": "Patrocinado"
+    },
+    "heroTitle": "O que você quer resolver hoje?",
+    "heroGuest": "Posso ajudar você a explorar a EccoPet, encontrar serviços, produtos e recursos disponíveis.",
+    "heroWithPet": "Posso ajudar você com a rotina, compras, cuidados e serviços do {{petName}}.",
+    "heroAuthenticated": "Posso ajudar com rotina, compras, cuidados e serviços dos seus pets.",
+    "header": {
+      "ready": "Pronta para ajudar",
+      "unavailable": "Temporariamente indisponível",
+      "activePet": "Pet ativo",
+      "pet": "Pet"
+    },
+    "capabilities": {
+      "b2cTitle": "Capacidades",
+      "b2bTitle": "Ferramentas para seu negócio",
+      "badgePartial": "Orientação",
+      "badgeDisabled": "Indisponível",
+      "signInToUse": "Entre na sua conta para usar esta função.",
+      "poweredBy": "Conectado aos dados reais da EccoPet",
+      "unavailableAi": "IA temporariamente indisponível",
+      "featureFlag": "Recurso ainda não liberado para sua conta",
+      "informationalOnly": "Orientação informativa — sem automação dedicada ainda",
+      "noBackend": "Backend ou ferramenta ainda não disponível",
+      "careDisclaimer": "Informação orientativa — não substitui avaliação veterinária.",
+      "concierge": {
+        "name": "EccoPet Concierge",
+        "description": "Navegue, compare, agende e gerencie pedidos na plataforma.",
+        "ex1": "Quero banho perto de mim",
+        "ex2": "Mostre meus pedidos",
+        "prompt": "Preciso de ajuda para encontrar produtos, serviços ou pedidos na EccoPet."
+      },
+      "care_navigator": {
+        "name": "Care Navigator",
+        "description": "Organize histórico, vacinas, lembretes e preparação para consultas.",
+        "ex1": "Próximas vacinas do meu pet",
+        "ex2": "Como me preparar para a consulta?",
+        "prompt": "Quero organizar a saúde e os cuidados do meu pet."
+      },
+      "shopping_agent": {
+        "name": "Shopping Agent",
+        "description": "Encontre produtos reais do marketplace com recomendações.",
+        "ex1": "Preciso comprar ração",
+        "ex2": "Quero achar algo mais barato",
+        "prompt": "Quero comprar produtos para meu pet no marketplace."
+      },
+      "routine_coach": {
+        "name": "Routine Coach",
+        "description": "Rotina, lembretes, atividade e agenda do pet.",
+        "ex1": "Tenho serviço marcado?",
+        "ex2": "Organize a rotina do meu pet",
+        "prompt": "Quero organizar a rotina e lembretes do meu pet."
+      },
+      "lost_pet": {
+        "name": "Lost Pet Agent",
+        "description": "Plano de ação para busca e compartilhamento quando um pet se perde.",
+        "ex1": "Meu pet fugiu, o que faço?",
+        "prompt": "Preciso de orientação para procurar meu pet perdido."
+      },
+      "travel_agent": {
+        "name": "Travel Agent Pet",
+        "description": "Checklist de viagem, documentação e serviços para pets.",
+        "ex1": "Vou viajar com meu cachorro",
+        "ex2": "O que preciso para viagem internacional?",
+        "prompt": "Quero planejar uma viagem com meu pet."
+      },
+      "adoption_assistant": {
+        "name": "Adoption Assistant",
+        "description": "Encontre pets para adoção com filtros reais de ONGs.",
+        "ex1": "Quero cachorro pequeno perto de mim",
+        "ex2": "Ache gatos adultos",
+        "prompt": "Quero adotar um pet."
+      },
+      "content_studio": {
+        "name": "Content Studio",
+        "description": "Legendas, descrições e textos para publicações sobre pets.",
+        "ex1": "Crie uma legenda para foto do meu pet",
+        "ex2": "Traduza este texto sobre pets",
+        "prompt": "Quero criar conteúdo sobre meu pet."
+      },
+      "sales_agent": {
+        "name": "Sales Agent",
+        "description": "Respostas e recomendações para vendas no seu negócio.",
+        "ex1": "Sugira resposta para cliente indeciso",
+        "prompt": "Preciso de ajuda com vendas no meu negócio pet."
+      },
+      "crm_agent": {
+        "name": "CRM Agent",
+        "description": "Segmentação e reativação de clientes.",
+        "ex1": "Clientes para reativar esta semana",
+        "prompt": "Quero analisar meus clientes e reativar inativos."
+      },
+      "catalog_agent": {
+        "name": "Catalog Agent",
+        "description": "Organize e melhore seu catálogo de produtos.",
+        "ex1": "Melhorar catálogo de produtos",
+        "prompt": "Preciso melhorar meu catálogo na EccoPet."
+      },
+      "pricing_agent": {
+        "name": "Pricing Agent",
+        "description": "Sugestões de preço com confirmação antes de alterar.",
+        "ex1": "Sugerir preço para novo produto",
+        "prompt": "Quero sugestões de precificação."
+      },
+      "inventory_agent": {
+        "name": "Inventory Agent",
+        "description": "Consulte estoque e disponibilidade de produtos.",
+        "ex1": "Verificar estoque dos produtos",
+        "prompt": "Preciso consultar estoque do meu catálogo."
+      },
+      "service_capacity_agent": {
+        "name": "Service Capacity Agent",
+        "description": "Analise agenda e capacidade de atendimento.",
+        "ex1": "Analisar agenda da semana",
+        "prompt": "Quero analisar a capacidade da minha agenda."
+      },
+      "finance_agent": {
+        "name": "Finance Agent",
+        "description": "Conciliação e visão financeira do negócio.",
+        "ex1": "Resumo financeiro do mês",
+        "prompt": "Preciso de ajuda com finanças do negócio."
+      },
+      "ads_copilot": {
+        "name": "Ads Copilot",
+        "description": "Assistente para campanhas publicitárias.",
+        "ex1": "Ideias para campanha de banho e tosa",
+        "prompt": "Quero criar uma campanha publicitária."
+      },
+      "support_agent_b2b": {
+        "name": "Support Agent",
+        "description": "Abra atendimentos com a equipe EccoPet.",
+        "ex1": "Preciso falar com o suporte parceiro",
+        "prompt": "Preciso de suporte da EccoPet para meu negócio."
+      },
+      "compliance_agent": {
+        "name": "Compliance Agent",
+        "description": "Orientação sobre conformidade e documentação.",
+        "ex1": "Verificar documentação da loja",
+        "prompt": "Preciso de orientação sobre compliance."
+      }
+    },
+    "quickPrompts": {
+      "guest": {
+        "near": "Encontre serviços perto de mim",
+        "marketplace": "Quero conhecer o marketplace",
+        "about": "Como funciona a EccoPet?",
+        "adoption": "Quero adotar"
+      },
+      "auth": {
+        "orders": "Ver meus pedidos",
+        "vaccines": "Próximas vacinas",
+        "near": "Serviços perto de mim",
+        "reorder": "Comprar novamente"
+      },
+      "partner": {
+        "orders": "Ver pedidos",
+        "reactivate": "Clientes para reativar",
+        "catalog": "Melhorar catálogo",
+        "schedule": "Analisar agenda"
+      }
+    },
+    "workspace": {
+      "lost": {
+        "title": "Plano de busca",
+        "subtitle": "Organize a busca sem inventar GPS. Use localização aproximada se preferir.",
+        "pet": "Pet",
+        "where": "Onde foi visto pela última vez?",
+        "useLocation": "Usar minha localização",
+        "manualLocation": "Informar local",
+        "locationDenied": "Localização do navegador negada. Informe cidade ou bairro.",
+        "cityPlaceholder": "Cidade, bairro ou endereço aproximado",
+        "when": "Quando?",
+        "contact": "Contato seguro",
+        "radiusTitle": "Área inicial de busca",
+        "radiusHint": "O raio é uma orientação, não a localização real do animal.",
+        "radiusValue": "Cerca de {km} km ao redor do último ponto informado",
+        "approxArea": "região aproximada",
+        "startPlan": "Iniciar plano de busca",
+        "markLost": "Registrar como perdido",
+        "markFound": "Marcar como encontrado",
+        "share": "Compartilhar na comunidade",
+        "shareTitle": "Pet perdido",
+        "lastSeen": "Última região",
+        "shareConfirmTitle": "Revisar antes de ir ao feed",
+        "shareConfirmHint": "Nada é publicado automaticamente. O texto será copiado para você colar.",
+        "foundConfirm": "Confirmar que o pet foi encontrado?",
+        "needPet": "Selecione um pet da sua conta.",
+        "markedLost": "Status de perdido atualizado.",
+        "markedFound": "Status atualizado: encontrado.",
+        "plan1": "Avise vizinhos e comércios próximos.",
+        "plan2": "Percorra a área em horários de alimentação.",
+        "plan3": "Deixe um objeto com o cheiro do pet no local.",
+        "plan4": "Compartilhe com confirmação — nunca publique automaticamente.",
+        "aiPrompt": "Meu pet {pet} foi visto pela última vez em {city}. Sugira um plano de busca com raio orientativo de {radius} km. Não invente GPS."
+      },
+      "travel": {
+        "title": "Planejamento de viagem",
+        "subtitle": "Organize o checklist. Regras do destino precisam ser confirmadas na fonte oficial.",
+        "origin": "Origem",
+        "destination": "Destino",
+        "date": "Data",
+        "transport": "Transporte",
+        "transportPh": "Carro, ônibus, avião…",
+        "purpose": "Objetivo da viagem",
+        "checklist": "Checklist",
+        "legalHint": "Pode ser exigido — confirme as regras do destino. A IA não inventa exigência sanitária ou alfandegária.",
+        "askAi": "Pedir organização à IA",
+        "aiPrompt": "Organize a viagem do pet {pet} de {origin} para {destination} em {date}, transporte {transport}. Monte um checklist. Não invente regras legais, preços ou companhias.",
+        "items": {
+          "id": "Identificação",
+          "microchip": "Microchip (quando aplicável)",
+          "docs": "Documentação",
+          "transport": "Transporte",
+          "carrier": "Caixa ou bolsa",
+          "food": "Alimentação",
+          "meds": "Medicamentos já prescritos",
+          "stay": "Hospedagem",
+          "services": "Serviços no destino",
+          "contacts": "Contatos"
+        },
+        "status": {
+          "pending": "Pendente",
+          "done": "Concluído",
+          "verify": "Precisa verificar",
+          "na": "Não aplicável"
+        }
+      },
+      "studio": {
+        "title": "Estúdio de conteúdo",
+        "subtitle": "A IA gera. Você revisa. Nada é publicado sem a sua ação.",
+        "type": "Tipo de conteúdo",
+        "tone": "Tom",
+        "language": "Idioma",
+        "context": "Contexto",
+        "generate": "Gerar",
+        "preview": "Prévia",
+        "aiLabel": "Conteúdo gerado por IA — revise antes de usar.",
+        "copy": "Copiar",
+        "copied": "Copiado",
+        "edit": "Editar",
+        "useInPost": "Usar na publicação",
+        "aiPrompt": "Gere um texto do tipo {type}, tom {tone}, idioma {language}, sobre o pet {pet}. Contexto: {context}. Não publique. Não use dados médicos. Entregue só o texto final.",
+        "types": {
+          "caption": "Legenda",
+          "description": "Descrição",
+          "post": "Post",
+          "memory": "Memória do pet",
+          "translate": "Tradução",
+          "rewrite": "Reescrita"
+        },
+        "tones": {
+          "natural": "Natural",
+          "fun": "Divertido",
+          "informative": "Informativo",
+          "affectionate": "Carinhoso",
+          "professional": "Profissional"
+        }
+      }
     }
   },
   "public": {
@@ -304,7 +631,8 @@
     "integrations": "Integrações",
     "logs": "Logs",
     "support": "Suporte",
-    "reports": "Denúncias"
+    "reports": "Denúncias",
+    "rewards": "EccoPontos"
   },
   "errors": {
     "unauthorized": "Sessão expirada ou não autenticado.",
@@ -1307,7 +1635,149 @@
     "viewPartner": "Ver parceiro",
     "viewProducts": "Ver produtos",
     "viewServices": "Ver serviços",
-    "reviews": "avaliações"
+    "reviews": "avaliações",
+    "verifiedOnly": "Parceiro verificado",
+    "promoOnly": "Em promoção",
+    "speciesLabel": "Espécie",
+    "speciesAll": "Todas",
+    "species": {
+      "dog": "Cão",
+      "cat": "Gato",
+      "bird": "Ave",
+      "fish": "Peixe",
+      "rodent": "Roedor",
+      "other": "Outros"
+    },
+    "radiusLabel": "Até (km)",
+    "rating45": "4,5 estrelas ou mais",
+    "noReviews": "Sem avaliações ainda",
+    "etaCheckout": "Prazo no checkout",
+    "compatibleWith": "Compatível com {name}",
+    "chipMaxPrice": "Até R$ {value}",
+    "chipMinPrice": "A partir de R$ {value}",
+    "chipRating": "{value} estrelas ou mais",
+    "clearAll": "Limpar tudo",
+    "tabsLabel": "Tipo de resultado",
+    "resultsFound": "Resultados encontrados",
+    "loadError": "Não foi possível carregar o marketplace.",
+    "retry": "Tentar novamente",
+    "emptyFilters": "Não encontramos opções com esses filtros.",
+    "emptyHint": "Limpe os filtros, aumente a distância ou explore outras categorias.",
+    "emptyRadius": "Não encontramos opções até {km} km.",
+    "increaseRadius": "Aumentar para {km} km",
+    "filtersHint": "Ajuste e aplique. Os filtros entram na URL, sem sua localização precisa.",
+    "locationTitle": "Opções perto de você",
+    "locationBody": "Use sua localização para encontrar opções próximas, com entrega mais rápida e menor custo.",
+    "useMyLocation": "Usar minha localização",
+    "enterManually": "Informar manualmente",
+    "notNow": "Agora não",
+    "manualLocationTitle": "Informar localização",
+    "manualLocationBody": "CEP ou cidade são suficientes. Não pedimos endereço completo.",
+    "cityLabel": "Cidade",
+    "cityPlaceholder": "Cidade / região",
+    "saveLocation": "Usar esta localização",
+    "groups": {
+      "food": "Alimentação",
+      "hygiene": "Higiene",
+      "health": "Saúde",
+      "home": "Casa",
+      "mobility": "Mobilidade",
+      "training": "Treinamento",
+      "otherAnimals": "Outros animais",
+      "other": "Outros",
+      "care": "Cuidados",
+      "routine": "Rotina"
+    },
+    "catalog": {
+      "products": {
+        "food": "Alimentação",
+        "medicine": "Medicamentos",
+        "hygiene": "Higiene",
+        "accessories": "Acessórios",
+        "toys": "Brinquedos",
+        "collars": "Coleiras",
+        "harnesses": "Peitorais",
+        "leashes": "Guias",
+        "bedding": "Camas",
+        "housing": "Casinhas",
+        "transport": "Transporte",
+        "aquarium": "Aquarismo",
+        "equine": "Equinos",
+        "cattle": "Bovinos",
+        "birds": "Aves",
+        "exotic": "Exóticos",
+        "technology": "Tecnologia",
+        "training": "Treinamento",
+        "health": "Saúde",
+        "other": "Outros"
+      },
+      "services": {
+        "veterinary": "Veterinário",
+        "consultation": "Consulta veterinária",
+        "bath": "Banho",
+        "grooming": "Tosa",
+        "bathGrooming": "Banho e tosa",
+        "boarding": "Hospedagem",
+        "daycare": "Creche",
+        "training": "Adestramento",
+        "dogWalker": "Passeador",
+        "transport": "Transporte",
+        "petSitter": "Pet sitter",
+        "exams": "Exames",
+        "vaccination": "Vacinação",
+        "surgery": "Cirurgia",
+        "consulting": "Consultoria",
+        "reproduction": "Reprodução",
+        "aquarium": "Aquarismo",
+        "equine": "Equinos",
+        "cattle": "Bovinos",
+        "exotic": "Exóticos",
+        "emergency24h": "Emergência 24h",
+        "other": "Outros"
+      }
+    },
+    "servicesPage": {
+      "aria": "Descoberta de serviços",
+      "lead": "Serviços reais de parceiros cadastrados. Filtros e ranking são os mesmos do Marketplace.",
+      "sortValue": "Melhor custo-benefício",
+      "telehealth": "Teleorientação",
+      "mobileGrooming": "Grooming móvel",
+      "openTodayBadge": "Atende hoje",
+      "openTodayHint": "“Atende hoje” significa que o parceiro cadastrou horário neste dia da semana. Não garante vaga livre.",
+      "forPetTitle": "Para o seu pet",
+      "forPet": "Para {name}",
+      "guestPet": "Entre e cadastre seu pet para ver serviços compatíveis com espécie e histórico reais. Não inventamos um Thor.",
+      "noPets": "Cadastre um pet para recomendações com dados reais.",
+      "addPet": "Cadastrar pet",
+      "noDiagnosis": "Isto não é diagnóstico. Compatibilidade usa espécie cadastrada, localização e ranking determinístico.",
+      "adoptionLink": "Adoção",
+      "ngosLink": "ONGs",
+      "bookingTitle": "Agendamento",
+      "bookingHint": "O agendamento usa a agenda real do parceiro: escolha o serviço, veja horários cadastrados e confirme. Política de cancelamento é a do parceiro.",
+      "verticals": {
+        "health": "Saúde",
+        "healthHint": "Consulta, vacinação, exames, cirurgia e emergência 24h quando o parceiro cadastrou. Teleorientação só com modalidade online.",
+        "care": "Cuidados",
+        "careHint": "Banho, tosa, hospedagem, creche e pet sitter. Grooming móvel usa o filtro de domicílio já existente.",
+        "routine": "Rotina",
+        "routineHint": "Passeio, adestramento, creche e pet sitting com categorias reais do catálogo.",
+        "mobility": "Mobilidade",
+        "mobilityHint": "Transporte pet cadastrado. Documentação, microchip e viagem aparecem quando um parceiro oferecer nessas categorias.",
+        "adoption": "Adoção e impacto",
+        "adoptionHint": "Adoção e ONGs são fluxos reais da plataforma, não anúncios fictícios do Marketplace.",
+        "memory": "Memória e fim de vida",
+        "memoryHint": "Paliativos, cremação e memorial",
+        "memoryEmpty": "Ainda não há categoria nem parceiros de memorial, cremação ou paliativos cadastrados. Não exibimos clínicas fictícias."
+      },
+      "rails": {
+        "near": "Perto de você",
+        "openToday": "Atendimento hoje",
+        "rating": "Mais bem avaliados",
+        "value": "Melhor custo-benefício",
+        "home": "Domiciliares",
+        "verified": "Parceiros verificados"
+      }
+    }
   },
   "a11y": {
     "title": "Acessibilidade EccoPet",
@@ -1368,9 +1838,11 @@
     "brailleDeactivated": "Modo Braille desativado.",
     "themeLight": "Ativar tema claro",
     "themeDark": "Ativar tema escuro",
+    "themeBlack": "Ativar tema preto",
     "themeSystem": "Usar tema do sistema",
     "themeLightActivated": "Tema claro ativado.",
     "themeDarkActivated": "Tema escuro ativado.",
+    "themeBlackActivated": "Tema preto ativado.",
     "themeSystemActivated": "Tema do sistema ativado.",
     "themeToggle": "Alternar tema claro/escuro",
     "language": {
@@ -1483,12 +1955,14 @@
       "noMapDataHint": "Dados geoespaciais aparecerão quando houver sensores cadastrados."
     },
     "ai": {
-      "title": "Assistente EccoPet",
+      "title": "Assistente pessoal EccoPet",
       "noHistory": "Nenhuma interação encontrada.",
-      "placeholder": "Pergunte sobre cuidados com pets...",
-      "unavailable": "IA indisponível no momento. Tente novamente mais tarde.",
-      "openLabel": "Abrir ECOPET IA",
-      "fullPage": "Abrir IA completa",
+      "placeholder": "Pergunte sobre navegação, produtos ou serviços...",
+      "unavailable": "O assistente está temporariamente indisponível.",
+      "openLabel": "Abrir assistente pessoal",
+      "fullPage": "Abrir EccoPet AI",
+      "signInPrompt": "Para continuar, entre ou crie sua conta. Vamos te levar de volta ao que você pediu.",
+      "humanSupport": "Falar com o Suporte EccoPet",
       "marketplaceTitle": "Assistente Marketplace",
       "noRecommendations": "Nenhuma recomendação disponível no momento.",
       "quickProducts": "Produtos",
@@ -1513,12 +1987,15 @@
       "createAccount": "Criar conta"
     },
     "composer": {
-      "placeholder": "O que seu pet está aprontando hoje? Use #hashtags",
+      "placeholder": "Compartilhe algo com a comunidade…",
       "media": "Mídia",
       "publish": "Publicar",
       "loginToPost": "Entre para publicar na comunidade",
       "typeLabel": "Tipo de publicação",
-      "validationEmpty": "Informe texto ou mídia."
+      "validationEmpty": "Informe texto ou mídia.",
+      "audiencePublic": "Público",
+      "audienceFollowers": "Seguidores",
+      "audiencePrivate": "Somente eu"
     },
     "actions": {
       "like": "Curtir",
@@ -1536,24 +2013,22 @@
       "editHint": "Altere o texto da publicação e salve para atualizar.",
       "editSuccess": "Publicação atualizada.",
       "editFailed": "Não foi possível editar a publicação.",
-      "delete": "Excluir publicação",
-      "deleteSuccess": "Publicação excluída.",
-      "deleteFailed": "Não foi possível excluir a publicação.",
       "copyLink": "Copiar link",
-      "linkCopied": "Link copiado!",
+      "linkCopied": "Link copiado.",
       "copyFailed": "Não foi possível copiar o link.",
       "shareTitle": "Publicação EccoPet",
       "shareFailed": "Não foi possível compartilhar.",
       "hide": "Ocultar publicação",
-      "hiddenFeedback": "Publicação ocultada do seu feed.",
+      "hiddenFeedback": "Publicação ocultada.",
       "notInterested": "Não tenho interesse",
-      "notInterestedFeedback": "Vamos mostrar menos conteúdo assim.",
+      "notInterestedFeedback": "Publicação marcada como sem interesse.",
       "savedFeedback": "Publicação salva.",
       "unsavedFeedback": "Removida dos salvos.",
       "saveFailed": "Não foi possível salvar a publicação.",
-      "visibilityPublic": "Tornar pública",
-      "visibilityFollowers": "Somente seguidores",
-      "visibilityPrivate": "Tornar privada",
+      "audience": "Alterar audiência",
+      "visibilityPublic": "Público",
+      "visibilityFollowers": "Seguidores",
+      "visibilityPrivate": "Somente eu",
       "visibilityPublicDone": "Publicação agora é pública.",
       "visibilityFollowersDone": "Visível apenas para seguidores.",
       "visibilityPrivateDone": "Só você poderá ver esta publicação.",
@@ -1561,6 +2036,10 @@
       "enableComments": "Ativar comentários",
       "commentsDisabledDone": "Comentários desativados.",
       "commentsEnabledDone": "Comentários ativados.",
+      "hideLikes": "Ocultar contagem de curtidas",
+      "showLikes": "Mostrar contagem de curtidas",
+      "hideLikesDone": "Contagem de curtidas oculta para outras pessoas.",
+      "showLikesDone": "Contagem de curtidas visível.",
       "pin": "Fixar no perfil",
       "unpin": "Desafixar",
       "pinDone": "Publicação fixada.",
@@ -1569,8 +2048,16 @@
       "unarchive": "Restaurar do arquivo",
       "archiveDone": "Publicação arquivada.",
       "unarchiveDone": "Publicação restaurada.",
-      "deleteConfirmTitle": "Excluir publicação?",
-      "deleteConfirmBody": "Esta ação removerá permanentemente a publicação e não poderá ser desfeita.",
+      "delete": "Excluir",
+      "deleteSuccess": "Publicação movida para a lixeira.",
+      "deleteFailed": "Não foi possível excluir a publicação.",
+      "deleteConfirmTitle": "Mover para a lixeira?",
+      "deleteConfirmBody": "A publicação sai do feed e do perfil público. Você pode restaurá-la na lixeira.",
+      "hardDelete": "Apagar de vez",
+      "hardDeleteTitle": "Apagar definitivamente?",
+      "hardDeleteBody": "Esta publicação e os dados associados não poderão ser recuperados.",
+      "hardDeleteConfirm": "Apagar definitivamente",
+      "followDone": "Você passou a seguir este perfil.",
       "unfollowDone": "Você deixou de seguir este perfil.",
       "unfollowFailed": "Não foi possível deixar de seguir.",
       "block": "Bloquear usuário",
@@ -1586,11 +2073,11 @@
       "shares": "{count} compartilhamentos"
     },
     "empty": {
-      "title": "Feed vazio",
-      "description": "Nenhuma publicação ainda. Seja o primeiro a compartilhar!"
+      "title": "Ainda não há publicações para mostrar.",
+      "description": "Quando a comunidade publicar, as novidades aparecem aqui."
     },
     "error": {
-      "load": "Erro ao carregar feed",
+      "load": "Não foi possível carregar o feed.",
       "retry": "Tentar novamente"
     },
     "loadMore": "Carregar mais",
@@ -1598,9 +2085,10 @@
       "placeholder": "Escreva um comentário...",
       "send": "Enviar",
       "sent": "Comentário enviado.",
-      "empty": "Nenhum comentário ainda. Seja o primeiro!",
+      "empty": "Seja o primeiro a comentar.",
       "sendError": "Não foi possível enviar o comentário.",
-      "loadError": "Não foi possível carregar os comentários."
+      "loadError": "Não foi possível carregar os comentários.",
+      "disabledByAuthor": "Os comentários foram desativados pelo autor."
     },
     "filters": {
       "all": "Todos",
@@ -1650,11 +2138,42 @@
     "post": {
       "removed": "Publicação removida",
       "hidden": "Publicação oculta pela moderação",
-      "edited": "editado"
+      "edited": "Editado",
+      "pinned": "Fixado"
     },
     "report": {
       "title": "Denunciar publicação",
-      "submit": "Enviar denúncia"
+      "whyTitle": "Por que você está denunciando esta publicação?",
+      "whyHint": "Escolha o motivo que melhor descreve o conteúdo.",
+      "detailsLabel": "Conte mais, se quiser.",
+      "detailsPlaceholder": "Detalhes opcionais",
+      "submit": "Enviar denúncia",
+      "sendFailed": "Não foi possível enviar a denúncia.",
+      "successTitle": "Denúncia enviada.",
+      "successBody": "Nossa equipe vai analisar o conteúdo.",
+      "close": "Fechar",
+      "back": "Voltar",
+      "reasons": {
+        "SPAM": "Spam",
+        "SCAM": "Golpe ou fraude",
+        "HARASSMENT": "Assédio",
+        "HATE": "Conteúdo ofensivo",
+        "ANIMAL_ABUSE": "Maus-tratos a animais",
+        "VIOLENCE": "Violência",
+        "SEXUAL_CONTENT": "Conteúdo sensível",
+        "MISINFORMATION": "Falsa identidade ou desinformação",
+        "OTHER": "Outro"
+      }
+    },
+    "trash": {
+      "title": "Lixeira",
+      "hint": "Publicações excluídas ficam aqui até você restaurar ou apagar de vez.",
+      "empty": "A lixeira está vazia.",
+      "noText": "Publicação sem texto",
+      "restore": "Restaurar",
+      "loadError": "Não foi possível carregar a lixeira.",
+      "restoreFailed": "Não foi possível restaurar.",
+      "hardFailed": "Não foi possível apagar definitivamente."
     }
   },
   "notifications": {
@@ -1892,7 +2411,8 @@
       "emptyDesc": "Seja o primeiro a compartilhar um momento do seu pet com a comunidade EccoPet.",
       "explore": "Explorar",
       "error": "Erro ao carregar o feed.",
-      "askAi": "Resuma e comente de forma útil este post da comunidade pet: \"{snippet}\""
+      "askAi": "Resuma e comente de forma útil este post da comunidade pet: \"{snippet}\"",
+      "askAiLabel": "Perguntar à EccoPet"
     },
     "panels": {
       "suggestedPartners": "Perfis sugeridos",
@@ -1932,12 +2452,16 @@
     },
     "sidebarNav": "Navegação da rede social",
     "trending": {
-      "title": "Tendências de Hoje",
+      "title": "Tendências para você",
+      "forYou": "Tendências para você",
+      "subtitle": "Com base em publicações reais da comunidade",
+      "inPets": "Tendência em Pets",
+      "publications": "publicações",
       "hashtags": "Hashtags em alta",
       "products": "Produtos populares",
       "services": "Serviços buscados",
       "ngos": "ONGs em destaque",
-      "empty": "Ainda não há tendências para mostrar."
+      "empty": "Ainda não há tendências suficientes."
     }
   },
   "enums": {
@@ -2101,6 +2625,11 @@
       "sortPriceDesc": "Maior preço",
       "sortPopular": "Mais populares",
       "sortRating": "Melhor avaliados",
+      "sortNearMe": "Mais perto de mim",
+      "sortTotalCost": "Menor custo total",
+      "sortShippingCost": "Menor custo de entrega",
+      "sortFastest": "Entrega mais rápida",
+      "tabPartners": "Parceiros",
       "rating": "Avaliação",
       "ratingAny": "Qualquer",
       "rating4": "4 estrelas ou mais",
@@ -2620,6 +3149,7 @@
       "adopted": "Adotado",
       "by": "por",
       "emptyAnimals": "Nenhum pet disponível para adoção nesta busca.",
+      "emptyNgos": "Nenhuma ONG verificada encontrada no momento.",
       "exploreNgos": "Explorar ONGs",
       "adjustFilters": "Ajustar filtros",
       "emptyCampaigns": "Nenhuma campanha ativa no momento.",
@@ -2644,5 +3174,42 @@
     "test": "Testar",
     "testing": "Testando…",
     "erpSection": "ERP — testar e ativar integrações"
+  },
+  "rewards": {
+    "title": "EccoPontos",
+    "lead": "Acumule pontos em compras e serviços concluídos e troque por cupons.",
+    "available": "Saldo disponível",
+    "pointsName": "EccoPontos",
+    "lifetime": "{count} pontos ao longo da vida",
+    "expiring": "{count} a expirar",
+    "howToEarn": "Como ganhar",
+    "earn": {
+      "order": "Compras no marketplace",
+      "service": "Serviços concluídos",
+      "referral": "Indicação de amigos"
+    },
+    "referralDisabled": "Indicação ainda não está disponível.",
+    "earnRate": "{rate} ponto(s) por real",
+    "earnDisabled": "Temporariamente indisponível.",
+    "rewardsTitle": "Recompensas",
+    "noRewards": "Nenhuma recompensa disponível no momento.",
+    "cost": "{count} EccoPontos",
+    "redeem": "Resgatar",
+    "insufficient": "Pontos insuficientes",
+    "redeemAria": "Resgatar {name}",
+    "yourCoupons": "Seus cupons",
+    "history": "Histórico",
+    "empty": "Você ainda não ganhou pontos.",
+    "oneListed": "Há planos EccoPet One cadastrados. A assinatura paga ainda não está disponível por aqui.",
+    "oneFlagged": "EccoPet One ainda não tem planos cadastrados. A assinatura paga não está disponível nesta fase.",
+    "loadError": "Não foi possível carregar EccoPontos.",
+    "retry": "Tentar de novo",
+    "redeemFail": "Não foi possível concluir o resgate.",
+    "redeemOk": "Resgate concluído.",
+    "redeemOkCode": "Resgate concluído. Cupom: {code}",
+    "confirmTitle": "Confirmar resgate",
+    "confirmBody": "Usar {count} EccoPontos em {name}?",
+    "confirm": "Confirmar",
+    "cancel": "Cancelar"
   }
 }

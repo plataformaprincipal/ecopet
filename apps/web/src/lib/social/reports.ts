@@ -6,7 +6,8 @@ import { checkSocialRateLimit } from "@/lib/social/rate-limit";
 import { writeAuditLog } from "@/lib/audit-log";
 import { emitPlatformEvent, PLATFORM_EVENTS } from "@/lib/events/event-bus";
 import { notifyModerationApplied, notifyReportReceived } from "@/lib/social/notifications/social-notification-service";
-import type { SocialReportReason } from "@prisma/client";
+import { isSocialReportReason } from "@/lib/social/post-authorization";
+import type { Prisma, SocialReportReason } from "@prisma/client";
 
 export async function createReport(params: {
   reporterId: string;
@@ -25,12 +26,25 @@ export async function createReport(params: {
     throw new SocialError("Informe post ou comentário.", "VALIDATION", 400);
   }
 
+  if (!isSocialReportReason(params.reason)) {
+    throw new SocialError("Motivo de denúncia inválido.", "VALIDATION", 400);
+  }
+
+  let snapshot: Prisma.InputJsonValue | undefined;
   if (params.postId) {
     const post = await prisma.socialPost.findUnique({ where: { id: params.postId } });
     if (!post || post.deletedAt) throw new SocialError("Publicação não encontrada.", "NOT_FOUND", 404);
     if (post.authorId === params.reporterId) {
       throw new SocialError("Você não pode denunciar sua publicação.", "VALIDATION", 400);
     }
+    snapshot = {
+      postId: post.id,
+      authorId: post.authorId,
+      content: post.content.slice(0, 2000),
+      visibility: post.visibility,
+      type: post.type,
+      reportedAt: new Date().toISOString(),
+    };
   }
 
   if (params.commentId) {
@@ -48,12 +62,19 @@ export async function createReport(params: {
       commentId: params.commentId,
       reason: params.reason,
       description: params.description,
+      targetSnapshot: snapshot,
     },
   });
 
   if (params.postId) {
     await prisma.socialPost.update({
       where: { id: params.postId },
+      data: { status: "REPORTED" },
+    });
+  }
+  if (params.commentId) {
+    await prisma.socialComment.update({
+      where: { id: params.commentId },
       data: { status: "REPORTED" },
     });
   }
@@ -64,7 +85,7 @@ export async function createReport(params: {
       select: { id: true },
     });
     for (const admin of admins) {
-      await notifyReportReceived({ adminId: admin.id, reportId: report.id }).catch(() => undefined);
+      void notifyReportReceived({ adminId: admin.id, reportId: report.id }).catch(() => undefined);
     }
   } catch {
     // Denúncia já persistida — falha de notificação não deve invalidar o report.
@@ -90,7 +111,15 @@ export async function listAdminReports(params: { status?: string; cursor?: strin
     where: params.status ? { status: params.status as "OPEN" | "REVIEWING" | "RESOLVED" | "REJECTED" } : undefined,
     include: {
       reporter: { select: { id: true, name: true } },
-      post: { select: { id: true, content: true, authorId: true, status: true } },
+      post: {
+        select: {
+          id: true,
+          content: true,
+          authorId: true,
+          status: true,
+          author: { select: { id: true, name: true } },
+        },
+      },
       comment: { select: { id: true, content: true, authorId: true, status: true } },
       reviewedBy: { select: { id: true, name: true } },
     },
@@ -109,7 +138,9 @@ export async function getAdminReport(reportId: string) {
     where: { id: reportId },
     include: {
       reporter: { select: { id: true, name: true } },
-      post: true,
+      post: {
+        include: { author: { select: { id: true, name: true } } },
+      },
       comment: true,
       reviewedBy: { select: { id: true, name: true } },
     },

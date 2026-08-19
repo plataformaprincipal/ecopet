@@ -93,13 +93,15 @@ export function AIMessageBubble({
             "rounded-3xl px-4 py-3 text-sm leading-relaxed shadow-sm",
             isUser
               ? "rounded-tr-md bg-ecopet-green text-white"
-              : "rounded-tl-md border border-zinc-200/70 bg-white text-zinc-800 dark:border-white/10 dark:bg-zinc-900/70 dark:text-zinc-100"
+              : "rounded-tl-md border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] text-[var(--ep-fg)]"
           )}
         >
           {message.pending ? (
-            <span className="flex items-center gap-2 text-zinc-400">
+            <span className="flex items-center gap-2 text-[var(--ep-fg-muted)]" role="status">
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-              {t("ecopetAi.thinking")}
+              {message.statusPhase
+                ? t(message.statusPhase as never)
+                : message.content || t("ecopetAi.thinking")}
             </span>
           ) : (
             <div className="space-y-1.5">{renderRich(message.content)}</div>
@@ -145,7 +147,7 @@ export function AIMessageBubble({
                 type="button"
                 onClick={onRegenerate}
                 aria-label={t("ecopetAi.regenerate")}
-                className="inline-flex items-center gap-1 rounded p-1 text-xs text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-800"
+                className="inline-flex items-center gap-1 rounded p-1 text-xs text-[var(--ep-fg-muted)] hover:bg-[var(--ep-bg-muted)]"
               >
                 <RotateCcw className="h-3.5 w-3.5" aria-hidden />
                 {t("ecopetAi.regenerate")}

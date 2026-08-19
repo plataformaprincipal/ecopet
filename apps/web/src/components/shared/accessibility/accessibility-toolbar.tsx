@@ -39,6 +39,12 @@ import {
 } from "@/store/accessibility-store";
 import type { AccessibilityPreferences } from "@/lib/accessibility/types";
 import { useTranslation } from "@/providers/i18n-provider";
+import {
+  appearanceThemeActivatedKey,
+  appearanceThemeLabelKey,
+  ECOPET_APPEARANCE_THEMES,
+  isEcopetAppearanceTheme,
+} from "@/lib/theme/ecopet-theme";
 import { deactivateVLibras } from "@/lib/accessibility/vlibras-loader";
 import { useAriaAnnounce } from "./aria-live-region";
 import { useSimpleLanguage } from "@/hooks/use-simple-language";
@@ -54,7 +60,8 @@ export function AccessibilityToolbar() {
   const { t } = useTranslation();
   const { s } = useSimpleLanguage();
   const { resolvedTheme, setTheme } = useTheme();
-  const isDarkTheme = resolvedTheme === "dark";
+  const appearance =
+    isEcopetAppearanceTheme(resolvedTheme) ? resolvedTheme : resolvedTheme === "dark" ? "dark" : "light";
 
   const fontScale = useAccessibilityStore((s) => s.fontScale);
   const brailleEnabled = useAccessibilityStore((s) => s.brailleEnabled);
@@ -81,6 +88,7 @@ export function AccessibilityToolbar() {
   const increaseFont = useAccessibilityStore((s) => s.increaseFont);
   const decreaseFont = useAccessibilityStore((s) => s.decreaseFont);
   const resetFont = useAccessibilityStore((s) => s.resetFont);
+  const setFontScale = useAccessibilityStore((s) => s.setFontScale);
   const increaseLetterSpacing = useAccessibilityStore((s) => s.increaseLetterSpacing);
   const increaseLineHeight = useAccessibilityStore((s) => s.increaseLineHeight);
   const toggle = useAccessibilityStore((s) => s.toggle);
@@ -99,6 +107,18 @@ export function AccessibilityToolbar() {
   const handleToggle = useCallback(
     (key: BooleanKey, label: string) => {
       const wasActive = useAccessibilityStore.getState()[key];
+      if (key === "invertedContrast") {
+        const next = !wasActive;
+        toggle(key);
+        if (next) {
+          setTheme("black");
+        } else if (appearance === "black") {
+          setTheme("light");
+        }
+        announce(`${label} ${next ? t("a11y.activated") : t("a11y.deactivated")}`, "polite");
+        return;
+      }
+
       toggle(key);
       announce(`${label} ${!wasActive ? t("a11y.activated") : t("a11y.deactivated")}`, "polite");
 
@@ -106,7 +126,7 @@ export function AccessibilityToolbar() {
         dismissPanel();
       }
     },
-    [toggle, announce, t, dismissPanel]
+    [toggle, announce, t, dismissPanel, setTheme, appearance]
   );
 
   const handleBrailleToggle = useCallback(() => {
@@ -149,7 +169,7 @@ export function AccessibilityToolbar() {
 
   return (
     <div
-      className="a11y-toolbar-root bottom-[calc(5.75rem+env(safe-area-inset-bottom))] right-4 left-auto lg:bottom-6 lg:right-4"
+      className="ep-float-a11y a11y-toolbar-root"
       style={{ paddingBottom: "max(0px, env(safe-area-inset-bottom))" }}
       role="region"
       aria-label={t("a11y.title")}
@@ -177,6 +197,24 @@ export function AccessibilityToolbar() {
               <ToolBtn icon={Plus} label={t("a11y.labels.increaseFont")} onClick={increaseFont} disabled={atMax} />
               <ToolBtn icon={Minus} label={t("a11y.labels.decreaseFont")} onClick={decreaseFont} disabled={atMin} />
               <ToolBtn icon={RotateCcw} label={t("a11y.labels.resetFont")} onClick={resetFont} />
+              <div className="col-span-2 flex flex-wrap gap-1 px-1">
+                {([1, 1.1, 1.25, 1.4] as const).map((scale) => (
+                  <button
+                    key={scale}
+                    type="button"
+                    onClick={() => setFontScale(scale)}
+                    className={cn(
+                      "rounded-full px-2 py-1 text-[10px] font-semibold",
+                      Math.abs(fontScale - scale) < 0.01
+                        ? "bg-ecopet-green text-white"
+                        : "bg-[var(--ep-bg-muted)] text-[var(--ep-fg)]"
+                    )}
+                    aria-pressed={Math.abs(fontScale - scale) < 0.01}
+                  >
+                    {Math.round(scale * 100)}%
+                  </button>
+                ))}
+              </div>
               <ToolBtn icon={Type} label={t("a11y.labels.letterSpacing")} onClick={increaseLetterSpacing} />
               <ToolBtn icon={Type} label={t("a11y.labels.lineHeight")} onClick={increaseLineHeight} />
               <ToggleBtn icon={Contrast} label={t("a11y.labels.highContrast")} active={highContrast} onClick={() => handleToggle("highContrast", t("a11y.labels.highContrast"))} />
@@ -222,14 +260,23 @@ export function AccessibilityToolbar() {
             </Section>
 
             <Section title={s(t("a11y.sections.preferences"))} icon={Settings2}>
-              <ToolBtn
-                icon={isDarkTheme ? Sun : Moon}
-                label={isDarkTheme ? t("a11y.themeLight") : t("a11y.themeDark")}
-                onClick={() => {
-                  setTheme(isDarkTheme ? "light" : "dark");
-                  announce(isDarkTheme ? t("a11y.themeLightActivated") : t("a11y.themeDarkActivated"), "polite");
-                }}
-              />
+              {ECOPET_APPEARANCE_THEMES.map((themeOption) => (
+                <ToggleBtn
+                  key={themeOption}
+                  icon={themeOption === "light" ? Sun : themeOption === "dark" ? Moon : Contrast}
+                  label={t(appearanceThemeLabelKey(themeOption))}
+                  active={appearance === themeOption}
+                  onClick={() => {
+                    setTheme(themeOption);
+                    if (themeOption === "black") {
+                      useAccessibilityStore.setState({ invertedContrast: true });
+                    } else if (invertedContrast) {
+                      useAccessibilityStore.setState({ invertedContrast: false });
+                    }
+                    announce(t(appearanceThemeActivatedKey(themeOption)), "polite");
+                  }}
+                />
+              ))}
               <ToolBtn
                 icon={Settings2}
                 label={t("a11y.themeSystem")}
@@ -243,6 +290,8 @@ export function AccessibilityToolbar() {
                 label={t("a11y.reset")}
                 onClick={() => {
                   reset();
+                  setTheme("system");
+                  useAccessibilityStore.setState({ invertedContrast: false });
                   deactivateVLibras();
                   announce(t("a11y.preferencesSaved"), "polite");
                 }}

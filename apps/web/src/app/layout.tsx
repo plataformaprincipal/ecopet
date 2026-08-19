@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "@/styles/globals.css";
 import { ThemeProvider } from "@/providers/theme-provider";
+import { ThemeAccessibilitySync } from "@/providers/theme-accessibility-sync";
 import { AuthSessionProvider } from "@/providers/session-provider";
 import { AuthGateProvider } from "@/providers/auth-gate-provider";
 import { AuthTokenSync } from "@/providers/auth-token-sync";
 import { AccessibilityProvider } from "@/providers/accessibility-provider";
 import { SkipLink } from "@/components/shared/accessibility/skip-link";
 import { GlobalAccessibility } from "@/components/shared/accessibility/global-accessibility";
+import { GlobalEcopetAssistant } from "@/components/features/ai/global-ecopet-assistant";
 import { I18nProvider } from "@/providers/i18n-provider";
 import { PreferencesSync } from "@/hooks/use-preferences-sync";
 import { AriaLiveProvider } from "@/components/shared/accessibility/aria-live-region";
@@ -80,6 +82,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="pt-BR" suppressHydrationWarning>
       <body className={`${inter.variable} ${jakarta.variable} font-sans antialiased`}>
         <ThemeProvider>
+          <ThemeAccessibilitySync />
           <AccessibilityProvider>
             <I18nProvider>
               <AriaLiveProvider>
@@ -102,12 +105,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                           <ConsentBanner />
                         </SupportChatProvider>
                       </AuthGateProvider>
+                      {/*
+                        Acessibilidade e assistente global — fora de AuthGate/SupportChat,
+                        mas dentro da sessão, para todas as rotas.
+                      */}
+                      <GlobalAccessibility />
+                      <GlobalEcopetAssistant />
                     </AuthSessionProvider>
-                    {/*
-                      Acessibilidade global — fora de AuthGate/SupportChat.
-                      Aparece em todas as rotas, antes e depois do login, sem depender de role.
-                    */}
-                    <GlobalAccessibility />
                   </GoogleAnalyticsProvider>
                 </GoogleTagManagerProvider>
               </AriaLiveProvider>

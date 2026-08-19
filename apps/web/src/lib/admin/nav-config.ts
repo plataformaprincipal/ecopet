@@ -43,6 +43,7 @@ import {
   Gavel,
   Sparkles,
   Rocket,
+  Coins,
 } from "lucide-react";
 
 export type AdminNavItem = {
@@ -122,6 +123,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin/partners", label: "Parceiros", icon: Building2, group: "Plataforma" },
   { href: "/admin/ngos", label: "ONGs", icon: Heart, group: "Plataforma" },
   { href: "/admin/marketplace", label: "Marketplace", icon: ShoppingBag, group: "Plataforma" },
+  { href: "/admin/rewards", label: "EccoPontos", icon: Coins, group: "Plataforma" },
   { href: "/admin/social", label: "Social", icon: Share2, group: "Plataforma" },
   { href: "/admin/approvals", label: "Aprovações", icon: UserCheck, group: "Plataforma" },
   { href: "/admin/orders", label: "Pedidos", icon: ClipboardList, group: "Plataforma" },

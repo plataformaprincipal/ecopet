@@ -27,6 +27,8 @@ export type AIMessage = {
   confirmation?: AIConfirmation;
   structured?: AIStructuredBlock[];
   pending?: boolean;
+  /** Fase real do stream (context, tools, generating…) */
+  statusPhase?: string;
 };
 
 export type AIConversation = {

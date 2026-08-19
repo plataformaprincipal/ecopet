@@ -22,7 +22,8 @@ export default function FeedPostPage() {
       <AppHeader title="Publicação" />
       <main className="mx-auto max-w-2xl flex-1 p-4">
         {error && <p className="text-red-600">{error}</p>}
-        {post && <PostCard post={post} />}
+        {!post && !error && <p role="status">Carregando publicação...</p>}
+        {post && <PostCard post={post} onPostUpdated={setPost} />}
       </main>
     </>
   );

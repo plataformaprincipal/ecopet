@@ -47,6 +47,7 @@ export function isPublicMarketplacePath(pathname: string): boolean {
   if (pathname.startsWith("/marketplace/produtos")) return true;
   if (pathname.startsWith("/marketplace/servicos")) return true;
   if (pathname.startsWith("/marketplace/busca")) return true;
+  if (pathname.startsWith("/marketplace/parceiros")) return true;
   if (/^\/marketplace\/produto\/.+/.test(pathname)) return true;
   if (/^\/marketplace\/servico\/.+/.test(pathname)) return true;
   if (/^\/marketplace\/parceiro\/.+/.test(pathname)) return true;

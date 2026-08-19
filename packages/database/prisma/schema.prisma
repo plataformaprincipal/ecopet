@@ -607,6 +607,7 @@ model User {
   socialBlocksReceived UserSocialBlock[] @relation("SocialBlockBlocked")
   socialMutesInitiated UserSocialMute[] @relation("SocialMuter")
   socialMutesReceived UserSocialMute[] @relation("SocialMuted")
+  hiddenSocialPosts   SocialHiddenPost[]
   loyaltyAccount      LoyaltyAccount?
   integrations        Integration[]
   operationalRobots   OperationalRobot[]
@@ -3640,6 +3641,7 @@ model SocialPost {
   isPinned          Boolean              @default(false)
   isFeatured        Boolean              @default(false)
   commentsEnabled   Boolean              @default(true)
+  hideLikeCount     Boolean              @default(false)
   archivedAt        DateTime?
   createdAt         DateTime             @default(now())
   updatedAt         DateTime             @updatedAt
@@ -3659,6 +3661,7 @@ model SocialPost {
   shares            SocialPostShare[]
   hashtags          SocialPostHashtag[]
   reports           SocialReport[]
+  hiddenBy          SocialHiddenPost[]
 
   @@index([authorId])
   @@index([createdAt])
@@ -3778,6 +3781,7 @@ model SocialReport {
   reviewedById String?
   reviewedAt   DateTime?
   resolution   String?
+  targetSnapshot Json?
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
 
@@ -5212,11 +5216,32 @@ model UserSocialMute {
   @@index([mutedId])
 }
 
+enum SocialFeedSignalKind {
+  HIDE
+  NOT_INTERESTED
+}
+
+model SocialHiddenPost {
+  id        String               @id @default(cuid())
+  userId    String
+  postId    String
+  kind      SocialFeedSignalKind @default(HIDE)
+  createdAt DateTime             @default(now())
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      SocialPost           @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@index([userId])
+  @@index([postId])
+}
+
 enum LoyaltyTxnType {
   EARN
   REDEEM
   EXPIRE
   ADJUSTMENT
+  REVERSAL
+  BONUS
 }
 
 enum LoyaltyTier {
@@ -5249,11 +5274,61 @@ model LoyaltyTransaction {
   description      String?
   idempotencyKey   String?       @unique
   expiresAt        DateTime?
+  metadata         Json?
   createdAt        DateTime      @default(now())
   account          LoyaltyAccount @relation(fields: [loyaltyAccountId], references: [id], onDelete: Cascade)
 
   @@index([loyaltyAccountId, createdAt])
   @@index([sourceType, sourceId])
+}
+
+/// Política única de EccoPontos — sem hardcode na UI.
+model LoyaltyPolicy {
+  id                    String   @id @default("singleton")
+  enabled               Boolean  @default(true)
+  pointsPerBrl          Float    @default(1)
+  servicePointsPerBrl   Float    @default(1)
+  /// null = expirationPolicy none
+  expirationDays        Int?
+  maxEarnPerEvent       Int?
+  minRedeemPoints       Int      @default(1)
+  referralEnabled       Boolean  @default(false)
+  overdraftPolicy       String   @default("forbid")
+  updatedAt             DateTime @updatedAt
+}
+
+model LoyaltyCampaign {
+  id            String   @id @default(cuid())
+  name          String
+  multiplier    Float    @default(1)
+  sourceType    String?
+  category      String?
+  startsAt      DateTime
+  endsAt        DateTime
+  isActive      Boolean  @default(false)
+  maxEarnPerUser Int?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([isActive, startsAt, endsAt])
+}
+
+/// Catálogo de resgate — gera Coupon existente, sem segundo engine.
+model LoyaltyReward {
+  id                     String   @id @default(cuid())
+  code                   String   @unique
+  title                  String
+  description            String?
+  pointsCost             Int
+  couponDiscountType     String
+  couponDiscountValue    Float
+  minOrderCents          Int?
+  isActive               Boolean  @default(true)
+  maxRedemptionsPerUser  Int?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@index([isActive])
 }
 
 model MembershipPlan {

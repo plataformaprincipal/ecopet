@@ -24,9 +24,11 @@ describe("visitor public routes", () => {
 
   it("keeps marketplace browse and cart public, checkout private via marketplace rules", () => {
     assert.equal(requiresAuth("/marketplace"), false);
+    assert.equal(requiresAuth("/marketplace/parceiros"), false);
     assert.equal(requiresAuth("/carrinho"), false);
     assert.equal(requiresAuth("/adocao"), false);
     assert.equal(requiresAuth("/explorar"), false);
     assert.equal(requiresAuth("/servicos"), false);
+    assert.equal(requiresAuth("/ngos"), false);
   });
 });

@@ -2,108 +2,94 @@ import { AccountStatus, VerificationStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { apiSuccess } from "@/lib/api-response";
 import { queryPublicPartners, queryPublicProducts, queryPublicServices } from "@/lib/marketplace/public-query";
+import { formatTrendCount, rankHashtagTrends, type HashtagTrendInput } from "@/lib/social/trends";
 
-const POST_W = 3;
-const COMMENT_W = 2;
-const LIKE_W = 1;
+const VISIBLE = ["PUBLISHED", "REPORTED"] as const;
 
-function formatCount(n: number): string {
-  if (n >= 1000) {
-    const v = n / 1000;
-    return `${v.toFixed(v >= 10 ? 0 : 1).replace(".", ",")} mil`;
-  }
-  return String(n);
-}
-
-/**
- * Tendências a partir de dados reais (janela 7d, fallback 30d / lifetime usageCount).
- * score = posts*3 + comments*2 + likes*1
- */
-export async function GET() {
-  const now = new Date();
-  const window7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const window30d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-
-  async function scoreHashtags(since: Date) {
-    const links = await prisma.socialPostHashtag.findMany({
-      where: {
-        post: {
-          deletedAt: null,
-          archivedAt: null,
-          status: { in: ["PUBLISHED", "REPORTED"] },
-          createdAt: { gte: since },
+async function scoreHashtags(since: Date, hours: number) {
+  const links = await prisma.socialPostHashtag.findMany({
+    where: {
+      post: {
+        deletedAt: null,
+        archivedAt: null,
+        visibility: "PUBLIC",
+        status: { in: [...VISIBLE] },
+        createdAt: { gte: since },
+      },
+    },
+    select: {
+      hashtag: { select: { id: true, name: true, slug: true } },
+      post: {
+        select: {
+          id: true,
+          authorId: true,
+          _count: { select: { likes: true, comments: true } },
         },
       },
-      select: {
-        hashtag: { select: { id: true, name: true, slug: true, usageCount: true } },
-        post: {
-          select: {
-            _count: { select: { likes: true, comments: true } },
-          },
-        },
-      },
-      take: 2000,
-    });
+    },
+    take: 4000,
+  });
 
-    const map = new Map<
-      string,
-      { id: string; name: string; slug: string; usageCount: number; posts: number; comments: number; likes: number }
-    >();
-
-    for (const row of links) {
-      const h = row.hashtag;
-      const cur = map.get(h.id) ?? {
-        id: h.id,
-        name: h.name,
-        slug: h.slug,
-        usageCount: h.usageCount,
-        posts: 0,
-        comments: 0,
-        likes: 0,
-      };
-      cur.posts += 1;
-      cur.comments += row.post._count.comments;
-      cur.likes += row.post._count.likes;
-      map.set(h.id, cur);
+  const map = new Map<
+    string,
+    {
+      id: string;
+      name: string;
+      slug: string;
+      posts: Set<string>;
+      authors: Set<string>;
+      comments: number;
+      likes: number;
     }
+  >();
 
-    return [...map.values()]
-      .map((h) => ({
-        ...h,
-        trendScore: h.posts * POST_W + h.comments * COMMENT_W + h.likes * LIKE_W,
-        publicationsLabel: formatCount(h.posts),
-        category: "hashtag" as const,
-      }))
-      .sort((a, b) => b.trendScore - a.trendScore || b.posts - a.posts);
-  }
-
-  let ranked = await scoreHashtags(window7d);
-  let windowUsed: "7d" | "30d" | "all" = "7d";
-
-  if (ranked.length < 5) {
-    ranked = await scoreHashtags(window30d);
-    windowUsed = "30d";
-  }
-
-  if (ranked.length < 3) {
-    const fallback = await prisma.hashtag.findMany({
-      orderBy: { usageCount: "desc" },
-      take: 12,
-      select: { id: true, name: true, slug: true, usageCount: true },
-    });
-    ranked = fallback.map((h) => ({
+  for (const row of links) {
+    const h = row.hashtag;
+    const cur = map.get(h.id) ?? {
       id: h.id,
       name: h.name,
       slug: h.slug,
-      usageCount: h.usageCount,
-      posts: h.usageCount,
+      posts: new Set<string>(),
+      authors: new Set<string>(),
       comments: 0,
       likes: 0,
-      trendScore: h.usageCount,
-      publicationsLabel: formatCount(h.usageCount),
-      category: "hashtag" as const,
-    }));
-    windowUsed = "all";
+    };
+    cur.posts.add(row.post.id);
+    cur.authors.add(row.post.authorId);
+    cur.comments += row.post._count.comments;
+    cur.likes += row.post._count.likes;
+    map.set(h.id, cur);
+  }
+
+  const inputs: HashtagTrendInput[] = [...map.values()].map((h) => ({
+    id: h.id,
+    name: h.name,
+    slug: h.slug,
+    posts: h.posts.size,
+    uniqueAuthors: h.authors.size,
+    comments: h.comments,
+    likes: h.likes,
+    hours,
+  }));
+
+  return rankHashtagTrends(inputs);
+}
+
+/**
+ * Tendências a partir de dados reais (janela 24h, fallback 7d).
+ * Exclui privado, arquivado, removido e penaliza spam de um único autor.
+ */
+export async function GET() {
+  const now = new Date();
+  const window24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const window7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+  let ranked = await scoreHashtags(window24h, 24);
+  let windowUsed: "24h" | "7d" = "24h";
+
+  if (ranked.length < 5) {
+    ranked = await scoreHashtags(window7d, 24 * 7);
+    windowUsed = "7d";
   }
 
   const trends = ranked.slice(0, 12).map((t, i) => ({
@@ -111,8 +97,9 @@ export async function GET() {
     topic: t.name.startsWith("#") ? t.name : `#${t.name}`,
     slug: t.slug,
     publications: t.posts,
-    publicationsLabel: t.publicationsLabel,
-    category: t.category,
+    uniqueAuthors: t.uniqueAuthors,
+    publicationsLabel: formatTrendCount(t.posts),
+    category: "hashtag" as const,
     score: t.trendScore,
   }));
 

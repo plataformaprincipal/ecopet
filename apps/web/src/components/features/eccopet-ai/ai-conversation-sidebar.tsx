@@ -86,7 +86,7 @@ export function AIConversationSidebar({
   const renderList = (items: AIConversation[], label: string) =>
     items.length === 0 ? null : (
       <div className="mb-2">
-        <h3 className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
+        <h3 className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--ep-fg-subtle)]">
           {label}
         </h3>
         <ul className="space-y-0.5">
@@ -100,7 +100,7 @@ export function AIConversationSidebar({
                   "flex min-w-0 flex-1 items-center gap-2 truncate rounded-2xl px-3 py-2 text-left text-sm transition",
                   activeId === c.id
                     ? "bg-ecopet-green/10 font-medium text-ecopet-green"
-                    : "text-zinc-600 hover:bg-zinc-100/70 dark:text-zinc-300 dark:hover:bg-white/5"
+                    : "text-[var(--ep-fg-muted)] hover:bg-[var(--ep-bg-muted)]"
                 )}
               >
                 <MessageCircle className="h-4 w-4 shrink-0 opacity-60" aria-hidden />
@@ -110,7 +110,7 @@ export function AIConversationSidebar({
                 {onTogglePin ? (
                   <button
                     type="button"
-                    className="flex h-7 w-7 items-center justify-center rounded-lg text-zinc-400 hover:text-ecopet-green"
+                    className="flex h-7 w-7 items-center justify-center rounded-lg text-[var(--ep-fg-subtle)] hover:text-ecopet-green"
                     title="Fixar"
                     aria-label="Fixar"
                     onClick={(e) => {
@@ -124,7 +124,7 @@ export function AIConversationSidebar({
                 {onToggleFavorite ? (
                   <button
                     type="button"
-                    className="flex h-7 w-7 items-center justify-center rounded-lg text-zinc-400 hover:text-amber-500"
+                    className="flex h-7 w-7 items-center justify-center rounded-lg text-[var(--ep-fg-subtle)] hover:text-amber-500"
                     title="Favoritar"
                     aria-label="Favoritar"
                     onClick={(e) => {
@@ -138,7 +138,7 @@ export function AIConversationSidebar({
                 {onRename ? (
                   <button
                     type="button"
-                    className="flex h-7 w-7 items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-700"
+                    className="flex h-7 w-7 items-center justify-center rounded-lg text-[var(--ep-fg-subtle)] hover:text-[var(--ep-fg)]"
                     title="Renomear"
                     aria-label="Renomear"
                     onClick={(e) => {
@@ -159,7 +159,7 @@ export function AIConversationSidebar({
                     }}
                     aria-label={t("ecopetAi.sidebar.delete")}
                     title={t("ecopetAi.sidebar.delete")}
-                    className="flex h-7 w-7 items-center justify-center rounded-lg text-zinc-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40"
+                    className="flex h-7 w-7 items-center justify-center rounded-lg text-[var(--ep-fg-subtle)] hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40"
                   >
                     <Trash2 className="h-3.5 w-3.5" aria-hidden />
                   </button>
@@ -183,17 +183,17 @@ export function AIConversationSidebar({
       </button>
 
       <label className="relative block">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-400" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--ep-fg-subtle)]" />
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Pesquisar conversas"
-          className="w-full rounded-2xl border border-zinc-200/70 bg-white/70 py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-ecopet-green/30 dark:border-white/10 dark:bg-zinc-900/50"
+          className="w-full rounded-2xl border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] py-2 pl-9 pr-3 text-sm text-[var(--ep-fg)] outline-none focus:ring-2 focus:ring-ecopet-green/30"
         />
       </label>
 
-      <nav className="rounded-3xl border border-zinc-200/70 bg-white/70 p-2 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-zinc-900/50">
-        <h2 className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-zinc-400">
+      <nav className="rounded-3xl border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] p-2 shadow-sm">
+        <h2 className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--ep-fg-subtle)]">
           {t("ecopetAi.sidebar.shortcuts")}
         </h2>
         <ul>
@@ -202,7 +202,7 @@ export function AIConversationSidebar({
               <button
                 type="button"
                 onClick={() => onSelectPreset(p)}
-                className="flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-zinc-600 transition hover:bg-zinc-100/70 hover:text-ecopet-green dark:text-zinc-300 dark:hover:bg-white/5"
+                className="flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-[var(--ep-fg-muted)] transition hover:bg-[var(--ep-bg-muted)] hover:text-ecopet-green"
               >
                 <p.icon className="h-4 w-4 shrink-0" aria-hidden />
                 {p.title}
@@ -212,13 +212,13 @@ export function AIConversationSidebar({
         </ul>
       </nav>
 
-      <div className="min-h-0 flex-1 overflow-y-auto rounded-3xl border border-zinc-200/70 bg-white/70 p-2 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-zinc-900/50">
-        <h2 className="flex items-center gap-2 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-zinc-400">
+      <div className="min-h-0 flex-1 overflow-y-auto rounded-3xl border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] p-2 shadow-sm">
+        <h2 className="flex items-center gap-2 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--ep-fg-subtle)]">
           <History className="h-3.5 w-3.5" aria-hidden />
           {t("ecopetAi.sidebar.history")}
         </h2>
         {filtered.length === 0 ? (
-          <p className="px-3 py-2 text-xs text-zinc-400">{t("ecopetAi.sidebar.historyEmpty")}</p>
+          <p className="px-3 py-2 text-xs text-[var(--ep-fg-subtle)]">{t("ecopetAi.sidebar.historyEmpty")}</p>
         ) : (
           <>
             {renderList(pinned, "Fixadas")}

@@ -136,9 +136,24 @@ export function SupportTicketView({ ticketId, admin = false }: { ticketId: strin
       <h1 className="text-xl font-bold">#{ticket.number} — {ticket.subject}</h1>
       <p className="text-sm text-muted-foreground">{ticket.description}</p>
       {admin && (
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button size="sm" onClick={() => supportApi.updateTicket(ticketId, { action: "assign" })}>Assumir</Button>
+          <Button size="sm" variant="outline" onClick={() => supportApi.updateTicket(ticketId, { status: "IN_PROGRESS" })}>Em análise</Button>
+          <Button size="sm" variant="outline" onClick={() => supportApi.updateTicket(ticketId, { status: "WAITING_USER" })}>Aguardando usuário</Button>
+          <Button size="sm" variant="outline" onClick={() => supportApi.updateTicket(ticketId, { status: "RESOLVED" })}>Resolver</Button>
           <Button size="sm" variant="outline" onClick={() => supportApi.updateTicket(ticketId, { status: "CLOSED" })}>Fechar</Button>
+          <Button size="sm" variant="outline" onClick={() => supportApi.updateTicket(ticketId, { status: "OPEN" })}>Reabrir</Button>
+          <select
+            className="rounded-md border px-2 text-sm"
+            defaultValue={ticket.priority}
+            onChange={(e) => void supportApi.updateTicket(ticketId, { priority: e.target.value })}
+            aria-label="Prioridade"
+          >
+            <option value="LOW">Baixa</option>
+            <option value="NORMAL">Normal</option>
+            <option value="HIGH">Alta</option>
+            <option value="URGENT">Urgente</option>
+          </select>
         </div>
       )}
       {!admin && (
@@ -149,9 +164,30 @@ export function SupportTicketView({ ticketId, admin = false }: { ticketId: strin
           Abrir conversa do chamado
         </Link>
       )}
-      <form onSubmit={send} className="flex gap-2">
-        <Input value={content} onChange={(e) => setContent(e.target.value)} placeholder="Responder..." />
-        <Button type="submit">Enviar</Button>
+      <form onSubmit={send} className="flex flex-col gap-2">
+        <div className="flex gap-2">
+          <Input value={content} onChange={(e) => setContent(e.target.value)} placeholder={admin ? "Responder ou nota interna..." : "Responder..."} />
+          <Button type="submit">Enviar</Button>
+        </div>
+        {admin ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={async () => {
+              if (!content.trim()) return;
+              try {
+                await supportApi.sendTicketMessage(ticketId, content, { internal: true });
+                setContent("");
+                void load();
+              } catch (err) {
+                setError(err instanceof Error ? err.message : "Erro");
+              }
+            }}
+          >
+            Adicionar nota interna (não aparece para o usuário)
+          </Button>
+        ) : null}
       </form>
       {error && <p className="text-sm text-red-600">{error}</p>}
     </div>

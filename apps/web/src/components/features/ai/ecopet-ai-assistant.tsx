@@ -12,6 +12,7 @@ import { EcopetSymbol } from "@/components/shared/brand/ecopet-symbol";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/providers/i18n-provider";
+import { useAuthSession } from "@/hooks/use-auth-session";
 import { useAiClientActions } from "@/hooks/use-ai-client-actions";
 import { geoPayloadForRequest } from "@/lib/ai/client-geo";
 import {
@@ -56,6 +57,8 @@ function quickCommandsForPath(pathname: string): QuickCommand[] {
 
 export function EcopetAIAssistant() {
   const { t, locale } = useTranslation();
+  const { status } = useAuthSession();
+  const isGuest = status !== "authenticated";
   const pathname = usePathname();
   const { apply: applyClientAction } = useAiClientActions();
   const quickCommands = useMemo(() => quickCommandsForPath(pathname), [pathname]);
@@ -66,6 +69,7 @@ export function EcopetAIAssistant() {
   const [error, setError] = useState<string | null>(null);
   const [unavailable, setUnavailable] = useState(false);
   const [unavailableMessage, setUnavailableMessage] = useState<string | null>(null);
+  const [loginIntent, setLoginIntent] = useState(false);
 
   const sendText = useCallback(
     async (raw: string) => {
@@ -76,6 +80,50 @@ export function EcopetAIAssistant() {
       setLoading(true);
 
       try {
+        if (isGuest) {
+          const guestRes = await fetch("/api/ai/public-chat", {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              message: userMsg,
+              locale,
+              pagePath: pathname,
+              ...geoPayloadForRequest(),
+            }),
+          });
+          const guestJson = (await guestRes.json().catch(() => ({}))) as {
+            success?: boolean;
+            data?: { reply?: string; available?: boolean; requiresSignIn?: boolean };
+            error?: { code?: string; message?: string };
+          };
+          if (!guestRes.ok || guestJson.success === false) {
+            setError(guestJson.error?.message ?? t("empty.ai.unavailable"));
+            setMessages((m) => m.slice(0, -1));
+            setMessage(userMsg);
+            return;
+          }
+          if (guestJson.data?.available === false) {
+            setUnavailable(true);
+            setUnavailableMessage(guestJson.data.reply ?? t("empty.ai.unavailable"));
+            setMessages((m) => m.slice(0, -1));
+            setMessage(userMsg);
+            return;
+          }
+          const guestReply = guestJson.data?.reply?.trim();
+          if (!guestReply) {
+            setError(t("empty.ai.unavailable"));
+            setMessages((m) => m.slice(0, -1));
+            setMessage(userMsg);
+            return;
+          }
+          if (guestJson.data?.requiresSignIn) {
+            setLoginIntent(true);
+          }
+          setMessages((m) => [...m, { role: "assistant", content: guestReply }]);
+          return;
+        }
+
         const res = await fetch("/api/ai/chat/stream", {
           method: "POST",
           credentials: "include",
@@ -197,7 +245,7 @@ export function EcopetAIAssistant() {
         setLoading(false);
       }
     },
-    [applyClientAction, loading, locale, pathname, t, unavailable]
+    [applyClientAction, isGuest, loading, locale, pathname, t, unavailable]
   );
 
   const send = useCallback(async () => {
@@ -217,7 +265,7 @@ export function EcopetAIAssistant() {
             exit={{ scale: 0, opacity: 0 }}
             type="button"
             onClick={() => setOpen(true)}
-            className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] left-4 z-50 flex h-14 w-14 items-center justify-center rounded-2xl shadow-xl shadow-ecopet-dark/30 transition-transform hover:scale-105 lg:bottom-6"
+            className="ep-float-assistant flex h-14 w-14 items-center justify-center rounded-2xl shadow-xl shadow-ecopet-dark/30 transition-transform hover:scale-105"
             aria-label={t("empty.ai.openLabel")}
           >
             <EcopetSymbol variant="accent" size={56} animated="glow" className="rounded-2xl shadow-lg" />
@@ -239,7 +287,7 @@ export function EcopetAIAssistant() {
               initial={{ opacity: 0, y: 40, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 40, scale: 0.95 }}
-              className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] left-4 z-50 flex h-[min(520px,calc(100vh-8rem))] w-[min(400px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-ecopet-gray/10 bg-white shadow-2xl dark:bg-[#0f1419] lg:bottom-6"
+              className="ep-float-assistant flex h-[min(520px,calc(100vh-8rem))] w-[min(400px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] shadow-2xl"
             >
               <header className="flex items-center justify-between border-b px-4 py-3 dark:border-white/10">
                 <div className="flex items-center gap-2">
@@ -272,6 +320,28 @@ export function EcopetAIAssistant() {
                     {error}
                   </p>
                 )}
+                {loginIntent ? (
+                  <div className="rounded-xl border border-ecopet-green/30 bg-ecopet-green/5 p-3 text-xs">
+                    <p className="mb-2">{t("empty.ai.signInPrompt")}</p>
+                    <div className="flex flex-wrap gap-2">
+                      <Link
+                        href={`/login?callbackUrl=${encodeURIComponent(pathname || "/")}`}
+                        className="rounded-full bg-ecopet-green px-3 py-1 font-semibold text-white"
+                      >
+                        {t("common.signIn")}
+                      </Link>
+                      <Link
+                        href={`/cadastro?callbackUrl=${encodeURIComponent(pathname || "/")}`}
+                        className="rounded-full border border-ecopet-green px-3 py-1 font-semibold text-ecopet-green"
+                      >
+                        {t("common.createAccount")}
+                      </Link>
+                      <Link href="/suporte" className="rounded-full px-3 py-1 text-ecopet-green underline">
+                        {t("empty.ai.humanSupport")}
+                      </Link>
+                    </div>
+                  </div>
+                ) : null}
               </div>
 
               <div className="border-t p-3 space-y-2 dark:border-white/10">

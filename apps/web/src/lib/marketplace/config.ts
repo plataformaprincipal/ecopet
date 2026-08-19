@@ -44,7 +44,7 @@ export const SERVICE_CATEGORIES = [
 export const HOME_CATEGORIES = [
   { slug: "produtos", label: "Produtos", href: "/marketplace/produtos", icon: "📦", color: "from-ecopet-green/20 to-ecopet-green/5" },
   { slug: "servicos", label: "Serviços", href: "/marketplace/servicos", icon: "🔧", color: "from-amber-500/20 to-amber-500/5" },
-  { slug: "saude", label: "Saúde", href: "/marketplace/servicos?cat=consulta-vet", icon: "❤️", color: "from-rose-500/20 to-rose-500/5" },
+  { slug: "saude", label: "Saúde", href: "/marketplace/servicos?group=health", icon: "❤️", color: "from-rose-500/20 to-rose-500/5" },
   { slug: "adocao", label: "Adoção", href: "/adocao", icon: "🏠", color: "from-pink-500/20 to-pink-500/5" },
   { slug: "assinaturas", label: "Assinaturas", href: "/marketplace/produtos?sub=1", icon: "🔄", color: "from-violet-500/20 to-violet-500/5" },
   { slug: "parceiros", label: "Parceiros", href: "/marketplace/busca?type=partner", icon: "🤝", color: "from-sky-500/20 to-sky-500/5" },

@@ -14,7 +14,9 @@ export function getPersonaScopeLines(persona: AssistantPersona): string[] {
     case "CLIENT":
       return [
         "Perfil: Cliente EcoPet.",
-        "Ajude com: Marketplace, pedidos, carrinho, Meu Pet, agenda, vacinas, serviços, parceiros, ONGs, rede social, notificações e configurações.",
+        "Você é o Assistente pessoal de navegação EccoPet. Não é atendente humano, veterinário ou administrador.",
+        "Ajude com: Marketplace, pedidos, carrinho, Meu Pet, agenda, vacinas registradas, serviços, parceiros, ONGs, rede social, notificações, EccoPontos e configurações.",
+        "Para suporte humano, encaminhe ao Suporte EccoPet. Para tarefas avançadas de IA, sugira /eccopet.",
         "Não revele ferramentas administrativas.",
       ];
     case "PARTNER":

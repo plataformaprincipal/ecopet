@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMarketplaceStore } from "@/store/marketplace-store";
 import { formatMpPrice } from "@/lib/marketplace/config";
 import { cn } from "@/lib/utils";
-import { checkoutOrder, type DeliveryMethod, type PaymentMethod, type Order } from "@/lib/orders/api";
+import { checkoutFromServerCart, type DeliveryMethod, type PaymentMethod, type Order } from "@/lib/orders/api";
 import { fetchPartnerLogistics, calculateShipping, type LogisticsMethod } from "@/lib/logistics/api";
 import { fetchWalletBalance } from "@/lib/wallet/api";
 import { useAppStore } from "@/store/app-store";
@@ -93,14 +93,25 @@ export function CheckoutSteps() {
     }
   }, [apiToken, step]);
 
-  function tryCoupon() {
-    const ok = applyCoupon(couponInput);
-    setCouponMsg(ok ? "Cupom aplicado!" : "Cupom inválido. Tente ECOPET10, LUNA15 ou PET20");
+  async function tryCoupon() {
+    const res = await fetch("/api/client/coupons/preview", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: couponInput }),
+    });
+    const json = await res.json();
+    if (!res.ok || json.success === false) {
+      setCouponMsg(json.error?.message ?? "Cupom inválido.");
+      return;
+    }
+    applyCoupon(json.data.code, json.data.discountAmount);
+    setCouponMsg(`Cupom ${json.data.code} — desconto de R$ ${Number(json.data.discountAmount).toFixed(2)}`);
   }
 
   async function handleConfirm() {
-    if (!apiToken) {
-      setError("Faça login para finalizar o pedido.");
+    if (!identification.phone.trim()) {
+      setError("Informe um telefone para finalizar o pedido.");
       return;
     }
     setLoading(true);
@@ -112,28 +123,25 @@ export function CheckoutSteps() {
         recipient: identification.name,
         phone: identification.phone,
       };
-      const order = await checkoutOrder({
-        items: cart.map((item) => ({
-          productId: item.type === "product" ? item.itemId : undefined,
-          serviceId: item.type === "service" ? item.itemId : undefined,
-          quoteId: item.quoteId,
-          itemType: item.type,
-          name: item.name,
-          quantity: item.quantity,
-          price: item.price,
-          partnerId: item.partnerId,
-        })),
-        shippingAddress,
-        alternateAddress: useAlternateAddress ? (alternateAddress as unknown as Record<string, unknown>) : undefined,
-        billingAddress: (useBillingAddress ? billingAddress : address) as unknown as Record<string, unknown>,
-        deliveryMethod,
-        paymentMethod,
-        scheduledAt: scheduledAt || undefined,
-        deliveryNotes: deliveryNotes || undefined,
-        thirdPartyPickup: thirdParty.enabled ? { name: thirdParty.name, document: thirdParty.document } : undefined,
-        serviceMode: serviceMode || undefined,
-        partnerId,
-        discount: discount(),
+      const method = deliveryMethod === "PICKUP_LOCAL" ? "PICKUP_LOCAL" : "DELIVERY_LOCAL";
+      const pay =
+        paymentMethod === "CARD" ? "CARD" : paymentMethod === "CASH" ? "CASH" : "PIX";
+      const order = await checkoutFromServerCart({
+        deliveryMethod: method,
+        paymentMethod: pay,
+        phone: identification.phone,
+        notes: deliveryNotes || undefined,
+        address: {
+          street: shippingAddress.street,
+          number: shippingAddress.number,
+          complement: shippingAddress.complement,
+          district: shippingAddress.district,
+          city: shippingAddress.city,
+          state: shippingAddress.state,
+          zipCode: shippingAddress.zipCode,
+        },
+        couponCode: coupon || undefined,
+        idempotencyKey: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `chk${Date.now()}`,
       });
       setConfirmedOrder(order);
       clearCart();

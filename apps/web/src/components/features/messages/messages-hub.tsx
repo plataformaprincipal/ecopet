@@ -22,6 +22,7 @@ export function MessagesHub({ initialConversationId }: { initialConversationId?:
   const { items, loading, error, refresh } = useConversationsPolling();
 
   const filtered = items.filter((c) => {
+    if (c.type === "SUPPORT") return false;
     if (typeFilter && c.type !== typeFilter) return false;
     if (!q.trim()) return true;
     const term = q.toLowerCase();
@@ -38,8 +39,8 @@ export function MessagesHub({ initialConversationId }: { initialConversationId?:
   }
 
   return (
-    <div className="mx-auto flex h-[calc(100vh-8rem)] max-w-6xl flex-col gap-4 p-4 lg:flex-row">
-      <aside className={cn("flex w-full flex-col rounded-2xl border border-ecopet-gray/12 bg-white dark:border-white/10 dark:bg-zinc-900/60 lg:w-96", selectedId && "hidden lg:flex")}>
+    <div className="mx-auto flex h-[calc(100vh-8rem)] max-w-6xl flex-col gap-0 p-0 lg:flex-row lg:gap-0">
+      <aside className={cn("flex w-full flex-col border-r border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] lg:w-96", selectedId && "hidden lg:flex")}>
         <div className="border-b border-ecopet-gray/10 p-4 dark:border-white/10">
           <div className="mb-3 flex items-center justify-between">
             <h1 className="text-lg font-bold text-ecopet-dark dark:text-white">Mensagens</h1>
@@ -57,7 +58,7 @@ export function MessagesHub({ initialConversationId }: { initialConversationId?:
             <Input className="pl-9" placeholder="Buscar conversas..." value={q} onChange={(e) => setQ(e.target.value)} />
           </div>
           <div className="mt-2 flex flex-wrap gap-1">
-            {["", "DIRECT", "CLIENT_PARTNER", "CLIENT_ONG", "SUPPORT"].map((t) => (
+            {["", "DIRECT", "CLIENT_PARTNER", "CLIENT_ONG"].map((t) => (
               <button
                 key={t || "all"}
                 type="button"
@@ -82,8 +83,8 @@ export function MessagesHub({ initialConversationId }: { initialConversationId?:
             </div>
           )}
           {!loading && !error && filtered.length === 0 && (
-            <div className="p-6 text-center text-sm text-muted-foreground">
-              <p>Nenhuma conversa ainda.</p>
+            <div className="p-6 text-center text-sm text-[var(--ep-fg-muted)]">
+              <p>Suas conversas aparecerão aqui.</p>
               <Button className="mt-3" onClick={() => setNewOpen(true)}>Iniciar conversa</Button>
             </div>
           )}
@@ -102,7 +103,7 @@ export function MessagesHub({ initialConversationId }: { initialConversationId?:
         </div>
       </aside>
 
-      <main className={cn("flex min-h-0 flex-1 flex-col rounded-2xl border border-ecopet-gray/12 bg-white dark:border-white/10 dark:bg-zinc-900/60", !selectedId && "hidden lg:flex")}>
+      <main className={cn("flex min-h-0 flex-1 flex-col bg-[var(--ep-bg)]", !selectedId && "hidden lg:flex")}>
         {selectedId ? (
           <ConversationView conversationId={selectedId} onBack={() => { setSelectedId(""); router.push("/dashboard/messages"); }} />
         ) : (

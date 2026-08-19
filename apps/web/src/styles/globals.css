@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "./tokens.css";
 @import "./themes.css";
+@import "./floating-elements.css";
 @import "./motion.css";
 
 @theme {
@@ -52,6 +53,8 @@
 
   body {
     @apply bg-ecopet-cream text-ecopet-gray antialiased dark:bg-ecopet-dark-bg dark:text-white;
+    background-color: var(--ep-bg);
+    color: var(--ep-fg);
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 

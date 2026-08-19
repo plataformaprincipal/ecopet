@@ -1,6 +1,6 @@
-import { ProfilePageContent } from "@/components/features/social/profile-page-content";
+import { redirect } from "next/navigation";
 
-export default async function SocialPerfilPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function SocialPerfilRedirect({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  return <ProfilePageContent profileId={id} />;
+  redirect(`/feed/profile/${id}`);
 }

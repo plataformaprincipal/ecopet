@@ -1,24 +1,27 @@
-import { apiSuccess } from "@/lib/api-response";
+import { apiSuccess, apiFailure } from "@/lib/api-response";
 import { queryPublicPartners } from "@/lib/marketplace/public-query";
-
-function numParam(value: string | null) {
-  if (!value) return undefined;
-  const n = Number(value);
-  return Number.isFinite(n) ? n : undefined;
-}
+import { parseCatalogRequest } from "@/lib/marketplace/parse-request";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
+  const parsed = parseCatalogRequest(url);
+  if ((url.searchParams.has("lat") || url.searchParams.has("lng")) && (parsed.lat == null || parsed.lng == null)) {
+    return apiFailure("VALIDATION", "Coordenadas inválidas.", 400);
+  }
+
   const result = await queryPublicPartners({
-    q: url.searchParams.get("q") ?? undefined,
-    category: url.searchParams.get("category") ?? undefined,
-    city: url.searchParams.get("city") ?? undefined,
-    state: url.searchParams.get("state") ?? undefined,
-    page: numParam(url.searchParams.get("page")),
-    pageSize: numParam(url.searchParams.get("pageSize")),
-    lat: numParam(url.searchParams.get("lat")),
-    lng: numParam(url.searchParams.get("lng")),
-    radiusKm: numParam(url.searchParams.get("radiusKm")),
+    q: parsed.q,
+    category: parsed.categoryParam,
+    city: parsed.city,
+    state: parsed.state,
+    page: parsed.page,
+    pageSize: parsed.pageSize,
+    lat: parsed.lat,
+    lng: parsed.lng,
+    radiusKm: parsed.radiusKm,
+    verifiedOnly: parsed.verifiedOnly,
+    minRating: parsed.minRating,
+    sort: parsed.sort,
   });
   return apiSuccess(result);
 }

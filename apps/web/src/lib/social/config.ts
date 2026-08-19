@@ -51,7 +51,7 @@ export function formatCount(n: number): string {
 
 export const UNSPLASH = {
   dog1: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=800&q=80",
-  dog2: "https://images.unsplash.com/photo-1558787533-047ed6946526?w=800&q=80",
+  dog2: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=800&q=80",
   cat1: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=800&q=80",
   vet: "https://images.unsplash.com/photo-1628009368238-7bb8cfc3877f?w=800&q=80",
   shop: "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=800&q=80",

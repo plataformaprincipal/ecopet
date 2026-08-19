@@ -31,7 +31,9 @@ interface MarketplaceState {
   clearCart: () => void;
   cartCount: () => number;
   cartSubtotal: () => number;
-  applyCoupon: (code: string) => boolean;
+  applyCoupon: (code: string, discountAmount?: number) => boolean;
+  clearCoupon: () => void;
+  couponDiscount: number;
   discount: () => number;
   total: () => number;
 
@@ -58,8 +60,6 @@ interface MarketplaceState {
   addQuoteToCart: (quoteId: string) => void;
 }
 
-const COUPONS: Record<string, number> = { ECOPET10: 0.1, LUNA15: 0.15, PET20: 0.2 };
-
 export const useMarketplaceStore = create<MarketplaceState>()(
   persist(
     (set, get) => ({
@@ -74,6 +74,7 @@ export const useMarketplaceStore = create<MarketplaceState>()(
       searchPanelOpen: false,
       aiModalOpen: false,
       coupon: "",
+      couponDiscount: 0,
       customRequests: [],
       productCache: {},
       serviceCache: {},
@@ -141,18 +142,14 @@ export const useMarketplaceStore = create<MarketplaceState>()(
       cartCount: () => get().cart.reduce((s, c) => s + c.quantity, 0),
       cartSubtotal: () => get().cart.reduce((s, c) => s + c.price * c.quantity, 0),
 
-      applyCoupon: (code) => {
-        if (COUPONS[code.toUpperCase()]) {
-          set({ coupon: code.toUpperCase() });
-          return true;
-        }
-        return false;
+      applyCoupon: (code, discountAmount = 0) => {
+        const normalized = code.trim().toUpperCase();
+        if (!normalized || discountAmount < 0) return false;
+        set({ coupon: normalized, couponDiscount: discountAmount });
+        return true;
       },
-      discount: () => {
-        const sub = get().cartSubtotal();
-        const pct = COUPONS[get().coupon] ?? 0;
-        return sub * pct;
-      },
+      clearCoupon: () => set({ coupon: "", couponDiscount: 0 }),
+      discount: () => Math.min(get().cartSubtotal(), get().couponDiscount),
       total: () => get().cartSubtotal() - get().discount(),
 
       toggleFavoriteProduct: (id, product) =>
@@ -293,6 +290,8 @@ export const useMarketplaceStore = create<MarketplaceState>()(
         partnerCache: s.partnerCache,
         searchHistory: s.searchHistory,
         customRequests: s.customRequests,
+        coupon: s.coupon,
+        couponDiscount: s.couponDiscount,
       }),
       merge: (persisted, current) => {
         const p = persisted as Record<string, unknown>;

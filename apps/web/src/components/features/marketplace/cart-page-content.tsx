@@ -25,9 +25,20 @@ export function CartPageContent() {
     return acc;
   }, {});
 
-  function tryCoupon() {
-    const ok = applyCoupon(couponInput);
-    setMsg(ok ? "Cupom aplicado!" : "Cupom inválido. Tente ECOPET10, LUNA15 ou PET20");
+  async function tryCoupon() {
+    const res = await fetch("/api/client/coupons/preview", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: couponInput }),
+    });
+    const json = await res.json();
+    if (!res.ok || json.success === false) {
+      setMsg(json.error?.message ?? "Cupom inválido.");
+      return;
+    }
+    applyCoupon(json.data.code, json.data.discountAmount);
+    setMsg(`Cupom ${json.data.code} — desconto de R$ ${Number(json.data.discountAmount).toFixed(2)}`);
   }
 
   if (cart.length === 0) {

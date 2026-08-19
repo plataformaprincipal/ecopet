@@ -156,6 +156,10 @@ export async function unfollowUser(params: { followerId: string; followingId: st
   return { following: false };
 }
 
+/**
+ * Bloqueio social usa `UserSocialBlock` (feed, follow, perfil).
+ * Existe também `UserBlock` em outros fluxos da plataforma; não unificar nesta fase.
+ */
 export async function blockUser(params: { blockerId: string; blockedId: string; reason?: string }) {
   await requireActiveSocialUser(params.blockerId);
   if (params.blockerId === params.blockedId) {

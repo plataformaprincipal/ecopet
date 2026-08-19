@@ -19,10 +19,9 @@ const DropdownMenuContent = React.forwardRef<
       sideOffset={sideOffset}
       collisionPadding={collisionPadding}
       className={cn(
-        "z-[80] min-w-[14rem] overflow-hidden rounded-xl border border-ecopet-gray/15 bg-white p-1 text-ecopet-dark shadow-lg",
+        "z-[80] min-w-[14rem] overflow-hidden rounded-xl border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] p-1 text-[var(--ep-fg)] shadow-lg",
         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
         "data-[side=bottom]:slide-in-from-top-1 data-[side=top]:slide-in-from-bottom-1",
-        "dark:border-white/10 dark:bg-ecopet-dark-card dark:text-white",
         "motion-reduce:animate-none",
         className
       )}
@@ -41,7 +40,7 @@ const DropdownMenuItem = React.forwardRef<
     className={cn(
       "relative flex cursor-pointer select-none items-center gap-2 rounded-lg px-3 py-2.5 text-sm outline-none transition-colors",
       "focus:bg-ecopet-green/10 data-[disabled]:pointer-events-none data-[disabled]:opacity-40",
-      danger ? "text-red-600 focus:bg-red-50 dark:focus:bg-red-950/40" : "text-ecopet-dark dark:text-white",
+      danger ? "text-red-600 focus:bg-red-50 dark:focus:bg-red-950/40" : "text-[var(--ep-fg)]",
       inset && "pl-8",
       className
     )}
@@ -56,7 +55,7 @@ const DropdownMenuSeparator = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DropdownMenuPrimitive.Separator
     ref={ref}
-    className={cn("-mx-1 my-1 h-px bg-ecopet-gray/15 dark:bg-white/10", className)}
+    className={cn("-mx-1 my-1 h-px bg-[var(--ep-border)]", className)}
     {...props}
   />
 ));
@@ -68,7 +67,7 @@ const DropdownMenuLabel = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DropdownMenuPrimitive.Label
     ref={ref}
-    className={cn("px-3 py-1.5 text-xs font-semibold text-ecopet-gray dark:text-white/60", className)}
+    className={cn("px-3 py-1.5 text-xs font-semibold text-[var(--ep-fg-muted)]", className)}
     {...props}
   />
 ));

@@ -22,6 +22,8 @@ export type ApiSocialPost = {
   isPinned?: boolean;
   isFeatured?: boolean;
   commentsEnabled?: boolean;
+  hideLikeCount?: boolean;
+  likesVisible?: boolean;
   archivedAt?: string | null;
   media: { id: string; fileUrl: string; fileName: string; mimeType: string; mediaType: string; sortOrder: number }[];
   hashtags: { id: string; name: string; slug: string }[];
@@ -106,9 +108,11 @@ export async function updatePost(
         content?: string;
         visibility?: string;
         commentsEnabled?: boolean;
+        hideLikeCount?: boolean;
         isPinned?: boolean;
         archive?: boolean;
         unarchive?: boolean;
+        restore?: boolean;
       }
 ) {
   const body = typeof payload === "string" ? { content: payload } : payload;
@@ -118,16 +122,38 @@ export async function updatePost(
   });
 }
 
-export async function deletePost(postId: string) {
-  return socialFetch<{ post: ApiSocialPost }>(`/api/social/posts/${postId}`, { method: "DELETE" });
+export async function deletePost(postId: string, hard = false) {
+  const q = hard ? "?hard=true" : "";
+  return socialFetch<{ post?: ApiSocialPost; deleted?: boolean; id?: string }>(`/api/social/posts/${postId}${q}`, {
+    method: "DELETE",
+  });
+}
+
+export async function restorePost(postId: string) {
+  return socialFetch<{ post: ApiSocialPost }>(`/api/social/posts/${postId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ restore: true }),
+  });
+}
+
+export async function fetchTrash(cursor?: string) {
+  const q = cursor ? `?cursor=${cursor}` : "";
+  return socialFetch<{ posts: ApiSocialPost[]; nextCursor: string | null }>(`/api/social/trash${q}`);
+}
+
+export async function hideFeedPost(postId: string, kind: "HIDE" | "NOT_INTERESTED" = "HIDE") {
+  return socialFetch<{ hidden: boolean; kind: string; persisted: boolean }>(`/api/social/posts/${postId}/hide`, {
+    method: "POST",
+    body: JSON.stringify({ kind }),
+  });
 }
 
 export async function likePost(postId: string) {
-  return socialFetch<{ liked: boolean; count: number }>(`/api/social/posts/${postId}/like`, { method: "POST" });
+  return socialFetch<{ liked: boolean; count: number; likesVisible?: boolean }>(`/api/social/posts/${postId}/like`, { method: "POST" });
 }
 
 export async function unlikePost(postId: string) {
-  return socialFetch<{ liked: boolean; count: number }>(`/api/social/posts/${postId}/like`, { method: "DELETE" });
+  return socialFetch<{ liked: boolean; count: number; likesVisible?: boolean }>(`/api/social/posts/${postId}/like`, { method: "DELETE" });
 }
 
 export async function savePost(postId: string) {

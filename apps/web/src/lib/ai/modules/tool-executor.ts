@@ -157,6 +157,24 @@ export async function executeBusinessTool(
 
   try {
     assertNoAdminLeak(ctx.persona, tool.name);
+    if (ctx.allowedTools && !ctx.allowedTools.includes(tool.name)) {
+      await writeAiAuditLog({
+        userId: ctx.userId,
+        role: ctx.role,
+        module: "ecopet-ai",
+        action: `tool:${tool.name}`,
+        decision: "DENY",
+        metadata: { reason: "capability_allowlist", capabilityId: ctx.capabilityId ?? null },
+      }).catch(() => undefined);
+      return {
+        toolName: tool.name,
+        executed: false,
+        ok: false,
+        error: "TOOL_NOT_ALLOWED",
+        data: null,
+        latencyMs: Date.now() - started,
+      };
+    }
     if (!canRoleUseTool(ctx.role, tool)) {
       await writeAiAuditLog({
         userId: ctx.userId,
@@ -216,8 +234,11 @@ export async function executeBusinessTool(
       role: ctx.role,
       module: "ecopet-ai",
       action: `tool:${tool.name}`,
-      decision: "ALLOW",
-      metadata: { keys: Object.keys(validated.params) },
+        decision: "ALLOW",
+        metadata: {
+          keys: Object.keys(validated.params),
+          capabilityId: ctx.capabilityId ?? null,
+        },
     }).catch(() => undefined);
 
     return {

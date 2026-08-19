@@ -30,7 +30,7 @@ export function AISuggestionChips({
           key={s}
           type="button"
           onClick={() => onSelect(s)}
-          className="rounded-2xl border border-zinc-200/80 bg-white/80 px-4 py-2.5 text-sm text-zinc-700 shadow-sm transition hover:-translate-y-0.5 hover:border-ecopet-green/40 hover:text-ecopet-green dark:border-white/10 dark:bg-zinc-900/60 dark:text-zinc-200"
+          className="rounded-2xl border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] px-4 py-2.5 text-sm text-[var(--ep-fg)] shadow-sm transition hover:-translate-y-0.5 hover:border-ecopet-green/40 hover:text-ecopet-green"
         >
           {s}
         </button>

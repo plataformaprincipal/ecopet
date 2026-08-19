@@ -39,6 +39,7 @@ export function isPublicMarketplacePath(pathname: string): boolean {
   if (pathname.startsWith("/marketplace/produtos")) return true;
   if (pathname.startsWith("/marketplace/servicos")) return true;
   if (pathname.startsWith("/marketplace/busca")) return true;
+  if (pathname.startsWith("/marketplace/parceiros")) return true;
   if (/^\/marketplace\/produto\/.+/.test(pathname)) return true;
   if (/^\/marketplace\/servico\/.+/.test(pathname)) return true;
   if (/^\/marketplace\/parceiro\/.+/.test(pathname)) return true;
@@ -69,7 +70,7 @@ export function isPublicClientPath(pathname: string): boolean {
   if (pathname === "/adocao" || pathname.startsWith("/adocao/")) return true;
   if (pathname === "/adoption" || pathname.startsWith("/adoption/")) return true;
   if (pathname === "/campaigns" || pathname.startsWith("/campaigns/")) return true;
-  if (pathname.startsWith("/ngos/")) return true;
+  if (pathname === "/ngos" || pathname.startsWith("/ngos/")) return true;
   return false;
 }
 

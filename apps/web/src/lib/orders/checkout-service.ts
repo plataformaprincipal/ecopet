@@ -16,6 +16,7 @@ import { calculateOrderPricing, loadPricingSettings } from "@/lib/commerce/prici
 import { calculateCommercialAllocation } from "@/lib/finance/allocation";
 import { writeAuditLog } from "@/lib/audit-log";
 import { assertCheckoutEnabled } from "@/lib/commerce/checkout-flags";
+import { consumeCouponInCheckout, quoteCouponInTx } from "@/lib/commerce/apply-coupon";
 
 const PAYMENT_AT_DELIVERY_LABEL: Record<PaymentMethod, string> = {
   PIX: "PIX na entrega",
@@ -34,6 +35,7 @@ export async function checkoutFromCart(params: {
   notes?: string | null;
   address: Prisma.InputJsonValue;
   idempotencyKey?: string | null;
+  couponCode?: string | null;
 }) {
   assertCheckoutEnabled();
 
@@ -119,9 +121,20 @@ export async function checkoutFromCart(params: {
     );
     if (priced.grossAmount <= 0) throw new Error("INVALID_TOTAL");
 
+    const couponCode = params.couponCode?.trim().toUpperCase() || null;
+    let discountAmount = 0;
+    if (couponCode) {
+      const quoted = await quoteCouponInTx(tx, {
+        userId: params.userId,
+        code: couponCode,
+        grossBrl: priced.grossAmount,
+      });
+      discountAmount = quoted.discountAmount;
+    }
+
     const allocation = calculateCommercialAllocation({
       grossAmount: priced.grossAmount,
-      discountAmount: 0,
+      discountAmount,
       platformPercentage: pricingSettings.platformFeePercent,
       platformFixedFee: pricingSettings.platformFixedFee,
       gatewayFeePercent: pricingSettings.gatewayFeePercent,
@@ -164,7 +177,7 @@ export async function checkoutFromCart(params: {
         partnerId,
         status: OrderStatus.PENDING_CONFIRMATION,
         fulfillmentStatus: OrderStatus.PENDING_CONFIRMATION,
-        total: snap.grossAmount,
+        total: Math.max(0, snap.grossAmount - snap.discountAmount),
         grossAmount: snap.grossAmount,
         discount: snap.discountAmount,
         platformFeeAmount: snap.platformFeeAmount,
@@ -205,7 +218,7 @@ export async function checkoutFromCart(params: {
           create: {
             provider: "pending",
             environment: process.env.MERCADO_PAGO_ENVIRONMENT === "production" ? "production" : "test",
-            amount: snap.grossAmount,
+            amount: Math.max(0, snap.grossAmount - snap.discountAmount),
             currency: "BRL",
             status: "PENDING",
             paymentMethod: paymentMethod,
@@ -227,6 +240,16 @@ export async function checkoutFromCart(params: {
       },
       include: { items: true, payments: true },
     });
+
+    if (couponCode) {
+      await consumeCouponInCheckout({
+        tx,
+        userId: params.userId,
+        code: couponCode,
+        grossBrl: priced.grossAmount,
+        orderId: created.id,
+      });
+    }
 
     await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
     return created;

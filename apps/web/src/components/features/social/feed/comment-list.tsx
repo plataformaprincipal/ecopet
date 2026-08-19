@@ -8,7 +8,7 @@ import { fetchComments, type ApiSocialComment } from "@/lib/social/client-api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "@/providers/i18n-provider";
 
-export function CommentList({ postId }: { postId: string }) {
+export function CommentList({ postId, readOnly }: { postId: string; readOnly?: boolean }) {
   const { t } = useTranslation();
   const [comments, setComments] = useState<ApiSocialComment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,8 +32,8 @@ export function CommentList({ postId }: { postId: string }) {
   }, [load]);
 
   return (
-    <div className="border-t border-ecopet-gray/10 bg-ecopet-cream/20 px-4 py-4 dark:border-white/10 dark:bg-white/[0.02] sm:px-5">
-      <CommentComposer postId={postId} onCreated={() => void load()} />
+    <div className="border-t border-[var(--ep-border)] bg-transparent px-0 py-4">
+      {readOnly ? null : <CommentComposer postId={postId} onCreated={() => void load()} />}
       {loading ? (
         <div className="mt-3 space-y-2">
           <Skeleton className="h-12 w-full rounded-xl" />

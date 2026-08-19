@@ -1,5 +1,5 @@
-import { SavedPageContent } from "@/components/features/social/trends-saved-content";
+import { redirect } from "next/navigation";
 
 export default function SocialSalvosPage() {
-  return <SavedPageContent />;
+  redirect("/feed/saved");
 }

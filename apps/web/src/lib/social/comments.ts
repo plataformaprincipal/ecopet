@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
 import { SocialError } from "@/lib/social/errors";
-import { requireActiveSocialUser, assertNotBlocked } from "@/lib/social/permissions";
+import { requireActiveSocialUser, assertNotBlocked, getBlockedUserIds } from "@/lib/social/permissions";
 import {
   SOCIAL_COMMENT_MAX_CONTENT,
   SOCIAL_COMMENTS_DEFAULT_LIMIT,
@@ -9,6 +9,7 @@ import {
 } from "@/lib/social/constants";
 import { checkSocialRateLimit } from "@/lib/social/rate-limit";
 import { notifyPostCommented, notifyCommentReplied } from "@/lib/social/notifications/social-notification-service";
+import { canCommentPost, canViewPost } from "@/lib/social/post-authorization";
 
 const VISIBLE_COMMENT = ["PUBLISHED", "REPORTED"] as const;
 
@@ -115,14 +116,31 @@ async function serializeComment(comment: CommentRecord, viewerId?: string) {
   return item;
 }
 
-async function assertPostCommentable(postId: string) {
+async function loadViewerFlags(viewerId: string | undefined, authorId: string) {
+  if (!viewerId) return { followsAuthor: false, isBlocked: false };
+  const [follow, blockedIds] = await Promise.all([
+    prisma.userFollow.findUnique({
+      where: { followerId_followingId: { followerId: viewerId, followingId: authorId } },
+    }),
+    getBlockedUserIds(viewerId),
+  ]);
+  return { followsAuthor: Boolean(follow), isBlocked: blockedIds.includes(authorId) };
+}
+
+async function assertPostVisible(postId: string, viewerId?: string) {
   const post = await prisma.socialPost.findUnique({ where: { id: postId } });
   if (!post) throw new SocialError("Publicação não encontrada.", "NOT_FOUND", 404);
-  if (post.deletedAt || post.status === "REMOVED" || post.status === "HIDDEN" || post.archivedAt) {
-    throw new SocialError("Não é possível comentar nesta publicação.", "FORBIDDEN", 403);
+  const flags = await loadViewerFlags(viewerId, post.authorId);
+  if (!canViewPost(post, { viewerId, ...flags })) {
+    throw new SocialError("Publicação não encontrada.", "NOT_FOUND", 404);
   }
-  if (post.commentsEnabled === false) {
-    throw new SocialError("Comentários desativados nesta publicação.", "FORBIDDEN", 403);
+  return post;
+}
+
+async function assertPostCommentable(postId: string, viewerId?: string) {
+  const post = await assertPostVisible(postId, viewerId);
+  if (!canCommentPost(post, { viewerId, ...(await loadViewerFlags(viewerId, post.authorId)) })) {
+    throw new SocialError("Os comentários foram desativados pelo autor.", "FORBIDDEN", 403);
   }
   return post;
 }
@@ -133,7 +151,7 @@ export async function listComments(params: {
   cursor?: string;
   limit?: number;
 }) {
-  await assertPostCommentable(params.postId);
+  await assertPostVisible(params.postId, params.viewerId);
   const limit = Math.min(params.limit ?? SOCIAL_COMMENTS_DEFAULT_LIMIT, 50);
 
   const comments = await prisma.socialComment.findMany({
@@ -167,7 +185,7 @@ export async function createComment(params: {
     throw new SocialError("Muitos comentários em pouco tempo.", "RATE_LIMIT", 429);
   }
 
-  const post = await assertPostCommentable(params.postId);
+  const post = await assertPostCommentable(params.postId, params.authorId);
   await assertNotBlocked(params.authorId, post.authorId);
 
   const content = params.content.trim();

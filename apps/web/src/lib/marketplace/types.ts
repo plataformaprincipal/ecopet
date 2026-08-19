@@ -70,12 +70,16 @@ export interface MarketplaceProduct {
   rating: number;
   reviewCount: number;
   partnerId: string;
-  partner: Pick<MarketplacePartner, "id" | "name" | "avatar" | "isVerified" | "location">;
+  partner: Pick<MarketplacePartner, "id" | "name" | "avatar" | "isVerified" | "location" | "distanceKm">;
   inStock: boolean;
   deliveryDays?: number;
   freeShipping: boolean;
   isPromo: boolean;
   isSponsored?: boolean;
+  distanceKm?: number | null;
+  shippingCost?: number | null;
+  speciesTarget?: string;
+  compatiblePetName?: string;
   species?: string[];
   sizes?: string[];
   subscriptionAvailable?: boolean;
@@ -102,7 +106,11 @@ export interface MarketplaceService {
   telehealth: boolean;
   emergency?: boolean;
   availableDates?: string[];
+  distanceKm?: number | null;
+  speciesTarget?: string;
+  compatiblePetName?: string;
   aiTag?: "ideal_today" | "recommended" | "best_value";
+  openToday?: boolean;
 }
 
 export interface MarketplaceReview {

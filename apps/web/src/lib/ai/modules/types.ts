@@ -89,6 +89,9 @@ export type ToolExecutionContext = {
   /** Coordenadas temporárias enviadas pelo cliente após consentimento explícito. */
   lat?: number;
   lng?: number;
+  /** Allowlist da capability ativa — se definida, tools fora dela são negadas. */
+  allowedTools?: string[];
+  capabilityId?: string;
 };
 
 export type ToolExecutionResult = {
@@ -116,6 +119,10 @@ export type BusinessContextInput = {
   displayName?: string | null;
   lat?: number;
   lng?: number;
+  allowedTools?: string[];
+  capabilityId?: string;
+  capabilityPrompt?: string;
+  capabilityModule?: string;
 };
 
 export type BusinessContext = {

@@ -65,12 +65,22 @@ export async function listMessages(params: {
   cursor?: string;
   limit?: number;
   order?: "asc" | "desc";
+  includeInternal?: boolean;
 }) {
   await assertConversationParticipant(params.conversationId, params.userId);
   const limit = Math.min(100, Math.max(1, params.limit ?? DEFAULT_PAGE_SIZE));
   const order = params.order ?? "desc";
 
-  const where: Prisma.MessageWhereInput = { conversationId: params.conversationId };
+  const where: Prisma.MessageWhereInput = {
+    conversationId: params.conversationId,
+    ...(params.includeInternal
+      ? {}
+      : {
+          NOT: {
+            AND: [{ type: "SYSTEM" }, { metadata: { path: ["visibility"], equals: "internal" } }],
+          },
+        }),
+  };
   if (params.cursor) {
     const cursorMsg = await prisma.message.findUnique({ where: { id: params.cursor } });
     if (cursorMsg) {
@@ -110,6 +120,7 @@ export async function sendMessage(params: {
   senderId: string;
   content?: string;
   type?: MessageType;
+  metadata?: Prisma.InputJsonValue;
   attachments?: Array<{
     fileName: string;
     fileUrl: string;
@@ -141,6 +152,7 @@ export async function sendMessage(params: {
         senderId: params.senderId,
         content: content || (hasAttachments ? "[Anexo]" : ""),
         type,
+        metadata: params.metadata ?? undefined,
         attachments: hasAttachments
           ? {
               create: params.attachments!.map((a) => ({

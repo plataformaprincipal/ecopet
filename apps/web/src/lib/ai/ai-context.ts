@@ -51,6 +51,25 @@ export async function buildMinimalContext(params: {
       parts.push(
         `Pet autorizado: nome=${pet.name}; espécie=${pet.species}; raça=${pet.breed ?? "n/d"}; sexo=${pet.sex ?? "n/d"}; peso=${pet.weight ?? "n/d"}.`
       );
+      const vaccines = await prisma.vaccination.findMany({
+        where: { petId: pet.id },
+        select: { name: true, date: true, nextDue: true },
+        orderBy: { date: "desc" },
+        take: 8,
+      });
+      if (vaccines.length) {
+        const lines = vaccines.map((v) => {
+          const applied = v.date.toLocaleDateString("pt-BR");
+          const next = v.nextDue ? v.nextDue.toLocaleDateString("pt-BR") : "sem próxima data";
+          return `${v.name} (aplicada ${applied}; próxima registrada: ${next})`;
+        });
+        parts.push(
+          `Vacinas registradas pelo tutor (não é protocolo clínico obrigatório): ${lines.join("; ")}.`
+        );
+        parts.push(
+          "Você pode informar datas registradas (ex.: há um reforço registrado para DD/MM). Nunca afirme que o pet precisa obrigatoriamente de uma vacina."
+        );
+      }
     }
   }
 

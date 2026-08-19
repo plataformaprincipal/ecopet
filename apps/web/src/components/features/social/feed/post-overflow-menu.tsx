@@ -7,6 +7,8 @@ import {
   Copy,
   EyeOff,
   Flag,
+  Globe,
+  HeartOff,
   Lock,
   MessageSquareOff,
   MoreHorizontal,
@@ -16,6 +18,7 @@ import {
   ThumbsDown,
   Trash2,
   UserMinus,
+  UserPlus,
   Users,
   Ban,
   VolumeX,
@@ -32,6 +35,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -39,6 +43,8 @@ import { ReportPostModal } from "./report-post-modal";
 import {
   blockUser,
   deletePost,
+  followUser,
+  hideFeedPost,
   muteUser,
   savePost,
   sharePost,
@@ -49,6 +55,7 @@ import {
 } from "@/lib/social/client-api";
 import { useFeedPreferencesStore } from "@/store/feed-preferences-store";
 import { useCurrentUser } from "@/hooks/use-current-user";
+import { useAuthSession } from "@/hooks/use-auth-session";
 import { useAuthGate } from "@/providers/auth-gate-provider";
 import { useTranslation } from "@/providers/i18n-provider";
 import { useSimpleLanguage } from "@/hooks/use-simple-language";
@@ -56,6 +63,28 @@ import { useSimpleLanguage } from "@/hooks/use-simple-language";
 function postAbsoluteUrl(postId: string) {
   if (typeof window === "undefined") return `/feed/post/${postId}`;
   return `${window.location.origin}/feed/post/${postId}`;
+}
+
+async function copyText(value: string) {
+  try {
+    await navigator.clipboard.writeText(value);
+    return true;
+  } catch {
+    try {
+      const el = document.createElement("textarea");
+      el.value = value;
+      el.setAttribute("readonly", "");
+      el.style.position = "fixed";
+      el.style.left = "-9999px";
+      document.body.appendChild(el);
+      el.select();
+      const ok = document.execCommand("copy");
+      document.body.removeChild(el);
+      return ok;
+    } catch {
+      return false;
+    }
+  }
 }
 
 export function PostOverflowMenu({
@@ -74,9 +103,10 @@ export function PostOverflowMenu({
   const { t } = useTranslation();
   const { s } = useSimpleLanguage();
   const { user } = useCurrentUser();
+  const { data: session } = useAuthSession();
   const { requireAuth } = useAuthGate();
-  const hidePost = useFeedPreferencesStore((s) => s.hidePost);
-  const markNotInterestedAuthor = useFeedPreferencesStore((s) => s.markNotInterestedAuthor);
+  const hidePost = useFeedPreferencesStore((st) => st.hidePost);
+  const markNotInterestedAuthor = useFeedPreferencesStore((st) => st.markNotInterestedAuthor);
 
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -87,8 +117,10 @@ export function PostOverflowMenu({
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(Boolean(post.viewerState?.saved));
 
-  const isAuthor = Boolean(user && (user.id === post.authorId || user.id === post.author.id));
+  const viewerId = user?.id || session?.user?.id;
+  const isAuthor = Boolean(viewerId && (viewerId === post.authorId || viewerId === post.author.id));
   const commentsEnabled = post.commentsEnabled !== false;
+  const hideLikeCount = Boolean(post.hideLikeCount);
   const isArchived = Boolean(post.archivedAt);
   const isPinned = Boolean(post.isPinned);
 
@@ -98,38 +130,34 @@ export function PostOverflowMenu({
   }
 
   async function copyLink() {
-    try {
-      await navigator.clipboard.writeText(postAbsoluteUrl(post.id));
-      showFeedback(t("socialFeed.actions.linkCopied"));
-    } catch {
-      setError(t("socialFeed.actions.copyFailed"));
-    }
+    const ok = await copyText(postAbsoluteUrl(post.id));
+    if (ok) showFeedback(t("socialFeed.actions.linkCopied"));
+    else setError(t("socialFeed.actions.copyFailed"));
   }
 
   async function shareAction() {
     const url = postAbsoluteUrl(post.id);
     try {
+      if (typeof navigator.share === "function") {
+        try {
+          await navigator.share({
+            title: t("socialFeed.actions.shareTitle"),
+            url,
+            text: post.content?.slice(0, 120) || undefined,
+          });
+        } catch (err) {
+          if ((err as Error)?.name === "AbortError") return;
+        }
+      }
       requireAuth(async () => {
         try {
           const data = await sharePost(post.id);
           const link = data.link || url;
-          if (typeof navigator.share === "function") {
-            try {
-              await navigator.share({
-                title: t("socialFeed.actions.shareTitle"),
-                url: link,
-                text: post.content?.slice(0, 120) || undefined,
-              });
-              return;
-            } catch (err) {
-              if ((err as Error)?.name === "AbortError") return;
-            }
-          }
-          await navigator.clipboard.writeText(link);
-          showFeedback(t("socialFeed.actions.linkCopied"));
+          const ok = await copyText(link);
+          if (ok) showFeedback(t("socialFeed.actions.linkCopied"));
         } catch {
-          await navigator.clipboard.writeText(url);
-          showFeedback(t("socialFeed.actions.linkCopied"));
+          const ok = await copyText(url);
+          if (ok) showFeedback(t("socialFeed.actions.linkCopied"));
         }
       });
     } catch {
@@ -149,18 +177,38 @@ export function PostOverflowMenu({
     });
   }
 
-  function hideFromFeed() {
-    hidePost(post.id);
-    onHidden?.(post.id);
-    showFeedback(t("socialFeed.actions.hiddenFeedback"));
+  async function hideFromFeed() {
+    requireAuth(async () => {
+      try {
+        await hideFeedPost(post.id, "HIDE");
+        hidePost(post.id);
+        onHidden?.(post.id);
+        showFeedback(t("socialFeed.actions.hiddenFeedback"));
+      } catch {
+        hidePost(post.id);
+        onHidden?.(post.id);
+        showFeedback(t("socialFeed.actions.hiddenFeedback"));
+      }
+    });
   }
 
-  function notInterested() {
-    requireAuth(() => {
-      markNotInterestedAuthor(post.author.id);
-      hidePost(post.id);
-      onHidden?.(post.id);
-      showFeedback(t("socialFeed.actions.notInterestedFeedback"));
+  async function notInterested() {
+    requireAuth(async () => {
+      try {
+        const data = await hideFeedPost(post.id, "NOT_INTERESTED");
+        markNotInterestedAuthor(post.author.id);
+        hidePost(post.id);
+        onHidden?.(post.id);
+        showFeedback(
+          data.persisted
+            ? t("socialFeed.actions.notInterestedFeedback")
+            : t("socialFeed.actions.hiddenFeedback")
+        );
+      } catch {
+        hidePost(post.id);
+        onHidden?.(post.id);
+        showFeedback(t("socialFeed.actions.hiddenFeedback"));
+      }
     });
   }
 
@@ -208,6 +256,214 @@ export function PostOverflowMenu({
     }
   }
 
+  const commonItems = (
+    <>
+      <DropdownMenuItem onSelect={() => void toggleSave()}>
+        <Bookmark className="h-4 w-4" aria-hidden />
+        {saved ? t("socialFeed.actions.unsave") : t("socialFeed.actions.save")}
+      </DropdownMenuItem>
+      <DropdownMenuItem onSelect={() => void copyLink()}>
+        <Copy className="h-4 w-4" aria-hidden />
+        {t("socialFeed.actions.copyLink")}
+      </DropdownMenuItem>
+      <DropdownMenuItem onSelect={() => void shareAction()}>
+        <Share2 className="h-4 w-4" aria-hidden />
+        {t("socialFeed.actions.share")}
+      </DropdownMenuItem>
+    </>
+  );
+
+  const ownerItems = (
+    <>
+      <DropdownMenuItem
+        onSelect={() => {
+          setEditContent(post.content ?? "");
+          setError(null);
+          setEditOpen(true);
+        }}
+      >
+        <Pencil className="h-4 w-4" aria-hidden />
+        {t("socialFeed.actions.edit")}
+      </DropdownMenuItem>
+      <DropdownMenuLabel>{t("socialFeed.actions.audience")}</DropdownMenuLabel>
+      <DropdownMenuItem
+        onSelect={() => void patchPost({ visibility: "PUBLIC" }, s(t("socialFeed.actions.visibilityPublicDone")))}
+      >
+        <Globe className="h-4 w-4" aria-hidden />
+        {s(t("socialFeed.actions.visibilityPublic"))}
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        onSelect={() =>
+          void patchPost({ visibility: "FOLLOWERS" }, s(t("socialFeed.actions.visibilityFollowersDone")))
+        }
+      >
+        <Users className="h-4 w-4" aria-hidden />
+        {s(t("socialFeed.actions.visibilityFollowers"))}
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        onSelect={() => void patchPost({ visibility: "PRIVATE" }, s(t("socialFeed.actions.visibilityPrivateDone")))}
+      >
+        <Lock className="h-4 w-4" aria-hidden />
+        {s(t("socialFeed.actions.visibilityPrivate"))}
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        onSelect={() =>
+          void patchPost(
+            { isPinned: !isPinned },
+            isPinned ? t("socialFeed.actions.unpinDone") : t("socialFeed.actions.pinDone")
+          )
+        }
+      >
+        <Pin className="h-4 w-4" aria-hidden />
+        {isPinned ? t("socialFeed.actions.unpin") : t("socialFeed.actions.pin")}
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        onSelect={() =>
+          void patchPost(
+            { commentsEnabled: !commentsEnabled },
+            commentsEnabled
+              ? t("socialFeed.actions.commentsDisabledDone")
+              : t("socialFeed.actions.commentsEnabledDone")
+          )
+        }
+      >
+        <MessageSquareOff className="h-4 w-4" aria-hidden />
+        {commentsEnabled ? t("socialFeed.actions.disableComments") : t("socialFeed.actions.enableComments")}
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        onSelect={() =>
+          void patchPost(
+            { hideLikeCount: !hideLikeCount },
+            hideLikeCount ? t("socialFeed.actions.showLikesDone") : t("socialFeed.actions.hideLikesDone")
+          )
+        }
+      >
+        <HeartOff className="h-4 w-4" aria-hidden />
+        {hideLikeCount ? t("socialFeed.actions.showLikes") : t("socialFeed.actions.hideLikes")}
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        onSelect={() =>
+          void patchPost(
+            isArchived ? { unarchive: true } : { archive: true },
+            isArchived ? t("socialFeed.actions.unarchiveDone") : t("socialFeed.actions.archiveDone")
+          )
+        }
+      >
+        <Archive className="h-4 w-4" aria-hidden />
+        {isArchived ? t("socialFeed.actions.unarchive") : t("socialFeed.actions.archive")}
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        danger
+        onSelect={() => {
+          setError(null);
+          setDeleteOpen(true);
+        }}
+      >
+        <Trash2 className="h-4 w-4" aria-hidden />
+        {t("socialFeed.actions.delete")}
+      </DropdownMenuItem>
+      <DropdownMenuSeparator />
+    </>
+  );
+
+  const otherItems = (
+    <>
+      <DropdownMenuSeparator />
+      <DropdownMenuItem onSelect={() => void hideFromFeed()}>
+        <EyeOff className="h-4 w-4" aria-hidden />
+        {t("socialFeed.actions.hide")}
+      </DropdownMenuItem>
+      <DropdownMenuItem onSelect={() => void notInterested()}>
+        <ThumbsDown className="h-4 w-4" aria-hidden />
+        {t("socialFeed.actions.notInterested")}
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        onSelect={() =>
+          requireAuth(async () => {
+            try {
+              if (post.viewerState?.followingAuthor) {
+                await unfollowUser(post.author.id);
+                showFeedback(t("socialFeed.actions.unfollowDone"));
+                onUpdated?.({
+                  ...post,
+                  viewerState: {
+                    liked: Boolean(post.viewerState?.liked),
+                    saved: Boolean(post.viewerState?.saved),
+                    followingAuthor: false,
+                  },
+                });
+              } else {
+                await followUser(post.author.id);
+                showFeedback(t("socialFeed.actions.followDone"));
+                onUpdated?.({
+                  ...post,
+                  viewerState: {
+                    liked: Boolean(post.viewerState?.liked),
+                    saved: Boolean(post.viewerState?.saved),
+                    followingAuthor: true,
+                  },
+                });
+              }
+            } catch (e) {
+              setError(e instanceof Error ? e.message : t("socialFeed.actions.unfollowFailed"));
+            }
+          })
+        }
+      >
+        {post.viewerState?.followingAuthor ? (
+          <UserMinus className="h-4 w-4" aria-hidden />
+        ) : (
+          <UserPlus className="h-4 w-4" aria-hidden />
+        )}
+        {post.viewerState?.followingAuthor ? t("socialFeed.actions.unfollow") : t("socialFeed.actions.follow")}
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        onSelect={() =>
+          requireAuth(async () => {
+            try {
+              await muteUser(post.author.id);
+              hidePost(post.id);
+              onHidden?.(post.id);
+              showFeedback(t("socialFeed.actions.muteDone"));
+            } catch (e) {
+              setError(e instanceof Error ? e.message : t("socialFeed.actions.muteFailed"));
+            }
+          })
+        }
+      >
+        <VolumeX className="h-4 w-4" aria-hidden />
+        {t("socialFeed.actions.mute")}
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        onSelect={() =>
+          requireAuth(async () => {
+            try {
+              await blockUser(post.author.id);
+              hidePost(post.id);
+              onHidden?.(post.id);
+              showFeedback(t("socialFeed.actions.blockDone"));
+            } catch (e) {
+              setError(e instanceof Error ? e.message : t("socialFeed.actions.blockFailed"));
+            }
+          })
+        }
+      >
+        <Ban className="h-4 w-4" aria-hidden />
+        {t("socialFeed.actions.block")}
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        onSelect={() =>
+          requireAuth(() => {
+            setReportOpen(true);
+          })
+        }
+      >
+        <Flag className="h-4 w-4" aria-hidden />
+        {t("socialFeed.actions.report")}
+      </DropdownMenuItem>
+    </>
+  );
+
   return (
     <div className="relative">
       <DropdownMenu>
@@ -216,206 +472,18 @@ export function PostOverflowMenu({
             type="button"
             variant="ghost"
             size="icon"
-            className="h-11 w-11 shrink-0 rounded-xl text-ecopet-gray hover:bg-ecopet-green/10 hover:text-ecopet-dark dark:text-white/70 dark:hover:text-white"
+            className="h-11 w-11 shrink-0 rounded-xl text-[var(--ep-fg-muted)] hover:bg-[var(--ep-bg-muted)] hover:text-[var(--ep-fg)]"
             aria-label={t("socialFeed.actions.more")}
+            aria-haspopup="menu"
+            data-testid="post-overflow-menu"
           >
             <MoreHorizontal className="h-5 w-5" aria-hidden />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" side="bottom">
-          {isAuthor ? (
-            <>
-              <DropdownMenuItem
-                onSelect={() => {
-                  setEditContent(post.content ?? "");
-                  setError(null);
-                  setEditOpen(true);
-                }}
-              >
-                <Pencil className="h-4 w-4" aria-hidden />
-                {t("socialFeed.actions.edit")}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={() =>
-                  void patchPost(
-                    { visibility: "PUBLIC" },
-                    s(t("socialFeed.actions.visibilityPublicDone"))
-                  )
-                }
-              >
-                <Users className="h-4 w-4" aria-hidden />
-                {s(t("socialFeed.actions.visibilityPublic"))}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={() =>
-                  void patchPost(
-                    { visibility: "FOLLOWERS" },
-                    s(t("socialFeed.actions.visibilityFollowersDone"))
-                  )
-                }
-              >
-                <Users className="h-4 w-4" aria-hidden />
-                {s(t("socialFeed.actions.visibilityFollowers"))}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={() =>
-                  void patchPost(
-                    { visibility: "PRIVATE" },
-                    s(t("socialFeed.actions.visibilityPrivateDone"))
-                  )
-                }
-              >
-                <Lock className="h-4 w-4" aria-hidden />
-                {s(t("socialFeed.actions.visibilityPrivate"))}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={() =>
-                  void patchPost(
-                    { commentsEnabled: !commentsEnabled },
-                    commentsEnabled
-                      ? t("socialFeed.actions.commentsDisabledDone")
-                      : t("socialFeed.actions.commentsEnabledDone")
-                  )
-                }
-              >
-                <MessageSquareOff className="h-4 w-4" aria-hidden />
-                {commentsEnabled
-                  ? t("socialFeed.actions.disableComments")
-                  : t("socialFeed.actions.enableComments")}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={() =>
-                  void patchPost(
-                    { isPinned: !isPinned },
-                    isPinned ? t("socialFeed.actions.unpinDone") : t("socialFeed.actions.pinDone")
-                  )
-                }
-              >
-                <Pin className="h-4 w-4" aria-hidden />
-                {isPinned ? t("socialFeed.actions.unpin") : t("socialFeed.actions.pin")}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={() =>
-                  void patchPost(
-                    isArchived ? { unarchive: true } : { archive: true },
-                    isArchived
-                      ? t("socialFeed.actions.unarchiveDone")
-                      : t("socialFeed.actions.archiveDone")
-                  )
-                }
-              >
-                <Archive className="h-4 w-4" aria-hidden />
-                {isArchived ? t("socialFeed.actions.unarchive") : t("socialFeed.actions.archive")}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                danger
-                onSelect={() => {
-                  setError(null);
-                  setDeleteOpen(true);
-                }}
-              >
-                <Trash2 className="h-4 w-4" aria-hidden />
-                {t("socialFeed.actions.delete")}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-            </>
-          ) : null}
-
-          <DropdownMenuItem onSelect={() => void toggleSave()}>
-            <Bookmark className="h-4 w-4" aria-hidden />
-            {saved ? t("socialFeed.actions.unsave") : t("socialFeed.actions.save")}
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => void copyLink()}>
-            <Copy className="h-4 w-4" aria-hidden />
-            {t("socialFeed.actions.copyLink")}
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => void shareAction()}>
-            <Share2 className="h-4 w-4" aria-hidden />
-            {t("socialFeed.actions.share")}
-          </DropdownMenuItem>
-
-          {!isAuthor ? (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={hideFromFeed}>
-                <EyeOff className="h-4 w-4" aria-hidden />
-                {t("socialFeed.actions.hide")}
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={notInterested}>
-                <ThumbsDown className="h-4 w-4" aria-hidden />
-                {t("socialFeed.actions.notInterested")}
-              </DropdownMenuItem>
-              {post.viewerState?.followingAuthor ? (
-                <DropdownMenuItem
-                  onSelect={() =>
-                    requireAuth(async () => {
-                      try {
-                        await unfollowUser(post.author.id);
-                        showFeedback(t("socialFeed.actions.unfollowDone"));
-                        onUpdated?.({
-                          ...post,
-                          viewerState: {
-                            liked: Boolean(post.viewerState?.liked),
-                            saved: Boolean(post.viewerState?.saved),
-                            followingAuthor: false,
-                          },
-                        });
-                      } catch (e) {
-                        setError(e instanceof Error ? e.message : t("socialFeed.actions.unfollowFailed"));
-                      }
-                    })
-                  }
-                >
-                  <UserMinus className="h-4 w-4" aria-hidden />
-                  {t("socialFeed.actions.unfollow")}
-                </DropdownMenuItem>
-              ) : null}
-              <DropdownMenuItem
-                onSelect={() =>
-                  requireAuth(async () => {
-                    try {
-                      await muteUser(post.author.id);
-                      hidePost(post.id);
-                      onHidden?.(post.id);
-                      showFeedback(t("socialFeed.actions.muteDone"));
-                    } catch (e) {
-                      setError(e instanceof Error ? e.message : t("socialFeed.actions.muteFailed"));
-                    }
-                  })
-                }
-              >
-                <VolumeX className="h-4 w-4" aria-hidden />
-                {t("socialFeed.actions.mute")}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={() =>
-                  requireAuth(async () => {
-                    try {
-                      await blockUser(post.author.id);
-                      hidePost(post.id);
-                      onHidden?.(post.id);
-                      showFeedback(t("socialFeed.actions.blockDone"));
-                    } catch (e) {
-                      setError(e instanceof Error ? e.message : t("socialFeed.actions.blockFailed"));
-                    }
-                  })
-                }
-              >
-                <Ban className="h-4 w-4" aria-hidden />
-                {t("socialFeed.actions.block")}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={() =>
-                  requireAuth(() => {
-                    setReportOpen(true);
-                  })
-                }
-              >
-                <Flag className="h-4 w-4" aria-hidden />
-                {t("socialFeed.actions.report")}
-              </DropdownMenuItem>
-            </>
-          ) : null}
+        <DropdownMenuContent align="end" side="bottom" className="max-h-[min(80vh,28rem)] overflow-y-auto">
+          {isAuthor ? ownerItems : null}
+          {commonItems}
+          {!isAuthor ? otherItems : null}
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -423,7 +491,7 @@ export function PostOverflowMenu({
         <span
           role="status"
           aria-live="polite"
-          className="absolute right-0 top-[calc(100%+0.35rem)] z-40 whitespace-nowrap rounded-md bg-ecopet-dark px-2.5 py-1 text-xs text-white shadow-md dark:bg-white dark:text-ecopet-dark"
+          className="absolute right-0 top-[calc(100%+0.35rem)] z-40 whitespace-nowrap rounded-md bg-[var(--ep-fg)] px-2.5 py-1 text-xs text-[var(--ep-bg)] shadow-md"
         >
           {feedback}
         </span>
@@ -444,7 +512,7 @@ export function PostOverflowMenu({
             value={editContent}
             onChange={(e) => setEditContent(e.target.value)}
             rows={5}
-            className="w-full rounded-xl border border-ecopet-gray/20 bg-white p-3 text-sm text-ecopet-dark outline-none focus:ring-2 focus:ring-ecopet-green dark:border-white/15 dark:bg-ecopet-dark-bg dark:text-white"
+            className="w-full rounded-xl border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] p-3 text-sm text-[var(--ep-fg)] outline-none focus:ring-2 focus:ring-[var(--ep-ring)]"
             aria-label={t("socialFeed.actions.edit")}
           />
           {error ? (

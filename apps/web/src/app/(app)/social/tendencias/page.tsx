@@ -1,5 +1,9 @@
-import { TrendsPageContent } from "@/components/features/social/trends-saved-content";
+import { HubTrending } from "@/components/features/social/hub/hub-trending";
 
 export default function SocialTendenciasPage() {
-  return <TrendsPageContent />;
+  return (
+    <main className="mx-auto max-w-lg flex-1 p-4">
+      <HubTrending />
+    </main>
+  );
 }

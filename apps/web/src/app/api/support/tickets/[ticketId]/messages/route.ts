@@ -26,11 +26,24 @@ export async function POST(req: Request, { params }: Params) {
 
     if (isAdmin) await addAdminToSupportConversation(ticketId, user!.id);
 
+    const isInternal = Boolean(isAdmin && body.internal === true);
     const message = await sendMessage({
       conversationId: conv.id,
       senderId: user!.id,
       content: body.content,
+      type: isInternal ? "SYSTEM" : undefined,
+      metadata: isInternal ? { visibility: "internal", kind: "admin_note" } : undefined,
     });
+    if (isAdmin && !isInternal && ticket.requesterId) {
+      const { notifySupportTicket } = await import("@/lib/messages/notifications");
+      await notifySupportTicket({
+        recipientId: ticket.requesterId,
+        title: "A equipe EccoPet respondeu.",
+        body: `Protocolo EP-${ticket.number}: a equipe respondeu ao seu chamado.`,
+        ticketId,
+        type: "SUPPORT_TICKET_REPLY",
+      }).catch(() => undefined);
+    }
     return apiSuccess({ message }, 201);
   } catch (e) {
     return handleChatRouteError(e);
@@ -47,6 +60,23 @@ export async function PATCH(req: Request, { params }: Params) {
 
     if (body.action === "assign" && isAdmin) {
       const ticket = await assignSupportTicket(ticketId, user!.id, body.assigneeId);
+      return apiSuccess({ ticket });
+    }
+
+    if (body.priority && isAdmin) {
+      const { prisma } = await import("@/lib/prisma");
+      const { auditChatAction } = await import("@/lib/messages/notifications");
+      const ticket = await prisma.supportTicket.update({
+        where: { id: ticketId },
+        data: { priority: body.priority },
+      });
+      await auditChatAction({
+        actorId: user!.id,
+        action: "UPDATE",
+        resource: "support_ticket",
+        resourceId: ticketId,
+        entityAfter: { priority: body.priority },
+      });
       return apiSuccess({ ticket });
     }
 

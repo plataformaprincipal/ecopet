@@ -16,8 +16,8 @@ export type FunctionCallRequest = {
   arguments: Record<string, unknown>;
 };
 
-export function listFunctionCallingSchemas(role: UserRole) {
-  return toOpenAiToolSchemas(role);
+export function listFunctionCallingSchemas(role: UserRole, allowedTools?: string[]) {
+  return toOpenAiToolSchemas(role, allowedTools);
 }
 
 export function parseFunctionCallArguments(raw: string): Record<string, unknown> {
@@ -52,6 +52,8 @@ export async function handleFunctionCall(
     confirmed: ctx.confirmed,
     lat: ctx.lat,
     lng: ctx.lng,
+    allowedTools: ctx.allowedTools,
+    capabilityId: ctx.capabilityId,
   }, validated.params);
   return result;
 }

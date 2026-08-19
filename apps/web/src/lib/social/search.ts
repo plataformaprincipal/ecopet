@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { SOCIAL_ROLE_LABELS } from "@/lib/social/constants";
 import { getBlockedUserIds } from "@/lib/social/permissions";
+import { visibilityWhereForViewer } from "@/lib/social/post-authorization";
 
 export async function searchSocial(params: {
   q: string;
@@ -58,15 +59,29 @@ export async function searchSocial(params: {
   }
 
   if (type === "all" || type === "posts") {
+    const followingIds = params.viewerId
+      ? (
+          await prisma.userFollow.findMany({
+            where: { followerId: params.viewerId },
+            select: { followingId: true },
+          })
+        ).map((f) => f.followingId)
+      : [];
+
     results.posts = await prisma.socialPost.findMany({
       where: {
-        status: "PUBLISHED",
+        status: { in: ["PUBLISHED", "REPORTED"] },
         deletedAt: null,
-        visibility: "PUBLIC",
+        archivedAt: null,
         authorId: blockedIds.length ? { notIn: blockedIds } : undefined,
-        OR: [
-          { content: { contains: q, mode: "insensitive" } },
-          { author: { name: { contains: q, mode: "insensitive" } } },
+        AND: [
+          visibilityWhereForViewer({ viewerId: params.viewerId, followingIds }),
+          {
+            OR: [
+              { content: { contains: q, mode: "insensitive" } },
+              { author: { name: { contains: q, mode: "insensitive" } } },
+            ],
+          },
         ],
       },
       orderBy: { createdAt: "desc" },

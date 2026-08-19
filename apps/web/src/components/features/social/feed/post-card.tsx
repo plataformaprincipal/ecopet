@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Sparkles } from "lucide-react";
+import { Pin } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PostMediaGrid } from "./post-media-grid";
 import { PostActions } from "./post-actions";
@@ -32,13 +32,14 @@ export function PostCard({
 }) {
   const { t } = useTranslation();
   const [showComments, setShowComments] = useState(false);
-  const removed = post.status === "REMOVED" || post.deletedAt;
+  const removed = post.status === "REMOVED" || Boolean(post.deletedAt);
   const hidden = post.status === "HIDDEN";
+  const commentsEnabled = post.commentsEnabled !== false;
 
   return (
-    <article className="rounded-[var(--radius-xl)] border border-ecopet-gray/12 bg-white shadow-[var(--shadow-sm)] transition hover:shadow-[var(--shadow-md)] dark:border-white/10 dark:bg-ecopet-dark-card animate-fade-in">
-      <header className="flex items-center gap-3 p-4 sm:p-5">
-        <Link href={`/feed/profile/${post.author.id}`} aria-label={post.author.name}>
+    <article className="border-b border-[var(--ep-border)] bg-transparent px-0 py-4 sm:py-5">
+      <header className="flex items-start gap-3">
+        <Link href={`/feed/profile/${post.author.id}`} aria-label={post.author.name} className="shrink-0">
           <Avatar>
             <AvatarImage src={post.author.avatarUrl ?? undefined} alt="" />
             <AvatarFallback>{post.author.name.slice(0, 2).toUpperCase()}</AvatarFallback>
@@ -46,15 +47,24 @@ export function PostCard({
         </Link>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <Link href={`/feed/profile/${post.author.id}`} className="font-display font-semibold text-ecopet-dark hover:underline dark:text-white">
+            <Link
+              href={`/feed/profile/${post.author.id}`}
+              className="font-semibold text-[var(--ep-fg)] hover:underline"
+            >
               {post.author.name}
             </Link>
             <PersonaBadge role={post.author.role} />
             {post.type && <PostTypeBadge type={post.type} />}
+            {post.isPinned ? (
+              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[var(--ep-fg-muted)]">
+                <Pin className="h-3 w-3" aria-hidden />
+                {t("socialFeed.post.pinned")}
+              </span>
+            ) : null}
           </div>
-          <p className="text-xs text-ecopet-gray dark:text-white/60">
+          <p className="text-xs text-[var(--ep-fg-muted)]">
             <time dateTime={post.createdAt}>{new Date(post.createdAt).toLocaleString()}</time>
-            {post.editedAt && ` · ${t("socialFeed.post.edited")}`}
+            {post.editedAt ? ` · ${t("socialFeed.post.edited")}` : ""}
           </p>
         </div>
         {!removed ? (
@@ -69,35 +79,45 @@ export function PostCard({
       </header>
 
       {removed ? (
-        <p className="px-4 pb-4 text-sm italic text-ecopet-gray dark:text-white/60 sm:px-5">{t("socialFeed.post.removed")}</p>
+        <p className="mt-3 text-sm italic text-[var(--ep-fg-muted)]">{t("socialFeed.post.removed")}</p>
       ) : (
         <>
-          {hidden && <p className="px-4 text-xs text-ep-warning sm:px-5">{t("socialFeed.post.hidden")}</p>}
-          {post.content && <p className="whitespace-pre-wrap px-4 pb-2 text-sm text-ecopet-dark dark:text-white/90 sm:px-5">{post.content}</p>}
+          {hidden && <p className="mt-2 text-xs text-ep-warning">{t("socialFeed.post.hidden")}</p>}
+          {post.content ? (
+            <p className="mt-2 whitespace-pre-wrap text-[15px] leading-relaxed text-[var(--ep-fg)]">{post.content}</p>
+          ) : null}
           <AdoptionMetaCard post={post} />
           {post.hashtags.length > 0 && (
-            <div className="flex flex-wrap gap-2 px-4 pb-2 sm:px-5">
+            <div className="mt-2 flex flex-wrap gap-2">
               {post.hashtags.map((h) => (
                 <HashtagLink key={h.id} slug={h.slug} name={h.name} />
               ))}
             </div>
           )}
-          <PostMediaGrid media={post.media} />
-          {onAskAi ? (
-            <div className="px-4 pb-1 sm:px-5">
-              <button
-                type="button"
-                onClick={() => onAskAi(post)}
-                className="inline-flex items-center gap-1.5 rounded-full border border-ecopet-green/30 bg-ecopet-green/5 px-3 py-1 text-xs font-medium text-ecopet-green transition hover:bg-ecopet-green/10"
-              >
-                <Sparkles className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
-                Perguntar à EccoPet
-              </button>
-            </div>
-          ) : null}
+          <div className="mt-3 overflow-hidden rounded-2xl">
+            <PostMediaGrid media={post.media} />
+          </div>
           <PostCtaBar post={post} />
+          {onAskAi ? (
+            <button
+              type="button"
+              onClick={() => onAskAi(post)}
+              className="mt-1 text-xs text-[var(--ep-fg-muted)] underline-offset-2 hover:underline"
+            >
+              {t("social.feed.askAiLabel")}
+            </button>
+          ) : null}
           <PostActions post={post} onToggleComments={() => setShowComments((v) => !v)} onUpdate={onUpdate} />
-          {showComments && <CommentList postId={post.id} />}
+          {showComments ? (
+            commentsEnabled ? (
+              <CommentList postId={post.id} />
+            ) : (
+              <div className="mt-2">
+                <p className="text-sm text-[var(--ep-fg-muted)]">{t("socialFeed.comments.disabledByAuthor")}</p>
+                <CommentList postId={post.id} readOnly />
+              </div>
+            )
+          ) : null}
         </>
       )}
     </article>

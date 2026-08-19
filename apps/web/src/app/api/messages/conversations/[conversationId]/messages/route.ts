@@ -1,3 +1,4 @@
+import { UserRole } from "@prisma/client";
 import { apiSuccess } from "@/lib/api-response";
 import { requireAuth } from "@/lib/auth/require-auth";
 import { handleChatRouteError } from "@/lib/messages/api-handler";
@@ -16,7 +17,14 @@ export async function GET(req: Request, { params }: Params) {
     const limit = Number(url.searchParams.get("limit") ?? "20");
     const order = (url.searchParams.get("order") as "asc" | "desc") ?? "asc";
 
-    const data = await listMessages({ conversationId, userId: user!.id, cursor, limit, order });
+    const data = await listMessages({
+      conversationId,
+      userId: user!.id,
+      cursor,
+      limit,
+      order,
+      includeInternal: user!.role === UserRole.ADMIN,
+    });
     return apiSuccess(data);
   } catch (e) {
     return handleChatRouteError(e);

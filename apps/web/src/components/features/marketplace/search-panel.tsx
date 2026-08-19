@@ -5,7 +5,9 @@ import { X, Search, Clock, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { SORT_OPTIONS, PRODUCT_CATEGORIES, SERVICE_CATEGORIES } from "@/lib/marketplace/config";
+import { SORT_OPTIONS } from "@/lib/marketplace/config";
+import { PRODUCT_CATEGORIES, SERVICE_CATEGORIES } from "@/lib/marketplace/categories";
+import { marketplaceQueryString, type MarketplaceQuery } from "@/lib/marketplace/query-model";
 import { useMarketplaceStore } from "@/store/marketplace-store";
 import { cn } from "@/lib/utils";
 
@@ -26,15 +28,18 @@ function categorySelectValue(type: string, category: string) {
   return category;
 }
 
-function categoryLabel(type: string, category: string) {
+import { useTranslation } from "@/providers/i18n-provider";
+
+function categoryLabel(type: string, category: string, t: (k: never) => string) {
   if (!category) return "";
   const source = type === "product" || type === "service" ? type : null;
   const match = CATEGORY_OPTIONS.find((c) => c.slug === category && (!source || c.source === source));
-  return match?.label ?? category;
+  return match ? t(match.labelKey as never) : category;
 }
 
 export function SearchPanel() {
   const router = useRouter();
+  const { t } = useTranslation();
   const {
     searchPanelOpen,
     setSearchPanelOpen,
@@ -47,34 +52,42 @@ export function SearchPanel() {
 
   const activeTags = [
     filters.type && { key: "type", label: filters.type },
-    filters.category && { key: "category", label: categoryLabel(filters.type, filters.category) },
-    filters.verifiedOnly && { key: "verifiedOnly", label: "Verificado" },
-    filters.promoOnly && { key: "promoOnly", label: "Promoção" },
-    filters.freeShipping && { key: "freeShipping", label: "Frete grátis" },
-    filters.homeService && { key: "homeService", label: "Domicílio" },
-    filters.minRating > 0 && { key: "minRating", label: `${filters.minRating}+ estrelas` },
+    filters.category && { key: "category", label: categoryLabel(filters.type, filters.category, t as never) },
+    filters.verifiedOnly && { key: "verifiedOnly", label: t("marketplace.verifiedOnly") },
+    filters.promoOnly && { key: "promoOnly", label: t("marketplace.promoOnly") },
+    filters.homeService && { key: "homeService", label: t("marketplace.homeService") },
+    filters.minRating > 0 && { key: "minRating", label: `${filters.minRating}+` },
   ].filter(Boolean) as { key: string; label: string }[];
 
   function handleSearch() {
     if (filters.query.trim()) addSearchHistory(filters.query.trim());
     setSearchPanelOpen(false);
-    router.push(`/marketplace/busca?q=${encodeURIComponent(filters.query)}`);
+    const q: MarketplaceQuery = {
+      q: filters.query.trim() || undefined,
+      type: filters.type === "product" || filters.type === "service" ? filters.type : "all",
+      category: filters.category || undefined,
+      minPrice: filters.priceMin > 0 ? filters.priceMin : undefined,
+      maxPrice: filters.priceMax > 0 && filters.priceMax < 2000 ? filters.priceMax : undefined,
+      minRating: filters.minRating > 0 ? filters.minRating : undefined,
+      verifiedOnly: filters.verifiedOnly || undefined,
+      promoOnly: filters.promoOnly || undefined,
+      homeService: filters.homeService || undefined,
+      species: filters.species || undefined,
+      sort: filters.sort === "distance" ? "near_me" : filters.sort === "ai" || filters.sort === "bestseller" ? "relevance" : (filters.sort as MarketplaceQuery["sort"]),
+    };
+    router.push(`/marketplace${marketplaceQueryString(q)}`);
   }
+
+  if (!searchPanelOpen) return null;
 
   return (
     <>
       <div
-        className={cn(
-          "fixed inset-0 z-50 bg-black/40 transition-opacity lg:bg-black/30",
-          searchPanelOpen ? "opacity-100" : "pointer-events-none opacity-0"
-        )}
+        className="fixed inset-0 z-50 bg-black/40 lg:bg-black/30"
         onClick={() => setSearchPanelOpen(false)}
       />
       <aside
-        className={cn(
-          "fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col overflow-y-auto bg-white shadow-2xl transition-transform duration-300 dark:bg-[#0f1419] lg:max-w-lg",
-          searchPanelOpen ? "translate-x-0" : "translate-x-full"
-        )}
+        className="fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col overflow-y-auto bg-white shadow-2xl dark:bg-[#0f1419] lg:max-w-lg"
       >
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-ecopet-gray/10 bg-white px-4 py-4 dark:bg-[#0f1419]">
           <div className="flex items-center gap-2">
@@ -188,7 +201,7 @@ export function SearchPanel() {
                   key={`${c.source}-${c.slug}`}
                   value={categoryOptionValue(c.source, c.slug)}
                 >
-                  {c.label}
+                  {t(c.labelKey as never)}
                 </option>
               ))}
             </select>
@@ -216,18 +229,6 @@ export function SearchPanel() {
           </div>
 
           <div>
-            <label className="text-sm font-medium">Distância máx. ({filters.maxDistance} km)</label>
-            <input
-              type="range"
-              min={1}
-              max={50}
-              value={filters.maxDistance}
-              onChange={(e) => setFilters({ maxDistance: Number(e.target.value) })}
-              className="mt-2 w-full accent-ecopet-green"
-            />
-          </div>
-
-          <div>
             <label className="text-sm font-medium">Avaliação mínima</label>
             <select
               className="mt-2 flex h-11 w-full rounded-xl border px-4 text-sm"
@@ -243,11 +244,9 @@ export function SearchPanel() {
 
           <div className="space-y-2">
             {[
-              { key: "verifiedOnly" as const, label: "Parceiro verificado" },
-              { key: "promoOnly" as const, label: "Em promoção" },
-              { key: "freeShipping" as const, label: "Frete grátis" },
-              { key: "homeService" as const, label: "Atendimento domicílio" },
-              { key: "subscription" as const, label: "Assinatura disponível" },
+              { key: "verifiedOnly" as const, label: t("marketplace.verifiedOnly") },
+              { key: "promoOnly" as const, label: t("marketplace.promoOnly") },
+              { key: "homeService" as const, label: t("marketplace.homeService") },
             ].map(({ key, label }) => (
               <label key={key} className="flex items-center gap-2 text-sm">
                 <input
@@ -282,7 +281,7 @@ export function SearchPanel() {
               value={filters.sort}
               onChange={(e) => setFilters({ sort: e.target.value as typeof filters.sort })}
             >
-              {SORT_OPTIONS.map((o) => (
+              {SORT_OPTIONS.filter((o) => o.value !== "ai" && o.value !== "bestseller").map((o) => (
                 <option key={o.value} value={o.value}>{o.label}</option>
               ))}
             </select>

@@ -1,29 +1,36 @@
-import { apiSuccess } from "@/lib/api-response";
+import { apiSuccess, apiFailure } from "@/lib/api-response";
 import { queryPublicServices } from "@/lib/marketplace/public-query";
-import { serviceCategoryFromSlug } from "@/lib/marketplace/categories";
-
-function numParam(value: string | null) {
-  if (!value) return undefined;
-  const n = Number(value);
-  return Number.isFinite(n) ? n : undefined;
-}
+import { parseCatalogRequest } from "@/lib/marketplace/parse-request";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const categoryParam = url.searchParams.get("category") ?? undefined;
-  const category = categoryParam ? (serviceCategoryFromSlug(categoryParam) ?? categoryParam) : undefined;
+  const parsed = parseCatalogRequest(url);
+  if ((url.searchParams.has("lat") || url.searchParams.has("lng")) && (parsed.lat == null || parsed.lng == null)) {
+    return apiFailure("VALIDATION", "Coordenadas inválidas.", 400);
+  }
 
   const result = await queryPublicServices({
-    q: url.searchParams.get("q") ?? undefined,
-    category,
-    species: url.searchParams.get("species") ?? undefined,
-    city: url.searchParams.get("city") ?? undefined,
-    state: url.searchParams.get("state") ?? undefined,
-    partnerId: url.searchParams.get("partnerId") ?? undefined,
-    minPrice: numParam(url.searchParams.get("minPrice")),
-    maxPrice: numParam(url.searchParams.get("maxPrice")),
-    page: numParam(url.searchParams.get("page")),
-    pageSize: numParam(url.searchParams.get("pageSize")),
+    q: parsed.q,
+    category: parsed.serviceCategory,
+    species: parsed.species,
+    city: parsed.city,
+    state: parsed.state,
+    partnerId: parsed.partnerId,
+    minPrice: parsed.minPrice,
+    maxPrice: parsed.maxPrice,
+    minRating: parsed.minRating,
+    telehealth: parsed.telehealth,
+    emergency24h: parsed.emergency24h,
+    homeService: parsed.homeService,
+    verifiedOnly: parsed.verifiedOnly,
+    openToday: parsed.openToday,
+    group: parsed.group,
+    lat: parsed.lat,
+    lng: parsed.lng,
+    radiusKm: parsed.radiusKm,
+    sort: parsed.sort,
+    page: parsed.page,
+    pageSize: parsed.pageSize,
   });
 
   return apiSuccess(result);

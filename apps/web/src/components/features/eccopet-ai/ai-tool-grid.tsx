@@ -19,7 +19,7 @@ export function AIToolGrid({
           key={tool.id}
           type="button"
           onClick={() => onSelectTool(tool)}
-          className="group flex flex-col items-start gap-2 rounded-2xl border border-zinc-200/70 bg-white/80 p-3.5 text-left shadow-sm backdrop-blur-md transition hover:-translate-y-0.5 hover:border-ecopet-green/40 hover:shadow-md dark:border-white/10 dark:bg-zinc-900/50"
+          className="group flex flex-col items-start gap-2 rounded-2xl border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] p-3.5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-ecopet-green/40 hover:shadow-md"
         >
           <div className="flex w-full items-center justify-between">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-ecopet-green/15 to-ecopet-yellow/15 text-ecopet-green">
@@ -29,8 +29,8 @@ export function AIToolGrid({
               {t("ecopetAi.toolStatus.ai")}
             </span>
           </div>
-          <p className="text-sm font-semibold leading-tight text-zinc-900 dark:text-white">{t(`ecopetAi.tools.${tool.id}.title`)}</p>
-          <p className="line-clamp-2 text-[11px] leading-snug text-zinc-500">{t(`ecopetAi.tools.${tool.id}.description`)}</p>
+          <p className="text-sm font-semibold leading-tight text-[var(--ep-fg)]">{t(`ecopetAi.tools.${tool.id}.title`)}</p>
+          <p className="line-clamp-2 text-[11px] leading-snug text-[var(--ep-fg-muted)]">{t(`ecopetAi.tools.${tool.id}.description`)}</p>
         </button>
       ))}
     </div>

@@ -325,6 +325,17 @@ export async function executePaymentRefund(input: ExecuteRefundInput): Promise<{
       /* auditado dentro de postLedgerForRefund; não reverte estorno gateway */
     }
 
+    void import("@/lib/loyalty/events")
+      .then(({ onOrderRefundedForRewards }) =>
+        onOrderRefundedForRewards({
+          orderId: payment.orderId,
+          refundId: refundRow.id,
+          refundAmount: amount,
+          fullRefund: fullyRefunded,
+        })
+      )
+      .catch(() => undefined);
+
     try {
       await createInternalNotification({
         userId: payment.order.userId,

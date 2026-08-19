@@ -11,9 +11,20 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Sparkles, MessageSquare, PanelRight, Bookmark, Lock } from "lucide-react";
-import { EcoPetLogo } from "@/components/shared/brand/ecopet-logo";
-import { LanguageSelector } from "@/components/features/i18n/language-selector";
+import { Sparkles, MessageSquare, PanelRight, Lock } from "lucide-react";
+import { useCurrentUser } from "@/hooks/use-current-user";
+import { useAiRuntimeStatus } from "@/hooks/use-ai-runtime-status";
+import { useActivePetForAi } from "@/hooks/use-active-pet-for-ai";
+import { getPetAIContext } from "@/lib/ai/pet-context";
+import {
+  getCapability,
+  getQuickPrompts,
+  resolveCapabilitiesForUser,
+  statusPhaseLabelKey,
+  type ResolvedCapability,
+} from "@/lib/ai/capabilities/registry";
+import { isWorkspaceCapability, normalizeCapabilityId } from "@/lib/ai/capabilities/orchestrate";
+import { readStoredAiGeo } from "@/lib/ai/client-geo";
 import { useAuthGate } from "@/providers/auth-gate-provider";
 import { useAuthSession } from "@/hooks/use-auth-session";
 import { useTranslation } from "@/providers/i18n-provider";
@@ -21,10 +32,6 @@ import type { TranslateFn } from "@/lib/i18n";
 import { localApi } from "@/lib/local-api.client";
 import { ApiRequestError, parseApiFailureError } from "@/lib/api-errors";
 import { cn } from "@/lib/utils";
-import type { EccoPetTool } from "@/lib/public/eccopet-tools";
-import { getSmartSuggestions } from "@/lib/ai/modules/suggestions";
-import type { AssistantPersona } from "@/lib/ai/assistant/types";
-import type { AiLocale } from "@/lib/ai/ai-disclaimer";
 import {
   AiUnavailableBanner,
   isAiNotConfiguredErrorCode,
@@ -34,6 +41,7 @@ import { geoPayloadForRequest } from "@/lib/ai/client-geo";
 import { AIConversationSidebar, type AIPreset } from "./ai-conversation-sidebar";
 import { AIChatWindow } from "./ai-chat-window";
 import { AIContextPanel } from "./ai-context-panel";
+import { AIWorkspaceHeader } from "./ai-workspace-header";
 import type { AIConfirmation, AIConversation, AIMessage, AIRecommendation, AIStructuredBlock } from "./types";
 
 const GUEST_MESSAGE_LIMIT = 12;
@@ -122,20 +130,59 @@ type ChatApiJson = {
 export function EccoPetAIShell() {
   const { isAuthenticated } = useAuthGate();
   const { data: session } = useAuthSession();
+  const { user, token } = useCurrentUser();
   const { t, locale } = useTranslation();
+  const { status: runtimeStatus, loading: runtimeLoading } = useAiRuntimeStatus();
   const searchParams = useSearchParams();
   const { apply: applyClientAction } = useAiClientActions();
   const promptConsumedRef = useRef(false);
-  const persona: AssistantPersona = (() => {
-    const role = session?.user?.role;
-    if (role === "ADMIN") return "ADMIN";
-    if (role === "PARTNER") return "PARTNER";
-    if (role === "ONG") return "ONG";
-    return "CLIENT";
-  })();
-  const smartSuggestions = useMemo(
-    () => getSmartSuggestions(persona, locale as AiLocale),
-    [persona, locale]
+
+  const isPartner = session?.user?.role === "PARTNER";
+  const petIds = useMemo(() => (user?.pets ?? []).map((p) => p.id), [user?.pets]);
+  const { activePetId, setActivePetId } = useActivePetForAi(petIds);
+  const petContext = useMemo(
+    () =>
+      getPetAIContext({
+        pets: (user?.pets ?? []).map((p) => ({
+          id: p.id,
+          name: p.name,
+          species: p.species,
+        })),
+        activePetId,
+      }),
+    [user?.pets, activePetId]
+  );
+
+  const capabilityCtx = useMemo(
+    () => ({
+      isGuest: !isAuthenticated,
+      isPartner,
+      isOng: session?.user?.role === "ONG",
+      isAdmin: session?.user?.role === "ADMIN",
+      hasPet: (user?.pets?.length ?? 0) > 0,
+      hasGeo: Boolean(readStoredAiGeo()),
+      aiConfigured: runtimeStatus.isConfigured,
+    }),
+    [isAuthenticated, isPartner, session?.user?.role, user?.pets, runtimeStatus.isConfigured]
+  );
+
+  const { b2c: b2cCapabilities, b2b: b2bCapabilities } = useMemo(
+    () => resolveCapabilitiesForUser(capabilityCtx),
+    [capabilityCtx]
+  );
+
+  const quickPromptKeys = useMemo(
+    () => getQuickPrompts({ isGuest: !isAuthenticated, isPartner }),
+    [isAuthenticated, isPartner]
+  );
+
+  const [activeCapabilityId, setActiveCapabilityId] = useState<string | null>(null);
+  const activeCapability = useMemo(
+    () =>
+      activeCapabilityId
+        ? [...b2cCapabilities, ...b2bCapabilities].find((c) => c.id === activeCapabilityId) ?? null
+        : null,
+    [activeCapabilityId, b2cCapabilities, b2bCapabilities]
   );
   const [conversations, setConversations] = useState<AIConversation[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -147,6 +194,14 @@ export function EccoPetAIShell() {
   const [aiUnavailableMessage, setAiUnavailableMessage] = useState<string | null>(null);
   const [chatError, setChatError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    if (runtimeLoading) return;
+    if (!runtimeStatus.isConfigured) {
+      setAiUnavailable(true);
+      setAiUnavailableMessage(t("empty.ai.unavailable"));
+    }
+  }, [runtimeLoading, runtimeStatus.isConfigured, t]);
 
   const active = useMemo(
     () => conversations.find((c) => c.id === activeId) ?? null,
@@ -280,9 +335,18 @@ export function EccoPetAIShell() {
   );
 
   const send = useCallback(
-    async (text: string) => {
+    async (text: string, capabilityOverride?: ResolvedCapability) => {
       const clean = text.trim();
       if (!clean || loading || aiUnavailable) return;
+
+      const cap = capabilityOverride ?? activeCapability;
+      if (cap?.availability === "locked") {
+        setGateOpen(true);
+        return;
+      }
+      if (cap?.availability === "disabled") return;
+
+      if (cap?.id) setActiveCapabilityId(cap.id);
 
       if (!isAuthenticated && demoCount >= GUEST_MESSAGE_LIMIT) {
         setGateOpen(true);
@@ -323,6 +387,7 @@ export function EccoPetAIShell() {
               message: clean,
               locale,
               pagePath: typeof window !== "undefined" ? window.location.pathname : "/eccopet",
+              capabilityId: cap?.id,
               ...geoPayloadForRequest(),
             }),
           });
@@ -384,7 +449,9 @@ export function EccoPetAIShell() {
             locale,
             conversationId: convId,
             pagePath: typeof window !== "undefined" ? window.location.pathname : "/eccopet",
-            module: "ecopet-ai",
+            module: cap?.module ?? "ecopet-ai",
+            capabilityId: cap?.id,
+            petId: petContext?.id,
             ...geoPayloadForRequest(),
           }),
         });
@@ -401,7 +468,9 @@ export function EccoPetAIShell() {
               type: "general",
               locale,
               conversationId: convId,
-              module: "ecopet-ai",
+              module: cap?.module ?? "ecopet-ai",
+              capabilityId: cap?.id,
+              petId: petContext?.id,
             }),
           });
           const json = (await fallback.json().catch(() => ({}))) as ChatApiJson;
@@ -462,14 +531,7 @@ export function EccoPetAIShell() {
               continue;
             }
             if (event.type === "status" && event.phase) {
-              const phaseLabel =
-                event.phase === "tools"
-                  ? t("ecopetAi.status.tools")
-                  : event.phase === "context"
-                    ? t("ecopetAi.status.context")
-                    : event.phase === "summary"
-                      ? t("ecopetAi.status.summary")
-                      : t("ecopetAi.status.generating");
+              const phaseKey = statusPhaseLabelKey(event.phase);
               updateConversation(convId, (c) => ({
                 ...c,
                 messages: c.messages.map((m) =>
@@ -477,8 +539,9 @@ export function EccoPetAIShell() {
                     ? {
                         id: m.id,
                         role: "assistant",
-                        content: assembled || phaseLabel,
+                        content: assembled,
                         pending: true,
+                        statusPhase: phaseKey,
                       }
                     : m
                 ),
@@ -596,6 +659,8 @@ export function EccoPetAIShell() {
       loading,
       locale,
       t,
+      activeCapability,
+      petContext,
       updateConversation,
     ]
   );
@@ -799,6 +864,7 @@ export function EccoPetAIShell() {
 
   const handleNew = useCallback(() => {
     setActiveId(null);
+    setActiveCapabilityId(null);
     setChatError(null);
     setMobileView("chat");
   }, []);
@@ -811,9 +877,17 @@ export function EccoPetAIShell() {
     [send]
   );
 
-  const handleSelectTool = useCallback(
-    (tool: EccoPetTool) => {
-      void send(tool.prompt);
+  const handleSelectCapability = useCallback(
+    (cap: ResolvedCapability, prompt: string) => {
+      setMobileView("chat");
+      if (cap.availability === "locked") {
+        setGateOpen(true);
+        return;
+      }
+      if (cap.availability === "disabled") return;
+      setActiveCapabilityId(cap.id);
+      if (isWorkspaceCapability(cap.id)) return;
+      void send(prompt, cap);
     },
     [send]
   );
@@ -922,52 +996,37 @@ export function EccoPetAIShell() {
   );
 
   useEffect(() => {
+    const capRaw = normalizeCapabilityId(searchParams.get("capability"));
+    if (capRaw && getCapability(capRaw)) {
+      setActiveCapabilityId(capRaw);
+    }
     const prompt = searchParams.get("prompt")?.trim();
     if (!prompt || promptConsumedRef.current) return;
     promptConsumedRef.current = true;
     void send(prompt);
   }, [searchParams, send]);
 
-  const handleSave = useCallback(() => {
-    if (!isAuthenticated) {
-      setGateOpen(true);
-    }
-  }, [isAuthenticated]);
-
   const handleAttach = useCallback(() => {
     if (!isAuthenticated) setGateOpen(true);
   }, [isAuthenticated]);
 
   return (
-    <div className="mx-auto flex h-[100dvh] w-full max-w-[1500px] flex-col bg-gradient-to-b from-ecopet-cream/30 to-transparent px-3 pb-24 pt-3 dark:from-ecopet-dark-bg sm:px-4 lg:px-6 lg:pb-4 lg:pr-20">
-      {/* Top bar */}
-      <div className="mb-3 flex items-center justify-between gap-3 rounded-[var(--radius-lg)] border border-ecopet-gray/10 bg-white/80 px-3 py-2.5 shadow-[var(--shadow-xs)] backdrop-blur-md dark:border-white/10 dark:bg-ecopet-dark-card/80">
-        <EcoPetLogo href="/eccopet" size="sm" showText />
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleSave}
-            className="hidden min-h-[36px] items-center gap-1.5 rounded-full border border-ecopet-gray/15 bg-white px-3 py-1.5 text-xs font-medium text-ecopet-gray sm:flex dark:border-white/10 dark:bg-ecopet-dark-bg dark:text-white/70"
-          >
-            <Bookmark className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
-            {t("ecopetAi.topbar.save")}
-          </button>
-          {!isAuthenticated ? (
-            <>
-              <Link href="/login" className="hidden rounded-full px-3 py-1.5 text-sm font-medium text-ecopet-gray hover:text-ecopet-green sm:inline-block dark:text-white/70">
-                {t("ecopetAi.topbar.signIn")}
-              </Link>
-              <Link href="/cadastro" className="rounded-full bg-ecopet-green px-3.5 py-1.5 text-sm font-semibold text-white shadow-[var(--shadow-sm)] transition hover:bg-ecopet-green-700">
-                {t("ecopetAi.topbar.createAccount")}
-              </Link>
-            </>
-          ) : null}
-          <LanguageSelector compact className="shrink-0" />
-        </div>
-      </div>
+    <div className="mx-auto flex h-[100dvh] w-full max-w-[1500px] flex-col bg-[var(--ep-bg)] px-3 pb-24 pt-3 sm:px-4 lg:px-6 lg:pb-4 lg:pr-20">
+      <AIWorkspaceHeader
+        isAuthenticated={isAuthenticated}
+        aiConfigured={runtimeStatus.isConfigured}
+        activeCapability={activeCapability}
+        petContext={petContext}
+        pets={user?.pets ?? []}
+        activePetId={activePetId}
+        onPetChange={setActivePetId}
+        onNewConversation={handleNew}
+        onOpenHistory={() => setMobileView("history")}
+        className="mb-3"
+      />
 
       {/* Mobile view switcher */}
-      <div className="mb-3 flex gap-1 rounded-[var(--radius-lg)] border border-ecopet-gray/12 bg-white p-1 shadow-[var(--shadow-xs)] lg:hidden dark:border-white/10 dark:bg-ecopet-dark-card">
+      <div className="mb-3 flex gap-1 rounded-[var(--radius-lg)] border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] p-1 shadow-[var(--shadow-xs)] lg:hidden">
         {([
           { id: "history", label: t("ecopetAi.mobile.conversations"), icon: MessageSquare },
           { id: "chat", label: t("ecopetAi.mobile.chat"), icon: Sparkles },
@@ -1021,7 +1080,7 @@ export function EccoPetAIShell() {
         {/* CENTER — chat */}
         <div
           className={cn(
-            "flex min-h-0 flex-col overflow-hidden rounded-[var(--radius-xl)] border border-ecopet-gray/12 bg-white/80 shadow-[var(--shadow-md)] backdrop-blur-md dark:border-white/10 dark:bg-ecopet-dark-card/60",
+            "flex min-h-0 flex-col overflow-hidden rounded-[var(--radius-xl)] border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] shadow-[var(--shadow-md)]",
             mobileView !== "chat" && "hidden lg:flex"
           )}
         >
@@ -1043,12 +1102,24 @@ export function EccoPetAIShell() {
               messages={messages}
               loading={loading}
               conversationId={activeId}
-              onSend={aiUnavailable ? () => undefined : send}
+              onSend={aiUnavailable ? () => undefined : (text) => void send(text)}
               onCancel={handleCancel}
               onRegenerate={
                 aiUnavailable || !isAuthenticated ? undefined : () => void handleRegenerate()
               }
-              onSelectTool={aiUnavailable ? () => undefined : handleSelectTool}
+              onSelectCapability={aiUnavailable ? () => undefined : handleSelectCapability}
+              onLoginRequired={() => setGateOpen(true)}
+              quickPromptKeys={quickPromptKeys}
+              b2cCapabilities={b2cCapabilities}
+              b2bCapabilities={b2bCapabilities}
+              activeCapabilityId={activeCapabilityId}
+              isGuest={!isAuthenticated}
+              petContext={petContext}
+              aiUnavailable={aiUnavailable}
+              pets={(user?.pets ?? []).map((p) => ({ id: p.id, name: p.name, species: p.species }))}
+              activePetId={activePetId}
+              onPetChange={setActivePetId}
+              token={token}
               onAttachAttempt={handleAttach}
               onConfirmAction={
                 aiUnavailable || !isAuthenticated
@@ -1060,14 +1131,17 @@ export function EccoPetAIShell() {
                   ? undefined
                   : (messageId) => handleCancelAction(messageId)
               }
-              suggestions={smartSuggestions}
             />
           </div>
         </div>
 
         {/* RIGHT — context */}
         <div className={cn("min-h-0 overflow-y-auto", mobileView !== "context" && "hidden lg:block")}>
-          <AIContextPanel />
+          <AIContextPanel
+            activeCapability={activeCapability}
+            petContext={petContext}
+            activePetId={activePetId}
+          />
         </div>
       </div>
 

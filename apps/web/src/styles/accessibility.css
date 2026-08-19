@@ -6,13 +6,9 @@ html.a11y-grayscale body {
 }
 
 html.a11y-inverted-contrast body {
-  filter: invert(1) hue-rotate(180deg);
-}
-
-html.a11y-inverted-contrast body img,
-html.a11y-inverted-contrast body video,
-html.a11y-inverted-contrast body picture {
-  filter: invert(1) hue-rotate(180deg);
+  /* Legado: preferir tema `.black` via next-themes (ThemeAccessibilitySync). */
+  background-color: var(--ep-bg);
+  color: var(--ep-fg);
 }
 
 html.a11y-colorblind body {

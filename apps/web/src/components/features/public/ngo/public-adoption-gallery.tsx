@@ -9,6 +9,7 @@ import { adoptionImageFallback, resolveMediaUrl } from "@/lib/media/fallbacks";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useSimpleLanguage } from "@/hooks/use-simple-language";
+import { useUserLocation } from "@/hooks/use-user-location";
 
 type Animal = {
   id: string;
@@ -96,6 +97,7 @@ export function PublicAdoptionGallery() {
   const [total, setTotal] = useState(0);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [draft, setDraft] = useState<Filters>(() => filtersFromParams(searchParams));
+  const location = useUserLocation();
 
   const applied = useMemo(() => filtersFromParams(searchParams), [searchParams]);
   const activeCount = countActive(applied);
@@ -166,15 +168,16 @@ export function PublicAdoptionGallery() {
 
   function openFiltersPanel() {
     setDraft(applied);
-    setFiltersOpen(true);
-    requestAnimationFrame(() => {
+    if (typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches) {
       document.getElementById("adocao-filtros")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
+      return;
+    }
+    setFiltersOpen(true);
   }
 
-  const filterPanel = (
+  const filterPanel = (panelId?: string) => (
     <div
-      id="adocao-filtros"
+      {...(panelId ? { id: panelId } : {})}
       className={cn(
         "rounded-3xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60",
         "lg:sticky lg:top-24"
@@ -263,6 +266,22 @@ export function PublicAdoptionGallery() {
             placeholder="Ex.: João Pessoa"
           />
         </label>
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          onClick={async () => {
+            if (!location.meta.city) {
+              await location.request();
+              location.refresh();
+            }
+            const city = location.meta.city?.trim();
+            if (city) setDraft((d) => ({ ...d, city }));
+          }}
+        >
+          <MapPin className="mr-2 h-4 w-4" aria-hidden />
+          {s("Perto de mim")}
+        </Button>
         <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200">
           <input
             type="checkbox"
@@ -316,7 +335,7 @@ export function PublicAdoptionGallery() {
       </header>
 
       <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
-        <aside className="hidden lg:block">{filterPanel}</aside>
+        <aside className="hidden lg:block">{filterPanel("adocao-filtros")}</aside>
 
         {filtersOpen ? (
           <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Filtros de adoção">
@@ -332,7 +351,7 @@ export function PublicAdoptionGallery() {
                   <X className="h-5 w-5" />
                 </Button>
               </div>
-              {filterPanel}
+              {filterPanel()}
             </div>
           </div>
         ) : null}

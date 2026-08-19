@@ -1,5 +1,6 @@
 import { productImageFallback, serviceImageFallback, resolveMediaUrl } from "@/lib/media/fallbacks";
 import { marketplaceFetch } from "@/lib/marketplace/fetch-api";
+import { buildMarketplaceApiQuery, type MarketplaceQuery, type GeoForApi } from "./query-model";
 import type {
   MarketplaceProduct,
   MarketplaceService,
@@ -25,6 +26,11 @@ type PublicProductRow = {
   reviewCount: number;
   isFeatured?: boolean;
   isSponsored?: boolean;
+  isVerified?: boolean;
+  isPromo?: boolean;
+  distanceKm?: number | null;
+  shippingCost?: number | null;
+  speciesTarget?: string | null;
   sellerId: string;
   seller: {
     id: string;
@@ -47,6 +53,10 @@ type PublicServiceRow = {
   modality?: string | null;
   city?: string | null;
   state?: string | null;
+  isVerified?: boolean;
+  distanceKm?: number | null;
+  speciesTarget?: string | null;
+  openToday?: boolean;
   providerId: string;
   provider: {
     id: string;
@@ -64,8 +74,9 @@ type PublicPartnerRow = {
   category?: string | null;
   productCount: number;
   serviceCount: number;
-  latitude?: number | null;
-  longitude?: number | null;
+  rating?: number;
+  reviewCount?: number;
+  isVerified?: boolean;
   distanceKm?: number | null;
 };
 
@@ -106,14 +117,19 @@ function mapProduct(p: PublicProductRow): MarketplaceProduct {
       id: p.seller.id,
       name: partnerName,
       avatar: "",
-      isVerified: true,
+      isVerified: Boolean(p.isVerified),
       location,
+      distanceKm: p.distanceKm ?? 0,
     },
     inStock: p.stock > 0,
     deliveryDays: undefined,
     freeShipping: false,
-    isPromo: !!p.comparePrice && p.comparePrice > p.price,
-    isSponsored: p.isFeatured ?? false,
+    isPromo: p.isPromo ?? (!!p.comparePrice && p.comparePrice > p.price),
+    isSponsored: p.isSponsored ?? p.isFeatured ?? false,
+    distanceKm: p.distanceKm ?? null,
+    shippingCost: p.shippingCost ?? null,
+    speciesTarget: p.speciesTarget ?? undefined,
+    species: p.speciesTarget ? [p.speciesTarget] : undefined,
   };
 }
 
@@ -137,15 +153,18 @@ function mapService(s: PublicServiceRow): MarketplaceService {
       id: s.provider.id,
       name: partnerName,
       avatar: "",
-      isVerified: true,
+      isVerified: Boolean(s.isVerified),
       location,
-      distanceKm: 0,
+      distanceKm: s.distanceKm ?? 0,
     },
+    distanceKm: s.distanceKm ?? null,
+    speciesTarget: s.speciesTarget ?? undefined,
     durationMin: s.durationMin ?? 60,
     homeService: s.modality === "HOME" || s.modality === "PICKUP_DELIVERY",
     inPerson: s.modality === "IN_PERSON" || !s.modality,
     telehealth: s.modality === "ONLINE",
     emergency: s.category === "EMERGENCY_24H",
+    openToday: Boolean(s.openToday),
   };
 }
 
@@ -160,11 +179,11 @@ function mapPartner(p: PublicPartnerRow): MarketplacePartner {
     description: p.description ?? "",
     location: [p.city, p.state].filter(Boolean).join(", "),
     distanceKm: p.distanceKm ?? 0,
-    rating: 0,
-    reviewCount: 0,
+    rating: p.rating ?? 0,
+    reviewCount: p.reviewCount ?? 0,
     salesCount: p.productCount,
     responseTime: "",
-    isVerified: true,
+    isVerified: Boolean(p.isVerified),
     categories: p.category ? [p.category] : ["Parceiro"],
     hours: "",
     policies: {},
@@ -174,34 +193,91 @@ function mapPartner(p: PublicPartnerRow): MarketplacePartner {
   };
 }
 
-function buildQuery(filters?: Partial<MarketplaceFilters>, extra?: Record<string, string>) {
-  const params = new URLSearchParams();
-  if (filters?.query) params.set("q", filters.query);
-  if (filters?.category) params.set("category", filters.category);
-  if (filters?.location) params.set("city", filters.location);
+function legacyFiltersToQuery(filters?: Partial<MarketplaceFilters>): MarketplaceQuery {
+  const sortRaw = filters?.sort;
+  const sort =
+    sortRaw === "distance"
+      ? "near_me"
+      : sortRaw === "bestseller"
+        ? "popular"
+        : sortRaw === "ai"
+          ? "relevance"
+          : sortRaw;
+  return {
+    q: filters?.query || undefined,
+    category: filters?.category || undefined,
+    minPrice: filters?.priceMin && filters.priceMin > 0 ? filters.priceMin : undefined,
+    maxPrice: filters?.priceMax && filters.priceMax > 0 && filters.priceMax < 2000 ? filters.priceMax : undefined,
+    minRating: filters?.minRating && filters.minRating > 0 ? filters.minRating : undefined,
+    verifiedOnly: filters?.verifiedOnly || undefined,
+    promoOnly: filters?.promoOnly || undefined,
+    inStock: filters?.inStock,
+    homeService: filters?.homeService || filters?.homeServiceOnly || undefined,
+    species: filters?.species || undefined,
+    brand: filters?.brand || undefined,
+    city: filters?.city || filters?.location || undefined,
+    sort: sort && sort !== "relevance" ? (sort as MarketplaceQuery["sort"]) : "relevance",
+    near: Boolean(filters?.lat && filters?.lng),
+    radiusKm: filters?.radiusKm ?? (filters?.lat != null ? filters.maxDistance : undefined),
+  };
+}
+
+function buildQuery(filters?: Partial<MarketplaceFilters>, extra?: Record<string, string>, geo?: GeoForApi) {
+  const query = legacyFiltersToQuery(filters);
+  const params = new URLSearchParams(
+    buildMarketplaceApiQuery(query, geo ?? { lat: filters?.lat, lng: filters?.lng }).replace(/^\?/, "")
+  );
   if (filters?.partnerId) params.set("partnerId", filters.partnerId);
-  if (filters?.city) params.set("city", filters.city);
   if (filters?.state) params.set("state", filters.state);
-  if (filters?.priceMin != null && filters.priceMin > 0) params.set("minPrice", String(filters.priceMin));
-  if (filters?.priceMax != null) params.set("maxPrice", String(filters.priceMax));
-  if (filters?.minRating != null && filters.minRating > 0) params.set("minRating", String(filters.minRating));
-  if (filters?.inStock) params.set("inStock", "true");
   if (filters?.telehealth || filters?.onlineOnly) params.set("telehealth", "true");
   if (filters?.emergency24h) params.set("emergency24h", "true");
-  if (filters?.lat != null) params.set("lat", String(filters.lat));
-  if (filters?.lng != null) params.set("lng", String(filters.lng));
-  if (filters?.radiusKm != null) params.set("radiusKm", String(filters.radiusKm));
-  if (filters?.maxDistance && filters.lat != null) params.set("radiusKm", String(filters.maxDistance));
-  if (filters?.sort === "distance" || (filters?.lat != null && filters?.sort === "relevance")) {
-    params.set("sort", "near_me");
-  } else if (filters?.sort) {
-    params.set("sort", filters.sort);
-  }
   if (extra) {
     for (const [k, v] of Object.entries(extra)) params.set(k, v);
   }
   const qs = params.toString();
   return qs ? `?${qs}` : "";
+}
+
+export async function fetchMarketplaceCatalog(query: MarketplaceQuery, geo?: GeoForApi) {
+  const qs = buildMarketplaceApiQuery(query, geo);
+  if (query.type === "product") {
+    const data = await marketplaceFetch<{ products: PublicProductRow[]; total: number; page: number; totalPages: number }>(
+      `/api/marketplace/products${qs}`
+    );
+    return { products: data.products.map(mapProduct), services: [] as MarketplaceService[], partners: [] as MarketplacePartner[], total: data.total, totalPages: data.totalPages, page: data.page };
+  }
+  if (query.type === "service") {
+    const data = await marketplaceFetch<{ services: PublicServiceRow[]; total: number; page: number; totalPages: number }>(
+      `/api/marketplace/services${qs}`
+    );
+    return { products: [] as MarketplaceProduct[], services: data.services.map(mapService), partners: [] as MarketplacePartner[], total: data.total, totalPages: data.totalPages, page: data.page };
+  }
+  if (query.type === "partner") {
+    const data = await marketplaceFetch<{ partners: PublicPartnerRow[]; total: number; page: number; totalPages: number }>(
+      `/api/marketplace/partners${qs}`
+    );
+    return { products: [] as MarketplaceProduct[], services: [] as MarketplaceService[], partners: data.partners.map(mapPartner), total: data.total, totalPages: data.totalPages, page: data.page };
+  }
+  const data = await marketplaceFetch<{
+    products: PublicProductRow[];
+    services: PublicServiceRow[];
+    partners: PublicPartnerRow[];
+    total: number;
+    totalProducts?: number;
+    totalServices?: number;
+    totalPartners?: number;
+  }>(`/api/marketplace/search${qs}`);
+  const total =
+    data.total ??
+    (data.totalProducts ?? data.products.length) + (data.totalServices ?? data.services.length) + (data.totalPartners ?? data.partners.length);
+  return {
+    products: data.products.map(mapProduct),
+    services: data.services.map(mapService),
+    partners: data.partners.map(mapPartner),
+    total,
+    totalPages: 1,
+    page: 1,
+  };
 }
 
 export async function fetchProducts(filters?: Partial<MarketplaceFilters>): Promise<MarketplaceProduct[]> {
@@ -261,7 +337,7 @@ export async function fetchPartner(id: string): Promise<MarketplacePartner | und
       reviewCount: Number(p.reviewCount ?? 0),
       salesCount: Array.isArray(p.products) ? p.products.length : 0,
       responseTime: "",
-      isVerified: true,
+      isVerified: Boolean(p.isVerified),
       categories: p.category ? [String(p.category)] : [],
       hours: String(p.businessHours ?? ""),
       policies: {},

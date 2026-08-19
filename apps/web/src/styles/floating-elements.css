@@ -1,0 +1,56 @@
+/**
+ * Posicionamento central de elementos flutuantes.
+ * Assistente: inferior esquerdo | Acessibilidade: inferior direito | Suporte: inferior direito (acima da a11y).
+ */
+:root {
+  --ep-float-gutter: 1rem;
+  --ep-float-bottom-mobile: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+  --ep-float-bottom-desktop: 1.5rem;
+  --ep-float-a11y-size: 3rem;
+  --ep-float-assistant-size: 3.5rem;
+  --ep-float-stack-gap: 0.75rem;
+  --ep-float-support-offset: calc(var(--ep-float-a11y-size) + var(--ep-float-stack-gap));
+}
+
+.ep-float-assistant {
+  position: fixed;
+  z-index: 50;
+  left: var(--ep-float-gutter);
+  bottom: var(--ep-float-bottom-mobile);
+}
+
+@media (min-width: 1024px) {
+  .ep-float-assistant {
+    bottom: var(--ep-float-bottom-desktop);
+  }
+}
+
+.ep-float-a11y {
+  position: fixed;
+  z-index: var(--z-a11y, 10050);
+  right: var(--ep-float-gutter);
+  left: auto;
+  bottom: var(--ep-float-bottom-mobile);
+}
+
+@media (min-width: 1024px) {
+  .ep-float-a11y {
+    bottom: var(--ep-float-bottom-desktop);
+  }
+}
+
+.ep-float-support-panel {
+  position: fixed;
+  z-index: 70;
+  right: var(--ep-float-gutter);
+  left: auto;
+  bottom: calc(var(--ep-float-bottom-mobile) + var(--ep-float-support-offset));
+  width: min(calc(100vw - 2rem), 380px);
+}
+
+@media (min-width: 1024px) {
+  .ep-float-support-panel {
+    bottom: var(--ep-float-bottom-desktop);
+    right: calc(var(--ep-float-gutter) + var(--ep-float-a11y-size) + var(--ep-float-stack-gap));
+  }
+}

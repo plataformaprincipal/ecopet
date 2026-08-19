@@ -16,6 +16,7 @@ import {
   ShoppingCart,
   Wrench,
   Sparkles,
+  Coins,
 } from "lucide-react";
 import type { TranslationKey } from "@/lib/i18n/types";
 import type { AppRole } from "@/lib/permissions";
@@ -68,6 +69,7 @@ const CLIENT_SECONDARY: RoleSecondaryNavItem[] = [
   { href: "/cliente/meu-pet", labelKey: "nav.myPet", icon: PawPrint },
   { href: "/carrinho", labelKey: "nav.cart", icon: ShoppingCart },
   { href: "/dashboard/client/orders", labelKey: "nav.orders", icon: ClipboardList },
+  { href: "/cliente/rewards", labelKey: "nav.rewards", icon: Coins },
   { href: "/dashboard/messages", labelKey: "nav.messages", icon: MessageCircle },
   { href: "/configuracoes", labelKey: "nav.settings", icon: Settings },
 ];

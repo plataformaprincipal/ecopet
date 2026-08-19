@@ -1,15 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { MessageCircle, Phone } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import { EcoPetLogo } from "@/components/shared/brand/ecopet-logo";
 import { useSupportChat } from "@/providers/support-chat-provider";
 import { useAuthSession } from "@/hooks/use-auth-session";
 import { useTranslation } from "@/providers/i18n-provider";
 import type { TranslationKey } from "@/lib/i18n/types";
 
-const PHONE = "(83) 99617-5215";
-const PHONE_TEL = "+5583996175215";
 const WHATSAPP_URL = `https://wa.me/5583996175215`;
 
 type NavLink = { href: string; labelKey: TranslationKey; authRequired?: boolean };
@@ -101,16 +99,6 @@ export function EcopetFooter() {
             <div>
               <h3 className="overline-text text-white/50">{t("common.support")}</h3>
               <ul className="mt-4 space-y-4 text-sm text-white/75">
-                <li>
-                  <span className="block text-xs uppercase tracking-wide text-white/45">{t("common.phone")}</span>
-                  <a
-                    href={`tel:${PHONE_TEL}`}
-                    className="mt-1 inline-flex min-h-[44px] items-center gap-2 hover:text-white"
-                  >
-                    <Phone className="h-4 w-4 text-ecopet-green-500" strokeWidth={2} aria-hidden />
-                    {PHONE}
-                  </a>
-                </li>
                 <li>
                   <button
                     type="button"

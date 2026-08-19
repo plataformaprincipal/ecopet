@@ -20,6 +20,8 @@ type AuthRequiredModalProps = {
   descriptionKey?: string;
   signInKey?: string;
   createAccountKey?: string;
+  /** Destino pós-login. Default: pathname atual. Shared with Social — optional only. */
+  callbackUrl?: string;
 };
 
 export function AuthRequiredModal({
@@ -29,10 +31,11 @@ export function AuthRequiredModal({
   descriptionKey = "public.authModal.description",
   signInKey = "public.authModal.signIn",
   createAccountKey = "public.authModal.createAccount",
+  callbackUrl,
 }: AuthRequiredModalProps) {
   const pathname = usePathname();
   const { t } = useTranslation();
-  const callback = encodeURIComponent(pathname);
+  const callback = encodeURIComponent(callbackUrl || pathname);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -49,7 +52,7 @@ export function AuthRequiredModal({
             <Link href={`/login?callbackUrl=${callback}`}>{t(signInKey as never)}</Link>
           </Button>
           <Button asChild variant="outline" className="flex-1">
-            <Link href="/cadastro">{t(createAccountKey as never)}</Link>
+            <Link href={`/cadastro?callbackUrl=${callback}`}>{t(createAccountKey as never)}</Link>
           </Button>
         </div>
       </DialogContent>

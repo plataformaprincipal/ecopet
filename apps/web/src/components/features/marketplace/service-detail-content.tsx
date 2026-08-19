@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { serviceImageAlt, avatarAlt } from "@/lib/accessibility/image-alt";
 import { StartConversationButton } from "@/components/messages/StartConversationButton";
 import { useTranslation } from "@/providers/i18n-provider";
+import { useMarketplaceAuthGate } from "@/hooks/use-marketplace-auth-gate";
 
 interface ServiceDetailContentProps {
   id: string;
@@ -24,6 +25,7 @@ interface ServiceDetailContentProps {
 
 export function ServiceDetailContent({ id }: ServiceDetailContentProps) {
   const { t } = useTranslation();
+  const { requireAuth, AuthModal } = useMarketplaceAuthGate();
   const { toggleFavoriteService, isFavoriteService } = useMarketplaceStore();
   const [service, setService] = useState<MarketplaceService | undefined>();
   const [reviews, setReviews] = useState<MarketplaceReview[]>([]);
@@ -50,6 +52,7 @@ export function ServiceDetailContent({ id }: ServiceDetailContentProps) {
   const fav = isFavoriteService(service.id);
 
   return (
+    <>
     <div>
       <Link href="/marketplace/servicos" className="mb-4 inline-flex items-center gap-1 text-sm text-ecopet-green">
         <ChevronLeft className="h-4 w-4" /> Voltar aos serviços
@@ -117,11 +120,15 @@ export function ServiceDetailContent({ id }: ServiceDetailContentProps) {
             <Button
               className="flex-1"
               size="lg"
-              asChild
+              data-testid="marketplace-service-book"
+              onClick={() => {
+                const intent = `/agenda?servico=${service.id}`;
+                requireAuth(() => {
+                  window.location.href = intent;
+                }, intent);
+              }}
             >
-              <Link href={`/messages?context=SERVICE&id=${service.id}`}>
-                <Calendar className="h-5 w-5" /> Solicitar agendamento
-              </Link>
+              <Calendar className="h-5 w-5" /> {t("marketplace.schedule")}
             </Button>
             <StartConversationButton
               variant="outline"
@@ -147,8 +154,8 @@ export function ServiceDetailContent({ id }: ServiceDetailContentProps) {
 
       <Card className="mt-8">
         <CardContent className="p-6">
-          <h3 className="font-bold">Política de cancelamento</h3>
-          <p className="mt-2 text-sm text-ecopet-gray">Cancelamento gratuito até 2h antes do horário agendado. Reagendamento disponível 1x sem custo.</p>
+          <h3 className="font-bold">{t("marketplace.servicesPage.bookingTitle")}</h3>
+          <p className="mt-2 text-sm text-ecopet-gray">{t("marketplace.servicesPage.bookingHint")}</p>
         </CardContent>
       </Card>
 
@@ -175,5 +182,7 @@ export function ServiceDetailContent({ id }: ServiceDetailContentProps) {
         </section>
       )}
     </div>
+    {AuthModal}
+    </>
   );
 }

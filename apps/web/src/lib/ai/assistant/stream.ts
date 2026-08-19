@@ -41,6 +41,7 @@ import { resolveAssistantPersona } from "./personas";
 import { assertAssistantAccess } from "./permissions";
 import type { AssistantStreamEvent } from "./types";
 import { isAiFlagEnabled, resolveEcoPetAgent } from "@/lib/ai/operational";
+import { resolveServerCapability } from "@/lib/ai/capabilities/orchestrate";
 
 const STRUCTURED_TOOL_KINDS: Partial<Record<ToolExecutionResult["toolName"], string>> = {
   consult_products: "products",
@@ -121,6 +122,7 @@ export async function* streamAssistantChat(input: {
   module?: string;
   lat?: number;
   lng?: number;
+  capabilityId?: string;
 }): AsyncGenerator<AssistantStreamEvent> {
   const started = Date.now();
   const locale: AiLocale = normalizeLocale(input.locale);
@@ -187,10 +189,45 @@ export async function* streamAssistantChat(input: {
     }
 
     const persona = resolveAssistantPersona(input.role);
+    const capabilityDecision = resolveServerCapability({
+      capabilityId: input.capabilityId,
+      role: input.role,
+      hasPet: Boolean(input.petId),
+      hasGeo: Number.isFinite(input.lat) && Number.isFinite(input.lng),
+      aiConfigured: AI_CONFIG.isConfigured,
+      isGuest: false,
+      locale,
+    });
+
+    if (capabilityDecision.status === "denied") {
+      await writeAiAuditLog({
+        userId: input.userId,
+        role: input.role,
+        module: "ecopet-ai",
+        action: "assistant-stream",
+        decision: "DENY",
+        metadata: {
+          requestId,
+          capabilityId: input.capabilityId ?? null,
+          code: capabilityDecision.code,
+          lockReason: capabilityDecision.lockReason ?? null,
+        },
+      }).catch(() => undefined);
+      yield {
+        type: "error",
+        code: capabilityDecision.code,
+        message: capabilityDecision.message,
+      };
+      return;
+    }
+
+    const allowedTools = capabilityDecision.allowedTools;
+    const resolvedCapabilityId = capabilityDecision.capability.id;
+
     const agentPlan = resolveEcoPetAgent({
       role: input.role,
       pagePath: input.pagePath,
-      moduleHint: input.module,
+      moduleHint: capabilityDecision.capability.module ?? input.module,
       message: userText,
     });
 
@@ -208,12 +245,16 @@ export async function* streamAssistantChat(input: {
       locale,
       message: userText,
       pagePath: input.pagePath,
-      module: (input.module as never) ?? agentPlan.businessModule,
+      module: (capabilityDecision.capability.module as never) ?? (input.module as never) ?? agentPlan.businessModule,
       petId: input.petId,
       conversationId: input.conversationId,
       displayName: input.displayName,
       lat: input.lat,
       lng: input.lng,
+      allowedTools,
+      capabilityId: resolvedCapabilityId,
+      capabilityPrompt: capabilityDecision.extraSystemPrompt,
+      capabilityModule: capabilityDecision.capability.module,
     });
 
     if (business.toolResults.length) {
@@ -275,6 +316,8 @@ export async function* streamAssistantChat(input: {
           conversationId,
           lat: input.lat,
           lng: input.lng,
+          allowedTools,
+          capabilityId: resolvedCapabilityId,
           messages: [
             { role: "system", content: business.systemPrompt },
             ...history,
@@ -364,6 +407,8 @@ export async function* streamAssistantChat(input: {
             module: business.activeModule,
             toolsUsed,
             firewall: firewall.decision,
+            capabilityId: resolvedCapabilityId,
+            fallbackFromInvalid: capabilityDecision.fallbackFromInvalid ?? false,
           },
         },
       })
@@ -411,8 +456,11 @@ export async function* streamAssistantChat(input: {
         streamed: true,
         businessModule: business.activeModule,
         toolsUsed,
+        toolsAllowed: allowedTools,
         enterprise: true,
         agentId: agentPlan.agentId,
+        capabilityId: resolvedCapabilityId,
+        fallbackFromInvalid: capabilityDecision.fallbackFromInvalid ?? false,
       },
     }).catch(() => undefined);
 

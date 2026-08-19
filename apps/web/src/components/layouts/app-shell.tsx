@@ -1,6 +1,5 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { MainNavigation } from "@/components/shared/navigation/main-navigation";
 import { BottomNav } from "@/components/shared/navigation/bottom-nav";
@@ -12,14 +11,6 @@ import { isPublicClientShellPath } from "@/lib/public-client/nav";
 import { isClientAreaPath } from "@/lib/client/nav";
 import { isOngAreaPath } from "@/lib/ong/nav";
 import { PublicClientShell } from "@/components/features/public-client/public-client-shell";
-
-const EcopetAIAssistant = dynamic(
-  () =>
-    import("@/components/features/ai/ecopet-ai-assistant").then((m) => ({
-      default: m.EcopetAIAssistant,
-    })),
-  { ssr: false }
-);
 
 const IMMERSIVE_PATHS = ["/feed", "/social", "/eccopet"];
 function isImmersivePath(pathname: string) {
@@ -74,7 +65,6 @@ function FoundationAppShell({
     isOngAreaPath(pathname) || pathname === "/ngo" || pathname.startsWith("/ngo/");
   const isAdminArea = pathname.startsWith("/admin");
   const isImmersive = isImmersivePath(pathname);
-  const showAi = role === "CLIENT" && pathname !== "/eccopet";
 
   if (isPartnerArea || isClientArea || isOngArea || isAdminArea) {
     return <div className="min-h-screen">{children}</div>;
@@ -86,7 +76,6 @@ function FoundationAppShell({
       <div className="min-h-screen bg-gray-50 dark:bg-ecopet-dark-bg">
         <div className="pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:pb-0">{children}</div>
         <BottomNav />
-        {showAi && <EcopetAIAssistant />}
       </div>
     );
   }
@@ -98,7 +87,6 @@ function FoundationAppShell({
         {children}
       </div>
       <BottomNav />
-      {showAi && <EcopetAIAssistant />}
     </div>
   );
 }

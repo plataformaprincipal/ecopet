@@ -140,7 +140,7 @@ export function SupportChatPanel() {
 
   return (
     <div
-      className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-4 z-[70] flex w-[min(100vw-2rem,380px)] flex-col overflow-hidden rounded-2xl border border-ecopet-gray/15 bg-white shadow-2xl dark:border-white/10 dark:bg-ecopet-dark-card lg:bottom-6"
+      className="ep-float-support-panel flex flex-col overflow-hidden rounded-2xl border border-ecopet-gray/15 bg-[var(--ep-bg-elevated)] shadow-2xl"
       role="dialog"
       aria-modal="true"
       aria-label={t("support.title")}
@@ -150,7 +150,8 @@ export function SupportChatPanel() {
           <MessageCircle className="h-5 w-5 text-ecopet-yellow" aria-hidden />
           <div>
             <p className="text-sm font-semibold">{t("support.title")}</p>
-            <p className="text-[10px] text-white/70">
+            <p className="text-[10px] text-white/70">{t("support.subtitle")}</p>
+            <p className="text-[10px] text-white/55">
               {authenticated ? t("support.statusAuth") : t("support.statusGuest")}
             </p>
           </div>

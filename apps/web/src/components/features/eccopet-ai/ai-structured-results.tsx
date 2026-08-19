@@ -13,24 +13,39 @@ function formatPrice(value: unknown): string {
   return "—";
 }
 
+const cardClass =
+  "flex flex-col gap-1 rounded-xl border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] p-3 transition hover:border-ecopet-green/40 hover:shadow-[var(--shadow-sm)]";
+
 function ProductCard({ item }: { item: Record<string, unknown> }) {
+  const { t } = useTranslation();
   const id = typeof item.id === "string" ? item.id : null;
   const name = typeof item.name === "string" ? item.name : "Produto";
   const href = id ? `/marketplace/produto/${id}` : "/marketplace";
+  const isSponsored = item.isSponsored === true || item.sponsored === true;
 
   return (
-    <Link
-      href={href}
-      className="flex flex-col gap-1 rounded-xl border border-zinc-200/70 bg-white p-3 transition hover:border-ecopet-green/40 dark:border-white/10 dark:bg-zinc-900/60"
-    >
-      <span className="text-sm font-semibold text-zinc-900 dark:text-white">{name}</span>
+    <Link href={href} className={cardClass}>
+      <div className="flex items-start justify-between gap-2">
+        <span className="text-sm font-semibold text-[var(--ep-fg)]">{name}</span>
+        {isSponsored ? (
+          <span className="shrink-0 rounded-full bg-[var(--ep-bg-muted)] px-2 py-0.5 text-[10px] font-medium text-[var(--ep-fg-subtle)]">
+            {t("ecopetAi.structured.sponsored")}
+          </span>
+        ) : null}
+      </div>
       {typeof item.brand === "string" && item.brand ? (
-        <span className="text-[11px] text-zinc-500">{item.brand}</span>
+        <span className="text-[11px] text-[var(--ep-fg-muted)]">{item.brand}</span>
       ) : null}
-      <div className="flex items-center justify-between gap-2 text-xs">
+      {typeof item.seller === "string" && item.seller ? (
+        <span className="text-[11px] text-[var(--ep-fg-subtle)]">{item.seller}</span>
+      ) : null}
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
         <span className="font-medium text-ecopet-green">{formatPrice(item.price)}</span>
         {typeof item.rating === "number" ? (
-          <span className="text-zinc-500">★ {item.rating.toFixed(1)}</span>
+          <span className="text-[var(--ep-fg-muted)]">★ {item.rating.toFixed(1)}</span>
+        ) : null}
+        {typeof item.distanceKm === "number" ? (
+          <span className="text-[var(--ep-fg-subtle)]">{item.distanceKm.toFixed(1)} km</span>
         ) : null}
       </div>
     </Link>
@@ -43,18 +58,15 @@ function ServiceCard({ item }: { item: Record<string, unknown> }) {
   const href = id ? `/marketplace/servico/${id}` : "/marketplace/servicos";
 
   return (
-    <Link
-      href={href}
-      className="flex flex-col gap-1 rounded-xl border border-zinc-200/70 bg-white p-3 transition hover:border-ecopet-green/40 dark:border-white/10 dark:bg-zinc-900/60"
-    >
-      <span className="text-sm font-semibold text-zinc-900 dark:text-white">{name}</span>
+    <Link href={href} className={cardClass}>
+      <span className="text-sm font-semibold text-[var(--ep-fg)]">{name}</span>
       {typeof item.partnerName === "string" && item.partnerName ? (
-        <span className="text-[11px] text-zinc-500">{item.partnerName}</span>
+        <span className="text-[11px] text-[var(--ep-fg-muted)]">{item.partnerName}</span>
       ) : null}
-      <div className="flex items-center justify-between gap-2 text-xs">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
         <span className="font-medium text-ecopet-green">{formatPrice(item.price)}</span>
         {typeof item.city === "string" && item.city ? (
-          <span className="text-zinc-500">{item.city}</span>
+          <span className="text-[var(--ep-fg-muted)]">{item.city}</span>
         ) : null}
       </div>
     </Link>
@@ -67,12 +79,9 @@ function AdoptionCard({ item }: { item: Record<string, unknown> }) {
   const city = typeof item.city === "string" ? item.city : null;
 
   return (
-    <Link
-      href="/adocao"
-      className="flex flex-col gap-1 rounded-xl border border-zinc-200/70 bg-white p-3 transition hover:border-ecopet-green/40 dark:border-white/10 dark:bg-zinc-900/60"
-    >
-      <span className="text-sm font-semibold text-zinc-900 dark:text-white">{name}</span>
-      <div className="flex flex-wrap gap-2 text-[11px] text-zinc-500">
+    <Link href="/adocao" className={cardClass}>
+      <span className="text-sm font-semibold text-[var(--ep-fg)]">{name}</span>
+      <div className="flex flex-wrap gap-2 text-[11px] text-[var(--ep-fg-muted)]">
         {species ? <span>{species}</span> : null}
         {city ? <span>{city}</span> : null}
       </div>
@@ -99,7 +108,7 @@ export function AIStructuredResults({ blocks }: { blocks: AIStructuredBlock[] })
 
         return (
           <div key={`${block.kind}-${idx}`} className="w-full space-y-2">
-            <p className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            <p className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-[var(--ep-fg-muted)]">
               {label}
               <ExternalLink className="h-3 w-3" aria-hidden />
             </p>

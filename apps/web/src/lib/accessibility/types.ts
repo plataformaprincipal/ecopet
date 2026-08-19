@@ -31,6 +31,7 @@ export const FONT_SCALE_MIN = 0.875;
 export const FONT_SCALE_MAX = 1.75;
 export const FONT_SCALE_STEP = 0.125;
 export const FONT_SCALE_DEFAULT = 1;
+export const FONT_SCALE_PRESETS = [1, 1.1, 1.25, 1.4] as const;
 
 export const SPACING_MIN = 0;
 export const SPACING_MAX = 3;

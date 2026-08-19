@@ -57,7 +57,7 @@ const STATUS_META: Record<VaccinationStatusCode, { label: string; className: str
     className: "bg-red-500/15 text-red-700 dark:text-red-300",
   },
   SEM_DATA: {
-    label: "Sem data",
+    label: "Sem informação",
     className: "bg-zinc-500/15 text-zinc-600 dark:text-zinc-300",
   },
 };

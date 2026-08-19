@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiFailure } from "@/lib/api-response";
 import { requireClient } from "@/lib/auth/require-auth";
 import { assertPetOwnership } from "@/lib/client/pet-ownership";
+import { createInternalNotification } from "@/lib/notifications/internal";
 import {
   vaccinationSchema,
   allergySchema,
@@ -38,6 +39,26 @@ export async function POST(request: Request, context: RouteContext) {
         notes: d.notes ?? null,
       },
     });
+    if (item.nextDue) {
+      const dueLabel = item.nextDue.toLocaleDateString("pt-BR");
+      await prisma.petReminder.create({
+        data: {
+          petId,
+          type: "VACCINE",
+          title: `Reforço registrado: ${item.name}`,
+          description: `Há um reforço registrado para ${dueLabel}.`,
+          dueAt: item.nextDue,
+        },
+      });
+      await createInternalNotification({
+        userId: user!.id,
+        title: "Lembrete de vacina registrada",
+        body: `Há um reforço registrado para ${item.name} em ${dueLabel}.`,
+        type: "APPOINTMENT",
+        actionUrl: "/cliente/meu-pet",
+        data: { petId, vaccinationId: item.id, idempotencyKey: `vaccine-due:${item.id}` },
+      }).catch(() => undefined);
+    }
     return apiSuccess({ item }, 201);
   }
 

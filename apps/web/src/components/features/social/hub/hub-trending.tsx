@@ -55,16 +55,16 @@ export function HubTrending({ className }: { className?: string }) {
   return (
     <section
       className={cn(
-        "rounded-[20px] border border-zinc-200/80 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900/60",
+        "rounded-2xl border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] p-4",
         className
       )}
       aria-label={t("social.trending.title")}
     >
-      <h2 className="mb-1 flex items-center gap-2 font-semibold text-zinc-900 dark:text-white">
+      <h2 className="mb-1 flex items-center gap-2 font-semibold text-[var(--ep-fg)]">
         <TrendingUp className="h-5 w-5 text-ecopet-green" aria-hidden />
-        Tendências na EccoPet
+        {t("social.trending.forYou")}
       </h2>
-      <p className="mb-3 text-xs text-zinc-500">Assuntos em alta com base em publicações reais</p>
+      <p className="mb-3 text-xs text-[var(--ep-fg-muted)]">{t("social.trending.subtitle")}</p>
 
       {loading ? (
         <div className="space-y-2" aria-busy="true">
@@ -80,14 +80,17 @@ export function HubTrending({ className }: { className?: string }) {
                 <li key={item.slug}>
                   <Link
                     href={`/feed/hashtag/${item.slug}`}
-                    className="flex items-start gap-3 rounded-xl px-2 py-2 transition hover:bg-zinc-50 dark:hover:bg-white/5"
+                    className="flex items-start gap-3 rounded-xl px-2 py-2 transition hover:bg-[var(--ep-bg-muted)]"
                   >
-                    <span className="w-5 shrink-0 pt-0.5 text-sm font-semibold text-zinc-400">{item.position}</span>
+                    <span className="w-5 shrink-0 pt-0.5 text-sm font-semibold text-[var(--ep-fg-subtle)]">{item.position}</span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate font-semibold text-zinc-900 dark:text-white">{item.topic}</span>
-                      <span className="block text-xs text-zinc-500">
-                        {item.publicationsLabel} publicações
-                      </span>
+                      <span className="block truncate text-xs text-[var(--ep-fg-muted)]">{t("social.trending.inPets")}</span>
+                      <span className="block truncate font-semibold text-[var(--ep-fg)]">{item.topic}</span>
+                      {item.publications > 0 ? (
+                        <span className="block text-xs text-[var(--ep-fg-muted)]">
+                          {item.publicationsLabel} {t("social.trending.publications")}
+                        </span>
+                      ) : null}
                     </span>
                     <Hash className="mt-1 h-3.5 w-3.5 shrink-0 text-ecopet-green/70" aria-hidden />
                   </Link>
@@ -95,7 +98,7 @@ export function HubTrending({ className }: { className?: string }) {
               ))}
             </ol>
           ) : (
-            <p className="text-sm text-zinc-500">{t("social.trending.empty")}</p>
+            <p className="text-sm text-[var(--ep-fg-muted)]">{t("social.trending.empty")}</p>
           )}
 
           {trends.length > 5 ? (

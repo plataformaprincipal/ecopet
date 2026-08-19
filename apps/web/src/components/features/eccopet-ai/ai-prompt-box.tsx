@@ -42,7 +42,7 @@ export function AIPromptBox({
   }
 
   return (
-    <div className="rounded-3xl border border-zinc-200/80 bg-white/90 p-2 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-zinc-900/70">
+    <div className="rounded-3xl border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] p-2 shadow-[var(--shadow-md)]">
       <div className="flex items-end gap-2">
         <div className="flex gap-0.5 pb-1.5">
           <button
@@ -50,7 +50,7 @@ export function AIPromptBox({
             onClick={onAttachAttempt}
             aria-label={t("ecopetAi.attachImage")}
             title={t("ecopetAi.attachImageTitle")}
-            className="flex h-9 w-9 items-center justify-center rounded-xl text-zinc-400 transition hover:bg-zinc-100 hover:text-ecopet-green dark:hover:bg-white/5"
+            className="flex h-9 w-9 items-center justify-center rounded-xl text-[var(--ep-fg-subtle)] transition hover:bg-[var(--ep-bg-muted)] hover:text-ecopet-green"
           >
             <ImagePlus className="h-5 w-5" aria-hidden />
           </button>
@@ -59,7 +59,7 @@ export function AIPromptBox({
             onClick={onAttachAttempt}
             aria-label={t("ecopetAi.attachFile")}
             title={t("ecopetAi.attachFileTitle")}
-            className="flex h-9 w-9 items-center justify-center rounded-xl text-zinc-400 transition hover:bg-zinc-100 hover:text-ecopet-green dark:hover:bg-white/5"
+            className="flex h-9 w-9 items-center justify-center rounded-xl text-[var(--ep-fg-subtle)] transition hover:bg-[var(--ep-bg-muted)] hover:text-ecopet-green"
           >
             <Paperclip className="h-5 w-5" aria-hidden />
           </button>
@@ -82,7 +82,7 @@ export function AIPromptBox({
           }}
           placeholder={placeholder ?? t("ecopetAi.promptPlaceholder")}
           disabled={isLoading}
-          className="max-h-40 flex-1 resize-none bg-transparent py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none disabled:opacity-60 dark:text-white"
+          className="max-h-40 flex-1 resize-none bg-transparent py-2.5 text-sm text-[var(--ep-fg)] placeholder:text-[var(--ep-fg-subtle)] focus:outline-none disabled:opacity-60"
         />
 
         {loading && onCancel ? (
@@ -90,7 +90,7 @@ export function AIPromptBox({
             type="button"
             onClick={onCancel}
             aria-label={t("ecopetAi.cancel")}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-zinc-700 text-white transition hover:bg-zinc-800 active:scale-95"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--ep-fg-muted)] text-white transition hover:bg-[var(--ep-fg)] active:scale-95"
           >
             <Square className="h-4 w-4 fill-current" aria-hidden />
           </button>
@@ -103,7 +103,7 @@ export function AIPromptBox({
             className={cn(
               "flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-white transition",
               isLoading || !value.trim()
-                ? "cursor-not-allowed bg-zinc-300 dark:bg-zinc-700"
+                ? "cursor-not-allowed bg-[var(--ep-bg-muted)] text-[var(--ep-fg-subtle)]"
                 : "bg-ecopet-green shadow-md shadow-ecopet-green/25 hover:bg-emerald-700 active:scale-95"
             )}
           >

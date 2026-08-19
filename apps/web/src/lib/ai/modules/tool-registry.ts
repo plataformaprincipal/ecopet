@@ -347,8 +347,11 @@ export function listBusinessTools(role?: UserRole): BusinessToolDefinition[] {
   return role ? filterToolsForRole(all, role) : all;
 }
 
-export function toOpenAiToolSchemas(role: UserRole): OpenAiToolSchema[] {
-  return listBusinessTools(role).map((t) => ({
+export function toOpenAiToolSchemas(role: UserRole, allowedTools?: string[]): OpenAiToolSchema[] {
+  const allow = allowedTools ? new Set(allowedTools) : null;
+  return listBusinessTools(role)
+    .filter((t) => !allow || allow.has(t.name))
+    .map((t) => ({
     type: "function",
     function: {
       name: t.name,

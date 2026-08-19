@@ -71,6 +71,7 @@ export async function checkoutFromServerCart(payload: {
     state: string;
     zipCode?: string;
   };
+  couponCode?: string | null;
   idempotencyKey?: string;
 }) {
   const data = await nextJson<{ order: Order }>("/api/checkout", {
@@ -84,6 +85,7 @@ export async function checkoutFromServerCart(payload: {
       phone: payload.phone,
       notes: payload.notes,
       address: payload.address,
+      couponCode: payload.couponCode || undefined,
     }),
   });
   return data.order;

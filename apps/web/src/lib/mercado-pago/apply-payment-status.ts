@@ -326,6 +326,19 @@ export async function applyInternalPaymentStatus(params: {
     }
   });
 
+  void import("@/lib/loyalty/events").then(({ onOrderStatusForRewards, onOrderRefundedForRewards }) => {
+    if (isTerminalApproved(params.internalStatus)) {
+      return onOrderStatusForRewards(payment.orderId);
+    }
+    if (isRefundedStatus(params.internalStatus) || params.internalStatus === "CHARGED_BACK") {
+      return onOrderRefundedForRewards({
+        orderId: payment.orderId,
+        fullRefund: params.internalStatus !== "PARTIALLY_REFUNDED",
+      });
+    }
+    return undefined;
+  }).catch(() => undefined);
+
   const meta = (payment.metadata as PaymentMeta | null) ?? {};
   // Estoque: liberar em falha/cancelamento/expiração.
   // Estorno total/parcial NÃO devolve estoque automaticamente (exige devolução física/admin).

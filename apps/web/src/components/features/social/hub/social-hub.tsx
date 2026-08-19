@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { LayoutGrid, Sparkles, Bell, MessageSquare, Plus, Filter } from "lucide-react";
 import { SocialSidebar } from "@/components/features/social/ecopet-social/social-sidebar";
-import { SocialFeedStream } from "@/components/features/social/ecopet-social/social-feed-stream";
+import { SocialFeedStream, scrollToComposer } from "@/components/features/social/ecopet-social/social-feed-stream";
 import { SuggestedProfilesPanel } from "@/components/features/social/ecopet-social/suggested-profiles-panel";
 import { SOCIAL_FILTERS, type SocialFilterId } from "@/components/features/social/ecopet-social/filters";
 import { HubAssistantPanel } from "./hub-assistant-panel";
@@ -29,7 +29,7 @@ const MOBILE_TABS: { id: MobileTab; labelKey: string; icon: typeof LayoutGrid }[
 
 function GuestPanelCTA({ title, description, signIn }: { title: string; description: string; signIn: string }) {
   return (
-    <section className="rounded-[var(--radius-xl)] border border-ecopet-gray/12 bg-white/80 p-5 text-center shadow-[var(--shadow-sm)] backdrop-blur-md dark:border-white/10 dark:bg-ecopet-dark-card/80">
+    <section className="rounded-[var(--radius-xl)] border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] p-5 text-center">
       <p className="text-sm font-semibold text-ecopet-dark dark:text-white">{title}</p>
       <p className="mt-1 text-xs text-ecopet-gray dark:text-white/60">{description}</p>
       <a href="/login" className="mt-3 inline-flex min-h-[40px] items-center rounded-xl bg-ecopet-green px-4 py-2 text-xs font-semibold text-white transition hover:bg-ecopet-green-700">
@@ -56,7 +56,7 @@ export function SocialHub() {
   return (
     <div className="relative mx-auto w-full max-w-[1500px] px-3 pb-28 pt-4 sm:px-4 lg:px-6 lg:pb-8 animate-fade-in">
       {/* Top bar — logo + language selector (top right, all breakpoints) */}
-      <div className="mb-4 flex items-center justify-between gap-3 rounded-[var(--radius-lg)] border border-ecopet-gray/10 bg-white/80 px-3 py-2.5 shadow-[var(--shadow-xs)] backdrop-blur-md dark:border-white/10 dark:bg-ecopet-dark-card/80">
+      <div className="mb-4 flex items-center justify-between gap-3 rounded-[var(--radius-lg)] border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] px-3 py-2.5">
         <EcoPetLogo href="/social" size="sm" showText />
         <div className="flex items-center gap-2">
           <button
@@ -185,7 +185,10 @@ export function SocialHub() {
         </button>
         <button
           type="button"
-          onClick={() => requireAuth(() => setMobileTab("feed"))}
+          onClick={() => requireAuth(() => {
+            setMobileTab("feed");
+            window.setTimeout(() => scrollToComposer(), 50);
+          })}
           aria-label={t("social.fab.newPost")}
           className="flex h-14 w-14 items-center justify-center rounded-full bg-ecopet-green text-white shadow-xl shadow-ecopet-green/30 transition active:scale-95"
         >

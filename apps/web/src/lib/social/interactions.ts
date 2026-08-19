@@ -4,6 +4,7 @@ import { requireActiveSocialUser, assertNotBlocked } from "@/lib/social/permissi
 import { SOCIAL_RATE_LIMITS, SOCIAL_FEED_DEFAULT_LIMIT } from "@/lib/social/constants";
 import { checkSocialRateLimit } from "@/lib/social/rate-limit";
 import { serializePosts } from "@/lib/social/posts";
+import { canViewPost } from "@/lib/social/post-authorization";
 import { sharePostToConversation } from "@/lib/social/sharing/internal-share-service";
 import { notifyPostLiked, notifyPostShared } from "@/lib/social/notifications/social-notification-service";
 
@@ -17,10 +18,19 @@ const postInclude = {
 
 async function getInteractablePost(postId: string, userId: string) {
   const post = await prisma.socialPost.findUnique({ where: { id: postId } });
-  if (!post || post.deletedAt || post.status === "REMOVED" || post.status === "HIDDEN") {
+  if (!post) throw new SocialError("Publicação não disponível.", "NOT_FOUND", 404);
+  await assertNotBlocked(userId, post.authorId);
+  const follows =
+    post.authorId === userId
+      ? true
+      : Boolean(
+          await prisma.userFollow.findUnique({
+            where: { followerId_followingId: { followerId: userId, followingId: post.authorId } },
+          })
+        );
+  if (!canViewPost(post, { viewerId: userId, followsAuthor: follows })) {
     throw new SocialError("Publicação não disponível.", "NOT_FOUND", 404);
   }
-  await assertNotBlocked(userId, post.authorId);
   return post;
 }
 
@@ -44,7 +54,8 @@ export async function togglePostLike(params: { postId: string; userId: string; l
   }
 
   const count = await prisma.socialPostLike.count({ where: { postId: params.postId } });
-  return { liked: params.like, count };
+  const likesVisible = !post.hideLikeCount || post.authorId === params.userId;
+  return { liked: params.like, count: likesVisible ? count : 0, likesVisible };
 }
 
 export async function togglePostSave(params: { postId: string; userId: string; save: boolean }) {

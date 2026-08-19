@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { RatingStars } from "./rating-stars";
 import { formatMpPrice, AI_TAG_LABELS } from "@/lib/marketplace/config";
+import { formatDistanceKm } from "@/lib/marketplace/query-model";
+import { isServiceCompatibleWithPet } from "@/lib/marketplace/service-personalize";
 import { useMarketplaceStore } from "@/store/marketplace-store";
 import type { MarketplaceService } from "@/lib/marketplace/types";
 import { cn } from "@/lib/utils";
@@ -14,6 +16,7 @@ import { useTranslation } from "@/providers/i18n-provider";
 import { useAriaAnnounce } from "@/components/shared/accessibility/aria-live-region";
 import { serviceImageAlt } from "@/lib/accessibility/image-alt";
 import { useMarketplaceActions } from "@/hooks/use-marketplace-actions";
+import { useServicesPet } from "./services-pet-context";
 
 interface ServiceCardProps {
   service: MarketplaceService;
@@ -25,13 +28,18 @@ export function ServiceCard({ service, compact }: ServiceCardProps) {
   const announce = useAriaAnnounce();
   const { AuthModal, requireAuth, toggleServiceFavorite, isFavoriteService } = useMarketplaceActions();
   const { toggleCompare, isInCompare } = useMarketplaceStore();
+  const pet = useServicesPet();
   const fav = isFavoriteService(service.id);
   const comparing = isInCompare("service", service.id);
+  const compatibleName =
+    service.compatiblePetName ??
+    (isServiceCompatibleWithPet(service.speciesTarget, pet.petSpecies) ? pet.petName : null);
 
   function handleSchedule() {
+    const intent = `/agenda?servico=${service.id}`;
     requireAuth(() => {
-      window.location.href = `/agenda?servico=${service.id}`;
-    });
+      window.location.href = intent;
+    }, intent);
     announce(t("marketplace.addedToCart", { name: service.name }));
   }
 
@@ -43,11 +51,17 @@ export function ServiceCard({ service, compact }: ServiceCardProps) {
   return (
     <>
     <article className="group flex flex-col overflow-hidden rounded-2xl border border-ecopet-gray/10 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg dark:border-white/10 dark:bg-zinc-900/60">
-      <Link href={`/marketplace/servico/${service.id}`} className="relative block aspect-video overflow-hidden bg-gray-100 dark:bg-white/5">
+      <Link href={`/marketplace/servico/${service.id}`} data-testid="marketplace-service-detail" className="relative block aspect-video overflow-hidden bg-gray-100 dark:bg-white/5">
         <Image src={service.image} alt={serviceImageAlt(service.name)} fill className="object-cover transition-transform group-hover:scale-105" sizes="(max-width:768px) 100vw, 33vw" />
         <div className="absolute left-2 top-2 flex flex-wrap gap-1">
           <Badge className="bg-ecopet-dark text-white">{t("marketplace.serviceBadge")}</Badge>
           {service.emergency && <Badge className="bg-red-500 text-white">{t("marketplace.emergency")}</Badge>}
+          {service.openToday && (
+            <Badge className="bg-ecopet-green text-white">{t("marketplace.servicesPage.openTodayBadge")}</Badge>
+          )}
+          {service.telehealth && (
+            <Badge className="bg-sky-600 text-white">{t("marketplace.servicesPage.telehealth")}</Badge>
+          )}
           {service.aiTag && (
             <Badge variant="premium" className="gap-0.5">
               <Sparkles className="h-3 w-3" />
@@ -63,6 +77,9 @@ export function ServiceCard({ service, compact }: ServiceCardProps) {
           <h3 className="mt-0.5 font-semibold leading-snug hover:text-ecopet-green">{service.name}</h3>
         </Link>
         <p className="mt-1 line-clamp-2 text-xs text-ecopet-gray">{service.description}</p>
+        {compatibleName ? (
+          <p className="mt-1 text-xs font-medium text-ecopet-green">{t("marketplace.compatibleWith", { name: compatibleName })}</p>
+        ) : null}
 
         <Link href={`/marketplace/parceiro/${service.partnerId}`} className="mt-2 flex items-center gap-1 text-xs text-ecopet-gray hover:text-ecopet-green">
           {service.partner.isVerified && <BadgeCheck className="h-3 w-3 text-blue-500" />}
@@ -75,20 +92,26 @@ export function ServiceCard({ service, compact }: ServiceCardProps) {
         </div>
 
         <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-ecopet-gray">
-          <RatingStars rating={service.rating} />
-          <span>({service.reviewCount})</span>
+          {service.reviewCount > 0 ? (
+            <>
+              <RatingStars rating={service.rating} />
+              <span>({service.reviewCount})</span>
+            </>
+          ) : (
+            <span>{t("marketplace.noReviews")}</span>
+          )}
           <span>~{service.durationMin} min</span>
           {service.homeService && (
             <span className="flex items-center gap-0.5"><Home className="h-3 w-3" /> {t("marketplace.homeService")}</span>
           )}
-          {service.partner.distanceKm != null && (
-            <span className="flex items-center gap-0.5"><MapPin className="h-3 w-3" /> {service.partner.distanceKm} km</span>
-          )}
+          {service.distanceKm != null && service.distanceKm >= 0 ? (
+            <span className="flex items-center gap-0.5"><MapPin className="h-3 w-3" /> {formatDistanceKm(service.distanceKm)}</span>
+          ) : null}
         </div>
 
         {!compact && (
           <div className="mt-auto flex gap-1.5 pt-3">
-            <Button size="sm" className="flex-1" onClick={handleSchedule}>
+            <Button size="sm" className="flex-1" data-testid="marketplace-service-schedule" onClick={handleSchedule}>
               <Calendar className="h-4 w-4" />
               {t("marketplace.schedule")}
             </Button>

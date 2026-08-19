@@ -13,10 +13,12 @@ export function LikeButton({
   postId,
   initialLiked,
   initialCount,
+  likesVisible = true,
 }: {
   postId: string;
   initialLiked?: boolean;
   initialCount: number;
+  likesVisible?: boolean;
 }) {
   const { requireAuth } = useAuthGate();
   const { t } = useTranslation();
@@ -37,7 +39,7 @@ export function LikeButton({
       try {
         const data = wasLiked ? await unlikePost(postId) : await likePost(postId);
         setLiked(data.liked);
-        setCount(data.count);
+        if (data.likesVisible !== false) setCount(data.count);
         if (!wasLiked && data.liked) {
           analyticsService.track(SocialEvents.LIKE, {
             params: { content_type: "post", item_id: postId },
@@ -57,7 +59,7 @@ export function LikeButton({
     <PostActionButton
       icon={Heart}
       label={liked ? t("socialFeed.actions.unlike") : t("socialFeed.actions.like")}
-      count={count}
+      count={likesVisible ? count : undefined}
       active={liked}
       activeClassName="text-red-500"
       onClick={() => void toggle()}

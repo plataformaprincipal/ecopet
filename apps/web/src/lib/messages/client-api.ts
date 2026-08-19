@@ -74,10 +74,10 @@ export const supportApi = {
       body: JSON.stringify(body),
     }),
   getTicket: (id: string) => chatFetch<{ ticket: SupportTicketItem }>(`/api/support/tickets/${id}`),
-  sendTicketMessage: (ticketId: string, content: string) =>
+  sendTicketMessage: (ticketId: string, content: string, opts?: { internal?: boolean }) =>
     chatFetch(`/api/support/tickets/${ticketId}/messages`, {
       method: "POST",
-      body: JSON.stringify({ content }),
+      body: JSON.stringify({ content, internal: Boolean(opts?.internal) }),
     }),
   updateTicket: (ticketId: string, body: Record<string, unknown>) =>
     chatFetch(`/api/support/tickets/${ticketId}/messages`, {

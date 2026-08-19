@@ -33,14 +33,14 @@ export function AIConfirmationCard({
       </div>
 
       {confirmation.message ? (
-        <p className="mt-1.5 text-zinc-600 dark:text-zinc-300">{confirmation.message}</p>
+        <p className="mt-1.5 text-[var(--ep-fg-muted)]">{confirmation.message}</p>
       ) : null}
 
       <dl className="mt-2 space-y-1">
         {previewRows(confirmation.preview).map(([key, value]) => (
           <div key={key} className="flex gap-2 text-xs">
-            <dt className="shrink-0 font-medium text-zinc-500">{key}</dt>
-            <dd className="truncate text-zinc-700 dark:text-zinc-200">{value}</dd>
+            <dt className="shrink-0 font-medium text-[var(--ep-fg-subtle)]">{key}</dt>
+            <dd className="truncate text-[var(--ep-fg-muted)]">{value}</dd>
           </div>
         ))}
       </dl>

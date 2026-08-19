@@ -1,34 +1,65 @@
-import { apiSuccess } from "@/lib/api-response";
+import { apiSuccess, apiFailure } from "@/lib/api-response";
 import { queryPublicProducts, queryPublicServices, queryPublicPartners } from "@/lib/marketplace/public-query";
-import { productCategoryFromSlug, serviceCategoryFromSlug } from "@/lib/marketplace/categories";
-
-function numParam(value: string | null) {
-  if (!value) return undefined;
-  const n = Number(value);
-  return Number.isFinite(n) ? n : undefined;
-}
+import { parseCatalogRequest } from "@/lib/marketplace/parse-request";
+import { parseMarketplaceType } from "@/lib/marketplace/query-model";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const q = url.searchParams.get("q") ?? undefined;
-  const categoryParam = url.searchParams.get("category") ?? undefined;
-  const productCategory = categoryParam ? productCategoryFromSlug(categoryParam) ?? categoryParam : undefined;
-  const serviceCategory = categoryParam ? serviceCategoryFromSlug(categoryParam) ?? categoryParam : undefined;
+  const parsed = parseCatalogRequest(url);
+  if ((url.searchParams.has("lat") || url.searchParams.has("lng")) && (parsed.lat == null || parsed.lng == null)) {
+    return apiFailure("VALIDATION", "Coordenadas inválidas.", 400);
+  }
 
+  const type = parseMarketplaceType(parsed.tab);
+  const pageSize = parsed.pageSize ?? 24;
   const common = {
-    q,
-    city: url.searchParams.get("city") ?? undefined,
-    state: url.searchParams.get("state") ?? undefined,
-    minPrice: numParam(url.searchParams.get("minPrice")),
-    maxPrice: numParam(url.searchParams.get("maxPrice")),
+    q: parsed.q,
+    city: parsed.city,
+    state: parsed.state,
+    minPrice: parsed.minPrice,
+    maxPrice: parsed.maxPrice,
+    minRating: parsed.minRating,
+    verifiedOnly: parsed.verifiedOnly,
+    lat: parsed.lat,
+    lng: parsed.lng,
+    radiusKm: parsed.radiusKm,
+    sort: parsed.sort,
     page: 1,
-    pageSize: numParam(url.searchParams.get("pageSize")) ?? 24,
+    pageSize,
   };
 
   const [products, services, partners] = await Promise.all([
-    queryPublicProducts({ ...common, category: productCategory }),
-    queryPublicServices({ ...common, category: serviceCategory }),
-    queryPublicPartners(common),
+    type === "service" || type === "partner"
+      ? Promise.resolve({ products: [], total: 0 })
+      : queryPublicProducts({
+          ...common,
+          category: parsed.productCategory,
+          species: parsed.species,
+          brand: parsed.brand,
+          partnerId: parsed.partnerId,
+          inStock: parsed.inStock,
+          freeShipping: parsed.freeShipping,
+          promoOnly: parsed.promoOnly,
+        }),
+    type === "product" || type === "partner"
+      ? Promise.resolve({ services: [], total: 0 })
+      : queryPublicServices({
+          ...common,
+          category: parsed.serviceCategory,
+          species: parsed.species,
+          partnerId: parsed.partnerId,
+          homeService: parsed.homeService,
+          telehealth: parsed.telehealth,
+          emergency24h: parsed.emergency24h,
+          openToday: parsed.openToday,
+          group: parsed.group,
+        }),
+    type === "product" || type === "service"
+      ? Promise.resolve({ partners: [], total: 0 })
+      : queryPublicPartners({
+          ...common,
+          category: parsed.categoryParam,
+        }),
   ]);
 
   return apiSuccess({
@@ -36,5 +67,8 @@ export async function GET(request: Request) {
     services: services.services,
     partners: partners.partners,
     total: products.total + services.total + partners.total,
+    totalProducts: products.total,
+    totalServices: services.total,
+    totalPartners: partners.total,
   });
 }

@@ -38,9 +38,11 @@ export async function runFunctionCallingLoop(input: {
   confirmed?: boolean;
   lat?: number;
   lng?: number;
+  allowedTools?: string[];
+  capabilityId?: string;
 }): Promise<ToolLoopResult> {
   const started = Date.now();
-  const schemas = listFunctionCallingSchemas(input.role);
+  const schemas = listFunctionCallingSchemas(input.role, input.allowedTools);
   if (!schemas.length) {
     return {
       toolResults: [],
@@ -74,6 +76,17 @@ export async function runFunctionCallingLoop(input: {
 
     const calls = gen.toolCalls.slice(0, MAX_TOOLS_PER_ROUND);
     for (const call of calls) {
+      if (input.allowedTools && !input.allowedTools.includes(call.name)) {
+        allResults.push({
+          toolName: call.name as ToolExecutionResult["toolName"],
+          executed: false,
+          ok: false,
+          error: "TOOL_NOT_ALLOWED",
+          data: null,
+          latencyMs: 0,
+        });
+        continue;
+      }
       assertToolRateLimit(input.userId, call.name);
       const result = await handleFunctionCall(
         { name: call.name, arguments: call.arguments },
@@ -85,6 +98,8 @@ export async function runFunctionCallingLoop(input: {
           confirmed: input.confirmed,
           lat: input.lat,
           lng: input.lng,
+          allowedTools: input.allowedTools,
+          capabilityId: input.capabilityId,
         }
       );
 

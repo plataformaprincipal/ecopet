@@ -10,6 +10,7 @@ import { enrichPromptWithToolResults } from "./response-enricher";
 import { loadActiveConversationMemory } from "./conversation-memory";
 import { buildSemanticContextStub } from "./semantic-context";
 import { estimateTokens, truncateToTokenBudget } from "./token-manager";
+import { filterToolsByAllowlist } from "@/lib/ai/capabilities/orchestrate";
 
 function mapAiModuleToBusiness(module?: string): BusinessModule | null {
   if (!module) return null;
@@ -29,6 +30,7 @@ function mapAiModuleToBusiness(module?: string): BusinessModule | null {
     admin: "admin",
     support: "support",
     "ecopet-ai": "general",
+    assistant: "general",
   };
   return map[module] ?? null;
 }
@@ -43,9 +45,12 @@ export async function buildBusinessContext(
   const pageModule = detectModuleFromPage(input.pagePath);
   const intent = planToolsFromMessage(input.message, input.persona);
   const activeModule =
+    mapAiModuleToBusiness(input.capabilityModule) ??
     pageModule ??
     mapAiModuleToBusiness(typeof input.module === "string" ? input.module : undefined) ??
     intent.module;
+
+  const plannedTools = filterToolsByAllowlist(intent.tools, input.allowedTools);
 
   const [minimal, memory, toolResults, semantic] = await Promise.all([
     buildMinimalContext({
@@ -74,14 +79,16 @@ export async function buildBusinessContext(
       petId: input.petId,
       conversationId: input.conversationId,
     }),
-    intent.tools.length
-      ? executeBusinessTools(intent.tools, {
+    plannedTools.length
+      ? executeBusinessTools(plannedTools, {
           userId: input.userId,
           role: input.role,
           persona: input.persona,
           locale: input.locale,
           lat: input.lat,
           lng: input.lng,
+          allowedTools: input.allowedTools,
+          capabilityId: input.capabilityId,
         })
       : Promise.resolve([]),
     buildSemanticContextStub({
@@ -95,6 +102,7 @@ export async function buildBusinessContext(
   const contextBlock = truncateToTokenBudget(
     [
       `Módulo ativo: ${activeModule}`,
+      input.capabilityId ? `Capability: ${input.capabilityId}` : "",
       input.pagePath ? `Página: ${input.pagePath}` : "",
       memory.activeContext,
       minimal.text,
@@ -106,12 +114,17 @@ export async function buildBusinessContext(
     3_200
   );
 
-  const systemPrompt = buildBusinessSystemPrompt({
-    persona: input.persona,
-    locale: input.locale,
-    module: activeModule,
-    displayName: input.displayName,
-  });
+  const systemPrompt = [
+    buildBusinessSystemPrompt({
+      persona: input.persona,
+      locale: input.locale,
+      module: activeModule,
+      displayName: input.displayName,
+    }),
+    input.capabilityPrompt,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
 
   return {
     persona: input.persona,

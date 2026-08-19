@@ -2,11 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, ShoppingCart, Scale, Sparkles, Truck, BadgeCheck } from "lucide-react";
+import { Heart, ShoppingCart, Scale, Sparkles, Truck, BadgeCheck, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { RatingStars } from "./rating-stars";
 import { formatMpPrice, discountPct, AI_TAG_LABELS } from "@/lib/marketplace/config";
+import { formatDistanceKm } from "@/lib/marketplace/query-model";
 import type { MarketplaceProduct } from "@/lib/marketplace/types";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/providers/i18n-provider";
@@ -70,7 +71,7 @@ export function ProductCard({ product, compact }: ProductCardProps) {
 
       <div className="flex flex-1 flex-col p-3 lg:p-4">
         <p className="text-[10px] font-medium uppercase tracking-wide text-ecopet-green">{product.category}</p>
-        <Link href={`/marketplace/produto/${product.id}`}>
+        <Link href={`/marketplace/produto/${product.id}`} data-testid="marketplace-product-detail">
           <h3 className="mt-0.5 line-clamp-2 text-sm font-semibold leading-snug hover:text-ecopet-green">{product.name}</h3>
         </Link>
 
@@ -87,17 +88,27 @@ export function ProductCard({ product, compact }: ProductCardProps) {
         </div>
 
         <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-ecopet-gray">
-          <RatingStars rating={product.rating} />
-          <span>({product.reviewCount})</span>
+          {product.reviewCount > 0 ? (
+            <>
+              <RatingStars rating={product.rating} />
+              <span>({product.reviewCount})</span>
+            </>
+          ) : (
+            <span>{t("marketplace.noReviews")}</span>
+          )}
+          {product.distanceKm != null && product.distanceKm >= 0 ? (
+            <span className="flex items-center gap-0.5">
+              <MapPin className="h-3 w-3" aria-hidden /> {formatDistanceKm(product.distanceKm)}
+            </span>
+          ) : null}
           {product.freeShipping && (
             <span className="flex items-center gap-0.5 text-ecopet-green">
               <Truck className="h-3 w-3" /> {t("marketplace.freeShipping")}
             </span>
           )}
-          {product.inStock && product.deliveryDays != null ? (
-            <span>{t("marketplace.deliveryDays", { days: String(product.deliveryDays) })}</span>
-          ) : product.inStock ? (
-            <span>Prazo no checkout</span>
+          {product.inStock ? <span>{t("marketplace.etaCheckout")}</span> : null}
+          {product.compatiblePetName ? (
+            <span className="text-ecopet-green">{t("marketplace.compatibleWith", { name: product.compatiblePetName })}</span>
           ) : null}
         </div>
 

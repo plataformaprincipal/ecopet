@@ -10,6 +10,8 @@ import {
   AI_NOT_CONFIGURED_USER_MESSAGE,
   INTEGRATION_ERROR_CODES,
 } from "@/lib/integrations/integration-errors";
+import { resolveServerCapability } from "@/lib/ai/capabilities/orchestrate";
+import { AI_CONFIG } from "@/lib/ai/ai-config";
 
 const chatSchema = z.object({
   message: z.string().min(1).max(8000),
@@ -26,6 +28,7 @@ const chatSchema = z.object({
   locale: z.string().optional(),
   integrationPoint: z.string().optional(),
   module: z.string().optional(),
+  capabilityId: z.string().max(64).optional(),
 });
 
 export async function POST(request: Request) {
@@ -36,6 +39,19 @@ export async function POST(request: Request) {
   const parsed = chatSchema.safeParse(body);
   if (!parsed.success) {
     return apiFailure("VALIDATION", parsed.error.errors[0]?.message ?? "Dados inválidos", 400);
+  }
+
+  const capabilityDecision = resolveServerCapability({
+    capabilityId: parsed.data.capabilityId,
+    role: user.role,
+    hasPet: Boolean(parsed.data.petId),
+    hasGeo: false,
+    aiConfigured: AI_CONFIG.isConfigured,
+    isGuest: false,
+    locale: parsed.data.locale,
+  });
+  if (capabilityDecision.status === "denied") {
+    return apiFailure(capabilityDecision.code, capabilityDecision.message, 403);
   }
 
   const aiModule: "ecopet-ai" | "pets" =

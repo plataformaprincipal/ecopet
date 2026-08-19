@@ -34,14 +34,14 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-1/2 top-1/2 z-[9999] grid w-[min(calc(100vw-2rem),32rem)] max-h-[min(90vh,720px)] -translate-x-1/2 -translate-y-1/2 gap-4 overflow-y-auto rounded-[var(--radius-xl)] border border-white/20 bg-white/95 p-6 shadow-[var(--shadow-floating)] backdrop-blur-xl duration-200 dark:border-white/10 dark:bg-ecopet-dark-card/95 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+        "fixed left-1/2 top-1/2 z-[9999] grid w-[min(calc(100vw-2rem),32rem)] max-h-[min(90vh,720px)] -translate-x-1/2 -translate-y-1/2 gap-4 overflow-y-auto rounded-[var(--radius-xl)] border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] p-6 text-[var(--ep-fg)] shadow-[var(--shadow-floating)] backdrop-blur-xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
         className
       )}
       {...props}
     >
       {children}
       <DialogPrimitive.Close
-        className="absolute right-4 top-4 rounded-lg p-1.5 text-ecopet-gray transition hover:bg-ecopet-green/10 hover:text-ecopet-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ecopet-green dark:hover:text-white"
+        className="absolute right-4 top-4 rounded-lg p-1.5 text-[var(--ep-fg-muted)] transition hover:bg-[var(--ep-bg-muted)] hover:text-[var(--ep-fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ep-ring)]"
         aria-label="Fechar"
       >
         <X className="h-4 w-4" aria-hidden />
@@ -58,7 +58,7 @@ function DialogHeader({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
 function DialogTitle({ className, ...props }: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>) {
   return (
     <DialogPrimitive.Title
-      className={cn("font-display text-lg font-bold text-ecopet-dark dark:text-white", className)}
+      className={cn("font-display text-lg font-bold text-[var(--ep-fg)]", className)}
       {...props}
     />
   );
@@ -70,7 +70,7 @@ function DialogDescription({
 }: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>) {
   return (
     <DialogPrimitive.Description
-      className={cn("text-sm leading-relaxed text-ecopet-gray dark:text-white/70", className)}
+      className={cn("text-sm leading-relaxed text-[var(--ep-fg-muted)]", className)}
       {...props}
     />
   );
