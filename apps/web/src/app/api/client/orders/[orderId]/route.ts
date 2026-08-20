@@ -5,6 +5,7 @@ import { apiSuccess, apiFailure } from "@/lib/api-response";
 import { requireClient } from "@/lib/auth/require-auth";
 import { assertOrderTransition, InvalidOrderTransitionError } from "@/lib/commerce/order-state-machine";
 import { writeAuditLog } from "@/lib/audit-log";
+import { humanizeOrderPricing } from "@/lib/finance/metrics";
 
 type RouteContext = { params: Promise<{ orderId: string }> };
 
@@ -26,11 +27,14 @@ export async function GET(_req: Request, context: RouteContext) {
   if (!order) return apiFailure("NOT_FOUND", "Pedido não encontrado.", 404);
 
   const { toClientPaymentView } = await import("@/lib/mercado-pago/payment-views");
-  const { payments, ...rest } = order;
+  const { payments, pricingSnapshot: _rawSnapshot, ...rest } = order;
+  void _rawSnapshot;
   return apiSuccess({
     order: {
       ...rest,
       payments: payments.map(toClientPaymentView),
+      pricing: humanizeOrderPricing(order),
+      pricingVersion: order.pricingVersion,
     },
   });
 }

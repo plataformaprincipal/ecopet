@@ -217,6 +217,9 @@ export async function cancelPartnerPayout(params: {
   actorId: string;
   reason: string;
 }): Promise<PayoutResult> {
+  if (!params.reason?.trim()) {
+    return { ok: false, code: "REASON_REQUIRED", message: "Motivo obrigatório para override de payout." };
+  }
   const payout = await prisma.partnerPayout.findUnique({ where: { id: params.payoutId } });
   if (!payout) return { ok: false, code: "NOT_FOUND", message: "Payout não encontrado" };
   if (["PAID", "CANCELLED", "REVERSED"].includes(payout.status)) {

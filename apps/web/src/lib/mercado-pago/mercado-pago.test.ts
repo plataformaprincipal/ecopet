@@ -36,6 +36,7 @@ describe("mercado-pago config", () => {
     process.env.MERCADO_PAGO_ACCESS_TOKEN = "TEST-abc123validtokenvalue";
     process.env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY = "TEST-pk-valid-key-value";
     process.env.MERCADO_PAGO_ENVIRONMENT = "test";
+    process.env.PAYMENT_PROVIDER = "mercado_pago";
     assert.equal(isMercadoPagoConfigured(), true);
     assert.equal(isMercadoPagoTestMode(), true);
     assert.equal(getMercadoPagoEnvironment(), "test");

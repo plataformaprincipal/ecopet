@@ -12,7 +12,8 @@ import { startOfLocalDay, startOfTomorrowLocal } from "@/lib/appointments/dateti
 import { createInternalNotification } from "@/lib/notifications/internal";
 import { emailAppointmentEvent } from "@/lib/mail/event-dispatch";
 import { getUserEmailLocale } from "@/lib/email/templates";
-import { AccountStatus, PartnerServiceStatus } from "@prisma/client";
+import { AccountStatus, PartnerServiceStatus, Prisma } from "@prisma/client";
+import { serverQuoteService, PricingError } from "@/lib/pricing/service";
 
 export async function GET() {
   const { user, error } = await requireClient();
@@ -29,7 +30,19 @@ export async function GET() {
     take: 200,
   });
 
-  return apiSuccess({ appointments, total: appointments.length });
+  return apiSuccess({
+    appointments: appointments.map((a) => {
+      const { pricingSnapshot: _snap, ...rest } = a as typeof a & { pricingSnapshot?: unknown };
+      void _snap;
+      return {
+        ...rest,
+        price: a.service?.price ?? null,
+        bookingFee: "bookingFee" in a ? (a as { bookingFee?: number }).bookingFee ?? 0 : 0,
+        partnerName: a.partner?.partnerProfile?.businessName ?? a.partner?.name ?? null,
+      };
+    }),
+    total: appointments.length,
+  });
 }
 
 export async function POST(request: Request) {
@@ -143,6 +156,43 @@ export async function POST(request: Request) {
     }
   }
 
+  let pricingFields: {
+    pricingVersion: string;
+    pricingSnapshot: Prisma.InputJsonValue;
+    grossAmount: number;
+    platformFeeAmount: number;
+    partnerAmount: number;
+    bookingFee: number;
+    urgentFee: number;
+  };
+  try {
+    const quote = await serverQuoteService({
+      kind: ["VET_CONSULTATION", "VETERINARY", "EXAMS", "SURGERY", "EMERGENCY_24H"].includes(service.category)
+        ? "HEALTH"
+        : "SERVICE",
+      baseAmount: service.price,
+      sku: service.pricingCatalogSku,
+      urgent: false,
+      partnerVerified: true,
+      partnerId: service.providerId,
+      charging: true,
+    });
+    pricingFields = {
+      pricingVersion: quote.pricingVersion,
+      pricingSnapshot: quote.snapshot as Prisma.InputJsonValue,
+      grossAmount: quote.baseAmountCents / 100,
+      platformFeeAmount: quote.eccopetRevenueCents / 100,
+      partnerAmount: quote.estimatedPayoutCents / 100,
+      bookingFee: quote.bookingFeeCents / 100,
+      urgentFee: quote.urgentFeeCents / 100,
+    };
+  } catch (e) {
+    if (e instanceof PricingError) {
+      return apiFailure(e.code, e.message, 400);
+    }
+    return apiFailure("PRICING_UNAVAILABLE", "Motor de pricing indisponível. Agendamento bloqueado.", 503);
+  }
+
   const appointment = await prisma.appointment.create({
     data: {
       userId: user!.id,
@@ -157,6 +207,7 @@ export async function POST(request: Request) {
       endAt: end,
       observations: observationParts.length ? observationParts.join("\n") : null,
       status: "PENDING",
+      ...pricingFields,
     },
   });
 

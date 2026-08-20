@@ -1,11 +1,11 @@
 import { ConversationContextType, ConversationType } from "@prisma/client";
-import { apiSuccess } from "@/lib/api-response";
+import { apiFailure, apiSuccess } from "@/lib/api-response";
 import { requireAuth } from "@/lib/auth/require-auth";
 import { handleChatRouteError } from "@/lib/messages/api-handler";
 import { listUserConversations, createConversation } from "@/lib/messages/conversations";
 import { createOrGetTalkJsConversation } from "@/lib/messages/talkjs-conversations";
 import { requireActiveChatUser } from "@/lib/messages/permissions";
-import { isTalkJsConfigured } from "@/lib/talkjs/client";
+import { isTalkJsServerConfigured } from "@/lib/talkjs/server";
 
 export async function GET(req: Request) {
   try {
@@ -43,7 +43,14 @@ export async function POST(req: Request) {
     const contextType = body.contextType as ConversationContextType | undefined;
     const contextId = body.contextId as string | null | undefined;
 
-    if (isTalkJsConfigured() && participantUserId) {
+    if (participantUserId) {
+      if (!isTalkJsServerConfigured()) {
+        return apiFailure(
+          "TALKJS_NOT_CONFIGURED",
+          "Mensagens temporariamente indisponíveis.",
+          503
+        );
+      }
       const result = await createOrGetTalkJsConversation({
         creatorId: user!.id,
         participantUserId,

@@ -3,11 +3,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AdminPageHeader } from "@/components/features/admin/ui/admin-page-header";
 
 export default function AdminFinanceiroConciliacaoPage() {
   const [result, setResult] = useState<unknown>(null);
+  const [settlement, setSettlement] = useState<unknown>(null);
+  const [lookupId, setLookupId] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -22,6 +25,25 @@ export default function AdminFinanceiroConciliacaoPage() {
       const json = await res.json();
       if (!res.ok || !json.success) throw new Error(json.error?.message ?? "Falha");
       setResult(json.data);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erro");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function loadSettlement() {
+    setLoading(true);
+    setError("");
+    try {
+      const id = lookupId.trim();
+      const qs = id.startsWith("pay") || id.length > 20
+        ? `orderId=${encodeURIComponent(id)}&paymentId=${encodeURIComponent(id)}`
+        : `orderId=${encodeURIComponent(id)}`;
+      const res = await fetch(`/api/admin/financeiro/settlement?${qs}`, { credentials: "include" });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error?.message ?? "Falha");
+      setSettlement(json.data);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro");
     } finally {
@@ -61,6 +83,32 @@ export default function AdminFinanceiroConciliacaoPage() {
           {result ? (
             <pre className="max-h-96 overflow-auto rounded bg-muted/40 p-3 text-xs">
               {JSON.stringify(result, null, 2)}
+            </pre>
+          ) : null}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Settlement por pedido/pagamento</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Input
+            placeholder="orderId ou paymentId"
+            value={lookupId}
+            onChange={(e) => setLookupId(e.target.value)}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            disabled={loading || !lookupId.trim()}
+            onClick={() => void loadSettlement()}
+          >
+            Consultar settlement
+          </Button>
+          {settlement ? (
+            <pre className="max-h-96 overflow-auto rounded bg-muted/40 p-3 text-xs">
+              {JSON.stringify(settlement, null, 2)}
             </pre>
           ) : null}
         </CardContent>

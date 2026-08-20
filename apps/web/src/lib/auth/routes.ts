@@ -3,6 +3,7 @@
 export const AUTH_ROUTES = [
   "/login",
   "/cadastro",
+  "/cadastro/google",
   "/recuperar-senha",
   "/redefinir-senha",
   "/esqueci-senha",
@@ -14,6 +15,7 @@ export const PUBLIC_EXACT = new Set([
   "/",
   "/login",
   "/cadastro",
+  "/cadastro/google",
   "/register",
   "/recuperar-senha",
   "/redefinir-senha",

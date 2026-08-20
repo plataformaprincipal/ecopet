@@ -104,9 +104,23 @@ export function isTurnstileEnvConfigured(source: EnvSource = process.env): boole
   return hasRealEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", source);
 }
 
+export function isGoogleAuthEnvConfigured(source: EnvSource = process.env): boolean {
+  const id = readEnv("GOOGLE_CLIENT_ID", source);
+  const secret = readEnv("GOOGLE_CLIENT_SECRET", source);
+  return Boolean(
+    id &&
+      secret &&
+      !isPlaceholderValue(id) &&
+      !isPlaceholderValue(secret) &&
+      id.length > 8 &&
+      secret.length > 8
+  );
+}
+
 export type ProviderConfiguredChecker = (source?: EnvSource) => boolean;
 
 export const PROVIDER_CONFIGURED_CHECKERS: Record<string, ProviderConfiguredChecker> = {
+  google_auth: isGoogleAuthEnvConfigured,
   openai: isOpenAiEnvConfigured,
   resend: isResendEnvConfigured,
   twilio: isTwilioEnvConfigured,

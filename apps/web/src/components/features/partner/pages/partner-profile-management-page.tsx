@@ -31,7 +31,7 @@ export function PartnerProfileManagementPage({
     <div className="space-y-8">
       <PartnerPageHeader
         title="Perfil e Gestão"
-        description="Dados comerciais, documentos, horários de funcionamento e configurações da sua loja."
+        description="Perfil público (o que o cliente vê) e perfil operacional (documentos, pagamentos, equipe). Não misture os dois."
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <PartnerStatusBadge
@@ -49,6 +49,17 @@ export function PartnerProfileManagementPage({
           </div>
         }
       />
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">Perfil público</h2>
+          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">Nome, logo, descrição, região aproximada, verificação, produtos, serviços, avaliações e horários visíveis ao cliente.</p>
+        </div>
+        <div className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">Perfil operacional</h2>
+          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">CNPJ/CPF, documentos, pagamentos, equipe, catálogo, pricing preview e financeiro. Somente o parceiro.</p>
+        </div>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
         {[

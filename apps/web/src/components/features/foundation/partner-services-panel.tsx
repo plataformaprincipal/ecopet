@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { FileUploadField } from "@/components/ui/file-upload-field";
 import { serviceImageAlt } from "@/lib/accessibility/image-alt";
+import { PartnerPricingPreview } from "@/components/features/partner/partner-pricing-preview";
 
 const CATEGORIES = [
   "BATH_GROOMING", "VET_CONSULTATION", "VACCINATION", "DOG_WALKER",
@@ -221,7 +222,16 @@ export function PartnerServicesPanel({ mode = "list", serviceId }: { mode?: "lis
               Preço sob consulta
             </label>
             {!form.priceOnRequest && (
-              <Input type="number" step="0.01" min="0.01" placeholder="Preço *" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} required />
+              <>
+                <Input type="number" step="0.01" min="0.01" placeholder="Preço *" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} required />
+                {Number(form.price) > 0 ? (
+                  <PartnerPricingPreview
+                    kind={form.category.includes("VET") || form.category === "SURGERY" || form.category === "EXAMS" ? "HEALTH" : "SERVICE"}
+                    baseAmount={Number(form.price)}
+                    clinic={form.category.includes("VET") || form.category === "SURGERY"}
+                  />
+                ) : null}
+              </>
             )}
             <Input type="number" min="1" placeholder="Duração (minutos) *" value={form.durationMin} onChange={(e) => setForm({ ...form, durationMin: e.target.value })} required />
             <select className="w-full rounded border px-3 py-2" value={form.modality} onChange={(e) => setForm({ ...form, modality: e.target.value })}>

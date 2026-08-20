@@ -12,11 +12,10 @@ import { createInternalNotification } from "@/lib/notifications/internal";
 import { emailOrderEvent } from "@/lib/mail/event-dispatch";
 import { getUserEmailLocale } from "@/lib/email/templates";
 import { getOrCreateCart } from "@/lib/cart/cart-service";
-import { calculateOrderPricing, loadPricingSettings } from "@/lib/commerce/pricing";
-import { calculateCommercialAllocation } from "@/lib/finance/allocation";
 import { writeAuditLog } from "@/lib/audit-log";
 import { assertCheckoutEnabled } from "@/lib/commerce/checkout-flags";
 import { consumeCouponInCheckout, quoteCouponInTx } from "@/lib/commerce/apply-coupon";
+import { PricingError, serverQuoteProduct, quoteToOrderFloats, couponToEngineInput } from "@/lib/pricing/service";
 
 const PAYMENT_AT_DELIVERY_LABEL: Record<PaymentMethod, string> = {
   PIX: "PIX na entrega",
@@ -53,7 +52,6 @@ export async function checkoutFromCart(params: {
   const cart = await getOrCreateCart(params.userId);
   if (!cart.items.length) throw new Error("CART_EMPTY");
 
-  const pricingSettings = await loadPricingSettings();
   const paymentMethod = params.paymentMethod ?? PaymentMethod.PIX;
   const paymentNote = PAYMENT_AT_DELIVERY_LABEL[paymentMethod] ?? paymentMethod;
 
@@ -115,35 +113,53 @@ export async function checkoutFromCart(params: {
     if (partnerIds.size !== 1) throw new Error("MULTI_PARTNER_CART");
     const partnerId = [...partnerIds][0]!;
 
-    const priced = calculateOrderPricing(
-      lines.map((l) => ({ unitPrice: l.unitPrice, quantity: l.quantity })),
-      pricingSettings
-    );
-    if (priced.grossAmount <= 0) throw new Error("INVALID_TOTAL");
-
     const couponCode = params.couponCode?.trim().toUpperCase() || null;
+    let couponInput: ReturnType<typeof couponToEngineInput> | null = null;
     let discountAmount = 0;
     if (couponCode) {
       const quoted = await quoteCouponInTx(tx, {
         userId: params.userId,
         code: couponCode,
-        grossBrl: priced.grossAmount,
+        grossBrl: lines.reduce((s, l) => s + l.unitPrice * l.quantity, 0),
       });
       discountAmount = quoted.discountAmount;
+      couponInput = couponToEngineInput(quoted.coupon);
     }
 
-    const allocation = calculateCommercialAllocation({
-      grossAmount: priced.grossAmount,
-      discountAmount,
-      platformPercentage: pricingSettings.platformFeePercent,
-      platformFixedFee: pricingSettings.platformFixedFee,
-      gatewayFeePercent: pricingSettings.gatewayFeePercent,
-      gatewayFeeBearer: pricingSettings.gatewayFeeBearer,
-      reservePercent: pricingSettings.reservePercent,
-      taxEstimatePercent: pricingSettings.taxEstimatePercent,
-      pricingVersion: priced.pricingVersion,
-    });
-    const snap = allocation.asOrderFloats;
+    let snap: ReturnType<typeof quoteToOrderFloats>;
+    let engineSnapshot: Record<string, unknown>;
+    let lineQuotes: { platformFeeAmount: number; partnerAmount: number; grossAmount: number; unitPrice: number }[];
+    try {
+      const quoted = await serverQuoteProduct({
+        lines: lines.map((l) => {
+          const product = byId.get(l.productId);
+          return {
+            unitPrice: l.unitPrice,
+            quantity: l.quantity,
+            sku: product?.pricingCatalogSku ?? null,
+          };
+        }),
+        coupon: couponInput,
+        partnerVerified: true,
+        partnerId,
+        charging: true,
+      });
+      snap = quoteToOrderFloats(quoted.order);
+      engineSnapshot = quoted.order.snapshot;
+      lineQuotes = quoted.lines.map((line, idx) => ({
+        unitPrice: lines[idx]!.unitPrice,
+        grossAmount: line.baseAmountCents / 100,
+        platformFeeAmount: (line.eccopetCommissionCents + line.fixedFeeCents) / 100,
+        partnerAmount: line.estimatedPayoutCents / 100,
+      }));
+    } catch (e) {
+      if (e instanceof PricingError) throw e;
+      throw new PricingError(
+        "PRICING_UNAVAILABLE",
+        "Motor de pricing indisponível. Checkout bloqueado (fail-closed)."
+      );
+    }
+    if (snap.grossAmount <= 0) throw new Error("INVALID_TOTAL");
 
     for (const line of lines) {
       const updated = await tx.product.updateMany({
@@ -188,6 +204,7 @@ export async function checkoutFromCart(params: {
         reserveAmount: snap.reserveAmount,
         taxEstimate: snap.taxEstimate,
         pricingVersion: snap.pricingVersion,
+        pricingSnapshot: engineSnapshot as Prisma.InputJsonValue,
         currency: "BRL",
         idempotencyKey: params.idempotencyKey || null,
         shippingAddress: { ...(params.address as Record<string, unknown>), phone: params.phone },
@@ -200,18 +217,18 @@ export async function checkoutFromCart(params: {
             itemType: "product",
             name: line.name,
             quantity: line.quantity,
-            price: priced.lines[idx]!.unitPrice,
-            grossAmount: priced.lines[idx]!.grossAmount,
-            platformFeeAmount: priced.lines[idx]!.platformFeeAmount,
-            partnerAmount: priced.lines[idx]!.partnerAmount,
-            pricingVersion: priced.pricingVersion,
+            price: lineQuotes[idx]!.unitPrice,
+            grossAmount: lineQuotes[idx]!.grossAmount,
+            platformFeeAmount: lineQuotes[idx]!.platformFeeAmount,
+            partnerAmount: lineQuotes[idx]!.partnerAmount,
+            pricingVersion: snap.pricingVersion,
             partnerId,
           })),
         },
         statusHistory: {
           create: {
             status: OrderStatus.PENDING_CONFIRMATION,
-            note: `Pedido criado — pagamento: ${paymentNote} | pricing=${priced.pricingVersion}`,
+            note: `Pedido criado — pagamento: ${paymentNote} | pricing=${snap.pricingVersion}`,
           },
         },
         payments: {
@@ -234,6 +251,7 @@ export async function checkoutFromCart(params: {
               taxEstimate: snap.taxEstimate,
               splitReady: false,
               logicalSplitOnly: true,
+              estimatesOnly: true,
             },
           },
         },
@@ -246,7 +264,7 @@ export async function checkoutFromCart(params: {
         tx,
         userId: params.userId,
         code: couponCode,
-        grossBrl: priced.grossAmount,
+        grossBrl: snap.grossAmount,
         orderId: created.id,
       });
     }

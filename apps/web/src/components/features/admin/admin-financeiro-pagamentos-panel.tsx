@@ -13,6 +13,9 @@ type PaymentRow = {
   orderNumber: number;
   clientName: string;
   partnerName: string | null;
+  pricingVersion: string | null;
+  eccopetRevenue: number | null;
+  partnerAmount: number | null;
   paymentMethod: string | null;
   amount: number;
   refundedAmount: number;
@@ -136,6 +139,7 @@ export function AdminFinanceiroPagamentosPanel() {
             <option value="REFUNDED">REFUNDED</option>
             <option value="REJECTED">REJECTED</option>
             <option value="CANCELLED">CANCELLED</option>
+            <option value="CHARGED_BACK">CHARGED_BACK</option>
           </select>
           <Button type="button" onClick={() => void load()} disabled={loading}>
             Atualizar
@@ -155,9 +159,13 @@ export function AdminFinanceiroPagamentosPanel() {
             <tr>
               <th className="p-2">Pedido</th>
               <th className="p-2">Cliente</th>
+              <th className="p-2">Parceiro</th>
+              <th className="p-2">Pricing</th>
+              <th className="p-2">Valor</th>
+              <th className="p-2">EccoPet</th>
+              <th className="p-2">Parceiro R$</th>
               <th className="p-2">Método</th>
               <th className="p-2">Status</th>
-              <th className="p-2">Valor</th>
               <th className="p-2">Reembolsável</th>
               <th className="p-2">Ações</th>
             </tr>
@@ -165,11 +173,19 @@ export function AdminFinanceiroPagamentosPanel() {
           <tbody>
             {rows.map((r) => (
               <tr key={r.id} className="border-t">
-                <td className="p-2">#{r.orderNumber}</td>
+                <td className="p-2">
+                  <Link className="underline" href={`/admin/financeiro/conciliacao?orderId=${r.orderId}`}>
+                    #{r.orderNumber}
+                  </Link>
+                </td>
                 <td className="p-2">{r.clientName}</td>
+                <td className="p-2">{r.partnerName ?? "—"}</td>
+                <td className="p-2">{r.pricingVersion ?? "—"}</td>
+                <td className="p-2">R$ {r.amount.toFixed(2)}</td>
+                <td className="p-2">R$ {(r.eccopetRevenue ?? 0).toFixed(2)}</td>
+                <td className="p-2">R$ {(r.partnerAmount ?? 0).toFixed(2)}</td>
                 <td className="p-2">{r.paymentMethod ?? "—"}</td>
                 <td className="p-2">{r.status}</td>
-                <td className="p-2">R$ {r.amount.toFixed(2)}</td>
                 <td className="p-2">R$ {r.refundableBalance.toFixed(2)}</td>
                 <td className="p-2">
                   {r.refundableBalance > 0 ? (

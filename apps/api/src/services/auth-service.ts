@@ -211,7 +211,9 @@ export async function loginUser(params: {
     );
   }
 
-  const valid = await bcrypt.compare(params.password, user.passwordHash);
+  const valid = user.passwordHash
+    ? await bcrypt.compare(params.password, user.passwordHash)
+    : false;
   if (!valid) {
     const attempts = user.failedLoginAttempts + 1;
     await prisma.user.update({
@@ -324,6 +326,9 @@ export async function loginUser(params: {
 
 export async function requestPasswordChangeCode(userId: string, currentPassword: string, ip?: string) {
   const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
+  if (!user.passwordHash) {
+    throw Object.assign(new Error("Senha atual incorreta"), { status: 400 });
+  }
   const valid = await bcrypt.compare(currentPassword, user.passwordHash);
   if (!valid) throw Object.assign(new Error("Senha atual incorreta"), { status: 400 });
 
@@ -363,6 +368,9 @@ export async function changePassword(params: {
     throw Object.assign(new Error("As senhas não conferem"), { status: 400 });
   }
 
+  if (!user.passwordHash) {
+    throw Object.assign(new Error("Senha atual incorreta"), { status: 400 });
+  }
   const valid = await bcrypt.compare(params.currentPassword, user.passwordHash);
   if (!valid) throw Object.assign(new Error("Senha atual incorreta"), { status: 400 });
 
@@ -433,6 +441,9 @@ export async function updateProfile(params: {
   ip?: string;
 }) {
   const user = await prisma.user.findUniqueOrThrow({ where: { id: params.userId } });
+  if (!user.passwordHash) {
+    throw Object.assign(new Error("Senha atual incorreta"), { status: 400 });
+  }
   const valid = await bcrypt.compare(params.currentPassword, user.passwordHash);
   if (!valid) throw Object.assign(new Error("Senha atual incorreta"), { status: 400 });
 

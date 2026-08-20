@@ -1,8 +1,9 @@
 import { expect, type APIRequestContext, type BrowserContext, type Page } from "@playwright/test";
 import bcrypt from "bcryptjs";
-import { AccountStatus, PrismaClient, UserRole } from "@prisma/client";
-import { TEST_PASSWORD, apiLogin, apiLogout, testEmail, testTag } from "./acceptance";
+import { AccountStatus, PrismaClient, UserRole, VerificationStatus, PetSpecies, AppointmentServiceType, AppointmentAttendanceMode } from "@prisma/client";
+import { TEST_PASSWORD, apiLogin, apiLogout, testEmail, testTag, validTestCnpj } from "./acceptance";
 import { loadWebRuntimeEnv } from "./load-web-env";
+import { clearAuthRateLimitBuckets } from "./rate-limit";
 
 loadWebRuntimeEnv();
 
@@ -56,14 +57,7 @@ export async function resetSocialTestLimits(request: APIRequestContext) {
   await request.post("/api/social/test/reset-rate-limit", { data: {} }).catch(() => undefined);
 }
 
-export async function clearAuthRateLimitBuckets() {
-  await prisma.rateLimitBucket.deleteMany({
-    where: { id: { startsWith: "login:" } },
-  });
-  await prisma.rateLimitBucket.deleteMany({
-    where: { id: { startsWith: "register:" } },
-  });
-}
+export { clearAuthRateLimitBuckets };
 
 export async function ensureClientUser(label: string): Promise<SocialPersona> {
   const tag = `${label}${Date.now()}${Math.floor(Math.random() * 1000)}`.replace(/[^a-z0-9]/gi, "").slice(0, 18);
@@ -104,12 +98,102 @@ export async function ensureAdminUser(email: string, name = "Admin Social E2E"):
   return { id: admin.id, email, name };
 }
 
+export async function ensureApprovedPartnerUser(label: string): Promise<SocialPersona> {
+  const tag = `${label}${Date.now()}${Math.floor(Math.random() * 1000)}`.replace(/[^a-z0-9]/gi, "").slice(0, 18);
+  const email = testEmail("partner", tag);
+  const hash = await bcrypt.hash(TEST_PASSWORD, 12);
+  const seed = Number(`${Date.now()}${Math.floor(Math.random() * 999)}`.slice(-12));
+  const user = await prisma.user.create({
+    data: {
+      email,
+      name: `ACC Parceiro ${tag}`,
+      passwordHash: hash,
+      role: UserRole.PARTNER,
+      accountStatus: AccountStatus.ACTIVE,
+      phone: `+55117${String(Math.floor(Math.random() * 90_000_000) + 10_000_000)}`,
+      username: `p${tag}`.slice(0, 20).toLowerCase(),
+      termsAcceptedAt: new Date(),
+      lgpdAcceptedAt: new Date(),
+      partnerProfile: {
+        create: {
+          businessName: `Petshop ACC ${tag}`,
+          legalName: `Petshop ACC ${tag} LTDA`,
+          cnpj: validTestCnpj(seed),
+          category: "Pet Shop",
+          address: "Rua Teste ACC, 100",
+          city: "Sao Paulo",
+          state: "SP",
+          verificationStatus: VerificationStatus.APPROVED,
+          approvedAt: new Date(),
+        },
+      },
+    },
+  });
+  return { id: user.id, email, name: user.name };
+}
+
+export async function ensureApprovedNgoUser(label: string): Promise<SocialPersona> {
+  const tag = `${label}${Date.now()}${Math.floor(Math.random() * 1000)}`.replace(/[^a-z0-9]/gi, "").slice(0, 18);
+  const email = testEmail("ngo", tag);
+  const hash = await bcrypt.hash(TEST_PASSWORD, 12);
+  const seed = Number(`${Date.now()}${Math.floor(Math.random() * 777)}`.slice(-12)) + 41;
+  const user = await prisma.user.create({
+    data: {
+      email,
+      name: `ACC ONG ${tag}`,
+      passwordHash: hash,
+      role: UserRole.ONG,
+      accountStatus: AccountStatus.ACTIVE,
+      phone: `+55116${String(Math.floor(Math.random() * 90_000_000) + 10_000_000)}`,
+      username: `n${tag}`.slice(0, 20).toLowerCase(),
+      termsAcceptedAt: new Date(),
+      lgpdAcceptedAt: new Date(),
+      ongProfile: {
+        create: {
+          name: `ONG ACC ${tag}`,
+          ongName: `ONG ACC ${tag}`,
+          responsible: `Responsavel ACC ${tag}`,
+          cnpj: validTestCnpj(seed),
+          verificationStatus: VerificationStatus.APPROVED,
+          approvedAt: new Date(),
+        },
+      },
+    },
+  });
+  return { id: user.id, email, name: user.name };
+}
+
+export async function createPartnerAppointmentFixture(partnerId: string) {
+  const owner = await ensureClientUser("apptown");
+  const pet = await prisma.pet.create({
+    data: {
+      ownerId: owner.id,
+      name: "IDOR Pet",
+      species: PetSpecies.DOG,
+    },
+  });
+  const scheduledAt = new Date(Date.now() + 86_400_000);
+  const appointment = await prisma.appointment.create({
+    data: {
+      userId: owner.id,
+      petId: pet.id,
+      partnerId,
+      serviceType: AppointmentServiceType.BANHO,
+      attendanceMode: AppointmentAttendanceMode.IN_PERSON,
+      scheduledDate: scheduledAt,
+      scheduledTime: "10:00",
+      scheduledAt,
+    },
+  });
+  return { owner, pet, appointment };
+}
+
 export async function loginContext(ctx: BrowserContext, email: string) {
   let res = await ctx.request.post("/api/auth/login", {
     data: { email, password: TEST_PASSWORD, identifier: email },
   });
-  if (res.status() === 429) {
-    await new Promise((r) => setTimeout(r, 2000));
+  for (let i = 0; i < 5 && res.status() === 429; i++) {
+    await new Promise((r) => setTimeout(r, 2500 * (i + 1)));
     res = await ctx.request.post("/api/auth/login", {
       data: { email, password: TEST_PASSWORD, identifier: email },
     });

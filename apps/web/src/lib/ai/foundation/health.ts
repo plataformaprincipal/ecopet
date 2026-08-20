@@ -134,8 +134,14 @@ export function runAiFoundationDiagnostics() {
 
   if (!status.apiKeyPresent) errors.push("OPENAI_API_KEY ausente");
   if (!status.globallyEnabled) warnings.push("IA globalmente desabilitada ou pausada");
-  if (!status.projectIdPresent) {
-    recommendations.push("Definir OPENAI_PROJECT_ID se a organização OpenAI exigir project scoping.");
+  if (status.projectIdPresent) {
+    recommendations.push(
+      "OPENAI_PROJECT_ID só é enviado com OPENAI_SEND_PROJECT=1. Confirme que o projeto ainda existe na conta OpenAI."
+    );
+  } else {
+    recommendations.push(
+      "Não enviar project header obsoleto. Só defina OPENAI_SEND_PROJECT=1 se a chave atual exigir project scoping."
+    );
   }
   if (status.timeoutMs < 5_000) warnings.push("Timeout muito baixo (<5s)");
   recommendations.push("Validar smoke em /admin/ai/foundation e integração OpenAI no hub.");

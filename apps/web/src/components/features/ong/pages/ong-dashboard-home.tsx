@@ -56,7 +56,7 @@ export function OngDashboardHome({
   const canPublish = accessLevel === "full";
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" data-testid="ong-ops-dashboard">
       <OngPageHeader
         title={`Olá, ${firstName}`}
         description="Painel da sua ONG ou protetor — acompanhe animais, adoções, mensagens e publicações."

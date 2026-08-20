@@ -166,7 +166,12 @@ export function validateOrderFinancialSnapshot(order: {
   taxEstimate: number;
   partnerAmount: number;
   pricingVersion: string;
+  pricingSnapshot?: unknown;
 }): CommercialAllocation {
+  const snap = asEngineSnapshot(order.pricingSnapshot);
+  if (snap) {
+    return allocationFromEngineSnapshot(order, snap);
+  }
   if (order.platformPercentage == null || !order.pricingVersion) {
     throw new Error("ORDER_MISSING_FINANCIAL_SNAPSHOT");
   }
@@ -192,4 +197,56 @@ export function validateOrderFinancialSnapshot(order: {
     throw new Error("ORDER_FINANCIAL_SNAPSHOT_DIVERGENT");
   }
   return allocation;
+}
+
+function asEngineSnapshot(raw: unknown): Record<string, unknown> | null {
+  if (!raw || typeof raw !== "object") return null;
+  const snap = raw as Record<string, unknown>;
+  if (typeof snap.pricingVersion !== "string") return null;
+  if (typeof snap.estimatedPayoutCents !== "number") return null;
+  return snap;
+}
+
+function allocationFromEngineSnapshot(
+  order: {
+    grossAmount: number;
+    discount?: number;
+    platformPercentage: number | null;
+    platformFixedFee: number;
+    platformFeeAmount: number;
+    gatewayFeeEstimated: number;
+    reserveAmount: number;
+    taxEstimate: number;
+    partnerAmount: number;
+    pricingVersion: string;
+  },
+  snap: Record<string, unknown>
+): CommercialAllocation {
+  const partnerPayableCents = Number(snap.estimatedPayoutCents);
+  const platformPercentageAmountCents = Number(snap.eccopetCommissionCents ?? 0);
+  const platformFixedFeeCents = Number(snap.fixedFeeCents ?? 0);
+  const reconstructed = calculateCommercialAllocation({
+    grossAmount: order.grossAmount,
+    discountAmount: order.discount ?? 0,
+    platformPercentage: order.platformPercentage ?? 10,
+    platformFixedFee: order.platformFixedFee,
+    gatewayFeeEstimated: order.gatewayFeeEstimated,
+    reserveAmount: order.reserveAmount,
+    taxEstimate: order.taxEstimate,
+    pricingVersion: order.pricingVersion,
+    gatewayFeeBearer: "PARTNER",
+  });
+  return {
+    ...reconstructed,
+    partnerPayableCents,
+    calculatedPartnerAmountCents: partnerPayableCents,
+    platformPercentageAmountCents,
+    platformFixedFeeCents,
+    asOrderFloats: {
+      ...reconstructed.asOrderFloats,
+      partnerAmount: partnerPayableCents / 100,
+      platformFeeAmount: (platformPercentageAmountCents + platformFixedFeeCents) / 100,
+      pricingVersion: String(snap.pricingVersion),
+    },
+  };
 }

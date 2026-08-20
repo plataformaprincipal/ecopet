@@ -36,8 +36,8 @@ export async function apiLogin(request: APIRequestContext, email: string, passwo
   let res = await request.post("/api/auth/login", {
     data: { identifier: email, email, password },
   });
-  if (res.status() === 429) {
-    await new Promise((r) => setTimeout(r, 2000));
+  for (let i = 0; i < 4 && res.status() === 429; i++) {
+    await new Promise((r) => setTimeout(r, 2500 * (i + 1)));
     res = await request.post("/api/auth/login", {
       data: { identifier: email, email, password },
     });
@@ -53,21 +53,25 @@ export async function apiLogout(request: APIRequestContext) {
 export async function registerClient(request: APIRequestContext, tag = testTag()) {
   const email = testEmail("client", tag);
   const uniq = `${Date.now()}${Math.floor(Math.random() * 1e9)}`;
-  const res = await request.post("/api/auth/register", {
-    data: {
-      role: "CLIENT",
-      name: `ACC Cliente ${tag}`,
-      email,
-      password: TEST_PASSWORD,
-      confirmPassword: TEST_PASSWORD,
-      phone: `+55119${uniq.slice(-8)}`,
-      birthDate: "1990-03-10",
-      username: `u${uniq}`.slice(0, 20).toLowerCase(),
-      gender: "MASCULINO",
-      acceptTerms: true,
-      acceptPrivacy: true,
-    },
-  });
+  const payload = {
+    role: "CLIENT" as const,
+    name: `ACC Cliente ${tag}`,
+    email,
+    password: TEST_PASSWORD,
+    confirmPassword: TEST_PASSWORD,
+    phone: `+55119${uniq.slice(-8)}`,
+    birthDate: "1990-03-10",
+    username: `u${uniq}`.slice(0, 20).toLowerCase(),
+    gender: "MASCULINO",
+    acceptTerms: true,
+    acceptPrivacy: true,
+  };
+  await request.post("/api/auth/test/reset-rate-limit", { data: {} }).catch(() => undefined);
+  let res = await request.post("/api/auth/register", { data: payload });
+  for (let i = 0; i < 3 && res.status() === 429; i++) {
+    await new Promise((r) => setTimeout(r, 4000 * (i + 1)));
+    res = await request.post("/api/auth/register", { data: payload });
+  }
   return { res, email, tag };
 }
 
@@ -94,6 +98,10 @@ export async function registerPartner(request: APIRequestContext, tag = testTag(
       acceptPrivacy: true,
     },
   });
+  if (res.status() === 429) {
+    await new Promise((r) => setTimeout(r, 8000));
+    return registerPartner(request, `${tag}r`);
+  }
   return { res, email, tag };
 }
 
@@ -119,5 +127,9 @@ export async function registerNgo(request: APIRequestContext, tag = testTag()) {
       acceptPrivacy: true,
     },
   });
+  if (res.status() === 429) {
+    await new Promise((r) => setTimeout(r, 8000));
+    return registerNgo(request, `${tag}r`);
+  }
   return { res, email, tag };
 }

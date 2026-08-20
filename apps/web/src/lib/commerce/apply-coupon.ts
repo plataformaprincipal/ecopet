@@ -23,6 +23,8 @@ export type CouponRow = {
   startsAt: Date | null;
   endsAt: Date | null;
   isActive: boolean;
+  fundedBy?: string | null;
+  marginFloorBps?: number | null;
 };
 
 export function computeCouponDiscountBrl(coupon: CouponRow, grossBrl: number): number {

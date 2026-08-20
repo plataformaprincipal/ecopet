@@ -25,18 +25,18 @@ export type ClientExperienceNavItem = {
 /** Navegação completa da experiência do cliente logado (/client/*). */
 export const CLIENT_EXPERIENCE_NAV: ClientExperienceNavItem[] = [
   { href: "/client", labelKey: "clientArea.nav.home", icon: Home },
+  { href: "/client/my-pet", labelKey: "clientArea.nav.myPet", icon: PawPrint },
+  { href: "/client/appointments", labelKey: "clientArea.nav.appointments", icon: CalendarDays },
+  { href: "/client/orders", labelKey: "clientArea.nav.orders", icon: Package },
   { href: "/client/social", labelKey: "clientArea.nav.social", icon: Users },
-  { href: "/client/explore", labelKey: "clientArea.nav.explore", icon: Compass },
+  { href: "/client/messages", labelKey: "clientArea.nav.messages", icon: MessageSquare },
+  { href: "/client/profile", labelKey: "clientArea.nav.profile", icon: User },
   { href: "/client/marketplace", labelKey: "clientArea.nav.marketplace", icon: ShoppingBag },
   { href: "/client/services", labelKey: "clientArea.nav.services", icon: Scissors },
   { href: "/client/eccopet", labelKey: "clientArea.nav.ai", icon: Sparkles },
-  { href: "/client/my-pet", labelKey: "clientArea.nav.myPet", icon: PawPrint },
   { href: "/client/cart", labelKey: "clientArea.nav.cart", icon: ShoppingCart },
-  { href: "/client/orders", labelKey: "clientArea.nav.orders", icon: Package },
-  { href: "/client/appointments", labelKey: "clientArea.nav.appointments", icon: CalendarDays },
-  { href: "/client/messages", labelKey: "clientArea.nav.messages", icon: MessageSquare },
+  { href: "/client/explore", labelKey: "clientArea.nav.explore", icon: Compass },
   { href: "/client/notifications", labelKey: "clientArea.nav.notifications", icon: Bell },
-  { href: "/client/profile", labelKey: "clientArea.nav.profile", icon: User },
 ];
 
 /** Itens da bottom navigation mobile (5 atalhos). */

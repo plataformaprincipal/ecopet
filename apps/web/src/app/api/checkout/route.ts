@@ -3,6 +3,7 @@ import { requireClient } from "@/lib/auth/require-auth";
 import { checkoutSchema } from "@/schemas/product";
 import { checkoutFromCart } from "@/lib/orders/checkout-service";
 import { CouponError } from "@/lib/commerce/apply-coupon";
+import { PricingError } from "@/lib/pricing/service";
 
 export async function POST(request: Request) {
   const { user, error } = await requireClient();
@@ -31,7 +32,14 @@ export async function POST(request: Request) {
     });
     return apiSuccess({ order }, 201);
   } catch (e) {
-    const message = e instanceof CouponError ? e.code : e instanceof Error ? e.message : "Erro no checkout.";
+    const message =
+      e instanceof CouponError
+        ? e.code
+        : e instanceof PricingError
+          ? e.code
+          : e instanceof Error
+            ? e.message
+            : "Erro no checkout.";
     const map: Record<string, [string, string, number]> = {
       CART_EMPTY: ["VALIDATION", "Carrinho vazio.", 400],
       MULTI_PARTNER_CART: ["CONFLICT", "Carrinho com produtos de parceiros diferentes.", 409],
@@ -54,7 +62,10 @@ export async function POST(request: Request) {
       COUPON_EXPIRED: ["VALIDATION", "Cupom expirado.", 400],
       COUPON_USED: ["VALIDATION", "Este cupom já foi utilizado.", 400],
       COUPON_EXHAUSTED: ["VALIDATION", "Cupom esgotado.", 400],
-      COUPON_MIN_ORDER: ["VALIDATION", "Pedido abaixo do mínimo do cupom.", 400],
+      MARGIN_FLOOR: ["VALIDATION", "Desconto recusado: margem abaixo do piso.", 400],
+      NEGATIVE_PAYOUT: ["VALIDATION", "Cotação inválida: payout negativo.", 400],
+      ZERO_PRICE_NOT_ALLOWED: ["VALIDATION", "Preço zero não permitido.", 400],
+      VERSION_NOT_ACTIVE: ["CONFLICT", "Versão de pricing indisponível.", 409],
     };
     const hit = map[message];
     if (hit) return apiFailure(hit[0], hit[1], hit[2]);

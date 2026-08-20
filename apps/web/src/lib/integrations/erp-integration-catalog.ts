@@ -6,6 +6,7 @@ import {
   isEmailConfigured,
   isErpExternalConfigured,
   isFacebookConfigured,
+  isGoogleAuthConfigured,
   isGoogleBusinessConfigured,
   isGoogleCalendarConfigured,
   isGoogleDriveConfigured,
@@ -172,6 +173,7 @@ export const PARTNER_INTEGRATION_CATALOG: IntegrationCatalogItem[] = [
 ];
 
 export const ADMIN_INTEGRATION_CATALOG: IntegrationCatalogItem[] = [
+  { id: "google_auth", nome: "Google Auth", category: "auth", envKeys: ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"], check: isGoogleAuthConfigured },
   { id: "openai", nome: "OpenAI", category: "ia", envKeys: ["OPENAI_API_KEY"], check: isOpenAiConfigured, partial: true },
   { id: "gemini", nome: "Gemini", category: "ia", envKeys: ["GOOGLE_API_KEY", "GEMINI_API_KEY"], check: isGeminiConfigured, partial: true },
   { id: "claude", nome: "Claude", category: "ia", envKeys: ["ANTHROPIC_API_KEY"], check: isAnthropicConfigured, partial: true },

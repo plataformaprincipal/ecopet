@@ -70,10 +70,12 @@ export function PartnerHomeDashboard({ businessName }: Props) {
     reviews.length > 0
       ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
       : "—";
-  const revenue = (summary?.recentOrders ?? []).reduce((sum, o) => sum + o.total, 0);
+  const gmv = summary?.commerce?.gmv ?? 0;
+  const platformRevenue = summary?.commerce?.platformRevenue ?? 0;
+  const estimatedPayout = summary?.commerce?.estimatedPayout ?? 0;
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-7" data-testid="partner-ops-dashboard">
       <header className="rounded-3xl border border-zinc-200/80 bg-gradient-to-br from-zinc-900/[0.04] via-white to-white p-6 dark:border-white/10 dark:from-white/5 dark:via-zinc-900/60 dark:to-zinc-900/60">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-ecopet-green">
           {t("partnerArea.home.title")}
@@ -105,7 +107,9 @@ export function PartnerHomeDashboard({ businessName }: Props) {
         <StatCard icon={Package} label={t("partnerArea.home.stats.productsActive")} value={summary?.stats.productsActive ?? 0} />
         <StatCard icon={Scissors} label={t("partnerArea.home.stats.servicesActive")} value={summary?.stats.servicesActive ?? 0} />
         <StatCard icon={Star} label={t("partnerArea.home.stats.avgRating")} value={avgRating} />
-        <StatCard icon={DollarSign} label={t("partnerArea.home.stats.revenue")} value={formatCurrency(revenue, locale)} />
+        <StatCard icon={DollarSign} label={t("partnerArea.home.stats.revenue")} value={formatCurrency(gmv, locale)} />
+        <StatCard icon={DollarSign} label={t("partnerArea.home.stats.platformFee")} value={formatCurrency(platformRevenue, locale)} />
+        <StatCard icon={DollarSign} label={t("partnerArea.home.stats.estimatedPayout")} value={formatCurrency(estimatedPayout, locale)} />
         <StatCard icon={MessageSquare} label={t("partnerArea.home.stats.unreadMessages")} value={summary?.pendingMessages ?? 0} />
         <StatCard icon={PackageX} label={t("partnerArea.home.stats.lowStock")} value={summary?.lowStockProducts.length ?? 0} />
       </div>

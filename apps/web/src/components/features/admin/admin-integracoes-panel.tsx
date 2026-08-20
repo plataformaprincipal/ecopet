@@ -46,6 +46,7 @@ const TEST_ENDPOINT: Record<string, { path: string; body?: Record<string, string
 };
 
 const PHASE3_ORDER = [
+  "google_auth",
   "openai",
   "resend",
   "twilio",

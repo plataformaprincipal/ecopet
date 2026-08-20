@@ -38,9 +38,11 @@ export function StartConversationButton({
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
+  const [error, setError] = useState("");
 
   async function startConversation() {
     setLoading(true);
+    setError("");
     try {
       const res = await fetch("/api/messages/conversations", {
         method: "POST",
@@ -54,12 +56,17 @@ export function StartConversationButton({
       });
       const json = await res.json();
       if (!res.ok || !json.success) {
-        throw new Error(json.error?.message ?? t("messagesModule.error"));
+        const code = json.error?.code as string | undefined;
+        throw new Error(
+          code === "TALKJS_NOT_CONFIGURED"
+            ? t("messagesModule.configError")
+            : (json.error?.message ?? t("messagesModule.error"))
+        );
       }
       const id = json.data.conversationId ?? json.data.conversation?.id;
       router.push(`/dashboard/messages/${id}`);
     } catch (e) {
-      console.error(e);
+      setError(e instanceof Error ? e.message : t("messagesModule.error"));
     } finally {
       setLoading(false);
     }
@@ -87,6 +94,11 @@ export function StartConversationButton({
         {loading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
         {label}
       </Button>
+      {error ? (
+        <p className="mt-2 text-sm text-red-600" role="alert" aria-live="polite">
+          {error}
+        </p>
+      ) : null}
       <AuthRequiredModal
         open={authOpen}
         onOpenChange={setAuthOpen}

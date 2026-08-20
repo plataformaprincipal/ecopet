@@ -10,7 +10,7 @@ test.describe.serial("EcoPet E2E mínimo", () => {
     const health = await page.request.get("/api/health");
     expect(health.ok()).toBeTruthy();
     await page.goto("/legal/privacidade");
-    await expect(page.getByRole("heading", { name: /privacidade/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Política de Privacidade", level: 1 })).toBeVisible();
     await page.goto("/legal/termos");
     await expect(page.getByRole("heading", { name: /termos/i })).toBeVisible();
   });

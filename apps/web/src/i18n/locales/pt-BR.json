@@ -717,6 +717,46 @@
         "requiredFields": "Campos obrigatórios"
       }
     },
+    "google": {
+      "connect": "Conectar Google",
+      "disconnect": "Desconectar Google",
+      "redirecting": "Redirecionando…",
+      "processing": "Concluindo…",
+      "finish": "Criar conta EccoPet",
+      "title": "Complete seu cadastro",
+      "completeHint": "O Google confirma a identidade; você escolhe o perfil EccoPet.",
+      "methodsTitle": "Métodos de acesso",
+      "unlinkFailed": "Não foi possível desconectar o Google.",
+      "useGoogle": "Esta conta entra com Google. Use Continuar com Google ou defina uma senha nas configurações.",
+      "chooseRole": "Como você vai usar a EccoPet?",
+      "acceptTerms": "Li e aceito os Termos de uso.",
+      "acceptPrivacy": "Li e aceito a Política de privacidade.",
+      "passwordConfigured": "Senha — configurada",
+      "passwordMissing": "Senha — não configurada",
+      "googleConnected": "Google — conectado",
+      "googleDisconnected": "Google — não conectado",
+      "roles": {
+        "CLIENT": "Tutor / Cliente",
+        "PARTNER": "Parceiro",
+        "ONG": "ONG"
+      },
+      "errors": {
+        "OAUTH_NOT_CONFIGURED": "Entrar com Google ainda não está disponível neste ambiente.",
+        "CANCELLED": "Nenhuma conta foi criada porque você cancelou o acesso.",
+        "INVALID_STATE": "Não foi possível entrar com o Google. Tente novamente.",
+        "INVALID_NONCE": "Não foi possível entrar com o Google. Tente novamente.",
+        "EMAIL_NOT_VERIFIED": "O Google precisa confirmar este e-mail antes de continuar.",
+        "ACCOUNT_EXISTS_PASSWORD": "Já existe uma conta EccoPet com este e-mail. Entre com sua senha para conectar o Google com segurança.",
+        "LINK_REQUIRED": "Já existe uma conta EccoPet com este e-mail. Entre com sua senha para conectar o Google com segurança.",
+        "ACCOUNT_SUSPENDED": "Esta conta está suspensa e não pode entrar pelo Google.",
+        "ACCOUNT_INACTIVE": "Esta conta não está ativa.",
+        "LAST_AUTH_METHOD": "Defina uma senha antes de desconectar o Google.",
+        "ADMIN_FORBIDDEN": "O Google não cria contas administrativas.",
+        "TERMS_REQUIRED": "Aceite os termos e a privacidade para continuar.",
+        "EXPIRED": "Sessão Google expirada. Entre novamente.",
+        "GENERIC": "Não foi possível entrar com o Google. Tente novamente."
+      }
+    },
     "register": {
       "title": "Criar conta EccoPet",
       "submit": "Criar conta",
@@ -1222,9 +1262,9 @@
     },
     "forgotPassword": {
       "title": "Recuperar Senha",
-      "description": "Informe seu e-mail ou telefone para receber as instruções de recuperação.",
-      "identifier": "E-mail ou Telefone",
-      "identifierPlaceholder": "Digite seu e-mail ou telefone",
+      "description": "Informe o e-mail da conta. A recuperação por SMS não está disponível neste lançamento.",
+      "identifier": "E-mail",
+      "identifierPlaceholder": "Digite seu e-mail",
       "submit": "Enviar Código",
       "submitting": "Enviando...",
       "success": "Se os dados estiverem corretos, enviaremos instruções de recuperação.",
@@ -1237,7 +1277,7 @@
       "resendCode": "Reenviar código",
       "resendWait": "Reenviar em {{seconds}}s",
       "sendFailed": "Não foi possível enviar o código agora. Tente novamente em alguns minutos.",
-      "changeIdentifier": "Alterar e-mail ou telefone",
+      "changeIdentifier": "Alterar e-mail",
       "checkInbox": "Verifique sua caixa de entrada ou pasta de spam.",
       "checkSms": "Verifique as mensagens SMS do seu telefone.",
       "backToLogin": "Voltar ao login",
@@ -2704,11 +2744,8 @@
       "title": "Bem-vindo de volta",
       "subtitle": "Entre para continuar cuidando do seu pet com carinho.",
       "google": "Continuar com Google",
-      "apple": "Continuar com Apple",
-      "facebook": "Continuar com Facebook",
       "orEmail": "ou continue com e-mail",
-      "comingSoon": "Em breve",
-      "socialGroup": "Login social (em breve)",
+      "socialGroup": "Entrar com Google",
       "noAccount": "Não tem conta?",
       "createAccount": "Criar conta"
     },
@@ -2773,7 +2810,9 @@
       "appointments": "Agendamentos",
       "messages": "Mensagens",
       "notifications": "Notificações",
-      "profile": "Perfil"
+      "profile": "Perfil",
+      "rewards": "Rewards",
+      "support": "Suporte"
     },
     "home": {
       "title": "Hoje no EccoPet",
@@ -2890,6 +2929,7 @@
       "orders": "Pedidos",
       "appointments": "Agendamentos",
       "customers": "Clientes",
+      "reviews": "Avaliações",
       "messages": "Mensagens",
       "notifications": "Notificações",
       "ai": "EccoPet AI",
@@ -2909,7 +2949,9 @@
         "productsActive": "Produtos ativos",
         "servicesActive": "Serviços ativos",
         "avgRating": "Avaliação média",
-        "revenue": "Receita (recentes)",
+        "revenue": "GMV recente (não é lucro)",
+        "platformFee": "Comissão EccoPet",
+        "estimatedPayout": "Payout estimado",
         "unreadMessages": "Mensagens não lidas",
         "lowStock": "Estoque baixo"
       },

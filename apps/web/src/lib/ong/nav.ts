@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { Home, UsersRound, Heart, Sparkles, Settings2 } from "lucide-react";
+import { Home, PawPrint, Heart, Users, Megaphone, Settings2, Headphones } from "lucide-react";
 
 export type OngNavItem = {
   href: string;
@@ -10,41 +10,13 @@ export type OngNavItem = {
 };
 
 export const ONG_NAV_ITEMS: OngNavItem[] = [
-  {
-    href: "/ong",
-    label: "Início",
-    description: "Dashboard da ONG",
-    icon: Home,
-    requiresApproval: false,
-  },
-  {
-    href: "/ong/comunidade",
-    label: "Comunidade",
-    description: "Divulgação e posts",
-    icon: UsersRound,
-    requiresApproval: true,
-  },
-  {
-    href: "/ong/adocoes",
-    label: "Adoções",
-    description: "Animais e solicitações",
-    icon: Heart,
-    requiresApproval: true,
-  },
-  {
-    href: "/ong/atividades-ia",
-    label: "Atividades com IA",
-    description: "Painel inteligente",
-    icon: Sparkles,
-    requiresApproval: true,
-  },
-  {
-    href: "/ong/perfil-gestao",
-    label: "Perfil e Gestão",
-    description: "Conta e documentos",
-    icon: Settings2,
-    requiresApproval: false,
-  },
+  { href: "/ong", label: "Visão geral", description: "Dashboard da ONG", icon: Home, requiresApproval: false },
+  { href: "/ngo/animais", label: "Animais", description: "Cadastro e disponibilidade", icon: PawPrint, requiresApproval: true },
+  { href: "/ong/adocoes", label: "Adoções", description: "Processos em andamento", icon: Heart, requiresApproval: true },
+  { href: "/ngo/adocoes", label: "Interessados", description: "Solicitações humanas", icon: Users, requiresApproval: true },
+  { href: "/ngo/campanhas", label: "Campanhas", description: "Campanhas reais", icon: Megaphone, requiresApproval: true },
+  { href: "/ong/perfil-gestao", label: "Perfil", description: "Público e operacional", icon: Settings2, requiresApproval: false },
+  { href: "/dashboard/support", label: "Suporte", description: "Tickets da ONG", icon: Headphones, requiresApproval: false },
 ];
 
 export function isOngNavActive(pathname: string, href: string): boolean {
@@ -53,5 +25,5 @@ export function isOngNavActive(pathname: string, href: string): boolean {
 }
 
 export function isOngAreaPath(pathname: string): boolean {
-  return pathname === "/ong" || pathname.startsWith("/ong/");
+  return pathname === "/ong" || pathname.startsWith("/ong/") || pathname === "/ngo" || pathname.startsWith("/ngo/");
 }

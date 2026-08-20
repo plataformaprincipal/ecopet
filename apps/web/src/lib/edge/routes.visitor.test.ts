@@ -20,6 +20,7 @@ describe("visitor public routes", () => {
     assert.equal(requiresAuth("/meu-pet"), true);
     assert.equal(requiresAuth("/pedidos"), true);
     assert.equal(requiresAuth("/checkout"), true);
+    assert.equal(requiresAuth("/cadastro/google"), false);
   });
 
   it("keeps marketplace browse and cart public, checkout private via marketplace rules", () => {

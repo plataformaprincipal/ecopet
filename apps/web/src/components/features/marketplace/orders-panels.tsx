@@ -22,6 +22,15 @@ type Order = {
   partnerId?: string | null;
   items?: { name: string; quantity: number; price: number }[];
   statusHistory?: { status: string; note?: string; createdAt: string }[];
+  pricing?: {
+    customerPaid: number;
+    itemsSubtotal: number;
+    discount: number;
+    platformFee: number;
+    partnerShare: number;
+    labels: { platformFee: string; partnerShare: string; discount: string };
+  };
+  pricingVersion?: string;
 };
 
 const CLIENT_STATUS_LABELS: Record<string, string> = {
@@ -51,16 +60,23 @@ export function ClientOrdersPanel({ mode = "list", orderId }: { mode?: "list" | 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const load = () =>
-    fetch("/api/client/orders", { credentials: "include" })
+  const load = () => {
+    const url = orderId ? `/api/client/orders/${orderId}` : "/api/client/orders";
+    return fetch(url, { credentials: "include" })
       .then((r) => r.json())
       .then((d) => {
         if (d.success) {
-          setOrders(d.data.orders);
-          if (orderId) setOrder(d.data.orders.find((o: Order) => o.id === orderId) ?? null);
+          if (orderId && d.data.order) {
+            setOrder(d.data.order);
+            setOrders([d.data.order]);
+          } else if (d.data.orders) {
+            setOrders(d.data.orders);
+            if (orderId) setOrder(d.data.orders.find((o: Order) => o.id === orderId) ?? null);
+          }
         }
       })
       .finally(() => setLoading(false));
+  };
 
   useEffect(() => { load(); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId]);
@@ -82,7 +98,15 @@ export function ClientOrdersPanel({ mode = "list", orderId }: { mode?: "list" | 
         <CardContent className="space-y-3 p-4 text-sm">
           <p><strong>Pedido:</strong> #{order.orderNumber}</p>
           <p><strong>Status:</strong> {CLIENT_STATUS_LABELS[order.status] ?? order.status}</p>
-          <p><strong>Total:</strong> R$ {Number(order.total).toFixed(2)}</p>
+          <p><strong>Total pago:</strong> R$ {Number(order.pricing?.customerPaid ?? order.total).toFixed(2)}</p>
+          {order.pricing ? (
+            <div className="space-y-1 rounded-lg border border-zinc-200 p-3 text-xs dark:border-white/10">
+              <p>Itens: R$ {order.pricing.itemsSubtotal.toFixed(2)}</p>
+              {order.pricing.discount > 0 ? <p>{order.pricing.labels.discount}: R$ {order.pricing.discount.toFixed(2)}</p> : null}
+              <p>{order.pricing.labels.platformFee}: R$ {order.pricing.platformFee.toFixed(2)}</p>
+              {order.pricingVersion ? <p>Tabela: {order.pricingVersion}</p> : null}
+            </div>
+          ) : null}
           {order.paymentMethod && (
             <p><strong>Pagamento:</strong> {PAYMENT_LABELS[order.paymentMethod] ?? order.paymentMethod}</p>
           )}

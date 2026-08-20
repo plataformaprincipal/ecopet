@@ -66,6 +66,7 @@ const steps = [
       "--test",
       "apps/web/src/lib/commerce/pricing.test.ts",
       "apps/web/src/lib/commerce/order-state-machine.test.ts",
+      "apps/web/src/lib/pricing/engine.test.ts",
     ],
     env: { TSX_TSCONFIG_PATH: "apps/web/tsconfig.json" },
   },

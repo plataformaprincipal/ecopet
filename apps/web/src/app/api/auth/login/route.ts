@@ -98,6 +98,13 @@ async function loginHandler(request: Request) {
       return apiFailure("ACCOUNT_INACTIVE", LOGIN_ACCOUNT_INACTIVE_MESSAGE, 403);
     }
 
+    if (!user.passwordHash) {
+      void auditLoginFailed({ userId: user.id, identifier, reason: "GOOGLE_ONLY", ip, userAgent });
+      trackMetric(MetricNames.AUTH_FAILURES, 1, { reason: "GOOGLE_ONLY" });
+      captureSecurityEvent("login_failed", { reason: "GOOGLE_ONLY", userId: user.id });
+      return apiFailure("INVALID_CREDENTIALS", LOGIN_INVALID_CREDENTIALS_MESSAGE, 401);
+    }
+
     const valid = await verifyPassword(password, user.passwordHash);
     if (!valid) {
       void auditLoginFailed({ userId: user.id, identifier, reason: "WRONG_PASSWORD", ip, userAgent });

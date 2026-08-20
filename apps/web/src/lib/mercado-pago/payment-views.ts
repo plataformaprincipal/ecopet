@@ -34,12 +34,7 @@ export function toPartnerPaymentView(p: Payment) {
   const meta = (p.metadata as PaymentMeta | null) ?? {};
   const gross = p.amount;
   const fee = typeof meta.platformFeeEstimated === "number" ? meta.platformFeeEstimated : null;
-  const net =
-    typeof meta.partnerNetEstimated === "number"
-      ? meta.partnerNetEstimated
-      : fee != null
-        ? gross - fee
-        : gross;
+  const net = typeof meta.partnerNetEstimated === "number" ? meta.partnerNetEstimated : null;
 
   return {
     id: p.id,
@@ -50,8 +45,9 @@ export function toPartnerPaymentView(p: Payment) {
     gross,
     platformFeeEstimated: fee,
     partnerNetEstimated: net,
-    payoutStatus: meta.splitReady ? "SPLIT_READY" : "SPLIT_PENDING",
+    payoutStatus: "SPLIT_PENDING" as const,
     splitImplemented: false,
+    splitReady: false,
     approvedAt: p.approvedAt,
     cancelledAt: p.cancelledAt,
     refundedAt: p.refundedAt,

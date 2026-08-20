@@ -4,6 +4,7 @@
  */
 
 export type IntegrationProviderCategory =
+  | "auth"
   | "ai"
   | "email"
   | "sms"
@@ -23,6 +24,14 @@ export type IntegrationProviderDefinition = {
 };
 
 export const INTEGRATION_PROVIDER_REGISTRY: readonly IntegrationProviderDefinition[] = [
+  {
+    id: "google_auth",
+    name: "Google Auth",
+    requiredEnvVars: ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"],
+    optionalEnvVars: [],
+    category: "auth",
+    capabilities: ["oauth", "oidc", "login", "register", "account_link"],
+  },
   {
     id: "openai",
     name: "OpenAI",

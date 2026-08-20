@@ -25,14 +25,14 @@ export type FinancialPricingSettings = PricingSettings & {
 };
 
 const DEFAULTS: FinancialPricingSettings = {
-  pricingVersion: "v1",
+  pricingVersion: "BR-2026.08-v1",
   platformFeePercent: 10,
-  platformFixedFee: 0,
-  gatewayFeePercent: 2.5,
-  reservePercent: 2,
-  taxEstimatePercent: 0,
+  platformFixedFee: 1.49,
+  gatewayFeePercent: 3,
+  reservePercent: 1.5,
+  taxEstimatePercent: 12,
   gatewayFeeBearer: "PARTNER",
-  reserveHoldDays: 7,
+  reserveHoldDays: 14,
 };
 
 export async function loadPricingSettings(): Promise<FinancialPricingSettings> {

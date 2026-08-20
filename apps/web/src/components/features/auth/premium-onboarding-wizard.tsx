@@ -7,6 +7,7 @@ import {
   RegisterRoleSelector,
   type RegisterRole,
 } from "@/components/features/foundation/register-role-selector";
+import { GoogleSignInButton } from "@/components/features/auth/google-sign-in-button";
 import { Button } from "@/components/ui/button";
 import { FadeIn } from "@/components/design-system/motion";
 import { useTranslation } from "@/providers/i18n-provider";
@@ -95,6 +96,17 @@ export function PremiumOnboardingWizard() {
 
       {step === 1 && (
         <FadeIn className="space-y-6 rounded-[var(--radius-xl)] border border-ecopet-gray/10 bg-white p-6 shadow-[var(--shadow-md)] sm:p-8 dark:border-white/10 dark:bg-ecopet-dark-card">
+          <GoogleSignInButton intent="register" />
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center" aria-hidden>
+              <div className="w-full border-t border-ecopet-gray/15 dark:border-white/10" />
+            </div>
+            <p className="relative flex justify-center text-xs uppercase tracking-wider">
+              <span className="bg-white px-3 text-ecopet-gray dark:bg-ecopet-dark-card dark:text-white/50">
+                {t("authPremium.login.orEmail")}
+              </span>
+            </p>
+          </div>
           <h2 className="text-xl font-semibold text-ecopet-dark dark:text-white">{t("authPremium.onboarding.who")}</h2>
           <RegisterRoleSelector value={role} onChange={setRole} />
           <Button

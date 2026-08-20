@@ -13,10 +13,11 @@ Este diretório documenta como ativar provedores externos **somente com variáve
 
 | Provedor | Doc | Variáveis principais | Sem chave |
 |----------|-----|----------------------|-----------|
+| Google Auth | [GOOGLE_AUTH.md](./GOOGLE_AUTH.md) | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | login senha |
 | OpenAI | [openai.md](./openai.md) | `AI_ENABLED`, `OPENAI_API_KEY` | UI/API `AI_NOT_CONFIGURED` |
-| Resend | [resend.md](./resend.md) | `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_DOMAIN_VERIFIED` | e-mail não enviado; status `DOMAIN_PENDING` até DNS |
+| Resend | [EMAIL_RESEND.md](./EMAIL_RESEND.md) / [resend.md](./resend.md) | `RESEND_API_KEY`, `EMAIL_FROM` | e-mail não enviado |
 | Twilio | [twilio.md](./twilio.md) | `TWILIO_*`, `SMS_PROVIDER` | SMS indisponível |
-| TalkJS | [talkjs.md](./talkjs.md) | `NEXT_PUBLIC_TALKJS_APP_ID`, `TALKJS_SECRET_KEY` | mensagem clara na UI |
+| TalkJS | [MESSAGING.md](./MESSAGING.md) / [talkjs.md](./talkjs.md) | `NEXT_PUBLIC_TALKJS_APP_ID`, `TALKJS_SECRET_KEY` | mensagem clara na UI |
 | Cloudinary | [cloudinary.md](./cloudinary.md) | `CLOUDINARY_*` | fallback local só em dev |
 | Mercado Pago | [mercado-pago.md](./mercado-pago.md) | `MERCADO_PAGO_*` | `PAYMENT_PROVIDER=none` |
 | Stripe | [stripe.md](./stripe.md) | `STRIPE_*` | idem |
@@ -25,9 +26,12 @@ Este diretório documenta como ativar provedores externos **somente com variáve
 | Google Analytics 4 | [../google-analytics-4.md](../google-analytics-4.md) | `NEXT_PUBLIC_GA_MEASUREMENT_ID` | tracking off / DEV_ONLY |
 | Google Tag Manager | [google-tag-manager-production.md](./google-tag-manager-production.md) | `NEXT_PUBLIC_GTM_ID` | container não carrega |
 
+Inventário: [INVENTORY.md](./INVENTORY.md). Health: [HEALTH.md](./HEALTH.md). Incidentes: [RUNBOOK.md](./RUNBOOK.md).
+
 ## Status no código
 
 - Registry: `apps/web/src/lib/integrations/integration-registry.ts`
+- Launch gate: `apps/web/src/lib/integrations/launch-health.ts`
 - Status: `apps/web/src/lib/integrations/integration-status.ts`
 - API: `GET /api/admin/integrations/status`
 - Smoke: `POST /api/admin/integrations/{provider}/test`

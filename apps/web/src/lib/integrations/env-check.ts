@@ -118,12 +118,18 @@ export function isTikTokConfigured(source: NodeJS.ProcessEnv = process.env): boo
   return Boolean(env("TIKTOK_CLIENT_KEY", source) && env("TIKTOK_CLIENT_SECRET", source));
 }
 
+export function isGoogleAuthConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
+  const id = env("GOOGLE_CLIENT_ID", source);
+  const secret = env("GOOGLE_CLIENT_SECRET", source);
+  return Boolean(id && secret && id.length > 8 && secret.length > 8);
+}
+
 export function isGoogleCalendarConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
-  return Boolean(env("GOOGLE_CALENDAR_CLIENT_ID", source) || env("GOOGLE_CLIENT_ID", source));
+  return Boolean(env("GOOGLE_CALENDAR_CLIENT_ID", source));
 }
 
 export function isGoogleDriveConfigured(source: NodeJS.ProcessEnv = process.env): boolean {
-  return Boolean(env("GOOGLE_DRIVE_CLIENT_ID", source) || env("GOOGLE_CLIENT_ID", source));
+  return Boolean(env("GOOGLE_DRIVE_CLIENT_ID", source));
 }
 
 export function isGoogleSheetsConfigured(source: NodeJS.ProcessEnv = process.env): boolean {

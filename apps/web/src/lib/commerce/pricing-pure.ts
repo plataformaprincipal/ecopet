@@ -1,5 +1,12 @@
 /**
  * Cálculo de precificação sem I/O (testável sem server-only/prisma).
+ *
+ * Classificação de fallback:
+ * - test fallback: usado por `pricing.test.ts` para regressão de aritmética isolada.
+ * - migration compatibility: NÃO usar em checkout; o motor oficial é `@/lib/pricing`.
+ * - production forbidden: nunca cobrir pedido/agendamento. Políticas divergem (sem booking fee oficial).
+ *
+ * Fonte de cobrança: Pricing Engine + PricingVersion ACTIVE.
  */
 export type PricingSettings = {
   pricingVersion: string;

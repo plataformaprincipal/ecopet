@@ -65,7 +65,13 @@ export const AI_CONFIG = {
   get monthlyBudgetCents(): number {
     return num(process.env.OPENAI_MONTHLY_BUDGET_CENTS, 5_000);
   },
+  /**
+   * Só envia o header `project` se OPENAI_SEND_PROJECT=1.
+   * Chaves atuais frequentemente falham com 401 "No such project" se um
+   * OPENAI_PROJECT_ID obsoleto continua sendo enviado.
+   */
   get projectId(): string | undefined {
+    if (process.env.OPENAI_SEND_PROJECT !== "1") return undefined;
     const id = process.env.OPENAI_PROJECT_ID?.trim();
     return id || undefined;
   },

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import type { GestorFilters } from "@/lib/gestor/gestor-filters";
 import { dateRangeWhere, paginationArgs } from "@/lib/gestor/gestor-filters";
 import { getIntegrationHealthReport } from "@/lib/integrations/health";
+import { metricsFromOrderRow, roundMetric } from "@/lib/finance/metrics";
 
 function startOfMonth(d = new Date()) {
   return new Date(d.getFullYear(), d.getMonth(), 1);
@@ -13,11 +14,17 @@ function startOfPrevMonth(d = new Date()) {
 }
 
 /** Dashboard executivo /admin — métricas e tabelas reais. */
-export async function getAdminExecutiveDashboard(_filters: GestorFilters) {
+export async function getAdminExecutiveDashboard(filters: GestorFilters) {
   const now = new Date();
   const monthStart = startOfMonth(now);
   const prevMonthStart = startOfPrevMonth(now);
   const prevMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+  const periodWhere = dateRangeWhere(filters);
+  const hasCustomPeriod = Boolean(filters.dateFrom || filters.dateTo);
+  const createdAtRange = hasCustomPeriod
+    ? ((periodWhere as { createdAt?: { gte?: Date; lte?: Date } }).createdAt ?? { gte: monthStart })
+    : { gte: monthStart };
+  const financeWhere = { createdAt: createdAtRange };
 
   const paidStatuses = ["PAID", "COMPLETED", "DELIVERED", "SHIPPED", "CONFIRMED"] as const;
   const pendingStatuses = ["PENDING", "PENDING_CONFIRMATION", "PROCESSING", "PREPARING"] as const;
@@ -33,10 +40,14 @@ export async function getAdminExecutiveDashboard(_filters: GestorFilters) {
     ordersTotal,
     ordersPaid,
     ordersPending,
-    revenueTotal,
-    revenueMonth,
-    revenuePrevMonth,
-    revenuePending,
+    financeAll,
+    financeMonth,
+    financePrevMonth,
+    financePending,
+    refundsMonth,
+    loyaltyIssued,
+    loyaltyRedeemed,
+    appointmentsPeriod,
     openTickets,
     openReports,
     recentUsers,
@@ -64,16 +75,34 @@ export async function getAdminExecutiveDashboard(_filters: GestorFilters) {
     prisma.order.count(),
     prisma.order.count({ where: { status: { in: [...paidStatuses] } } }),
     prisma.order.count({ where: { status: { in: [...pendingStatuses] } } }),
-    prisma.order.aggregate({ _sum: { total: true } }),
-    prisma.order.aggregate({ where: { createdAt: { gte: monthStart } }, _sum: { total: true } }),
+    prisma.order.aggregate({
+      _sum: { grossAmount: true, platformFeeAmount: true, partnerAmount: true, total: true, reserveAmount: true },
+    }),
+    prisma.order.aggregate({
+      where: financeWhere,
+      _sum: { grossAmount: true, platformFeeAmount: true, partnerAmount: true, total: true, reserveAmount: true },
+    }),
     prisma.order.aggregate({
       where: { createdAt: { gte: prevMonthStart, lte: prevMonthEnd } },
-      _sum: { total: true },
+      _sum: { grossAmount: true, platformFeeAmount: true, partnerAmount: true, total: true },
     }),
     prisma.order.aggregate({
       where: { status: { in: [...pendingStatuses] } },
-      _sum: { total: true },
+      _sum: { grossAmount: true, platformFeeAmount: true, partnerAmount: true, total: true },
     }),
+    prisma.payment.aggregate({
+      where: { createdAt: createdAtRange, status: { in: ["REFUNDED", "CANCELLED"] } },
+      _sum: { amount: true },
+    }),
+    prisma.loyaltyTransaction.aggregate({
+      where: { createdAt: createdAtRange, type: "EARN" },
+      _sum: { points: true },
+    }),
+    prisma.loyaltyTransaction.aggregate({
+      where: { createdAt: createdAtRange, type: "REDEEM" },
+      _sum: { points: true },
+    }),
+    prisma.appointment.count({ where: financeWhere }),
     prisma.supportTicket.count({
       where: { status: { in: ["OPEN", "IN_PROGRESS", "WAITING", "WAITING_USER"] } },
     }),
@@ -141,22 +170,32 @@ export async function getAdminExecutiveDashboard(_filters: GestorFilters) {
     }),
   ]);
 
-  const grossTotal = revenueTotal._sum.total ?? 0;
-  const grossMonth = revenueMonth._sum.total ?? 0;
-  const grossPrev = revenuePrevMonth._sum.total ?? 0;
-  const avgTicket = ordersTotal > 0 ? grossTotal / ordersTotal : 0;
+  const gmvStored = (row: { _sum: { grossAmount: number | null; total: number | null } }) =>
+    row._sum.grossAmount && row._sum.grossAmount > 0 ? row._sum.grossAmount : (row._sum.total ?? 0);
+  const gmvAll = gmvStored(financeAll);
+  const gmvPeriod = gmvStored(financeMonth);
+  const gmvPrev = gmvStored(financePrevMonth);
+  const platformPeriod = financeMonth._sum.platformFeeAmount ?? 0;
+  const partnerPeriod = financeMonth._sum.partnerAmount ?? 0;
+  const avgTicket = ordersTotal > 0 ? gmvAll / ordersTotal : 0;
   const conversionRate = ordersTotal > 0 ? Math.round((ordersPaid / ordersTotal) * 1000) / 10 : 0;
   const growth =
-    grossPrev > 0 ? Math.round(((grossMonth - grossPrev) / grossPrev) * 1000) / 10 : grossMonth > 0 ? 100 : 0;
+    gmvPrev > 0 ? Math.round(((gmvPeriod - gmvPrev) / gmvPrev) * 1000) / 10 : gmvPeriod > 0 ? 100 : 0;
 
   return {
     metrics: [
-      { key: "revenue_total", label: "Receita total", value: Math.round(grossTotal * 100) / 100 },
-      { key: "revenue_month", label: "Receita mensal", value: Math.round(grossMonth * 100) / 100 },
-      { key: "revenue_pending", label: "Receita pendente", value: Math.round((revenuePending._sum.total ?? 0) * 100) / 100 },
+      { key: "gmv_period", label: "GMV (período)", value: roundMetric(gmvPeriod) },
+      { key: "platform_revenue_period", label: "Receita EccoPet (período)", value: roundMetric(platformPeriod) },
+      { key: "partner_economic_period", label: "Valor econômico parceiros (período)", value: roundMetric(partnerPeriod) },
+      { key: "gmv_all", label: "GMV acumulado", value: roundMetric(gmvAll) },
+      { key: "platform_revenue_all", label: "Receita EccoPet acumulada", value: roundMetric(financeAll._sum.platformFeeAmount ?? 0) },
+      { key: "gmv_pending", label: "GMV pendente", value: roundMetric(gmvStored(financePending)) },
+      { key: "refunds_period", label: "Estornos (período)", value: roundMetric(refundsMonth._sum.amount ?? 0) },
+      { key: "payout_estimated", label: "Payout estimado (não liquidado)", value: roundMetric(partnerPeriod) },
       { key: "orders_total", label: "Pedidos totais", value: ordersTotal },
       { key: "orders_paid", label: "Pedidos pagos", value: ordersPaid },
       { key: "orders_pending", label: "Pedidos pendentes", value: ordersPending },
+      { key: "appointments_period", label: "Agendamentos (período)", value: appointmentsPeriod },
       { key: "users_total", label: "Usuários totais", value: totalUsers },
       { key: "clients_active", label: "Clientes ativos", value: activeClients },
       { key: "partners_active", label: "Parceiros ativos", value: activePartners },
@@ -166,9 +205,11 @@ export async function getAdminExecutiveDashboard(_filters: GestorFilters) {
       { key: "reports_open", label: "Denúncias pendentes", value: openReports },
       { key: "products_active", label: "Produtos ativos", value: productsActive },
       { key: "services_active", label: "Serviços ativos", value: servicesActive },
+      { key: "loyalty_issued", label: "EccoPontos emitidos", value: loyaltyIssued._sum.points ?? 0 },
+      { key: "loyalty_redeemed", label: "EccoPontos resgatados", value: Math.abs(loyaltyRedeemed._sum.points ?? 0) },
       { key: "conversion_rate", label: "Taxa de conversão (%)", value: conversionRate },
-      { key: "avg_ticket", label: "Ticket médio", value: Math.round(avgTicket * 100) / 100 },
-      { key: "monthly_growth", label: "Crescimento mensal (%)", value: growth },
+      { key: "avg_ticket", label: "Ticket médio (GMV/pedidos)", value: roundMetric(avgTicket) },
+      { key: "monthly_growth", label: "Variação GMV vs mês anterior (%)", value: growth },
       { key: "critical_alerts", label: "Alertas críticos", value: criticalLogs + openReports },
       { key: "integration_errors", label: "Integrações com erro", value: integrationErrors, variant: integrationErrors > 0 ? "warning" : "default" },
       { key: "pending_actions", label: "Ações pendentes", value: pendingApprovals + openTickets },
@@ -252,35 +293,70 @@ export async function getAdminDashboardMetrics() {
 
 export async function getAdminFinanceModule(filters: GestorFilters) {
   const dateWhere = dateRangeWhere(filters);
-  const monthStart = startOfMonth();
 
-  const [volume, payments, refunds, orders, paymentList, financialTx] = await Promise.all([
-    prisma.order.aggregate({ where: dateWhere, _sum: { total: true }, _avg: { total: true }, _count: { _all: true } }),
+  const [volume, payments, refundAgg, orders, paymentList, financialTx, recon] = await Promise.all([
+    prisma.order.aggregate({
+      where: dateWhere,
+      _sum: {
+        total: true,
+        grossAmount: true,
+        platformFeeAmount: true,
+        partnerAmount: true,
+        discount: true,
+        reserveAmount: true,
+        platformFixedFee: true,
+        gatewayFeeEstimated: true,
+      },
+      _avg: { total: true },
+      _count: { _all: true },
+    }),
     prisma.payment.groupBy({ by: ["status"], _count: { _all: true }, _sum: { amount: true }, where: dateWhere }),
-    prisma.payment.count({ where: { ...dateWhere, status: { in: ["REFUNDED", "CANCELLED"] } } }),
+    prisma.payment.aggregate({
+      where: { ...dateWhere, status: { in: ["REFUNDED", "CANCELLED"] } },
+      _sum: { amount: true },
+      _count: { _all: true },
+    }),
     prisma.order.findMany({
       where: dateWhere,
       select: {
         id: true,
         total: true,
+        grossAmount: true,
+        platformFeeAmount: true,
+        partnerAmount: true,
+        discount: true,
+        reserveAmount: true,
+        platformFixedFee: true,
+        pricingSnapshot: true,
+        pricingVersion: true,
         status: true,
         createdAt: true,
         user: { select: { name: true, email: true } },
         partner: { select: { name: true, partnerProfile: { select: { businessName: true } } } },
-        payments: { select: { provider: true, status: true, amount: true }, take: 1, orderBy: { createdAt: "desc" } },
+        payments: { select: { provider: true, status: true, amount: true, providerPaymentId: true }, take: 1, orderBy: { createdAt: "desc" } },
       },
       orderBy: { createdAt: "desc" },
       ...paginationArgs(filters),
     }),
     prisma.order.count({ where: dateWhere }),
     prisma.financialTransaction.aggregate({ where: dateWhere, _sum: { amount: true } }),
+    prisma.financialReconciliation.groupBy({
+      by: ["status"],
+      _count: { _all: true },
+    }),
   ]);
 
   const succeeded = payments.find((p) => p.status === "SUCCEEDED" || p.status === "PAID");
   const pending = payments.find((p) => p.status === "PENDING");
-  const gross = volume._sum.total ?? 0;
-  const commissionRate = 0.1;
-  const commission = Math.round(gross * commissionRate * 100) / 100;
+  const gmv = volume._sum.grossAmount && volume._sum.grossAmount > 0 ? volume._sum.grossAmount : (volume._sum.total ?? 0);
+  const platformRevenue = volume._sum.platformFeeAmount ?? 0;
+  const partnerEconomic = volume._sum.partnerAmount ?? 0;
+  const discountAmount = volume._sum.discount ?? 0;
+  const reserveAmount = volume._sum.reserveAmount ?? 0;
+  const fixedFee = volume._sum.platformFixedFee ?? 0;
+  const pspEstimated = volume._sum.gatewayFeeEstimated ?? 0;
+  const refundAmount = refundAgg._sum.amount ?? 0;
+  const reconMap = Object.fromEntries(recon.map((r) => [r.status, r._count._all]));
 
   return {
     tabs: [
@@ -292,39 +368,51 @@ export async function getAdminFinanceModule(filters: GestorFilters) {
       { id: "cashflow", label: "Fluxo de caixa" },
     ],
     metrics: [
-      { key: "gross", label: "Receita bruta", value: Math.round(gross * 100) / 100 },
-      { key: "net", label: "Receita líquida est.", value: Math.round((gross - commission) * 100) / 100 },
-      { key: "pending", label: "Receita pendente", value: Math.round((pending?._sum.amount ?? 0) * 100) / 100 },
-      { key: "refunds", label: "Reembolsos", value: refunds },
-      { key: "commission", label: "Comissão plataforma", value: commission },
-      { key: "avg_ticket", label: "Ticket médio", value: Math.round((volume._avg.total ?? 0) * 100) / 100 },
-      { key: "mrr", label: "MRR (pedidos mês)", value: Math.round(gross * 100) / 100 },
-      { key: "partner_balance", label: "Saldo a repassar est.", value: Math.round((gross - commission) * 100) / 100 },
-      { key: "cashflow", label: "Transações financeiras", value: Math.round((financialTx._sum.amount ?? 0) * 100) / 100 },
+      { key: "gmv", label: "GMV", value: roundMetric(gmv) },
+      { key: "platform_revenue", label: "Receita EccoPet", value: roundMetric(platformRevenue) },
+      { key: "partner_economic", label: "Valor do parceiro", value: roundMetric(partnerEconomic) },
+      { key: "fixed_fee", label: "Taxa fixa / booking", value: roundMetric(fixedFee) },
+      { key: "discount", label: "Descontos", value: roundMetric(discountAmount) },
+      { key: "reserve", label: "Reserva", value: roundMetric(reserveAmount) },
+      { key: "psp_estimated", label: "PSP estimado (não contratual)", value: roundMetric(pspEstimated) },
+      { key: "refunds", label: "Estornos (valor)", value: roundMetric(refundAmount) },
+      { key: "refunds_count", label: "Estornos (qtd)", value: refundAgg._count._all },
+      { key: "pending", label: "Pagamentos pendentes", value: roundMetric(pending?._sum.amount ?? 0) },
+      { key: "avg_ticket", label: "Ticket médio (GMV)", value: roundMetric(volume._count._all > 0 ? gmv / volume._count._all : 0) },
+      { key: "payout_estimated", label: "Payout estimado", value: roundMetric(partnerEconomic) },
+      { key: "split_ready", label: "Split Mercado Pago", value: 0 },
+      { key: "recon_reconciled", label: "Conciliação casada", value: reconMap.RECONCILED ?? 0 },
+      { key: "recon_mismatch", label: "Divergência de valor", value: reconMap.VALUE_MISMATCH ?? 0 },
+      { key: "recon_review", label: "Conciliação em revisão", value: reconMap.MANUAL_REVIEW ?? 0 },
+      { key: "cashflow_ledger", label: "Transações financeiras", value: roundMetric(financialTx._sum.amount ?? 0) },
     ],
     items: orders.map((o) => {
       const pay = o.payments[0];
       const partnerName = o.partner?.partnerProfile?.businessName ?? o.partner?.name ?? "—";
-      const comm = Math.round(o.total * commissionRate * 100) / 100;
+      const m = metricsFromOrderRow(o);
       return {
         id: o.id.slice(0, 10),
         cliente: o.user.name,
         parceiro: partnerName,
-        valorBruto: o.total,
-        comissaoEcoPet: comm,
-        liquidoParceiro: Math.round((o.total - comm) * 100) / 100,
+        gmv: roundMetric(m.gmv),
+        receitaEccoPet: roundMetric(m.platformRevenue),
+        valorParceiro: roundMetric(m.partnerEconomicValue),
+        payoutEstimado: roundMetric(m.estimatedPayout),
+        versaoPricing: o.pricingVersion,
         statusPagamento: pay?.status ?? o.status,
         gateway: pay?.provider ?? "—",
+        paymentId: pay?.providerPaymentId ?? "—",
+        split: "não habilitado",
         data: o.createdAt.toISOString(),
       };
     }),
     cashflow: {
-      entradasPrevistas: Math.round(gross * 100) / 100,
-      entradasRealizadas: Math.round((succeeded?._sum.amount ?? 0) * 100) / 100,
-      saidasPrevistas: commission,
-      saidasRealizadas: Math.round((financialTx._sum.amount ?? 0) * 100) / 100,
-      saldoPrevisto: Math.round((gross - commission) * 100) / 100,
-      saldoReal: Math.round(((succeeded?._sum.amount ?? 0) - (financialTx._sum.amount ?? 0)) * 100) / 100,
+      gmv: roundMetric(gmv),
+      platformRevenue: roundMetric(platformRevenue),
+      partnerEconomicValue: roundMetric(partnerEconomic),
+      entradasRealizadas: roundMetric(succeeded?._sum.amount ?? 0),
+      estornos: roundMetric(refundAmount),
+      reserva: roundMetric(reserveAmount),
     },
     pagination: {
       page: filters.page,
@@ -332,7 +420,8 @@ export async function getAdminFinanceModule(filters: GestorFilters) {
       total: paymentList,
       pages: Math.ceil(paymentList / filters.limit) || 1,
     },
-    disclaimer: "Comissão estimada em 10% até configuração em PlatformSettings. Dados de pagamento dependem de webhooks do gateway.",
+    disclaimer:
+      "GMV ≠ receita EccoPet ≠ payout. Valores vêm de snapshots do pedido (não recalculados). Split Mercado Pago não está habilitado (splitReady=false). Payout estimado não é saldo disponível.",
   };
 }
 
@@ -363,8 +452,8 @@ export async function getAdminAccountingModule(filters: GestorFilters) {
       { id: "reports", label: "Relatórios" },
     ],
     metrics: [
-      { key: "monthly_revenue", label: "Faturamento mensal", value: Math.round(revenue * 100) / 100 },
-      { key: "tax_base", label: "Base tributável est.", value: Math.round(revenue * 0.85 * 100) / 100 },
+      { key: "monthly_revenue", label: "GMV mensal (não é receita fiscal)", value: Math.round(revenue * 100) / 100 },
+      { key: "tax_base", label: "Base tributável", value: 0 },
       { key: "invoices_issued", label: "Notas emitidas", value: 0 },
       { key: "invoices_pending", label: "Notas pendentes", value: 0 },
       { key: "expenses", label: "Despesas cadastradas", value: Math.round(expenses * 100) / 100 },

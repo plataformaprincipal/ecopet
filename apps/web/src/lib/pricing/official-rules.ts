@@ -1,0 +1,46 @@
+import type { PricingPolicyRules } from "./types";
+
+/** Regras oficiais BR-2026.08-v1 — Relatório Mestre Financeiro, seções 4 e 27.2. */
+export const OFFICIAL_RULES: PricingPolicyRules = {
+  productCommissionPercentBps: 1000,
+  productFixedFeeCents: 149,
+  productReserveBps: 150,
+  productPayoutDays: 14,
+  serviceCommissionPercentBps: 1200,
+  serviceBookingFeeCents: 490,
+  serviceUrgentFeeCents: 1490,
+  serviceReserveBps: 150,
+  servicePayoutDays: 7,
+  pspEstimatePercentBps: 300,
+  pspEstimateFixedFeeCents: 49,
+  pspPayer: "PARTNER",
+  taxProvisionBps: 1200,
+  floorSaasAiBps: 6000,
+  floorSubscriptionBps: 4500,
+  floorAdsFeeBps: 3500,
+  exceptionFloorProductBps: 800,
+  exceptionFloorServiceBps: 1000,
+  maxDiscountWithoutApprovalBps: 1500,
+  cancelPolicyCode: "POL-CANCEL-V1",
+  noShowPolicyCode: "POL-NOSHOW-V1",
+  refundPolicyCode: "POL-REFUND-V1",
+  chargebackPolicyCode: "POL-CHARGEBACK-V1",
+};
+
+export const CALCULATION_ORDER = [
+  "1. resolve PricingVersion",
+  "2. resolve SKU / pricing mode",
+  "3. resolve base/provider/seller price",
+  "4. apply contract override",
+  "5. calculate platform commission",
+  "6. calculate fixed/booking/urgent fee",
+  "7. validate promotion",
+  "8. validate coupon",
+  "9. enforce margin guardrail",
+  "10. calculate reserve",
+  "11. calculate PSP estimate",
+  "12. calculate payout estimate",
+  "13. round cents",
+  "14. create quote",
+  "15. snapshot at transaction",
+] as const;

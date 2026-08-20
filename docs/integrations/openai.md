@@ -7,6 +7,9 @@ Chat, resumos, geração de texto, embeddings e moderação assistiva.
 ```
 AI_ENABLED=false
 OPENAI_API_KEY=
+# Não enviar por padrão. Só 1 se a chave atual exigir project scoping.
+OPENAI_SEND_PROJECT=
+OPENAI_PROJECT_ID=
 OPENAI_MODEL=gpt-4o-mini
 OPENAI_EMBEDDING_MODEL=text-embedding-3-small
 OPENAI_MODERATION_MODEL=omni-moderation-latest

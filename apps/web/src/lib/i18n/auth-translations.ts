@@ -192,6 +192,7 @@ const API_ERROR_CODE_KEYS: Record<string, TranslationKey> = {
   USER_ALREADY_EXISTS: "auth.validation.userAlreadyRegistered",
   TURNSTILE_REQUIRED: "turnstile.incomplete",
   TURNSTILE_FAILED: "turnstile.failed",
+  USE_GOOGLE: "auth.google.useGoogle",
   TOKEN_MISSING: "turnstile.incomplete",
   TOKEN_EXPIRED: "turnstile.expired",
   TOKEN_INVALID: "turnstile.failed",

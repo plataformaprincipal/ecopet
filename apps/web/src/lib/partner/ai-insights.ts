@@ -54,6 +54,11 @@ export type PartnerDashboardSummary = {
     servicesActive: number;
     productsActive: number;
   };
+  commerce: {
+    gmv: number;
+    platformRevenue: number;
+    estimatedPayout: number;
+  };
 };
 
 export async function buildPartnerDashboardSummary(
@@ -73,6 +78,7 @@ export async function buildPartnerDashboardSummary(
     inactiveProducts,
     servicesWithShortDescription,
     unansweredReviews,
+    commerceAgg,
   ] = await Promise.all([
     prisma.order.findMany({
       where: { partnerId },
@@ -169,6 +175,10 @@ export async function buildPartnerDashboardSummary(
     }),
     prisma.serviceReview.count({
       where: { partnerId, rating: { lte: 3 } },
+    }),
+    prisma.order.aggregate({
+      where: { partnerId, status: { in: ["PAID", "COMPLETED", "DELIVERED", "SHIPPED", "CONFIRMED"] } },
+      _sum: { grossAmount: true, platformFeeAmount: true, partnerAmount: true, total: true },
     }),
   ]);
 
@@ -298,6 +308,13 @@ export async function buildPartnerDashboardSummary(
       appointmentsPending,
       servicesActive: servicesCount,
       productsActive: productsCount,
+    },
+    commerce: {
+      gmv: commerceAgg._sum.grossAmount && commerceAgg._sum.grossAmount > 0
+        ? commerceAgg._sum.grossAmount
+        : (commerceAgg._sum.total ?? 0),
+      platformRevenue: commerceAgg._sum.platformFeeAmount ?? 0,
+      estimatedPayout: commerceAgg._sum.partnerAmount ?? 0,
     },
   };
 }

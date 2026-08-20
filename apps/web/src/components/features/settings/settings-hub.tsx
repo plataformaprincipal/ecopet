@@ -13,6 +13,7 @@ import { EcopetWatermark } from "@/components/shared/brand/ecopet-symbol";
 import { PersonaTabs } from "@/components/features/profile/shared/persona-tabs";
 import { NotificationPreferencesPanel } from "@/components/features/notifications/notification-preferences-panel";
 import { LogoutButton } from "@/components/shared/auth/logout-button";
+import { AccessMethodsPanel } from "@/components/features/settings/access-methods-panel";
 import type { ProfileModule } from "@/lib/profile/types";
 
 const SETTINGS_MODULES: ProfileModule[] = [
@@ -64,6 +65,8 @@ export function SettingsHub() {
               <Card className="card-premium">
                 <CardContent className="p-6">
                   <h2 className="heading-3 mb-4">Segurança</h2>
+                  <AccessMethodsPanel />
+                  <div className="mt-6 border-t border-ecopet-gray/10 pt-4 dark:border-white/10" />
                   <SettingRow
                     label="Autenticação em dois fatores (2FA)"
                     value="Em preparação"

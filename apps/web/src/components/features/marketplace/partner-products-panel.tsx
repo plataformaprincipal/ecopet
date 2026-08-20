@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { FileUploadField } from "@/components/ui/file-upload-field";
 import { productImageAlt } from "@/lib/accessibility/image-alt";
 import { AIComposerAssistant } from "@/components/features/ai/ai-composer-assistant";
+import { PartnerPricingPreview } from "@/components/features/partner/partner-pricing-preview";
 
 const CATEGORIES = ["FOOD", "HYGIENE", "TOYS", "ACCESSORIES", "MEDICINE", "HEALTH", "BEDDING", "TRANSPORT", "OTHER"];
 const SPECIES = ["DOG", "CAT", "BIRD", "FISH", "RODENT", "REPTILE", "OTHER"];
@@ -294,6 +295,9 @@ export function PartnerProductsPanel({ mode = "list", productId }: { mode?: "lis
                 <Input id="product-compare-price" type="number" step="0.01" placeholder="Preço anterior (opcional)" value={form.comparePrice} onChange={(e) => setForm({ ...form, comparePrice: e.target.value })} />
               </FormField>
             </div>
+            {Number(form.price) > 0 ? (
+              <PartnerPricingPreview kind="PRODUCT" baseAmount={Number(form.price)} />
+            ) : null}
             <div className="grid gap-2 sm:grid-cols-3">
               <FormField id="product-stock" label="Estoque">
                 <Input id="product-stock" type="number" min="0" placeholder="Quantidade" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} />

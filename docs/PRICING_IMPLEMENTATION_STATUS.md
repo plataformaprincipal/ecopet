@@ -1,4 +1,12 @@
-# Status da Precificação — Fase 2
+# Status da Precificação — Fonte única (`BR-2026.08-v1`)
+
+Ver `docs/pricing/PRICING_SOURCE_OF_TRUTH.md`.
+
+**Runtime:** `PricingVersion` ACTIVE + `apps/web/src/lib/pricing/engine.ts`. Frontend não é autoridade.
+
+---
+
+# Status da Precificação — Fase 2 (legado)
 
 **Fonte:** `PlatformSettings` + `apps/web/src/lib/commerce/pricing.ts`  
 **Versão padrão:** `v1`

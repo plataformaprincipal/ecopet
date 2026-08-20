@@ -79,6 +79,8 @@ export type PetOsOverview = {
     walletBalance: number;
     spentThisMonth: number;
     savings: number;
+    loyaltyPoints: number;
+    openSupportTickets: number;
     recentOrders: Array<{
       id: string;
       status: string;
@@ -253,6 +255,16 @@ export async function buildPetOsOverview(
     }),
   ]);
 
+  const [loyaltyAccount, openSupportTickets] = await Promise.all([
+    prisma.loyaltyAccount.findUnique({ where: { userId }, select: { pointsBalance: true } }),
+    prisma.supportTicket.count({
+      where: {
+        requesterId: userId,
+        status: { in: ["OPEN", "IN_PROGRESS", "WAITING", "WAITING_USER"] },
+      },
+    }),
+  ]);
+
   const deviceIds = devices.map((d) => d.id);
   const [alerts, readings, recommendedProducts, recommendedServices, recentActivities] = await Promise.all([
     deviceIds.length
@@ -345,6 +357,8 @@ export async function buildPetOsOverview(
       walletBalance: walletRow?.balance ?? 0,
       spentThisMonth: spentAgg._sum.total ?? 0,
       savings: savingsAgg._sum.amount ?? 0,
+      loyaltyPoints: loyaltyAccount?.pointsBalance ?? 0,
+      openSupportTickets,
       recentOrders: recentOrders.map((o) => ({
         id: o.id,
         status: o.status,

@@ -25,6 +25,12 @@ export const AuthEvents = {
     action: "login",
     module: "auth",
   }),
+  GOOGLE_LOGIN: defineEvent({
+    event_name: "google_login",
+    category: "auth",
+    action: "google_login",
+    module: "auth",
+  }),
   LOGOUT: defineEvent({
     event_name: "auth_logout",
     category: "auth",

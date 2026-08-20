@@ -18,6 +18,8 @@ import { serviceImageAlt, avatarAlt } from "@/lib/accessibility/image-alt";
 import { StartConversationButton } from "@/components/messages/StartConversationButton";
 import { useTranslation } from "@/providers/i18n-provider";
 import { useMarketplaceAuthGate } from "@/hooks/use-marketplace-auth-gate";
+import { formatBrlFromCents } from "@/lib/pricing/display";
+import { OFFICIAL_RULES } from "@/lib/pricing/official-rules";
 
 interface ServiceDetailContentProps {
   id: string;
@@ -72,6 +74,21 @@ export function ServiceDetailContent({ id }: ServiceDetailContentProps) {
             <span className="text-sm text-ecopet-gray">({service.reviewCount})</span>
           </div>
           <p className="mt-4 text-3xl font-extrabold text-ecopet-green">{formatMpPrice(service.price)}</p>
+          {["VET_CONSULTATION", "VETERINARY", "EXAMS", "SURGERY", "EMERGENCY_24H"].includes(service.category) ? (
+            <p className="mt-1 text-sm text-ecopet-gray">
+              Referência comercial. O estabelecimento é responsável pelo preço profissional. Cirurgias e exames complexos exigem orçamento — não é preço final garantido.
+            </p>
+          ) : (
+            <p className="mt-1 text-sm text-ecopet-gray">A partir do preço informado pelo prestador.</p>
+          )}
+          <p className="mt-1 text-xs text-ecopet-gray" data-testid="service-booking-fee">
+            Taxa de agendamento EccoPet: {formatBrlFromCents(OFFICIAL_RULES.serviceBookingFeeCents)} — exibida no resumo antes do pagamento.
+          </p>
+          {service.emergency ? (
+            <p className="mt-1 text-xs text-ecopet-gray" data-testid="service-urgent-fee">
+              Roteamento urgente: {formatBrlFromCents(OFFICIAL_RULES.serviceUrgentFeeCents)} — cobrado somente em atendimento emergencial elegível, não por marcar urgência.
+            </p>
+          ) : null}
           <p className="mt-4 text-ecopet-gray">{service.description}</p>
 
           <div className="mt-4 flex flex-wrap gap-3 text-sm">

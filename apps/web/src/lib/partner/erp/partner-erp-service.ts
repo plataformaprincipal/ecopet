@@ -34,6 +34,8 @@ import {
   getPartnerSuporteModule,
 } from "./final-service";
 import { getPartnerParceriasModule } from "./parcerias-service";
+import { metricsFromOrderRow, roundMetric } from "@/lib/finance/metrics";
+import { getPartnerBalances } from "@/lib/finance/balances";
 
 const PAID = ["PAID", "COMPLETED", "DELIVERED", "SHIPPED", "CONFIRMED"] as const;
 
@@ -52,10 +54,19 @@ async function partnerRevenue(prisma: PrismaClient, partnerId: string, from: Dat
       status: { in: [...PAID] },
       createdAt: { gte: from, ...(to ? { lte: to } : {}) },
     },
-    _sum: { total: true },
+    _sum: { total: true, grossAmount: true, platformFeeAmount: true, partnerAmount: true, reserveAmount: true, discount: true },
     _count: true,
   });
-  return { total: agg._sum.total ?? 0, count: agg._count };
+  const gmv = agg._sum.grossAmount && agg._sum.grossAmount > 0 ? agg._sum.grossAmount : (agg._sum.total ?? 0);
+  return {
+    gmv,
+    platformRevenue: agg._sum.platformFeeAmount ?? 0,
+    partnerEconomicValue: agg._sum.partnerAmount ?? 0,
+    reserveAmount: agg._sum.reserveAmount ?? 0,
+    discountAmount: agg._sum.discount ?? 0,
+    total: gmv,
+    count: agg._count,
+  };
 }
 
 async function partnerOrders(prisma: PrismaClient, partnerId: string, from?: Date) {
@@ -89,7 +100,7 @@ async function monthlyRevenueSeries(prisma: PrismaClient, partnerId: string, mon
     const start = new Date(d.getFullYear(), d.getMonth(), 1);
     const end = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
     const rev = await partnerRevenue(prisma, partnerId, start, end);
-    points.push({ label: start.toLocaleDateString("pt-BR", { month: "short" }), value: Math.round(rev.total * 100) / 100 });
+    points.push({ label: start.toLocaleDateString("pt-BR", { month: "short" }), value: Math.round(rev.gmv * 100) / 100 });
   }
   return points;
 }
@@ -123,12 +134,9 @@ export async function getPartnerDashboardModule(prisma: PrismaClient, partnerId:
     ]);
 
   const lowStock = stockRows.filter((p) => p.stock <= p.minStock).length;
-  const revenue = curRev.total;
-  const growth = pctChange(revenue, prevRev.total);
-  const ticket = curRev.count > 0 ? revenue / curRev.count : 0;
-  const estimatedCost = revenue * 0.62;
-  const profit = revenue - estimatedCost;
-  const margin = revenue > 0 ? Math.round((profit / revenue) * 1000) / 10 : 0;
+  const gmv = curRev.gmv;
+  const growth = pctChange(gmv, prevRev.gmv);
+  const ticket = curRev.count > 0 ? gmv / curRev.count : 0;
   const revenueSeries = await monthlyRevenueSeries(prisma, partnerId);
 
   const alerts = [];
@@ -139,22 +147,18 @@ export async function getPartnerDashboardModule(prisma: PrismaClient, partnerId:
     moduleId: "dashboard",
     title: "Dashboard Executivo",
     kpis: [
-      kpi("revenue", "Faturamento (mês)", Math.round(revenue * 100) / 100, { delta: growth, variant: growth && growth < 0 ? "warning" : "success" }),
+      kpi("gmv", "GMV (mês)", Math.round(curRev.gmv * 100) / 100, { delta: growth, variant: growth && growth < 0 ? "warning" : "success" }),
+      kpi("platform", "Comissão EccoPet (snapshot)", Math.round(curRev.platformRevenue * 100) / 100),
+      kpi("payout", "Payout estimado (não liquidado)", Math.round(curRev.partnerEconomicValue * 100) / 100),
       kpi("orders", "Pedidos (mês)", ordersMonth),
-      kpi("profit", "Lucro est.", Math.round(profit * 100) / 100),
-      kpi("margin", "Margem (%)", margin),
-      kpi("ticket", "Ticket médio", Math.round(ticket * 100) / 100),
+      kpi("ticket", "Ticket médio (GMV)", Math.round(ticket * 100) / 100),
       kpi("customers", "Clientes ativos", activeCustomers),
       kpi("products", "Produtos vendidos", productsSold._sum.quantity ?? 0),
       kpi("services", "Serviços vendidos", servicesSold),
-      kpi("goal", "Meta mensal (est.)", Math.round(revenue * 1.15 * 100) / 100),
+      kpi("pending", "Pedidos pendentes", pendingOrders, { variant: pendingOrders > 0 ? "warning" : "default" }),
     ],
     charts: [
-      { id: "revenue", type: "line", title: "Faturamento mensal", series: [{ name: "Receita", points: revenueSeries }] },
-      { id: "mix", type: "pie", title: "Mix receita", series: [{ name: "Mix", points: [
-        { label: "Produtos", value: Math.round(revenue * 0.55) },
-        { label: "Serviços", value: Math.round(revenue * 0.45) },
-      ] }] },
+      { id: "gmv", type: "line", title: "GMV mensal (não é lucro)", series: [{ name: "GMV", points: revenueSeries }] },
     ],
     alerts,
     aiInsights: partnerInsights(growth, "dashboard"),
@@ -163,7 +167,7 @@ export async function getPartnerDashboardModule(prisma: PrismaClient, partnerId:
       { label: "Produtos", href: "/partner/products" },
       { label: "Financeiro", href: "/partner/financeiro" },
     ],
-    disclaimer: refunds > 0 ? `${refunds} reembolso(s) vinculados — revise conciliação.` : undefined,
+    disclaimer: "GMV ≠ lucro. Comissão e payout vêm do snapshot do pedido. Split Mercado Pago não habilitado. Estimativa ≠ saldo disponível.",
   };
 }
 
@@ -183,47 +187,57 @@ export async function getPartnerBiModule(prisma: PrismaClient, partnerId: string
 
 export async function getPartnerFinanceiroModule(prisma: PrismaClient, partnerId: string): Promise<ErpModuleResponse> {
   const curStart = monthStart();
-  const orders = await partnerOrders(prisma, partnerId, curStart);
+  const [orders, refunds, balances] = await Promise.all([
+    partnerOrders(prisma, partnerId, curStart),
+    prisma.refund.findMany({
+      where: { order: { partnerId } },
+      orderBy: { createdAt: "desc" },
+      take: 20,
+    }),
+    getPartnerBalances(partnerId),
+  ]);
   const paid = orders.filter((o) => PAID.includes(o.status as (typeof PAID)[number]));
   const pending = orders.filter((o) => o.status === "PENDING" || o.status === "PROCESSING");
-  const receivable = pending.reduce((s, o) => s + o.total, 0);
-  const received = paid.reduce((s, o) => s + o.total, 0);
-  const refunds = await prisma.refund.findMany({
-    where: { order: { partnerId } },
-    orderBy: { createdAt: "desc" },
-    take: 20,
-  });
+  const paidMetrics = paid.reduce(
+    (acc, o) => {
+      const m = metricsFromOrderRow(o);
+      acc.gmv += m.gmv;
+      acc.platformRevenue += m.platformRevenue;
+      acc.partnerEconomicValue += m.partnerEconomicValue;
+      acc.estimatedPayout += m.estimatedPayout;
+      return acc;
+    },
+    { gmv: 0, platformRevenue: 0, partnerEconomicValue: 0, estimatedPayout: 0 }
+  );
+  const pendingGmv = pending.reduce((s, o) => s + metricsFromOrderRow(o).gmv, 0);
   const refundTotal = refunds.reduce((s, r) => s + r.amount, 0);
-
-  const payableEst = received * 0.35;
-  const cashFlow = received - payableEst - refundTotal;
-  const delinquency = pending.length > 0 ? Math.round((pending.length / Math.max(orders.length, 1)) * 100) : 0;
 
   return {
     moduleId: "financeiro",
     title: "Financeiro",
     kpis: [
-      kpi("receivable", "Contas a receber", Math.round(receivable * 100) / 100, { variant: receivable > 0 ? "warning" : "default" }),
-      kpi("payable", "Contas a pagar (est.)", Math.round(payableEst * 100) / 100),
-      kpi("cashflow", "Fluxo de caixa", Math.round(cashFlow * 100) / 100),
-      kpi("budget", "Orçamento (mês)", Math.round(received * 1.1 * 100) / 100),
-      kpi("forecast", "Previsão financeira", Math.round(received * 1.08 * 100) / 100),
-      kpi("delinquency", "Inadimplência (%)", delinquency, { variant: delinquency > 20 ? "critical" : "default" }),
-      kpi("payouts", "Repasses (est.)", Math.round(received * 0.92 * 100) / 100),
-      kpi("commissions", "Comissões (est.)", Math.round(received * 0.08 * 100) / 100),
-      kpi("refunds", "Reembolsos", Math.round(refundTotal * 100) / 100),
+      kpi("gmv", "GMV (mês, pedidos pagos)", roundMetric(paidMetrics.gmv)),
+      kpi("commission", "Comissão EccoPet (snapshot)", roundMetric(paidMetrics.platformRevenue)),
+      kpi("partner", "Valor econômico do parceiro", roundMetric(paidMetrics.partnerEconomicValue)),
+      kpi("payout_est", "Payout estimado", roundMetric(paidMetrics.estimatedPayout)),
+      kpi("pending_gmv", "GMV em processamento", roundMetric(pendingGmv), { variant: pendingGmv > 0 ? "warning" : "default" }),
+      kpi("ledger_pending", "Ledger pendente", roundMetric(balances.asFloats.pending)),
+      kpi("ledger_available", "Ledger disponível (≠ payout MP)", roundMetric(balances.asFloats.available)),
+      kpi("ledger_paid", "Payout liquidado (ledger)", roundMetric(balances.asFloats.paid)),
+      kpi("refunds", "Reembolsos", roundMetric(refundTotal)),
     ],
     charts: [
       {
-        id: "cashflow",
+        id: "split",
         type: "bar",
-        title: "Fluxo de caixa",
+        title: "Composição do mês (snapshots)",
         series: [{
           name: "Valores",
           points: [
-            { label: "Entradas", value: received },
-            { label: "Saídas est.", value: payableEst },
-            { label: "Reembolsos", value: refundTotal },
+            { label: "GMV", value: paidMetrics.gmv },
+            { label: "EccoPet", value: paidMetrics.platformRevenue },
+            { label: "Parceiro", value: paidMetrics.partnerEconomicValue },
+            { label: "Estornos", value: refundTotal },
           ],
         }],
       },
@@ -231,14 +245,18 @@ export async function getPartnerFinanceiroModule(prisma: PrismaClient, partnerId
     tables: [
       {
         id: "receivables",
-        label: "Contas a receber",
-        rows: pending.slice(0, 15).map((o) => ({
-          id: o.id,
-          cliente: o.user?.name ?? "—",
-          valor: o.total,
-          status: o.status,
-          data: o.createdAt.toISOString(),
-        })),
+        label: "Pedidos em processamento",
+        rows: pending.slice(0, 15).map((o) => {
+          const m = metricsFromOrderRow(o);
+          return {
+            id: o.id,
+            cliente: o.user?.name ?? "—",
+            gmv: roundMetric(m.gmv),
+            payoutEstimado: roundMetric(m.estimatedPayout),
+            status: o.status,
+            data: o.createdAt.toISOString(),
+          };
+        }),
       },
       {
         id: "refunds",
@@ -252,77 +270,58 @@ export async function getPartnerFinanceiroModule(prisma: PrismaClient, partnerId
       },
     ],
     tabs: [
-      { id: "payable", label: "A pagar" },
-      { id: "receivable", label: "A receber" },
-      { id: "cashflow", label: "Fluxo" },
-      { id: "reconciliation", label: "Conciliação" },
-      { id: "gateways", label: "Gateways" },
-      { id: "subscriptions", label: "Assinaturas" },
+      { id: "overview", label: "Visão geral" },
+      { id: "receivable", label: "Em processamento" },
+      { id: "payout", label: "Repasse" },
+      { id: "refunds", label: "Estornos" },
     ],
-    disclaimer: "Gateways e assinaturas exibem dados agregados de pedidos. Conciliação bancária completa pendente de integração.",
+    disclaimer:
+      "Split Mercado Pago não habilitado (splitReady=false). Payout estimado ≠ saldo disponível ≠ payout liquidado. Ledger não prova repasse no PSP.",
   };
 }
 
 export async function getPartnerContabilModule(prisma: PrismaClient, partnerId: string): Promise<ErpModuleResponse> {
   const curStart = monthStart();
   const rev = await partnerRevenue(prisma, partnerId, curStart);
-  const revenue = rev.total;
-  const cogs = revenue * 0.45;
-  const opex = revenue * 0.25;
-  const ebitda = revenue - cogs - opex;
-  const taxes = revenue * 0.06;
 
   return {
     moduleId: "contabil",
-    title: "Contábil",
+    title: "Contábil operacional",
     kpis: [
-      kpi("revenue", "Receitas", Math.round(revenue * 100) / 100),
-      kpi("expenses", "Despesas", Math.round((cogs + opex) * 100) / 100),
-      kpi("ebitda", "EBITDA", Math.round(ebitda * 100) / 100),
-      kpi("taxes", "Impostos (est.)", Math.round(taxes * 100) / 100),
-      kpi("assets", "Ativo (est.)", Math.round(revenue * 1.4 * 100) / 100),
-      kpi("liabilities", "Passivo (est.)", Math.round(revenue * 0.5 * 100) / 100),
+      kpi("gmv", "GMV (mês)", roundMetric(rev.gmv)),
+      kpi("platform", "Receita EccoPet (não é do parceiro)", roundMetric(rev.platformRevenue)),
+      kpi("partner", "Valor econômico do parceiro", roundMetric(rev.partnerEconomicValue)),
+      kpi("reserve", "Reserva snapshot", roundMetric(rev.reserveAmount)),
     ],
     charts: [
       {
-        id: "dre",
+        id: "composition",
         type: "bar",
-        title: "DRE simplificada",
+        title: "Composição (não é DRE fiscal)",
         series: [{
-          name: "DRE",
+          name: "Snapshots",
           points: [
-            { label: "Receita", value: revenue },
-            { label: "CMV", value: cogs },
-            { label: "Despesas", value: opex },
-            { label: "EBITDA", value: ebitda },
+            { label: "GMV", value: rev.gmv },
+            { label: "EccoPet", value: rev.platformRevenue },
+            { label: "Parceiro", value: rev.partnerEconomicValue },
           ],
         }],
       },
     ],
     tables: [
       {
-        id: "chart-accounts",
-        label: "Plano de contas (resumo)",
+        id: "notes",
+        label: "Notas",
         rows: [
-          { conta: "1.1 Caixa", tipo: "Ativo", saldo: Math.round(revenue * 0.2 * 100) / 100 },
-          { conta: "3.1 Receita vendas", tipo: "Receita", saldo: Math.round(revenue * 100) / 100 },
-          { conta: "4.1 CMV", tipo: "Despesa", saldo: Math.round(cogs * 100) / 100 },
-          { conta: "4.2 Despesas operacionais", tipo: "Despesa", saldo: Math.round(opex * 100) / 100 },
+          { item: "Contabilidade legal", status: "não emitida neste módulo" },
+          { item: "Split PSP", status: "não habilitado" },
         ],
-      },
-      {
-        id: "invoices",
-        label: "Notas fiscais",
-        rows: [],
       },
     ],
     tabs: [
-      { id: "dre", label: "DRE" },
-      { id: "balance", label: "Balanço" },
-      { id: "trial", label: "Balancete" },
-      { id: "taxes", label: "Impostos" },
+      { id: "overview", label: "Visão operacional" },
     ],
-    disclaimer: "DRE e balanço calculados a partir de pedidos pagos. NF-e requer integração fiscal.",
+    disclaimer: "Não substitui escrituração fiscal. CMV/EBITDA não são estimados por percentual.",
   };
 }
 
@@ -334,35 +333,32 @@ export async function getPartnerComercialModule(prisma: PrismaClient, partnerId:
     prisma.product.count({ where: { sellerId: partnerId, status: "ACTIVE", deletedAt: null } }),
     prisma.appointment.count({ where: { partnerId, createdAt: { gte: curStart } } }),
   ]);
-  const goal = revenue.total * 1.2;
-  const attainment = goal > 0 ? Math.round((revenue.total / goal) * 100) : 0;
 
   return {
     moduleId: "comercial",
     title: "Comercial",
     kpis: [
-      kpi("revenue", "Receita comercial", Math.round(revenue.total * 100) / 100),
-      kpi("goal", "Meta comercial", Math.round(goal * 100) / 100),
-      kpi("attainment", "Atingimento (%)", attainment, { variant: attainment >= 80 ? "success" : "warning" }),
+      kpi("gmv", "GMV comercial (mês)", Math.round(revenue.gmv * 100) / 100),
+      kpi("platform", "Comissão EccoPet", Math.round(revenue.platformRevenue * 100) / 100),
       kpi("products", "Produtos ativos", products),
       kpi("services", "Serviços ativos", services),
       kpi("appointments", "Agendamentos (mês)", appointments),
     ],
     charts: [
       {
-        id: "goal",
+        id: "gmv",
         type: "bar",
-        title: "Meta x Realizado",
+        title: "GMV do mês",
         series: [{
           name: "Comercial",
           points: [
-            { label: "Realizado", value: Math.round(revenue.total * 100) / 100 },
-            { label: "Meta", value: Math.round(goal * 100) / 100 },
+            { label: "GMV", value: Math.round(revenue.gmv * 100) / 100 },
           ],
         }],
       },
     ],
-    aiInsights: partnerInsights(pctChange(revenue.total, revenue.total * 0.9), "comercial"),
+    aiInsights: partnerInsights(pctChange(revenue.gmv, revenue.gmv), "comercial"),
+    disclaimer: "Sem meta fictícia. GMV não é lucro do parceiro.",
   };
 }
 
@@ -446,8 +442,16 @@ export async function getPartnerVendasModule(prisma: PrismaClient, partnerId: st
   const orders = await partnerOrders(prisma, partnerId, curStart);
   const paid = orders.filter((o) => PAID.includes(o.status as (typeof PAID)[number]));
   const conversion = orders.length > 0 ? Math.round((paid.length / orders.length) * 100) : 0;
-  const revenue = paid.reduce((s, o) => s + o.total, 0);
-  const ticket = paid.length > 0 ? revenue / paid.length : 0;
+  const paidMetrics = paid.reduce(
+    (acc, o) => {
+      const m = metricsFromOrderRow(o);
+      acc.gmv += m.gmv;
+      acc.platformRevenue += m.platformRevenue;
+      return acc;
+    },
+    { gmv: 0, platformRevenue: 0 }
+  );
+  const ticket = paid.length > 0 ? paidMetrics.gmv / paid.length : 0;
 
   return {
     moduleId: "vendas",
@@ -455,18 +459,23 @@ export async function getPartnerVendasModule(prisma: PrismaClient, partnerId: st
     kpis: [
       kpi("orders", "Pedidos", orders.length),
       kpi("paid", "Vendas concluídas", paid.length),
-      kpi("revenue", "Receita", Math.round(revenue * 100) / 100),
-      kpi("conversion", "Conversão (%)", conversion),
-      kpi("ticket", "Ticket médio", Math.round(ticket * 100) / 100),
+      kpi("gmv", "GMV", Math.round(paidMetrics.gmv * 100) / 100),
+      kpi("commission", "Comissão EccoPet", Math.round(paidMetrics.platformRevenue * 100) / 100),
+      kpi("conversion", "Conversão pedido→pago (%)", conversion),
+      kpi("ticket", "Ticket médio (GMV)", Math.round(ticket * 100) / 100),
     ],
-    items: paid.slice(0, 20).map((o) => ({
-      id: o.id,
-      cliente: o.user?.name ?? "—",
-      total: o.total,
-      status: o.status,
-      itens: o.items.length,
-      data: o.createdAt.toISOString(),
-    })),
+    items: paid.slice(0, 20).map((o) => {
+      const m = metricsFromOrderRow(o);
+      return {
+        id: o.id,
+        cliente: o.user?.name ?? "—",
+        gmv: roundMetric(m.gmv),
+        payoutEstimado: roundMetric(m.estimatedPayout),
+        status: o.status,
+        itens: o.items.length,
+        data: o.createdAt.toISOString(),
+      };
+    }),
     charts: [
       {
         id: "pipeline",
@@ -500,28 +509,25 @@ export async function getPartnerAnalyticsModule(prisma: PrismaClient, partnerId:
     }),
   ]);
 
-  const growth = pctChange(cur.total, prev.total) ?? 0;
+  const growth = pctChange(cur.gmv, prev.gmv) ?? 0;
   const repeat = repeatCustomers.filter((r) => r._count > 1).length;
-  const churnEst = customers > 0 ? Math.max(0, Math.round((1 - repeat / customers) * 100)) : 0;
-  const ltv = customers > 0 ? Math.round((cur.total / customers) * 12 * 100) / 100 : 0;
-  const cac = cur.count > 0 ? Math.round((cur.total * 0.12 / cur.count) * 100) / 100 : 0;
   const series = await monthlyRevenueSeries(prisma, partnerId);
 
   return {
     moduleId: "analytics",
     title: "Analytics",
     kpis: [
-      kpi("revenue", "Receita", Math.round(cur.total * 100) / 100),
-      kpi("conversion", "Conversão (%)", cur.count > 0 ? Math.round((cur.count / Math.max(cur.count + 2, 1)) * 100) : 0),
-      kpi("ticket", "Ticket médio", cur.count > 0 ? Math.round((cur.total / cur.count) * 100) / 100 : 0),
-      kpi("growth", "Crescimento (%)", growth),
-      kpi("churn", "Churn est. (%)", churnEst, { variant: churnEst > 30 ? "warning" : "default" }),
-      kpi("ltv", "LTV est.", ltv),
-      kpi("cac", "CAC est.", cac),
+      kpi("gmv", "GMV", Math.round(cur.gmv * 100) / 100),
+      kpi("platform", "Receita EccoPet", Math.round(cur.platformRevenue * 100) / 100),
+      kpi("ticket", "Ticket médio (GMV)", cur.count > 0 ? Math.round((cur.gmv / cur.count) * 100) / 100 : 0),
+      kpi("growth", "Variação GMV (%)", growth),
+      kpi("customers", "Clientes únicos", customers),
+      kpi("repeat", "Clientes com >1 pedido no mês", repeat),
     ],
     charts: [
-      { id: "growth", type: "line", title: "Receita mensal", series: [{ name: "Receita", points: series }] },
+      { id: "growth", type: "line", title: "GMV mensal", series: [{ name: "GMV", points: series }] },
     ],
+    disclaimer: "Sem LTV/CAC/churn estimado. Contadores reais apenas.",
   };
 }
 

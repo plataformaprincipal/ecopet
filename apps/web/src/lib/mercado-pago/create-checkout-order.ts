@@ -13,6 +13,8 @@ import {
 import { mapMpOrderStatusToInternal } from "@/lib/mercado-pago/status";
 import { applyInternalPaymentStatus } from "@/lib/mercado-pago/apply-payment-status";
 import type { CreateMpOrderRequest } from "@/lib/mercado-pago/types";
+import { metricsFromOrderRow } from "@/lib/finance/metrics";
+import { evaluateSplitCapability, marketplaceParamsForOrdersApi } from "@/lib/finance/split-capability";
 
 export type CreateCheckoutOrderInput = {
   userId: string;
@@ -68,6 +70,9 @@ export async function createMercadoPagoCheckoutOrder(input: CreateCheckoutOrderI
 
   const amount = Number(order.total);
   if (!Number.isFinite(amount) || amount <= 0) throw new Error("INVALID_AMOUNT");
+  const snapshotMetrics = metricsFromOrderRow(order);
+  const split = evaluateSplitCapability();
+  void marketplaceParamsForOrdersApi(split);
 
   const methodId = input.paymentMethodId.toLowerCase();
   const isCard = Boolean(input.cardToken);
@@ -100,9 +105,13 @@ export async function createMercadoPagoCheckoutOrder(input: CreateCheckoutOrderI
         paymentType: input.paymentMethodType ?? (isCard ? "credit_card" : methodId),
         installments: isCard ? input.installments ?? 1 : 1,
         metadata: {
-          platformFeeEstimated: null,
-          partnerNetEstimated: amount,
+          platformFeeEstimated: snapshotMetrics.platformRevenue,
+          partnerNetEstimated: snapshotMetrics.estimatedPayout,
+          riskReserveEstimate: snapshotMetrics.reserveAmount,
+          pricingVersion: order.pricingVersion,
           splitReady: false,
+          logicalSplitOnly: true,
+          splitDecision: split.decision,
           items: order.items.map((i) => ({
             partnerId: i.partnerId,
             productId: i.productId,

@@ -17,10 +17,14 @@ export async function GET() {
   });
 
   return apiSuccess({
-    orders: orders.map((o) => ({
-      ...o,
-      partnerId: o.partnerId,
-    })),
+    orders: orders.map((o) => {
+      const { pricingSnapshot: _snap, ...rest } = o;
+      void _snap;
+      return {
+        ...rest,
+        partnerId: o.partnerId,
+      };
+    }),
     total: orders.length,
   });
 }

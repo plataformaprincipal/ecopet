@@ -76,7 +76,7 @@ export function ClientDashboardHome({ userName }: ClientDashboardHomeProps) {
   if (!data) return null;
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8 animate-fade-in" data-testid="client-ops-dashboard">
       <ClientPageHeader
         title={`Olá, ${firstName}`}
         description="Resumo do dia, saúde, agenda, finanças e recomendações do seu pet."
@@ -103,8 +103,11 @@ export function ClientDashboardHome({ userName }: ClientDashboardHomeProps) {
         <PetOsCard title="Pets cadastrados" icon={PawPrint} accent="violet" href="/cliente/pets">
           <PetOsMetric value={data.petsCount} hint={data.pets.map((p) => p.name).join(", ") || "Nenhum pet"} />
         </PetOsCard>
-        <PetOsCard title="Gastos do mês" icon={TrendingDown} accent="rose" href="/dashboard/client/orders">
+        <PetOsCard title="Gastos do mês" icon={TrendingDown} accent="rose" href="/cliente/pedidos">
           <PetOsMetric value={brl(data.finance.spentThisMonth)} hint="Compras no marketplace" />
+        </PetOsCard>
+        <PetOsCard title="EccoPontos" icon={Sparkles} accent="violet" href="/cliente/rewards">
+          <PetOsMetric value={data.finance.loyaltyPoints} hint="Saldo real no ledger" />
         </PetOsCard>
         <PetOsCard title="Medicamentos pendentes" icon={Pill} accent="amber" href="/cliente/saude">
           <PetOsMetric value={data.today.medicationsActive} hint="Tratamentos ativos" />

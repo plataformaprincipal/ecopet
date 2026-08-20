@@ -5,7 +5,7 @@ import { requireAuth } from "@/lib/auth/require-auth";
 import { handleChatRouteError } from "@/lib/messages/api-handler";
 import { requireActiveChatUser } from "@/lib/messages/permissions";
 import { openContextualConversation } from "@/lib/talkjs/contextual-conversations";
-import { isTalkJsConfigured } from "@/lib/talkjs/client";
+import { isTalkJsServerConfigured } from "@/lib/talkjs/server";
 
 export const dynamic = "force-dynamic";
 
@@ -23,8 +23,8 @@ export async function POST(request: Request) {
 
     await requireActiveChatUser(user.id);
 
-    if (!isTalkJsConfigured()) {
-      return apiFailure("TALKJS_NOT_CONFIGURED", "TalkJS não configurado.", 503);
+    if (!isTalkJsServerConfigured()) {
+      return apiFailure("TALKJS_NOT_CONFIGURED", "Mensagens temporariamente indisponíveis.", 503);
     }
 
     const body = await request.json().catch(() => ({}));
