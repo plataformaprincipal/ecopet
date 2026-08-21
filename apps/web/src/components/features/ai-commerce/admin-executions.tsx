@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type Row = {
   id: string;
@@ -21,20 +21,28 @@ export function AdminAiExecutionsPage() {
   const [status, setStatus] = useState("");
   const [sku, setSku] = useState("");
 
-  function load() {
+  const load = useCallback(async (signal: AbortSignal) => {
     const q = new URLSearchParams();
     if (status) q.set("status", status);
     if (sku) q.set("sku", sku);
-    fetch(`/api/admin/ai/commerce-executions?${q}`, { credentials: "include" })
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.success) setRows(d.data.items);
+    try {
+      const r = await fetch(`/api/admin/ai/commerce-executions?${q}`, {
+        credentials: "include",
+        signal,
       });
-  }
+      const d = await r.json();
+      if (signal.aborted) return;
+      if (d.success) setRows(d.data.items);
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+    }
+  }, [status, sku]);
 
   useEffect(() => {
-    load();
-  }, [status, sku]);
+    const ac = new AbortController();
+    void load(ac.signal);
+    return () => ac.abort();
+  }, [load]);
   return (
     <div className="p-6">
       <h1 className="text-2xl font-semibold">Execuções de IA comercial</h1>

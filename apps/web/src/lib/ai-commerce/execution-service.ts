@@ -5,6 +5,7 @@ import {
   consumeEntitlement,
   reserveEntitlementForExecution,
   restoreEntitlement,
+  assertPetOwned,
 } from "./entitlement-service";
 import { runStructuredCapability, type GatewayImage } from "./openai-gateway";
 import { getProductDefBySku } from "./catalog";
@@ -38,7 +39,7 @@ export async function startOrGetExecution(params: { userId: string; entitlementI
 export async function saveExecutionInput(params: {
   userId: string;
   executionId: string;
-  input: Prisma.InputJsonValue;
+  input: Record<string, unknown>;
 }) {
   const execution = await prisma.aIExecution.findUnique({ where: { id: params.executionId } });
   if (!execution || execution.userId !== params.userId) {
@@ -46,7 +47,10 @@ export async function saveExecutionInput(params: {
   }
   return prisma.aIExecution.update({
     where: { id: execution.id },
-    data: { inputSnapshot: params.input, status: execution.status === "COMPLETED" ? execution.status : "DRAFT" },
+    data: {
+      inputSnapshot: params.input as Prisma.InputJsonValue,
+      status: execution.status === "COMPLETED" ? execution.status : "DRAFT",
+    },
   });
 }
 

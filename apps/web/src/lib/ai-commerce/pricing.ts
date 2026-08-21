@@ -10,6 +10,7 @@ import {
   type AiCommerceSku,
 } from "./flags";
 import { AiCommerceError } from "./errors";
+import type { CouponInput } from "@/lib/pricing/types";
 
 export type ResolvedAiPrice = {
   sku: string;
@@ -65,7 +66,7 @@ export async function resolveAiProductPrice(sku: string): Promise<ResolvedAiPric
 export async function quoteAiSku(params: {
   sku: string;
   quantity?: number;
-  coupon?: { code: string; discountType: string; discountValue: number } | null;
+  coupon?: CouponInput | null;
 }): Promise<{
   quote: ReturnType<typeof quotePricing>;
   resolved: ResolvedAiPrice;

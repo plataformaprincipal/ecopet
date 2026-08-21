@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { getProductDefBySku } from "@/lib/ai-commerce/catalog";
@@ -48,20 +48,31 @@ export function AiWorkspace({ executionId }: { executionId: string }) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
 
-  async function load() {
-    const res = await fetch(`/api/ai-commerce/executions/${executionId}`, { credentials: "include" });
-    const data = await res.json();
-    if (!data.success) {
-      setMsg(data.error?.message ?? "Não encontrado.");
-      return;
+  const load = useCallback(async (signal?: AbortSignal) => {
+    try {
+      const res = await fetch(`/api/ai-commerce/executions/${executionId}`, {
+        credentials: "include",
+        signal,
+      });
+      const data = await res.json();
+      if (signal?.aborted) return;
+      if (!data.success) {
+        setMsg(data.error?.message ?? "Não encontrado.");
+        return;
+      }
+      setEx(data.data);
+      if (data.data.inputSnapshot) setInput(data.data.inputSnapshot);
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      setMsg("Não encontrado.");
     }
-    setEx(data.data);
-    if (data.data.inputSnapshot) setInput(data.data.inputSnapshot);
-  }
+  }, [executionId]);
 
   useEffect(() => {
-    load();
-  }, [executionId]);
+    const ac = new AbortController();
+    void load(ac.signal);
+    return () => ac.abort();
+  }, [load]);
 
   async function persist(next: Record<string, unknown>) {
     setInput(next);

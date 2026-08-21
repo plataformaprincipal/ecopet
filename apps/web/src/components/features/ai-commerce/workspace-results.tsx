@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { URGENCY_LABELS, getProductDefBySku } from "@/lib/ai-commerce/catalog";
 import { analyticsService } from "@/lib/analytics/service";
@@ -51,9 +52,9 @@ function Downloads({ executionId, sku }: { executionId: string; sku: string }) {
         </Button>
       ) : null}
       <Button asChild variant="outline">
-        <a href={def?.href ?? "/eccopet"} onClick={() => analyticsService.track(AiEvents.REPURCHASE, { screen: "eccopet_workspace" })}>
+        <Link href={def?.href ?? "/eccopet"} onClick={() => analyticsService.track(AiEvents.REPURCHASE, { screen: "eccopet_workspace" })}>
           {def?.billingType === "SUBSCRIPTION" ? "Renovar plano" : "Nova análise"}
-        </a>
+        </Link>
       </Button>
     </div>
   );
@@ -116,7 +117,7 @@ export function SpecializedResult({
           <p className="mt-2 text-2xl font-semibold">{urgency || "Acompanhamento"}</p>
           <p className="mt-2 text-sm text-muted-foreground">{String(output.summary ?? "")}</p>
           <Button asChild className="mt-4">
-            <a href="/servicos">Encontrar atendimento</a>
+            <Link href="/servicos">Encontrar atendimento</Link>
           </Button>
         </div>
       )}
@@ -351,7 +352,7 @@ function MarketplaceCards({ products }: { products: Hit[] }) {
             <p className="text-xs text-muted-foreground">{p.sellerName} · {p.available ? "Disponível" : "Sem estoque"}</p>
             <div className="mt-3 flex gap-2">
               <Button asChild size="sm" variant="outline">
-                <a href={p.href}>Ver produto</a>
+                <Link href={p.href}>Ver produto</Link>
               </Button>
               <Button
                 size="sm"

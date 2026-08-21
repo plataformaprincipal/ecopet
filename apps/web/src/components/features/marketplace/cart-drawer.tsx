@@ -50,7 +50,7 @@ export function CartDrawer() {
       <aside
         className={cn(
           "fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col bg-white shadow-2xl transition-transform duration-300 dark:bg-[#0f1419]",
-          cartOpen ? "translate-x-0" : "translate-x-full"
+          cartOpen ? "translate-x-0" : "pointer-events-none translate-x-full"
         )}
         aria-label="Carrinho"
         aria-hidden={!cartOpen}

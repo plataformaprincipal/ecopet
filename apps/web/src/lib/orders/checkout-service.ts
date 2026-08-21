@@ -83,6 +83,7 @@ export async function checkoutFromCart(params: {
     }[] = [];
 
     for (const item of physicalItems) {
+      if (!item.productId) continue;
       const product = byId.get(item.productId);
       if (!product) throw new Error("PRODUCT_NOT_FOUND");
       if (product.status !== ProductCatalogStatus.ACTIVE) throw new Error("PRODUCT_INACTIVE");

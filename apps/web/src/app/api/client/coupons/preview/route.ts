@@ -16,7 +16,10 @@ export async function POST(request: Request) {
   if (!parsed.success) return apiFailure("VALIDATION", "Informe o cupom.", 400);
 
   const cart = await getOrCreateCart(user!.id);
-  const grossBrl = cart.items.reduce((s, i) => s + i.product.price * i.quantity, 0);
+  const grossBrl = cart.items.reduce(
+    (s, i) => s + (i.product?.price ?? i.unitPriceSnapshot ?? 0) * i.quantity,
+    0
+  );
 
   try {
     const preview = await previewCouponForUser({

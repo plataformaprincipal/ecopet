@@ -2,7 +2,7 @@
  * Verificação de sessão JWT para Edge Runtime (middleware).
  * Sem Prisma, server-only ou lib/env — apenas jose + process.env.
  */
-import { jwtVerify } from "jose";
+import { jwtVerify } from "jose/jwt/verify";
 import { resolveAuthSecret } from "@/lib/auth-secret";
 import type { AccountStatus, AppRole } from "@/lib/edge/types";
 

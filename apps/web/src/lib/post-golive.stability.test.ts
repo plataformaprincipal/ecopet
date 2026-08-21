@@ -188,9 +188,12 @@ describe("partner login independent from CNPJ lookup", () => {
 });
 
 describe("partner/ONG dark and black theme", () => {
-  it("black também aplica classe dark", () => {
+  it("black usa um único token de classe e ainda ativa dark", () => {
     const src = readSrc("providers/theme-provider.tsx");
-    assert.ok(src.includes('black: "dark black"'));
+    assert.ok(!src.includes('"dark black"'));
+    assert.ok(src.includes('black: "black"'));
+    const sync = readSrc("providers/theme-accessibility-sync.tsx");
+    assert.ok(sync.includes('classList.add("dark")'));
   });
 });
 

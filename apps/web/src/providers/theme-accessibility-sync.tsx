@@ -7,6 +7,7 @@ import { isEcopetAppearanceTheme } from "@/lib/theme/ecopet-theme";
 
 /**
  * Mantém contraste invertido (legado) alinhado ao tema preto nativo — sem filter: invert.
+ * Também aplica `.dark` junto de `.black` para utilitários Tailwind `dark:`.
  */
 export function ThemeAccessibilitySync() {
   const { resolvedTheme, setTheme } = useTheme();
@@ -24,6 +25,13 @@ export function ThemeAccessibilitySync() {
       useAccessibilityStore.setState({ invertedContrast: false });
     }
   }, [invertedContrast, resolvedTheme]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (resolvedTheme === "black") {
+      root.classList.add("dark");
+    }
+  }, [resolvedTheme]);
 
   return null;
 }
