@@ -307,20 +307,20 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
       const cpfDigits = onlyDigits(form.cpf);
       if (form.partnerType === "AUTONOMOUS") {
         if (!validateCpfChecksum(cpfDigits)) errors.cpf = v.cpfInvalid;
-        else if (cpfAvailability === "taken") Object.assign(errors, duplicateRegistrationError());
+        else if (cpfAvailability === "taken") Object.assign(errors, duplicateRegistrationError("CPF_DUPLICATE"));
       }
       if (!getEmailLiveFeedback(form.email).valid) errors.email = v.emailInvalid;
       const phoneFb = getPhoneLiveFeedback(form.phone, phoneCountry, phoneCountry === "BR" ? brazilDdd : undefined);
       if (!phoneFb.valid) errors.phone = phoneFb.message ?? v.phoneInvalid;
       if (!isValidUsername(form.username)) errors.username = p.validation.usernameInvalid;
-      if (usernameStatus === "taken") Object.assign(errors, duplicateRegistrationError());
+      if (usernameStatus === "taken") Object.assign(errors, duplicateRegistrationError("USERNAME_DUPLICATE"));
       const dateErr = validateActivityStartDate(form.activityStartDate);
       if (dateErr) errors.activityStartDate = tv(dateErr) ?? dateErr;
     }
 
     if (current === "corporate" && form.partnerType === "CORPORATE") {
       if (!validateCnpjChecksum(onlyDigits(form.cnpj))) errors.cnpj = v.cnpjInvalid;
-      else if (cnpjAvailability === "taken") Object.assign(errors, duplicateRegistrationError());
+      else if (cnpjAvailability === "taken") Object.assign(errors, duplicateRegistrationError("CNPJ_DUPLICATE"));
       if (form.businessName.trim().length < 2) errors.businessName = p.validation.businessNameRequired;
       if (form.legalName.trim().length < 2) errors.legalName = p.validation.legalNameRequired;
       if (!form.corporateType) errors.corporateType = p.validation.corporateTypeRequired;

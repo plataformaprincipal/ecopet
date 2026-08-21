@@ -23,8 +23,13 @@ export async function GET(request: Request) {
     return apiSuccess({
       cnpj: normalized,
       found: false,
+      unavailable: Boolean(lookup.unavailable),
       provider: "brasilapi",
-      message: lookup.error ?? "CNPJ não encontrado na base consultada.",
+      message:
+        lookup.error ??
+        (lookup.unavailable
+          ? "Não foi possível consultar automaticamente os dados deste CNPJ agora. Confira os dados abaixo e continue manualmente."
+          : "CNPJ não encontrado na base consultada."),
     });
   }
 

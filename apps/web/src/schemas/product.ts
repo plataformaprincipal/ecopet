@@ -1,5 +1,8 @@
 import { z } from "zod";
 import { PetSpecies, ProductCatalogCategory, ProductCatalogStatus } from "@prisma/client";
+import { BRAZILIAN_STATES } from "@/lib/registration/personas";
+import { isValidBrazilPhoneInput, normalizeBrazilPhoneInput } from "@/lib/validation/brazil-phone";
+import { normalizeCep } from "@/lib/address/cep-service";
 
 const dimensionsSchema = z
   .object({
@@ -69,16 +72,28 @@ export const stockPatchSchema = z.object({
 export const checkoutSchema = z.object({
   deliveryMethod: z.enum(["DELIVERY_LOCAL", "PICKUP_LOCAL"]),
   paymentMethod: z.enum(["PIX", "CARD", "CASH"]).default("PIX"),
-  phone: z.string().min(10),
+  phone: z
+    .string()
+    .min(1, "Informe um telefone.")
+    .refine((v) => isValidBrazilPhoneInput(v), "Telefone incompleto. Use DDD + número (10 ou 11 dígitos).")
+    .transform((v) => normalizeBrazilPhoneInput(v) ?? v),
   notes: z.string().optional().nullable(),
   address: z.object({
-    street: z.string().min(3),
+    street: z.string().min(3, "Informe a rua (mínimo 3 caracteres)."),
     number: z.string().optional(),
     complement: z.string().optional(),
     district: z.string().optional(),
-    city: z.string().min(2),
-    state: z.string().length(2),
-    zipCode: z.string().optional(),
+    city: z.string().min(2, "Informe a cidade."),
+    state: z
+      .string()
+      .length(2, "Selecione a UF.")
+      .transform((v) => v.toUpperCase())
+      .refine((v) => (BRAZILIAN_STATES as readonly string[]).includes(v), "Selecione uma UF válida."),
+    zipCode: z
+      .string()
+      .min(1, "Informe o CEP.")
+      .transform((v) => normalizeCep(v))
+      .refine((v) => v.length === 8, "CEP incompleto. Informe 8 números."),
   }),
   couponCode: z.string().trim().min(3).max(40).optional().nullable(),
 });

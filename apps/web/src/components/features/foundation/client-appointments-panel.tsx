@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { AppointmentCalendar } from "@/components/shared/accessibility/appointment-calendar";
 import { ATTENDANCE_LABELS } from "@/lib/appointments/labels";
+import { fetchWithTimeout } from "@/lib/http/fetch-with-timeout";
 
 type Appointment = {
   id: string;
@@ -74,30 +75,42 @@ export function ClientAppointmentsPanel({
   const [pickupReference, setPickupReference] = useState("");
   const [pickupPhone, setPickupPhone] = useState("");
   const [loadingSlots, setLoadingSlots] = useState(false);
+  const [slotsError, setSlotsError] = useState("");
+  const [listDay, setListDay] = useState("");
+  const [slotsTick, setSlotsTick] = useState(0);
 
   const partnerProfile = service?.provider?.partnerProfile;
 
   useEffect(() => {
-    if (mode === "detail" && appointmentId) {
-      fetch("/api/client/appointments", { credentials: "include" })
-        .then((r) => r.json())
-        .then((d) => {
+    let cancelled = false;
+    setError("");
+    setLoading(true);
+
+    async function load() {
+      try {
+        if (mode === "detail" && appointmentId) {
+          const r = await fetchWithTimeout("/api/client/appointments", { timeoutMs: 12_000 });
+          const d = await r.json();
+          if (cancelled) return;
           if (d.success) {
             const found = d.data.appointments.find((a: Appointment) => a.id === appointmentId);
             setAppointment(found ?? null);
+            if (!found) setError("Agendamento não encontrado.");
+          } else {
+            setError(d.error?.message ?? "Não foi possível carregar o agendamento.");
           }
-        })
-        .finally(() => setLoading(false));
-      return;
-    }
-    if (mode === "new") {
-      Promise.all([
-        fetch("/api/client/pets", { credentials: "include" }).then((r) => r.json()),
-        serviceId
-          ? fetch(`/api/public/services/${serviceId}`).then((r) => r.json())
-          : Promise.resolve(null),
-      ])
-        .then(([petsData, svcData]) => {
+          return;
+        }
+        if (mode === "new") {
+          const [petsRes, svcRes] = await Promise.all([
+            fetchWithTimeout("/api/client/pets", { timeoutMs: 12_000 }),
+            serviceId
+              ? fetchWithTimeout(`/api/public/services/${serviceId}`, { timeoutMs: 12_000 })
+              : Promise.resolve(null),
+          ]);
+          const petsData = await petsRes.json();
+          const svcData = svcRes ? await svcRes.json() : null;
+          if (cancelled) return;
           if (petsData.success) setPets(petsData.data.pets);
           if (svcData?.success) {
             const s = svcData.data.service as Service & { provider?: Service["provider"] };
@@ -108,17 +121,29 @@ export function ClientAppointmentsPanel({
               durationMin: s.durationMin,
               provider: s.provider,
             });
+          } else if (serviceId) {
+            setError(svcData?.error?.message ?? "Não foi possível carregar o serviço.");
           }
-        })
-        .finally(() => setLoading(false));
-      return;
-    }
-    fetch("/api/client/appointments", { credentials: "include" })
-      .then((r) => r.json())
-      .then((d) => {
+          return;
+        }
+        const r = await fetchWithTimeout("/api/client/appointments", { timeoutMs: 12_000 });
+        const d = await r.json();
+        if (cancelled) return;
         if (d.success) setAppointments(d.data.appointments);
-      })
-      .finally(() => setLoading(false));
+        else setError(d.error?.message ?? "Não foi possível carregar os agendamentos.");
+      } catch (e) {
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : "Não foi possível carregar.");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
   }, [mode, appointmentId, serviceId]);
 
   useEffect(() => {
@@ -128,14 +153,23 @@ export function ClientAppointmentsPanel({
       return;
     }
     setLoadingSlots(true);
-    fetch(`/api/public/services/${serviceId}/availability?date=${selectedDate}`)
+    setSlotsError("");
+    fetchWithTimeout(`/api/public/services/${serviceId}/availability?date=${selectedDate}`, { timeoutMs: 12_000 })
       .then((r) => r.json())
       .then((d) => {
-        if (d.success) setSlots(d.data.slots ?? []);
-        else setSlots([]);
+        if (d.success) {
+          setSlots(d.data.slots ?? []);
+        } else {
+          setSlots([]);
+          setSlotsError(d.error?.message ?? "Não foi possível carregar os horários.");
+        }
+      })
+      .catch((e) => {
+        setSlots([]);
+        setSlotsError(e instanceof Error ? e.message : "Não foi possível carregar os horários.");
       })
       .finally(() => setLoadingSlots(false));
-  }, [mode, serviceId, selectedDate]);
+  }, [mode, serviceId, selectedDate, slotsTick]);
 
   async function handleBook(e: React.FormEvent) {
     e.preventDefault();
@@ -186,6 +220,17 @@ export function ClientAppointmentsPanel({
   }
 
   if (loading) return <p className="text-sm">Carregando...</p>;
+
+  if (mode !== "new" && mode !== "detail" && error && appointments.length === 0) {
+    return (
+      <div className="space-y-3 text-sm">
+        <p className="text-red-600">{error}</p>
+        <Button size="sm" variant="outline" onClick={() => window.location.reload()}>
+          Tentar novamente
+        </Button>
+      </div>
+    );
+  }
 
   if (mode === "new") {
     const formErrorId = "appointment-form-error";
@@ -350,9 +395,21 @@ export function ClientAppointmentsPanel({
                   </span>
                   {loadingSlots ? (
                     <p className="text-sm text-muted-foreground">Carregando horários...</p>
+                  ) : slotsError ? (
+                    <div className="space-y-2 text-sm">
+                      <p className="text-red-600">Não foi possível carregar os horários.</p>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setSlotsTick((n) => n + 1)}
+                      >
+                        Tentar novamente
+                      </Button>
+                    </div>
                   ) : slots.length === 0 ? (
                     <p className="text-sm text-amber-700" role="status">
-                      Nenhum horário livre nesta data. Escolha outro dia ou outro horário.
+                      Nenhum horário disponível para esta data. Escolha outro dia.
                     </p>
                   ) : (
                     <div
@@ -469,12 +526,22 @@ export function ClientAppointmentsPanel({
       <Button asChild>
         <Link href="/servicos">Buscar serviços</Link>
       </Button>
-      {appointments.length === 0 ? (
+      <AppointmentCalendar
+        id="appointments-month"
+        label="Calendário"
+        mode="browse"
+        value={listDay}
+        markedDates={appointments.map((a) => a.scheduledAt.slice(0, 10))}
+        onChange={setListDay}
+      />
+      {appointments.filter((a) => !listDay || a.scheduledAt.slice(0, 10) === listDay).length === 0 ? (
         <p className="rounded border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
-          Nenhum agendamento encontrado.
+          {listDay ? "Nenhum agendamento neste dia." : "Nenhum agendamento encontrado."}
         </p>
       ) : (
-        appointments.map((a) => (
+        appointments
+          .filter((a) => !listDay || a.scheduledAt.slice(0, 10) === listDay)
+          .map((a) => (
           <Card key={a.id}>
             <CardContent className="flex justify-between p-4 text-sm">
               <div>

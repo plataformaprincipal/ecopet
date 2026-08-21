@@ -3,8 +3,10 @@ import { prisma } from "@/lib/prisma";
 import { DEFAULT_PAGE_SIZE } from "@/lib/messages/constants";
 import {
   assertConversationParticipant,
+  canUseMessaging,
   requireActiveChatUser,
 } from "@/lib/messages/permissions";
+import { resolveMessagingUserId } from "@/lib/messages/resolve-participant";
 import {
   ChatError,
   directConversationKey,
@@ -171,7 +173,10 @@ export async function createConversation(params: {
   participantUserIds: string[];
 }) {
   const creator = await requireActiveChatUser(params.creatorId);
-  const uniqueTargets = [...new Set(params.participantUserIds.filter((id) => id !== params.creatorId))];
+  const resolved = (
+    await Promise.all(params.participantUserIds.map((id) => resolveMessagingUserId(id)))
+  ).filter((id): id is string => Boolean(id));
+  const uniqueTargets = [...new Set(resolved.filter((id) => id !== params.creatorId))];
 
   if (uniqueTargets.length === 0) {
     throw new ChatError("Informe pelo menos um participante.", "VALIDATION", 400);
@@ -187,7 +192,7 @@ export async function createConversation(params: {
   }
 
   for (const p of participants) {
-    if (p.accountStatus !== "ACTIVE") {
+    if (!canUseMessaging(p.accountStatus)) {
       throw new ChatError(`${p.name} não está com conta ativa.`, "ACCOUNT_NOT_ACTIVE", 403);
     }
   }

@@ -17,7 +17,7 @@ import { ClientPageHeader } from "../client-page-header";
 const QUICK_LINKS = [
   { href: "/dashboard/client/orders", label: "Meus pedidos", icon: ClipboardList },
   { href: "/dashboard/client/appointments", label: "Meus agendamentos", icon: Calendar },
-  { href: "/cliente/marketplace", label: "Favoritos", icon: Heart },
+  { href: "/marketplace/favoritos", label: "Favoritos", icon: Heart },
   { href: "/notificacoes", label: "Notificações", icon: Bell },
   { href: "/recuperar-senha", label: "Alterar senha", icon: KeyRound },
 ];
@@ -45,7 +45,7 @@ export function ClientProfileManagementPage() {
           </Link>
         ))}
         <Link
-          href="/dashboard/client/appointments"
+          href="/dashboard/client/reviews"
           className="flex items-center gap-3 rounded-[var(--radius-xl)] border border-ecopet-gray/12 bg-white p-4 shadow-[var(--shadow-xs)] transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)] dark:border-white/10 dark:bg-ecopet-dark-card"
         >
           <span className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-ecopet-green/10">

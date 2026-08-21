@@ -64,7 +64,7 @@ export function EcopetAIAssistant() {
   const quickCommands = useMemo(() => quickCommandsForPath(pathname), [pathname]);
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
+  const [messages, setMessages] = useState<{ role: string; content: string; pending?: boolean; imageUrl?: string; imagePrompt?: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [unavailable, setUnavailable] = useState(false);
@@ -76,7 +76,12 @@ export function EcopetAIAssistant() {
       const userMsg = raw.trim();
       if (!userMsg || loading || unavailable) return;
       setError(null);
-      setMessages((m) => [...m, { role: "user", content: userMsg }]);
+      setMessage("");
+      setMessages((m) => [
+        ...m,
+        { role: "user", content: userMsg },
+        { role: "assistant", content: "", pending: true },
+      ]);
       setLoading(true);
 
       try {
@@ -99,28 +104,28 @@ export function EcopetAIAssistant() {
           };
           if (!guestRes.ok || guestJson.success === false) {
             setError(guestJson.error?.message ?? t("empty.ai.unavailable"));
-            setMessages((m) => m.slice(0, -1));
+            setMessages((m) => m.slice(0, -2));
             setMessage(userMsg);
             return;
           }
           if (guestJson.data?.available === false) {
             setUnavailable(true);
             setUnavailableMessage(guestJson.data.reply ?? t("empty.ai.unavailable"));
-            setMessages((m) => m.slice(0, -1));
+            setMessages((m) => m.slice(0, -2));
             setMessage(userMsg);
             return;
           }
           const guestReply = guestJson.data?.reply?.trim();
           if (!guestReply) {
             setError(t("empty.ai.unavailable"));
-            setMessages((m) => m.slice(0, -1));
+            setMessages((m) => m.slice(0, -2));
             setMessage(userMsg);
             return;
           }
           if (guestJson.data?.requiresSignIn) {
             setLoginIntent(true);
           }
-          setMessages((m) => [...m, { role: "assistant", content: guestReply }]);
+          setMessages((m) => [...m.slice(0, -1), { role: "assistant", content: guestReply }]);
           return;
         }
 
@@ -157,18 +162,18 @@ export function EcopetAIAssistant() {
           if (!fallback.ok || json.success === false || isAiNotConfiguredErrorCode(json.error?.code)) {
             setUnavailable(true);
             setUnavailableMessage(json.error?.message ?? t("empty.ai.unavailable"));
-            setMessages((m) => m.slice(0, -1));
+            setMessages((m) => m.slice(0, -2));
             setMessage(userMsg);
             return;
           }
           const content = (json.data?.content ?? json.data?.reply)?.trim();
           if (!content) {
             setError(t("empty.ai.unavailable"));
-            setMessages((m) => m.slice(0, -1));
+            setMessages((m) => m.slice(0, -2));
             setMessage(userMsg);
             return;
           }
-          setMessages((m) => [...m, { role: "assistant", content }]);
+          setMessages((m) => [...m.slice(0, -1), { role: "assistant", content }]);
           return;
         }
 
@@ -176,7 +181,8 @@ export function EcopetAIAssistant() {
         const decoder = new TextDecoder();
         let buffer = "";
         let assembled = "";
-        setMessages((m) => [...m, { role: "assistant", content: "" }]);
+        let imageUrl: string | undefined;
+        let imagePrompt: string | undefined;
 
         while (true) {
           const { done, value } = await reader.read();
@@ -195,6 +201,8 @@ export function EcopetAIAssistant() {
               message?: string;
               action?: string;
               payload?: Record<string, unknown>;
+              url?: string;
+              prompt?: string;
             };
             try {
               event = JSON.parse(line.slice(6)) as typeof event;
@@ -205,7 +213,21 @@ export function EcopetAIAssistant() {
               assembled += event.text;
               setMessages((m) => {
                 const copy = [...m];
-                copy[copy.length - 1] = { role: "assistant", content: assembled };
+                copy[copy.length - 1] = { role: "assistant", content: assembled, pending: true, imageUrl, imagePrompt };
+                return copy;
+              });
+            } else if (event.type === "image" && event.url) {
+              imageUrl = event.url;
+              imagePrompt = event.prompt;
+              setMessages((m) => {
+                const copy = [...m];
+                copy[copy.length - 1] = {
+                  role: "assistant",
+                  content: assembled || "Aqui está a imagem gerada.",
+                  pending: true,
+                  imageUrl,
+                  imagePrompt,
+                };
                 return copy;
               });
             } else if (event.type === "client_action" && event.action) {
@@ -226,7 +248,7 @@ export function EcopetAIAssistant() {
           }
         }
 
-        if (!assembled.trim()) {
+        if (!assembled.trim() && !imageUrl) {
           setError(t("empty.ai.unavailable"));
           setMessages((m) => m.slice(0, -2));
           setMessage(userMsg);
@@ -234,12 +256,17 @@ export function EcopetAIAssistant() {
         }
         setMessages((m) => {
           const copy = [...m];
-          copy[copy.length - 1] = { role: "assistant", content: assembled };
+          copy[copy.length - 1] = {
+            role: "assistant",
+            content: assembled.trim() || (imageUrl ? "Aqui está a imagem gerada." : assembled),
+            imageUrl,
+            imagePrompt,
+          };
           return copy;
         });
       } catch (err) {
         setError(err instanceof Error ? err.message : t("empty.ai.unavailable"));
-        setMessages((m) => m.slice(0, -1));
+        setMessages((m) => m.slice(0, -2));
         setMessage(userMsg);
       } finally {
         setLoading(false);
@@ -248,10 +275,9 @@ export function EcopetAIAssistant() {
     [applyClientAction, isGuest, loading, locale, pathname, t, unavailable]
   );
 
-  const send = useCallback(async () => {
+    const send = useCallback(async () => {
     const userMsg = message.trim();
     if (!userMsg) return;
-    setMessage("");
     await sendText(userMsg);
   }, [message, sendText]);
 
@@ -311,7 +337,13 @@ export function EcopetAIAssistant() {
                 ) : (
                   messages.map((m, i) => (
                     <div key={i} className={cn("rounded-xl px-3 py-2 text-sm", m.role === "user" ? "ml-8 bg-ecopet-green/10 dark:bg-ecopet-green/20" : "mr-8 bg-ecopet-gray/10 dark:bg-white/5")}>
-                      {m.content || (loading && i === messages.length - 1 ? t("social.assistant.thinking") : "")}
+                      {m.pending && !m.content
+                        ? "EccoPet está pensando..."
+                        : m.content}
+                      {m.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={m.imageUrl} alt={m.imagePrompt || "Imagem gerada"} className="mt-2 max-h-56 w-full rounded-lg object-contain" />
+                      ) : null}
                     </div>
                   ))
                 )}

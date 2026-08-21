@@ -207,7 +207,7 @@ export function ClientRegisterForm({ embedded }: { embedded?: boolean }) {
     if (!isValidUsername(username)) {
       errors.username = v.usernameFormat;
     } else if (usernameStatus === "taken") {
-      Object.assign(errors, duplicateRegistrationError());
+      Object.assign(errors, duplicateRegistrationError("USERNAME_DUPLICATE"));
     }
 
     if (!form.birthDate) {

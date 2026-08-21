@@ -40,6 +40,7 @@ export type AssistantStreamEvent =
     }
   /** Resultado tabular de consultas (produtos, serviços, adoções). */
   | { type: "structured"; kind: string; items: unknown[] }
+  | { type: "image"; url: string; prompt: string; revisedPrompt?: string }
   | {
       type: "done";
       conversationId: string;

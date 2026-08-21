@@ -16,7 +16,7 @@ export function NgoBottomNav() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-200/80 bg-white/95 backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/95 lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--ep-border)] bg-[var(--ep-bg-elevated)]/95 backdrop-blur-xl lg:hidden"
       aria-label={t("ngoArea.area")}
     >
       <div

@@ -2,15 +2,26 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export type ApiSuccessBody<T = unknown> = { success: true; data?: T };
-export type ApiFailureBody = { success: false; error: { code: string; message: string } };
+export type ApiFailureBody = {
+  success: false;
+  error: { code: string; message: string; fields?: Record<string, string> };
+};
 
 export function apiSuccess<T>(data?: T, status = 200) {
   return NextResponse.json({ success: true, data } satisfies ApiSuccessBody<T>, { status });
 }
 
-export function apiFailure(code: string, message: string, status = 400) {
+export function apiFailure(
+  code: string,
+  message: string,
+  status = 400,
+  extra?: { fields?: Record<string, string> }
+) {
   return NextResponse.json(
-    { success: false, error: { code, message } } satisfies ApiFailureBody,
+    {
+      success: false,
+      error: extra?.fields ? { code, message, fields: extra.fields } : { code, message },
+    } satisfies ApiFailureBody,
     { status }
   );
 }

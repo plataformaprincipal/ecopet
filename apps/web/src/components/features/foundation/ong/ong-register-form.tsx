@@ -302,12 +302,12 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
       if (!isValidFullName(form.name)) errors.name = v.fullNameIncomplete;
       const cpfDigits = onlyDigits(form.cpf);
       if (!validateCpfChecksum(cpfDigits)) errors.cpf = v.cpfInvalid;
-      else if (cpfAvailability === "taken") Object.assign(errors, duplicateRegistrationError());
+      else if (cpfAvailability === "taken") Object.assign(errors, duplicateRegistrationError("CPF_DUPLICATE"));
       if (!getEmailLiveFeedback(form.email).valid) errors.email = v.emailInvalid;
       const phoneFb = getPhoneLiveFeedback(form.phone, phoneCountry, phoneCountry === "BR" ? brazilDdd : undefined);
       if (!phoneFb.valid) errors.phone = phoneFb.message ?? v.phoneInvalid;
       if (!isValidUsername(form.username)) errors.username = o.validation.usernameInvalid;
-      if (usernameStatus === "taken") Object.assign(errors, duplicateRegistrationError());
+      if (usernameStatus === "taken") Object.assign(errors, duplicateRegistrationError("USERNAME_DUPLICATE"));
       if (form.ongType === "INDIVIDUAL") {
         const dateErr = validateActivityStartDate(form.activityStartDate);
         if (dateErr) errors.activityStartDate = tv(dateErr) ?? dateErr;
@@ -322,7 +322,7 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
 
     if (current === "institutional" && form.ongType === "INSTITUTION") {
       if (!validateCnpjChecksum(onlyDigits(form.cnpj))) errors.cnpj = v.cnpjInvalid;
-      else if (cnpjAvailability === "taken") Object.assign(errors, duplicateRegistrationError());
+      else if (cnpjAvailability === "taken") Object.assign(errors, duplicateRegistrationError("CNPJ_DUPLICATE"));
       if (form.ongName.trim().length < 2) errors.ongName = o.validation.ongNameRequired;
       if (form.legalName.trim().length < 2) errors.legalName = o.validation.legalNameRequired;
       if (!form.foundedDate) errors.foundedDate = o.validation.foundedDateRequired;

@@ -70,6 +70,18 @@ const steps = [
     ],
     env: { TSX_TSCONFIG_PATH: "apps/web/tsconfig.json" },
   },
+  {
+    name: "test:post-golive",
+    cmd: "node",
+    args: [
+      "--import",
+      "tsx",
+      "--test",
+      "apps/web/src/lib/post-golive.stability.test.ts",
+      "apps/web/src/lib/registration/collect-step-errors.test.ts",
+    ],
+    env: { TSX_TSCONFIG_PATH: "apps/web/tsconfig.json" },
+  },
 ];
 
 let failed = 0;

@@ -334,6 +334,22 @@ function bootstrap() {
       required: ["petId", "serviceId", "startAt"],
     },
   });
+
+  def({
+    name: "generate_image",
+    description: "Gera uma imagem (máximo 1 por pedido) a partir de uma descrição. Uso autenticado, com limite diário.",
+    modules: ["general", "social"],
+    personas: ["CLIENT", "PARTNER", "ONG", "ADMIN"],
+    roles: [...ALL],
+    readOnly: false,
+    parameters: {
+      type: "object",
+      properties: {
+        prompt: { type: "string", description: "Descrição da imagem a gerar" },
+      },
+      required: ["prompt"],
+    },
+  });
 }
 
 bootstrap();

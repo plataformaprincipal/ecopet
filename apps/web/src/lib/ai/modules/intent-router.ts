@@ -36,6 +36,18 @@ export function planToolsFromMessage(
     tools.push({ name, params });
   };
 
+  if (
+    /(gerar|crie|criar|desenhar|desenhe|gere).{0,40}(imagem|foto|ilustra|picture|image)/.test(s) ||
+    /(imagem|foto|ilustra).{0,20}(de|do|da|um|uma)/.test(s) ||
+    /(quero ver|mostra|mostre).{0,20}(um|uma).{0,40}(feliz|fofo|fofa)/.test(s) ||
+    /\b(dall-e|dalle|generate image|draw me)\b/.test(s)
+  ) {
+    return {
+      module: "general",
+      tools: [{ name: "generate_image", params: { prompt: message.trim().slice(0, 1000) } }],
+    };
+  }
+
   if (/(carrinho|cart|cesta)/.test(s)) {
     bizModule = "cart";
     if (persona === "CLIENT" || persona === "ADMIN") push("consult_cart");

@@ -2,7 +2,8 @@ import type { ConversationContextType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { createNotification } from "@/lib/notifications/notification-service";
 import { ChatError } from "@/lib/messages/utils";
-import { requireActiveChatUser } from "@/lib/messages/permissions";
+import { canUseMessaging, requireActiveChatUser } from "@/lib/messages/permissions";
+import { resolveMessagingUserId } from "@/lib/messages/resolve-participant";
 import { resolveConversationTypeForRoles } from "@/lib/messages/utils";
 import {
   assertPersonaCanMessage,
@@ -32,23 +33,26 @@ export async function createOrGetTalkJsConversation(params: {
     where: { id: params.creatorId },
     select: userSelect,
   });
-  if (!creator || creator.accountStatus !== "ACTIVE") {
+  if (!creator || !canUseMessaging(creator.accountStatus)) {
     throw new ChatError("Conta precisa estar ativa para usar mensagens.", "ACCOUNT_NOT_ACTIVE", 403);
   }
   const contextType = params.contextType ?? "GENERAL";
   const contextId = params.contextId ?? null;
 
-  if (params.participantUserId === creator.id) {
+  const resolvedTargetId = await resolveMessagingUserId(params.participantUserId);
+  if (!resolvedTargetId) throw new ChatError("Participante inválido.", "VALIDATION", 400);
+
+  if (resolvedTargetId === creator.id) {
     throw new ChatError("Não é possível iniciar conversa consigo mesmo.", "VALIDATION", 400);
   }
 
   const target = await prisma.user.findUnique({
-    where: { id: params.participantUserId },
+    where: { id: resolvedTargetId },
     select: userSelect,
   });
 
   if (!target) throw new ChatError("Participante inválido.", "VALIDATION", 400);
-  if (target.accountStatus !== "ACTIVE") {
+  if (!canUseMessaging(target.accountStatus)) {
     throw new ChatError(`${target.name} não está com conta ativa.`, "ACCOUNT_NOT_ACTIVE", 403);
   }
 
@@ -97,28 +101,37 @@ export async function createOrGetTalkJsConversation(params: {
   });
 
   if (isTalkJsServerConfigured()) {
-    await syncTalkJsUser({
-      id: creator.id,
-      name: creator.name,
-      email: creator.email,
-      photoUrl: creator.avatarUrl,
-      role: creator.role,
-    });
-    await syncTalkJsUser({
-      id: target.id,
-      name: target.name,
-      email: target.email,
-      photoUrl: target.avatarUrl,
-      role: target.role,
-    });
-    await syncTalkJsConversation({
-      conversationId: talkjsConversationId,
-      participantIds: [creator.id, target.id],
-      subject: params.title,
-      contextType,
-      contextId,
-      ecopetConversationId: conversation.id,
-    });
+    try {
+      await Promise.race([
+        (async () => {
+          await syncTalkJsUser({
+            id: creator.id,
+            name: creator.name,
+            email: creator.email,
+            photoUrl: creator.avatarUrl,
+            role: creator.role,
+          });
+          await syncTalkJsUser({
+            id: target.id,
+            name: target.name,
+            email: target.email,
+            photoUrl: target.avatarUrl,
+            role: target.role,
+          });
+          await syncTalkJsConversation({
+            conversationId: talkjsConversationId,
+            participantIds: [creator.id, target.id],
+            subject: params.title,
+            contextType,
+            contextId,
+            ecopetConversationId: conversation.id,
+          });
+        })(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("TALKJS_SYNC_TIMEOUT")), 10_000)),
+      ]);
+    } catch {
+      /* Conversa local já existe; TalkJS pode sincronizar depois. */
+    }
   }
 
   await createNotification({

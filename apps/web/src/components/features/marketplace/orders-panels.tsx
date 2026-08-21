@@ -148,7 +148,15 @@ export function ClientOrdersPanel({ mode = "list", orderId }: { mode?: "list" | 
   }
 
   if (orders.length === 0) {
-    return <p className="rounded border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">Nenhum pedido encontrado.</p>;
+    return (
+      <div className="rounded border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
+        <p className="font-medium text-[var(--ep-fg)]">Você ainda não fez nenhum pedido.</p>
+        <p className="mt-1">Explore produtos e serviços para começar.</p>
+        <Button asChild className="mt-4" size="sm">
+          <Link href="/marketplace">Explorar marketplace</Link>
+        </Button>
+      </div>
+    );
   }
 
   return (

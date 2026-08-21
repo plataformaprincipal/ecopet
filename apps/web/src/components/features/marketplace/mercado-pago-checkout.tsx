@@ -221,8 +221,14 @@ export function MercadoPagoCheckout({ orderId, amount, payerEmail, onPaid, onCan
       });
 
       setResult(paid);
-      if (paid.status === "APPROVED") onPaid(paid);
-      else onPaid(paid);
+      const status = String(paid.status).toUpperCase();
+      if (["REJECTED", "CANCELLED", "EXPIRED", "ERROR"].includes(status)) {
+        setError(
+          "Não foi possível concluir o pagamento. Seu pedido não foi cobrado. Tente novamente ou escolha outra forma de pagamento."
+        );
+        return;
+      }
+      onPaid(paid);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao pagar com cartão");
     } finally {
@@ -243,6 +249,13 @@ export function MercadoPagoCheckout({ orderId, amount, payerEmail, onPaid, onCan
         payerEmail,
       });
       setResult(paid);
+      const status = String(paid.status).toUpperCase();
+      if (["REJECTED", "CANCELLED", "EXPIRED", "ERROR"].includes(status)) {
+        setError(
+          "Não foi possível concluir o pagamento. Seu pedido não foi cobrado. Tente novamente ou escolha outra forma de pagamento."
+        );
+        return;
+      }
       onPaid(paid);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao iniciar pagamento");

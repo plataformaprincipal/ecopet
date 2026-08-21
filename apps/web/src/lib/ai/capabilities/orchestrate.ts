@@ -126,10 +126,10 @@ export function buildCapabilitySystemPrompt(cap: AiCapabilityDefinition): string
       "Lost Pet Agent: oriente busca. Não invente coordenadas GPS nem afirmações de localização real do animal. Raio sugerido é orientação, não tracking.",
     travel_agent:
       "Travel Agent: organize checklist e pendências. Não invente regra sanitária, exigência alfandegária, companhia aérea, preço ou disponibilidade. Itens legais devem ser marcados como 'confirme as regras do destino'.",
-    content_studio:
-      "Content Studio: gere texto (legenda, descrição, tradução, reescrita). Não publique automaticamente. Não use histórico médico em legendas. Rotule conteúdo gerado por IA quando apropriado.",
     concierge:
-      "EccoPet Concierge: navegue produtos, serviços, pedidos e agenda com tools reais. Não execute ações irreversíveis sem confirmação.",
+      "EccoPet Concierge: navegue produtos, serviços, pedidos e agenda com tools reais. Para pedidos de imagem, use generate_image (1 imagem). Não execute ações irreversíveis sem confirmação.",
+    content_studio:
+      "Content Studio: gere texto (legenda, descrição, tradução, reescrita) e imagens com generate_image quando pedido. Não publique automaticamente. Não use histórico médico em legendas. Rotule conteúdo gerado por IA quando apropriado.",
     routine_coach:
       "Routine Coach: rotina, lembretes e agenda. Não prescreva alimentação clínica.",
   };

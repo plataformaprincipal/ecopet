@@ -29,6 +29,8 @@ export type AIMessage = {
   pending?: boolean;
   /** Fase real do stream (context, tools, generating…) */
   statusPhase?: string;
+  imageUrl?: string;
+  imagePrompt?: string;
 };
 
 export type AIConversation = {

@@ -37,16 +37,19 @@ export function TalkJSSessionProvider({ children }: { children: React.ReactNode 
     let cancelled = false;
     void (async () => {
       try {
-        const res = await fetch("/api/messages/talkjs/session");
+        const res = await fetch("/api/messages/talkjs/session", {
+          credentials: "include",
+          signal: AbortSignal.timeout(12_000),
+        });
         const json = await res.json();
         if (cancelled) return;
         if (!res.ok || !json.success) {
-          setError(json.error?.message ?? "Erro ao conectar TalkJS.");
+          setError(json.error?.message ?? "Não foi possível carregar a conversa.");
           return;
         }
         setSession(json.data as TalkJsSessionPayload);
       } catch {
-        if (!cancelled) setError("Erro ao conectar TalkJS.");
+        if (!cancelled) setError("Não foi possível carregar a conversa.");
       } finally {
         if (!cancelled) setLoading(false);
       }

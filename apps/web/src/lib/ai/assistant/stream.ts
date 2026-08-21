@@ -57,7 +57,16 @@ function deriveToolEvents(results: ToolExecutionResult[]): AssistantStreamEvent[
   const events: AssistantStreamEvent[] = [];
 
   for (const result of results) {
-    if (!result.ok) continue;
+    if (!result.ok) {
+      if (result.toolName === "generate_image") {
+        events.push({
+          type: "error",
+          code: "IMAGE_GENERATION_FAILED",
+          message: result.error ?? "Não foi possível gerar a imagem agora.",
+        });
+      }
+      continue;
+    }
 
     const data = result.data;
     const record = data && typeof data === "object" ? (data as Record<string, unknown>) : null;
@@ -99,6 +108,15 @@ function deriveToolEvents(results: ToolExecutionResult[]): AssistantStreamEvent[
       if (items?.length) {
         events.push({ type: "structured", kind, items });
       }
+    }
+
+    if (result.toolName === "generate_image" && result.executed && typeof record?.url === "string") {
+      events.push({
+        type: "image",
+        url: record.url,
+        prompt: typeof record.prompt === "string" ? record.prompt : "",
+        revisedPrompt: typeof record.revisedPrompt === "string" ? record.revisedPrompt : undefined,
+      });
     }
   }
 

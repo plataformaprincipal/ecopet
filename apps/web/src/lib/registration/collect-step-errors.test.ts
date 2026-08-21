@@ -34,17 +34,18 @@ describe("collect-step-errors", () => {
     assert.ok(messages.includes("Digite um e-mail válido."));
   });
 
-  it("duplicidade retorna apenas mensagem genérica", () => {
+  it("duplicidade genérica permanece só quando o código é desconhecido", () => {
     assert.deepEqual(collectUniqueErrorMessages(duplicateRegistrationError()), [
       USER_ALREADY_REGISTERED_MESSAGE,
     ]);
-    assert.deepEqual(
-      collectUniqueErrorMessages({
-        ...duplicateRegistrationError(),
-        email: "Digite um e-mail válido.",
-        cpf: "Digite um CPF válido.",
-      }),
-      [USER_ALREADY_REGISTERED_MESSAGE]
-    );
+  });
+
+  it("duplicidade identifica o campo em conflito", () => {
+    assert.deepEqual(collectUniqueErrorMessages(duplicateRegistrationError("EMAIL_DUPLICATE")), [
+      "Este e-mail já está cadastrado.",
+    ]);
+    assert.deepEqual(collectUniqueErrorMessages(duplicateRegistrationError("CNPJ_DUPLICATE")), [
+      "Este CNPJ já possui cadastro.",
+    ]);
   });
 });

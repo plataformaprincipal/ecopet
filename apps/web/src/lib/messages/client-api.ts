@@ -1,8 +1,11 @@
 export type ApiEnvelope<T> = { success: boolean; data?: T; error?: { code: string; message: string } };
 
+import { fetchWithTimeout } from "@/lib/http/fetch-with-timeout";
+
 async function chatFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(path, {
+  const res = await fetchWithTimeout(path, {
     ...init,
+    timeoutMs: 12_000,
     credentials: "include",
     headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
   });

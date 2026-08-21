@@ -22,7 +22,7 @@ export function NgoTopbar({ ngoName, onMenuClick }: Props) {
     .toUpperCase();
 
   return (
-    <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-ecopet-gray/10 bg-ecopet-cream/90 px-4 py-3 backdrop-blur-xl dark:border-white/10 dark:bg-ecopet-dark-bg/90">
+    <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-[var(--ep-border)] bg-[var(--ep-bg-elevated)]/90 px-4 py-3 backdrop-blur-xl">
       <button
         type="button"
         onClick={onMenuClick}

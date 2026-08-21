@@ -9,6 +9,7 @@ import { getProfileUpdateSchema } from "@/schemas/profile";
 import { syncAddressRecord } from "@/lib/address-sync";
 import { writeAuditLog } from "@/lib/audit-log";
 import { USER_ALREADY_REGISTERED_MESSAGE } from "@/lib/registration/document-messages";
+import { firstFieldError, zodIssuesToFieldMap } from "@/lib/validation/field-errors";
 
 function stripProtectedFields(body: Record<string, unknown>) {
   const { role, email, verificationStatus, password, passwordHash, ...rest } = body;
@@ -56,8 +57,8 @@ export async function PUT(request: Request) {
 
     const parsed = schema.safeParse(body);
     if (!parsed.success) {
-      const first = parsed.error.errors[0];
-      return apiFailure("VALIDATION", first?.message ?? "Dados inválidos", 400);
+      const fields = zodIssuesToFieldMap(parsed.error, {});
+      return apiFailure("VALIDATION", firstFieldError(fields) ?? "Dados inválidos", 400, { fields });
     }
 
     const data = parsed.data;

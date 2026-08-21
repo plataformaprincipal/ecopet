@@ -78,14 +78,27 @@ export async function fetchCnpjFromBrasilApi(cnpj: string, signal?: AbortSignal)
   const normalized = normalizeCnpj(cnpj);
   if (!validateCnpjChecksum(normalized)) return null;
 
-  const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${normalized}`, {
-    signal,
-    headers: { Accept: "application/json" },
-    next: { revalidate: 3600 },
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8_000);
+  const onAbort = () => controller.abort();
+  signal?.addEventListener("abort", onAbort);
+
+  let res: Response;
+  try {
+    res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${normalized}`, {
+      signal: controller.signal,
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    });
+  } catch {
+    throw new Error("CNPJ_LOOKUP_UNAVAILABLE");
+  } finally {
+    clearTimeout(timeout);
+    signal?.removeEventListener("abort", onAbort);
+  }
 
   if (res.status === 404) return null;
-  if (!res.ok) throw new Error("Falha ao consultar CNPJ. Tente novamente.");
+  if (!res.ok) throw new Error("CNPJ_LOOKUP_UNAVAILABLE");
 
   const data = (await res.json()) as BrasilApiCnpjResponse;
   if (data.type === "bad_request" || data.message) return null;
@@ -95,6 +108,7 @@ export async function fetchCnpjFromBrasilApi(cnpj: string, signal?: AbortSignal)
 export async function lookupCnpj(cnpj: string, signal?: AbortSignal): Promise<{
   valid: boolean;
   result: CnpjLookupResult | null;
+  unavailable?: boolean;
   error?: string;
 }> {
   const normalized = normalizeCnpj(cnpj);
@@ -104,11 +118,13 @@ export async function lookupCnpj(cnpj: string, signal?: AbortSignal): Promise<{
   try {
     const result = await fetchCnpjFromBrasilApi(normalized, signal);
     return { valid: true, result };
-  } catch (e) {
+  } catch {
     return {
       valid: true,
       result: null,
-      error: e instanceof Error ? e.message : "Consulta de CNPJ indisponível.",
+      unavailable: true,
+      error:
+        "Não foi possível consultar automaticamente os dados deste CNPJ agora. Confira os dados abaixo e continue manualmente.",
     };
   }
 }

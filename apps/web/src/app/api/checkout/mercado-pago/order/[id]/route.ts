@@ -22,12 +22,16 @@ export async function GET(request: Request, context: Ctx) {
   }
 
   const url = new URL(request.url);
-  const asProvider = url.searchParams.get("as") === "provider";
+  const as = url.searchParams.get("as");
 
   try {
     const result = await getMercadoPagoCheckoutOrderForUser({
       userId: user!.id,
-      ...(asProvider ? { providerOrderId: id } : { paymentId: id }),
+      ...(as === "provider"
+        ? { providerOrderId: id }
+        : as === "order"
+          ? { orderId: id }
+          : { paymentId: id }),
     });
     return apiSuccess(result);
   } catch (e) {

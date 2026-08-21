@@ -18,6 +18,10 @@ type AppointmentCalendarProps = {
   disabledWeekdays?: number[];
   id?: string;
   label?: string;
+  /** browse = meus agendamentos (permite passado; marca dias com eventos). */
+  mode?: "booking" | "browse";
+  markedDates?: string[];
+  hint?: string;
 };
 
 function toIso(y: number, m: number, d: number) {
@@ -41,11 +45,16 @@ export function AppointmentCalendar({
   disabledWeekdays = [0],
   id = "appointment-date",
   label = "Selecione a data",
+  mode = "booking",
+  markedDates = [],
+  hint,
 }: AppointmentCalendarProps) {
   const [tomorrow] = useState(() => startOfTomorrow());
-  const initial = value ? new Date(value + "T12:00:00") : tomorrow;
+  const [today] = useState(() => startOfToday());
+  const initial = value ? new Date(value + "T12:00:00") : mode === "browse" ? today : tomorrow;
   const [viewYear, setViewYear] = useState(initial.getFullYear());
   const [viewMonth, setViewMonth] = useState(initial.getMonth());
+  const marked = new Set(markedDates);
 
   const cells = useMemo(() => {
     const first = new Date(viewYear, viewMonth, 1);
@@ -59,12 +68,12 @@ export function AppointmentCalendar({
     for (let d = 1; d <= daysInMonth; d++) {
       const date = new Date(viewYear, viewMonth, d);
       const iso = toIso(viewYear, viewMonth, d);
-      const isBeforeTomorrow = date.getTime() < tomorrow.getTime();
-      const isBlockedWeekday = disabledWeekdays.includes(date.getDay());
+      const isBeforeTomorrow = mode === "booking" && date.getTime() < tomorrow.getTime();
+      const isBlockedWeekday = mode === "booking" && disabledWeekdays.includes(date.getDay());
       rows.push({ day: d, iso, disabled: isBeforeTomorrow || isBlockedWeekday });
     }
     return rows;
-  }, [viewYear, viewMonth, disabledWeekdays, tomorrow]);
+  }, [viewYear, viewMonth, disabledWeekdays, tomorrow, mode]);
 
   function prevMonth() {
     if (viewMonth === 0) {
@@ -88,7 +97,10 @@ export function AppointmentCalendar({
         {label}
       </span>
       <p id={hintId} className="mb-2 text-xs text-muted-foreground">
-        Segunda a sábado, das 08:00 às 18:00. Agendamentos a partir de amanhã. Domingos bloqueados.
+        {hint ??
+          (mode === "browse"
+            ? "Toque em um dia para ver os agendamentos."
+            : "Segunda a sábado, das 08:00 às 18:00. Agendamentos a partir de amanhã. Domingos bloqueados.")}
       </p>
       <div className="rounded-lg border p-3" aria-describedby={hintId}>
         <div className="mb-3 flex items-center justify-between">
@@ -123,13 +135,17 @@ export function AppointmentCalendar({
                 aria-selected={value === cell.iso}
                 onClick={() => onChange(cell.iso!)}
                 className={cn(
-                  "aspect-square rounded-md text-sm transition",
+                  "relative aspect-square rounded-md text-sm transition",
                   cell.disabled && "cursor-not-allowed text-muted-foreground/40",
                   !cell.disabled && "hover:bg-primary/10",
-                  value === cell.iso && "bg-primary text-primary-foreground hover:bg-primary"
+                  value === cell.iso && "bg-primary text-primary-foreground hover:bg-primary",
+                  cell.iso && today.getTime() === new Date(cell.iso + "T12:00:00").setHours(0, 0, 0, 0) && value !== cell.iso && "ring-1 ring-ecopet-green"
                 )}
               >
                 {cell.day}
+                {cell.iso && marked.has(cell.iso) ? (
+                  <span className="absolute bottom-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-ecopet-green" aria-hidden />
+                ) : null}
               </button>
             )
           )}

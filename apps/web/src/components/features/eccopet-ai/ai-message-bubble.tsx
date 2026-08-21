@@ -101,11 +101,31 @@ export function AIMessageBubble({
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
               {message.statusPhase
                 ? t(message.statusPhase as never)
-                : message.content || t("ecopetAi.thinking")}
+                : message.content || "EccoPet está pensando..."}
             </span>
           ) : (
             <div className="space-y-1.5">{renderRich(message.content)}</div>
           )}
+          {message.imageUrl ? (
+            <div className="mt-3 space-y-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={message.imageUrl}
+                alt={message.imagePrompt || "Imagem gerada pela EccoPet AI"}
+                className="max-h-80 w-full rounded-xl object-contain"
+              />
+              {showRegenerate && onRegenerate && !message.pending ? (
+                <button
+                  type="button"
+                  onClick={onRegenerate}
+                  className="inline-flex items-center gap-1 text-xs text-[var(--ep-fg-muted)] hover:text-[var(--ep-fg)]"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" aria-hidden />
+                  Gerar novamente
+                </button>
+              ) : null}
+            </div>
+          ) : null}
         </div>
 
         {message.confirmation ? (

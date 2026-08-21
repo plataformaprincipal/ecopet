@@ -1,25 +1,55 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Search, MessageSquarePlus, RefreshCw, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { useConversationsPolling } from "@/hooks/use-message-polling";
 import { ConversationItemRow } from "@/components/features/messages/conversation-item";
 import { ConversationView } from "@/components/features/messages/conversation-view";
 import { NewConversationModal } from "@/components/features/messages/new-conversation-modal";
+import { messagesApi } from "@/lib/messages/client-api";
 import { cn } from "@/lib/utils";
 
 export function MessagesHub({ initialConversationId }: { initialConversationId?: string }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [selectedId, setSelectedId] = useState(initialConversationId ?? "");
   const [q, setQ] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [newOpen, setNewOpen] = useState(false);
+  const [bootstrapping, setBootstrapping] = useState(false);
+  const [bootstrapError, setBootstrapError] = useState("");
   const { items, loading, error, refresh } = useConversationsPolling();
+
+  useEffect(() => {
+    const partner = searchParams.get("partner") ?? searchParams.get("userId");
+    if (!partner || selectedId) return;
+    let cancelled = false;
+    setBootstrapping(true);
+    setBootstrapError("");
+    void messagesApi
+      .createConversation({ participantUserIds: [partner] })
+      .then((data) => {
+        if (cancelled) return;
+        const id = data.conversation.id;
+        setSelectedId(id);
+        router.replace(`/dashboard/messages/${id}`);
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          setBootstrapError(e instanceof Error ? e.message : "Não foi possível carregar a conversa.");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setBootstrapping(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [router, searchParams, selectedId]);
 
   const filtered = items.filter((c) => {
     if (c.type === "SUPPORT") return false;
@@ -37,6 +67,8 @@ export function MessagesHub({ initialConversationId }: { initialConversationId?:
     setSelectedId(id);
     router.push(`/dashboard/messages/${id}`);
   }
+
+  const listLoading = (loading || bootstrapping) && !error && !bootstrapError;
 
   return (
     <div className="mx-auto flex h-[calc(100vh-8rem)] max-w-6xl flex-col gap-0 p-0 lg:flex-row lg:gap-0">
@@ -75,14 +107,18 @@ export function MessagesHub({ initialConversationId }: { initialConversationId?:
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          {loading && <p className="p-4 text-sm text-muted-foreground">Carregando conversas...</p>}
-          {error && (
-            <div className="flex items-center gap-2 p-4 text-sm text-red-600">
-              <AlertCircle className="h-4 w-4" /> {error}
-              <Button size="sm" variant="outline" onClick={() => void refresh()}>Tentar novamente</Button>
+          {listLoading && <p className="p-4 text-sm text-muted-foreground">Carregando conversas...</p>}
+          {(error || bootstrapError) && (
+            <div className="flex flex-col gap-2 p-4 text-sm text-red-600">
+              <span className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4" /> {bootstrapError || error}
+              </span>
+              <Button size="sm" variant="outline" onClick={() => void refresh()}>
+                Tentar novamente
+              </Button>
             </div>
           )}
-          {!loading && !error && filtered.length === 0 && (
+          {!listLoading && !error && !bootstrapError && filtered.length === 0 && (
             <div className="p-6 text-center text-sm text-[var(--ep-fg-muted)]">
               <p>Suas conversas aparecerão aqui.</p>
               <Button className="mt-3" onClick={() => setNewOpen(true)}>Iniciar conversa</Button>

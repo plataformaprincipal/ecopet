@@ -27,7 +27,11 @@ import {
   isCpfGloballyAvailable,
   isCnpjGloballyAvailable,
 } from "@/lib/registration/document-availability";
-import { USER_ALREADY_REGISTERED_MESSAGE } from "@/lib/registration/document-messages";
+import {
+  messageForDuplicateCode,
+  duplicateFieldFromPrismaTarget,
+} from "@/lib/registration/document-messages";
+import { normalizeBrazilPhoneInput } from "@/lib/validation/brazil-phone";
 import {
   ongRegisterSchema,
   ongLegacyRegisterSchema,
@@ -365,35 +369,41 @@ export async function POST(request: Request) {
       partnerData?.email ??
       ongData?.email ??
       (legacyPartner || legacyOng ? body.email : data!.email);
-    const phone =
+    const phoneRaw =
       partnerData?.phone ??
       ongData?.phone ??
       (legacyPartner || legacyOng ? body.phone : data!.phone);
+    const phone = normalizeBrazilPhoneInput(String(phoneRaw ?? "")) ?? String(phoneRaw ?? "");
 
     const emailExists = await prisma.user.findUnique({ where: { email } });
     if (emailExists) {
-      return apiFailure("EMAIL_DUPLICATE", USER_ALREADY_REGISTERED_MESSAGE, 409);
+      return apiFailure("EMAIL_DUPLICATE", messageForDuplicateCode("EMAIL_DUPLICATE"), 409);
     }
 
-    const phoneExists = await prisma.user.findFirst({ where: { phone } });
+    const phoneDigits = String(phone).replace(/\D/g, "");
+    const phoneExists = phone
+      ? await prisma.user.findFirst({
+          where: { phone },
+        })
+      : null;
     if (phoneExists) {
-      return apiFailure("PHONE_DUPLICATE", USER_ALREADY_REGISTERED_MESSAGE, 409);
+      return apiFailure("PHONE_DUPLICATE", messageForDuplicateCode("PHONE_DUPLICATE"), 409);
     }
 
     if (partnerData) {
       const usernameExists = await prisma.user.findUnique({ where: { username: partnerData.username } });
       if (usernameExists) {
-        return apiFailure("USERNAME_DUPLICATE", USER_ALREADY_REGISTERED_MESSAGE, 409);
+        return apiFailure("USERNAME_DUPLICATE", messageForDuplicateCode("USERNAME_DUPLICATE"), 409);
       }
       if (partnerData.partnerType === "AUTONOMOUS") {
         const cpfAvailable = await isCpfGloballyAvailable(partnerData.cpf);
         if (!cpfAvailable) {
-          return apiFailure("CPF_DUPLICATE", USER_ALREADY_REGISTERED_MESSAGE, 409);
+          return apiFailure("CPF_DUPLICATE", messageForDuplicateCode("CPF_DUPLICATE"), 409);
         }
       } else {
         const cnpjAvailable = await isCnpjGloballyAvailable(partnerData.cnpj);
         if (!cnpjAvailable) {
-          return apiFailure("CNPJ_DUPLICATE", USER_ALREADY_REGISTERED_MESSAGE, 409);
+          return apiFailure("CNPJ_DUPLICATE", messageForDuplicateCode("CNPJ_DUPLICATE"), 409);
         }
       }
     }
@@ -401,16 +411,16 @@ export async function POST(request: Request) {
     if (ongData) {
       const usernameExists = await prisma.user.findUnique({ where: { username: ongData.username } });
       if (usernameExists) {
-        return apiFailure("USERNAME_DUPLICATE", USER_ALREADY_REGISTERED_MESSAGE, 409);
+        return apiFailure("USERNAME_DUPLICATE", messageForDuplicateCode("USERNAME_DUPLICATE"), 409);
       }
       const cpfAvailable = await isCpfGloballyAvailable(ongData.cpf);
       if (!cpfAvailable) {
-        return apiFailure("CPF_DUPLICATE", USER_ALREADY_REGISTERED_MESSAGE, 409);
+        return apiFailure("CPF_DUPLICATE", messageForDuplicateCode("CPF_DUPLICATE"), 409);
       }
       if (ongData.ongType === "INSTITUTION") {
         const cnpjAvailable = await isCnpjGloballyAvailable(ongData.cnpj);
         if (!cnpjAvailable) {
-          return apiFailure("CNPJ_DUPLICATE", USER_ALREADY_REGISTERED_MESSAGE, 409);
+          return apiFailure("CNPJ_DUPLICATE", messageForDuplicateCode("CNPJ_DUPLICATE"), 409);
         }
       }
     }
@@ -423,7 +433,7 @@ export async function POST(request: Request) {
       }
       const cnpjAvailable = await isCnpjGloballyAvailable(legacy.cnpj);
       if (!cnpjAvailable) {
-        return apiFailure("CNPJ_DUPLICATE", USER_ALREADY_REGISTERED_MESSAGE, 409);
+        return apiFailure("CNPJ_DUPLICATE", messageForDuplicateCode("CNPJ_DUPLICATE"), 409);
       }
       const user = await createLegacyPartnerUser(legacy);
       const token = await createSessionToken(user.id, user.email, user.role, user.accountStatus ?? AccountStatus.ACTIVE);
@@ -458,7 +468,7 @@ export async function POST(request: Request) {
       }
       const cnpjAvailable = await isCnpjGloballyAvailable(legacy.cnpj);
       if (!cnpjAvailable) {
-        return apiFailure("CNPJ_DUPLICATE", USER_ALREADY_REGISTERED_MESSAGE, 409);
+        return apiFailure("CNPJ_DUPLICATE", messageForDuplicateCode("CNPJ_DUPLICATE"), 409);
       }
       const user = await createLegacyOngUser(legacy);
       const token = await createSessionToken(user.id, user.email, user.role, user.accountStatus ?? AccountStatus.ACTIVE);
@@ -508,14 +518,14 @@ export async function POST(request: Request) {
     if (data.role === UserRole.CLIENT) {
       const usernameExists = await prisma.user.findUnique({ where: { username: data.username }, select: { id: true } });
       if (usernameExists) {
-        return apiFailure("USERNAME_DUPLICATE", USER_ALREADY_REGISTERED_MESSAGE, 409);
+        return apiFailure("USERNAME_DUPLICATE", messageForDuplicateCode("USERNAME_DUPLICATE"), 409);
       }
     }
 
     if (data.role === UserRole.CLIENT && data.cpf) {
       const cpfAvailable = await isCpfGloballyAvailable(data.cpf);
       if (!cpfAvailable) {
-        return apiFailure("CPF_DUPLICATE", USER_ALREADY_REGISTERED_MESSAGE, 409);
+        return apiFailure("CPF_DUPLICATE", messageForDuplicateCode("CPF_DUPLICATE"), 409);
       }
     }
 
@@ -578,6 +588,10 @@ export async function POST(request: Request) {
     void emailRegisterCompleted(user.email, user.name, user.role, localeFromAcceptLanguage(request.headers.get("accept-language")));
     return response;
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      const code = duplicateFieldFromPrismaTarget(error.meta?.target) ?? "EMAIL_DUPLICATE";
+      return apiFailure(code, messageForDuplicateCode(code), 409);
+    }
     if (process.env.NODE_ENV !== "production") {
       console.error("[register:error]", error);
     }

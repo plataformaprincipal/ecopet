@@ -126,6 +126,28 @@
   color: var(--ep-fg-subtle);
 }
 
+.dark .bg-white,
+.black .bg-white,
+.dark .bg-white\/90,
+.black .bg-white\/90,
+.dark .bg-white\/95,
+.black .bg-white\/95,
+.dark .bg-white\/50,
+.black .bg-white\/50,
+.dark .bg-white\/60,
+.black .bg-white\/60,
+.dark .bg-white\/40,
+.black .bg-white\/40 {
+  background-color: var(--ep-bg-elevated);
+}
+
+.dark .text-black,
+.black .text-black,
+.dark .text-gray-900,
+.black .text-gray-900 {
+  color: var(--ep-fg);
+}
+
 html.a11y-high-contrast {
   --ep-ring: #ffffff;
   --ep-border: #ffffff;

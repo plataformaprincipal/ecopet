@@ -34,6 +34,7 @@ import {
   writePrepareAppointment,
   writeClientAction,
 } from "./services/domain-writes";
+import { generateAiImage } from "./services/generate-image";
 
 function resolveGeoOpts(
   ctx: ToolExecutionContext,
@@ -126,6 +127,12 @@ async function runHandler(
         userId: ctx.userId,
         params,
         confirmed: ctx.confirmed,
+      });
+    case "generate_image":
+      return generateAiImage({
+        userId: ctx.userId,
+        role: ctx.role,
+        prompt: typeof params.prompt === "string" ? params.prompt : "",
       });
     default:
       return null;

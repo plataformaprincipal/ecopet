@@ -25,9 +25,13 @@ export async function requireChatUser(userId: string): Promise<ChatUser> {
   return user;
 }
 
+export function canUseMessaging(status: AccountStatus): boolean {
+  return status === "ACTIVE" || status === "PENDING";
+}
+
 export async function requireActiveChatUser(userId: string): Promise<ChatUser> {
   const user = await requireChatUser(userId);
-  if (user.accountStatus !== "ACTIVE") {
+  if (!canUseMessaging(user.accountStatus)) {
     throw new ChatError("Conta precisa estar ativa para usar mensagens.", "ACCOUNT_NOT_ACTIVE", 403);
   }
   return user;

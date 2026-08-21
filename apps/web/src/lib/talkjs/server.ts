@@ -52,14 +52,36 @@ async function talkJsRequest(path: string, body: Record<string, unknown>) {
   const { apiV1Base } = getTalkJsPrivateConfig();
   if (!appId || !secret) return;
 
-  const res = await fetch(`${apiV1Base}/${appId}${path}`, {
-    method: "PUT",
-    headers: {
-      Authorization: `Bearer ${secret}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8_000);
+  let res: Response;
+  try {
+    res = await fetch(`${apiV1Base}/${appId}${path}`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${secret}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+  } catch (error) {
+    console.warn(`[TalkJS] sync timeout/network ${path}`);
+    try {
+      const { logStructured } = await import("@/lib/observability/logger");
+      logStructured("warn", "talkjs.sync_timeout", {
+        module: "talkjs",
+        integration: "talkjs",
+        event: "talkjs.sync_timeout",
+        path,
+      });
+    } catch {
+      /* optional */
+    }
+    return;
+  } finally {
+    clearTimeout(timer);
+  }
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");

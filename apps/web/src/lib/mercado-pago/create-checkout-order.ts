@@ -310,6 +310,7 @@ export async function getMercadoPagoCheckoutOrderForUser(params: {
   userId: string;
   paymentId?: string;
   providerOrderId?: string;
+  orderId?: string;
 }) {
   const payment = await prisma.payment.findFirst({
     where: {
@@ -317,7 +318,9 @@ export async function getMercadoPagoCheckoutOrderForUser(params: {
       userId: params.userId,
       ...(params.paymentId ? { id: params.paymentId } : {}),
       ...(params.providerOrderId ? { providerOrderId: params.providerOrderId } : {}),
+      ...(params.orderId ? { orderId: params.orderId } : {}),
     },
+    orderBy: { createdAt: "desc" },
     include: { order: { select: { id: true, orderNumber: true, userId: true, total: true, status: true } } },
   });
   if (!payment || payment.order.userId !== params.userId) throw new Error("ORDER_FORBIDDEN");

@@ -130,18 +130,42 @@ export function normalizeBrazilPhoneE164(ddd: string, national: string): string 
 
 /** Valida telefone brasileiro já em E.164 (+55...). */
 export function isValidBrazilPhoneE164(value: string): boolean {
-  const digits = onlyDigits(value);
-  if (!digits.startsWith("55")) return false;
-
-  const national = digits.slice(2);
-  if (national.length !== 10 && national.length !== 11) return false;
-
-  const ddd = national.slice(0, 2);
-  const subscriber = national.slice(2);
-  return isValidBrazilNationalNumber(ddd, subscriber);
+  return parseBrazilPhoneInput(value) !== null && onlyDigits(value).startsWith("55");
 }
 
 export function normalizeBrazilPhoneFromE164(value: string): string | null {
-  if (!isValidBrazilPhoneE164(value)) return null;
-  return `+${onlyDigits(value)}`;
+  const parsed = parseBrazilPhoneInput(value);
+  if (!parsed) return null;
+  return composeBrazilPhoneE164(parsed.ddd, parsed.subscriber);
+}
+
+/**
+ * Aceita formatos reais de telefone BR (máscara, DDD, +55) e devolve DDD + inscrito.
+ * Exemplos válidos: (83) 99999-9999, 83 99999-9999, 83999999999, +55 83 99999-9999.
+ */
+export function parseBrazilPhoneInput(value: string): { ddd: string; subscriber: string } | null {
+  const digits = onlyDigits(value);
+  if (!digits) return null;
+
+  let national = digits;
+  if (digits.startsWith("55") && (digits.length === 12 || digits.length === 13)) {
+    national = digits.slice(2);
+  }
+  if (national.length !== 10 && national.length !== 11) return null;
+
+  const ddd = national.slice(0, 2);
+  const subscriber = national.slice(2);
+  if (!isValidBrazilNationalNumber(ddd, subscriber)) return null;
+  return { ddd, subscriber };
+}
+
+/** Normaliza qualquer telefone BR válido para E.164 (+55DDD…). */
+export function normalizeBrazilPhoneInput(value: string): string | null {
+  const parsed = parseBrazilPhoneInput(value);
+  if (!parsed) return null;
+  return composeBrazilPhoneE164(parsed.ddd, parsed.subscriber);
+}
+
+export function isValidBrazilPhoneInput(value: string): boolean {
+  return parseBrazilPhoneInput(value) !== null;
 }

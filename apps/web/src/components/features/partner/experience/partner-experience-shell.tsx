@@ -58,7 +58,7 @@ export function PartnerExperienceShell({
   const routeLocked = limited && partnerExperienceRouteRequiresApproval(pathname);
 
   return (
-    <div className="flex min-h-screen bg-zinc-50 dark:bg-zinc-950">
+    <div className="flex min-h-screen bg-[var(--ep-bg)] text-[var(--ep-fg)]">
       <PartnerExperienceSidebar
         businessName={businessName}
         accessLevel={accessLevel}
@@ -101,7 +101,7 @@ export function PartnerExperienceShell({
             ) : null}
 
             {routeLocked ? (
-              <div className="flex flex-col items-center justify-center rounded-3xl border border-zinc-200/80 bg-white px-6 py-16 text-center dark:border-white/10 dark:bg-zinc-900/60">
+              <div className="flex flex-col items-center justify-center rounded-3xl border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] px-6 py-16 text-center">
                 <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-zinc-100 dark:bg-white/10">
                   <Lock className="h-6 w-6 text-zinc-400" aria-hidden />
                 </span>
@@ -154,7 +154,7 @@ export function PartnerExperienceShell({
             className="absolute inset-0 bg-black/40"
             onClick={() => setMenuOpen(false)}
           />
-          <div className="absolute inset-y-0 left-0 flex w-72 max-w-[80vw] flex-col bg-white shadow-xl dark:bg-zinc-950">
+          <div className="absolute inset-y-0 left-0 flex w-72 max-w-[80vw] flex-col bg-[var(--ep-bg-elevated)] shadow-xl">
             <div className="flex items-center justify-between border-b border-zinc-200/80 px-4 py-4 dark:border-white/10">
               <span className="truncate font-display text-base font-semibold text-zinc-900 dark:text-white">
                 {businessName}

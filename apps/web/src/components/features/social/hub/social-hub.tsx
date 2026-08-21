@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { LayoutGrid, Sparkles, Bell, MessageSquare, Plus, Filter } from "lucide-react";
+import { LayoutGrid, Bell, MessageSquare, Plus, Filter } from "lucide-react";
 import { SocialSidebar } from "@/components/features/social/ecopet-social/social-sidebar";
 import { SocialFeedStream, scrollToComposer } from "@/components/features/social/ecopet-social/social-feed-stream";
 import { SuggestedProfilesPanel } from "@/components/features/social/ecopet-social/suggested-profiles-panel";
 import { SOCIAL_FILTERS, type SocialFilterId } from "@/components/features/social/ecopet-social/filters";
-import { HubAssistantPanel } from "./hub-assistant-panel";
 import { HubNotificationsPanel } from "./hub-notifications-panel";
 import { HubMessagesPanel } from "./hub-messages-panel";
 import { HubTrending } from "./hub-trending";
@@ -18,11 +17,10 @@ import { LanguageSelector } from "@/components/features/i18n/language-selector";
 import { useAuthGate } from "@/providers/auth-gate-provider";
 import { useTranslation } from "@/providers/i18n-provider";
 
-type MobileTab = "feed" | "ai" | "notifications" | "messages";
+type MobileTab = "feed" | "notifications" | "messages";
 
 const MOBILE_TABS: { id: MobileTab; labelKey: string; icon: typeof LayoutGrid }[] = [
   { id: "feed", labelKey: "social.tabs.feed", icon: LayoutGrid },
-  { id: "ai", labelKey: "social.tabs.ai", icon: Sparkles },
   { id: "notifications", labelKey: "social.tabs.alerts", icon: Bell },
   { id: "messages", labelKey: "social.tabs.chat", icon: MessageSquare },
 ];
@@ -139,9 +137,6 @@ export function SocialHub() {
 
         {/* RIGHT — assistant + notifications + messages + trending + suggestions */}
         <div className="space-y-4">
-          <div className={cn(mobileTab !== "ai" && "hidden lg:block")}>
-            <HubAssistantPanel />
-          </div>
           <div className={cn(mobileTab !== "notifications" && "hidden lg:block")}>
             {authLoading ? null : isAuthenticated ? (
               <HubNotificationsPanel />
@@ -175,14 +170,6 @@ export function SocialHub() {
 
       {/* Mobile floating actions */}
       <div className="fixed bottom-24 left-4 z-30 flex flex-col gap-3 lg:hidden">
-        <button
-          type="button"
-          onClick={() => setMobileTab("ai")}
-          aria-label={t("social.fab.assistant")}
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-ecopet-green shadow-lg ring-1 ring-ecopet-green/20 transition active:scale-95 dark:bg-zinc-900"
-        >
-          <Sparkles className="h-5 w-5" aria-hidden />
-        </button>
         <button
           type="button"
           onClick={() => requireAuth(() => {

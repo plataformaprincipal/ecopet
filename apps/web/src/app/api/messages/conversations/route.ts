@@ -44,29 +44,31 @@ export async function POST(req: Request) {
     const contextId = body.contextId as string | null | undefined;
 
     if (participantUserId) {
-      if (!isTalkJsServerConfigured()) {
-        return apiFailure(
-          "TALKJS_NOT_CONFIGURED",
-          "Mensagens temporariamente indisponíveis.",
-          503
+      if (isTalkJsServerConfigured()) {
+        const result = await createOrGetTalkJsConversation({
+          creatorId: user!.id,
+          participantUserId,
+          contextType,
+          contextId,
+          title: body.title,
+        });
+        return apiSuccess(
+          {
+            conversation: result.conversation,
+            conversationId: result.conversation.id,
+            talkjsConversationId: result.conversation.talkjsConversationId,
+            created: result.created,
+          },
+          result.created ? 201 : 200
         );
       }
-      const result = await createOrGetTalkJsConversation({
+      const conversation = await createConversation({
         creatorId: user!.id,
-        participantUserId,
-        contextType,
-        contextId,
+        type,
         title: body.title,
+        participantUserIds: [participantUserId],
       });
-      return apiSuccess(
-        {
-          conversation: result.conversation,
-          conversationId: result.conversation.id,
-          talkjsConversationId: result.conversation.talkjsConversationId,
-          created: result.created,
-        },
-        result.created ? 201 : 200
-      );
+      return apiSuccess({ conversation, conversationId: conversation.id }, 201);
     }
 
     const conversation = await createConversation({

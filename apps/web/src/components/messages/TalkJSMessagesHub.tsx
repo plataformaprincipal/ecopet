@@ -19,18 +19,22 @@ function TalkJSMessagesInner({ initialConversationId }: { initialConversationId?
   const [selectedTalkJsId, setSelectedTalkJsId] = useState<string | null>(null);
   const [ecopetId, setEcopetId] = useState(initialConversationId ?? "");
   const [bootstrapping, setBootstrapping] = useState(false);
+  const [bootstrapError, setBootstrapError] = useState<string | null>(null);
 
   const bootstrapFromQuery = useCallback(async () => {
     const userId = searchParams.get("userId") ?? searchParams.get("partner");
     if (!userId) return;
 
     setBootstrapping(true);
+    setBootstrapError(null);
     try {
       const contextType = searchParams.get("contextType") ?? "GENERAL";
       const contextId = searchParams.get("contextId");
       const res = await fetch("/api/messages/conversations", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
+        signal: AbortSignal.timeout(15_000),
         body: JSON.stringify({
           participantUserId: userId,
           contextType,
@@ -43,7 +47,11 @@ function TalkJSMessagesInner({ initialConversationId }: { initialConversationId?
         setEcopetId(conv.id);
         setSelectedTalkJsId(conv.talkjsConversationId ?? null);
         router.replace(`/dashboard/messages/${conv.id}`);
+        return;
       }
+      setBootstrapError(json.error?.message ?? "Não foi possível carregar a conversa.");
+    } catch {
+      setBootstrapError("Não foi possível carregar a conversa.");
     } finally {
       setBootstrapping(false);
     }
@@ -82,12 +90,20 @@ function TalkJSMessagesInner({ initialConversationId }: { initialConversationId?
     );
   }
 
-  if (error || !session) {
+  if (error || bootstrapError || !session) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
         <AlertCircle className="h-8 w-8 text-red-500" aria-hidden />
-        <p className="text-sm text-muted-foreground">{error ?? t("messagesModule.configError")}</p>
-        <Button variant="outline" onClick={() => window.location.reload()}>
+        <p className="text-sm text-muted-foreground">
+          {bootstrapError ?? error ?? t("messagesModule.configError")}
+        </p>
+        <Button
+          variant="outline"
+          onClick={() => {
+            setBootstrapError(null);
+            void bootstrapFromQuery();
+          }}
+        >
           {t("messagesModule.retry")}
         </Button>
       </div>

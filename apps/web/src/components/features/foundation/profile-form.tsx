@@ -7,6 +7,14 @@ import { Input } from "@/components/ui/input";
 import { FileUploadField } from "@/components/ui/file-upload-field";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LogoutButton } from "@/components/shared/auth/logout-button";
+import { InternationalPhoneField } from "@/components/features/foundation/international-phone-field";
+import { AddressByCepField } from "@/components/shared/address/address-by-cep-field";
+import type { CountryCode } from "libphonenumber-js";
+import {
+  composeBrazilPhoneE164,
+  maskBrazilNationalNumber,
+  parseBrazilPhoneInput,
+} from "@/lib/validation/brazil-phone";
 
 type Profile = {
   id: string;
@@ -126,6 +134,9 @@ export function FoundationProfileForm({ dashboardPath = "/dashboard" }: { dashbo
   const [success, setSuccess] = useState("");
   const [profile, setProfile] = useState<Profile | null>(null);
   const [form, setForm] = useState<Record<string, string>>({});
+  const [phoneCountry, setPhoneCountry] = useState<CountryCode>("BR");
+  const [brazilDdd, setBrazilDdd] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetch("/api/profile/me", { credentials: "include" })
@@ -148,10 +159,19 @@ export function FoundationProfileForm({ dashboardPath = "/dashboard" }: { dashbo
   }, []);
 
   function initForm(p: Profile) {
+    const parsedPhone = parseBrazilPhoneInput(p.phone ?? "");
+    if (parsedPhone) {
+      setPhoneCountry("BR");
+      setBrazilDdd(parsedPhone.ddd);
+    } else {
+      setBrazilDdd("");
+    }
+    const phoneValue = parsedPhone ? maskBrazilNationalNumber(parsedPhone.subscriber) : (p.phone ?? "");
+
     if (p.role === "CLIENT") {
       setForm({
         name: p.name ?? "",
-        phone: p.phone ?? "",
+        phone: phoneValue,
         cpf: p.cpf ?? "",
         birthDate: p.birthDate ?? "",
         address: p.address ?? "",
@@ -167,7 +187,7 @@ export function FoundationProfileForm({ dashboardPath = "/dashboard" }: { dashbo
         legalName: pp.legalName,
         cnpj: pp.cnpj,
         category: pp.category,
-        phone: p.phone ?? "",
+        phone: phoneValue,
         commercialEmail: pp.commercialEmail ?? p.email,
         responsibleName: pp.responsibleName ?? p.name,
         address: pp.address,
@@ -184,7 +204,7 @@ export function FoundationProfileForm({ dashboardPath = "/dashboard" }: { dashbo
         ongName: op.ongName,
         cnpj: op.cnpj,
         responsibleName: op.responsibleName,
-        phone: p.phone ?? "",
+        phone: phoneValue,
         institutionalEmail: op.institutionalEmail ?? p.email,
         address: op.address,
         city: op.city,
@@ -205,17 +225,25 @@ export function FoundationProfileForm({ dashboardPath = "/dashboard" }: { dashbo
     setSaving(true);
     setError("");
     setSuccess("");
+    setFieldErrors({});
 
     try {
       const res = await fetch("/api/profile/me", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          phone:
+            phoneCountry === "BR" && brazilDdd
+              ? composeBrazilPhoneE164(brazilDdd, form.phone ?? "")
+              : form.phone,
+        }),
       });
       const data = await res.json();
       if (!res.ok || data.success === false) {
         setError(data.error?.message ?? data.error ?? "Erro ao salvar perfil");
+        if (data.error?.fields) setFieldErrors(data.error.fields);
         return;
       }
       const profileData = data.data?.profile ?? data.profile;
@@ -259,7 +287,17 @@ export function FoundationProfileForm({ dashboardPath = "/dashboard" }: { dashbo
           {profile.role === "CLIENT" && (
             <>
               <Field label="Nome completo" id="name" value={form.name ?? ""} onChange={(v) => setField("name", v)} required />
-              <Field label="Telefone" id="phone" value={form.phone ?? ""} onChange={(v) => setField("phone", v)} required />
+              <InternationalPhoneField
+                id="phone"
+                value={form.phone ?? ""}
+                onChange={(v) => setField("phone", v)}
+                country={phoneCountry}
+                onCountryChange={setPhoneCountry}
+                brazilDdd={brazilDdd}
+                onBrazilDddChange={setBrazilDdd}
+                required
+                error={fieldErrors.phone}
+              />
               <Field
                 label="CPF"
                 id="cpf"
@@ -272,12 +310,32 @@ export function FoundationProfileForm({ dashboardPath = "/dashboard" }: { dashbo
                 <p className="text-xs text-muted-foreground">CPF já cadastrado — não pode ser alterado nesta etapa.</p>
               )}
               <Field label="Data de nascimento" id="birthDate" type="date" value={form.birthDate ?? ""} onChange={(v) => setField("birthDate", v)} required />
-              <Field label="Endereço" id="address" value={form.address ?? ""} onChange={(v) => setField("address", v)} required />
-              <div className="grid gap-4 sm:grid-cols-3">
-                <Field label="Cidade" id="city" value={form.city ?? ""} onChange={(v) => setField("city", v)} required />
-                <Field label="UF" id="state" value={form.state ?? ""} onChange={(v) => setField("state", v)} required />
-                <Field label="CEP" id="zipCode" value={form.zipCode ?? ""} onChange={(v) => setField("zipCode", v)} required />
-              </div>
+              <AddressByCepField
+                idPrefix="profile"
+                title=""
+                variant="plain"
+                showReference={false}
+                value={{
+                  zipCode: form.zipCode ?? "",
+                  street: form.address ?? "",
+                  number: form.number ?? "",
+                  district: form.district ?? "",
+                  city: form.city ?? "",
+                  state: form.state ?? "",
+                }}
+                onChange={(a) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    zipCode: a.zipCode,
+                    address: a.street || prev.address,
+                    city: a.city,
+                    state: a.state,
+                    district: a.district,
+                    number: a.number,
+                  }))
+                }
+                errors={fieldErrors}
+              />
               <FileUploadField
                 purpose="user_avatar"
                 label="Avatar"
@@ -295,15 +353,45 @@ export function FoundationProfileForm({ dashboardPath = "/dashboard" }: { dashbo
               <Field label="Razão social" id="legalName" value={form.legalName ?? ""} onChange={(v) => setField("legalName", v)} required />
               <Field label="CNPJ" id="cnpj" value={form.cnpj ?? ""} onChange={(v) => setField("cnpj", v)} required />
               <Field label="Categoria" id="category" value={form.category ?? ""} onChange={(v) => setField("category", v)} required />
-              <Field label="Telefone" id="phone" value={form.phone ?? ""} onChange={(v) => setField("phone", v)} required />
+              <InternationalPhoneField
+                id="phone"
+                value={form.phone ?? ""}
+                onChange={(v) => setField("phone", v)}
+                country={phoneCountry}
+                onCountryChange={setPhoneCountry}
+                brazilDdd={brazilDdd}
+                onBrazilDddChange={setBrazilDdd}
+                required
+                error={fieldErrors.phone}
+              />
               <Field label="E-mail comercial" id="commercialEmail" type="email" value={form.commercialEmail ?? ""} onChange={(v) => setField("commercialEmail", v)} required />
               <Field label="Responsável" id="responsibleName" value={form.responsibleName ?? ""} onChange={(v) => setField("responsibleName", v)} required />
-              <Field label="Endereço" id="address" value={form.address ?? ""} onChange={(v) => setField("address", v)} required />
-              <div className="grid gap-4 sm:grid-cols-3">
-                <Field label="Cidade" id="city" value={form.city ?? ""} onChange={(v) => setField("city", v)} required />
-                <Field label="UF" id="state" value={form.state ?? ""} onChange={(v) => setField("state", v)} required />
-                <Field label="CEP" id="zipCode" value={form.zipCode ?? ""} onChange={(v) => setField("zipCode", v)} />
-              </div>
+              <AddressByCepField
+                idPrefix="partner-profile"
+                title=""
+                variant="plain"
+                showReference={false}
+                value={{
+                  zipCode: form.zipCode ?? "",
+                  street: form.address ?? "",
+                  number: form.number ?? "",
+                  district: form.district ?? "",
+                  city: form.city ?? "",
+                  state: form.state ?? "",
+                }}
+                onChange={(a) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    zipCode: a.zipCode,
+                    address: a.street || prev.address,
+                    city: a.city,
+                    state: a.state,
+                    district: a.district,
+                    number: a.number,
+                  }))
+                }
+                errors={fieldErrors}
+              />
               <TextArea label="Descrição do negócio" id="description" value={form.description ?? ""} onChange={(v) => setField("description", v)} />
               <Field label="Horário de funcionamento" id="businessHours" value={form.businessHours ?? ""} onChange={(v) => setField("businessHours", v)} />
               <FileUploadField
@@ -322,14 +410,44 @@ export function FoundationProfileForm({ dashboardPath = "/dashboard" }: { dashbo
               <Field label="Nome da ONG" id="ongName" value={form.ongName ?? ""} onChange={(v) => setField("ongName", v)} required />
               <Field label="CNPJ" id="cnpj" value={form.cnpj ?? ""} onChange={(v) => setField("cnpj", v)} required />
               <Field label="Responsável" id="responsibleName" value={form.responsibleName ?? ""} onChange={(v) => setField("responsibleName", v)} required />
-              <Field label="Telefone" id="phone" value={form.phone ?? ""} onChange={(v) => setField("phone", v)} required />
+              <InternationalPhoneField
+                id="phone"
+                value={form.phone ?? ""}
+                onChange={(v) => setField("phone", v)}
+                country={phoneCountry}
+                onCountryChange={setPhoneCountry}
+                brazilDdd={brazilDdd}
+                onBrazilDddChange={setBrazilDdd}
+                required
+                error={fieldErrors.phone}
+              />
               <Field label="E-mail institucional" id="institutionalEmail" type="email" value={form.institutionalEmail ?? ""} onChange={(v) => setField("institutionalEmail", v)} required />
-              <Field label="Endereço" id="address" value={form.address ?? ""} onChange={(v) => setField("address", v)} required />
-              <div className="grid gap-4 sm:grid-cols-3">
-                <Field label="Cidade" id="city" value={form.city ?? ""} onChange={(v) => setField("city", v)} required />
-                <Field label="UF" id="state" value={form.state ?? ""} onChange={(v) => setField("state", v)} required />
-                <Field label="CEP" id="zipCode" value={form.zipCode ?? ""} onChange={(v) => setField("zipCode", v)} />
-              </div>
+              <AddressByCepField
+                idPrefix="ong-profile"
+                title=""
+                variant="plain"
+                showReference={false}
+                value={{
+                  zipCode: form.zipCode ?? "",
+                  street: form.address ?? "",
+                  number: form.number ?? "",
+                  district: form.district ?? "",
+                  city: form.city ?? "",
+                  state: form.state ?? "",
+                }}
+                onChange={(a) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    zipCode: a.zipCode,
+                    address: a.street || prev.address,
+                    city: a.city,
+                    state: a.state,
+                    district: a.district,
+                    number: a.number,
+                  }))
+                }
+                errors={fieldErrors}
+              />
               <TextArea label="Descrição" id="description" value={form.description ?? ""} onChange={(v) => setField("description", v)} />
               <Field label="Área de atuação" id="focusArea" value={form.focusArea ?? ""} onChange={(v) => setField("focusArea", v)} />
             </>

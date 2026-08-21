@@ -15,9 +15,49 @@ const productReviewSchema = z.object({
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
+  const mine = url.searchParams.get("mine") === "1";
   const serviceId = url.searchParams.get("serviceId");
   const partnerId = url.searchParams.get("partnerId");
   const productId = url.searchParams.get("productId");
+
+  if (mine) {
+    const { user, error } = await requireClient();
+    if (error) return error;
+    const [productReviews, serviceReviews] = await Promise.all([
+      prisma.review.findMany({
+        where: { userId: user!.id },
+        include: { product: { select: { id: true, name: true } } },
+        orderBy: { createdAt: "desc" },
+        take: 50,
+      }),
+      prisma.serviceReview.findMany({
+        where: { userId: user!.id },
+        include: { service: { select: { id: true, name: true } } },
+        orderBy: { createdAt: "desc" },
+        take: 50,
+      }),
+    ]);
+    return apiSuccess({
+      reviews: [
+        ...productReviews.map((r) => ({
+          id: r.id,
+          kind: "product" as const,
+          targetName: r.product.name,
+          rating: r.rating,
+          comment: r.comment,
+          createdAt: r.createdAt,
+        })),
+        ...serviceReviews.map((r) => ({
+          id: r.id,
+          kind: "service" as const,
+          targetName: r.service.name,
+          rating: r.rating,
+          comment: r.comment,
+          createdAt: r.createdAt,
+        })),
+      ].sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt)),
+    });
+  }
 
   if (productId) {
     const reviews = await prisma.review.findMany({

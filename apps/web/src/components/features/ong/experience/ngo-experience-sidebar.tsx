@@ -32,7 +32,7 @@ export function NgoExperienceSidebar({ ngoName, accessLevel, statusLabel, status
   const { t } = useTranslation();
 
   return (
-    <aside className="hidden w-72 shrink-0 flex-col border-r border-zinc-200/80 bg-white/80 backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/80 lg:flex">
+    <aside className="hidden w-72 shrink-0 flex-col border-r border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] backdrop-blur-xl lg:flex">
       <div className="border-b border-zinc-200/80 px-5 py-5 dark:border-white/10">
         <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-400">
           {t("ngoArea.area")}

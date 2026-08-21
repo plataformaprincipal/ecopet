@@ -22,4 +22,5 @@ export const REGISTERED_AI_TOOL_NAMES = new Set([
   "add_to_cart",
   "create_support_ticket",
   "prepare_appointment",
+  "generate_image",
 ]);

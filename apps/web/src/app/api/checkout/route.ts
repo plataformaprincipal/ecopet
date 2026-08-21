@@ -4,6 +4,7 @@ import { checkoutSchema } from "@/schemas/product";
 import { checkoutFromCart } from "@/lib/orders/checkout-service";
 import { CouponError } from "@/lib/commerce/apply-coupon";
 import { PricingError } from "@/lib/pricing/service";
+import { firstFieldError, zodIssuesToFieldMap } from "@/lib/validation/field-errors";
 
 export async function POST(request: Request) {
   const { user, error } = await requireClient();
@@ -11,7 +12,13 @@ export async function POST(request: Request) {
 
   const parsed = checkoutSchema.safeParse(await request.json());
   if (!parsed.success) {
-    return apiFailure("VALIDATION", parsed.error.errors[0]?.message ?? "Inválido", 400);
+    const fields = zodIssuesToFieldMap(parsed.error);
+    return apiFailure(
+      "VALIDATION",
+      firstFieldError(fields) ?? parsed.error.errors[0]?.message ?? "Inválido",
+      400,
+      { fields }
+    );
   }
 
   const idempotencyKey =
@@ -66,6 +73,8 @@ export async function POST(request: Request) {
       NEGATIVE_PAYOUT: ["VALIDATION", "Cotação inválida: payout negativo.", 400],
       ZERO_PRICE_NOT_ALLOWED: ["VALIDATION", "Preço zero não permitido.", 400],
       VERSION_NOT_ACTIVE: ["CONFLICT", "Versão de pricing indisponível.", 409],
+      PRICING_UNAVAILABLE: ["VALIDATION", "Não foi possível calcular o preço agora. Tente novamente.", 503],
+      PRICING_SCHEMA_UNAVAILABLE: ["VALIDATION", "Tabela de preços indisponível no momento.", 503],
     };
     const hit = map[message];
     if (hit) return apiFailure(hit[0], hit[1], hit[2]);

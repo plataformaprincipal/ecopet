@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { CheckoutPayAgain } from "@/components/features/marketplace/checkout-pay-again";
+import { CheckoutPaymentPoller } from "@/components/features/marketplace/checkout-payment-poller";
 
 type PageProps = {
   params: Promise<{ orderId: string }>;
@@ -92,6 +93,7 @@ export default async function CheckoutSuccessPage({ params }: PageProps) {
           ) : (
             <p className="text-xs text-muted-foreground">ID: {orderId}</p>
           )}
+          {confirming && order ? <CheckoutPaymentPoller orderId={order.id} paymentId={payment?.id} /> : null}
           {canRetry && user?.email ? (
             <CheckoutPayAgain
               orderId={orderId}

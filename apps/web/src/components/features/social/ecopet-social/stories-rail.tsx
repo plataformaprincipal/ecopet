@@ -9,6 +9,7 @@ import type { ApiSocialPost } from "@/lib/social/client-api";
 import { useAuthGate } from "@/providers/auth-gate-provider";
 import { useTranslation } from "@/providers/i18n-provider";
 import { cn } from "@/lib/utils";
+import { StoryComposer } from "@/components/features/social/story-composer";
 
 type StoryItem = {
   authorId: string;
@@ -20,19 +21,49 @@ type StoryItem = {
 export function StoriesRail({ className }: { className?: string }) {
   const { isAuthenticated, requireAuth } = useAuthGate();
   const { t } = useTranslation();
+  const [composerOpen, setComposerOpen] = useState(false);
+  const [storiesFromApi, setStoriesFromApi] = useState<StoryItem[]>([]);
   const [posts, setPosts] = useState<ApiSocialPost[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchPublicPosts({ limit: 24 })
-      .then((d) => setPosts(d.posts))
-      .catch(() => setPosts([]))
-      .finally(() => setLoading(false));
+    let cancelled = false;
+    Promise.all([
+      fetchPublicPosts({ limit: 24 }).catch(() => ({ posts: [] as ApiSocialPost[] })),
+      fetch("/api/social/stories", { credentials: "include" })
+        .then((r) => r.json())
+        .catch(() => ({ success: false })),
+    ])
+      .then(([feed, storyJson]) => {
+        if (cancelled) return;
+        setPosts(feed.posts ?? []);
+        if (storyJson?.success && Array.isArray(storyJson.data?.stories)) {
+          setStoriesFromApi(
+            storyJson.data.stories.map((s: { id: string; authorId: string; author: { name: string; avatarUrl: string | null } }) => ({
+              authorId: s.authorId,
+              name: s.author.name,
+              avatarUrl: s.author.avatarUrl,
+              postId: s.id,
+            }))
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const stories = useMemo<StoryItem[]>(() => {
     const seen = new Set<string>();
     const items: StoryItem[] = [];
+    for (const s of storiesFromApi) {
+      if (seen.has(s.authorId)) continue;
+      seen.add(s.authorId);
+      items.push(s);
+    }
     for (const p of posts) {
       if (!p.media.some((m) => m.mediaType === "IMAGE" || m.mediaType === "VIDEO")) continue;
       if (seen.has(p.authorId)) continue;
@@ -41,7 +72,7 @@ export function StoriesRail({ className }: { className?: string }) {
       if (items.length >= 14) break;
     }
     return items;
-  }, [posts]);
+  }, [posts, storiesFromApi]);
 
   return (
     <div
@@ -53,7 +84,7 @@ export function StoriesRail({ className }: { className?: string }) {
     >
       <button
         type="button"
-        onClick={() => requireAuth()}
+        onClick={() => requireAuth(() => setComposerOpen(true))}
         className="flex shrink-0 flex-col items-center gap-1.5"
         aria-label="Adicionar story"
       >
@@ -103,6 +134,26 @@ export function StoriesRail({ className }: { className?: string }) {
       {!loading && stories.length === 0 ? (
         <p className="flex items-center text-sm text-zinc-400">{t("social.stories.empty")}</p>
       ) : null}
+      <StoryComposer
+        open={composerOpen}
+        onClose={() => setComposerOpen(false)}
+        onPublished={() => {
+          void fetch("/api/social/stories", { credentials: "include" })
+            .then((r) => r.json())
+            .then((json) => {
+              if (json?.success && Array.isArray(json.data?.stories)) {
+                setStoriesFromApi(
+                  json.data.stories.map((s: { id: string; authorId: string; author: { name: string; avatarUrl: string | null } }) => ({
+                    authorId: s.authorId,
+                    name: s.author.name,
+                    avatarUrl: s.author.avatarUrl,
+                    postId: s.id,
+                  }))
+                );
+              }
+            });
+        }}
+      />
     </div>
   );
 }

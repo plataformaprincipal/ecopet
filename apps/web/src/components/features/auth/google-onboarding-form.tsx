@@ -48,7 +48,12 @@ export function GoogleOnboardingForm() {
       if (!res.ok || !json.success) {
         throw new Error(json.error?.code ?? "GENERIC");
       }
+      const { confirmSessionCookie } = await import("@/lib/auth/confirm-session");
+      const { notifySessionChanged } = await import("@/lib/auth/session-events");
+      await confirmSessionCookie();
+      notifySessionChanged();
       router.replace(json.data.redirectTo || "/");
+      router.refresh();
     } catch (e) {
       const code = e instanceof Error ? e.message : "GENERIC";
       setError(t(`auth.google.errors.${code}` as "auth.google.errors.GENERIC"));

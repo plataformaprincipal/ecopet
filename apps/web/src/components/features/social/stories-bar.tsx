@@ -1,20 +1,27 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { SocialStory } from "@/lib/social/types";
+import { useAuthGate } from "@/providers/auth-gate-provider";
+import { StoryComposer } from "@/components/features/social/story-composer";
 
 interface StoriesBarProps {
   stories: SocialStory[];
 }
 
 export function StoriesBar({ stories }: StoriesBarProps) {
+  const { requireAuth } = useAuthGate();
+  const [open, setOpen] = useState(false);
+
   return (
     <div className="mb-4 flex gap-3 overflow-x-auto pb-2 scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <Link
-        href="/social/stories"
+      <button
+        type="button"
+        onClick={() => requireAuth(() => setOpen(true))}
         className="flex shrink-0 flex-col items-center gap-1"
       >
         <div className="relative flex h-[68px] w-[68px] items-center justify-center rounded-full bg-gradient-to-br from-ecopet-green to-ecopet-yellow p-[2px]">
@@ -23,7 +30,7 @@ export function StoriesBar({ stories }: StoriesBarProps) {
           </div>
         </div>
         <span className="max-w-[64px] truncate text-[10px] font-medium">Seu story</span>
-      </Link>
+      </button>
       {stories.map((story) => (
         <Link
           key={story.id}
@@ -53,6 +60,7 @@ export function StoriesBar({ stories }: StoriesBarProps) {
           </span>
         </Link>
       ))}
+      <StoryComposer open={open} onClose={() => setOpen(false)} />
     </div>
   );
 }

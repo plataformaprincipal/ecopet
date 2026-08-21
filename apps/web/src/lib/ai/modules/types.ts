@@ -43,7 +43,8 @@ export type BusinessToolName =
   | "request_client_action"
   | "add_to_cart"
   | "create_support_ticket"
-  | "prepare_appointment";
+  | "prepare_appointment"
+  | "generate_image";
 
 export type ClientActionName =
   | "SET_THEME"

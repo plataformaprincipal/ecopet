@@ -111,6 +111,8 @@ type StreamEvent = {
   params?: Record<string, unknown>;
   kind?: string;
   items?: unknown[];
+  url?: string;
+  prompt?: string;
 };
 
 type ChatApiJson = {
@@ -358,23 +360,55 @@ export function EccoPetAIShell() {
       const controller = new AbortController();
       abortRef.current = controller;
 
-      let convId: string;
-      try {
-        convId = await ensureConversationId(clean);
-      } catch (err) {
-        setChatError(err instanceof Error ? err.message : t("ecopetAi.errors.generic"));
-        return;
-      }
-
       const userMsg: AIMessage = { id: uid(), role: "user", content: clean };
       const pendingId = uid();
-      updateConversation(convId, (c) => ({
-        ...c,
-        title: c.messages.length === 0 ? (clean.length > 40 ? `${clean.slice(0, 40)}…` : clean) : c.title,
-        messages: [...c.messages, userMsg, { id: pendingId, role: "assistant", content: "", pending: true }],
-      }));
+      const existingId = activeId;
+      let convId = existingId ?? uid();
+      if (!existingId) {
+        const title = clean.length > 40 ? `${clean.slice(0, 40)}…` : clean;
+        setConversations((prev) => [
+          {
+            id: convId,
+            title,
+            messages: [userMsg, { id: pendingId, role: "assistant", content: "", pending: true }],
+            createdAt: Date.now(),
+          },
+          ...prev,
+        ]);
+        setActiveId(convId);
+      } else {
+        updateConversation(convId, (c) => ({
+          ...c,
+          title: c.messages.length === 0 ? (clean.length > 40 ? `${clean.slice(0, 40)}…` : clean) : c.title,
+          messages: [...c.messages, userMsg, { id: pendingId, role: "assistant", content: "", pending: true }],
+        }));
+      }
       setLoading(true);
       if (!isAuthenticated) setDemoCount((n) => n + 1);
+
+      try {
+        if (isAuthenticated && !existingId) {
+          const persisted = await localApi<{
+            success?: boolean;
+            data?: { conversation?: { id: string } };
+          }>("/api/ai/conversations", {
+            method: "POST",
+            body: JSON.stringify({ title: clean.slice(0, 80), locale }),
+          });
+          const createdId = persisted.data?.conversation?.id;
+          if (createdId && createdId !== convId) {
+            setConversations((prev) =>
+              prev.map((c) => (c.id === convId ? { ...c, id: createdId } : c))
+            );
+            setActiveId(createdId);
+            convId = createdId;
+          }
+        }
+      } catch (err) {
+        setChatError(err instanceof Error ? err.message : t("ecopetAi.errors.generic"));
+        setLoading(false);
+        return;
+      }
 
       try {
         if (!isAuthenticated) {
@@ -514,6 +548,8 @@ export function EccoPetAIShell() {
         let serverConv = convId;
         let pendingConfirmation: AIConfirmation | undefined;
         const structuredBlocks: AIStructuredBlock[] = [];
+        let imageUrl: string | undefined;
+        let imagePrompt: string | undefined;
 
         while (true) {
           const { done, value } = await reader.read();
@@ -599,6 +635,24 @@ export function EccoPetAIShell() {
                     : m
                 ),
               }));
+            } else if (event.type === "image" && event.url) {
+              imageUrl = event.url;
+              imagePrompt = event.prompt;
+              updateConversation(convId, (c) => ({
+                ...c,
+                messages: c.messages.map((m) =>
+                  m.id === pendingId
+                    ? {
+                        ...m,
+                        role: "assistant",
+                        content: assembled || "Aqui está a imagem gerada.",
+                        pending: true,
+                        imageUrl,
+                        imagePrompt,
+                      }
+                    : m
+                ),
+              }));
             } else if (event.type === "error") {
               applyChatError(event.code, event.message, convId, pendingId, userMsg.id);
               return;
@@ -610,7 +664,7 @@ export function EccoPetAIShell() {
           }
         }
 
-        if (!assembled.trim()) {
+        if (!assembled.trim() && !imageUrl) {
           applyChatError("AI_UNAVAILABLE", t("empty.ai.unavailable"), convId, pendingId);
           return;
         }
@@ -622,10 +676,12 @@ export function EccoPetAIShell() {
               ? {
                   id: serverMessageId || m.id,
                   role: "assistant",
-                  content: assembled,
+                  content: assembled.trim() || (imageUrl ? "Aqui está a imagem gerada." : assembled),
                   recommendations: deriveRecommendations(`${clean} ${assembled}`, t),
                   confirmation: pendingConfirmation ?? m.confirmation,
                   structured: structuredBlocks.length ? structuredBlocks : m.structured,
+                  imageUrl: imageUrl ?? m.imageUrl,
+                  imagePrompt: imagePrompt ?? m.imagePrompt,
                 }
               : m
           ),

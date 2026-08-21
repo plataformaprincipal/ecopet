@@ -3,6 +3,10 @@ import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiFailure } from "@/lib/api-response";
 import { requireAuth } from "@/lib/auth/require-auth";
 
+function uniqueIds(values: Array<string | null | undefined>) {
+  return [...new Set(values.filter((v): v is string => Boolean(v)))];
+}
+
 export async function GET() {
   const { user, error } = await requireAuth();
   if (error) return error;
@@ -13,28 +17,67 @@ export async function GET() {
     take: 300,
   });
 
-  const productIds = favorites.map((f) => f.productId).filter(Boolean) as string[];
-  const products = productIds.length
-    ? await prisma.product.findMany({
-        where: {
-          id: { in: productIds },
-          deletedAt: null,
-          status: ProductCatalogStatus.ACTIVE,
-          approvalStatus: "APPROVED",
-          stock: { gt: 0 },
-        },
-        select: { id: true, name: true, price: true, images: true, catalogCategory: true },
-      })
-    : [];
+  const productIds = uniqueIds(favorites.map((f) => f.productId));
+  const serviceIds = uniqueIds([
+    ...favorites.map((f) => f.serviceId),
+    ...favorites
+      .map((f) => f.postId)
+      .filter((id): id is string => Boolean(id?.startsWith("service:")))
+      .map((id) => id.slice("service:".length)),
+  ]);
+  const partnerIds = uniqueIds([
+    ...favorites.map((f) => f.partnerId),
+    ...favorites
+      .map((f) => f.postId)
+      .filter((id): id is string => Boolean(id?.startsWith("partner:")))
+      .map((id) => id.slice("partner:".length)),
+  ]);
+
+  const [products, services, partners] = await Promise.all([
+    productIds.length
+      ? prisma.product.findMany({
+          where: {
+            id: { in: productIds },
+            deletedAt: null,
+            status: ProductCatalogStatus.ACTIVE,
+            approvalStatus: "APPROVED",
+          },
+          select: { id: true, name: true, price: true, images: true, catalogCategory: true },
+        })
+      : Promise.resolve([]),
+    serviceIds.length
+      ? prisma.service.findMany({
+          where: { id: { in: serviceIds }, deletedAt: null, status: "ACTIVE", isActive: true },
+          select: { id: true, name: true, price: true, image: true, category: true },
+        })
+      : Promise.resolve([]),
+    partnerIds.length
+      ? prisma.user.findMany({
+          where: { id: { in: partnerIds }, role: "PARTNER" },
+          select: {
+            id: true,
+            name: true,
+            avatarUrl: true,
+            partnerProfile: { select: { businessName: true, city: true, state: true } },
+          },
+        })
+      : Promise.resolve([]),
+  ]);
 
   return apiSuccess({
     productIds: products.map((p) => p.id),
-    serviceIds: [] as string[],
-    partnerIds: [] as string[],
+    serviceIds: services.map((s) => s.id),
+    partnerIds: partners.map((p) => p.id),
     products,
-    services: [],
-    partners: [],
-    total: favorites.length,
+    services,
+    partners: partners.map((p) => ({
+      id: p.id,
+      name: p.partnerProfile?.businessName || p.name,
+      avatarUrl: p.avatarUrl,
+      city: p.partnerProfile?.city ?? null,
+      state: p.partnerProfile?.state ?? null,
+    })),
+    total: products.length + services.length + partners.length,
   });
 }
 
@@ -71,28 +114,29 @@ export async function POST(request: Request) {
       where: { id: serviceId, deletedAt: null, status: "ACTIVE", isActive: true },
     });
     if (!service) return apiFailure("NOT_FOUND", "Serviço não disponível.", 404);
-    // serviceId favorito: persist via metadata em postId placeholder até migration aplicada
-    const marker = `service:${serviceId}`;
-    const existing = await prisma.favorite.findFirst({ where: { userId: user!.id, postId: marker } });
+    const existing = await prisma.favorite.findFirst({
+      where: { userId: user!.id, OR: [{ serviceId }, { postId: `service:${serviceId}` }] },
+    });
     if (existing) {
       await prisma.favorite.delete({ where: { id: existing.id } });
       return apiSuccess({ favorited: false, serviceId });
     }
-    await prisma.favorite.create({ data: { userId: user!.id, postId: marker } });
+    await prisma.favorite.create({ data: { userId: user!.id, serviceId } });
     return apiSuccess({ favorited: true, serviceId }, 201);
   }
 
   const partner = await prisma.user.findFirst({
-    where: { id: partnerId!, role: "PARTNER", accountStatus: "ACTIVE" },
+    where: { id: partnerId!, role: "PARTNER" },
   });
   if (!partner) return apiFailure("NOT_FOUND", "Parceiro não encontrado.", 404);
 
-  const marker = `partner:${partnerId}`;
-  const existing = await prisma.favorite.findFirst({ where: { userId: user!.id, postId: marker } });
+  const existing = await prisma.favorite.findFirst({
+    where: { userId: user!.id, OR: [{ partnerId }, { postId: `partner:${partnerId}` }] },
+  });
   if (existing) {
     await prisma.favorite.delete({ where: { id: existing.id } });
     return apiSuccess({ favorited: false, partnerId });
   }
-  await prisma.favorite.create({ data: { userId: user!.id, postId: marker } });
+  await prisma.favorite.create({ data: { userId: user!.id, partnerId } });
   return apiSuccess({ favorited: true, partnerId }, 201);
 }

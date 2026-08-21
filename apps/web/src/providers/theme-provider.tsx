@@ -10,6 +10,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       defaultTheme="system"
       enableSystem
       themes={[...ECOPET_THEMES]}
+      value={{ light: "light", dark: "dark", black: "dark black", system: "system" }}
       storageKey={ECOPET_THEME_STORAGE_KEY}
       disableTransitionOnChange
     >

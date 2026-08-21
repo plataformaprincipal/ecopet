@@ -12,7 +12,9 @@ import {
   normalizeCep,
 } from "@/lib/address/cep-service";
 import type { AddressByCepValue } from "@/lib/address/types";
-import { BRAZILIAN_STATES } from "@/lib/registration/personas";
+import { BRAZILIAN_STATE_OPTIONS } from "@/lib/address/brazilian-states";
+import { StateSelect } from "@/components/shared/address/state-select";
+import { CityCombobox } from "@/components/shared/address/city-combobox";
 
 export type { AddressByCepValue };
 
@@ -157,9 +159,13 @@ export function AddressByCepField({
               onChange={(e) => handleCepChange(e.target.value)}
               inputMode="numeric"
               autoComplete="postal-code"
+              aria-invalid={errors.zipCode || errors["address.zipCode"] ? true : undefined}
+              aria-describedby={errors.zipCode || errors["address.zipCode"] ? `${idPrefix}-zip-error` : undefined}
             />
           )}
-          <FieldError message={errors.zipCode ?? errors["address.zipCode"]} />
+          <span id={`${idPrefix}-zip-error`}>
+            <FieldError message={errors.zipCode ?? errors["address.zipCode"]} />
+          </span>
           {cepMessage && !loading && <p className="mt-1 text-xs text-amber-600">{cepMessage}</p>}
         </div>
       ))}
@@ -210,8 +216,11 @@ export function AddressByCepField({
           </div>
           <div className="col-md-4">
             <label htmlFor={`${idPrefix}-state`} className={labelClass}>Estado</label>
-            <select id={`${idPrefix}-state`} className={selectClass} value={value.state || "SP"} onChange={(e) => patch({ state: e.target.value })}>
-              {BRAZILIAN_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+            <select id={`${idPrefix}-state`} className={selectClass} value={value.state || ""} onChange={(e) => patch({ state: e.target.value })}>
+              <option value="">UF</option>
+              {BRAZILIAN_STATE_OPTIONS.map((s) => (
+                <option key={s.code} value={s.code}>{s.label}</option>
+              ))}
             </select>
           </div>
         </>
@@ -219,15 +228,32 @@ export function AddressByCepField({
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label htmlFor={`${idPrefix}-city`} className={labelClass}>Cidade <span className="text-red-500">*</span></label>
-            <Input id={`${idPrefix}-city`} className={inputClass} value={value.city} onChange={(e) => patch({ city: e.target.value })} />
-            <FieldError message={errors.city ?? errors["address.city"]} />
+            <CityCombobox
+              id={`${idPrefix}-city`}
+              className={inputClass}
+              uf={value.state}
+              value={value.city}
+              onChange={(city) => patch({ city })}
+              error={errors.city ?? errors["address.city"]}
+              describedBy={errors.city || errors["address.city"] ? `${idPrefix}-city-error` : undefined}
+            />
+            <span id={`${idPrefix}-city-error`}>
+              <FieldError message={errors.city ?? errors["address.city"]} />
+            </span>
           </div>
           <div>
             <label htmlFor={`${idPrefix}-state`} className={labelClass}>UF <span className="text-red-500">*</span></label>
-            <select id={`${idPrefix}-state`} className={selectClass} value={value.state || "SP"} onChange={(e) => patch({ state: e.target.value })}>
-              {BRAZILIAN_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
-            <FieldError message={errors.state ?? errors["address.state"]} />
+            <StateSelect
+              id={`${idPrefix}-state`}
+              className={selectClass}
+              value={value.state || ""}
+              onChange={(state) => patch({ state, city: "" })}
+              error={errors.state ?? errors["address.state"]}
+              describedBy={errors.state || errors["address.state"] ? `${idPrefix}-state-error` : undefined}
+            />
+            <span id={`${idPrefix}-state-error`}>
+              <FieldError message={errors.state ?? errors["address.state"]} />
+            </span>
           </div>
         </div>
       )}

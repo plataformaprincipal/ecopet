@@ -155,7 +155,35 @@ export async function fetchComments(_postId: string, _token?: string): Promise<S
 }
 
 export async function fetchStories(): Promise<SocialStory[]> {
-  return [];
+  try {
+    const res = await fetch("/api/social/stories", { credentials: "include" });
+    const json = await res.json();
+    if (!json?.success) return [];
+    return (json.data.stories as Array<{
+      id: string;
+      authorId: string;
+      content: string | null;
+      mediaUrls: string[];
+      createdAt: string;
+      author: { id: string; name: string; avatarUrl: string | null };
+    }>).map((s) => ({
+      id: s.id,
+      profile: {
+        id: s.author.id,
+        name: s.author.name,
+        avatar: s.author.avatarUrl ?? "",
+        type: "tutor" as const,
+        isVerified: false,
+      },
+      preview: s.mediaUrls[0] ?? "",
+      media: { url: s.mediaUrls[0] ?? "", type: "image" as const },
+      createdAt: typeof s.createdAt === "string" ? s.createdAt : new Date(s.createdAt).toISOString(),
+      viewed: false,
+      label: s.author.name.split(" ")[0],
+    }));
+  } catch {
+    return [];
+  }
 }
 
 export async function fetchReels(): Promise<SocialReel[]> {

@@ -12,6 +12,8 @@ import {
   isValidBrazilPhoneE164,
   normalizeBrazilPhoneE164,
   normalizeBrazilPhoneFromE164,
+  normalizeBrazilPhoneInput,
+  isValidBrazilPhoneInput,
 } from "@/lib/validation/brazil-phone";
 
 export type { CountryCode };
@@ -55,13 +57,16 @@ export function isValidInternationalPhone(
   if (isBrazilContext(country, sanitized)) {
     if (country === "BR" && options.brazilDdd !== undefined) {
       if (!options.brazilDdd) return false;
-      return isValidBrazilNationalNumber(options.brazilDdd, sanitized);
+      if (isValidBrazilNationalNumber(options.brazilDdd, sanitized)) return true;
+      return isValidBrazilPhoneInput(sanitized);
     }
     if (sanitized.startsWith("+55")) return isValidBrazilPhoneE164(sanitized);
     const digits = sanitized.replace(/\D/g, "");
-    if (digits.startsWith("55")) return isValidBrazilPhoneE164(`+${digits}`);
-    if (options.brazilDdd) return isValidBrazilNationalNumber(options.brazilDdd, sanitized);
-    return false;
+    if (digits.startsWith("55") && (digits.length === 12 || digits.length === 13)) {
+      return isValidBrazilPhoneE164(`+${digits}`);
+    }
+    if (options.brazilDdd && isValidBrazilNationalNumber(options.brazilDdd, sanitized)) return true;
+    return isValidBrazilPhoneInput(sanitized);
   }
 
   const digitsOnly = sanitized.replace(/\D/g, "");
@@ -86,16 +91,17 @@ export function normalizeInternationalPhone(
 
   if (isBrazilContext(country, sanitized)) {
     if (country === "BR" && options.brazilDdd) {
-      return normalizeBrazilPhoneE164(options.brazilDdd, sanitized);
+      const withDdd = normalizeBrazilPhoneE164(options.brazilDdd, sanitized);
+      if (withDdd) return withDdd;
     }
     if (sanitized.startsWith("+55")) {
       return normalizeBrazilPhoneFromE164(sanitized);
     }
     const digits = sanitized.replace(/\D/g, "");
-    if (digits.startsWith("55")) {
+    if (digits.startsWith("55") && (digits.length === 12 || digits.length === 13)) {
       return normalizeBrazilPhoneFromE164(`+${digits}`);
     }
-    return null;
+    return normalizeBrazilPhoneInput(sanitized);
   }
 
   try {
@@ -183,8 +189,11 @@ export function resolveRegistrationPhoneE164(
   brazilDdd?: string
 ): string | null {
   if (country === "BR") {
-    if (!brazilDdd?.trim()) return null;
-    return normalizeBrazilPhoneE164(brazilDdd, value);
+    if (brazilDdd?.trim()) {
+      const withDdd = normalizeBrazilPhoneE164(brazilDdd, value);
+      if (withDdd) return withDdd;
+    }
+    return normalizeBrazilPhoneInput(value);
   }
   return normalizeInternationalPhone(value, country);
 }
@@ -197,16 +206,13 @@ export function isValidRegistrationPhone(
   const sanitized = sanitizePhoneInput(value).trim();
   if (!sanitized) return false;
 
-  if (sanitized.startsWith("+55") || sanitized.replace(/\D/g, "").startsWith("55")) {
-    const e164 = sanitized.startsWith("+")
-      ? normalizeBrazilPhoneFromE164(sanitized)
-      : normalizeBrazilPhoneFromE164(`+${sanitized.replace(/\D/g, "")}`);
-    return e164 !== null;
+  if (country === "BR") {
+    if (brazilDdd && isValidBrazilNationalNumber(brazilDdd, sanitized)) return true;
+    return isValidBrazilPhoneInput(sanitized);
   }
 
-  if (country === "BR") {
-    if (!brazilDdd) return false;
-    return isValidBrazilNationalNumber(brazilDdd, sanitized);
+  if (sanitized.startsWith("+55") || sanitized.replace(/\D/g, "").startsWith("55")) {
+    return isValidBrazilPhoneInput(sanitized);
   }
 
   return isValidInternationalPhone(sanitized, country);

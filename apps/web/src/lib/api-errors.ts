@@ -1,7 +1,7 @@
 import { USER_MESSAGES } from "@/schemas/validation/documents";
 import {
-  USER_ALREADY_REGISTERED_MESSAGE,
   isDuplicateRegistrationCode,
+  messageForDuplicateCode,
 } from "@/lib/registration/document-messages";
 
 export type ApiFailurePayload = {
@@ -20,7 +20,7 @@ export function parseApiFailureError(body: ApiFailurePayload): { code?: string; 
 
 export function mapRegisterConflictMessage(code?: string, _message?: string): string {
   if (isDuplicateRegistrationCode(code)) {
-    return USER_ALREADY_REGISTERED_MESSAGE;
+    return messageForDuplicateCode(code);
   }
   if (_message) return _message;
   return USER_MESSAGES.UNEXPECTED;
@@ -46,7 +46,7 @@ export function mapApiErrorMessage(message: string, code?: string): string {
   if (code === "USER_OR_PASSWORD_INCORRECT") return message;
   if (code === "ACCOUNT_UNAVAILABLE" || code === "ACCOUNT_LOCKED" || code === "EMAIL_NOT_VERIFIED") return message;
   if (isDuplicateRegistrationCode(code)) {
-    return USER_ALREADY_REGISTERED_MESSAGE;
+    return messageForDuplicateCode(code);
   }
   if (code === "VALIDATION") return message || USER_MESSAGES.VALIDATION;
   if (code === "DATABASE") return USER_MESSAGES.DATABASE;

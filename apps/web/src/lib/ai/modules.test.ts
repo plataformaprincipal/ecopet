@@ -30,6 +30,12 @@ describe("context / intent", () => {
     assert.ok(!plan.tools.some((t) => t.name === "consult_partner_summary"));
   });
 
+  it("detecta intenção de geração de imagem", () => {
+    const plan = planToolsFromMessage("Crie uma imagem de um camelo feliz.", "CLIENT");
+    assert.equal(plan.tools.length, 1);
+    assert.equal(plan.tools[0]?.name, "generate_image");
+  });
+
   it("detecta página", () => {
     assert.equal(detectModuleFromPage("/client/meu-pet"), "mypet");
     assert.equal(detectModuleFromPage("/marketplace"), "marketplace");

@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { MercadoPagoCheckout } from "@/components/features/marketplace/mercado-pago-checkout";
-import { analyticsService } from "@/lib/analytics/service";
+import { AddressByCepField } from "@/components/shared/address/address-by-cep-field";
 import { OrderEvents, PaymentEvents } from "@/lib/analytics/events";
+import { analyticsService } from "@/lib/analytics/service";
 
 type PaymentMethod = "PIX" | "CARD" | "CASH";
 type PayMode = "delivery" | "online";
@@ -23,6 +24,7 @@ export function CheckoutPanel() {
   const router = useRouter();
   const [cart, setCart] = useState<Record<string, unknown> | null>(null);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [mpAvailable, setMpAvailable] = useState(false);
   const [mpEnvironment, setMpEnvironment] = useState<"test" | "production" | "">("");
@@ -41,8 +43,9 @@ export function CheckoutPanel() {
     street: "",
     number: "",
     city: "",
-    state: "SP",
+    state: "",
     zipCode: "",
+    district: "",
   });
 
   useEffect(() => {
@@ -75,6 +78,7 @@ export function CheckoutPanel() {
     if (saving) return;
     setSaving(true);
     setError("");
+    setFieldErrors({});
     if (payMode === "online" && mpAvailable && !payerEmail.trim()) {
       setSaving(false);
       setError("Faça login com um e-mail válido para pagar online.");
@@ -101,13 +105,27 @@ export function CheckoutPanel() {
           city: form.city,
           state: form.state,
           zipCode: form.zipCode || undefined,
+          district: form.district || undefined,
         },
       }),
     });
     const data = await res.json();
     setSaving(false);
     if (!data.success) {
+      const fields = (data.error?.fields ?? {}) as Record<string, string>;
+      setFieldErrors(fields);
       setError(data.error?.message ?? "Erro ao finalizar pedido.");
+      const firstKey = Object.keys(fields)[0];
+      if (firstKey) {
+        const el = document.getElementById(
+          firstKey === "street" || firstKey === "city" || firstKey === "state" || firstKey === "zipCode" || firstKey === "number"
+            ? `checkout-${firstKey}`
+            : firstKey === "phone"
+              ? "checkout-phone"
+              : `checkout-${firstKey}`
+        );
+        el?.focus();
+      }
       return;
     }
 
@@ -140,8 +158,12 @@ export function CheckoutPanel() {
           payerEmail={payerEmail}
           onPaid={async (result) => {
             const approved = String(result.status).toUpperCase() === "APPROVED";
-            analyticsService.track(
-              approved ? PaymentEvents.PAYMENT_APPROVED : PaymentEvents.PAYMENT_DENIED,
+            const processing = ["PROCESSING", "IN_PROCESS", "PENDING"].includes(
+              String(result.status).toUpperCase()
+            );
+            if (approved || !processing) {
+              analyticsService.track(
+                approved ? PaymentEvents.PAYMENT_APPROVED : PaymentEvents.PAYMENT_DENIED,
               {
                 value: pendingOrder.total,
                 params: {
@@ -150,7 +172,8 @@ export function CheckoutPanel() {
                   provider: "mercado_pago",
                 },
               }
-            );
+              );
+            }
             if (approved) {
               // Claim server-side (sobrevive reload) + dedupe client.
               let allowPurchase = true;
@@ -342,82 +365,46 @@ export function CheckoutPanel() {
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 required
-                aria-describedby="checkout-phone-hint"
+                aria-invalid={fieldErrors.phone ? true : undefined}
+                aria-describedby={fieldErrors.phone ? "checkout-phone-error checkout-phone-hint" : "checkout-phone-hint"}
+                className={fieldErrors.phone ? "border-red-500" : undefined}
               />
+              {fieldErrors.phone ? (
+                <p id="checkout-phone-error" className="mt-1 text-xs text-red-500">
+                  {fieldErrors.phone}
+                </p>
+              ) : null}
               <p id="checkout-phone-hint" className="mt-1 text-xs text-muted-foreground">
                 Usado para combinar entrega e pagamento.
               </p>
             </div>
 
-            <div>
-              <label htmlFor="checkout-street" className="mb-1 block text-sm font-medium">
-                Rua
-              </label>
-              <Input
-                id="checkout-street"
-                type="text"
-                placeholder="Nome da rua"
-                value={form.street}
-                onChange={(e) => setForm({ ...form, street: e.target.value })}
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="checkout-number" className="mb-1 block text-sm font-medium">
-                Número
-              </label>
-              <Input
-                id="checkout-number"
-                type="text"
-                placeholder="Número ou S/N"
-                value={form.number}
-                onChange={(e) => setForm({ ...form, number: e.target.value })}
-              />
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div>
-                <label htmlFor="checkout-city" className="mb-1 block text-sm font-medium">
-                  Cidade
-                </label>
-                <Input
-                  id="checkout-city"
-                  type="text"
-                  placeholder="Cidade"
-                  value={form.city}
-                  onChange={(e) => setForm({ ...form, city: e.target.value })}
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="checkout-state" className="mb-1 block text-sm font-medium">
-                  UF
-                </label>
-                <Input
-                  id="checkout-state"
-                  type="text"
-                  placeholder="SP"
-                  maxLength={2}
-                  value={form.state}
-                  onChange={(e) => setForm({ ...form, state: e.target.value.toUpperCase() })}
-                  required
-                />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="checkout-zip" className="mb-1 block text-sm font-medium">
-                CEP
-              </label>
-              <Input
-                id="checkout-zip"
-                type="text"
-                placeholder="00000-000"
-                value={form.zipCode}
-                onChange={(e) => setForm({ ...form, zipCode: e.target.value })}
-              />
-            </div>
+            <AddressByCepField
+              idPrefix="checkout"
+              title="Endereço de entrega"
+              variant="plain"
+              showReference={false}
+              value={{
+                zipCode: form.zipCode,
+                street: form.street,
+                number: form.number,
+                district: form.district ?? "",
+                city: form.city,
+                state: form.state,
+              }}
+              onChange={(address) =>
+                setForm((current) => ({
+                  ...current,
+                  zipCode: address.zipCode,
+                  street: address.street,
+                  number: address.number,
+                  district: address.district,
+                  city: address.city,
+                  state: address.state,
+                }))
+              }
+              errors={fieldErrors}
+            />
 
             <div>
               <label htmlFor="checkout-notes" className="mb-1 block text-sm font-medium">
