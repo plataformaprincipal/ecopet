@@ -370,6 +370,9 @@ export async function applyInternalPaymentStatus(params: {
         where: { id: payment.orderId },
         data: { fulfillmentBlocked: true, fraudHold: true },
       });
+      void import("@/lib/ai-commerce/entitlement-service").then(({ revokeEntitlementsForOrder }) =>
+        revokeEntitlementsForOrder(payment.orderId, "CHARGEBACK")
+      );
     } catch {
       /* ignore */
     }
@@ -415,6 +418,29 @@ export async function applyInternalPaymentStatus(params: {
           locale: getUserEmailLocale(user.preferences),
         });
       }
+      void import("@/lib/ai-commerce/entitlement-service")
+        .then(({ grantEntitlementsForPaidOrder }) =>
+          grantEntitlementsForPaidOrder(payment.orderId, payment.id)
+        )
+        .then(async (result) => {
+          if (!result.created) return;
+          const first = await prisma.aIEntitlement.findFirst({
+            where: { orderId: payment.orderId },
+            include: { product: { select: { name: true } }, pet: { select: { name: true } } },
+          });
+          const toolName = first?.product?.name ?? "EccoPet AI";
+          await createInternalNotification({
+            userId: payment.order.userId,
+            title: `${toolName} disponível`,
+            body: first?.pet?.name
+              ? `Seu ${toolName} está disponível para ${first.pet.name}.`
+              : `Seu ${toolName} está disponível.`,
+            type: "AI_ENTITLEMENT_CREATED",
+            actionUrl: "/minha-conta/ia",
+            data: { orderId: payment.order.id },
+          });
+        })
+        .catch(() => undefined);
     }
   } catch {
     /* ignore */

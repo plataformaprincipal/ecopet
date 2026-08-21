@@ -118,6 +118,7 @@ export type CatalogItem = {
   sourceDocument: string;
   sourceSection: string;
   sourceSku: string;
+  metadata?: Record<string, unknown>;
 };
 
 export type ResolvedPricingVersion = {

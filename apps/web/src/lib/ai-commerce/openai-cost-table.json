@@ -1,0 +1,7 @@
+{
+  "gpt-4o-mini": { "input": 0.00015, "cachedInput": 0.000075, "output": 0.0006 },
+  "gpt-4o": { "input": 0.0025, "cachedInput": 0.00125, "output": 0.01 },
+  "gpt-4.1-mini": { "input": 0.0004, "cachedInput": 0.0001, "output": 0.0016 },
+  "gpt-4.1": { "input": 0.002, "cachedInput": 0.0005, "output": 0.008 },
+  "default": { "input": 0.00015, "cachedInput": 0.000075, "output": 0.0006 }
+}

@@ -45,7 +45,9 @@ export async function addToCart(userId: string, productId: string, quantity = 1)
       data: { quantity: existing.quantity + quantity },
     });
   } else {
-    await prisma.cartItem.create({ data: { cartId: cart.id, productId, quantity } });
+    await prisma.cartItem.create({
+      data: { cartId: cart.id, productId, quantity, itemType: "product", lineKey: `product:${productId}` },
+    });
   }
   return getOrCreateCart(userId);
 }
@@ -73,7 +75,7 @@ export function serializeCart(cart: Awaited<ReturnType<typeof getOrCreateCart>>)
     ...cart,
     items: cart.items.map((item) => ({
       ...item,
-      product: serializeProduct(item.product),
+      product: item.product ? serializeProduct(item.product) : null,
     })),
   };
 }

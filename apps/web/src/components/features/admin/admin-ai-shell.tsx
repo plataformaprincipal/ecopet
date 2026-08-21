@@ -21,6 +21,9 @@ const AI_ADMIN_NAV = [
   { href: "/admin/ai/logs", label: "Logs" },
   { href: "/admin/ai/feedbacks", label: "Feedbacks" },
   { href: "/admin/ai/tools", label: "Ferramentas" },
+  { href: "/admin/ai/products", label: "Produtos IA" },
+  { href: "/admin/ai/executions", label: "Execuções IA" },
+  { href: "/admin/ai/commerce-metrics", label: "Métricas IA" },
 ] as const;
 
 export function AdminAiShell({ children }: { children: React.ReactNode }) {

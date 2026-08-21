@@ -42,6 +42,7 @@ export function isPublicClientShellPath(pathname: string): boolean {
   if (pathname === "/explorar" || pathname === "/explore") return true;
   if (pathname === "/social" || pathname.startsWith("/social/")) return true;
   if (pathname === "/eccopet" || pathname === "/ia") return true;
+  if (/^\/eccopet\/(vet|triagem|relatorio|exames|vision|nutri|peso|dental|behavior|vacina|med|checkup|health-profile|lab)$/.test(pathname)) return true;
   if (pathname === "/adocao" || pathname.startsWith("/adocao/")) return true;
   if (pathname === "/feed" || pathname.startsWith("/feed/")) return true;
   if (pathname === "/meu-pet") return true;

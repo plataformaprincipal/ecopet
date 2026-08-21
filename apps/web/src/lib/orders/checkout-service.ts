@@ -50,14 +50,15 @@ export async function checkoutFromCart(params: {
   }
 
   const cart = await getOrCreateCart(params.userId);
-  if (!cart.items.length) throw new Error("CART_EMPTY");
+  const physicalItems = cart.items.filter((i) => i.itemType !== "DIGITAL_AI" && i.productId);
+  if (!physicalItems.length) throw new Error("CART_EMPTY");
 
   const paymentMethod = params.paymentMethod ?? PaymentMethod.PIX;
   const paymentNote = PAYMENT_AT_DELIVERY_LABEL[paymentMethod] ?? paymentMethod;
 
   const order = await prisma.$transaction(async (tx) => {
     // Recarrega produtos do servidor — nunca confia em preço do cliente
-    const productIds = cart.items.map((i) => i.productId);
+    const productIds = physicalItems.map((i) => i.productId!).filter(Boolean);
     const products = await tx.product.findMany({
       where: { id: { in: productIds }, deletedAt: null },
       include: {
@@ -81,7 +82,7 @@ export async function checkoutFromCart(params: {
       partnerId: string;
     }[] = [];
 
-    for (const item of cart.items) {
+    for (const item of physicalItems) {
       const product = byId.get(item.productId);
       if (!product) throw new Error("PRODUCT_NOT_FOUND");
       if (product.status !== ProductCatalogStatus.ACTIVE) throw new Error("PRODUCT_INACTIVE");
@@ -269,7 +270,9 @@ export async function checkoutFromCart(params: {
       });
     }
 
-    await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
+    await tx.cartItem.deleteMany({
+      where: { cartId: cart.id, itemType: { not: "DIGITAL_AI" } },
+    });
     return created;
   });
 

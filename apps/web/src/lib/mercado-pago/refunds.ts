@@ -304,6 +304,20 @@ export async function executePaymentRefund(input: ExecuteRefundInput): Promise<{
       });
     });
 
+    if (fullyRefunded) {
+      void import("@/lib/ai-commerce/entitlement-service").then(({ revokeEntitlementsForOrder }) =>
+        revokeEntitlementsForOrder(payment.orderId, "REFUNDED")
+      );
+      void import("@/lib/ai-commerce/audit").then(({ writeAiCommerceAudit, AI_AUDIT }) =>
+        writeAiCommerceAudit({
+          action: AI_AUDIT.PAYMENT_REFUNDED,
+          orderId: payment.orderId,
+          paymentId: payment.id,
+          metadata: { amount, full: true },
+        })
+      );
+    }
+
     void writeAuditLog({
       actorId: input.adminId,
       action: "UPDATE",

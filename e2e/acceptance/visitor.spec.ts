@@ -53,10 +53,10 @@ test.describe("Acceptance VISITOR", () => {
     expect([200, 201]).toContain(add.status());
   });
 
-  test("EcoPet IA pública abre shell", async ({ page }) => {
+  test("EcoPet IA pública abre catálogo comercial", async ({ page }) => {
     await page.goto("/eccopet");
     await expect(page.locator("body")).toBeVisible();
-    await expect(page.locator("body")).toContainText(/ecopet|ia|assistente|chat|conversa/i);
+    await expect(page.locator("body")).toContainText(/eccopet|inteligência especializada|eccovet/i);
   });
 
   test("login e cadastro abrem", async ({ page }) => {

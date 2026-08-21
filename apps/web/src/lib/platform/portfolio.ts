@@ -20,7 +20,7 @@ export type PortfolioSuite = {
 export const ECCOPET_PORTFOLIO: PortfolioSuite[] = [
   { id: "market", name: "EccoPet Market", status: "ACTIVE", commercial: true, dependency: "Parceiros aprovados + catálogo" },
   { id: "services", name: "EccoPet Services", status: "ACTIVE", commercial: true, dependency: "Parceiros com serviços publicados" },
-  { id: "ai", name: "EccoPet AI", status: "ACTIVE", commercial: false, dependency: "OpenAI quando AI_ENABLED" },
+  { id: "ai", name: "EccoPet AI", status: "ACTIVE", commercial: true, dependency: "AI_COMMERCE_ENABLED + OpenAI + Mercado Pago" },
   { id: "pro", name: "EccoPet Pro", status: "PARTIAL", commercial: true, dependency: "Módulos ERP do parceiro já existentes" },
   { id: "ads", name: "EccoPet Ads", status: "FEATURE_FLAGGED", commercial: false, dependency: "ads_copilot + API de mídia" },
   { id: "one", name: "EccoPet One", status: "FEATURE_FLAGGED", commercial: false, dependency: "Billing recorrente — checkoutEnabled=false" },

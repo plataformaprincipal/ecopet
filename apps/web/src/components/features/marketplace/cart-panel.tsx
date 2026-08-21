@@ -73,6 +73,12 @@ export function CartPanel() {
               )}
               <div className="min-w-0 flex-1">
                 <p className="font-medium">{String(item.name)}</p>
+                {item.itemType === "DIGITAL_AI" && item.petName ? (
+                  <p className="text-muted-foreground">Pet: {String(item.petName)}</p>
+                ) : null}
+                {item.itemType === "DIGITAL_AI" ? (
+                  <p className="text-muted-foreground">1 utilização</p>
+                ) : null}
                 <p>R$ {Number(item.unitPrice).toFixed(2)}</p>
                 <div className="mt-2 flex items-center gap-2">
                   <Button
@@ -109,12 +115,31 @@ export function CartPanel() {
         </p>
       )}
       <p className="font-medium">Subtotal: R$ {Number(cart.subtotal).toFixed(2)}</p>
+      {Boolean(cart.mixed) && (
+        <p className="text-sm text-muted-foreground">
+          Serviços digitais e produtos físicos são pagos em fluxos separados.
+        </p>
+      )}
       {Boolean(cart.multiPartner) && (
         <p className="text-sm text-red-600">Remova itens de outras lojas — apenas um parceiro por pedido.</p>
       )}
-      <Button asChild disabled={Boolean(cart.multiPartner)}>
-        <Link href="/checkout">Finalizar</Link>
-      </Button>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        {Boolean(cart.hasProducts) && (
+          <Button asChild disabled={Boolean(cart.multiPartner)}>
+            <Link href="/checkout">Pagar produtos</Link>
+          </Button>
+        )}
+        {Boolean(cart.hasAi) && (
+          <Button asChild variant={cart.hasProducts ? "outline" : "default"}>
+            <Link href="/eccopet/checkout">Pagar serviços de IA</Link>
+          </Button>
+        )}
+        {!cart.hasProducts && !cart.hasAi && (
+          <Button asChild disabled>
+            <Link href="/checkout">Finalizar</Link>
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

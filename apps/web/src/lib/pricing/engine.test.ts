@@ -265,12 +265,12 @@ describe("pricing catalog integrity", () => {
     assert.equal(CATALOG_COUNTS.SAU, 57);
     assert.equal(CATALOG_COUNTS.ONE, 10);
     assert.equal(CATALOG_COUNTS.PRO, 10);
-    assert.equal(CATALOG_COUNTS.AI, 33);
+    assert.equal(CATALOG_COUNTS.AI, 46);
     assert.equal(CATALOG_COUNTS.ADS, 19);
     assert.equal(CATALOG_COUNTS.PRT, 10);
     assert.equal(CATALOG_COUNTS.IOT, 10);
     assert.equal(CATALOG_COUNTS.API, 4);
-    assert.equal(CATALOG_COUNTS.TOTAL, 204);
+    assert.equal(CATALOG_COUNTS.TOTAL, 217);
   });
 
   it("has unique SKUs and source traceability", () => {

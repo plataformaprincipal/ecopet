@@ -720,6 +720,16 @@ model User {
   iotDevices          IotDevice[]
   agroUnits           AgroUnit[]
   externalAuthAccounts ExternalAuthAccount[]
+  aiEntitlements      AIEntitlement[]
+  aiExecutions        AIExecution[]
+  aiReports           AIReport[]
+  aiUploadedAssets    AIUploadedAsset[]
+  aiCommerceAuditEvents AICommerceAuditEvent[]
+  aiProductPricesSet  AIProductPrice[] @relation("AIProductPriceActor")
+  aiSubscriptions     AISubscription[]
+  aiWorkbooks         AIWorkbook[]
+  aiCommerceFeedbacks AICommerceFeedback[]
+  petHealthProfiles   PetHealthProfile[]
 
   @@index([email])
   @@index([username])
@@ -834,6 +844,13 @@ model Pet {
   iotDevices        IotDevice[]
   reminders         PetReminder[]
   petDocuments      PetDocument[]
+  aiEntitlements    AIEntitlement[]
+  aiExecutions      AIExecution[]
+  aiReports         AIReport[]
+  aiUploadedAssets  AIUploadedAsset[]
+  aiSubscriptions   AISubscription[]
+  aiWorkbooks       AIWorkbook[]
+  petHealthProfile  PetHealthProfile?
 
   @@index([ownerId])
   @@index([ongId])
@@ -1467,13 +1484,24 @@ model Cart {
 model CartItem {
   id                String  @id @default(cuid())
   cartId            String
-  productId         String
+  productId         String?
+  /// product | DIGITAL_AI
+  itemType          String  @default("product")
+  /// Chave estável de linha: product:{id} ou ai:{sku}:{petId}
+  lineKey           String
+  sku               String?
+  petId             String?
   quantity          Int     @default(1)
   unitPriceSnapshot Float?
+  pricingVersion    String?
+  metadata          Json?
   cart              Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
-  product           Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  @@unique([cartId, productId])
+  product           Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  @@unique([cartId, lineKey])
   @@index([productId])
+  @@index([sku])
+  @@index([petId])
+  @@index([itemType])
 }
 
 model Order {
@@ -1552,6 +1580,7 @@ model Order {
   financialChargebacks FinancialChargeback[]
   financialReconciliations FinancialReconciliation[]
   partnerPayouts    PartnerPayout[]
+  aiEntitlements    AIEntitlement[]
 
   @@index([userId])
   @@index([partnerId])
@@ -1606,12 +1635,19 @@ model OrderItem {
   partnerAmount     Float   @default(0)
   pricingVersion    String  @default("v1")
   partnerId         String?
+  sku               String?
+  petId             String?
+  metadata          Json?
   order             Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product           Product? @relation(fields: [productId], references: [id])
+  aiEntitlement     AIEntitlement?
 
   @@index([orderId])
   @@index([productId])
   @@index([partnerId])
+  @@index([sku])
+  @@index([petId])
+  @@index([itemType])
 }
 
 model Review {
@@ -5502,6 +5538,8 @@ model Coupon {
   fundedBy        String   @default("ECCOPET")
   marginFloorBps  Int?
   pricingVersionId String?
+  /// Lista de SKUs elegíveis (JSON string[]). Vazio/null = cupom não se aplica a DIGITAL_AI.
+  eligibleSkus    Json?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   redemptions     CouponRedemption[]
@@ -5674,4 +5712,326 @@ model PricingAuditEvent {
 
   @@index([versionId, createdAt])
   @@index([action, createdAt])
+}
+
+// ─── EccoPet AI Commerce (ferramentas pagas) ────────────────────────────────
+
+enum AIProductStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
+}
+
+enum AIEntitlementStatus {
+  AVAILABLE
+  ACTIVE
+  RESERVED
+  IN_USE
+  CONSUMED
+  REVOKED
+  EXPIRED
+  REFUNDED
+}
+
+enum AIExecutionStatus {
+  CREATED
+  DRAFT
+  QUEUED
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum AIUrgencyLevel {
+  ROUTINE
+  MONITOR
+  SOON
+  URGENT
+  EMERGENCY
+}
+
+enum AIAssetStatus {
+  PENDING
+  READY
+  REJECTED
+  DELETED
+}
+
+model AIProduct {
+  id                String          @id @default(cuid())
+  sku               String          @unique
+  slug              String          @unique
+  name              String
+  shortDescription  String
+  longDescription   String
+  status            AIProductStatus @default(DRAFT)
+  category          String
+  billingType       String          @default("ONE_TIME")
+  usageLimit        Int             @default(1)
+  capabilityId      String
+  icon              String?
+  heroAsset         String?
+  sortOrder         Int             @default(0)
+  badge             String?
+  maxImages         Int?
+  maxFiles          Int?
+  avgFillMinutes    Int?
+  pricesConfirmedAt DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  prices            AIProductPrice[]
+  entitlements      AIEntitlement[]
+  executions        AIExecution[]
+  subscriptions     AISubscription[]
+
+  @@index([status, sortOrder])
+  @@index([capabilityId])
+}
+
+model AIProductPrice {
+  id           String    @id @default(cuid())
+  productId    String
+  priceInCents Int
+  currency     String    @default("BRL")
+  version      Int       @default(1)
+  active       Boolean   @default(true)
+  startsAt     DateTime  @default(now())
+  endsAt       DateTime?
+  /// DOCUMENT | DOCUMENT_DERIVED | ADMIN_CONFIRMED | ADMIN_DEFAULT_PENDING_COMMERCIAL | CATALOG
+  source       String    @default("DOCUMENT")
+  reference    String?
+  billingType  String?
+  usageLimit   Int?
+  actorId      String?
+  createdAt    DateTime  @default(now())
+  product      AIProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  actor        User?     @relation("AIProductPriceActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([productId, active])
+  @@index([productId, version])
+}
+
+model AIEntitlement {
+  id                   String               @id @default(cuid())
+  userId               String
+  petId                String
+  sku                  String
+  productId            String?
+  orderId              String
+  orderItemId          String               @unique
+  paymentId            String?
+  subscriptionId       String?
+  status               AIEntitlementStatus  @default(AVAILABLE)
+  usageLimit           Int                  @default(1)
+  usageCount           Int                  @default(0)
+  reservedExecutionId  String?              @unique
+  purchasedAt          DateTime             @default(now())
+  activatedAt          DateTime?
+  consumedAt           DateTime?
+  expiresAt            DateTime?
+  revokedAt            DateTime?
+  revokeReason         String?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  user                 User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pet                  Pet                  @relation(fields: [petId], references: [id], onDelete: Cascade)
+  product              AIProduct?           @relation(fields: [productId], references: [id], onDelete: SetNull)
+  order                Order                @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItem            OrderItem            @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  subscription         AISubscription?      @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  executions           AIExecution[]
+
+  @@index([userId, status])
+  @@index([petId])
+  @@index([sku])
+  @@index([orderId])
+  @@index([subscriptionId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model AIExecution {
+  id                String             @id @default(cuid())
+  userId            String
+  petId             String
+  productId         String?
+  entitlementId     String
+  capabilityId      String
+  status            AIExecutionStatus  @default(DRAFT)
+  inputSnapshot     Json?
+  structuredOutput  Json?
+  model             String?
+  promptVersion     String?
+  startedAt         DateTime?
+  completedAt       DateTime?
+  failedAt          DateTime?
+  failureCode       String?
+  failureMessage    String?
+  inputTokens       Int?
+  cachedInputTokens Int?
+  outputTokens      Int?
+  estimatedCostUsd  Float?
+  retryCount        Int                @default(0)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pet               Pet                @relation(fields: [petId], references: [id], onDelete: Cascade)
+  product           AIProduct?         @relation(fields: [productId], references: [id], onDelete: SetNull)
+  entitlement       AIEntitlement      @relation(fields: [entitlementId], references: [id])
+  reports           AIReport[]
+  workbooks         AIWorkbook[]
+  assets            AIUploadedAsset[]
+  feedback          AICommerceFeedback?
+
+  @@index([userId, createdAt])
+  @@index([petId])
+  @@index([entitlementId])
+  @@index([status])
+  @@index([capabilityId])
+  @@index([createdAt])
+}
+
+model AIReport {
+  id             String      @id @default(cuid())
+  executionId    String
+  userId         String
+  petId          String
+  type           String
+  version        String      @default("v1")
+  structuredData Json
+  pdfStorageKey  String?
+  pdfUrl         String?
+  verificationHash String?
+  createdAt      DateTime    @default(now())
+  execution      AIExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pet            Pet         @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([petId, createdAt])
+  @@index([executionId])
+}
+
+model AIUploadedAsset {
+  id           String        @id @default(cuid())
+  executionId  String?
+  userId       String
+  petId        String
+  type         String
+  mimeType     String
+  storageKey   String
+  size         Int
+  sha256       String
+  status       AIAssetStatus @default(PENDING)
+  createdAt    DateTime      @default(now())
+  execution    AIExecution?  @relation(fields: [executionId], references: [id], onDelete: SetNull)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pet          Pet           @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([petId])
+  @@index([executionId])
+  @@index([sha256])
+  @@index([status])
+}
+
+model AICommerceAuditEvent {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  sku       String?
+  orderId   String?
+  paymentId String?
+  executionId String?
+  entitlementId String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([action, createdAt])
+  @@index([sku])
+  @@index([orderId])
+  @@index([executionId])
+}
+
+enum AISubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+}
+
+model AISubscription {
+  id                       String               @id @default(cuid())
+  userId                   String
+  petId                    String
+  sku                      String
+  productId                String?
+  status                   AISubscriptionStatus @default(ACTIVE)
+  currentPeriodStart       DateTime
+  currentPeriodEnd         DateTime
+  cancelAtPeriodEnd        Boolean              @default(false)
+  cancelledAt              DateTime?
+  mercadoPagoSubscriptionId String?
+  usageAllowance           Int                  @default(1)
+  usageCount               Int                  @default(0)
+  orderId                  String?
+  createdAt                DateTime             @default(now())
+  updatedAt                DateTime             @updatedAt
+  user                     User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pet                      Pet                  @relation(fields: [petId], references: [id], onDelete: Cascade)
+  product                  AIProduct?           @relation(fields: [productId], references: [id], onDelete: SetNull)
+  entitlements             AIEntitlement[]
+
+  @@index([userId, status])
+  @@index([petId, sku])
+  @@index([sku, status])
+  @@index([currentPeriodEnd])
+}
+
+model AIWorkbook {
+  id            String      @id @default(cuid())
+  executionId   String
+  userId        String
+  petId         String
+  type          String
+  version       String      @default("v1")
+  storageKey    String?
+  createdAt     DateTime    @default(now())
+  execution     AIExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pet           Pet         @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([executionId])
+  @@index([petId])
+}
+
+model PetHealthProfile {
+  id                         String   @id @default(cuid())
+  petId                      String   @unique
+  userId                     String
+  activatedFromEntitlementId String?
+  lastSummary                Json?
+  activatedAt                DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+  pet                        Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+  user                       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model AICommerceFeedback {
+  id          String      @id @default(cuid())
+  userId      String
+  executionId String      @unique
+  helpful     Boolean
+  comment     String?
+  createdAt   DateTime    @default(now())
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  execution   AIExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }

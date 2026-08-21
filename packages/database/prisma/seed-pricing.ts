@@ -108,6 +108,7 @@ export async function seedOfficialPricing(prisma: PrismaClient) {
         sourceDocument: sku.sourceDocument,
         sourceSection: sku.sourceSection,
         sourceSku: sku.sourceSku,
+        metadata: sku.metadata ?? undefined,
       },
       create: {
         versionId: version.id,
@@ -140,6 +141,7 @@ export async function seedOfficialPricing(prisma: PrismaClient) {
         sourceDocument: sku.sourceDocument,
         sourceSection: sku.sourceSection,
         sourceSku: sku.sourceSku,
+        metadata: sku.metadata ?? undefined,
       },
     });
   }

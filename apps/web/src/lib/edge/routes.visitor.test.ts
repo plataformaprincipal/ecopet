@@ -32,4 +32,12 @@ describe("visitor public routes", () => {
     assert.equal(requiresAuth("/servicos"), false);
     assert.equal(requiresAuth("/ngos"), false);
   });
+
+  it("exposes EccoPet AI catalog publicly and protects checkout/session", () => {
+    assert.equal(requiresAuth("/eccopet"), false);
+    assert.equal(requiresAuth("/eccopet/triagem"), false);
+    assert.equal(requiresAuth("/eccopet/health-profile"), false);
+    assert.equal(requiresAuth("/eccopet/checkout"), true);
+    assert.equal(requiresAuth("/minha-conta/ia"), true);
+  });
 });
