@@ -242,6 +242,17 @@ export async function createReport(data: { postId?: string; commentId?: string; 
   return socialFetch<{ report: { id: string; status: string } }>("/api/social/reports", { method: "POST", body: JSON.stringify(data) });
 }
 
+export async function uploadSocialStoryMedia(file: File) {
+  const result = await uploadFile(file, "social_story_media");
+  return {
+    url: result.url,
+    fileName: result.originalFilename ?? file.name,
+    mimeType: result.mimeType,
+    sizeBytes: result.sizeBytes,
+    provider: result.provider ?? "cloudinary",
+  };
+}
+
 export async function uploadSocialMedia(file: File) {
   const result = await uploadFile(file, "social_post_media");
   return {

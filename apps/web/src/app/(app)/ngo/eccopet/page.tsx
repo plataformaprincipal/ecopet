@@ -1,5 +1,5 @@
-import { NgoIaErpPage } from "@/components/features/ong/erp/ngo-ia-erp-page";
+import { EccoPetAiLanding } from "@/components/features/ai-commerce/landing";
 
 export default function NgoEccoPetRoute() {
-  return <NgoIaErpPage />;
+  return <EccoPetAiLanding />;
 }

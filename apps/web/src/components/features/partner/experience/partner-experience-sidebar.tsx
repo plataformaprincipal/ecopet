@@ -10,6 +10,7 @@ import {
   PARTNER_EXPERIENCE_NAV,
   isPartnerExperienceNavActive,
 } from "@/lib/partner/experience-nav";
+import { LogoutButton } from "@/components/shared/auth/logout-button";
 
 type Props = {
   businessName: string;
@@ -72,6 +73,9 @@ export function PartnerExperienceSidebar({ businessName, accessLevel, statusLabe
           );
         })}
       </nav>
+      <div className="border-t border-[var(--ep-border)] p-3">
+        <LogoutButton variant="inline" redirectTo="/" />
+      </div>
     </aside>
   );
 }

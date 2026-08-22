@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Loader2, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { uploadSocialMedia } from "@/lib/social/client-api";
+import { uploadSocialStoryMedia } from "@/lib/social/client-api";
 import { useAuthGate } from "@/providers/auth-gate-provider";
 import { cn } from "@/lib/utils";
 
@@ -16,7 +16,7 @@ type Props = {
 export function StoryComposer({ open, onClose, onPublished }: Props) {
   const { requireAuth, isAuthenticated } = useAuthGate();
   const [filePreview, setFilePreview] = useState<string | null>(null);
-  const [media, setMedia] = useState<{ url: string; mimeType: string; fileSize: number } | null>(null);
+  const [file, setFile] = useState<File | null>(null);
   const [caption, setCaption] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
@@ -24,20 +24,11 @@ export function StoryComposer({ open, onClose, onPublished }: Props) {
   if (!open) return null;
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const next = e.target.files?.[0];
+    if (!next) return;
     setError("");
-    setFilePreview(URL.createObjectURL(file));
-    setPending(true);
-    try {
-      const upload = await uploadSocialMedia(file);
-      setMedia({ url: upload.url, mimeType: upload.mimeType, fileSize: upload.sizeBytes });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Falha no upload");
-      setFilePreview(null);
-    } finally {
-      setPending(false);
-    }
+    setFile(next);
+    setFilePreview(URL.createObjectURL(next));
   }
 
   async function publish() {
@@ -45,21 +36,22 @@ export function StoryComposer({ open, onClose, onPublished }: Props) {
       requireAuth(() => void publish());
       return;
     }
-    if (!media) {
+    if (!file) {
       setError("Adicione uma imagem ou vídeo.");
       return;
     }
     setPending(true);
     setError("");
     try {
+      const upload = await uploadSocialStoryMedia(file);
       const res = await fetch("/api/social/stories", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          mediaUrl: media.url,
-          mimeType: media.mimeType,
-          fileSize: media.fileSize,
+          mediaUrl: upload.url,
+          mimeType: upload.mimeType,
+          fileSize: upload.sizeBytes,
           content: caption,
         }),
       });
@@ -69,7 +61,7 @@ export function StoryComposer({ open, onClose, onPublished }: Props) {
       }
       onPublished?.();
       onClose();
-      setMedia(null);
+      setFile(null);
       setFilePreview(null);
       setCaption("");
     } catch (err) {
@@ -113,7 +105,7 @@ export function StoryComposer({ open, onClose, onPublished }: Props) {
           <Button type="button" variant="ghost" onClick={onClose}>
             Cancelar
           </Button>
-          <Button type="button" disabled={pending || !media} onClick={() => void publish()}>
+          <Button type="button" disabled={pending || !file} onClick={() => void publish()}>
             {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Publicar"}
           </Button>
         </div>

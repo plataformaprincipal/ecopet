@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Moon, Sun, Circle } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/providers/i18n-provider";
@@ -19,7 +19,7 @@ type ThemeToggleProps = {
 };
 
 /**
- * Ciclo claro → escuro → preto com guard de montagem (evita mismatch de hidratação).
+ * Ciclo claro ↔ escuro com guard de montagem (evita mismatch de hidratação).
  */
 export function ThemeToggle({ className, size = "md" }: ThemeToggleProps) {
   const { resolvedTheme, setTheme } = useTheme();
@@ -31,7 +31,11 @@ export function ThemeToggle({ className, size = "md" }: ThemeToggleProps) {
   }, []);
 
   const appearance =
-    mounted && isEcopetAppearanceTheme(resolvedTheme) ? resolvedTheme : "light";
+    mounted && isEcopetAppearanceTheme(resolvedTheme)
+      ? resolvedTheme
+      : resolvedTheme === "black"
+        ? "dark"
+        : "light";
 
   const iconClass = size === "sm" ? "h-4 w-4" : "h-5 w-5";
   const labelKey = appearanceThemeLabelKey(appearance);
@@ -71,16 +75,6 @@ export function ThemeToggle({ className, size = "md" }: ThemeToggleProps) {
             appearance === "dark" ? "scale-100 rotate-0 opacity-100" : "scale-0 opacity-0"
           )}
           strokeWidth={2}
-          aria-hidden
-        />
-        <Circle
-          className={cn(
-            iconClass,
-            "absolute transition-all duration-200",
-            appearance === "black" ? "scale-100 opacity-100" : "scale-0 opacity-0"
-          )}
-          strokeWidth={2}
-          fill="currentColor"
           aria-hidden
         />
       </span>

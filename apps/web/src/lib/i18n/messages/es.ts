@@ -13,7 +13,7 @@ const messages: MessageTree = {
     feed: "Feed",
     explore: "Explorar",
     marketplace: "Tienda",
-    ia: "IA Pet",
+    ia: "EccoPet AI",
     pets: "Mis Mascotas",
     adoption: "Adopción",
     chat: "Chat",

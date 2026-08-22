@@ -128,7 +128,7 @@ export function PetDetailView({ pet, token, onRefresh }: PetDetailViewProps) {
         <CardContent className="p-4">
           <div className="mb-2 flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-ecopet-yellow" />
-            <h2 className="font-semibold">IA Pet (estrutura preparada)</h2>
+            <h2 className="font-semibold">EccoPet AI</h2>
           </div>
           <p className="text-sm text-ecopet-gray">
             Futuramente analisará sintomas, vacinas atrasadas, histórico médico, peso e alimentação.

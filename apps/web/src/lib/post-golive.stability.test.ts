@@ -187,13 +187,14 @@ describe("partner login independent from CNPJ lookup", () => {
   });
 });
 
-describe("partner/ONG dark and black theme", () => {
-  it("black usa um único token de classe e ainda ativa dark", () => {
+describe("partner/ONG light and dark theme", () => {
+  it("não oferece tema black e normaliza preferência antiga", () => {
     const src = readSrc("providers/theme-provider.tsx");
     assert.ok(!src.includes('"dark black"'));
-    assert.ok(src.includes('black: "black"'));
-    const sync = readSrc("providers/theme-accessibility-sync.tsx");
-    assert.ok(sync.includes('classList.add("dark")'));
+    assert.ok(!src.includes('black: "black"'));
+    const theme = readSrc("lib/theme/ecopet-theme.ts");
+    assert.ok(theme.includes("normalizeAppearanceTheme"));
+    assert.ok(!theme.includes('"black" as const'));
   });
 });
 

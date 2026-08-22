@@ -1,5 +1,5 @@
-import { EccoPetAIShell } from "@/components/features/eccopet-ai/eccopet-ai-shell";
+import { EccoPetAiLanding } from "@/components/features/ai-commerce/landing";
 
 export default function ClientEccoPetRoute() {
-  return <EccoPetAIShell />;
+  return <EccoPetAiLanding />;
 }

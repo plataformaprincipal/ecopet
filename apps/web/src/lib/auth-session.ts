@@ -43,7 +43,7 @@ export async function createSessionToken(
   return new SignJWT({ userId, id: userId, email, role, accountStatus })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime("7d")
+    .setExpirationTime("30d")
     .sign(secret());
 }
 
@@ -79,6 +79,6 @@ export function sessionCookieOptions() {
     secure: sessionCookieSecure(),
     sameSite: "lax" as const,
     path: "/",
-    maxAge: 60 * 60 * 24 * 7,
+    maxAge: 60 * 60 * 24 * 30,
   };
 }

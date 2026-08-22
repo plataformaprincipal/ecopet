@@ -43,7 +43,7 @@ import {
   appearanceThemeActivatedKey,
   appearanceThemeLabelKey,
   ECOPET_APPEARANCE_THEMES,
-  isEcopetAppearanceTheme,
+  normalizeAppearanceTheme,
 } from "@/lib/theme/ecopet-theme";
 import { deactivateVLibras } from "@/lib/accessibility/vlibras-loader";
 import { useAriaAnnounce } from "./aria-live-region";
@@ -60,8 +60,7 @@ export function AccessibilityToolbar() {
   const { t } = useTranslation();
   const { s } = useSimpleLanguage();
   const { resolvedTheme, setTheme } = useTheme();
-  const appearance =
-    isEcopetAppearanceTheme(resolvedTheme) ? resolvedTheme : resolvedTheme === "dark" ? "dark" : "light";
+  const appearance = normalizeAppearanceTheme(resolvedTheme);
 
   const fontScale = useAccessibilityStore((s) => s.fontScale);
   const brailleEnabled = useAccessibilityStore((s) => s.brailleEnabled);
@@ -111,8 +110,8 @@ export function AccessibilityToolbar() {
         const next = !wasActive;
         toggle(key);
         if (next) {
-          setTheme("black");
-        } else if (appearance === "black") {
+          setTheme("dark");
+        } else if (appearance === "dark") {
           setTheme("light");
         }
         announce(`${label} ${next ? t("a11y.activated") : t("a11y.deactivated")}`, "polite");
@@ -263,14 +262,12 @@ export function AccessibilityToolbar() {
               {ECOPET_APPEARANCE_THEMES.map((themeOption) => (
                 <ToggleBtn
                   key={themeOption}
-                  icon={themeOption === "light" ? Sun : themeOption === "dark" ? Moon : Contrast}
+                  icon={themeOption === "light" ? Sun : Moon}
                   label={t(appearanceThemeLabelKey(themeOption))}
                   active={appearance === themeOption}
                   onClick={() => {
                     setTheme(themeOption);
-                    if (themeOption === "black") {
-                      useAccessibilityStore.setState({ invertedContrast: true });
-                    } else if (invertedContrast) {
+                    if (invertedContrast && themeOption === "light") {
                       useAccessibilityStore.setState({ invertedContrast: false });
                     }
                     announce(t(appearanceThemeActivatedKey(themeOption)), "polite");

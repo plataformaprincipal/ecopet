@@ -5,6 +5,9 @@ import { requireSocialPoster } from "@/lib/social/permissions";
 import { checkSocialRateLimit } from "@/lib/social/rate-limit";
 import { SOCIAL_RATE_LIMITS } from "@/lib/social/constants";
 import { SocialError } from "@/lib/social/errors";
+import { isStoryPubliclyActive } from "@/lib/social/story-policy";
+
+export { isStoryPubliclyActive };
 
 const STORY_TTL_MS = 24 * 60 * 60 * 1000;
 const MAX_BYTES = 8 * 1024 * 1024;
@@ -16,7 +19,7 @@ export async function listActiveStories() {
     where: {
       type: PostType.STORY,
       isHidden: false,
-      OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+      expiresAt: { gt: now },
     },
     orderBy: { createdAt: "desc" },
     take: 40,
@@ -66,6 +69,38 @@ export async function createStory(params: {
     },
     include: { author: { select: { id: true, name: true, avatarUrl: true } } },
   });
+}
+
+export async function getActiveStory(id: string) {
+  const row = await prisma.post.findFirst({
+    where: { id, type: PostType.STORY, isHidden: false },
+    include: { author: { select: { id: true, name: true, avatarUrl: true } } },
+  });
+  if (!row || !isStoryPubliclyActive(row.expiresAt)) return null;
+  return {
+    id: row.id,
+    authorId: row.authorId,
+    author: row.author,
+    content: row.content,
+    mediaUrls: Array.isArray(row.mediaUrls) ? (row.mediaUrls as string[]) : [],
+    createdAt: row.createdAt,
+    expiresAt: row.expiresAt,
+  };
+}
+
+export async function deleteOwnStory(params: { userId: string; storyId: string }) {
+  const row = await prisma.post.findFirst({
+    where: { id: params.storyId, type: PostType.STORY },
+  });
+  if (!row) throw new SocialError("Story não encontrado.", "NOT_FOUND", 404);
+  if (row.authorId !== params.userId) {
+    throw new SocialError("Você não pode remover este story.", "FORBIDDEN", 403);
+  }
+  await prisma.post.update({
+    where: { id: row.id },
+    data: { isHidden: true },
+  });
+  return { id: row.id };
 }
 
 export async function requireStoryAuthor() {

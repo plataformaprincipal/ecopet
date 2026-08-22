@@ -64,7 +64,7 @@ test.describe("Adoção, ONGs e assistente (guest)", () => {
     await expect(box).toHaveCount(0);
   });
 
-  for (const theme of ["light", "dark", "black"] as const) {
+  for (const theme of ["light", "dark"] as const) {
     test(`assistente FAB visível no tema ${theme}`, async ({ page }) => {
       await isolateBrowser(page);
       await page.addInitScript((value) => {

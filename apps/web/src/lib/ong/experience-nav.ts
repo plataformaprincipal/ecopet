@@ -48,7 +48,7 @@ export const NGO_EXPERIENCE_NAV: NgoExperienceNavItem[] = [
   { href: "/ngo/supporters", labelKey: "ngoArea.nav.supporters", icon: HandHeart, requiresApproval: true },
   { href: "/ngo/messages", labelKey: "ngoArea.nav.messages", icon: MessageSquare, requiresApproval: false },
   { href: "/ngo/notifications", labelKey: "ngoArea.nav.notifications", icon: Bell, requiresApproval: false },
-  { href: "/ngo/eccopet", labelKey: "ngoArea.nav.ai", icon: Sparkles, requiresApproval: true },
+  { href: "/ngo/eccopet", labelKey: "ngoArea.nav.ai", icon: Sparkles, requiresApproval: false },
   { href: "/ngo/profile", labelKey: "ngoArea.nav.profile", icon: Building2, requiresApproval: false },
   { href: "/ngo/configuracoes", labelKey: "ngoArea.nav.configuracoes", icon: Settings, requiresApproval: false },
 ];
@@ -58,7 +58,7 @@ export const NGO_EXPERIENCE_BOTTOM_NAV: NgoExperienceNavItem[] = [
   { href: "/ngo/animais", labelKey: "ngoArea.nav.animais", icon: PawPrint, requiresApproval: true },
   { href: "/ngo/adocoes", labelKey: "ngoArea.nav.adocoes", icon: Heart, requiresApproval: true },
   { href: "/ngo/campanhas", labelKey: "ngoArea.nav.campanhas", icon: Megaphone, requiresApproval: true },
-  { href: "/ngo/eccopet", labelKey: "ngoArea.nav.ai", icon: Sparkles, requiresApproval: true },
+  { href: "/ngo/eccopet", labelKey: "ngoArea.nav.ai", icon: Sparkles, requiresApproval: false },
 ];
 
 export const NGO_APPROVAL_REQUIRED_PREFIXES = NGO_EXPERIENCE_NAV.filter(

@@ -12,10 +12,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   return (
     <NextThemesProvider
       attribute="class"
-      defaultTheme="system"
+      defaultTheme="light"
       enableSystem
       themes={[...ECOPET_THEMES]}
-      value={{ light: "light", dark: "dark", black: "black", system: "system" }}
+      value={{ light: "light", dark: "dark", system: "system" }}
       storageKey={ECOPET_THEME_STORAGE_KEY}
       disableTransitionOnChange
     >

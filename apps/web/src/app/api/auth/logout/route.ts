@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { SESSION_COOKIE, sessionCookieOptions } from "@/lib/auth";
 import { verifySessionToken } from "@/lib/auth-session";
+import { GOOGLE_OAUTH_COOKIE, GOOGLE_PENDING_COOKIE } from "@/lib/auth/google-oauth-service";
 import { apiSuccess } from "@/lib/api-response";
 import { auditLogout } from "@/lib/auth/auth-audit";
 import { deactivateCurrentDevice } from "@/lib/firebase/token-management";
@@ -39,6 +40,9 @@ export async function POST(req: Request) {
   void auditLogout({ userId });
 
   const response = apiSuccess({ message: "Sessão encerrada." });
-  response.cookies.set(SESSION_COOKIE, "", { ...sessionCookieOptions(), maxAge: 0 });
+  const cleared = { ...sessionCookieOptions(), maxAge: 0 };
+  response.cookies.set(SESSION_COOKIE, "", cleared);
+  response.cookies.set(GOOGLE_OAUTH_COOKIE, "", cleared);
+  response.cookies.set(GOOGLE_PENDING_COOKIE, "", cleared);
   return response;
 }

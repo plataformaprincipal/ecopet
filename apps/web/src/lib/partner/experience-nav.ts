@@ -38,7 +38,7 @@ export const PARTNER_EXPERIENCE_NAV: PartnerExperienceNavItem[] = [
   { href: "/partner/customers", labelKey: "partnerArea.nav.customers", icon: Users, requiresApproval: true },
   { href: "/partner/financeiro", labelKey: "partnerArea.nav.financeiro", icon: DollarSign, requiresApproval: true },
   { href: "/partner/avaliacoes", labelKey: "partnerArea.nav.reviews", icon: Star, requiresApproval: true },
-  { href: "/partner/eccopet", labelKey: "partnerArea.nav.ai", icon: Sparkles, requiresApproval: true },
+  { href: "/partner/eccopet", labelKey: "partnerArea.nav.ai", icon: Sparkles, requiresApproval: false },
   { href: "/partner/profile", labelKey: "partnerArea.nav.profile", icon: Building2, requiresApproval: false },
   { href: "/partner/settings", labelKey: "partnerArea.nav.settings", icon: Settings, requiresApproval: false },
   { href: "/partner/dashboard", labelKey: "partnerArea.nav.dashboard", icon: BarChart3, requiresApproval: true },
@@ -53,7 +53,7 @@ export const PARTNER_EXPERIENCE_BOTTOM_NAV: PartnerExperienceNavItem[] = [
   { href: "/partner/products", labelKey: "partnerArea.nav.products", icon: Package, requiresApproval: true },
   { href: "/partner/orders", labelKey: "partnerArea.nav.orders", icon: ShoppingBag, requiresApproval: true },
   { href: "/partner/appointments", labelKey: "partnerArea.nav.appointments", icon: CalendarDays, requiresApproval: true },
-  { href: "/partner/eccopet", labelKey: "partnerArea.nav.ai", icon: Sparkles, requiresApproval: true },
+  { href: "/partner/eccopet", labelKey: "partnerArea.nav.ai", icon: Sparkles, requiresApproval: false },
 ];
 
 /** Prefixos /partner/* que exigem parceiro aprovado. */

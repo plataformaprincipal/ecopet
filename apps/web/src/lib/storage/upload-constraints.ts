@@ -17,6 +17,7 @@ export type UploadPurpose =
   | "chat_attachment"
   | "ai_attachment"
   | "social_post_media"
+  | "social_story_media"
   | "social_profile_avatar"
   | "social_profile_cover";
 
@@ -32,6 +33,7 @@ export const UPLOAD_PURPOSES: UploadPurpose[] = [
   "chat_attachment",
   "ai_attachment",
   "social_post_media",
+  "social_story_media",
   "social_profile_avatar",
   "social_profile_cover",
 ];
@@ -53,6 +55,7 @@ export const PURPOSE_FOLDER: Record<UploadPurpose, string> = {
   product_image: "ecopet/products",
   service_image: "ecopet/products",
   social_post_media: "ecopet/posts",
+  social_story_media: "ecopet/stories",
   partner_document: "ecopet/partners/documents",
   ngo_document: "ecopet/ngos/documents",
   chat_attachment: "ecopet/chat",
@@ -81,6 +84,7 @@ export const ALLOWED_MIME: Record<UploadPurpose, string[]> = {
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   ],
   social_post_media: IMAGE_MIME,
+  social_story_media: [...IMAGE_MIME, "video/mp4", "video/webm"],
   social_profile_avatar: IMAGE_MIME,
   social_profile_cover: IMAGE_MIME,
 };
@@ -93,6 +97,7 @@ export const MAX_BYTES: Record<UploadPurpose, number> = {
   product_image: 5 * MB,
   partner_logo: 5 * MB,
   social_post_media: 5 * MB,
+  social_story_media: 8 * MB,
   social_profile_avatar: 5 * MB,
   social_profile_cover: 5 * MB,
   pet_document: 10 * MB,
@@ -107,6 +112,8 @@ const MIME_EXTENSIONS: Record<string, string[]> = {
   "image/jpeg": ["jpg", "jpeg"],
   "image/png": ["png"],
   "image/webp": ["webp"],
+  "video/mp4": ["mp4"],
+  "video/webm": ["webm"],
   "application/pdf": ["pdf"],
   "text/plain": ["txt"],
   "text/csv": ["csv"],

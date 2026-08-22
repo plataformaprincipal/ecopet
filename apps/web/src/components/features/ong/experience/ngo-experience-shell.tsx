@@ -19,6 +19,7 @@ import { NgoExperienceSidebar } from "./ngo-experience-sidebar";
 import { NgoBottomNav } from "./ngo-bottom-nav";
 import { NgoTopbar } from "./ngo-topbar";
 import { NgoRightPanel } from "./ngo-right-panel";
+import { LogoutButton } from "@/components/shared/auth/logout-button";
 
 type StatusTone = "pending" | "approved" | "suspended" | "rejected";
 
@@ -199,6 +200,9 @@ export function NgoExperienceShell({ ngoName, accessLevel, statusTone, children 
                 );
               })}
             </nav>
+            <div className="border-t border-[var(--ep-border)] p-3">
+              <LogoutButton variant="inline" redirectTo="/" />
+            </div>
           </div>
         </div>
       ) : null}

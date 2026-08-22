@@ -8,7 +8,7 @@ import {
   upsertTestReward,
 } from "./helpers/rewards";
 
-const THEMES = ["light", "dark", "black"] as const;
+const THEMES = ["light", "dark"] as const;
 
 async function isolateBrowser(page: import("@playwright/test").Page) {
   await page.addInitScript(() => {
@@ -159,7 +159,7 @@ test.describe("FASE 8 — EccoPontos", () => {
       await page.setViewportSize({ width: 1280, height: 800 });
       await openRewards(page);
       await expect(page.locator("body")).toBeVisible();
-      if (theme === "black" || theme === "dark") {
+      if (theme === "dark") {
         const bg = await page.locator("body").evaluate((el) => getComputedStyle(el).backgroundColor);
         expect(bg).not.toBe("rgb(255, 255, 255)");
       }

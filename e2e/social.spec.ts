@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-const THEMES = ["light", "dark", "black"] as const;
+const THEMES = ["light", "dark"] as const;
 
 async function setTheme(page: import("@playwright/test").Page, theme: (typeof THEMES)[number]) {
   await page.addInitScript((value) => {
@@ -45,12 +45,12 @@ test.describe("Fase 5 — Social", () => {
   });
 
   for (const theme of THEMES) {
-    test(`tema ${theme} no feed não deixa body branco em dark/black`, async ({ page }) => {
+    test(`tema ${theme} no feed não deixa body branco em dark`, async ({ page }) => {
       await setTheme(page, theme);
       await page.setViewportSize({ width: 1280, height: 800 });
       await page.goto("/social");
       await expect(page.locator("body")).toBeVisible({ timeout: 20_000 });
-      if (theme === "black" || theme === "dark") {
+      if (theme === "dark") {
         const bg = await page.locator("body").evaluate((el) => getComputedStyle(el).backgroundColor);
         expect(bg).not.toBe("rgb(255, 255, 255)");
       }

@@ -10,6 +10,7 @@ import {
   NGO_EXPERIENCE_NAV,
   isNgoExperienceNavActive,
 } from "@/lib/ong/experience-nav";
+import { LogoutButton } from "@/components/shared/auth/logout-button";
 
 type StatusTone = "pending" | "approved" | "suspended" | "rejected";
 
@@ -74,6 +75,9 @@ export function NgoExperienceSidebar({ ngoName, accessLevel, statusLabel, status
           );
         })}
       </nav>
+      <div className="border-t border-[var(--ep-border)] p-3">
+        <LogoutButton variant="inline" redirectTo="/" />
+      </div>
     </aside>
   );
 }

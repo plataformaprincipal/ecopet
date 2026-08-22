@@ -53,7 +53,7 @@ export const PRIMARY_NAVIGATION: PrimaryNavItem[] = [
     mobileLabelKey: "pub.nav.eccopet",
     icon: Sparkles,
     href: "/eccopet",
-    match: ["/eccopet", "/ia", "/cliente/ia", "/cliente/assistente", "/client/eccopet"],
+    match: ["/eccopet", "/ia", "/cliente/ia", "/cliente/assistente", "/client/eccopet", "/partner/eccopet", "/ngo/eccopet"],
   },
   {
     id: "profile",
@@ -109,7 +109,18 @@ export function getPrimaryNavigation(context: PrimaryNavContext = "public"): Pri
     });
   }
 
-  // partner / ong / public: rotas públicas principais (áreas internas ficam na sidebar)
+  if (context === "partner") {
+    return PRIMARY_NAVIGATION.map((item) =>
+      item.id === "eccopet" ? { ...item, href: "/partner/eccopet" } : item
+    );
+  }
+
+  if (context === "ong") {
+    return PRIMARY_NAVIGATION.map((item) =>
+      item.id === "eccopet" ? { ...item, href: "/ngo/eccopet" } : item
+    );
+  }
+
   return PRIMARY_NAVIGATION;
 }
 

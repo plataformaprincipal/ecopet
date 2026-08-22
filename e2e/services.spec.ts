@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { registerClient, TEST_PASSWORD } from "./helpers/acceptance";
 
-const THEMES = ["light", "dark", "black"] as const;
+const THEMES = ["light", "dark"] as const;
 
 async function isolateBrowser(page: import("@playwright/test").Page) {
   await page.addInitScript(() => {
@@ -182,7 +182,7 @@ test.describe("FASE 7 — Serviços", () => {
       await page.setViewportSize({ width: 1280, height: 800 });
       await openServices(page);
       await expect(page.locator("body")).toBeVisible({ timeout: 20_000 });
-      if (theme === "black" || theme === "dark") {
+      if (theme === "dark") {
         const bg = await page.locator("body").evaluate((el) => getComputedStyle(el).backgroundColor);
         expect(bg).not.toBe("rgb(255, 255, 255)");
       }

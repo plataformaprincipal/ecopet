@@ -18,6 +18,7 @@ import { PartnerExperienceSidebar } from "./partner-experience-sidebar";
 import { PartnerBottomNav } from "./partner-bottom-nav";
 import { PartnerTopbar } from "./partner-topbar";
 import { PartnerRightPanel } from "./partner-right-panel";
+import { LogoutButton } from "@/components/shared/auth/logout-button";
 
 type StatusTone = "pending" | "approved" | "suspended" | "rejected";
 
@@ -192,6 +193,9 @@ export function PartnerExperienceShell({
                 );
               })}
             </nav>
+            <div className="border-t border-[var(--ep-border)] p-3">
+              <LogoutButton variant="inline" redirectTo="/" />
+            </div>
           </div>
         </div>
       ) : null}

@@ -4,8 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { fetchPublicPosts } from "@/lib/public/client-api";
-import type { ApiSocialPost } from "@/lib/social/client-api";
 import { useAuthGate } from "@/providers/auth-gate-provider";
 import { useTranslation } from "@/providers/i18n-provider";
 import { cn } from "@/lib/utils";
@@ -23,20 +21,14 @@ export function StoriesRail({ className }: { className?: string }) {
   const { t } = useTranslation();
   const [composerOpen, setComposerOpen] = useState(false);
   const [storiesFromApi, setStoriesFromApi] = useState<StoryItem[]>([]);
-  const [posts, setPosts] = useState<ApiSocialPost[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([
-      fetchPublicPosts({ limit: 24 }).catch(() => ({ posts: [] as ApiSocialPost[] })),
-      fetch("/api/social/stories", { credentials: "include" })
-        .then((r) => r.json())
-        .catch(() => ({ success: false })),
-    ])
-      .then(([feed, storyJson]) => {
+    fetch("/api/social/stories", { credentials: "include" })
+      .then((r) => r.json())
+      .then((storyJson) => {
         if (cancelled) return;
-        setPosts(feed.posts ?? []);
         if (storyJson?.success && Array.isArray(storyJson.data?.stories)) {
           setStoriesFromApi(
             storyJson.data.stories.map((s: { id: string; authorId: string; author: { name: string; avatarUrl: string | null } }) => ({
@@ -48,6 +40,7 @@ export function StoriesRail({ className }: { className?: string }) {
           );
         }
       })
+      .catch(() => undefined)
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
@@ -64,20 +57,13 @@ export function StoriesRail({ className }: { className?: string }) {
       seen.add(s.authorId);
       items.push(s);
     }
-    for (const p of posts) {
-      if (!p.media.some((m) => m.mediaType === "IMAGE" || m.mediaType === "VIDEO")) continue;
-      if (seen.has(p.authorId)) continue;
-      seen.add(p.authorId);
-      items.push({ authorId: p.author.id, name: p.author.name, avatarUrl: p.author.avatarUrl, postId: p.id });
-      if (items.length >= 14) break;
-    }
     return items;
-  }, [posts, storiesFromApi]);
+  }, [storiesFromApi]);
 
   return (
     <div
       className={cn(
-        "flex gap-4 overflow-x-auto rounded-3xl border border-zinc-200/70 bg-white/70 p-4 shadow-sm backdrop-blur-md scrollbar-none dark:border-white/10 dark:bg-zinc-900/50",
+        "flex gap-4 overflow-x-auto rounded-3xl border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] p-4 shadow-sm backdrop-blur-md scrollbar-none",
         className
       )}
       aria-label="Stories"
@@ -116,7 +102,7 @@ export function StoriesRail({ className }: { className?: string }) {
               </>
             );
             return isAuthenticated ? (
-              <Link key={s.authorId} href={`/feed/post/${s.postId}`} className="flex shrink-0 flex-col items-center gap-1.5">
+              <Link key={s.authorId} href={`/social/stories/${s.postId}`} className="flex shrink-0 flex-col items-center gap-1.5">
                 {content}
               </Link>
             ) : (

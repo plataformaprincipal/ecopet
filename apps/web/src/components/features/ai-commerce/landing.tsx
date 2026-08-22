@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { analyticsService } from "@/lib/analytics/service";
 import { AiEvents } from "@/lib/analytics/events";
 import { AI_STORE_FILTERS, AI_STORE_GROUPS, type AiStoreGroup } from "@/lib/ai-commerce/catalog";
+import { useAuthSession } from "@/hooks/use-auth-session";
 
 type CatalogProduct = {
   sku: string;
@@ -31,7 +32,16 @@ function formatPrice(cents: number) {
   return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+function assistantHref(role?: string) {
+  if (role === "PARTNER") return "/partner/eccopet/assistente";
+  if (role === "ONG") return "/ngo/eccopet/assistente";
+  if (role === "CLIENT") return "/client/eccopet/assistente";
+  return "/eccopet/assistente";
+}
+
 export function EccoPetAiLanding() {
+  const { data } = useAuthSession();
+  const role = data?.user?.role;
   const [products, setProducts] = useState<CatalogProduct[] | null>(null);
   const [filter, setFilter] = useState<(typeof AI_STORE_FILTERS)[number]>("Todos");
   const [query, setQuery] = useState("");
@@ -58,6 +68,13 @@ export function EccoPetAiLanding() {
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
       <header className="max-w-3xl">
         <p className="text-sm font-medium tracking-wide text-ecopet-green">EccoPet AI</p>
+        {role === "PARTNER" ? (
+          <p className="mt-1 text-xs text-muted-foreground">Ferramentas para operação e atendimento do seu negócio.</p>
+        ) : role === "ONG" ? (
+          <p className="mt-1 text-xs text-muted-foreground">Ferramentas para cuidado animal e operação da organização.</p>
+        ) : role === "CLIENT" ? (
+          <p className="mt-1 text-xs text-muted-foreground">Soluções de saúde e cuidado para o seu pet.</p>
+        ) : null}
         <h1 className="mt-3 text-4xl font-semibold tracking-tight text-ecopet-dark dark:text-white sm:text-5xl">
           Inteligência especializada para cuidar de quem faz parte da família.
         </h1>
@@ -70,8 +87,13 @@ export function EccoPetAiLanding() {
             <a href="#solucoes">Explorar soluções</a>
           </Button>
           <Button asChild variant="outline">
-            <Link href="/minha-conta/ia">Meus serviços</Link>
+            <Link href={assistantHref(role)}>Abrir assistente EccoPet AI</Link>
           </Button>
+          {role ? (
+            <Button asChild variant="outline">
+              <Link href="/minha-conta/ia">Meus serviços</Link>
+            </Button>
+          ) : null}
         </div>
         <p className="mt-4 text-sm text-muted-foreground">
           Resultados automatizados e orientativos. Quando necessário, procure um médico-veterinário.
@@ -127,7 +149,7 @@ export function EccoPetAiLanding() {
               {items.map((p) => (
                 <article
                   key={p.sku}
-                  className="flex flex-col rounded-2xl border border-black/5 bg-white p-6 shadow-[var(--shadow-sm)] dark:border-white/10 dark:bg-ecopet-dark"
+                  className="flex flex-col rounded-2xl border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] p-6 shadow-[var(--shadow-sm)]"
                 >
                   <p className="text-xs font-medium uppercase tracking-wide text-ecopet-green">{p.tag}</p>
                   <h3 className="mt-2 text-xl font-semibold">{p.name}</h3>

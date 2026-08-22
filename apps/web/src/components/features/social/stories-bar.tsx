@@ -25,7 +25,7 @@ export function StoriesBar({ stories }: StoriesBarProps) {
         className="flex shrink-0 flex-col items-center gap-1"
       >
         <div className="relative flex h-[68px] w-[68px] items-center justify-center rounded-full bg-gradient-to-br from-ecopet-green to-ecopet-yellow p-[2px]">
-          <div className="flex h-full w-full items-center justify-center rounded-full bg-white dark:bg-[#0f1419]">
+          <div className="flex h-full w-full items-center justify-center rounded-full bg-[var(--ep-bg-elevated)]">
             <Plus className="h-6 w-6 text-ecopet-green" />
           </div>
         </div>
@@ -34,7 +34,7 @@ export function StoriesBar({ stories }: StoriesBarProps) {
       {stories.map((story) => (
         <Link
           key={story.id}
-          href="/social/stories"
+          href={`/social/stories/${story.id}`}
           className="flex shrink-0 flex-col items-center gap-1"
         >
           <div
@@ -49,7 +49,7 @@ export function StoriesBar({ stories }: StoriesBarProps) {
                     : "bg-gradient-to-br from-ecopet-green to-ecopet-yellow"
             )}
           >
-            <div className="rounded-full bg-white p-[2px] dark:bg-[#0f1419]">
+            <div className="rounded-full bg-[var(--ep-bg-elevated)] p-[2px]">
               <div className="relative h-14 w-14 overflow-hidden rounded-full">
                 <Image src={story.profile.avatar} alt={story.profile.name} fill className="object-cover" />
               </div>

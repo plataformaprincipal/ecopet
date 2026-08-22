@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-const THEMES = ["light", "dark", "black"] as const;
+const THEMES = ["light", "dark"] as const;
 
 async function setTheme(page: import("@playwright/test").Page, theme: (typeof THEMES)[number]) {
   await page.addInitScript((value) => {
@@ -15,6 +15,7 @@ test.describe("EccoPet AI marketplace", () => {
     await expect(
       page.getByRole("heading", { name: /inteligência especializada para cuidar de quem faz parte da família/i })
     ).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText("EccoPet AI").first()).toBeVisible();
     await expect(page.getByRole("link", { name: /explorar soluções/i })).toBeVisible();
     await expect(page.getByText(/eccovet ai/i).first()).toBeVisible({ timeout: 20_000 });
     await expect(page.getByText(/eccovet vision/i).first()).toBeVisible();
@@ -42,7 +43,7 @@ test.describe("EccoPet AI marketplace", () => {
       await expect(
         page.getByRole("heading", { name: /inteligência especializada para cuidar de quem faz parte da família/i })
       ).toBeVisible({ timeout: 20_000 });
-      if (theme === "black" || theme === "dark") {
+      if (theme === "dark") {
         const bg = await page.locator("body").evaluate((el) => getComputedStyle(el).backgroundColor);
         expect(bg).not.toBe("rgb(255, 255, 255)");
       }
@@ -54,5 +55,21 @@ test.describe("legacy assistant shell (internal)", () => {
   test("assistente interno ainda abre", async ({ page }) => {
     await page.goto("/eccopet/assistente");
     await expect(page.locator("body")).toBeVisible();
+  });
+
+  test("/ia redireciona para EccoPet AI", async ({ page }) => {
+    await page.goto("/ia");
+    await expect(page).toHaveURL(/\/eccopet/);
+    await expect(page.getByText("EccoPet AI").first()).toBeVisible({ timeout: 20_000 });
+  });
+
+  test("preferência black antiga não quebra o dark", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("ecopet-theme", "black"));
+    await page.goto("/eccopet");
+    await expect(
+      page.getByRole("heading", { name: /inteligência especializada para cuidar de quem faz parte da família/i })
+    ).toBeVisible({ timeout: 20_000 });
+    const bg = await page.locator("body").evaluate((el) => getComputedStyle(el).backgroundColor);
+    expect(bg).not.toBe("rgb(255, 255, 255)");
   });
 });

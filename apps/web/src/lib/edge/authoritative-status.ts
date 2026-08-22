@@ -19,6 +19,13 @@ export const AUTHORITATIVE_STATUS_PREFIXES = [
   "/pedidos",
   "/adocao",
   "/ong",
+  "/ngo",
+  "/partner",
+  "/parceiro",
+  "/client",
+  "/cliente",
+  "/eccopet",
+  "/social",
 ] as const;
 
 export function requiresAuthoritativeStatus(pathname: string): boolean {

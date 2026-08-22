@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { FoundationProfileForm } from "@/components/features/foundation/profile-form";
 import { PartnerPageHeader } from "../partner-page-header";
 import { PartnerStatusBadge } from "../partner-status-badge";
+import { LogoutButton } from "@/components/shared/auth/logout-button";
 import type { PartnerAccessLevel } from "@/lib/partner/access";
 
 type PartnerProfileManagementPageProps = {
@@ -46,6 +47,7 @@ export function PartnerProfileManagementPage({
                 </Link>
               </Button>
             ) : null}
+            <LogoutButton variant="button" className="inline-flex" redirectTo="/" />
           </div>
         }
       />

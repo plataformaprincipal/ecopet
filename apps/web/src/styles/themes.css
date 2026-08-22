@@ -29,9 +29,9 @@
   --color-ecopet-dark-card: #1a221e;
   --color-ecopet-gray: #a8b2ab;
 
-  --ep-bg: #0e1411;
-  --ep-bg-elevated: #1a221e;
-  --ep-bg-muted: #24302a;
+  --ep-bg: #122018;
+  --ep-bg-elevated: #1a2a22;
+  --ep-bg-muted: #24352c;
   --ep-bg-inverse: #0a4f26;
   --ep-fg: #f5f7f6;
   --ep-fg-muted: #a8b2ab;
@@ -60,26 +60,26 @@
   color: var(--ep-fg);
 }
 
-/* Preto total — tokens nativos (não usar filter: invert) */
+/* Preferência antiga `black` — mesmos tokens do dark (verde profundo / grafite). */
 .black {
   color-scheme: dark;
-  --color-ecopet-surface: #0a0a0a;
-  --color-ecopet-dark-bg: #000000;
-  --color-ecopet-dark-card: #0f0f0f;
-  --color-ecopet-gray: #a3a3a3;
-  --color-ecopet-cream: #050505;
+  --color-ecopet-surface: #1c2420;
+  --color-ecopet-dark-bg: #122018;
+  --color-ecopet-dark-card: #1a2a22;
+  --color-ecopet-gray: #a8b2ab;
+  --color-ecopet-cream: #122018;
 
-  --ep-bg: #000000;
-  --ep-bg-elevated: #0f0f0f;
-  --ep-bg-muted: #171717;
-  --ep-bg-inverse: #16a34a;
-  --ep-fg: #f5f5f5;
-  --ep-fg-muted: #a3a3a3;
-  --ep-fg-subtle: #737373;
+  --ep-bg: #122018;
+  --ep-bg-elevated: #1a2a22;
+  --ep-bg-muted: #24352c;
+  --ep-bg-inverse: #0a4f26;
+  --ep-fg: #f5f7f6;
+  --ep-fg-muted: #a8b2ab;
+  --ep-fg-subtle: #8a9590;
   --ep-fg-inverse: #ffffff;
-  --ep-border: rgba(255, 255, 255, 0.1);
-  --ep-border-strong: rgba(255, 255, 255, 0.18);
-  --ep-ring: var(--ep-green-500);
+  --ep-border: rgba(255, 255, 255, 0.12);
+  --ep-border-strong: rgba(255, 255, 255, 0.22);
+  --ep-ring: var(--ep-green-400);
 
   --ep-success-bg: rgba(21, 128, 61, 0.22);
   --ep-warning-bg: rgba(180, 83, 9, 0.22);
