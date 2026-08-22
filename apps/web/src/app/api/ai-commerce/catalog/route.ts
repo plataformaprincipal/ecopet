@@ -1,7 +1,7 @@
 import { apiSuccess } from "@/lib/api-response";
 import { listPublicCatalog } from "@/lib/ai-commerce/pricing";
 import { ensureAiCommerceProducts } from "@/lib/ai-commerce/product-service";
-import { isAiCommerceEnabled } from "@/lib/ai-commerce/flags";
+import { getAiMonetizationMode, isAiCommerceEnabled, isAiMonetizationFree, isAiPaidCheckoutEnabled } from "@/lib/ai-commerce/flags";
 import { AI_COMMERCE_PRODUCTS } from "@/lib/ai-commerce/catalog";
 
 export const dynamic = "force-dynamic";
@@ -9,8 +9,13 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   await ensureAiCommerceProducts();
   const items = await listPublicCatalog();
+  const free = isAiMonetizationFree();
   return apiSuccess({
-    enabled: isAiCommerceEnabled(),
+    enabled: true,
+    commerceEnabled: isAiCommerceEnabled(),
+    monetizationMode: getAiMonetizationMode(),
+    requiresPayment: !free,
+    free,
     disclaimer:
       "Resultados automatizados e orientativos. Quando necessário, procure um médico-veterinário.",
     products: items.map((p) => ({
@@ -28,11 +33,18 @@ export async function GET() {
       avgFillMinutes: p.avgFillMinutes,
       maxImages: p.maxImages,
       href: p.href,
-      priceInCents: p.price.priceInCents,
-      currency: p.price.currency,
-      commercialPending: p.price.commercialPending,
-      purchasable: p.price.purchasable && isAiCommerceEnabled(),
-      priceSource: p.price.source,
+      capabilityId: p.capabilityId,
+      free,
+      requiresPayment: !free,
+      purchasable: !free && p.price.purchasable && isAiPaidCheckoutEnabled(),
+      ...(free
+        ? {}
+        : {
+            priceInCents: p.price.priceInCents,
+            currency: p.price.currency,
+            commercialPending: p.price.commercialPending,
+            priceSource: p.price.source,
+          }),
     })),
     howItWorks: AI_COMMERCE_PRODUCTS[0]?.howItWorks,
   });

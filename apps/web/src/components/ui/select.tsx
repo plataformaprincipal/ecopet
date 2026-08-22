@@ -15,7 +15,7 @@ export const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex h-11 min-h-[44px] w-full items-center justify-between rounded-[var(--radius-input)] border border-ecopet-gray/25 bg-white px-4 text-sm text-ecopet-dark focus:outline-none focus:ring-2 focus:ring-ecopet-green/25 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/15 dark:bg-white/5 dark:text-white",
+      "flex h-11 min-h-[44px] w-full items-center justify-between rounded-[var(--radius-input)] border border-[var(--ep-border)] bg-[var(--card)] px-4 text-sm text-[var(--ep-fg)] focus:outline-none focus:ring-2 focus:ring-ecopet-green/25 disabled:cursor-not-allowed disabled:opacity-50",
       className
     )}
     {...props}
@@ -36,7 +36,7 @@ export const SelectContent = React.forwardRef<
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        "z-[50] max-h-72 min-w-[8rem] overflow-hidden rounded-[var(--radius-md)] border border-ecopet-gray/15 bg-white shadow-[var(--shadow-lg)] dark:border-white/10 dark:bg-ecopet-dark-card",
+        "z-[50] max-h-72 min-w-[8rem] overflow-hidden rounded-[var(--radius-md)] border border-[var(--ep-border)] bg-[var(--popover)] text-[var(--popover-foreground)] shadow-[var(--shadow-lg)]",
         className
       )}
       position={position}

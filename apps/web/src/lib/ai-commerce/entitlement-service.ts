@@ -5,6 +5,7 @@ import { AI_AUDIT, writeAiCommerceAudit } from "./audit";
 import { getProductDefBySku } from "./catalog";
 import { AiCommerceError } from "./errors";
 import { grantAccessForPaidItem } from "./subscription-service";
+import { AI_ENTITLEMENT_SOURCE_FREE_BETA, isAiCommerceSku, isAiMonetizationFree } from "./flags";
 
 export async function grantEntitlementsForPaidOrder(orderId: string, paymentId?: string | null) {
   const order = await prisma.order.findUnique({
@@ -199,6 +200,72 @@ export async function restoreEntitlement(params: { tx: Prisma.TransactionClient;
       reservedExecutionId: null,
     },
   });
+}
+
+/** Concede utilização gratuita sem Order. Só em FREE_BETA. */
+export async function grantFreeBetaEntitlement(params: {
+  userId: string;
+  petId: string;
+  sku: string;
+}) {
+  if (!isAiMonetizationFree()) {
+    throw new AiCommerceError("AI_PAID_REQUIRED", "Esta ferramenta exige compra neste ambiente.", 409);
+  }
+  if (!isAiCommerceSku(params.sku)) {
+    throw new AiCommerceError("SKU_UNKNOWN", "Ferramenta não encontrada.", 404);
+  }
+  await assertPetOwned(params.userId, params.petId);
+  const def = getProductDefBySku(params.sku);
+  if (!def) throw new AiCommerceError("SKU_UNKNOWN", "Ferramenta não encontrada.", 404);
+
+  const reusable = await prisma.aIEntitlement.findFirst({
+    where: {
+      userId: params.userId,
+      petId: params.petId,
+      sku: params.sku,
+      source: AI_ENTITLEMENT_SOURCE_FREE_BETA,
+      status: { in: ["AVAILABLE", "ACTIVE", "IN_USE", "RESERVED"] },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+  if (reusable && reusable.usageCount < reusable.usageLimit) {
+    return reusable;
+  }
+
+  const product = await prisma.aIProduct.findUnique({ where: { sku: params.sku } });
+  const entitlement = await prisma.aIEntitlement.create({
+    data: {
+      userId: params.userId,
+      petId: params.petId,
+      sku: params.sku,
+      productId: product?.id ?? null,
+      source: AI_ENTITLEMENT_SOURCE_FREE_BETA,
+      status: def.billingType === "ACTIVATION" ? "ACTIVE" : "AVAILABLE",
+      usageLimit: 1,
+      usageCount: 0,
+      purchasedAt: new Date(),
+      activatedAt: def.billingType === "ACTIVATION" ? new Date() : null,
+    },
+  });
+  await writeAiCommerceAudit({
+    userId: params.userId,
+    action: AI_AUDIT.ENTITLEMENT_CREATED,
+    sku: params.sku,
+    entitlementId: entitlement.id,
+    metadata: { source: AI_ENTITLEMENT_SOURCE_FREE_BETA, capabilityId: def.capabilityId },
+  });
+  if (def.billingType === "ACTIVATION") {
+    await prisma.petHealthProfile.upsert({
+      where: { petId: params.petId },
+      create: {
+        petId: params.petId,
+        userId: params.userId,
+        activatedFromEntitlementId: entitlement.id,
+      },
+      update: { activatedFromEntitlementId: entitlement.id },
+    });
+  }
+  return entitlement;
 }
 
 export async function listUserEntitlements(userId: string) {

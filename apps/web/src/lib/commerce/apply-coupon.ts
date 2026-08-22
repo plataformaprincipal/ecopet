@@ -91,7 +91,9 @@ export async function quoteCouponInTx(
     }
   }
   const discountAmount = computeCouponDiscountBrl(coupon, params.grossBrl);
-  if (discountAmount <= 0) throw new CouponError("Cupom sem desconto aplicável.", "COUPON_ZERO", 400);
+  if (discountAmount <= 0) {
+    throw new CouponError("Este cupom não é válido para os itens do seu carrinho.", "COUPON_ZERO", 400);
+  }
   return { coupon, discountAmount };
 }
 
@@ -115,7 +117,9 @@ export async function consumeCouponInCheckout(params: {
   }
 
   const discountAmount = computeCouponDiscountBrl(coupon, params.grossBrl);
-  if (discountAmount <= 0) throw new CouponError("Cupom sem desconto aplicável.", "COUPON_ZERO", 400);
+  if (discountAmount <= 0) {
+    throw new CouponError("Este cupom não é válido para os itens do seu carrinho.", "COUPON_ZERO", 400);
+  }
 
   const reserved = await params.tx.couponRedemption.findFirst({
     where: { couponId: coupon.id, userId: params.userId, orderId: null },

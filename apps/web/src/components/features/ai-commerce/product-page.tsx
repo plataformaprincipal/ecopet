@@ -6,6 +6,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { analyticsService } from "@/lib/analytics/service";
 import { AiEvents } from "@/lib/analytics/events";
+import { useTranslation } from "@/providers/i18n-provider";
+import { getProductDefBySku } from "@/lib/ai-commerce/catalog";
 
 type Product = {
   sku: string;
@@ -20,17 +22,10 @@ type Product = {
   howItWorks: string[];
   limitations: string[];
   exampleResult: string;
-  billingType: string;
-  unitLabel: string;
-  usageLimit?: number;
-  durationCopy?: string;
   avgFillMinutes: number | null;
   maxImages: number | null;
-  purchasable: boolean;
-  price: {
-    priceInCents: number;
-    commercialPending: boolean;
-  };
+  free?: boolean;
+  requiresPayment?: boolean;
 };
 
 type Pet = {
@@ -41,10 +36,6 @@ type Pet = {
   birthDate: string | null;
 };
 
-function formatPrice(cents: number) {
-  return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
 function ageLabel(birthDate: string | null) {
   if (!birthDate) return null;
   const years = Math.floor((Date.now() - new Date(birthDate).getTime()) / (365.25 * 24 * 3600 * 1000));
@@ -54,12 +45,13 @@ function ageLabel(birthDate: string | null) {
 export function AiProductPage({ slug }: { slug: string }) {
   const router = useRouter();
   const search = useSearchParams();
+  const { t } = useTranslation();
   const [product, setProduct] = useState<Product | null>(null);
   const [pets, setPets] = useState<Pet[] | null>(null);
   const [petId, setPetId] = useState("");
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
-  const authed = pets !== null;
+  const [guest, setGuest] = useState(false);
 
   useEffect(() => {
     fetch(`/api/ai-commerce/products/${slug}`)
@@ -74,14 +66,21 @@ export function AiProductPage({ slug }: { slug: string }) {
         }
       });
     fetch("/api/ai-commerce/pets", { credentials: "include" })
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.success) {
-          setPets(d.data.pets);
-          if (d.data.pets.length === 1) setPetId(d.data.pets[0].id);
-        } else setPets([]);
+      .then(async (r) => ({ status: r.status, json: await r.json() }))
+      .then(({ status, json }) => {
+        if (json.success) {
+          setGuest(false);
+          setPets(json.data.pets);
+          if (json.data.pets.length === 1) setPetId(json.data.pets[0].id);
+        } else {
+          setPets([]);
+          setGuest(status === 401);
+        }
       })
-      .catch(() => setPets([]));
+      .catch(() => {
+        setPets([]);
+        setGuest(true);
+      });
   }, [slug]);
 
   useEffect(() => {
@@ -89,51 +88,59 @@ export function AiProductPage({ slug }: { slug: string }) {
     if (from) setPetId(from);
   }, [search]);
 
-  const canBuy = Boolean(product?.purchasable && petId);
+  const selected = useMemo(() => pets?.find((p) => p.id === petId), [pets, petId]);
 
-  async function addToCart(thenCheckout: boolean) {
+  async function startTool() {
     if (!product) return;
-    if (!authed) {
-      router.push(`/login?callbackUrl=/eccopet/${slug}`);
-      return;
-    }
-    if (!pets?.length) {
-      router.push(`/onboarding/pet?callbackUrl=/eccopet/${slug}`);
+    if (!pets || pets.length === 0) {
+      if (guest) {
+        router.push(`/login?callbackUrl=${encodeURIComponent(`/eccopet/${slug}`)}`);
+        return;
+      }
+      router.push(`/onboarding/pet?callbackUrl=${encodeURIComponent(`/eccopet/${slug}`)}`);
       return;
     }
     if (!petId) {
-      setMsg("Selecione o pet para continuar.");
+      setMsg(t("ecopetAi.hub.needPet"));
       return;
     }
     setBusy(true);
     setMsg("");
-    const res = await fetch("/api/cart/items", {
+    const res = await fetch("/api/ai-commerce/executions", {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sku: product.sku, petId, quantity: 1 }),
+      body: JSON.stringify({ sku: product.sku, petId }),
     });
     const data = await res.json();
     setBusy(false);
     if (!data.success) {
-      if (data.error?.code === "AUTH_REQUIRED") {
-        router.push(`/login?callbackUrl=/eccopet/${slug}`);
+      const code = data.error?.code as string | undefined;
+      if (code === "AUTH_REQUIRED" || res.status === 401) {
+        router.push(`/login?callbackUrl=${encodeURIComponent(`/eccopet/${slug}`)}`);
         return;
       }
-      setMsg(data.error?.message ?? "Não foi possível adicionar ao carrinho.");
+      if (code === "RATE_LIMIT") {
+        setMsg(t("ecopetAi.hub.limitReached"));
+        return;
+      }
+      if (code === "PET_FORBIDDEN") {
+        setMsg(t("ecopetAi.hub.needPet"));
+        return;
+      }
+      setMsg(data.error?.message ?? t("ecopetAi.hub.unavailable"));
       return;
     }
-    analyticsService.track(thenCheckout ? AiEvents.CHECKOUT_STARTED : AiEvents.ADD_TO_CART, {
+    analyticsService.track(AiEvents.EXECUTION_STARTED, {
       screen: `eccopet_${slug}`,
       label: product.sku,
     });
-    router.push(thenCheckout ? "/eccopet/checkout" : "/carrinho");
+    const def = getProductDefBySku(product.sku);
+    router.push(def?.workspaceHref(data.data.executionId) ?? `/eccopet/${slug}/session/${data.data.executionId}`);
   }
 
-  const selected = useMemo(() => pets?.find((p) => p.id === petId), [pets, petId]);
-
   if (!product) {
-    return <div className="mx-auto max-w-3xl px-4 py-16 text-sm text-muted-foreground">Carregando…</div>;
+    return <div className="mx-auto max-w-3xl px-4 py-16 text-sm text-[var(--ep-fg-muted)]">Carregando…</div>;
   }
 
   return (
@@ -142,9 +149,12 @@ export function AiProductPage({ slug }: { slug: string }) {
         ← EccoPet AI
       </Link>
       <p className="mt-6 text-xs font-medium uppercase tracking-wide text-ecopet-green">{product.tag}</p>
-      <h1 className="mt-2 text-4xl font-semibold tracking-tight">{product.name}</h1>
-      <p className="mt-3 text-base text-muted-foreground">{product.longDescription}</p>
-      <ul className="mt-6 space-y-2 text-sm">
+      <h1 className="mt-2 text-4xl font-semibold tracking-tight text-[var(--ep-fg)]">{product.name}</h1>
+      <p className="mt-3 text-base text-[var(--ep-fg-muted)]">{product.longDescription}</p>
+      <p className="mt-4 inline-flex rounded-full border border-[var(--ep-border)] bg-[var(--ep-bg-muted)] px-3 py-1 text-xs font-medium">
+        {t("ecopetAi.hub.free")}
+      </p>
+      <ul className="mt-6 space-y-2 text-sm text-[var(--ep-fg)]">
         {product.included.map((item) => (
           <li key={item} className="flex gap-2">
             <span className="text-ecopet-green">✓</span>
@@ -152,37 +162,26 @@ export function AiProductPage({ slug }: { slug: string }) {
           </li>
         ))}
       </ul>
-      <p className="mt-8 text-3xl font-semibold">{formatPrice(product.price.priceInCents)}</p>
-      <p className="text-sm text-muted-foreground">{product.unitLabel}</p>
-      {product.durationCopy && <p className="mt-2 max-w-xl text-sm">{product.durationCopy}</p>}
-      {product.usageLimit != null && (
-        <p className="text-sm text-muted-foreground">Utilizações neste acesso: {product.usageLimit}</p>
-      )}
-      {product.price.commercialPending ? (
-        <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">
-          Preço administrativo — confirmação comercial pendente. Não extraído da planilha oficial.
-        </p>
-      ) : null}
 
-      <div className="mt-8 rounded-2xl border border-black/5 p-4 dark:border-white/10">
-        <p className="text-sm font-medium">Para qual pet você deseja comprar?</p>
-        {pets === null && <p className="mt-2 text-sm text-muted-foreground">Carregando pets…</p>}
-        {pets && pets.length === 0 && authed && (
+      <div className="mt-8 rounded-2xl border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] p-4">
+        <p className="text-sm font-medium text-[var(--ep-fg)]">{t("ecopetAi.hub.selectPet")}</p>
+        {pets === null && <p className="mt-2 text-sm text-[var(--ep-fg-muted)]">Carregando pets…</p>}
+        {pets && pets.length === 0 && (
           <div className="mt-3">
-            <p className="text-sm">Cadastre seu pet antes de continuar.</p>
+            <p className="text-sm text-[var(--ep-fg)]">{t("ecopetAi.hub.needPet")}</p>
             <Button asChild className="mt-3">
-              <Link href={`/onboarding/pet?callbackUrl=/eccopet/${slug}`}>Cadastrar pet</Link>
+              <Link href={`/onboarding/pet?callbackUrl=${encodeURIComponent(`/eccopet/${slug}`)}`}>Cadastrar pet</Link>
             </Button>
           </div>
         )}
         {pets && pets.length > 0 && (
           <select
-            className="mt-3 w-full rounded-lg border bg-transparent px-3 py-2"
+            className="mt-3 w-full rounded-lg border border-[var(--ep-border)] bg-[var(--ep-bg)] px-3 py-2 text-[var(--ep-fg)]"
             value={petId}
             onChange={(e) => setPetId(e.target.value)}
-            aria-label="Selecionar pet"
+            aria-label={t("ecopetAi.hub.selectPet")}
           >
-            <option value="">Selecione</option>
+            <option value="">{t("ecopetAi.hub.selectPet")}</option>
             {pets.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name} · {p.breed || p.species} {ageLabel(p.birthDate) ? `· ${ageLabel(p.birthDate)}` : ""}
@@ -191,25 +190,17 @@ export function AiProductPage({ slug }: { slug: string }) {
           </select>
         )}
         {selected && (
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-2 text-sm text-[var(--ep-fg-muted)]">
             {selected.name} · {selected.breed || selected.species}
           </p>
         )}
       </div>
 
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-        <Button disabled={busy || (!canBuy && Boolean(pets?.length))} loading={busy} onClick={() => addToCart(false)}>
-          Adicionar ao carrinho
-        </Button>
-        <Button variant="outline" disabled={busy} onClick={() => addToCart(true)}>
-          {product.billingType === "SUBSCRIPTION"
-            ? "Comprar plano de 30 dias"
-            : product.billingType === "ACTIVATION"
-              ? "Ativar perfil"
-              : "Comprar agora"}
+      <div className="mt-6">
+        <Button disabled={busy} loading={busy} onClick={() => void startTool()}>
+          {t("ecopetAi.hub.useNow")}
         </Button>
       </div>
-      <p className="mt-3 text-xs text-muted-foreground">Compra segura via Mercado Pago</p>
       {msg && (
         <p className="mt-3 text-sm text-red-600" role="alert">
           {msg}
@@ -217,43 +208,34 @@ export function AiProductPage({ slug }: { slug: string }) {
       )}
 
       <section className="mt-14">
-        <h2 className="text-xl font-semibold">Como funciona</h2>
+        <h2 className="text-xl font-semibold text-[var(--ep-fg)]">Como funciona</h2>
         <ol className="mt-4 grid gap-3 sm:grid-cols-2">
           {product.howItWorks.map((step, i) => (
-            <li key={step} className="rounded-xl border border-black/5 p-4 text-sm dark:border-white/10">
+            <li key={step} className="rounded-xl border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] p-4 text-sm">
               <span className="font-medium text-ecopet-green">{i + 1}.</span> {step}
             </li>
           ))}
         </ol>
       </section>
       <section className="mt-10">
-        <h2 className="text-xl font-semibold">Exemplo de resultado</h2>
-        <p className="mt-2 text-sm text-muted-foreground">{product.exampleResult}</p>
+        <h2 className="text-xl font-semibold text-[var(--ep-fg)]">Exemplo de resultado</h2>
+        <p className="mt-2 text-sm text-[var(--ep-fg-muted)]">{product.exampleResult}</p>
       </section>
       <section className="mt-10">
-        <h2 className="text-xl font-semibold">Limitações</h2>
-        <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-muted-foreground">
+        <h2 className="text-xl font-semibold text-[var(--ep-fg)]">Limitações</h2>
+        <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-[var(--ep-fg-muted)]">
           {product.limitations.map((x) => (
             <li key={x}>{x}</li>
           ))}
         </ul>
       </section>
       <section className="mt-10">
-        <h2 className="text-xl font-semibold">Para quem é</h2>
-        <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-muted-foreground">
-          {product.forWhom.map((x) => (
-            <li key={x}>{x}</li>
-          ))}
-        </ul>
-        <p className="mt-3 text-sm text-muted-foreground">Não substitui consulta veterinária.</p>
-      </section>
-      <section className="mt-10">
-        <h2 className="text-xl font-semibold">FAQ</h2>
+        <h2 className="text-xl font-semibold text-[var(--ep-fg)]">FAQ</h2>
         <dl className="mt-4 space-y-3">
           {product.faqs.map((f) => (
-            <div key={f.q} className="rounded-xl border border-black/5 p-4 dark:border-white/10">
-              <dt className="font-medium">{f.q}</dt>
-              <dd className="mt-1 text-sm text-muted-foreground">{f.a}</dd>
+            <div key={f.q} className="rounded-xl border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] p-4">
+              <dt className="font-medium text-[var(--ep-fg)]">{f.q}</dt>
+              <dd className="mt-1 text-sm text-[var(--ep-fg-muted)]">{f.a}</dd>
             </div>
           ))}
         </dl>

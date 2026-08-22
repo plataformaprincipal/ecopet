@@ -6,6 +6,7 @@ import {
   addToCart,
   addAiToCart,
   applyCartSessionCookie,
+  parseInsufficientStock,
 } from "@/lib/cart/cart-service";
 import { getCurrentUser } from "@/lib/auth";
 import { assertPetOwned } from "@/lib/ai-commerce/entitlement-service";
@@ -59,10 +60,18 @@ export async function POST(request: Request) {
       return apiFailure("CONFLICT", "Carrinho aceita produtos de um parceiro por vez.", 409);
     }
     if (message === "INSUFFICIENT_STOCK") {
-      return apiFailure("VALIDATION", "Estoque insuficiente.", 400);
+      const max = parseInsufficientStock(e);
+      return apiFailure(
+        "VALIDATION",
+        max != null ? `Quantidade máxima disponível: ${max}` : "Estoque insuficiente.",
+        400
+      );
+    }
+    if (message === "AI_FREE_BETA") {
+      return apiFailure("AI_FREE_BETA", "As ferramentas EccoPet AI estão gratuitas. Use a ferramenta diretamente.", 409);
     }
     if (message === "AI_COMMERCE_DISABLED") {
-      return apiFailure("AI_COMMERCE_DISABLED", "As ferramentas EccoPet AI ainda não estão à venda neste ambiente.", 403);
+      return apiFailure("AI_COMMERCE_DISABLED", "A compra das ferramentas EccoPet AI está desligada neste ambiente.", 403);
     }
     if (handled.status !== 500) return handled;
     return apiFailure("INTERNAL", "Erro ao adicionar item.", 500);

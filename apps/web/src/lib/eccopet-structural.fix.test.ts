@@ -28,6 +28,19 @@ describe("EccoPet AI wiring", () => {
     }
   });
 
+  it("landing e product page em FREE_BETA não vendem", () => {
+    const landing = readSrc("components/features/ai-commerce/landing.tsx");
+    const product = readSrc("components/features/ai-commerce/product-page.tsx");
+    assert.ok(!landing.includes("Adicionar ao carrinho"));
+    assert.ok(!landing.includes("priceInCents"));
+    assert.ok(!product.includes("Adicionar ao carrinho"));
+    assert.ok(!product.includes("/api/cart/items"));
+    assert.match(product, /\/api\/ai-commerce\/executions/);
+    const checkout = readSrc("app/(app)/eccopet/checkout/page.tsx");
+    assert.match(checkout, /isAiMonetizationFree/);
+    assert.match(checkout, /redirect\("\/eccopet"\)/);
+  });
+
   it("rotas de persona usam a landing canônica, não um segundo chatbot", () => {
     assert.match(readSrc("app/(app)/eccopet/page.tsx"), /EccoPetAiLanding/);
     assert.match(readSrc("app/(app)/client/eccopet/page.tsx"), /EccoPetAiLanding/);
@@ -39,13 +52,14 @@ describe("EccoPet AI wiring", () => {
 
   it("navegação e i18n padronizam o módulo como EccoPet AI", () => {
     const pt = JSON.parse(readSrc("i18n/locales/pt-BR.json")) as {
-      pub: { nav: { eccopet: string }; home: { areaEccopet: string; aiCta: string } };
+      pub: { nav: { eccopet: string }; home: { areaEccopet: string; aiCta: string; aiSubtitle: string } };
       nav: { ia: string };
     };
     assert.equal(pt.pub.nav.eccopet, "EccoPet AI");
     assert.equal(pt.nav.ia, "EccoPet AI");
     assert.equal(pt.pub.home.areaEccopet, "EccoPet AI");
     assert.match(pt.pub.home.aiCta, /EccoPet AI/);
+    assert.match(pt.pub.home.aiSubtitle, /gratuitas|free/i);
     const partnerNav = readSrc("lib/partner/experience-nav.ts");
     assert.match(partnerNav, /href: "\/partner\/eccopet".*requiresApproval: false/);
     const ngoNav = readSrc("lib/ong/experience-nav.ts");
@@ -103,5 +117,15 @@ describe("Tema light/dark", () => {
     const provider = readSrc("providers/theme-provider.tsx");
     assert.ok(!provider.includes("black:"));
     assert.match(provider, /defaultTheme="light"/);
+  });
+
+  it("dark usa verde-grafite sem preto absoluto como fundo", () => {
+    const themes = readSrc("styles/themes.css");
+    assert.match(themes, /--ep-bg:\s*#0f1713/i);
+    assert.match(themes, /--ep-bg-elevated:\s*#15211b/i);
+    assert.match(themes, /--surface-elevated:\s*#1b2a22/i);
+    assert.ok(!themes.includes("--ep-bg: #000000"));
+    assert.ok(!themes.includes("--ep-bg: #000"));
+    assert.match(themes, /\.black\s*\{/);
   });
 });

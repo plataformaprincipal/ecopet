@@ -15,7 +15,7 @@ export function PublicClientShell({ children }: PublicClientShellProps) {
   const isHome = pathname === "/";
 
   return (
-    <div className="flex min-h-screen flex-col bg-white dark:bg-ecopet-dark-bg">
+    <div className="flex min-h-screen flex-col bg-[var(--ep-bg)] text-[var(--ep-fg)]">
       <PublicNavbar />
       <main
         className={cn(

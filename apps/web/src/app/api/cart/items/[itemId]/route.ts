@@ -5,6 +5,7 @@ import {
   resolveCartForRequest,
   updateCartItem,
   applyCartSessionCookie,
+  parseInsufficientStock,
 } from "@/lib/cart/cart-service";
 
 const patchSchema = z.object({
@@ -33,7 +34,12 @@ export async function PATCH(request: Request, context: RouteContext) {
       return apiFailure("NOT_FOUND", "Item não encontrado.", 404);
     }
     if (message === "INSUFFICIENT_STOCK") {
-      return apiFailure("VALIDATION", "Estoque insuficiente.", 400);
+      const max = parseInsufficientStock(e);
+      return apiFailure(
+        "VALIDATION",
+        max != null ? `Quantidade máxima disponível: ${max}` : "Estoque insuficiente.",
+        400
+      );
     }
     return apiFailure("INTERNAL", "Erro ao atualizar item.", 500);
   }

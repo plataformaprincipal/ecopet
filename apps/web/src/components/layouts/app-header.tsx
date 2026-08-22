@@ -17,7 +17,7 @@ export function AppHeader({ title, titleKey }: { title?: string; titleKey?: Tran
   const heading = titleKey ? t(titleKey) : title;
 
   return (
-    <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-ecopet-gray/10 bg-ecopet-cream/90 px-4 backdrop-blur-md dark:border-white/10 dark:bg-ecopet-dark-bg/90 lg:px-8">
+    <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-[var(--ep-border)] bg-[var(--header)]/90 px-4 backdrop-blur-md lg:px-8">
       {heading && (
         <h1 className="min-w-0 truncate font-display text-lg font-bold text-ecopet-dark dark:text-white lg:text-xl">
           {heading}

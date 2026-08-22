@@ -1,27 +1,55 @@
 /**
- * Navegação principal EcoPet — única fonte de verdade (5 itens).
- * Funcionalidades secundárias permanecem em sidebars/submenus/páginas internas.
+ * Navegação principal EcoPet — única fonte de verdade.
+ * Desktop público e mobile público usam recortes diferentes da mesma tabela.
+ * CLIENT / PARTNER / ONG mantêm o atalho operacional de 5 itens.
  */
 import type { LucideIcon } from "lucide-react";
-import { Users, Compass, ShoppingBag, Sparkles, User } from "lucide-react";
+import { Users, Compass, ShoppingBag, Sparkles, User, Home, Scissors, Heart } from "lucide-react";
 import type { TranslationKey } from "@/lib/i18n/types";
 
-export type PrimaryNavId = "social" | "explore" | "marketplace" | "eccopet" | "profile";
+export type PrimaryNavId =
+  | "home"
+  | "social"
+  | "explore"
+  | "marketplace"
+  | "services"
+  | "eccopet"
+  | "adoption"
+  | "profile";
 
 export type PrimaryNavItem = {
   id: PrimaryNavId;
-  /** Label completa (desktop / aria) */
   labelKey: TranslationKey;
-  /** Label curta mobile */
   mobileLabelKey: TranslationKey;
   icon: LucideIcon;
-  /** Href público / compartilhado */
   href: string;
-  /** Prefixos que marcam o item como ativo */
   match: string[];
 };
 
-/** Cinco destinos principais — rotas públicas existentes reutilizadas. */
+export type PrimaryNavSurface = "desktop" | "mobile";
+
+const marketplaceMatch = [
+  "/marketplace",
+  "/cliente/marketplace",
+  "/client/marketplace",
+  "/produtos",
+  "/carrinho",
+  "/pedidos",
+];
+
+const eccopetMatch = [
+  "/eccopet",
+  "/ia",
+  "/cliente/ia",
+  "/cliente/assistente",
+  "/client/eccopet",
+  "/partner/eccopet",
+  "/ngo/eccopet",
+];
+
+const communityMatch = ["/social", "/feed", "/client/social"];
+
+/** Cinco destinos operacionais — usado por CLIENT / PARTNER / ONG. */
 export const PRIMARY_NAVIGATION: PrimaryNavItem[] = [
   {
     id: "social",
@@ -29,7 +57,7 @@ export const PRIMARY_NAVIGATION: PrimaryNavItem[] = [
     mobileLabelKey: "pub.nav.socialShort",
     icon: Users,
     href: "/social",
-    match: ["/social", "/feed", "/client/social"],
+    match: communityMatch,
   },
   {
     id: "explore",
@@ -45,7 +73,7 @@ export const PRIMARY_NAVIGATION: PrimaryNavItem[] = [
     mobileLabelKey: "pub.nav.marketShort",
     icon: ShoppingBag,
     href: "/marketplace",
-    match: ["/marketplace", "/cliente/marketplace", "/client/marketplace", "/produtos", "/carrinho", "/pedidos"],
+    match: marketplaceMatch,
   },
   {
     id: "eccopet",
@@ -53,7 +81,95 @@ export const PRIMARY_NAVIGATION: PrimaryNavItem[] = [
     mobileLabelKey: "pub.nav.eccopet",
     icon: Sparkles,
     href: "/eccopet",
-    match: ["/eccopet", "/ia", "/cliente/ia", "/cliente/assistente", "/client/eccopet", "/partner/eccopet", "/ngo/eccopet"],
+    match: eccopetMatch,
+  },
+  {
+    id: "profile",
+    labelKey: "nav.profile",
+    mobileLabelKey: "pub.nav.profileShort",
+    icon: User,
+    href: "/perfil",
+    match: ["/perfil", "/profile", "/cliente/perfil", "/client/profile", "/configuracoes"],
+  },
+];
+
+/** Header desktop público: portas do ecossistema. /explorar permanece como rota. */
+export const PUBLIC_DESKTOP_NAVIGATION: PrimaryNavItem[] = [
+  {
+    id: "marketplace",
+    labelKey: "nav.marketplace",
+    mobileLabelKey: "pub.nav.marketShort",
+    icon: ShoppingBag,
+    href: "/marketplace",
+    match: marketplaceMatch,
+  },
+  {
+    id: "services",
+    labelKey: "nav.services",
+    mobileLabelKey: "pub.nav.servicesShort",
+    icon: Scissors,
+    href: "/servicos",
+    match: ["/servicos", "/marketplace/servicos"],
+  },
+  {
+    id: "social",
+    labelKey: "pub.nav.community",
+    mobileLabelKey: "pub.nav.communityShort",
+    icon: Users,
+    href: "/social",
+    match: communityMatch,
+  },
+  {
+    id: "eccopet",
+    labelKey: "pub.nav.eccopet",
+    mobileLabelKey: "pub.nav.eccopet",
+    icon: Sparkles,
+    href: "/eccopet",
+    match: eccopetMatch,
+  },
+  {
+    id: "adoption",
+    labelKey: "nav.adoption",
+    mobileLabelKey: "pub.nav.adoptionShort",
+    icon: Heart,
+    href: "/adocao",
+    match: ["/adocao"],
+  },
+];
+
+/** Bottom nav pública: 5 itens, Marketplace permanece central. */
+export const PUBLIC_MOBILE_NAVIGATION: PrimaryNavItem[] = [
+  {
+    id: "home",
+    labelKey: "nav.home",
+    mobileLabelKey: "pub.nav.homeShort",
+    icon: Home,
+    href: "/",
+    match: [],
+  },
+  {
+    id: "marketplace",
+    labelKey: "nav.marketplace",
+    mobileLabelKey: "pub.nav.marketShort",
+    icon: ShoppingBag,
+    href: "/marketplace",
+    match: marketplaceMatch,
+  },
+  {
+    id: "eccopet",
+    labelKey: "pub.nav.eccopet",
+    mobileLabelKey: "pub.nav.eccopet",
+    icon: Sparkles,
+    href: "/eccopet",
+    match: eccopetMatch,
+  },
+  {
+    id: "social",
+    labelKey: "pub.nav.community",
+    mobileLabelKey: "pub.nav.communityShort",
+    icon: Users,
+    href: "/social",
+    match: communityMatch,
   },
   {
     id: "profile",
@@ -67,11 +183,14 @@ export const PRIMARY_NAVIGATION: PrimaryNavItem[] = [
 
 export type PrimaryNavContext = "public" | "clientPt" | "clientEn" | "partner" | "ong";
 
-/**
- * Resolve hrefs contextuais sem duplicar páginas.
- * Mantém as 5 entradas; só troca o destino da persona quando a rota dedicada existe.
- */
-export function getPrimaryNavigation(context: PrimaryNavContext = "public"): PrimaryNavItem[] {
+export function getPrimaryNavigation(
+  context: PrimaryNavContext = "public",
+  surface: PrimaryNavSurface = "mobile"
+): PrimaryNavItem[] {
+  if (context === "public") {
+    return surface === "desktop" ? PUBLIC_DESKTOP_NAVIGATION : PUBLIC_MOBILE_NAVIGATION;
+  }
+
   if (context === "clientPt") {
     return PRIMARY_NAVIGATION.map((item) => {
       switch (item.id) {
@@ -125,6 +244,7 @@ export function getPrimaryNavigation(context: PrimaryNavContext = "public"): Pri
 }
 
 export function isPrimaryNavActive(pathname: string, item: PrimaryNavItem): boolean {
+  if (item.id === "home") return pathname === "/";
   const candidates = [item.href, ...item.match];
   return candidates.some((prefix) => {
     if (prefix === "/") return pathname === "/";
@@ -132,6 +252,5 @@ export function isPrimaryNavActive(pathname: string, item: PrimaryNavItem): bool
   });
 }
 
-/** Altura da barra + safe area — usar no padding-bottom do conteúdo. */
 export const PRIMARY_BOTTOM_NAV_CONTENT_PADDING =
   "pb-[calc(4.75rem+env(safe-area-inset-bottom))] lg:pb-8";

@@ -5818,8 +5818,9 @@ model AIEntitlement {
   petId                String
   sku                  String
   productId            String?
-  orderId              String
-  orderItemId          String               @unique
+  orderId              String?
+  orderItemId          String?              @unique
+  source               String               @default("PURCHASE")
   paymentId            String?
   subscriptionId       String?
   status               AIEntitlementStatus  @default(AVAILABLE)
@@ -5837,8 +5838,8 @@ model AIEntitlement {
   user                 User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   pet                  Pet                  @relation(fields: [petId], references: [id], onDelete: Cascade)
   product              AIProduct?           @relation(fields: [productId], references: [id], onDelete: SetNull)
-  order                Order                @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  orderItem            OrderItem            @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  order                Order?               @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  orderItem            OrderItem?           @relation(fields: [orderItemId], references: [id], onDelete: SetNull)
   subscription         AISubscription?      @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
   executions           AIExecution[]
 
@@ -5849,6 +5850,7 @@ model AIEntitlement {
   @@index([subscriptionId])
   @@index([status])
   @@index([createdAt])
+  @@index([source])
 }
 
 model AIExecution {

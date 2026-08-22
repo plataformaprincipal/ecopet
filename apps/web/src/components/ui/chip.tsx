@@ -12,7 +12,7 @@ export function Chip({ className, selected, children, ...props }: ChipProps) {
         "inline-flex min-h-[36px] items-center rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors",
         selected
           ? "border-ecopet-green bg-ecopet-green text-white"
-          : "border-ecopet-gray/20 bg-white text-ecopet-gray hover:border-ecopet-green/40 hover:text-ecopet-dark dark:bg-white/5 dark:text-white/80",
+          : "border-[var(--ep-border)] bg-[var(--card)] text-[var(--ep-fg-muted)] hover:border-ecopet-green/40 hover:text-[var(--ep-fg)]",
         className
       )}
       aria-pressed={selected}

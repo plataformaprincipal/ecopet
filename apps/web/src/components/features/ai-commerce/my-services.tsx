@@ -63,7 +63,7 @@ export function MyAiServicesPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
-      <h1 className="text-3xl font-semibold">Meus serviços de IA</h1>
+      <h1 className="text-3xl font-semibold">Histórico EccoPet AI</h1>
       <div className="mt-6 flex flex-wrap gap-2">
         {[
           ["available", "Disponíveis"],
@@ -82,7 +82,7 @@ export function MyAiServicesPage() {
       </div>
       {filtered.length === 0 && (
         <p className="mt-8 text-sm text-muted-foreground">
-          Nenhum serviço comprado. Escolha uma ferramenta EccoPet AI para começar.
+          Nenhuma execução ainda. Escolha uma ferramenta EccoPet AI para começar.
         </p>
       )}
       {filtered.length === 0 && (
@@ -92,28 +92,30 @@ export function MyAiServicesPage() {
       )}
       <ul className="mt-6 space-y-4">
         {filtered.map((i) => (
-          <li key={i.id} className="rounded-2xl border border-black/5 p-5 dark:border-white/10">
+          <li key={i.id} className="rounded-2xl border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] p-5">
             <p className="font-semibold">{i.name}</p>
-            <p className="text-sm text-muted-foreground">Pet: {i.pet.name}</p>
-            <p className="text-sm text-muted-foreground">
-              Comprado em {new Date(i.purchasedAt).toLocaleDateString("pt-BR")}
+            <p className="text-sm text-[var(--ep-fg-muted)]">Pet: {i.pet.name}</p>
+            <p className="text-sm text-[var(--ep-fg-muted)]">
+              {new Date(i.purchasedAt).toLocaleDateString("pt-BR")}
             </p>
-            <p className="text-sm">{i.remaining} utilização disponível</p>
-            {i.status === "ACTIVE" && <p className="text-sm text-ecopet-green">Plano de 30 dias ativo</p>}
+            {i.latestExecution ? (
+              <p className="text-sm text-[var(--ep-fg)]">Status: {i.latestExecution.status}</p>
+            ) : null}
             <div className="mt-3 flex flex-wrap gap-2">
               {i.remaining > 0 && (
                 <Button size="sm" loading={busy === i.id} onClick={() => start(i)}>
                   Usar agora
                 </Button>
               )}
-              <Button asChild size="sm" variant="outline">
-                <Link
-                  href={i.href ?? "/eccopet"}
-                  onClick={() => analyticsService.track(AiEvents.REPURCHASE, { label: i.sku })}
-                >
-                  {i.sku.includes("ECCOVET") && i.remaining === 0 ? "Renovar plano" : "Comprar novamente"}
-                </Link>
-              </Button>
+              {i.latestExecution?.href ? (
+                <Button asChild size="sm" variant="outline">
+                  <Link href={i.latestExecution.href}>Ver resultado</Link>
+                </Button>
+              ) : (
+                <Button asChild size="sm" variant="outline">
+                  <Link href={i.href ?? "/eccopet"}>Abrir ferramenta</Link>
+                </Button>
+              )}
             </div>
           </li>
         ))}

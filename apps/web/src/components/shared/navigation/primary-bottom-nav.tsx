@@ -29,8 +29,7 @@ export function PrimaryBottomNav({ context = "public", className, ariaLabel }: P
   return (
     <nav
       className={cn(
-        "fixed inset-x-0 bottom-0 z-50 border-t border-ecopet-gray/10 bg-white/95 backdrop-blur-xl",
-        "dark:border-white/10 dark:bg-[#0f1419]/95",
+        "fixed inset-x-0 bottom-0 z-50 border-t border-[var(--ep-border)] bg-[var(--bottom-nav)]/95 backdrop-blur-xl",
         "lg:hidden",
         className
       )}

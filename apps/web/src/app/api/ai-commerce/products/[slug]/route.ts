@@ -2,7 +2,7 @@ import { apiFailure, apiSuccess } from "@/lib/api-response";
 import { getProductDefBySlug, durationCopy } from "@/lib/ai-commerce/catalog";
 import { resolveAiProductPrice } from "@/lib/ai-commerce/pricing";
 import { ensureAiCommerceProducts } from "@/lib/ai-commerce/product-service";
-import { isAiCommerceEnabled } from "@/lib/ai-commerce/flags";
+import { getAiMonetizationMode, isAiCommerceEnabled, isAiMonetizationFree, isAiPaidCheckoutEnabled } from "@/lib/ai-commerce/flags";
 
 export const dynamic = "force-dynamic";
 
@@ -14,11 +14,16 @@ export async function GET(_req: Request, ctx: Ctx) {
   const def = getProductDefBySlug(slug);
   if (!def) return apiFailure("NOT_FOUND", "Ferramenta não encontrada.", 404);
   const price = await resolveAiProductPrice(def.sku);
+  const free = isAiMonetizationFree();
   return apiSuccess({
     ...def,
     durationCopy: durationCopy(def),
-    price,
-    enabled: isAiCommerceEnabled(),
-    purchasable: price.purchasable && isAiCommerceEnabled(),
+    enabled: true,
+    commerceEnabled: isAiCommerceEnabled(),
+    monetizationMode: getAiMonetizationMode(),
+    free,
+    requiresPayment: !free,
+    purchasable: !free && price.purchasable && isAiPaidCheckoutEnabled(),
+    ...(free ? {} : { price }),
   });
 }

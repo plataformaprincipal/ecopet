@@ -10,13 +10,15 @@ import { ThemeToggle } from "@/components/shared/theme/theme-toggle";
 import { PrimaryDesktopNav } from "@/components/shared/navigation/primary-desktop-nav";
 import { useTranslation } from "@/providers/i18n-provider";
 import { getPrimaryNavigation } from "@/lib/navigation/primary-nav";
+import { useFoundationSession } from "@/hooks/use-foundation-session";
 import { cn } from "@/lib/utils";
 
 export function PublicNavbar() {
   const { t } = useTranslation();
+  const { isAuthenticated, loading } = useFoundationSession();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuId = useId();
-  const navItems = getPrimaryNavigation("public");
+  const navItems = getPrimaryNavigation("public", "desktop");
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -32,7 +34,7 @@ export function PublicNavbar() {
   }, [menuOpen]);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-ecopet-gray/10 bg-ecopet-cream/90 backdrop-blur-md dark:border-white/10 dark:bg-ecopet-dark-bg/90">
+    <header className="sticky top-0 z-50 border-b border-[var(--ep-border)] bg-[var(--header)]/90 backdrop-blur-md">
       <div className="mx-auto flex h-[4.25rem] max-w-7xl items-center gap-3 px-4 sm:px-6">
         <EcoPetLogo
           href="/"
@@ -43,17 +45,25 @@ export function PublicNavbar() {
           className="min-w-0 shrink"
         />
 
-        <PrimaryDesktopNav context="public" className="mx-auto hidden xl:flex" />
+        <PrimaryDesktopNav context="public" surface="desktop" className="mx-auto hidden xl:flex" />
 
         <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-1.5">
           <LanguageSelector compact className="shrink-0" />
           <ThemeToggle size="sm" />
-          <Button asChild variant="ghost" size="sm" className="hidden rounded-xl sm:inline-flex">
-            <Link href="/login">{t("common.signIn")}</Link>
-          </Button>
-          <Button asChild size="sm" className="hidden rounded-xl sm:inline-flex">
-            <Link href="/cadastro">{t("common.createAccount")}</Link>
-          </Button>
+          {!loading && isAuthenticated ? (
+            <Button asChild variant="ghost" size="sm" className="hidden rounded-xl sm:inline-flex">
+              <Link href="/perfil">{t("nav.profile")}</Link>
+            </Button>
+          ) : !loading ? (
+            <>
+              <Button asChild variant="ghost" size="sm" className="hidden rounded-xl sm:inline-flex">
+                <Link href="/login">{t("common.signIn")}</Link>
+              </Button>
+              <Button asChild size="sm" className="hidden rounded-xl sm:inline-flex">
+                <Link href="/cadastro">{t("common.createAccount")}</Link>
+              </Button>
+            </>
+          ) : null}
           <Button
             type="button"
             variant="ghost"
@@ -72,7 +82,7 @@ export function PublicNavbar() {
       <div
         id={menuId}
         className={cn(
-          "border-t border-ecopet-gray/10 bg-ecopet-cream dark:border-white/10 dark:bg-ecopet-dark-bg xl:hidden",
+          "border-t border-[var(--ep-border)] bg-[var(--header)] xl:hidden",
           "transition-[max-height,opacity] duration-200 ease-out",
           menuOpen ? "max-h-[32rem] opacity-100" : "pointer-events-none max-h-0 overflow-hidden opacity-0"
         )}
@@ -85,24 +95,34 @@ export function PublicNavbar() {
                 key={item.id}
                 href={item.href}
                 onClick={() => setMenuOpen(false)}
-                className="inline-flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-ecopet-dark transition-colors hover:bg-ecopet-green/10 dark:text-white dark:hover:bg-white/5"
+                className="inline-flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-[var(--ep-fg)] transition-colors hover:bg-ecopet-green/10"
               >
                 <Icon className="h-5 w-5 shrink-0 text-ecopet-green" aria-hidden />
                 {t(item.labelKey)}
               </Link>
             );
           })}
-          <div className="mt-2 flex flex-col gap-2 border-t border-ecopet-gray/10 pt-3 dark:border-white/10 sm:hidden">
-            <Button asChild variant="outline" className="w-full rounded-xl">
-              <Link href="/login" onClick={() => setMenuOpen(false)}>
-                {t("common.signIn")}
-              </Link>
-            </Button>
-            <Button asChild className="w-full rounded-xl">
-              <Link href="/cadastro" onClick={() => setMenuOpen(false)}>
-                {t("common.createAccount")}
-              </Link>
-            </Button>
+          <div className="mt-2 flex flex-col gap-2 border-t border-[var(--ep-border)] pt-3 sm:hidden">
+            {!loading && isAuthenticated ? (
+              <Button asChild variant="outline" className="w-full rounded-xl">
+                <Link href="/perfil" onClick={() => setMenuOpen(false)}>
+                  {t("nav.profile")}
+                </Link>
+              </Button>
+            ) : !loading ? (
+              <>
+                <Button asChild variant="outline" className="w-full rounded-xl">
+                  <Link href="/login" onClick={() => setMenuOpen(false)}>
+                    {t("common.signIn")}
+                  </Link>
+                </Button>
+                <Button asChild className="w-full rounded-xl">
+                  <Link href="/cadastro" onClick={() => setMenuOpen(false)}>
+                    {t("common.createAccount")}
+                  </Link>
+                </Button>
+              </>
+            ) : null}
           </div>
         </nav>
       </div>

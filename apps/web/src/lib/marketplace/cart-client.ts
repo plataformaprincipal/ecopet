@@ -2,13 +2,20 @@ import { marketplaceFetch } from "@/lib/marketplace/fetch-api";
 
 export type ServerCartItem = {
   id: string;
-  productId: string;
+  itemType?: "product" | "DIGITAL_AI" | string;
+  productId: string | null;
   quantity: number;
   unitPrice: number;
   name: string;
   images: unknown;
-  sellerId: string;
+  image?: string | null;
+  sellerId: string | null;
+  sellerName?: string | null;
+  variant?: string | null;
   stock: number;
+  sku?: string | null;
+  petName?: string | null;
+  checkoutHref?: string;
 };
 
 export type ServerCart = {
@@ -16,7 +23,13 @@ export type ServerCart = {
   items: ServerCartItem[];
   itemCount: number;
   subtotal: number;
+  productSubtotal?: number;
+  estimatedRewards?: number;
+  discount?: number;
+  shipping?: number | null;
   multiPartner: boolean;
+  hasProducts?: boolean;
+  hasAi?: boolean;
 };
 
 export async function fetchServerCart(): Promise<ServerCart> {

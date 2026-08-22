@@ -10,7 +10,7 @@ import {
   appearanceThemeActivatedKey,
   appearanceThemeLabelKey,
   cycleAppearanceTheme,
-  isEcopetAppearanceTheme,
+  normalizeAppearanceTheme,
 } from "@/lib/theme/ecopet-theme";
 
 type ThemeToggleProps = {
@@ -30,12 +30,7 @@ export function ThemeToggle({ className, size = "md" }: ThemeToggleProps) {
     setMounted(true);
   }, []);
 
-  const appearance =
-    mounted && isEcopetAppearanceTheme(resolvedTheme)
-      ? resolvedTheme
-      : resolvedTheme === "black"
-        ? "dark"
-        : "light";
+  const appearance = mounted ? normalizeAppearanceTheme(resolvedTheme) : "light";
 
   const iconClass = size === "sm" ? "h-4 w-4" : "h-5 w-5";
   const labelKey = appearanceThemeLabelKey(appearance);

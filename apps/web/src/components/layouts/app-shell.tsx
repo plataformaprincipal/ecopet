@@ -41,7 +41,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   if (usePublicShell) {
     return (
-      <div className="flex min-h-screen flex-col bg-gray-50 dark:bg-ecopet-dark-bg">
+      <div className="flex min-h-screen flex-col bg-[var(--ep-bg)] text-[var(--ep-fg)]">
         <PublicAppBar />
         <div className="flex-1">{children}</div>
       </div>
@@ -73,7 +73,7 @@ function FoundationAppShell({
   // Immersive experiences (Social / EccoPet AI) own their full-width layout.
   if (isImmersive) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-ecopet-dark-bg">
+      <div className="min-h-screen bg-[var(--ep-bg)] text-[var(--ep-fg)]">
         <div className="pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:pb-0">{children}</div>
         <BottomNav />
       </div>
@@ -81,7 +81,7 @@ function FoundationAppShell({
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-ecopet-dark-bg">
+    <div className="flex min-h-screen bg-[var(--ep-bg)] text-[var(--ep-fg)]">
       <MainNavigation />
       <div className="flex flex-1 flex-col pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:pb-0">
         {children}

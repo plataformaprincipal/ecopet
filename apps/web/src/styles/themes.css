@@ -1,6 +1,7 @@
 /**
  * ECOPET themes — light / dark semantic surfaces
  * Single source with next-themes (`html.dark` via storageKey ecopet-theme).
+ * Prefer --ep-* / aliases (--card, --header). Do not introduce a second palette.
  */
 
 :root {
@@ -15,91 +16,103 @@
   --ep-bg-inverse: #003b16;
   --ep-fg: #102015;
   --ep-fg-muted: #5c6b62;
-  --ep-fg-subtle: #7a8a80;
+  --ep-fg-subtle: #6f7d74;
   --ep-fg-inverse: #ffffff;
   --ep-border: rgba(16, 32, 21, 0.12);
   --ep-border-strong: rgba(16, 32, 21, 0.22);
   --ep-ring: #128a3f;
+  --ep-surface-hover: #eef3ef;
+
+  --background: var(--ep-bg);
+  --foreground: var(--ep-fg);
+  --surface: var(--ep-bg-elevated);
+  --surface-elevated: #ffffff;
+  --surface-muted: var(--ep-bg-muted);
+  --card: var(--ep-bg-elevated);
+  --card-foreground: var(--ep-fg);
+  --popover: var(--ep-bg-elevated);
+  --popover-foreground: var(--ep-fg);
+  --muted: var(--ep-bg-muted);
+  --muted-foreground: var(--ep-fg-muted);
+  --border: var(--ep-border);
+  --input: var(--ep-border);
+  --ring: var(--ep-ring);
+  --header: var(--ep-bg-elevated);
+  --bottom-nav: var(--ep-bg-elevated);
+  --sidebar: var(--ep-bg-elevated);
+  --sidebar-foreground: var(--ep-fg);
+  --sidebar-border: var(--ep-border);
 }
 
-.dark {
-  color-scheme: dark;
-  --color-ecopet-surface: #1c2420;
-  --color-ecopet-dark-bg: #0e1411;
-  --color-ecopet-dark-card: #1a221e;
-  --color-ecopet-gray: #a8b2ab;
-
-  --ep-bg: #122018;
-  --ep-bg-elevated: #1a2a22;
-  --ep-bg-muted: #24352c;
-  --ep-bg-inverse: #0a4f26;
-  --ep-fg: #f5f7f6;
-  --ep-fg-muted: #a8b2ab;
-  --ep-fg-subtle: #8a9590;
-  --ep-fg-inverse: #ffffff;
-  --ep-border: rgba(255, 255, 255, 0.12);
-  --ep-border-strong: rgba(255, 255, 255, 0.22);
-  --ep-ring: var(--ep-green-400);
-
-  --ep-success-bg: rgba(21, 128, 61, 0.18);
-  --ep-warning-bg: rgba(180, 83, 9, 0.18);
-  --ep-danger-bg: rgba(220, 38, 38, 0.18);
-  --ep-info-bg: rgba(37, 99, 235, 0.18);
-
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.35);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45);
-  --shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.55);
-  --shadow-floating: 0 20px 48px rgba(0, 0, 0, 0.6);
-  --shadow-premium: var(--shadow-md);
-  --shadow-premium-lg: var(--shadow-lg);
-}
-
-.dark body {
-  background-color: var(--ep-bg);
-  color: var(--ep-fg);
-}
-
-/* Preferência antiga `black` — mesmos tokens do dark (verde profundo / grafite). */
+.dark,
 .black {
   color-scheme: dark;
-  --color-ecopet-surface: #1c2420;
-  --color-ecopet-dark-bg: #122018;
-  --color-ecopet-dark-card: #1a2a22;
-  --color-ecopet-gray: #a8b2ab;
-  --color-ecopet-cream: #122018;
+  --color-ecopet-surface: #15211b;
+  --color-ecopet-dark-bg: #0f1713;
+  --color-ecopet-dark-card: #15211b;
+  --color-ecopet-gray: #b7c4bc;
+  --color-ecopet-cream: #0f1713;
 
-  --ep-bg: #122018;
-  --ep-bg-elevated: #1a2a22;
-  --ep-bg-muted: #24352c;
+  --ep-bg: #0f1713;
+  --ep-bg-elevated: #15211b;
+  --ep-bg-muted: #1b2a22;
   --ep-bg-inverse: #0a4f26;
-  --ep-fg: #f5f7f6;
-  --ep-fg-muted: #a8b2ab;
-  --ep-fg-subtle: #8a9590;
-  --ep-fg-inverse: #ffffff;
-  --ep-border: rgba(255, 255, 255, 0.12);
-  --ep-border-strong: rgba(255, 255, 255, 0.22);
-  --ep-ring: var(--ep-green-400);
+  --ep-fg: #f4f7f5;
+  --ep-fg-muted: #b7c4bc;
+  --ep-fg-subtle: #8f9e96;
+  --ep-fg-inverse: #f4f7f5;
+  --ep-border: rgba(183, 196, 188, 0.16);
+  --ep-border-strong: rgba(183, 196, 188, 0.28);
+  --ep-ring: #34d399;
+  --ep-surface-hover: #22362c;
 
-  --ep-success-bg: rgba(21, 128, 61, 0.22);
-  --ep-warning-bg: rgba(180, 83, 9, 0.22);
-  --ep-danger-bg: rgba(220, 38, 38, 0.22);
-  --ep-info-bg: rgba(37, 99, 235, 0.22);
+  --ep-success: #3d9b64;
+  --ep-success-bg: rgba(61, 155, 100, 0.16);
+  --ep-warning: #d4a017;
+  --ep-warning-bg: rgba(212, 160, 23, 0.16);
+  --ep-danger: #e85d4c;
+  --ep-danger-bg: rgba(232, 93, 76, 0.16);
+  --ep-info: #5b8def;
+  --ep-info-bg: rgba(91, 141, 239, 0.16);
 
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.5);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.55);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.6);
-  --shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.65);
-  --shadow-floating: 0 20px 48px rgba(0, 0, 0, 0.7);
+  --background: var(--ep-bg);
+  --foreground: var(--ep-fg);
+  --surface: #15211b;
+  --surface-elevated: #1b2a22;
+  --surface-muted: #1b2a22;
+  --card: #15211b;
+  --card-foreground: var(--ep-fg);
+  --popover: #1b2a22;
+  --popover-foreground: var(--ep-fg);
+  --muted: #1b2a22;
+  --muted-foreground: var(--ep-fg-muted);
+  --border: var(--ep-border);
+  --input: var(--ep-border);
+  --ring: var(--ep-ring);
+  --header: #15211b;
+  --bottom-nav: #15211b;
+  --sidebar: #15211b;
+  --sidebar-foreground: var(--ep-fg);
+  --sidebar-border: var(--ep-border);
+
+  --shadow-xs: 0 1px 2px rgba(8, 14, 11, 0.35);
+  --shadow-sm: 0 1px 3px rgba(8, 14, 11, 0.4);
+  --shadow-md: 0 4px 16px rgba(8, 14, 11, 0.45);
+  --shadow-lg: 0 12px 36px rgba(8, 14, 11, 0.5);
+  --shadow-floating: 0 20px 48px rgba(8, 14, 11, 0.55);
   --shadow-premium: var(--shadow-md);
   --shadow-premium-lg: var(--shadow-lg);
 }
 
+.dark body,
 .black body {
   background-color: var(--ep-bg);
   color: var(--ep-fg);
 }
 
+.dark input,
+.dark textarea,
+.dark select,
 .black input,
 .black textarea,
 .black select {
@@ -108,21 +121,10 @@
   border-color: var(--ep-border);
 }
 
+.dark input::placeholder,
+.dark textarea::placeholder,
 .black input::placeholder,
 .black textarea::placeholder {
-  color: var(--ep-fg-subtle);
-}
-
-.dark input,
-.dark textarea,
-.dark select {
-  color: var(--ep-fg);
-  background-color: var(--ep-bg-muted);
-  border-color: var(--ep-border);
-}
-
-.dark input::placeholder,
-.dark textarea::placeholder {
   color: var(--ep-fg-subtle);
 }
 
@@ -137,20 +139,42 @@
 .dark .bg-white\/60,
 .black .bg-white\/60,
 .dark .bg-white\/40,
-.black .bg-white\/40 {
+.black .bg-white\/40,
+.dark .bg-gray-50,
+.black .bg-gray-50,
+.dark .bg-gray-100,
+.black .bg-gray-100 {
   background-color: var(--ep-bg-elevated);
 }
 
 .dark .text-black,
 .black .text-black,
 .dark .text-gray-900,
-.black .text-gray-900 {
+.black .text-gray-900,
+.dark .text-gray-800,
+.black .text-gray-800 {
   color: var(--ep-fg);
+}
+
+.dark .text-gray-600,
+.black .text-gray-600,
+.dark .text-gray-500,
+.black .text-gray-500,
+.dark .text-muted-foreground,
+.black .text-muted-foreground {
+  color: var(--ep-fg-muted);
+}
+
+.dark .border-gray-200,
+.black .border-gray-200,
+.dark .border-gray-100,
+.black .border-gray-100 {
+  border-color: var(--ep-border);
 }
 
 html.a11y-high-contrast {
   --ep-ring: #ffffff;
   --ep-border: #ffffff;
   --ep-interactive: #ffffff;
-  --ep-interactive-fg: #000000;
+  --ep-interactive-fg: #102015;
 }

@@ -14,6 +14,7 @@ type Props = {
   context?: PrimaryNavContext;
   className?: string;
   orientation?: "horizontal" | "vertical";
+  surface?: "desktop" | "mobile";
 };
 
 /**
@@ -24,10 +25,11 @@ export function PrimaryDesktopNav({
   context = "public",
   className,
   orientation = "horizontal",
+  surface = "desktop",
 }: Props) {
   const pathname = usePathname();
   const { t } = useTranslation();
-  const items = getPrimaryNavigation(context);
+  const items = getPrimaryNavigation(context, surface);
 
   return (
     <nav

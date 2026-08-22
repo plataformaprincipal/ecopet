@@ -44,5 +44,6 @@ export function useServerCart(opts?: { enabled?: boolean; refreshToken?: number 
     refresh,
     itemCount: cart?.itemCount ?? 0,
     subtotal: cart?.subtotal ?? 0,
+    estimatedRewards: cart?.estimatedRewards ?? 0,
   };
 }

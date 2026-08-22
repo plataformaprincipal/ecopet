@@ -9,7 +9,7 @@ import { writeAuditLog } from "@/lib/audit-log";
 import { createInternalNotification } from "@/lib/notifications/internal";
 import { emailOrderEvent } from "@/lib/mail/event-dispatch";
 import { getUserEmailLocale } from "@/lib/email/templates";
-import { AI_COMMERCE_ITEM_TYPE, assertAiCommerceEnabled, isAiCommerceSku } from "./flags";
+import { AI_COMMERCE_ITEM_TYPE, assertAiPaidCheckoutEnabled, isAiCommerceSku } from "./flags";
 import { quoteAiSku } from "./pricing";
 import { getProductDefBySku } from "./catalog";
 import { assertPetOwned } from "./entitlement-service";
@@ -30,7 +30,7 @@ export async function checkoutAiFromCart(params: {
   couponCode?: string | null;
 }) {
   assertCheckoutEnabled();
-  assertAiCommerceEnabled();
+  assertAiPaidCheckoutEnabled();
   await ensureAiCommerceProducts();
 
   if (params.idempotencyKey) {

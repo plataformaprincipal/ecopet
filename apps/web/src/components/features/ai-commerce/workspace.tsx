@@ -95,7 +95,11 @@ export function AiWorkspace({ executionId }: { executionId: string }) {
     const data = await res.json();
     setBusy(false);
     if (!data.success) {
-      setMsg(data.error?.message ?? "Não conseguimos concluir sua análise agora. Sua utilização não foi consumida.");
+      setMsg(
+        data.error?.code === "RATE_LIMIT"
+          ? "Você atingiu temporariamente o limite desta ferramenta. Tente novamente mais tarde."
+          : data.error?.message ?? "Não foi possível concluir a análise agora. Tente novamente."
+      );
       return;
     }
     analyticsService.track(AiEvents.EXECUTION_COMPLETED, { screen: "eccopet_workspace", label: executionId });
@@ -127,7 +131,7 @@ export function AiWorkspace({ executionId }: { executionId: string }) {
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
       <Link href="/minha-conta/ia" className="text-sm text-ecopet-green hover:underline">
-        ← Meus serviços
+        ← Histórico
       </Link>
       <div className="mt-6 flex items-center gap-4">
         {ex.pet.photo ? (
@@ -153,7 +157,7 @@ export function AiWorkspace({ executionId }: { executionId: string }) {
           <SpecializedForm kind={kind} input={input} onChange={persist} onUpload={upload} />
           <div className="sticky bottom-4 mt-8">
             <Button className="w-full sm:w-auto" onClick={analyze} loading={busy}>
-              Processar
+              Executar análise
             </Button>
           </div>
         </div>

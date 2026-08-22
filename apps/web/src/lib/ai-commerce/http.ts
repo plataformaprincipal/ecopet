@@ -5,7 +5,13 @@ import { AiCommerceError } from "@/lib/ai-commerce/errors";
 
 export async function enforceAiCommerceRateLimit(key: string, limit: number, windowMs = 60_000) {
   const ok = await checkDistributedRateLimit(key, limit, windowMs);
-  if (!ok) return apiFailure("RATE_LIMIT", "Muitas tentativas. Aguarde um momento.", 429);
+  if (!ok) {
+    return apiFailure(
+      "RATE_LIMIT",
+      "Você atingiu temporariamente o limite desta ferramenta. Tente novamente mais tarde.",
+      429
+    );
+  }
   return null;
 }
 
@@ -39,8 +45,11 @@ export function handleAiCommerceError(e: unknown) {
     return apiFailure(e.code, e.message, e.status);
   }
   const msg = e instanceof Error ? e.message : "";
+  if (msg === "AI_FREE_BETA") {
+    return apiFailure("AI_FREE_BETA", "As ferramentas EccoPet AI estão gratuitas neste momento. Use a ferramenta diretamente.", 409);
+  }
   if (msg === "AI_COMMERCE_DISABLED") {
-    return apiFailure("AI_COMMERCE_DISABLED", "As ferramentas EccoPet AI ainda não estão à venda neste ambiente.", 403);
+    return apiFailure("AI_COMMERCE_DISABLED", "A compra das ferramentas EccoPet AI está desligada neste ambiente.", 403);
   }
   if (msg === "CHECKOUT_DISABLED") {
     return apiFailure("CHECKOUT_DISABLED", "Checkout temporariamente indisponível.", 503);

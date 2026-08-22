@@ -4,8 +4,13 @@ import {
   areAiCommercePricesConfirmed,
   isAiCommerceEnabled,
   isAiCommerceSku,
+  isAiMonetizationFree,
+  isAiPaidCheckoutEnabled,
+  getAiMonetizationMode,
   AI_COMMERCE_SKUS,
+  AI_COMMERCE_SKU_LIST,
 } from "./flags";
+import { aiToolCostClass, aiToolHourlyLimit } from "./rate-policy";
 import { couponAllowsSku } from "./coupon-policy";
 import { eccovetOutputSchema, visionOutputSchema, labOutputSchema, checkupOutputSchema } from "./schemas";
 import { estimateOpenAiCostUsd } from "./models";
@@ -24,6 +29,30 @@ describe("AI commerce flags", () => {
     assert.equal(isAiCommerceEnabled({}), false);
     assert.equal(isAiCommerceEnabled({ AI_COMMERCE_ENABLED: "true" }), true);
     assert.equal(areAiCommercePricesConfirmed({}), false);
+  });
+
+  it("FREE_BETA é o default e não exige checkout", () => {
+    assert.equal(getAiMonetizationMode({}), "FREE_BETA");
+    assert.equal(isAiMonetizationFree({}), true);
+    assert.equal(isAiPaidCheckoutEnabled({ AI_COMMERCE_ENABLED: "true" }), false);
+    assert.equal(isAiPaidCheckoutEnabled({ AI_MONETIZATION_MODE: "PAID", AI_COMMERCE_ENABLED: "true" }), true);
+    assert.equal(isAiPaidCheckoutEnabled({ AI_MONETIZATION_MODE: "PAID" }), false);
+  });
+
+  it("FREE_BETA preserva os 13 capabilityIds e não zera preço canônico", () => {
+    assert.equal(AI_COMMERCE_SKU_LIST.length, 13);
+    for (const product of AI_COMMERCE_PRODUCTS) {
+      assert.ok(product.capabilityId.length > 3);
+      assert.ok(product.sku.startsWith("AI_"));
+    }
+    assert.equal(getCatalogBySku("AI_ECCOVET")?.amountCents, 2990);
+  });
+
+  it("classifica custo para rate limit sem expor números ao usuário", () => {
+    assert.equal(aiToolCostClass("AI_ECCOVET_VISION"), "high");
+    assert.equal(aiToolCostClass("AI_ECCONUTRI"), "medium");
+    assert.equal(aiToolCostClass("AI_ECCOVET"), "low");
+    assert.ok(aiToolHourlyLimit("AI_ECCOVET_VISION") < aiToolHourlyLimit("AI_ECCOVET"));
   });
 
   it("reconhece os 13 SKUs oficiais e o alias legado", () => {

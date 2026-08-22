@@ -4,16 +4,44 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { ProductCatalogStatus } from "@prisma/client";
-import { AI_COMMERCE_ITEM_TYPE, isAiCommerceEnabled, isAiCommerceSku } from "@/lib/ai-commerce/flags";
+import { AI_COMMERCE_ITEM_TYPE, isAiCommerceEnabled, isAiCommerceSku, isAiMonetizationFree } from "@/lib/ai-commerce/flags";
 import { getProductDefBySku } from "@/lib/ai-commerce/catalog";
 import { resolveAiProductPrice } from "@/lib/ai-commerce/pricing";
 import { ensureAiCommerceProducts } from "@/lib/ai-commerce/product-service";
+import { firstProductImageUrl } from "@/lib/catalog/images";
+import { computeEarnPoints, DEFAULT_LOYALTY_POLICY } from "@/lib/loyalty/rules";
 
 export const CART_SESSION_COOKIE = "ecopet-cart-session";
 
 const cartInclude = {
-  items: { include: { product: true } },
+  items: {
+    include: {
+      product: {
+        include: {
+          seller: {
+            select: {
+              id: true,
+              name: true,
+              partnerProfile: { select: { businessName: true } },
+            },
+          },
+        },
+      },
+    },
+  },
 } as const;
+
+export function insufficientStockError(maxQuantity: number) {
+  return Object.assign(new Error("INSUFFICIENT_STOCK"), { maxQuantity });
+}
+
+export function parseInsufficientStock(error: unknown): number | null {
+  if (error && typeof error === "object" && "maxQuantity" in error) {
+    const max = Number((error as { maxQuantity?: number }).maxQuantity);
+    return Number.isFinite(max) ? max : null;
+  }
+  return null;
+}
 
 export async function getOrCreateCart(userId?: string | null, sessionId?: string | null) {
   if (userId) {
@@ -99,60 +127,81 @@ export async function validateProductForCart(productId: string) {
 }
 
 export function serializeCart(cart: Awaited<ReturnType<typeof getOrCreateCart>>) {
-  const items = cart.items.map((item) => {
-    if (item.itemType === AI_COMMERCE_ITEM_TYPE || !item.product) {
-      const meta = (item.metadata as Record<string, unknown> | null) ?? {};
+  const hideAi = isAiMonetizationFree();
+  const items = cart.items
+    .map((item) => {
+      if (item.itemType === AI_COMMERCE_ITEM_TYPE || !item.product) {
+        const meta = (item.metadata as Record<string, unknown> | null) ?? {};
+        return {
+          id: item.id,
+          itemType: AI_COMMERCE_ITEM_TYPE,
+          productId: null,
+          sku: item.sku,
+          petId: item.petId,
+          petName: typeof meta.petName === "string" ? meta.petName : null,
+          quantity: item.quantity,
+          unitPrice: item.unitPriceSnapshot ?? 0,
+          name: typeof meta.name === "string" ? meta.name : item.sku,
+          tag: typeof meta.tag === "string" ? meta.tag : null,
+          images: null,
+          image: null as string | null,
+          sellerId: null as string | null,
+          sellerName: null as string | null,
+          variant: null as string | null,
+          stock: 99,
+          pricingVersion: item.pricingVersion,
+          checkoutHref: "/eccopet/checkout",
+        };
+      }
+      const sellerName =
+        item.product.seller?.partnerProfile?.businessName || item.product.seller?.name || null;
       return {
         id: item.id,
-        itemType: AI_COMMERCE_ITEM_TYPE,
-        productId: null,
-        sku: item.sku,
-        petId: item.petId,
-        petName: typeof meta.petName === "string" ? meta.petName : null,
+        itemType: "product" as const,
+        productId: item.productId,
+        sku: item.product.pricingCatalogSku,
+        petId: null,
+        petName: null,
         quantity: item.quantity,
-        unitPrice: item.unitPriceSnapshot ?? 0,
-        name: typeof meta.name === "string" ? meta.name : item.sku,
-        tag: typeof meta.tag === "string" ? meta.tag : null,
-        images: null,
-        sellerId: null,
-        stock: 99,
+        unitPrice: item.product.price,
+        name: item.product.name,
+        tag: null,
+        images: item.product.images,
+        image: firstProductImageUrl(item.product.images),
+        sellerId: item.product.sellerId,
+        sellerName,
+        variant: item.product.unit ?? item.product.brand ?? null,
+        stock: item.product.stock,
         pricingVersion: item.pricingVersion,
-        checkoutHref: "/eccopet/checkout",
+        checkoutHref: "/checkout",
       };
-    }
-    return {
-      id: item.id,
-      itemType: "product",
-      productId: item.productId,
-      sku: item.product.pricingCatalogSku,
-      petId: null,
-      petName: null,
-      quantity: item.quantity,
-      unitPrice: item.product.price,
-      name: item.product.name,
-      tag: null,
-      images: item.product.images,
-      sellerId: item.product.sellerId,
-      stock: item.product.stock,
-      pricingVersion: item.pricingVersion,
-      checkoutHref: "/checkout",
-    };
-  });
+    })
+    .filter((item) => !(hideAi && item.itemType === AI_COMMERCE_ITEM_TYPE));
   const productItems = items.filter((i) => i.itemType === "product");
   const aiItems = items.filter((i) => i.itemType === AI_COMMERCE_ITEM_TYPE);
   const partnerIds = new Set(productItems.map((i) => i.sellerId).filter(Boolean));
+  const productSubtotal = productItems.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
+  const estimatedRewards = DEFAULT_LOYALTY_POLICY.enabled
+    ? computeEarnPoints({
+        amountBrl: productSubtotal,
+        pointsPerBrl: DEFAULT_LOYALTY_POLICY.pointsPerBrl,
+      })
+    : 0;
   return {
     id: cart.id,
     items,
     itemCount: items.reduce((s, i) => s + i.quantity, 0),
     subtotal: items.reduce((s, i) => s + i.unitPrice * i.quantity, 0),
-    productSubtotal: productItems.reduce((s, i) => s + i.unitPrice * i.quantity, 0),
+    productSubtotal,
     aiSubtotal: aiItems.reduce((s, i) => s + i.unitPrice * i.quantity, 0),
     hasProducts: productItems.length > 0,
     hasAi: aiItems.length > 0,
     mixed: productItems.length > 0 && aiItems.length > 0,
     multiPartner: partnerIds.size > 1,
     partnerId: partnerIds.size === 1 ? [...partnerIds][0] : null,
+    estimatedRewards,
+    discount: 0,
+    shipping: null as number | null,
   };
 }
 
@@ -189,7 +238,7 @@ export async function addToCart(cart: Awaited<ReturnType<typeof getOrCreateCart>
   const lineKey = productLineKey(productId);
   const existing = cart.items.find((i) => i.lineKey === lineKey || i.productId === productId);
   const newQty = (existing?.quantity ?? 0) + quantity;
-  if (newQty > product.stock) throw new Error("INSUFFICIENT_STOCK");
+  if (newQty > product.stock) throw insufficientStockError(product.stock);
 
   if (existing) {
     await prisma.cartItem.update({
@@ -219,6 +268,7 @@ export async function addAiToCart(params: {
   petName?: string;
   quantity?: number;
 }) {
+  if (isAiMonetizationFree()) throw new Error("AI_FREE_BETA");
   if (!isAiCommerceEnabled()) throw new Error("AI_COMMERCE_DISABLED");
   if (!isAiCommerceSku(params.sku)) throw new Error("SKU_UNKNOWN");
   await ensureAiCommerceProducts();
@@ -283,7 +333,7 @@ export async function updateCartItem(
     await prisma.cartItem.update({ where: { id: itemId }, data: { quantity } });
   } else {
     if (!item.product) throw new Error("ITEM_NOT_FOUND");
-    if (quantity > item.product.stock) throw new Error("INSUFFICIENT_STOCK");
+    if (quantity > item.product.stock) throw insufficientStockError(item.product.stock);
     await prisma.cartItem.update({ where: { id: itemId }, data: { quantity } });
   }
 

@@ -22,8 +22,8 @@
   --color-ecopet-gray: #4a5560;
   --color-ecopet-cream: #f4f7f4;
   --color-ecopet-surface: #ffffff;
-  --color-ecopet-dark-bg: #121816;
-  --color-ecopet-dark-card: #1c2420;
+  --color-ecopet-dark-bg: #0f1713;
+  --color-ecopet-dark-card: #15211b;
   --color-ep-success: #15803d;
   --color-ep-warning: #b45309;
   --color-ep-danger: #dc2626;
@@ -52,7 +52,7 @@
   }
 
   body {
-    @apply bg-ecopet-cream text-ecopet-gray antialiased dark:bg-ecopet-dark-bg dark:text-white;
+    @apply antialiased;
     background-color: var(--ep-bg);
     color: var(--ep-fg);
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";

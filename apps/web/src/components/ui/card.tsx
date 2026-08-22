@@ -3,7 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const cardVariants = cva(
-  "rounded-[var(--radius-lg)] border border-ecopet-gray/12 bg-white dark:border-white/10 dark:bg-ecopet-dark-card",
+  "rounded-[16px] border border-[var(--ep-border)] bg-[var(--card)] text-[var(--card-foreground)]",
   {
     variants: {
       surface: {
@@ -37,13 +37,13 @@ const CardHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement
 
 const CardTitle = ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
   <h3
-    className={cn("font-display text-xl font-bold tracking-tight text-ecopet-dark dark:text-white", className)}
+    className={cn("font-display text-xl font-bold tracking-tight text-[var(--ep-fg)]", className)}
     {...props}
   />
 );
 
 const CardDescription = ({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) => (
-  <p className={cn("text-sm text-ecopet-gray dark:text-white/70", className)} {...props} />
+  <p className={cn("text-sm text-[var(--ep-fg-muted)]", className)} {...props} />
 );
 
 const CardContent = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (

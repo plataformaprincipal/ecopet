@@ -1,6 +1,7 @@
 /**
- * Feature flag e SKUs oficiais do ecossistema EccoPet AI (13 produtos).
- * Default fail-closed: desligado até AI_COMMERCE_ENABLED=1.
+ * Feature flag, monetização e SKUs oficiais do ecossistema EccoPet AI (13 produtos).
+ * Commerce (checkout) permanece fail-closed até AI_COMMERCE_ENABLED=1.
+ * Ferramentas gratuitas usam AI_MONETIZATION_MODE=FREE_BETA (default).
  */
 type EnvLike = Record<string, string | undefined>;
 
@@ -27,6 +28,37 @@ export function assertAiCommerceEnabled(env: EnvLike = process.env): void {
     throw err;
   }
 }
+
+export const AI_MONETIZATION_MODES = ["FREE_BETA", "PAID"] as const;
+export type AiMonetizationMode = (typeof AI_MONETIZATION_MODES)[number];
+
+/** Fonte canônica: backend decide. Default FREE_BETA. */
+export function getAiMonetizationMode(env: EnvLike = process.env): AiMonetizationMode {
+  const raw = String(env.AI_MONETIZATION_MODE ?? "").trim().toUpperCase();
+  if (raw === "PAID") return "PAID";
+  return "FREE_BETA";
+}
+
+export function isAiMonetizationFree(env: EnvLike = process.env): boolean {
+  return getAiMonetizationMode(env) === "FREE_BETA";
+}
+
+/** Checkout de DIGITAL_AI só no modo PAID e com a flag comercial ligada. */
+export function isAiPaidCheckoutEnabled(env: EnvLike = process.env): boolean {
+  return getAiMonetizationMode(env) === "PAID" && isAiCommerceEnabled(env);
+}
+
+export function assertAiPaidCheckoutEnabled(env: EnvLike = process.env): void {
+  if (isAiMonetizationFree(env)) {
+    const err = new Error("AI_FREE_BETA");
+    err.name = "AiFreeBetaError";
+    throw err;
+  }
+  assertAiCommerceEnabled(env);
+}
+
+export const AI_ENTITLEMENT_SOURCE_PURCHASE = "PURCHASE" as const;
+export const AI_ENTITLEMENT_SOURCE_FREE_BETA = "FREE_BETA" as const;
 
 export const AI_COMMERCE_ITEM_TYPE = "DIGITAL_AI" as const;
 
