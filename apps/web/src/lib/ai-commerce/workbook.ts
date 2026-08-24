@@ -116,42 +116,84 @@ export function workbookFromOutput(capabilityId: string, output: Record<string, 
     const markers = Array.isArray(output.markers) ? output.markers : [];
     return [
       {
-        name: "Marcadores",
-        headers: ["Data", "Exame", "Marcador", "Resultado", "Unidade", "Referência", "Status", "Fonte"],
+        name: "Resumo",
+        headers: ["Exame", "Data", "Laboratório", "Pet"],
+        rows: [[String(output.examName ?? ""), String(output.examDate ?? ""), String(output.laboratory ?? ""), petName]],
+      },
+      {
+        name: "Resultados",
+        headers: ["Marcador", "Resultado", "Unidade", "Referência", "Status", "Confiança", "Página"],
         rows: markers.map((m) => {
           const row = m as Record<string, unknown>;
           return [
-            String(output.examDate ?? ""),
-            String(output.examName ?? ""),
             String(row.name ?? ""),
             String(row.value ?? ""),
             String(row.unit ?? ""),
             String(row.reference ?? ""),
             String(row.status ?? ""),
-            String(output.laboratory ?? ""),
+            String(row.confidence ?? ""),
+            String(row.sourcePage ?? ""),
           ];
         }),
+      },
+      {
+        name: "Comparação",
+        headers: ["Alteração"],
+        rows: (Array.isArray(output.mainChanges) ? output.mainChanges : []).map((x) => [String(x)]),
+      },
+      {
+        name: "Histórico",
+        headers: ["Nota"],
+        rows: [[String(output.historicalNotes ?? "")]],
       },
     ];
   }
   if (capabilityId.includes("nutri")) {
+    const diary = Array.isArray(output.foodDiary) ? output.foodDiary : [];
     return [
       {
-        name: "Rotina",
-        headers: ["Dia", "Horário", "Alimento", "Quantidade", "Observação", "Consumo"],
-        rows: [["Segunda", "Manhã", "Ração atual", "", "Orientativo", ""]],
+        name: "Plano",
+        headers: ["Item", "Detalhe"],
+        rows: (Array.isArray(output.suggestedOrganization) ? output.suggestedOrganization : []).map((x) => ["Rotina", String(x)]),
+      },
+      {
+        name: "Diário",
+        headers: ["Registro"],
+        rows: (diary.length ? diary : ["Manhã", "Tarde", "Noite"]).map((x) => [String(x)]),
       },
     ];
   }
   if (capabilityId.includes("peso")) {
-    return [{ name: "Peso", headers: ["Data", "Peso", "Variação", "Meta", "Alimentação", "Atividade", "Observações"], rows: [] }];
+    const math = (output.weightMath as Record<string, unknown> | undefined) ?? {};
+    return [
+      {
+        name: "Medições",
+        headers: ["Pet", "Peso atual", "Delta", "%", "Tendência"],
+        rows: [[petName, String(math.currentKg ?? ""), String(math.deltaKg ?? ""), String(math.deltaPct ?? ""), String(math.trend ?? "")]],
+      },
+      {
+        name: "Tendência",
+        headers: ["30d kg", "30d %", "Média"],
+        rows: [[String(math.delta30dKg ?? ""), String(math.delta30dPct ?? ""), String(math.averageKg ?? "")]],
+      },
+    ];
   }
   if (capabilityId.includes("behavior")) {
     return [
       {
-        name: "Plano",
-        headers: ["Dia", "Exercício", "Duração", "Gatilho", "Resposta", "Resultado", "Observação"],
-        rows: [],
+        name: "Registros ABC",
+        headers: ["Notas ABC"],
+        rows: [[String(output.abcNotes ?? "")]],
+      },
+      {
+        name: "Resumo",
+        headers: ["Padrão"],
+        rows: (Array.isArray(output.patterns) ? output.patterns : []).map((x) => [String(x)]),
+      },
+      {
+        name: "Tendências",
+        headers: ["Gatilho"],
+        rows: (Array.isArray(output.triggers) ? output.triggers : []).map((x) => [String(x)]),
       },
     ];
   }

@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { apiFailure, apiSuccess } from "@/lib/api-response";
 import { createSessionToken, SESSION_COOKIE, sessionCookieOptions } from "@/lib/auth-session";
 import { dashboardPathForRole } from "@/lib/auth/dashboard";
-import { isAllowedGoogleRole } from "@/lib/auth/google-oauth";
+import { resolveGoogleSignupRole } from "@/lib/auth/google-oauth";
 import {
   GOOGLE_PENDING_COOKIE,
   completeGoogleOnboarding,
@@ -29,13 +29,10 @@ export async function POST(req: Request) {
     termsAccepted?: boolean;
     privacyAccepted?: boolean;
   };
-  if (!isAllowedGoogleRole(body.role ?? "")) {
-    return apiFailure("ADMIN_FORBIDDEN", "Escolha Cliente, Parceiro ou ONG.", 400);
-  }
 
   const completed = await completeGoogleOnboarding({
     identity,
-    role: body.role!,
+    role: resolveGoogleSignupRole(body.role),
     termsAccepted: Boolean(body.termsAccepted),
     privacyAccepted: Boolean(body.privacyAccepted),
   });
@@ -60,5 +57,5 @@ export async function GET() {
   const jar = await cookies();
   const identity = await readPendingGoogleIdentity(jar.get(GOOGLE_PENDING_COOKIE)?.value);
   if (!identity) return apiFailure("EXPIRED", "Sessão Google expirada.", 401);
-  return apiSuccess({ email: identity.email, name: identity.name });
+  return apiSuccess({ email: identity.email, name: identity.name, picture: identity.picture ?? null });
 }

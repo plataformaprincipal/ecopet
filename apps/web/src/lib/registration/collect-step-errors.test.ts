@@ -45,7 +45,7 @@ describe("collect-step-errors", () => {
       "Este e-mail já está cadastrado.",
     ]);
     assert.deepEqual(collectUniqueErrorMessages(duplicateRegistrationError("CNPJ_DUPLICATE")), [
-      "Este CNPJ já possui cadastro.",
+      "Este CNPJ já possui cadastro na EccoPet.",
     ]);
   });
 });

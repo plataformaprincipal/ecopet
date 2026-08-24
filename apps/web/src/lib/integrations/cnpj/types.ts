@@ -30,3 +30,17 @@ export type CnpjLookupResult = {
 
 export const CNPJ_BAIXADO_MESSAGE = "Este CNPJ encontra-se baixado.";
 export const CNPJ_INAPTO_MESSAGE = "Este CNPJ apresenta restrições cadastrais.";
+
+export type CnpjLookupStatus =
+  | "SUCCESS"
+  | "NOT_FOUND"
+  | "UNAVAILABLE"
+  | "TIMEOUT"
+  | "INVALID";
+
+export type CnpjLookupCode =
+  | "INVALID_CNPJ"
+  | "CNPJ_ALREADY_EXISTS"
+  | "CNPJ_LOOKUP_UNAVAILABLE"
+  | "CNPJ_NOT_FOUND"
+  | "NETWORK_ERROR";

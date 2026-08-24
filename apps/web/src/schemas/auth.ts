@@ -26,7 +26,14 @@ import { usernameSchema } from "@/lib/validation/username";
 
 export { usernameSchema } from "@/lib/validation/username";
 
-import { onlyDigits, validateCpfChecksum, validateCnpjChecksum } from "./validation/documents-shared";
+import {
+  onlyDigits,
+  validateCpfChecksum,
+  normalizeCnpj,
+  inspectCnpjInput,
+  cnpjIssueMessage,
+  CNPJ_EMPTY_MESSAGE,
+} from "./validation/documents-shared";
 
 export const cpfSchema = z
   .string()
@@ -108,11 +115,13 @@ export const birthDateSchema = z
 
 export const cnpjSchema = z
   .string()
-  .min(14, "Digite um CNPJ válido.")
-  .transform(onlyDigits)
-  .refine((v) => v.length === 14, "Digite um CNPJ válido.")
-  .refine((v) => !/^(\d)\1+$/.test(v), "Digite um CNPJ válido.")
-  .refine(validateCnpjChecksum, "Digite um CNPJ válido.");
+  .min(1, CNPJ_EMPTY_MESSAGE)
+  .transform(normalizeCnpj)
+  .superRefine((value, ctx) => {
+    const issue = inspectCnpjInput(value);
+    if (issue === "ok") return;
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: cnpjIssueMessage(issue) });
+  });
 
 const baseRegisterFields = z.object({
   role: z.nativeEnum(UserRole),

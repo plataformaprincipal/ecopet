@@ -5,7 +5,7 @@ export const EMAIL_DUPLICATE_MESSAGE = "Este e-mail já está cadastrado.";
 export const PHONE_DUPLICATE_MESSAGE = "Este telefone já está cadastrado.";
 export const USERNAME_DUPLICATE_MESSAGE = "Este nome de usuário já está em uso.";
 export const CPF_DUPLICATE_MESSAGE = "Este CPF já possui cadastro.";
-export const CNPJ_DUPLICATE_MESSAGE = "Este CNPJ já possui cadastro.";
+export const CNPJ_DUPLICATE_MESSAGE = "Este CNPJ já possui cadastro na EccoPet.";
 
 export const DUPLICATE_REGISTRATION_CODES = [
   "EMAIL_DUPLICATE",

@@ -1,19 +1,24 @@
 import { prisma } from "@/lib/prisma";
-import { onlyDigits, validateCpfChecksum, validateCnpjChecksum } from "@/schemas/validation/documents-shared";
+import {
+  onlyDigits,
+  validateCpfChecksum,
+  normalizeCnpj,
+  isValidCnpj,
+} from "@/schemas/validation/documents-shared";
 
 export { CPF_DUPLICATE_MESSAGE, CNPJ_DUPLICATE_MESSAGE } from "./document-messages";
 
 export type DocumentKind = "cpf" | "cnpj";
 
 export function normalizeDocumentDigits(type: DocumentKind, value: string): string {
-  return onlyDigits(value);
+  return type === "cpf" ? onlyDigits(value) : normalizeCnpj(value);
 }
 
 export function isValidDocumentFormat(type: DocumentKind, digits: string): boolean {
   if (type === "cpf") {
     return digits.length === 11 && validateCpfChecksum(digits);
   }
-  return digits.length === 14 && validateCnpjChecksum(digits);
+  return isValidCnpj(digits);
 }
 
 /**

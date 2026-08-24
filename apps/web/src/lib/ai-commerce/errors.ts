@@ -30,6 +30,18 @@ export const USER_FACING_ERRORS: Record<string, { title: string; message: string
     title: "Arquivo",
     message: "Não conseguimos ler este arquivo. Envie um PDF ou imagem com boa qualidade.",
   },
+  ANALYSIS_TIMEOUT: {
+    title: "Tempo esgotado",
+    message: "A análise demorou além do esperado.",
+  },
+  RESULT_INVALID: {
+    title: "Resultado",
+    message: "Não conseguimos organizar o resultado. Tente novamente.",
+  },
+  IN_PROGRESS: {
+    title: "Em andamento",
+    message: "Esta análise já está em andamento.",
+  },
   PET_REQUIRED: {
     title: "Cadastre seu pet",
     message: "Cadastre seu pet antes de continuar.",

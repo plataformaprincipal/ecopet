@@ -50,7 +50,8 @@ import {
 } from "@/lib/validation/international-phone";
 import { validateActivityStartDate, getActivityStartDateBounds } from "@/lib/validation/activity-start-date";
 import { validateStrongPassword, PASSWORD_MISMATCH_MESSAGE } from "@/lib/password/validate-strong-password";
-import { maskCpf, maskCnpj, onlyDigits, validateCpfChecksum, validateCnpjChecksum } from "@/schemas/validation/documents-shared";
+import { maskCpf, maskCnpj, onlyDigits, validateCpfChecksum, inspectCnpjInput, cnpjIssueMessage, isValidCnpj, normalizeCnpj, CNPJ_LOOKUP_LOADING_MESSAGE, CNPJ_LOOKUP_FOUND_MESSAGE, CNPJ_LOOKUP_UNAVAILABLE_MESSAGE } from "@/schemas/validation/documents-shared";
+import type { CnpjLookupResult } from "@/lib/integrations/cnpj/types";
 import { dashboardPathForRole } from "@/lib/auth/dashboard";
 import { confirmSessionCookie } from "@/lib/auth/confirm-session";
 import { notifySessionChanged } from "@/lib/auth/session-events";
@@ -116,6 +117,8 @@ function Field({
   maxLength,
   error,
   tv,
+  inputMode,
+  autoCapitalize,
 }: {
   id: string;
   label: string;
@@ -127,6 +130,8 @@ function Field({
   maxLength?: number;
   error?: string;
   tv?: (message: string | undefined) => string;
+  inputMode?: "text" | "email" | "numeric" | "tel";
+  autoCapitalize?: "characters" | "none" | "on" | "off";
 }) {
   return (
     <div>
@@ -142,6 +147,10 @@ function Field({
         onChange={(e) => onChange(e.target.value)}
         required={required}
         maxLength={maxLength}
+        inputMode={inputMode}
+        autoCapitalize={autoCapitalize}
+        autoCorrect={autoCapitalize ? "off" : undefined}
+        spellCheck={autoCapitalize ? false : undefined}
         className={cn("mt-1", error && "border-red-500")}
         aria-invalid={!!error}
       />
@@ -228,6 +237,8 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
   const [documents, setDocuments] = useState<OngDocumentItem[]>([]);
   const [docsError, setDocsError] = useState("");
   const [stepFeedback, setStepFeedback] = useState<string[]>([]);
+  const [cnpjLookupLoading, setCnpjLookupLoading] = useState(false);
+  const [cnpjLookupInfo, setCnpjLookupInfo] = useState("");
 
   useEffect(() => {
     try {
@@ -263,6 +274,50 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
 
   const cpfAvailability = useDocumentAvailability("cpf", form.cpf);
   const cnpjAvailability = useDocumentAvailability("cnpj", form.ongType === "INSTITUTION" ? form.cnpj : "");
+
+  const lookupCnpj = useCallback(async (cnpjMasked: string) => {
+    const normalized = normalizeCnpj(cnpjMasked);
+    if (inspectCnpjInput(normalized) !== "ok" || !isValidCnpj(normalized)) {
+      setCnpjLookupInfo("");
+      return;
+    }
+    setCnpjLookupLoading(true);
+    setCnpjLookupInfo("");
+    try {
+      const res = await fetch(`/api/integrations/cnpj?cnpj=${encodeURIComponent(normalized)}`);
+      const data = await res.json();
+      if (!data.success) {
+        setCnpjLookupInfo(CNPJ_LOOKUP_UNAVAILABLE_MESSAGE);
+        return;
+      }
+      if (!data.data.found) {
+        setCnpjLookupInfo(data.data.message ?? CNPJ_LOOKUP_UNAVAILABLE_MESSAGE);
+        return;
+      }
+      const result = data.data.data as CnpjLookupResult;
+      setForm((prev) => ({
+        ...prev,
+        ongName: result.businessName || prev.ongName,
+        legalName: result.legalName || prev.legalName,
+        city: result.address.city || prev.city,
+        state: result.address.state || prev.state,
+        address: result.address.street
+          ? `${result.address.street}${result.address.number ? `, ${result.address.number}` : ""}`
+          : prev.address,
+      }));
+      setCnpjLookupInfo(CNPJ_LOOKUP_FOUND_MESSAGE);
+    } catch {
+      setCnpjLookupInfo(CNPJ_LOOKUP_UNAVAILABLE_MESSAGE);
+    } finally {
+      setCnpjLookupLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (form.ongType !== "INSTITUTION" || step !== "institutional") return;
+    const t = setTimeout(() => void lookupCnpj(form.cnpj), 700);
+    return () => clearTimeout(t);
+  }, [form.cnpj, form.ongType, step, lookupCnpj]);
 
   function patch(partial: Partial<OngFormState>) {
     setForm((prev) => ({ ...prev, ...partial }));
@@ -321,7 +376,7 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
     }
 
     if (current === "institutional" && form.ongType === "INSTITUTION") {
-      if (!validateCnpjChecksum(onlyDigits(form.cnpj))) errors.cnpj = v.cnpjInvalid;
+      if (inspectCnpjInput(form.cnpj) !== "ok") errors.cnpj = cnpjIssueMessage(inspectCnpjInput(form.cnpj));
       else if (cnpjAvailability === "taken") Object.assign(errors, duplicateRegistrationError("CNPJ_DUPLICATE"));
       if (form.ongName.trim().length < 2) errors.ongName = o.validation.ongNameRequired;
       if (form.legalName.trim().length < 2) errors.legalName = o.validation.legalNameRequired;
@@ -630,7 +685,27 @@ export function OngRegisterForm({ embedded }: { embedded?: boolean }) {
           <h2 id="ong-institutional-step" className="text-lg font-semibold">
             {o.sections.institutional}
           </h2>
-          <Field id="ong-cnpj" label={t("auth.register.fields.cnpj")} value={form.cnpj} onChange={(v) => patch({ cnpj: maskCnpj(v) })} required error={fieldErrors.cnpj} tv={tv} />
+          <Field
+            id="ong-cnpj"
+            label={t("auth.register.fields.cnpj")}
+            value={form.cnpj}
+            onChange={(v) => patch({ cnpj: maskCnpj(v) })}
+            required
+            error={fieldErrors.cnpj}
+            tv={tv}
+            maxLength={18}
+            inputMode="text"
+            autoCapitalize="characters"
+          />
+          {cnpjLookupLoading && (
+            <p className="flex items-center gap-2 text-sm text-muted-foreground" aria-live="polite">
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+              {CNPJ_LOOKUP_LOADING_MESSAGE}
+            </p>
+          )}
+          {cnpjLookupInfo && !cnpjLookupLoading && (
+            <p className="text-xs text-emerald-800" aria-live="polite">{cnpjLookupInfo}</p>
+          )}
           <Field id="ong-name-inst" label={o.fields.ongName} value={form.ongName} onChange={(v) => patch({ ongName: v })} required error={fieldErrors.ongName} tv={tv} />
           <Field id="ong-legal-name" label={o.fields.legalName} value={form.legalName} onChange={(v) => patch({ legalName: v })} required error={fieldErrors.legalName} tv={tv} />
           <Field id="ong-trade-name" label={t("auth.register.fields.tradeName")} value={form.tradeName} onChange={(v) => patch({ tradeName: v })} tv={tv} />

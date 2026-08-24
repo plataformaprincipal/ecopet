@@ -5,23 +5,17 @@ import {
   fullNameSchema,
   phoneSchema,
   cpfSchema,
+  cnpjSchema,
 } from "@/schemas/auth";
 import { usernameSchema } from "@/lib/validation/username";
 import { PASSWORD_MISMATCH_MESSAGE, validateStrongPassword } from "@/lib/password/validate-strong-password";
 import { validateActivityStartDate } from "@/lib/validation/activity-start-date";
-import { onlyDigits, validateCnpjChecksum } from "@/schemas/validation/documents-shared";
+import { CNPJ_CHECK_DIGIT_MESSAGE } from "@/schemas/validation/documents-shared";
 import { ONG_LEGAL, ONG_LEGAL_ACCEPTANCE_MESSAGE } from "@/lib/legal/legal-links";
 import { validateRequiredOngDocuments } from "@/lib/ong/document-validation";
 
-export const ONG_CNPJ_INVALID_MESSAGE = "Digite um CNPJ válido.";
-
-export const ongCnpjSchema = z
-  .string()
-  .min(1, ONG_CNPJ_INVALID_MESSAGE)
-  .transform(onlyDigits)
-  .refine((v) => v.length === 14, ONG_CNPJ_INVALID_MESSAGE)
-  .refine((v) => !/^(\d)\1+$/.test(v), ONG_CNPJ_INVALID_MESSAGE)
-  .refine(validateCnpjChecksum, ONG_CNPJ_INVALID_MESSAGE);
+export const ONG_CNPJ_INVALID_MESSAGE = CNPJ_CHECK_DIGIT_MESSAGE;
+export const ongCnpjSchema = cnpjSchema;
 
 const profileDetailsSchema = z
   .object({

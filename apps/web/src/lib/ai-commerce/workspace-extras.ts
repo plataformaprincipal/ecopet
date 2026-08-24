@@ -75,10 +75,25 @@ export async function extrasForExecution(params: {
     marketplaceProducts = await searchMarketplaceProductsFromQueries(queriesFrom(params.output, params.input));
   }
 
+  const { buildPetAIContext } = await import("./pet-context");
+  const petAIContext = await buildPetAIContext({
+    userId: params.userId,
+    petId: params.petId,
+    capabilityId: params.capabilityId,
+  }).catch(() => null);
+
   return {
     marketplaceProducts,
     weightSeries,
     examSeries,
     previousCheckup: previousCheckup ?? null,
+    petAIContext,
+    nextBestAction: params.output
+      ? (await import("./next-best-action")).computeNextBestAction({
+          sku: params.sku,
+          output: params.output,
+          input: params.input,
+        })
+      : null,
   };
 }

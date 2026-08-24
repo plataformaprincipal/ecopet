@@ -9,6 +9,8 @@ type AccessMethods = {
   passwordConfigured: boolean;
   googleConnected: boolean;
   canUnlinkGoogle: boolean;
+  googleAllowed: boolean;
+  role?: string;
 };
 
 export function AccessMethodsPanel() {
@@ -73,9 +75,9 @@ export function AccessMethodsPanel() {
           ? t("auth.google.googleConnected")
           : t("auth.google.googleDisconnected")}
       </p>
-      {!methods.googleConnected ? (
+      {methods.googleAllowed && !methods.googleConnected ? (
         <GoogleSignInButton intent="link" returnTo="/configuracoes" />
-      ) : (
+      ) : methods.googleConnected ? (
         <Button
           type="button"
           variant="outline"
@@ -84,7 +86,7 @@ export function AccessMethodsPanel() {
         >
           {t("auth.google.disconnect")}
         </Button>
-      )}
+      ) : null}
       {error ? (
         <p className="text-sm text-red-600" role="alert" aria-live="polite">
           {error}

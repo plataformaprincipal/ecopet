@@ -1,9 +1,12 @@
 /**
  * Protocolo Google OAuth 2.0 / OIDC — funções puras (sem Prisma).
- * Login social único. Não pede Drive/Calendar/Gmail.
+ * Google consumer login é CLIENT ONLY (Tutor). Parceiro e ONG usam e-mail/senha.
  */
 
+import { normalizeRegistrationEmail } from "@/lib/validation/email";
+
 export const GOOGLE_PROVIDER = "google" as const;
+export const GOOGLE_AUTH_ALLOWED_ROLE = "CLIENT" as const;
 export const GOOGLE_AUTH_SCOPES = "openid email profile";
 export const GOOGLE_AUTHORIZATION_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth";
 export const GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
@@ -25,6 +28,10 @@ export type GoogleAuthErrorCode =
   | "LINK_REQUIRED"
   | "LAST_AUTH_METHOD"
   | "ADMIN_FORBIDDEN"
+  | "PARTNER_GOOGLE_FORBIDDEN"
+  | "ONG_GOOGLE_FORBIDDEN"
+  | "GOOGLE_ACCOUNT_IN_USE"
+  | "TERMS_REQUIRED"
   | "OPEN_REDIRECT"
   | "TOKEN_INVALID"
   | "GENERIC";
@@ -70,17 +77,115 @@ export function canUnlinkGoogle(input: { hasPassword: boolean; googleLinked: boo
   return input.hasPassword;
 }
 
-export function googleOnboardingRoles(): readonly ["CLIENT", "PARTNER", "ONG"] {
-  return ["CLIENT", "PARTNER", "ONG"] as const;
+export function googleOnboardingRoles(): readonly ["CLIENT"] {
+  return [GOOGLE_AUTH_ALLOWED_ROLE] as const;
 }
 
-export function isAllowedGoogleRole(role: string): role is "CLIENT" | "PARTNER" | "ONG" {
-  return role === "CLIENT" || role === "PARTNER" || role === "ONG";
+export function isAllowedGoogleRole(role: string): role is typeof GOOGLE_AUTH_ALLOWED_ROLE {
+  return role === GOOGLE_AUTH_ALLOWED_ROLE;
 }
 
-/** Nunca auto-vincular só porque o e-mail coincide. */
-export function shouldAutoLinkByEmail(): false {
-  return false;
+/** O browser nunca escolhe a persona. Google signup/login consumer é sempre CLIENT. */
+export function resolveGoogleSignupRole(_requested?: string | null): typeof GOOGLE_AUTH_ALLOWED_ROLE {
+  return GOOGLE_AUTH_ALLOWED_ROLE;
+}
+
+/**
+ * Auto-link estritamente controlado:
+ * provider=google + email_verified + role CLIENT + e-mails normalizados iguais.
+ */
+export function shouldAutoLinkByEmail(params: {
+  provider: string;
+  emailVerified: boolean;
+  existingRole: string;
+  googleEmail: string;
+  userEmail: string;
+}): boolean {
+  if (params.provider !== GOOGLE_PROVIDER) return false;
+  if (params.emailVerified !== true) return false;
+  if (params.existingRole !== GOOGLE_AUTH_ALLOWED_ROLE) return false;
+  return normalizeRegistrationEmail(params.googleEmail) === normalizeRegistrationEmail(params.userEmail);
+}
+
+export function googleErrorForExistingNonClientRole(role: string): GoogleAuthErrorCode {
+  if (role === "PARTNER") return "PARTNER_GOOGLE_FORBIDDEN";
+  if (role === "ONG") return "ONG_GOOGLE_FORBIDDEN";
+  return "ADMIN_FORBIDDEN";
+}
+
+export type GoogleCallbackFacts = {
+  identity: { sub: string; email: string; emailVerified: boolean };
+  intent: GoogleOAuthIntent;
+  currentUser: { id: string; role: string; email: string } | null;
+  existingGoogleLink: { userId: string; role: string; accountStatus: string } | null;
+  emailOwner: { id: string; role: string; email: string; accountStatus: string } | null;
+};
+
+export type GoogleCallbackDecision =
+  | { kind: "session"; userId: string }
+  | { kind: "autolink"; userId: string }
+  | { kind: "pending" }
+  | { kind: "error"; code: GoogleAuthErrorCode };
+
+function googleAccountUsable(status: string): GoogleAuthErrorCode | null {
+  if (status === "SUSPENDED") return "ACCOUNT_SUSPENDED";
+  if (status !== "ACTIVE" && status !== "PENDING") return "ACCOUNT_INACTIVE";
+  return null;
+}
+
+export function decideGoogleCallback(facts: GoogleCallbackFacts): GoogleCallbackDecision {
+  const { identity, intent, currentUser, existingGoogleLink, emailOwner } = facts;
+  if (!identity.emailVerified) return { kind: "error", code: "EMAIL_NOT_VERIFIED" };
+
+  if (existingGoogleLink) {
+    if (existingGoogleLink.role !== GOOGLE_AUTH_ALLOWED_ROLE) {
+      return { kind: "error", code: googleErrorForExistingNonClientRole(existingGoogleLink.role) };
+    }
+    const statusError = googleAccountUsable(existingGoogleLink.accountStatus);
+    if (statusError) return { kind: "error", code: statusError };
+    if (intent === "link" && currentUser && currentUser.id !== existingGoogleLink.userId) {
+      return { kind: "error", code: "GOOGLE_ACCOUNT_IN_USE" };
+    }
+    return { kind: "session", userId: existingGoogleLink.userId };
+  }
+
+  if (intent === "link") {
+    if (!currentUser) return { kind: "error", code: "GENERIC" };
+    if (currentUser.role !== GOOGLE_AUTH_ALLOWED_ROLE) {
+      return { kind: "error", code: googleErrorForExistingNonClientRole(currentUser.role) };
+    }
+    return { kind: "autolink", userId: currentUser.id };
+  }
+
+  if (emailOwner) {
+    if (emailOwner.role !== GOOGLE_AUTH_ALLOWED_ROLE) {
+      return { kind: "error", code: googleErrorForExistingNonClientRole(emailOwner.role) };
+    }
+    const statusError = googleAccountUsable(emailOwner.accountStatus);
+    if (statusError) return { kind: "error", code: statusError };
+    if (
+      shouldAutoLinkByEmail({
+        provider: GOOGLE_PROVIDER,
+        emailVerified: identity.emailVerified,
+        existingRole: emailOwner.role,
+        googleEmail: identity.email,
+        userEmail: emailOwner.email,
+      })
+    ) {
+      return { kind: "autolink", userId: emailOwner.id };
+    }
+    return { kind: "error", code: "ACCOUNT_EXISTS_PASSWORD" };
+  }
+
+  return { kind: "pending" };
+}
+
+export function canCompleteGoogleOnboarding(params: {
+  termsAccepted: boolean;
+  privacyAccepted: boolean;
+}): { ok: true } | { ok: false; code: "TERMS_REQUIRED" } {
+  if (!params.termsAccepted || !params.privacyAccepted) return { ok: false, code: "TERMS_REQUIRED" };
+  return { ok: true };
 }
 
 export function humanGoogleAuthError(code: GoogleAuthErrorCode, locale: "pt-BR" | "en" | "es" = "pt-BR"): string {
@@ -138,9 +243,29 @@ export function humanGoogleAuthError(code: GoogleAuthErrorCode, locale: "pt-BR" 
       es: "Define una contraseña antes de desconectar Google.",
     },
     ADMIN_FORBIDDEN: {
-      "pt-BR": "O Google não cria contas administrativas.",
-      en: "Google cannot create admin accounts.",
-      es: "Google no crea cuentas de administración.",
+      "pt-BR": "Esta conta não pode entrar com Google. Use o login administrativo.",
+      en: "This account cannot sign in with Google. Use the admin login.",
+      es: "Esta cuenta no puede entrar con Google. Usa el acceso administrativo.",
+    },
+    PARTNER_GOOGLE_FORBIDDEN: {
+      "pt-BR": "Esta conta pertence a um Parceiro EccoPet. Entre com seu e-mail e senha.",
+      en: "This account belongs to an EccoPet Partner. Sign in with your email and password.",
+      es: "Esta cuenta pertenece a un Socio EccoPet. Entra con tu correo y contraseña.",
+    },
+    ONG_GOOGLE_FORBIDDEN: {
+      "pt-BR": "Esta conta pertence a uma ONG EccoPet. Entre com seu e-mail e senha.",
+      en: "This account belongs to an EccoPet NGO. Sign in with your email and password.",
+      es: "Esta cuenta pertenece a una ONG EccoPet. Entra con tu correo y contraseña.",
+    },
+    GOOGLE_ACCOUNT_IN_USE: {
+      "pt-BR": "Esta conta Google já está vinculada a outro usuário EccoPet.",
+      en: "This Google account is already linked to another EccoPet user.",
+      es: "Esta cuenta de Google ya está vinculada a otro usuario EccoPet.",
+    },
+    TERMS_REQUIRED: {
+      "pt-BR": "Aceite os Termos de Uso e a Política de Privacidade para continuar.",
+      en: "Accept the Terms of Use and Privacy Policy to continue.",
+      es: "Acepta los Términos de Uso y la Política de Privacidad para continuar.",
     },
     OPEN_REDIRECT: {
       "pt-BR": "Destino de retorno inválido.",

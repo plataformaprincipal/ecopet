@@ -162,7 +162,12 @@ export function EccoPetAiLanding() {
                     <p className="mt-2 flex-1 text-sm leading-relaxed text-[var(--ep-fg-muted)]">{p.shortDescription}</p>
                     <p className="mt-4 text-sm font-medium text-[var(--ep-fg)]">{t("ecopetAi.hub.free")}</p>
                     <Button asChild className="mt-5">
-                      <Link href={p.href}>{t("ecopetAi.hub.useNow")}</Link>
+                      <Link
+                        href={p.href}
+                        onClick={() => analyticsService.track(AiEvents.MODULE_OPEN, { screen: "eccopet_hub", label: p.sku })}
+                      >
+                        {t("ecopetAi.hub.useNow")}
+                      </Link>
                     </Button>
                   </article>
                 );

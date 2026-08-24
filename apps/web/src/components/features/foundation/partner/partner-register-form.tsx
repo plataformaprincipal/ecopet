@@ -60,7 +60,17 @@ import {
 import { validateActivityStartDate, getActivityStartDateBounds } from "@/lib/validation/activity-start-date";
 import { validateStrongPassword, PASSWORD_MISMATCH_MESSAGE } from "@/lib/password/validate-strong-password";
 import { maskCpf, maskCnpj } from "@/schemas/validation/documents-shared";
-import { validateCpfChecksum, validateCnpjChecksum, onlyDigits } from "@/schemas/validation/documents-shared";
+import {
+  validateCpfChecksum,
+  onlyDigits,
+  inspectCnpjInput,
+  cnpjIssueMessage,
+  isValidCnpj,
+  normalizeCnpj,
+  CNPJ_LOOKUP_LOADING_MESSAGE,
+  CNPJ_LOOKUP_FOUND_MESSAGE,
+  CNPJ_LOOKUP_UNAVAILABLE_MESSAGE,
+} from "@/schemas/validation/documents-shared";
 import { dashboardPathForRole } from "@/lib/auth/dashboard";
 import { confirmSessionCookie } from "@/lib/auth/confirm-session";
 import { notifySessionChanged } from "@/lib/auth/session-events";
@@ -243,8 +253,8 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
   }, [form.cpf, form.name, form.partnerType]);
 
   const lookupCnpj = useCallback(async (cnpjMasked: string) => {
-    const digits = onlyDigits(cnpjMasked);
-    if (digits.length !== 14 || !validateCnpjChecksum(digits)) {
+    const normalized = normalizeCnpj(cnpjMasked);
+    if (inspectCnpjInput(normalized) !== "ok" || !isValidCnpj(normalized)) {
       setCnpjWarnings([]);
       setCnpjLookupInfo("");
       return;
@@ -253,11 +263,14 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
     setCnpjWarnings([]);
     setCnpjLookupInfo("");
     try {
-      const res = await fetch(`/api/integrations/cnpj?cnpj=${encodeURIComponent(digits)}`);
+      const res = await fetch(`/api/integrations/cnpj?cnpj=${encodeURIComponent(normalized)}`);
       const data = await res.json();
-      if (!data.success) return;
+      if (!data.success) {
+        setCnpjLookupInfo(CNPJ_LOOKUP_UNAVAILABLE_MESSAGE);
+        return;
+      }
       if (!data.data.found) {
-        setCnpjLookupInfo(data.data.message ?? "CNPJ não encontrado na consulta.");
+        setCnpjLookupInfo(data.data.message ?? CNPJ_LOOKUP_UNAVAILABLE_MESSAGE);
         return;
       }
       const result = data.data.data as CnpjLookupResult;
@@ -281,9 +294,9 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
           complement: result.address.complement || prev.addressDetails.complement,
         },
       }));
-      setCnpjLookupInfo(`Situação: ${result.registrationStatus || "consultada"}. Dados preenchidos automaticamente — revise se necessário.`);
+      setCnpjLookupInfo(CNPJ_LOOKUP_FOUND_MESSAGE);
     } catch {
-      setCnpjLookupInfo("Consulta de CNPJ indisponível no momento. Preencha manualmente.");
+      setCnpjLookupInfo(CNPJ_LOOKUP_UNAVAILABLE_MESSAGE);
     } finally {
       setCnpjLookupLoading(false);
     }
@@ -319,7 +332,7 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
     }
 
     if (current === "corporate" && form.partnerType === "CORPORATE") {
-      if (!validateCnpjChecksum(onlyDigits(form.cnpj))) errors.cnpj = v.cnpjInvalid;
+      if (inspectCnpjInput(form.cnpj) !== "ok") errors.cnpj = cnpjIssueMessage(inspectCnpjInput(form.cnpj));
       else if (cnpjAvailability === "taken") Object.assign(errors, duplicateRegistrationError("CNPJ_DUPLICATE"));
       if (form.businessName.trim().length < 2) errors.businessName = p.validation.businessNameRequired;
       if (form.legalName.trim().length < 2) errors.legalName = p.validation.legalNameRequired;
@@ -578,11 +591,24 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
           <h2 id="partner-corporate-step" className="text-lg font-semibold">
             {p.sections.corporate}
           </h2>
-          <Field label={p.fields.cnpj} id="partner-cnpj" value={form.cnpj} onChange={(v) => patch({ cnpj: maskCnpj(v) })} error={fieldErrors.cnpj} required tv={tv} />
+          <Field
+            label={p.fields.cnpj}
+            id="partner-cnpj"
+            value={form.cnpj}
+            onChange={(v) => patch({ cnpj: maskCnpj(v) })}
+            error={fieldErrors.cnpj}
+            required
+            tv={tv}
+            autoCapitalize="characters"
+            autoCorrect="off"
+            spellCheck={false}
+            maxLength={18}
+            inputMode="text"
+          />
           {cnpjLookupLoading && (
             <p className="flex items-center gap-2 text-sm text-muted-foreground" aria-live="polite">
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-              {p.cnpj.loading}
+              {CNPJ_LOOKUP_LOADING_MESSAGE}
             </p>
           )}
           {cnpjWarnings.map((w) => (
@@ -917,6 +943,11 @@ function Field({
   autoComplete,
   placeholder,
   tv,
+  autoCapitalize,
+  autoCorrect,
+  spellCheck,
+  maxLength,
+  inputMode,
 }: {
   label: string;
   id: string;
@@ -931,6 +962,11 @@ function Field({
   autoComplete?: string;
   placeholder?: string;
   tv?: (message: string | undefined) => string;
+  autoCapitalize?: "characters" | "none" | "on" | "off";
+  autoCorrect?: "on" | "off";
+  spellCheck?: boolean;
+  maxLength?: number;
+  inputMode?: "text" | "email" | "numeric" | "tel";
 }) {
   const hintId = hint ? `${id}-hint` : undefined;
   const errorId = error ? `${id}-error` : undefined;
@@ -950,6 +986,11 @@ function Field({
         max={max}
         autoComplete={autoComplete}
         placeholder={placeholder}
+        autoCapitalize={autoCapitalize}
+        autoCorrect={autoCorrect}
+        spellCheck={spellCheck}
+        maxLength={maxLength}
+        inputMode={inputMode}
         className="mt-1"
         aria-label={label}
         aria-invalid={!!error}

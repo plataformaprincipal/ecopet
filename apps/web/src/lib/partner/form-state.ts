@@ -1,6 +1,7 @@
 import { EMPTY_ADDRESS } from "@/lib/address/types";
 import type { PartnerType } from "@/lib/partner/constants";
 import type { CnpjLookupResult } from "@/lib/integrations/cnpj/types";
+import { normalizeCnpj } from "@/schemas/validation/documents-shared";
 
 export type PartnerVerificationDocumentMeta = {
   id: string;
@@ -214,7 +215,7 @@ export function formToRegisterPayload(
 
   return {
     ...base,
-    cnpj: form.cnpj.replace(/\D/g, ""),
+    cnpj: normalizeCnpj(form.cnpj),
     businessName: form.businessName.trim(),
     legalName: form.legalName.trim(),
     corporateType: form.corporateType,

@@ -12,14 +12,17 @@ import { auditLogin, auditLoginFailed } from "@/lib/auth/auth-audit";
 import { dashboardPathForRole } from "@/lib/auth/dashboard";
 import {
   GOOGLE_AUTHORIZATION_ENDPOINT,
+  GOOGLE_AUTH_ALLOWED_ROLE,
   GOOGLE_AUTH_SCOPES,
   GOOGLE_ISSUERS,
   GOOGLE_PRODUCTION_ORIGIN,
   GOOGLE_PROVIDER,
   GOOGLE_TOKEN_ENDPOINT,
+  canCompleteGoogleOnboarding,
+  decideGoogleCallback,
   googleCallbackPath,
-  isAllowedGoogleRole,
   isGoogleAuthConfigured,
+  resolveGoogleSignupRole,
   safeInternalPath,
   type GoogleOAuthIntent,
 } from "@/lib/auth/google-oauth";
@@ -207,96 +210,124 @@ export async function resolveGoogleCallback(params: {
     include: { user: true },
   });
 
-  if (existingIdentity) {
-    const user = existingIdentity.user;
-    if (user.accountStatus === AccountStatus.SUSPENDED) {
-      return { kind: "error", code: "ACCOUNT_SUSPENDED", returnTo };
-    }
-    if (user.accountStatus !== AccountStatus.ACTIVE && user.accountStatus !== AccountStatus.PENDING) {
-      return { kind: "error", code: "ACCOUNT_INACTIVE", returnTo };
-    }
-    if (params.intent === "link" && params.currentUserId && params.currentUserId !== user.id) {
-      return { kind: "error", code: "GENERIC", returnTo };
-    }
-    return {
-      kind: "session",
-      userId: user.id,
-      email: user.email,
-      role: user.role,
-      accountStatus: user.accountStatus,
-      returnTo: returnTo === "/" ? dashboardPathForRole(user.role) : returnTo,
-    };
+  const currentUser = params.currentUserId
+    ? await prisma.user.findUnique({
+        where: { id: params.currentUserId },
+        select: { id: true, role: true, email: true },
+      })
+    : null;
+
+  const emailOwner = await prisma.user.findUnique({
+    where: { email: params.identity.email },
+    select: { id: true, role: true, email: true, accountStatus: true },
+  });
+
+  const decision = decideGoogleCallback({
+    identity: {
+      sub: params.identity.sub,
+      email: params.identity.email,
+      emailVerified: params.identity.emailVerified,
+    },
+    intent: params.intent,
+    currentUser: currentUser ? { id: currentUser.id, role: currentUser.role, email: currentUser.email } : null,
+    existingGoogleLink: existingIdentity
+      ? {
+          userId: existingIdentity.user.id,
+          role: existingIdentity.user.role,
+          accountStatus: existingIdentity.user.accountStatus,
+        }
+      : null,
+    emailOwner,
+  });
+
+  if (decision.kind === "error") {
+    return { kind: "error", code: decision.code, returnTo: "/login" };
   }
 
-  if (params.intent === "link") {
-    if (!params.currentUserId) return { kind: "error", code: "GENERIC", returnTo };
-    const linked = await linkGoogleToUser({ userId: params.currentUserId, identity: params.identity });
-    if (!linked.ok) return { kind: "error", code: linked.code, returnTo };
-    const user = await prisma.user.findUnique({ where: { id: params.currentUserId } });
-    if (!user) return { kind: "error", code: "GENERIC", returnTo };
-    return {
-      kind: "session",
-      userId: user.id,
-      email: user.email,
-      role: user.role,
-      accountStatus: user.accountStatus,
-      returnTo: "/configuracoes?tab=seguranca",
-    };
+  if (decision.kind === "pending") {
+    const cookieValue = await signPendingGoogleIdentity(params.identity);
+    return { kind: "pending", cookieValue, returnTo };
   }
 
-  const emailOwner = await prisma.user.findUnique({ where: { email: params.identity.email } });
-  if (emailOwner) {
-    return { kind: "error", code: "ACCOUNT_EXISTS_PASSWORD", returnTo: "/login" };
+  if (decision.kind === "autolink") {
+    const linked = await linkGoogleToUser({ userId: decision.userId, identity: params.identity });
+    if (!linked.ok) return { kind: "error", code: linked.code, returnTo: "/login" };
   }
 
-  const cookieValue = await signPendingGoogleIdentity(params.identity);
-  return { kind: "pending", cookieValue, returnTo };
+  const userId = decision.kind === "session" || decision.kind === "autolink" ? decision.userId : "";
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) return { kind: "error", code: "GENERIC", returnTo };
+  if (user.role !== GOOGLE_AUTH_ALLOWED_ROLE) {
+    return { kind: "error", code: "ADMIN_FORBIDDEN", returnTo: "/login" };
+  }
+
+  return {
+    kind: "session",
+    userId: user.id,
+    email: user.email,
+    role: user.role,
+    accountStatus: user.accountStatus,
+    returnTo:
+      params.intent === "link"
+        ? "/configuracoes?tab=seguranca"
+        : returnTo === "/"
+          ? dashboardPathForRole(user.role)
+          : returnTo,
+  };
 }
 
 export async function completeGoogleOnboarding(params: {
   identity: GoogleIdentity;
-  role: string;
+  role?: string | null;
   termsAccepted: boolean;
   privacyAccepted: boolean;
 }): Promise<
   { ok: true; userId: string; email: string; role: UserRole; accountStatus: AccountStatus } | { ok: false; code: string }
 > {
-  if (!params.termsAccepted || !params.privacyAccepted) return { ok: false, code: "TERMS_REQUIRED" };
-  if (!isAllowedGoogleRole(params.role)) return { ok: false, code: "ADMIN_FORBIDDEN" };
+  const consent = canCompleteGoogleOnboarding(params);
+  if (!consent.ok) return consent;
+
+  const role = resolveGoogleSignupRole(params.role);
 
   const existingIdentity = await prisma.externalAuthAccount.findUnique({
     where: {
       provider_providerAccountId: { provider: GOOGLE_PROVIDER, providerAccountId: params.identity.sub },
     },
   });
-  if (existingIdentity) return { ok: false, code: "GENERIC" };
+  if (existingIdentity) return { ok: false, code: "GOOGLE_ACCOUNT_IN_USE" };
 
   const emailOwner = await prisma.user.findUnique({ where: { email: params.identity.email } });
-  if (emailOwner) return { ok: false, code: "ACCOUNT_EXISTS_PASSWORD" };
+  if (emailOwner) {
+    if (emailOwner.role !== GOOGLE_AUTH_ALLOWED_ROLE) {
+      return { ok: false, code: emailOwner.role === "PARTNER" ? "PARTNER_GOOGLE_FORBIDDEN" : emailOwner.role === "ONG" ? "ONG_GOOGLE_FORBIDDEN" : "ADMIN_FORBIDDEN" };
+    }
+    return { ok: false, code: "ACCOUNT_EXISTS_PASSWORD" };
+  }
 
-  const role = params.role as UserRole;
-  const accountStatus = role === "CLIENT" ? AccountStatus.ACTIVE : AccountStatus.PENDING;
+  const accountStatus = AccountStatus.ACTIVE;
   const username = await uniqueUsernameFromEmail(params.identity.email);
 
-  const user = await prisma.user.create({
-    data: {
-      email: params.identity.email,
-      name: params.identity.name.slice(0, 120),
-      username,
-      passwordHash: null,
-      role,
-      accountStatus,
-      avatarUrl: params.identity.picture,
-      termsAcceptedAt: new Date(),
-      lgpdAcceptedAt: new Date(),
-      externalAuthAccounts: {
-        create: {
-          provider: GOOGLE_PROVIDER,
-          providerAccountId: params.identity.sub,
-          email: params.identity.email,
+  const user = await prisma.$transaction(async (tx) => {
+    return tx.user.create({
+      data: {
+        email: params.identity.email,
+        name: params.identity.name.slice(0, 120),
+        username,
+        passwordHash: null,
+        role,
+        accountStatus,
+        avatarUrl: params.identity.picture,
+        termsAcceptedAt: new Date(),
+        lgpdAcceptedAt: new Date(),
+        externalAuthAccounts: {
+          create: {
+            provider: GOOGLE_PROVIDER,
+            providerAccountId: params.identity.sub,
+            email: params.identity.email,
+          },
         },
       },
-    },
+    });
   });
 
   await writeAuditLog({
@@ -316,22 +347,49 @@ export async function linkGoogleToUser(params: {
   userId: string;
   identity: GoogleIdentity;
 }): Promise<{ ok: true } | { ok: false; code: string }> {
-  const taken = await prisma.externalAuthAccount.findUnique({
-    where: {
-      provider_providerAccountId: { provider: GOOGLE_PROVIDER, providerAccountId: params.identity.sub },
-    },
-  });
-  if (taken && taken.userId !== params.userId) return { ok: false, code: "GENERIC" };
-  if (taken) return { ok: true };
+  const user = await prisma.user.findUnique({ where: { id: params.userId }, select: { id: true, role: true } });
+  if (!user) return { ok: false, code: "GENERIC" };
+  if (user.role !== GOOGLE_AUTH_ALLOWED_ROLE) {
+    return {
+      ok: false,
+      code:
+        user.role === "PARTNER"
+          ? "PARTNER_GOOGLE_FORBIDDEN"
+          : user.role === "ONG"
+            ? "ONG_GOOGLE_FORBIDDEN"
+            : "ADMIN_FORBIDDEN",
+    };
+  }
 
-  await prisma.externalAuthAccount.create({
-    data: {
-      userId: params.userId,
-      provider: GOOGLE_PROVIDER,
-      providerAccountId: params.identity.sub,
-      email: params.identity.email,
-    },
-  });
+  try {
+    await prisma.$transaction(async (tx) => {
+      const taken = await tx.externalAuthAccount.findUnique({
+        where: {
+          provider_providerAccountId: { provider: GOOGLE_PROVIDER, providerAccountId: params.identity.sub },
+        },
+      });
+      if (taken && taken.userId !== params.userId) {
+        throw new Error("GOOGLE_ACCOUNT_IN_USE");
+      }
+      if (taken) return;
+      await tx.externalAuthAccount.create({
+        data: {
+          userId: params.userId,
+          provider: GOOGLE_PROVIDER,
+          providerAccountId: params.identity.sub,
+          email: params.identity.email,
+        },
+      });
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message === "GOOGLE_ACCOUNT_IN_USE") {
+      return { ok: false, code: "GOOGLE_ACCOUNT_IN_USE" };
+    }
+    const prismaCode = error && typeof error === "object" && "code" in error ? String(error.code) : "";
+    if (prismaCode === "P2002") return { ok: false, code: "GOOGLE_ACCOUNT_IN_USE" };
+    throw error;
+  }
+
   await writeAuditLog({
     actorId: params.userId,
     action: "UPDATE",
@@ -369,17 +427,21 @@ export async function getAccessMethods(userId: string) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: {
+      role: true,
       passwordHash: true,
       email: true,
       externalAuthAccounts: { select: { provider: true, createdAt: true } },
     },
   });
   if (!user) return null;
+  const googleConnected = user.externalAuthAccounts.some((a) => a.provider === GOOGLE_PROVIDER);
   return {
     email: user.email,
+    role: user.role,
+    googleAllowed: user.role === GOOGLE_AUTH_ALLOWED_ROLE,
     passwordConfigured: Boolean(user.passwordHash),
-    googleConnected: user.externalAuthAccounts.some((a) => a.provider === GOOGLE_PROVIDER),
-    canUnlinkGoogle: Boolean(user.passwordHash) && user.externalAuthAccounts.some((a) => a.provider === GOOGLE_PROVIDER),
+    googleConnected,
+    canUnlinkGoogle: Boolean(user.passwordHash) && googleConnected,
   };
 }
 

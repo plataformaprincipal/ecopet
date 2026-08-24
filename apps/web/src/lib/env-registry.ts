@@ -69,7 +69,7 @@ export const ENV_REGISTRY: EnvVarDefinition[] = [
     tier: "recommended",
     scopes: ["web"],
     environments: ["Production", "Preview", "Development"],
-    purpose: "OAuth 2.0 / OIDC Google — único login social EccoPet (Authorization Code + PKCE)",
+    purpose: "OAuth 2.0 / OIDC Google — login social CLIENT ONLY (Tutor). Parceiro e ONG usam e-mail/senha.",
     usedIn: [
       "apps/web/src/lib/auth/google-oauth.ts",
       "apps/web/src/lib/auth/google-oauth-service.ts",

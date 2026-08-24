@@ -1,4 +1,5 @@
 import type { OngType } from "@/lib/ong/constants";
+import { normalizeCnpj } from "@/schemas/validation/documents-shared";
 
 export type OngSocialLinks = {
   instagram?: string;
@@ -136,7 +137,7 @@ export function formToOngRegisterPayload(
   return {
     ...base,
     cpf: form.cpf.replace(/\D/g, ""),
-    cnpj: form.cnpj.replace(/\D/g, ""),
+    cnpj: normalizeCnpj(form.cnpj),
     ongName: form.ongName.trim(),
     legalName: form.legalName.trim(),
     tradeName: form.tradeName.trim() || undefined,

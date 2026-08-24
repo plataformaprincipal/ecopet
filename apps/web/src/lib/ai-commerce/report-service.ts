@@ -13,7 +13,35 @@ function asList(value: unknown): string[] {
 }
 
 function sectionsFromOutput(capabilityId: string, output: Record<string, unknown>) {
-  if (capabilityId === "eccovet_vision") {
+  const impression = output.diagnosticImpression as Record<string, unknown> | undefined;
+  const evidence = Array.isArray(output.evidence) ? output.evidence : [];
+  const common = [
+    { heading: "Resumo", body: String(output.summary ?? output.clinicalOverview ?? "") },
+    ...(impression && impression.status !== "NOT_APPLICABLE"
+      ? [
+          {
+            heading: "Impressao Diagnostica Assistida por IA",
+            body: [
+              `Hipotese principal: ${String(impression.primaryHypothesis ?? "—")}`,
+              `Confianca: ${String(impression.confidence ?? "")}${impression.confidenceScore != null ? ` (${impression.confidenceScore} heuristicos)` : ""}`,
+              `Racional: ${String(impression.rationale ?? "")}`,
+            ],
+          },
+        ]
+      : []),
+    ...(evidence.length
+      ? [
+          {
+            heading: "Evidencias",
+            body: evidence.map((row) => {
+              const e = row as Record<string, unknown>;
+              return `${e.statement} [${e.source} / ${e.strength}]`;
+            }),
+          },
+        ]
+      : []),
+  ];
+  if (capabilityId.includes("vision") || capabilityId === "eccovet_vision") {
     return [
       { heading: "Qualidade da imagem", body: String(output.imageQuality ?? "") },
       { heading: "Regiao visivel", body: String(output.visibleRegion ?? "") },
@@ -21,10 +49,11 @@ function sectionsFromOutput(capabilityId: string, output: Record<string, unknown
       { heading: "Alteracoes aparentes", body: asList(output.apparentChanges) },
       { heading: "Sinais de atencao", body: asList(output.attentionSigns) },
       { heading: "Prioridade", body: String(output.urgencyLevel ?? "") },
-      { heading: "Proximos passos", body: asList(output.recommendedNextSteps) },
+      { heading: "Proximos passos", body: asList(output.recommendedNextSteps ?? output.nextSteps) },
+      ...common,
     ];
   }
-  if (capabilityId === "eccolab") {
+  if (capabilityId.includes("exams") || capabilityId === "eccolab") {
     const markers = Array.isArray(output.markers) ? output.markers : [];
     const table = markers.map((m) => {
       const row = m as Record<string, unknown>;
@@ -39,7 +68,7 @@ function sectionsFromOutput(capabilityId: string, output: Record<string, unknown
       { heading: "Pontos para o veterinario", body: asList(output.vetTalkingPoints) },
     ];
   }
-  if (capabilityId === "eccocheckup") {
+  if (capabilityId.includes("checkup") || capabilityId === "eccocheckup") {
     return [
       { heading: "Visao geral", body: String(output.overview ?? "") },
       { heading: "Rotina", body: String(output.routine ?? "") },
@@ -52,6 +81,7 @@ function sectionsFromOutput(capabilityId: string, output: Record<string, unknown
     ];
   }
   return [
+    ...common,
     { heading: "Resumo", body: String(output.summary ?? "") },
     { heading: "Queixa", body: String(output.complaint ?? "") },
     { heading: "Historico relevante", body: String(output.relevantHistory ?? "") },

@@ -31,6 +31,7 @@ import {
   messageForDuplicateCode,
   duplicateFieldFromPrismaTarget,
 } from "@/lib/registration/document-messages";
+import { isValidCnpj, cnpjIssueMessage, inspectCnpjInput } from "@/schemas/validation/documents-shared";
 import { normalizeBrazilPhoneInput } from "@/lib/validation/brazil-phone";
 import {
   ongRegisterSchema,
@@ -401,9 +402,15 @@ export async function POST(request: Request) {
           return apiFailure("CPF_DUPLICATE", messageForDuplicateCode("CPF_DUPLICATE"), 409);
         }
       } else {
+        const issue = inspectCnpjInput(partnerData.cnpj);
+        if (issue !== "ok" || !isValidCnpj(partnerData.cnpj)) {
+          const message = cnpjIssueMessage(issue === "ok" ? "check_digit" : issue);
+          return apiFailure("INVALID_CNPJ", message, 400, { fields: { cnpj: message } });
+        }
         const cnpjAvailable = await isCnpjGloballyAvailable(partnerData.cnpj);
         if (!cnpjAvailable) {
-          return apiFailure("CNPJ_DUPLICATE", messageForDuplicateCode("CNPJ_DUPLICATE"), 409);
+          const message = messageForDuplicateCode("CNPJ_DUPLICATE");
+          return apiFailure("CNPJ_DUPLICATE", message, 409, { fields: { cnpj: message } });
         }
       }
     }
@@ -418,9 +425,15 @@ export async function POST(request: Request) {
         return apiFailure("CPF_DUPLICATE", messageForDuplicateCode("CPF_DUPLICATE"), 409);
       }
       if (ongData.ongType === "INSTITUTION") {
+        const issue = inspectCnpjInput(ongData.cnpj);
+        if (issue !== "ok" || !isValidCnpj(ongData.cnpj)) {
+          const message = cnpjIssueMessage(issue === "ok" ? "check_digit" : issue);
+          return apiFailure("INVALID_CNPJ", message, 400, { fields: { cnpj: message } });
+        }
         const cnpjAvailable = await isCnpjGloballyAvailable(ongData.cnpj);
         if (!cnpjAvailable) {
-          return apiFailure("CNPJ_DUPLICATE", messageForDuplicateCode("CNPJ_DUPLICATE"), 409);
+          const message = messageForDuplicateCode("CNPJ_DUPLICATE");
+          return apiFailure("CNPJ_DUPLICATE", message, 409, { fields: { cnpj: message } });
         }
       }
     }
@@ -431,9 +444,15 @@ export async function POST(request: Request) {
       if (!pwdCheck.valid) {
         return apiFailure("VALIDATION", pwdCheck.error ?? "Senha inválida.", 400);
       }
+      const issue = inspectCnpjInput(legacy.cnpj);
+      if (issue !== "ok" || !isValidCnpj(legacy.cnpj)) {
+        const message = cnpjIssueMessage(issue === "ok" ? "check_digit" : issue);
+        return apiFailure("INVALID_CNPJ", message, 400, { fields: { cnpj: message } });
+      }
       const cnpjAvailable = await isCnpjGloballyAvailable(legacy.cnpj);
       if (!cnpjAvailable) {
-        return apiFailure("CNPJ_DUPLICATE", messageForDuplicateCode("CNPJ_DUPLICATE"), 409);
+        const message = messageForDuplicateCode("CNPJ_DUPLICATE");
+        return apiFailure("CNPJ_DUPLICATE", message, 409, { fields: { cnpj: message } });
       }
       const user = await createLegacyPartnerUser(legacy);
       const token = await createSessionToken(user.id, user.email, user.role, user.accountStatus ?? AccountStatus.ACTIVE);
@@ -466,9 +485,15 @@ export async function POST(request: Request) {
       if (!pwdCheck.valid) {
         return apiFailure("VALIDATION", pwdCheck.error ?? "Senha inválida.", 400);
       }
+      const issue = inspectCnpjInput(legacy.cnpj);
+      if (issue !== "ok" || !isValidCnpj(legacy.cnpj)) {
+        const message = cnpjIssueMessage(issue === "ok" ? "check_digit" : issue);
+        return apiFailure("INVALID_CNPJ", message, 400, { fields: { cnpj: message } });
+      }
       const cnpjAvailable = await isCnpjGloballyAvailable(legacy.cnpj);
       if (!cnpjAvailable) {
-        return apiFailure("CNPJ_DUPLICATE", messageForDuplicateCode("CNPJ_DUPLICATE"), 409);
+        const message = messageForDuplicateCode("CNPJ_DUPLICATE");
+        return apiFailure("CNPJ_DUPLICATE", message, 409, { fields: { cnpj: message } });
       }
       const user = await createLegacyOngUser(legacy);
       const token = await createSessionToken(user.id, user.email, user.role, user.accountStatus ?? AccountStatus.ACTIVE);

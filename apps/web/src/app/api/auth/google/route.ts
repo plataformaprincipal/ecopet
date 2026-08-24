@@ -20,6 +20,7 @@ export async function GET(req: Request) {
   const intent: GoogleOAuthIntent =
     intentRaw === "register" || intentRaw === "link" ? intentRaw : "login";
   const returnTo = safeInternalPath(url.searchParams.get("returnTo") ?? url.searchParams.get("callbackUrl"));
+  void url.searchParams.get("role");
 
   if (!isGoogleAuthConfigured()) {
     return NextResponse.redirect(new URL(`/login?google=oauth_not_configured`, url.origin));
@@ -34,6 +35,15 @@ export async function GET(req: Request) {
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.redirect(new URL(`/login?google=generic&callbackUrl=${encodeURIComponent(returnTo)}`, url.origin));
+    }
+    if (user.role !== "CLIENT") {
+      const code =
+        user.role === "PARTNER"
+          ? "partner_google_forbidden"
+          : user.role === "ONG"
+            ? "ong_google_forbidden"
+            : "admin_forbidden";
+      return NextResponse.redirect(new URL(`/login?google=${code}`, url.origin));
     }
   }
 

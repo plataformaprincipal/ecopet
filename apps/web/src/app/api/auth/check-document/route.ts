@@ -18,7 +18,11 @@ export async function GET(request: Request) {
 
     const digits = normalizeDocumentDigits(type, raw);
     if (!isValidDocumentFormat(type, digits)) {
-      return apiFailure("VALIDATION", type === "cpf" ? "Digite um CPF válido." : "Digite um CNPJ válido.", 400);
+      return apiFailure(
+        type === "cpf" ? "INVALID_CPF" : "INVALID_CNPJ",
+        type === "cpf" ? "Digite um CPF válido." : "Confira o CNPJ informado.",
+        400
+      );
     }
 
     const available = await isDocumentGloballyAvailable(type, digits);

@@ -18,6 +18,10 @@ const GOOGLE_ERROR_KEYS: Record<string, string> = {
   account_exists_password: "auth.google.errors.ACCOUNT_EXISTS_PASSWORD",
   account_suspended: "auth.google.errors.ACCOUNT_SUSPENDED",
   account_inactive: "auth.google.errors.ACCOUNT_INACTIVE",
+  partner_google_forbidden: "auth.google.errors.PARTNER_GOOGLE_FORBIDDEN",
+  ong_google_forbidden: "auth.google.errors.ONG_GOOGLE_FORBIDDEN",
+  admin_forbidden: "auth.google.errors.ADMIN_FORBIDDEN",
+  google_account_in_use: "auth.google.errors.GOOGLE_ACCOUNT_IN_USE",
   generic: "auth.google.errors.GENERIC",
 };
 
@@ -48,9 +52,14 @@ export function PremiumLoginExperience() {
         </div>
 
         {googleError ? (
-          <p className="mt-3 text-sm text-red-600" role="alert" aria-live="polite">
-            {googleError}
-          </p>
+          <div className="mt-3 space-y-1" role="alert" aria-live="polite">
+            <p className="text-sm text-red-600">{googleError}</p>
+            {(googleCode === "partner_google_forbidden" || googleCode === "ong_google_forbidden") && (
+              <p className="text-sm font-medium text-ecopet-dark dark:text-white">
+                {t("auth.google.emailLoginCta")}
+              </p>
+            )}
+          </div>
         ) : null}
 
         <div className="relative my-8">

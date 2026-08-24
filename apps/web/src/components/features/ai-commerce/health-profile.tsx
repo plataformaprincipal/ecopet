@@ -40,7 +40,19 @@ export function PetHealthProfilePanel({ petId }: { petId: string }) {
       });
   }, [petId]);
 
-  const tabs = ["Visão geral", "Timeline", "Peso", "Vacinas", "Medicamentos", "Exames", "IA", "Documentos"];
+  const tabs = [
+    "Visão Geral",
+    "Linha do Tempo",
+    "Exames",
+    "Vacinas",
+    "Medicações",
+    "Peso",
+    "Nutrição",
+    "Dental",
+    "Comportamento",
+    "Documentos",
+    "Análises IA",
+  ];
   const pet = data?.pet;
 
   return (
@@ -63,7 +75,7 @@ export function PetHealthProfilePanel({ petId }: { petId: string }) {
           </button>
         ))}
       </div>
-      {tab === "Visão geral" && data && (
+      {tab === "Visão Geral" && data && (
         <div className="mt-4 grid gap-3 sm:grid-cols-2 text-sm">
           <p>Peso: {data.cards.weight != null ? `${data.cards.weight} kg` : "—"}</p>
           <p>Vacinas: {data.cards.vaccines}</p>
@@ -73,7 +85,7 @@ export function PetHealthProfilePanel({ petId }: { petId: string }) {
           <p>Último Checkup: {data.cards.lastCheckup ? new Date(data.cards.lastCheckup).toLocaleDateString("pt-BR") : "—"}</p>
         </div>
       )}
-      {tab === "Timeline" && <PetAiTimeline petId={petId} />}
+      {tab === "Linha do Tempo" && <PetAiTimeline petId={petId} />}
       {tab === "Peso" && (
         <div className="mt-4">
           <Sparkline
@@ -96,7 +108,7 @@ export function PetHealthProfilePanel({ petId }: { petId: string }) {
           {!data?.vaccines.length && <li className="text-muted-foreground">Sem vacinas cadastradas.</li>}
         </ul>
       )}
-      {tab === "Medicamentos" && (
+      {tab === "Medicações" && (
         <ul className="mt-4 space-y-2 text-sm">
           {(data?.medications ?? []).map((m) => (
             <li key={m.name}>
@@ -116,7 +128,7 @@ export function PetHealthProfilePanel({ petId }: { petId: string }) {
           {!data?.exams.length && <li className="text-muted-foreground">Sem exames cadastrados.</li>}
         </ul>
       )}
-      {tab === "IA" && (
+      {tab === "Análises IA" && (
         <ul className="mt-4 space-y-2 text-sm">
           {(data?.ia ?? []).map((e) => (
             <li key={e.id}>
@@ -131,6 +143,15 @@ export function PetHealthProfilePanel({ petId }: { petId: string }) {
             </li>
           ))}
         </ul>
+      )}
+      {tab === "Nutrição" && (
+        <p className="mt-4 text-sm text-muted-foreground">Alimentação e restrições entram pelo EccoNutri AI e pelo cadastro do pet.</p>
+      )}
+      {tab === "Dental" && (
+        <p className="mt-4 text-sm text-muted-foreground">Análises orais confirmadas aparecem aqui após você adicioná-las ao perfil.</p>
+      )}
+      {tab === "Comportamento" && (
+        <p className="mt-4 text-sm text-muted-foreground">Registros ABC confirmados pelo tutor entram no histórico longitudinal.</p>
       )}
       {tab === "Documentos" && (
         <p className="mt-4 text-sm">

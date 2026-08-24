@@ -6,24 +6,18 @@ import {
   usernameSchema,
   phoneSchema,
   cpfSchema,
+  cnpjSchema,
 } from "@/schemas/auth";
 import { PASSWORD_MISMATCH_MESSAGE, validateStrongPassword } from "@/lib/password/validate-strong-password";
 import { validateActivityStartDate } from "@/lib/validation/activity-start-date";
-import { onlyDigits, validateCnpjChecksum } from "@/schemas/validation/documents-shared";
+import { CNPJ_CHECK_DIGIT_MESSAGE } from "@/schemas/validation/documents-shared";
 import { PARTNER_LEGAL_ACCEPTANCE_MESSAGE } from "@/lib/legal/legal-links";
 import { validateOperationSchedule } from "@/lib/partner/operation-rules";
 import { validateRequiredDocuments } from "@/lib/partner/document-validation";
 
 export const CPF_INVALID_MESSAGE = "Digite um CPF válido.";
-export const CNPJ_INVALID_MESSAGE = "Digite um CNPJ válido.";
-
-export const partnerCnpjSchema = z
-  .string()
-  .min(1, CNPJ_INVALID_MESSAGE)
-  .transform(onlyDigits)
-  .refine((v) => v.length === 14, CNPJ_INVALID_MESSAGE)
-  .refine((v) => !/^(\d)\1+$/.test(v), CNPJ_INVALID_MESSAGE)
-  .refine(validateCnpjChecksum, CNPJ_INVALID_MESSAGE);
+export const CNPJ_INVALID_MESSAGE = CNPJ_CHECK_DIGIT_MESSAGE;
+export const partnerCnpjSchema = cnpjSchema;
 
 export const partnerCpfSchema = cpfSchema;
 

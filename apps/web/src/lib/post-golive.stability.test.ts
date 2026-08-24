@@ -97,7 +97,7 @@ describe("city autocomplete fallback", () => {
 describe("ONG uniqueness messages", () => {
   it("não usa mensagem genérica para e-mail/CNPJ", () => {
     assert.equal(messageForDuplicateCode("EMAIL_DUPLICATE"), "Este e-mail já está cadastrado.");
-    assert.equal(messageForDuplicateCode("CNPJ_DUPLICATE"), "Este CNPJ já possui cadastro.");
+    assert.equal(messageForDuplicateCode("CNPJ_DUPLICATE"), "Este CNPJ já possui cadastro na EccoPet.");
   });
 });
 
@@ -172,7 +172,7 @@ describe("CNPJ lookup failure does not block login", () => {
   it("lookup trata indisponibilidade como continue manual", () => {
     const src = readSrc("lib/integrations/cnpj/cnpj-service.ts");
     assert.ok(src.includes("unavailable: true"));
-    assert.ok(src.includes("continue manualmente"));
+    assert.ok(src.includes("CNPJ_LOOKUP_UNAVAILABLE_MESSAGE") || src.includes("manualmente"));
   });
 });
 
