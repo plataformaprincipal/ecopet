@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { getProductDefBySku, getProductDefBySlug } from "@/lib/ai-commerce/catalog";
 import { getCapabilityRuntime } from "@/lib/ai-commerce/capability-runtime";
+import { getSpecialistProtocol, isInterviewReady, petNameFromContext } from "@/lib/ai-commerce/specialist-protocols";
 import { analyticsService } from "@/lib/analytics/service";
 import { AiEvents } from "@/lib/analytics/events";
 import { PetHealthProfilePanel } from "./health-profile";
@@ -65,63 +66,71 @@ function ageLabel(birthDate: string | null | undefined) {
 function ModuleBrief({ sku }: { sku: string }) {
   const runtime = getCapabilityRuntime(sku);
   const def = getProductDefBySku(sku);
+  const protocol = getSpecialistProtocol(sku);
   if (!runtime || !def) return null;
   return (
     <header className="rounded-[18px] border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] p-5">
-      <p className="text-xs font-medium uppercase tracking-wide text-ecopet-green">EccoPet AI · Grátis</p>
-      <h1 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--ep-fg)] sm:text-3xl">{runtime.headline}</h1>
-      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--ep-fg-muted)]">{runtime.description}</p>
-      <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
-        <div>
-          <p className="font-medium">O que fornecer</p>
-          <ul className="mt-1 list-disc pl-5 text-[var(--ep-fg-muted)]">
-            {runtime.youProvide.map((x) => (
-              <li key={x}>{x}</li>
-            ))}
-          </ul>
-        </div>
-        <div>
-          <p className="font-medium">O que você recebe</p>
-          <ul className="mt-1 list-disc pl-5 text-[var(--ep-fg-muted)]">
-            {runtime.youReceive.map((x) => (
-              <li key={x}>{x}</li>
-            ))}
-          </ul>
-        </div>
-        <div>
-          <p className="font-medium">Arquivos e dados do pet</p>
-          <p className="mt-1 text-[var(--ep-fg-muted)]">
-            {runtime.fileTypes.length ? runtime.fileTypes.join(", ") : "Sem upload obrigatório"}
-          </p>
-          <p className="mt-1 text-[var(--ep-fg-muted)]">{runtime.petDataUsed.join(" · ")}</p>
-        </div>
-      </div>
+      <p className="text-xs font-medium uppercase tracking-wide text-ecopet-green">Dr. Ecco · Veterinário Virtual EccoPet</p>
+      <h1 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--ep-fg)] sm:text-3xl">
+        {protocol?.specialistTitle ?? runtime.specialistTitle ?? def.name}
+      </h1>
+      <p className="mt-1 text-sm text-[var(--ep-fg-muted)]">Análise assistida por inteligência artificial</p>
+      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--ep-fg)]">
+        {protocol?.commercialValue ?? runtime.description}
+      </p>
     </header>
   );
 }
 
-function PetPanel({ pet }: { pet: Pet }) {
+function listNames(value: unknown): string {
+  if (!Array.isArray(value) || !value.length) return "Não registrado";
+  return value
+    .map((item) => {
+      if (item && typeof item === "object" && "name" in item) return String((item as { name?: unknown }).name ?? "");
+      return String(item);
+    })
+    .filter(Boolean)
+    .slice(0, 3)
+    .join(", ");
+}
+
+function PetPanel({ pet, petContext }: { pet: Pet; petContext?: Record<string, unknown> | null }) {
+  const health = (petContext?.health ?? {}) as Record<string, unknown>;
   return (
     <aside className="rounded-[18px] border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-ecopet-green">Contexto do pet</p>
+      <p className="text-xs font-medium uppercase tracking-wide text-ecopet-green">Pet</p>
       <div className="mt-3 flex items-center gap-3">
         {pet.photo ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={pet.photo} alt="" className="h-14 w-14 rounded-2xl object-cover" />
+          <img src={pet.photo} alt="" className="h-12 w-12 rounded-2xl object-cover" />
         ) : (
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-ecopet-green/10 text-lg font-semibold">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-ecopet-green/10 text-lg font-semibold">
             {pet.name.slice(0, 1)}
           </div>
         )}
         <div>
           <p className="font-semibold">{pet.name}</p>
-          <p className="text-sm text-[var(--ep-fg-muted)]">
-            {[pet.breed || pet.species, ageLabel(pet.birthDate), pet.weight ? `${pet.weight} kg` : null]
-              .filter(Boolean)
-              .join(" · ")}
-          </p>
+          <p className="text-sm text-[var(--ep-fg-muted)]">{pet.breed || pet.species}</p>
         </div>
       </div>
+      <dl className="mt-4 space-y-2 text-sm">
+        <div className="flex justify-between gap-3">
+          <dt className="text-[var(--ep-fg-muted)]">Peso</dt>
+          <dd>{pet.weight ? `${pet.weight} kg` : "—"}</dd>
+        </div>
+        <div className="flex justify-between gap-3">
+          <dt className="text-[var(--ep-fg-muted)]">Idade</dt>
+          <dd>{ageLabel(pet.birthDate) ?? "—"}</dd>
+        </div>
+        <div>
+          <dt className="text-[var(--ep-fg-muted)]">Alergias</dt>
+          <dd className="mt-0.5">{listNames(health.allergies)}</dd>
+        </div>
+        <div>
+          <dt className="text-[var(--ep-fg-muted)]">Medicações</dt>
+          <dd className="mt-0.5">{listNames(petContext?.medications)}</dd>
+        </div>
+      </dl>
     </aside>
   );
 }
@@ -233,9 +242,11 @@ export function AiWorkspace({ executionId }: { executionId: string }) {
 
   const def = getProductDefBySku(ex.sku);
   const runtime = def ? getCapabilityRuntime(def.sku) : undefined;
+  const protocol = getSpecialistProtocol(ex.sku);
   const kind = def?.workspaceKind ?? "assessment";
   const out = ex.structuredOutput;
   const petContext = (ex.extras?.petAIContext ?? null) as Record<string, unknown> | null;
+  const canAnalyze = protocol ? isInterviewReady(protocol, input, petContext) : Object.keys(input).length > 0;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
@@ -249,7 +260,7 @@ export function AiWorkspace({ executionId }: { executionId: string }) {
         <ModuleBrief sku={ex.sku} />
       </div>
       <div className="mt-6 grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <PetPanel pet={ex.pet} />
+        <PetPanel pet={ex.pet} petContext={petContext} />
         <div>
           {ex.status !== "COMPLETED" && runtime && (
             <>
@@ -263,8 +274,13 @@ export function AiWorkspace({ executionId }: { executionId: string }) {
                 onStepIndex={setStepIndex}
               />
               <div className="sticky bottom-4 mt-6">
-                <Button className="w-full sm:w-auto" onClick={() => void analyze()} loading={busy} disabled={busy}>
-                  Executar análise
+                <Button
+                  className="w-full sm:w-auto"
+                  onClick={() => void analyze()}
+                  loading={busy}
+                  disabled={busy || !canAnalyze}
+                >
+                  Gerar análise de {petNameFromContext(petContext, ex.pet.name)}
                 </Button>
               </div>
             </>
@@ -293,6 +309,7 @@ export function AiWorkspace({ executionId }: { executionId: string }) {
             capabilityId={ex.capabilityId}
             petId={ex.pet.id}
             runtime={runtime}
+            petName={ex.pet.name}
           />
         </div>
       )}
@@ -438,7 +455,7 @@ export function AiWorkbench({ slug }: { slug: string }) {
             </div>
           )}
           <Button className="mt-6" loading={busy} disabled={busy} onClick={() => void startTool()}>
-            Usar agora
+            {runtime.ctaLabel ?? def.ctaLabel ?? "Conversar com Dr. Ecco"}
           </Button>
           {msg ? (
             <p className="mt-3 text-sm text-red-600" role="alert">

@@ -300,12 +300,18 @@ export function NextBestActionCard({ output }: { output: Record<string, unknown>
 export function SpecialistFollowUpChat({
   executionId,
   runtime,
+  petName = "seu pet",
 }: {
   executionId: string;
   capabilityId: string;
   petId: string;
   runtime?: CapabilityRuntime;
+  petName?: string;
 }) {
+  const followPrompt = (runtime?.followUpPrompt ?? "Quer conversar comigo sobre a análise de {petName}?").replaceAll(
+    "{petName}",
+    petName
+  );
   const [messages, setMessages] = useState<Array<{ role: string; content: string }>>([]);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
@@ -343,7 +349,7 @@ export function SpecialistFollowUpChat({
 
   return (
     <section className="rounded-[18px] border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] p-5">
-      <h3 className="font-semibold">{runtime?.followUpPrompt ?? "Converse com o especialista"}</h3>
+      <h3 className="font-semibold">{followPrompt}</h3>
       <p className="mt-1 text-sm text-[var(--ep-fg-muted)]">O chat usa esta análise. Ele não começa do zero.</p>
       <div className="mt-3 flex flex-wrap gap-2">
         {(runtime?.followUpSuggestions ?? []).map((s) => (
@@ -375,7 +381,7 @@ export function SpecialistFollowUpChat({
           className="flex-1 rounded-full border border-[var(--ep-border)] bg-[var(--ep-bg)] px-4 py-2 text-sm"
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder={runtime?.followUpPrompt ?? "Pergunte sobre esta análise"}
+          placeholder={followPrompt}
           aria-label="Pergunta ao especialista"
         />
         <Button type="submit" loading={busy} disabled={busy}>

@@ -70,28 +70,105 @@ function sectionsFromOutput(capabilityId: string, output: Record<string, unknown
   }
   if (capabilityId.includes("checkup") || capabilityId === "eccocheckup") {
     return [
-      { heading: "Visao geral", body: String(output.overview ?? "") },
-      { heading: "Rotina", body: String(output.routine ?? "") },
-      { heading: "Alimentacao", body: String(output.feeding ?? "") },
-      { heading: "Atividade", body: String(output.activity ?? "") },
-      { heading: "Prevencao", body: String(output.prevention ?? "") },
-      { heading: "Pontos para acompanhar", body: asList(output.followUpPoints) },
-      { heading: "Prioridades", body: asList(output.priorities) },
-      { heading: "Proximos passos", body: asList(output.nextSteps) },
+      { heading: "Check-up", body: String(output.overview ?? "") },
+      { heading: "Status por sistema", body: asList(output.checklist) },
+      { heading: "Documentado", body: asList(output.documented) },
+      { heading: "Lacunas", body: asList(output.gaps) },
+      { heading: "Top 3 prioridades", body: asList(output.priorities) },
+      { heading: "Acoes recomendadas", body: asList(output.nextSteps) },
+    ];
+  }
+  if (capabilityId.includes("triage")) {
+    return [
+      { heading: "Classificacao", body: String(output.triageClass ?? output.urgencyLevel ?? "") },
+      { heading: "Queixa", body: String(output.complaint ?? "") },
+      { heading: "Por que / sinal", body: asList(output.attentionSigns) },
+      { heading: "O que fazer", body: asList(output.nowDo) },
+      { heading: "O que nao fazer", body: asList(output.avoid) },
+      { heading: "Levar / observar", body: asList(output.takeWithYou) },
+      ...common,
+    ];
+  }
+  if (capabilityId.includes("nutri")) {
+    const energy = (output.energyMath as Record<string, unknown> | undefined) ?? {};
+    return [
+      { heading: "Avaliacao nutricional", body: String(output.overview ?? output.summary ?? "") },
+      {
+        heading: "Calculo energetico (sistema)",
+        body: `RER ${energy.rerKcal ?? "—"} kcal | fator ${energy.merFactor ?? "—"} | MER ${energy.merKcal ?? "—"} kcal`,
+      },
+      { heading: "Rotina", body: asList(output.suggestedOrganization) },
+      { heading: "Transicao", body: asList(output.transitionPlan) },
+      { heading: "Monitoramento", body: asList(output.followUpPoints) },
+    ];
+  }
+  if (capabilityId.includes("peso")) {
+    const math = (output.weightMath as Record<string, unknown> | undefined) ?? {};
+    return [
+      { heading: "Peso atual", body: String(math.currentKg ?? "") },
+      { heading: "Variacao", body: `${math.deltaKg ?? "—"} kg (${math.deltaPct ?? "—"}%)` },
+      { heading: "Tendencia", body: String(math.trend ?? output.trendNarrative ?? "") },
+      { heading: "Monitoramento", body: asList(output.monitoringPlan) },
+    ];
+  }
+  if (capabilityId.includes("behavior")) {
+    return [
+      { heading: "Padrao ABC", body: String(output.abcNotes ?? "") },
+      { heading: "Gatilhos", body: asList(output.triggers) },
+      { heading: "Plano de manejo", body: asList(output.managementPlan) },
+      { heading: "Enriquecimento", body: asList(output.enrichmentPlan) },
+      ...common,
+    ];
+  }
+  if (capabilityId.includes("vacina")) {
+    return [
+      { heading: "Carteira identificada", body: asList(output.observations) },
+      { heading: "Proximas acoes", body: asList(output.nextActions) },
+      { heading: "Campos incompletos", body: asList(output.incompleteFields) },
+      ...common,
+    ];
+  }
+  if (capabilityId.includes("eccomed") || capabilityId.includes("med")) {
+    return [
+      { heading: "Medicamentos documentados", body: asList(output.observations) },
+      { heading: "Alertas de informacao incompleta", body: asList(output.incompleteAlerts) },
+      { heading: "Administracao", body: asList(output.administrationPlan) },
+      ...common,
+    ];
+  }
+  if (capabilityId.includes("dental")) {
+    return [
+      { heading: "Mapa oral visual", body: String(output.oralSummary ?? "") },
+      { heading: "Observacoes visiveis", body: asList(output.visibleObservations) },
+      { heading: "Cuidados domiciliares", body: asList(output.preventiveCare) },
+      { heading: "Quando avaliar presencialmente", body: asList(output.professionalItems) },
+      ...common,
+    ];
+  }
+  if (capabilityId.includes("report") || capabilityId.includes("profile")) {
+    return [
+      { heading: "Identificacao / resumo", body: String(output.healthBrief ?? output.summary ?? "") },
+      { heading: "Linha do tempo", body: asList(output.timeline ?? output.trends) },
+      { heading: "Dado informado pelo tutor", body: asList(output.reportedInformation) },
+      { heading: "Dado documental", body: asList(output.documentedFindings ?? output.documented) },
+      { heading: "Analise IA", body: asList(output.sourcesUsed) },
+      { heading: "Questoes a esclarecer", body: asList(output.pendingItems ?? output.gaps) },
+      ...common,
     ];
   }
   return [
     ...common,
-    { heading: "Resumo", body: String(output.summary ?? "") },
+    { heading: "Resumo do caso", body: String(output.clinicalOverview ?? output.summary ?? "") },
     { heading: "Queixa", body: String(output.complaint ?? "") },
     { heading: "Historico relevante", body: String(output.relevantHistory ?? "") },
-    { heading: "Observacoes", body: asList(output.observations) },
+    { heading: "Achados", body: asList(output.observations) },
     { heading: "Sinais de atencao", body: asList(output.attentionSigns) },
     { heading: "Prioridade", body: String(output.urgencyLevel ?? "") },
-    { heading: "Possibilidades a considerar", body: asList(output.possibleConsiderations) },
+    { heading: "Diferenciais", body: asList(output.possibleConsiderations) },
     { heading: "O que fazer agora", body: asList(output.recommendedNextSteps) },
-    { heading: "O que observar", body: asList(output.watchFor) },
-    { heading: "Perguntas para seu veterinario", body: asList(output.vetQuestions) },
+    { heading: "O que monitorar", body: asList(output.watchFor) },
+    { heading: "Perguntas para a consulta", body: asList(output.vetQuestions) },
+    { heading: "Fontes e limitacoes", body: asList(output.limitations) },
   ];
 }
 

@@ -150,16 +150,27 @@ export function workbookFromOutput(capabilityId: string, output: Record<string, 
   }
   if (capabilityId.includes("nutri")) {
     const diary = Array.isArray(output.foodDiary) ? output.foodDiary : [];
+    const energy = (output.energyMath as Record<string, unknown> | undefined) ?? {};
     return [
       {
-        name: "Plano",
+        name: "Refeições",
         headers: ["Item", "Detalhe"],
         rows: (Array.isArray(output.suggestedOrganization) ? output.suggestedOrganization : []).map((x) => ["Rotina", String(x)]),
       },
       {
-        name: "Diário",
+        name: "Quantidades",
+        headers: ["Gramas/dia", "kcal/100g"],
+        rows: [[String(energy.gramsPerDay ?? ""), String(energy.kcalPer100g ?? "")]],
+      },
+      {
+        name: "Calorias",
+        headers: ["RER", "Fator", "MER"],
+        rows: [[String(energy.rerKcal ?? ""), String(energy.merFactor ?? ""), String(energy.merKcal ?? "")]],
+      },
+      {
+        name: "Peso semanal",
         headers: ["Registro"],
-        rows: (diary.length ? diary : ["Manhã", "Tarde", "Noite"]).map((x) => [String(x)]),
+        rows: (diary.length ? diary : ["Semana 1", "Semana 2", "Semana 3", "Semana 4"]).map((x) => [String(x)]),
       },
     ];
   }
@@ -181,7 +192,7 @@ export function workbookFromOutput(capabilityId: string, output: Record<string, 
   if (capabilityId.includes("behavior")) {
     return [
       {
-        name: "Registros ABC",
+        name: "Diário ABC",
         headers: ["Notas ABC"],
         rows: [[String(output.abcNotes ?? "")]],
       },

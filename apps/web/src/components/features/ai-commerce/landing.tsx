@@ -33,6 +33,7 @@ type CatalogProduct = {
   tag: string;
   category: string;
   shortDescription: string;
+  ctaLabel?: string;
   href: string;
   free?: boolean;
   requiresPayment?: boolean;
@@ -166,7 +167,7 @@ export function EccoPetAiLanding() {
                         href={p.href}
                         onClick={() => analyticsService.track(AiEvents.MODULE_OPEN, { screen: "eccopet_hub", label: p.sku })}
                       >
-                        {t("ecopetAi.hub.useNow")}
+                        {p.ctaLabel ?? t("ecopetAi.hub.useNow")}
                       </Link>
                     </Button>
                   </article>

@@ -16,6 +16,39 @@ import { getAuthorizedPetContext } from "./pet-context";
 import { detectRedFlags } from "./red-flags";
 import { applySafetyLayer, postprocessSpecialistOutput } from "./postprocess";
 import { AI_COMMERCE_LIMITS } from "./models";
+import { computeEnergyMath, computeWeightMath } from "./weight-math";
+
+function deterministicMathForCapability(
+  sku: string,
+  capabilityId: string,
+  input: Record<string, unknown>,
+  context: Awaited<ReturnType<typeof getAuthorizedPetContext>>
+) {
+  const history = (context.weightHistory as Array<{ weight: number; recordedAt: string }> | undefined) ?? [];
+  const identity = (context.petAIContext as { identity?: { neutered?: boolean }; anthropometrics?: { weight?: number } } | null)
+    ?.identity;
+  const knownWeight = Number(input.weight) || Number(context.petAIContext && (context.petAIContext as { anthropometrics?: { weight?: number } }).anthropometrics?.weight);
+  const extra: Record<string, unknown> = {};
+  if (capabilityId.includes("peso") || sku === "AI_ECCOPESO") {
+    extra.weightMath = computeWeightMath(
+      history.map((w) => ({ kg: w.weight, date: w.recordedAt })),
+      Number.isFinite(knownWeight) && knownWeight > 0 ? knownWeight : null
+    );
+  }
+  if (capabilityId.includes("nutri") || sku === "AI_ECCONUTRI") {
+    if (Number.isFinite(knownWeight) && knownWeight > 0) {
+      const kcalRaw = Number(String(input.kcalLabel ?? input.kcalPer100g ?? "").replace(",", "."));
+      extra.energyMath = computeEnergyMath({
+        weightKg: knownWeight,
+        goal: typeof input.goal === "string" ? input.goal : null,
+        activity: typeof input.activity === "string" ? input.activity : null,
+        neutered: identity?.neutered ?? null,
+        kcalPer100g: Number.isFinite(kcalRaw) && kcalRaw > 0 ? kcalRaw : null,
+      });
+    }
+  }
+  return extra;
+}
 
 export async function startOrGetExecution(params: { userId: string; entitlementId: string }) {
   return prisma.$transaction(async (tx) => {
@@ -107,6 +140,7 @@ export async function runExecution(params: {
       userPayload: {
         ...input,
         redFlagsDetected: preFlags,
+        ...deterministicMathForCapability(execution.entitlement.sku, execution.capabilityId, input, context),
       },
       images,
       files,

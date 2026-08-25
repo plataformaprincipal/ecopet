@@ -48,10 +48,12 @@ describe("13/13 capability runtime", () => {
     }
   });
 
-  it("cada card CTA aponta para o workbench /eccopet/{slug}", () => {
+  it("cada card CTA aponta para o workbench /eccopet/{slug} com CTA próprio", () => {
     const landing = readSrc("components/features/ai-commerce/landing.tsx");
-    assert.match(landing, /ecopetAi\.hub\.useNow/);
+    assert.match(landing, /p\.ctaLabel/);
     assert.match(landing, /href=\{p\.href\}/);
+    const ctas = new Set(AI_COMMERCE_PRODUCTS.map((p) => p.ctaLabel));
+    assert.equal(ctas.size, 13);
     for (const product of AI_COMMERCE_PRODUCTS) {
       assert.equal(product.href, `/eccopet/${product.slug}`);
       assert.match(product.workspaceHref("abc"), /\/eccopet\/.+\/session\/abc/);
@@ -61,6 +63,8 @@ describe("13/13 capability runtime", () => {
       assert.ok(runtime!.headline.length > 8, product.sku);
       assert.ok(runtime!.youProvide.length > 0, product.sku);
       assert.ok(runtime!.youReceive.length > 0, product.sku);
+      assert.ok(runtime!.specialistTitle?.startsWith("Dr. Ecco"), product.sku);
+      assert.ok(product.ctaLabel.length > 4, product.sku);
     }
   });
 

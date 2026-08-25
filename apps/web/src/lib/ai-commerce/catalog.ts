@@ -1,4 +1,5 @@
 import { AI_COMMERCE_SKUS, canonicalAiCommerceSku, type AiCommerceSku } from "./flags";
+import { getSpecialistProtocol } from "./specialist-protocols";
 
 export type AiBillingType = "ONE_TIME" | "SUBSCRIPTION" | "ACTIVATION";
 export type AiStoreGroup = "avaliacao" | "analise" | "acompanhamento" | "documentos";
@@ -28,6 +29,7 @@ export type AiCommerceProductDef = {
   group: AiStoreGroup;
   filters: string[];
   shortDescription: string;
+  ctaLabel: string;
   longDescription: string;
   capabilityId: string;
   promptVersion: string;
@@ -87,12 +89,21 @@ const SHARED_FAQS: Array<{ q: string; a: string }> = [
 
 const HOW = ["Escolha seu pet", "Envie as informações", "A EccoPet AI processa", "Receba resultado, relatório e histórico"];
 
-function p(partial: Omit<AiCommerceProductDef, "href" | "workspaceHref" | "faqs"> & { extraFaqs?: Array<{ q: string; a: string }> }): AiCommerceProductDef {
+function p(
+  partial: Omit<AiCommerceProductDef, "href" | "workspaceHref" | "faqs" | "ctaLabel"> & {
+    extraFaqs?: Array<{ q: string; a: string }>;
+    ctaLabel?: string;
+  }
+): AiCommerceProductDef {
   const slug = partial.slug === "lab" ? "exames" : partial.slug;
   const { extraFaqs, ...rest } = partial;
+  const protocol = getSpecialistProtocol(rest.sku);
   return {
     ...rest,
     slug,
+    ctaLabel: rest.ctaLabel ?? protocol?.ctaLabel ?? "Conversar com Dr. Ecco",
+    shortDescription: rest.shortDescription,
+    reportTitle: protocol?.artifactConfig.reportTitle ?? rest.reportTitle,
     href: `/eccopet/${slug}`,
     workspaceHref: (id) => `/eccopet/${slug}/session/${id}`,
     faqs: [...SHARED_FAQS, ...(extraFaqs ?? [])],
@@ -108,7 +119,7 @@ export const AI_COMMERCE_PRODUCTS: AiCommerceProductDef[] = [
     category: "Avaliação",
     group: "avaliacao",
     filters: ["Todos", "Avaliação"],
-    shortDescription: "Avaliação estruturada de um caso, com sinais de atenção, prioridade e próximos passos.",
+    shortDescription: "Conte os sintomas e faça uma avaliação guiada.",
     longDescription:
       "Assistente especializado para organizar queixa, histórico informado e sinais relatados. Não é chat genérico e não substitui consulta veterinária.",
     capabilityId: "eccovet.assessment",
@@ -144,7 +155,7 @@ export const AI_COMMERCE_PRODUCTS: AiCommerceProductDef[] = [
     category: "Avaliação",
     group: "avaliacao",
     filters: ["Todos", "Avaliação"],
-    shortDescription: "Classifica a prioridade do atendimento com base nos sinais relatados.",
+    shortDescription: "Descubra o nível de urgência.",
     longDescription:
       "Triagem remota informativa. Não minimiza sinais potencialmente graves e orienta quando procurar atendimento.",
     capabilityId: "eccovet.triage",
@@ -176,7 +187,7 @@ export const AI_COMMERCE_PRODUCTS: AiCommerceProductDef[] = [
     category: "Documentos e histórico",
     group: "documentos",
     filters: ["Todos", "Documentos"],
-    shortDescription: "Transforma histórico, exames e arquivos do pet em um documento técnico organizado.",
+    shortDescription: "Prepare o histórico para a consulta.",
     longDescription:
       "Organizador de informações para consulta, evolução ou prontuário. Pode gerar minuta técnica — nunca com assinatura falsa de veterinário.",
     capabilityId: "eccovet.report",
@@ -209,7 +220,7 @@ export const AI_COMMERCE_PRODUCTS: AiCommerceProductDef[] = [
     category: "Análise",
     group: "analise",
     filters: ["Todos", "Exames"],
-    shortDescription: "Extrai marcadores de exames e organiza leitura comparável ao longo do tempo.",
+    shortDescription: "Entenda seus exames.",
     longDescription:
       "Aceita PDF e imagens. Não inventa unidades. Quando o parsing for incerto, pede confirmação antes da interpretação.",
     capabilityId: "eccovet.exams",
@@ -245,7 +256,7 @@ export const AI_COMMERCE_PRODUCTS: AiCommerceProductDef[] = [
     category: "Análise",
     group: "analise",
     filters: ["Todos", "Imagem"],
-    shortDescription: "Envie fotos e receba avaliação estruturada de alterações aparentes.",
+    shortDescription: "Analise uma foto.",
     longDescription:
       "Descreve somente o visível. Não altera evidência. Imagens geradas, se houver, são ilustrações educativas rotuladas.",
     capabilityId: "eccovet.vision",
@@ -277,7 +288,7 @@ export const AI_COMMERCE_PRODUCTS: AiCommerceProductDef[] = [
     category: "Acompanhamento",
     group: "acompanhamento",
     filters: ["Todos", "Nutrição"],
-    shortDescription: "Avaliação nutricional orientativa personalizada com rotina e metas.",
+    shortDescription: "Revise a alimentação.",
     longDescription:
       "IA orientativa. Não é consulta humana de nutrição clínica e não prescreve dieta terapêutica.",
     capabilityId: "ecconutri.assessment",
@@ -309,7 +320,7 @@ export const AI_COMMERCE_PRODUCTS: AiCommerceProductDef[] = [
     category: "Acompanhamento",
     group: "acompanhamento",
     filters: ["Todos", "Peso"],
-    shortDescription: "Histórico de peso, tendência, meta e relatório de evolução.",
+    shortDescription: "Acompanhe peso e condição corporal.",
     longDescription: "Acompanhamento longitudinal. Foto opcional para condição corporal orientativa, sem precisão clínica afirmada.",
     capabilityId: "eccopeso.assessment",
     promptVersion: "eccopeso-v1",
@@ -346,7 +357,7 @@ export const AI_COMMERCE_PRODUCTS: AiCommerceProductDef[] = [
     category: "Análise",
     group: "analise",
     filters: ["Todos", "Imagem"],
-    shortDescription: "Análise visual preliminar da boca e dos dentes a partir de fotos.",
+    shortDescription: "Avalie a saúde oral.",
     longDescription: "Não é odontograma clínico oficial. Não incentiva manipulação perigosa da boca do animal.",
     capabilityId: "eccodental.vision",
     promptVersion: "eccodental-vision-v1",
@@ -377,7 +388,7 @@ export const AI_COMMERCE_PRODUCTS: AiCommerceProductDef[] = [
     category: "Acompanhamento",
     group: "acompanhamento",
     filters: ["Todos", "Comportamento"],
-    shortDescription: "Avaliação comportamental estruturada com plano semanal orientativo.",
+    shortDescription: "Entenda o comportamento.",
     longDescription: "IA comportamental orientativa. Não confundir com consulta clínica humana de comportamento.",
     capabilityId: "eccobehavior.assessment",
     promptVersion: "eccobehavior-v1",
@@ -408,7 +419,7 @@ export const AI_COMMERCE_PRODUCTS: AiCommerceProductDef[] = [
     category: "Acompanhamento",
     group: "acompanhamento",
     filters: ["Todos", "Vacinas"],
-    shortDescription: "Carteira, calendário, comprovantes e alertas de doses.",
+    shortDescription: "Organize a carteira de vacinação.",
     longDescription: "Organiza o que foi informado. Nunca inventa que uma vacina foi administrada.",
     capabilityId: "eccovacina.plan",
     promptVersion: "eccovacina-v1",
@@ -440,7 +451,7 @@ export const AI_COMMERCE_PRODUCTS: AiCommerceProductDef[] = [
     category: "Acompanhamento",
     group: "acompanhamento",
     filters: ["Todos", "Medicamentos"],
-    shortDescription: "Organiza tratamentos existentes, horários e adesão — sem prescrever.",
+    shortDescription: "Revise medicamentos com segurança.",
     longDescription: "Não aumenta, diminui, suspende nem substitui medicamento. Apenas organiza o que já foi prescrito.",
     capabilityId: "eccomed.review",
     promptVersion: "eccomed-v1",
@@ -472,7 +483,7 @@ export const AI_COMMERCE_PRODUCTS: AiCommerceProductDef[] = [
     category: "Avaliação",
     group: "avaliacao",
     filters: ["Todos", "Avaliação"],
-    shortDescription: "Questionário inteligente da rotina, prevenção e sinais do pet.",
+    shortDescription: "Faça uma revisão preventiva completa.",
     longDescription:
       "Fluxo progressivo. O Índice de Acompanhamento EccoPet é interno e não é índice clínico validado.",
     capabilityId: "eccocheckup.assessment",
@@ -504,7 +515,7 @@ export const AI_COMMERCE_PRODUCTS: AiCommerceProductDef[] = [
     category: "Documentos e histórico",
     group: "documentos",
     filters: ["Todos", "Documentos"],
-    shortDescription: "Ativação do prontuário inteligente do pet — peso, vacinas, exames e avaliações em um só lugar.",
+    shortDescription: "Tenha toda a saúde do pet em um único histórico.",
     longDescription:
       "Organização inicial do dossiê. Depois de ativado, o perfil persiste e novas compras EccoPet AI alimentam a timeline.",
     capabilityId: "pethealth.profile",

@@ -5,6 +5,7 @@ import { getAuthorizedPetContext } from "./pet-context";
 import { runFollowUpMessage } from "./openai-gateway";
 import { getProductDefBySku } from "./catalog";
 import { getCapabilityRuntime } from "./capability-runtime";
+import { getSpecialistProtocol } from "./specialist-protocols";
 import { AiCommerceError } from "./errors";
 
 function compactJson(value: unknown, max = 8000): string {
@@ -78,9 +79,13 @@ export async function sendFollowUp(params: {
     data: { conversationId, role: "user", content: text },
   });
 
+  const protocol = getSpecialistProtocol(execution.entitlement.sku);
   const systemExtra = `
 capabilityId: ${execution.capabilityId}
 executionId: ${execution.id}
+specialist: ${protocol?.specialistTitle ?? runtime?.specialistTitle ?? "Dr. Ecco"}
+Você está conversando SOBRE ESTA execução. Use input, output, evidências e documentos desta análise.
+Não recomece outra especialidade.
 petContext: ${compactJson(petContext.petAIContext, 2500)}
 originalInput: ${compactJson(execution.inputSnapshot, 2500)}
 structuredResult: ${compactJson(execution.structuredOutput, 5000)}

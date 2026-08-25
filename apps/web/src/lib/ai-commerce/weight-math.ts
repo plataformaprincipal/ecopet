@@ -54,3 +54,83 @@ export function computeWeightMath(points: WeightPoint[], currentOverride?: numbe
     source: "SYSTEM_CALCULATED",
   };
 }
+
+export type MerGoal = "maintenance" | "weight_loss" | "weight_gain" | "growth";
+export type MerActivity = "low" | "moderate" | "high";
+
+/** Fatores MER configurados. O LLM não inventa fator. */
+export const MER_FACTORS = {
+  intactAdult: 1.8,
+  neuteredAdult: 1.6,
+  lowActivity: 1.2,
+  highActivity: 2.0,
+  weightLoss: 1.0,
+  weightGain: 1.4,
+  growth: 2.5,
+} as const;
+
+export function computeRerKcal(weightKg: number): number {
+  if (!Number.isFinite(weightKg) || weightKg <= 0) return 0;
+  return Math.round(70 * Math.pow(weightKg, 0.75));
+}
+
+export function merFactorFor(params: {
+  goal?: string | null;
+  neutered?: boolean | null;
+  activity?: string | null;
+}): number {
+  const goal = String(params.goal ?? "").toLowerCase();
+  const activity = String(params.activity ?? "").toLowerCase();
+  if (goal.includes("perder") || goal.includes("loss") || goal.includes("reduz")) return MER_FACTORS.weightLoss;
+  if (goal.includes("ganhar") || goal.includes("gain") || goal.includes("aument")) return MER_FACTORS.weightGain;
+  if (goal.includes("filhote") || goal.includes("puppy") || goal.includes("kitten") || goal.includes("growth")) {
+    return MER_FACTORS.growth;
+  }
+  if (activity.includes("alta") || activity.includes("high")) return MER_FACTORS.highActivity;
+  if (activity.includes("baixa") || activity.includes("low")) return MER_FACTORS.lowActivity;
+  if (params.neutered === true) return MER_FACTORS.neuteredAdult;
+  if (params.neutered === false) return MER_FACTORS.intactAdult;
+  return MER_FACTORS.neuteredAdult;
+}
+
+export function computeMerKcal(weightKg: number, factor: number): number {
+  return Math.round(computeRerKcal(weightKg) * factor);
+}
+
+export function gramsPerDayFromKcal(merKcal: number, kcalPer100g: number): number | null {
+  if (!Number.isFinite(merKcal) || merKcal <= 0) return null;
+  if (!Number.isFinite(kcalPer100g) || kcalPer100g <= 0) return null;
+  return Math.round((merKcal / kcalPer100g) * 100);
+}
+
+export type EnergyMath = {
+  weightKg: number;
+  rerKcal: number;
+  merFactor: number;
+  merKcal: number;
+  kcalPer100g: number | null;
+  gramsPerDay: number | null;
+  source: "SYSTEM_CALCULATED";
+};
+
+export function computeEnergyMath(params: {
+  weightKg: number;
+  goal?: string | null;
+  neutered?: boolean | null;
+  activity?: string | null;
+  kcalPer100g?: number | null;
+}): EnergyMath {
+  const factor = merFactorFor(params);
+  const rerKcal = computeRerKcal(params.weightKg);
+  const merKcal = computeMerKcal(params.weightKg, factor);
+  const kcalPer100g = params.kcalPer100g && params.kcalPer100g > 0 ? params.kcalPer100g : null;
+  return {
+    weightKg: params.weightKg,
+    rerKcal,
+    merFactor: factor,
+    merKcal,
+    kcalPer100g,
+    gramsPerDay: kcalPer100g ? gramsPerDayFromKcal(merKcal, kcalPer100g) : null,
+    source: "SYSTEM_CALCULATED",
+  };
+}

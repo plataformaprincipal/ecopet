@@ -1,5 +1,5 @@
 import { detectRedFlags, isEmergencyRedFlag } from "./red-flags";
-import { computeWeightMath } from "./weight-math";
+import { computeEnergyMath, computeWeightMath } from "./weight-math";
 import { nextDueFromRule } from "./vaccination-rules";
 import { computeNextBestAction } from "./next-best-action";
 import { DIAGNOSTIC_STATUS } from "./provenance";
@@ -61,6 +61,21 @@ export function postprocessSpecialistOutput(params: {
       (params.weightHistory ?? []).map((w) => ({ kg: w.weight, date: w.recordedAt })),
       Number.isFinite(current) ? current : null
     );
+  }
+
+  if (params.capabilityId.includes("nutri") || params.sku === "AI_ECCONUTRI") {
+    const fromInput = Number(input.weight);
+    const fromHistory = params.weightHistory?.at(-1)?.weight;
+    const weightKg = Number.isFinite(fromInput) && fromInput > 0 ? fromInput : Number(fromHistory);
+    if (Number.isFinite(weightKg) && weightKg > 0) {
+      const kcalRaw = Number(String(input.kcalLabel ?? input.kcalPer100g ?? "").replace(",", "."));
+      out.energyMath = computeEnergyMath({
+        weightKg,
+        goal: typeof input.goal === "string" ? input.goal : null,
+        activity: typeof input.activity === "string" ? input.activity : null,
+        kcalPer100g: Number.isFinite(kcalRaw) && kcalRaw > 0 ? kcalRaw : null,
+      });
+    }
   }
 
   if (params.capabilityId.includes("vacina") || params.sku === "AI_ECCOVACCINE") {

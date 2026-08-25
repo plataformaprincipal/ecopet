@@ -29,6 +29,7 @@ export async function GET() {
       unitLabel: p.unitLabel,
       billingType: p.billingType,
       shortDescription: p.shortDescription,
+      ctaLabel: p.ctaLabel,
       included: p.included,
       avgFillMinutes: p.avgFillMinutes,
       maxImages: p.maxImages,

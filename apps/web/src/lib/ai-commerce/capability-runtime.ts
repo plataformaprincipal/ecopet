@@ -1,5 +1,6 @@
 import { AI_COMMERCE_PRODUCTS, getProductDefBySku, type AiWorkspaceKind } from "./catalog";
 import type { AiCommerceSku } from "./flags";
+import { getSpecialistProtocol } from "./specialist-protocols";
 
 export type WizardFieldType = "text" | "textarea" | "chips" | "checkboxes" | "abc";
 
@@ -48,6 +49,9 @@ export type CapabilityRuntime = {
   followUpPrompt: string;
   followUpSuggestions: string[];
   chatTitle: string;
+  specialistTitle?: string;
+  ctaLabel?: string;
+  intro?: string;
 };
 
 const IMAGE_ACCEPT = "image/jpeg,image/png,image/webp";
@@ -587,12 +591,19 @@ export function getCapabilityRuntime(sku: string): CapabilityRuntime | undefined
   const def = getProductDefBySku(sku);
   const spec = RUNTIMES[def?.sku ?? sku];
   if (!def || !spec) return undefined;
+  const protocol = getSpecialistProtocol(def.sku);
   return {
     ...spec,
     sku: def.sku,
     capabilityId: def.capabilityId,
     kind: def.workspaceKind,
     name: def.name,
+    specialistTitle: protocol?.specialistTitle ?? spec.headline,
+    ctaLabel: protocol?.ctaLabel ?? def.ctaLabel,
+    intro: protocol?.intro,
+    followUpPrompt: protocol?.followUpPrompt ?? spec.followUpPrompt,
+    followUpSuggestions: protocol?.followUpSuggestions ?? spec.followUpSuggestions,
+    chatTitle: protocol?.specialistTitle ?? spec.chatTitle,
   };
 }
 
