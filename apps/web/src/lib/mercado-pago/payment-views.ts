@@ -29,12 +29,13 @@ export function toClientPaymentView(p: Payment) {
   };
 }
 
-/** Visão financeira estimada para o parceiro (sem split real). */
+/** Visão financeira estimada para o parceiro. */
 export function toPartnerPaymentView(p: Payment) {
   const meta = (p.metadata as PaymentMeta | null) ?? {};
   const gross = p.amount;
   const fee = typeof meta.platformFeeEstimated === "number" ? meta.platformFeeEstimated : null;
   const net = typeof meta.partnerNetEstimated === "number" ? meta.partnerNetEstimated : null;
+  const splitReady = Boolean(meta.splitReady);
 
   return {
     id: p.id,
@@ -45,9 +46,9 @@ export function toPartnerPaymentView(p: Payment) {
     gross,
     platformFeeEstimated: fee,
     partnerNetEstimated: net,
-    payoutStatus: "SPLIT_PENDING" as const,
-    splitImplemented: false,
-    splitReady: false,
+    payoutStatus: splitReady ? ("MARKETPLACE_SPLIT" as const) : ("SPLIT_PENDING" as const),
+    splitImplemented: true,
+    splitReady,
     approvedAt: p.approvedAt,
     cancelledAt: p.cancelledAt,
     refundedAt: p.refundedAt,

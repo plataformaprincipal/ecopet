@@ -4,7 +4,7 @@ import { getOpenAIClient } from "@/lib/ai/openai-client";
 import { AI_CONFIG } from "@/lib/ai/ai-config";
 import { withRetry } from "@/lib/ai/utils/retry";
 import { AI_COMMERCE_LIMITS, AI_COMMERCE_MODELS, estimateOpenAiCostUsd } from "./models";
-import { jsonSchemaByCapability, schemaForCapability, normalizeCapability } from "./schemas";
+import { jsonSchemaByCapability, pfoAssistiveJsonSchema, schemaForCapability, normalizeCapability } from "./schemas";
 import { systemPromptForCapability } from "./prompts";
 import { AiCommerceError } from "./errors";
 
@@ -82,7 +82,9 @@ export async function runStructuredCapability(params: {
   }
   const client = getOpenAIClient();
   const capabilityId = normalizeCapability(params.capabilityId);
-  const schema = jsonSchemaByCapability[capabilityId] ?? jsonSchemaByCapability["eccovet.assessment"];
+  const schema = capabilityId.startsWith("pfo.")
+    ? pfoAssistiveJsonSchema
+    : jsonSchemaByCapability[capabilityId] ?? jsonSchemaByCapability["eccovet.assessment"];
   const model =
     capabilityId.includes("vision") || capabilityId.includes("exams") || capabilityId.includes("dental") || capabilityId.includes("vacina") || capabilityId.includes("eccomed")
       ? AI_COMMERCE_MODELS.vision

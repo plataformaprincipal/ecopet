@@ -120,6 +120,13 @@ function basePromptFor(capabilityId: string): string {
   if (capabilityId.includes("med") || capabilityId.includes("eccomed")) return MED_PROMPT;
   if (capabilityId.includes("pethealth") || capabilityId.includes("profile")) return PROFILE_PROMPT;
   if (capabilityId.includes("report")) return REPORT_PROMPT;
+  if (capabilityId.includes("pfo.radiology")) return VISION_SYSTEM_PROMPT;
+  if (capabilityId.includes("pfo.exam") || capabilityId.includes("pfo.report")) return LAB_SYSTEM_PROMPT;
+  if (capabilityId.includes("pfo.medication") || capabilityId.includes("pfo.treatment")) return MED_PROMPT;
+  if (capabilityId.includes("pfo.emergency")) return TRIAGE_PROMPT;
+  if (capabilityId.startsWith("pfo.")) {
+    return `Você é um módulo comercial EccoPet AI (add-on PFO). Organize e rascunhe. ${SAFETY}`;
+  }
   return ECCOVET_SYSTEM_PROMPT;
 }
 

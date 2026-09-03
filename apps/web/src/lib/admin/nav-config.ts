@@ -68,6 +68,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin/analytics", label: "Analytics ERP", icon: Activity, group: "Business Intelligence" },
   { href: "/admin/financeiro", label: "Financeiro", icon: DollarSign, group: "Finance" },
   { href: "/admin/pricing", label: "Pricing", icon: Coins, group: "Finance" },
+  { href: "/admin/commerce", label: "Catálogo comercial", icon: Store, group: "Finance" },
   { href: "/admin/financeiro/pagamentos", label: "Pagamentos MP", icon: DollarSign, group: "Financeiro" },
   { href: "/admin/financeiro/estornos", label: "Estornos", icon: DollarSign, group: "Financeiro" },
   { href: "/admin/financeiro/conciliacao", label: "Conciliação", icon: DollarSign, group: "Financeiro" },

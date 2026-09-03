@@ -1,6 +1,7 @@
 /**
  * Deploy de migrations no banco da aplicação Web.
- * Fonte de verdade: apps/web/.env.local → apps/web/.env → .env raiz.
+ * Default: produção (packages/database/.env + apps/web/.env.production.verify).
+ * Preview/local: ECOPET_DB_TARGET=preview (carrega apps/web/.env.local).
  * Não imprime URLs. Prisma usa DIRECT_URL para migrate quando definido.
  */
 import { spawnSync } from "node:child_process";
@@ -38,13 +39,18 @@ const root = path.resolve(import.meta.dirname, "..");
 load(path.join(root, ".env"));
 load(path.join(root, "packages/database/.env"));
 load(path.join(root, "apps/web/.env"));
-load(path.join(root, "apps/web/.env.local"));
+load(path.join(root, "apps/web/.env.production.verify"));
+const target = (process.env.ECOPET_DB_TARGET || "production").toLowerCase();
+if (target === "preview") {
+  load(path.join(root, "apps/web/.env.local"));
+}
 
 if (!process.env.DATABASE_URL) {
   console.error("DATABASE_URL ausente após carregar env da Web.");
   process.exit(1);
 }
 
+console.log("migrate deploy — target:", target);
 console.log("migrate deploy — runtime host:", hostOf(process.env.DATABASE_URL));
 if (process.env.DIRECT_URL) {
   console.log("migrate deploy — direct host:", hostOf(process.env.DIRECT_URL));

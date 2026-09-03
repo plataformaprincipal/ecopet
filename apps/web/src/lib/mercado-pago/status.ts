@@ -44,6 +44,24 @@ export function mapMpOrderStatusToInternal(
   return "PENDING";
 }
 
+/** Payments API (/v1/payments) — cartão, Pix, boleto e marketplace split. */
+export function mapMpLegacyPaymentStatusToInternal(
+  status: string | undefined,
+  statusDetail?: string | undefined
+): InternalPaymentStatus {
+  const s = (status || "").toLowerCase();
+  const detail = (statusDetail || "").toLowerCase();
+  if (s === "approved") return "APPROVED";
+  if (s === "authorized" || s === "in_process" || s === "in_mediation") return "PROCESSING";
+  if (s === "pending") return "PENDING";
+  if (s === "rejected") return "REJECTED";
+  if (s === "cancelled") return "CANCELLED";
+  if (s === "refunded") return detail.includes("partial") ? "PARTIALLY_REFUNDED" : "REFUNDED";
+  if (s === "charged_back") return "CHARGED_BACK";
+  if (!s) return "ERROR";
+  return mapMpOrderStatusToInternal(status, statusDetail);
+}
+
 export function isTerminalApproved(status: InternalPaymentStatus): boolean {
   return status === "APPROVED";
 }

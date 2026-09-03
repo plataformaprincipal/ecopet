@@ -1,13 +1,22 @@
-import { redirect } from "next/navigation";
-import { UserRole } from "@prisma/client";
-import { getCurrentUser } from "@/lib/auth";
-import { dashboardPathForRole } from "@/lib/auth/dashboard";
-import { ClientHealthPage } from "@/components/features/client/pages/client-health-page";
+import { HealthCaseWorkspace } from "@/components/features/commerce/health-case-workspace";
+import { AppHeader } from "@/components/layouts/app-header";
+import Link from "next/link";
 
-export default async function ClientSaudeRoutePage() {
-  const user = await getCurrentUser();
-  if (!user) redirect("/login?callbackUrl=/cliente/saude");
-  if (user.role !== UserRole.CLIENT) redirect(dashboardPathForRole(user.role));
+export const metadata = { title: "Meus casos de saúde | EccoPet" };
 
-  return <ClientHealthPage />;
+export default function ClienteSaudePage() {
+  return (
+    <>
+      <AppHeader title="Saúde do pet" />
+      <main className="mx-auto max-w-6xl flex-1 space-y-4 p-4 lg:p-8">
+        <div className="flex flex-wrap gap-3 text-sm">
+          <Link href="/marketplace/saude/teleconsulta">Teleconsulta</Link>
+          <Link href="/marketplace/saude/exames">Exames</Link>
+          <Link href="/marketplace/saude/planos">Planos</Link>
+          <Link href="/cliente/assinaturas">Assinaturas</Link>
+        </div>
+        <HealthCaseWorkspace />
+      </main>
+    </>
+  );
 }

@@ -195,7 +195,7 @@ export function quotePricing(input: QuoteInput & { omitFixedFee?: boolean }): Pr
   const urgentFeeCents = isService && urgentRequested && urgentEligible ? rules.serviceUrgentFeeCents : 0;
 
   let customerAmountCents = isService ? lineBase + bookingFeeCents + urgentFeeCents : lineBase;
-  if (kind === "SUBSCRIPTION" || kind === "ADDON" || kind === "AI" || kind === "ADS" || kind === "IOT" || kind === "API") {
+  if (kind === "SUBSCRIPTION" || kind === "ADDON" || kind === "AI" || kind === "ADS" || kind === "IOT" || kind === "API" || kind === "PROTECT") {
     customerAmountCents = lineBase;
   }
 

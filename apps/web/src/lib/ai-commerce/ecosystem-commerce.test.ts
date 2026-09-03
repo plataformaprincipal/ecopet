@@ -105,22 +105,20 @@ describe("Marketplace Saúde e EccoPet Saúde", () => {
     assert.doesNotMatch(rail, /AI_ECCOVET/);
   });
 
-  it("planos cotam SKUs reais e não fingem PURCHASABLE nem recorrência", () => {
+  it("planos cotam SKUs PRT oficiais e não fingem cobertura própria", () => {
     const quotes = listEccoPetSaudeQuotes();
     assert.equal(quotes.length, 3);
     for (const row of quotes) {
       assert.equal(row.seller, "ECCOPET");
-      assert.equal(row.recurringBilling, false);
+      assert.equal(row.billingEnabled, false);
       assert.equal(row.splitReady, false);
       assert.ok(row.quote.customerAmountCents > 0);
-      assert.equal(row.commercialAvailability, "CATALOG_ONLY");
+      assert.equal(row.commercialAvailability, "PARTNER_REQUIRED");
       assert.equal(row.quote.purchasable, false);
-      assert.ok((row.quote.blockedReasons ?? []).some((r) => r.includes("CATALOG_ONLY")));
+      assert.ok((row.quote.blockedReasons ?? []).some((r) => r.includes("PARTNER_REQUIRED")));
     }
     const activate = readSrc("app/api/eccopet-saude/activate/route.ts");
-    assert.match(activate, /FREE_BETA/);
     assert.doesNotMatch(activate, /splitReady:\s*true/);
-    assert.doesNotMatch(activate, /recurringBilling:\s*true/);
   });
 });
 

@@ -3,7 +3,7 @@ import "server-only";
 import { randomBytes } from "crypto";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { encryptMpSecret } from "@/lib/mercado-pago/mp-secret-crypto";
+import { decryptMpSecret, encryptMpSecret } from "@/lib/mercado-pago/mp-secret-crypto";
 import { writeAuditLog } from "@/lib/audit-log";
 
 export type PartnerMpConnectionStatus =
@@ -175,4 +175,99 @@ export async function completePartnerMpOAuth(params: {
   }).catch(() => undefined);
 
   return { ok: true, partnerId: row.partnerId };
+}
+
+async function persistRefreshedTokens(params: {
+  id: string;
+  accessToken: string;
+  refreshToken?: string;
+  userId?: number | string;
+  expiresIn?: number;
+}) {
+  const expiresAt =
+    typeof params.expiresIn === "number" ? new Date(Date.now() + params.expiresIn * 1000) : null;
+  await prisma.partnerMpConnection.update({
+    where: { id: params.id },
+    data: {
+      status: "CONNECTED",
+      accessTokenEnc: encryptMpSecret(params.accessToken),
+      refreshTokenEnc: params.refreshToken ? encryptMpSecret(params.refreshToken) : undefined,
+      mpUserId: params.userId != null ? String(params.userId) : undefined,
+      lastError: null,
+      expiresAt,
+    },
+  });
+}
+
+export async function refreshPartnerMpAccessToken(partnerId: string): Promise<boolean> {
+  if (!oauthConfigured()) return false;
+  const row = await prisma.partnerMpConnection.findUnique({ where: { partnerId } });
+  if (!row?.refreshTokenEnc) return false;
+  let refreshToken: string;
+  try {
+    refreshToken = decryptMpSecret(row.refreshTokenEnc);
+  } catch {
+    return false;
+  }
+  const body = new URLSearchParams({
+    grant_type: "refresh_token",
+    client_id: process.env.MERCADO_PAGO_CLIENT_ID!.trim(),
+    client_secret: process.env.MERCADO_PAGO_CLIENT_SECRET!.trim(),
+    refresh_token: refreshToken,
+  });
+  const res = await fetch("https://api.mercadopago.com/oauth/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
+    body,
+  });
+  const json = (await res.json().catch(() => ({}))) as {
+    access_token?: string;
+    refresh_token?: string;
+    user_id?: number | string;
+    expires_in?: number;
+  };
+  if (!res.ok || !json.access_token) {
+    await prisma.partnerMpConnection.update({
+      where: { id: row.id },
+      data: {
+        status: "REAUTH_REQUIRED",
+        lastError: "Falha ao renovar token OAuth do vendedor.",
+      },
+    });
+    return false;
+  }
+  await persistRefreshedTokens({
+    id: row.id,
+    accessToken: json.access_token,
+    refreshToken: json.refresh_token,
+    userId: json.user_id,
+    expiresIn: json.expires_in,
+  });
+  return true;
+}
+
+/**
+ * Token do seller para Payments API de marketplace. Nunca loga o valor.
+ */
+export async function getUsablePartnerMpAccessToken(partnerId: string): Promise<
+  { ok: true; accessToken: string; mpUserId: string } | { ok: false; reason: string }
+> {
+  let row = await prisma.partnerMpConnection.findUnique({ where: { partnerId } });
+  if (!row || row.status !== "CONNECTED" || !row.mpUserId || !row.accessTokenEnc) {
+    return { ok: false, reason: "Parceiro sem conexão Mercado Pago CONNECTED." };
+  }
+  const expiringSoon = row.expiresAt && row.expiresAt.getTime() < Date.now() + 60_000;
+  if (expiringSoon) {
+    const refreshed = await refreshPartnerMpAccessToken(partnerId);
+    if (!refreshed) return { ok: false, reason: "Token OAuth do vendedor expirado. Reautorize." };
+    row = await prisma.partnerMpConnection.findUnique({ where: { partnerId } });
+    if (!row?.accessTokenEnc || !row.mpUserId) {
+      return { ok: false, reason: "Token OAuth do vendedor indisponível após refresh." };
+    }
+  }
+  try {
+    return { ok: true, accessToken: decryptMpSecret(row.accessTokenEnc), mpUserId: row.mpUserId };
+  } catch {
+    return { ok: false, reason: "Não foi possível abrir as credenciais do vendedor." };
+  }
 }

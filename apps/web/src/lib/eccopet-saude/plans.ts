@@ -11,35 +11,34 @@ export type EccoPetSaudeTier = {
   sku: string;
   periodDays: number;
   description: string;
-  /** Only catalog SKUs / AI tools that actually exist. */
   includedSkuLabels: string[];
 };
 
-/** Tiers map to existing HEALTH catalog SKUs. Coverage is not invented. */
+/** Planos oficiais PRT-001…003 — operador externo obrigatório. */
 export const ECCOPET_SAUDE_TIERS: EccoPetSaudeTier[] = [
   {
     id: "essencial",
-    name: "EccoPet Saúde Essencial",
-    sku: "SAU-006",
+    name: "Clube preventivo",
+    sku: "PRT-001",
     periodDays: 30,
-    description: "Acesso de 30 dias à triagem remota informativa do catálogo de saúde, renovável. Não é seguro.",
-    includedSkuLabels: ["SAU-006 Triagem remota informativa", "EccoVet Triagem (IA)", "Bubis"],
+    description: "Plano preventivo intermediado. Não é cobertura própria da EccoPet.",
+    includedSkuLabels: ["PRT-001 Clube preventivo"],
   },
   {
     id: "plus",
-    name: "EccoPet Saúde Plus",
-    sku: "SAU-007",
+    name: "Plano ambulatorial",
+    sku: "PRT-002",
     periodDays: 30,
-    description: "Acesso de 30 dias à teleorientação veterinária de catálogo, renovável. Não é seguro.",
-    includedSkuLabels: ["SAU-007 Teleorientação veterinária", "EccoCheckup AI", "EccoVet Triagem (IA)"],
+    description: "Plano ambulatorial via operador autorizado.",
+    includedSkuLabels: ["PRT-002 Plano ambulatorial"],
   },
   {
     id: "familia",
-    name: "EccoPet Saúde Família",
-    sku: "SAU-055",
+    name: "Plano completo",
+    sku: "PRT-003",
     periodDays: 30,
-    description: "Acesso de 30 dias ao programa de acompanhamento mensal do catálogo de saúde. Não é seguro nem recorrência automática.",
-    includedSkuLabels: ["SAU-055 Programa de doença crônica / mês", "Pet Health Profile", "EccoCheckup AI"],
+    description: "Plano completo via operador. Prêmio não é receita integral EccoPet.",
+    includedSkuLabels: ["PRT-003 Plano completo"],
   },
 ];
 
@@ -48,13 +47,9 @@ export function quoteEccoPetSaudeTier(id: EccoPetSaudeTierId) {
   if (!tier) return null;
   const catalog = getCatalogBySku(tier.sku);
   if (!catalog) return null;
-  const base =
-    catalog.referenceTutorCents ??
-    catalog.amountCents ??
-    catalog.nationalReferenceCents ??
-    0;
+  const base = catalog.amountCents ?? catalog.referenceTutorCents ?? 0;
   const quote = quotePricing({
-    kind: "HEALTH",
+    kind: "PROTECT",
     sku: catalog.sku,
     baseAmountCents: base,
     quantity: 1,
@@ -68,7 +63,8 @@ export function quoteEccoPetSaudeTier(id: EccoPetSaudeTierId) {
     catalogName: catalog.name,
     commercialAvailability: catalog.commercialAvailability,
     quote,
-    recurringBilling: false,
+    recurringBilling: true,
+    billingEnabled: false,
     splitReady: false,
   };
 }

@@ -165,6 +165,16 @@ export async function postLedgerForApprovedPayment(params: {
       status: "POSTED",
       idempotencyKey: `${baseKey}:PAYMENT_RECEIVED`,
       description: "Pagamento recebido (GMV)",
+      metadata: (() => {
+        const meta = (payment.metadata ?? {}) as Record<string, unknown>;
+        return meta.mpProduct === "payments_api_marketplace"
+          ? {
+              marketplaceSplit: true,
+              collectorId: meta.collectorId ?? null,
+              applicationFee: meta.applicationFee ?? null,
+            }
+          : undefined;
+      })(),
     });
 
     await push({

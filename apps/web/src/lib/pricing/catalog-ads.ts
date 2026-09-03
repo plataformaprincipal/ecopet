@@ -20,7 +20,7 @@ function adsSku(
       amountCents: brl(fee),
       unit: condition,
       costReferenceCents: brl(cost),
-      commercialAvailability: "FEATURE_FLAGGED",
+      commercialAvailability: mediaPassThrough ? "CATALOG_ONLY" : "PURCHASABLE",
       revenueRecognition: "MANAGEMENT_FEE",
       portfolioSuiteId: "ads",
       sourceSection: SECTION,

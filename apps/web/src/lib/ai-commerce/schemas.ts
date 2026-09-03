@@ -74,7 +74,29 @@ export type VisionOutput = z.infer<typeof visionOutputSchema>;
 export type LabOutput = z.infer<typeof labOutputSchema>;
 export type CheckupOutput = z.infer<typeof checkupOutputSchema>;
 
+export const pfoAssistiveOutputSchema = z.object({
+  summary: z.string().min(1),
+  organized: z.array(z.string()),
+  nextSteps: z.array(z.string()),
+  limitations: z.array(z.string()),
+  notProfessionalDocument: z.boolean(),
+});
+
+export const pfoAssistiveJsonSchema: Record<string, unknown> = {
+  type: "object",
+  additionalProperties: false,
+  required: ["summary", "organized", "nextSteps", "limitations", "notProfessionalDocument"],
+  properties: {
+    summary: { type: "string" },
+    organized: { type: "array", items: { type: "string" } },
+    nextSteps: { type: "array", items: { type: "string" } },
+    limitations: { type: "array", items: { type: "string" } },
+    notProfessionalDocument: { type: "boolean" },
+  },
+};
+
 export function schemaForCapability(capabilityId: string) {
+  if (capabilityId.startsWith("pfo.")) return pfoAssistiveOutputSchema;
   return specialistSchemaFor(capabilityId);
 }
 

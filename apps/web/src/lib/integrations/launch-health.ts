@@ -111,7 +111,7 @@ export function getLaunchHealthRows(source: NodeJS.ProcessEnv = process.env): La
       launchClass: "LAUNCH_REQUIRED",
       configured: split.splitReady,
       verdict: "SPLIT_REQUIRES_MP_ENABLEMENT",
-      note: "splitReady permanece false até evidência PSP.",
+      note: "splitReady da plataforma permanece false. Ativação por pedido exige OAuth CONNECTED do parceiro.",
     },
     {
       provider: "SUPABASE_DB",

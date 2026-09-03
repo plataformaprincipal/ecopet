@@ -14,6 +14,11 @@ export default async function ClienteFinanceiroPage() {
         Pedidos, pagamentos, reclamações e contestações. Dados de cartão e critérios de fraude não
         são exibidos.
       </p>
+      <p className="text-sm">
+        <a className="underline" href="/cliente/assinaturas">
+          Assinaturas e créditos
+        </a>
+      </p>
       <FinanceiroPanel role="client" />
     </main>
   );

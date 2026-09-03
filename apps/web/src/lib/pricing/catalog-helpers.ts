@@ -31,6 +31,7 @@ export function fixedSku(params: {
   billingCycle?: string;
   costReferenceCents?: number;
   allowZero?: boolean;
+  billingEnabled?: boolean;
   commercialAvailability: PricingCommercialAvailability;
   revenueRecognition?: PricingRevenueRecognition;
   capabilityId?: string;
@@ -53,6 +54,7 @@ export function fixedSku(params: {
     billingCycle: params.billingCycle,
     costReferenceCents: params.costReferenceCents,
     allowZero: params.allowZero,
+    billingEnabled: params.billingEnabled ?? params.commercialAvailability === "PURCHASABLE",
     capabilityId: params.capabilityId,
     portfolioSuiteId: params.portfolioSuiteId,
     mediaPassThrough: params.mediaPassThrough,
@@ -75,6 +77,7 @@ export function marketSku(
     kind: "PRODUCT",
     pricingMode: "SELLER_DEFINED",
     commercialAvailability: "PURCHASABLE",
+    billingEnabled: true,
     revenueRecognition: "COMMISSION_AND_FEE",
     referenceTicketCents: brl(ticketReais),
     eccopetRevenueRefCents: brl(eccopetRevenueReais),
@@ -100,6 +103,7 @@ export function serviceSku(params: {
     kind: "SERVICE",
     pricingMode: "PROVIDER_DEFINED",
     commercialAvailability: "CATALOG_ONLY",
+    billingEnabled: false,
     revenueRecognition: "COMMISSION_AND_FEE",
     referenceTutorCents: brl(params.tutorReais),
     providerBaseCents: brl(params.baseReais),
@@ -123,14 +127,17 @@ export function healthSku(params: {
   eccopetRevenueReais: number;
   urgent?: boolean;
   complex?: boolean;
+  commercialAvailability?: PricingCommercialAvailability;
 }): CatalogItem {
+  const availability = params.commercialAvailability ?? "CATALOG_ONLY";
   return item({
     sku: params.sku,
     name: params.name,
     suite: "HEALTH",
     kind: "HEALTH",
     pricingMode: "PROVIDER_DEFINED",
-    commercialAvailability: "CATALOG_ONLY",
+    commercialAvailability: availability,
+    billingEnabled: availability === "PURCHASABLE",
     revenueRecognition: "COMMISSION_AND_FEE",
     referenceTutorCents: brl(params.jpReais),
     nationalReferenceCents: brl(params.nationalReais),

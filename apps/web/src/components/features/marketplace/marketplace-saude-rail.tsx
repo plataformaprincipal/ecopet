@@ -12,7 +12,15 @@ export function MarketplaceSaudeRail() {
           <h3 className="mt-2 text-2xl font-semibold">PLANO DE SAÚDE PET</h3>
           <p className="mt-2 text-sm text-[var(--ep-fg-muted)]">Prevenção e acompanhamento. Não é seguro. Preços do motor oficial.</p>
           <Button asChild className="mt-4">
-            <Link href="/marketplace/saude">Conhecer planos</Link>
+            <Link href="/marketplace/saude/planos">Conhecer planos</Link>
+          </Button>
+        </article>
+        <article className="rounded-[20px] border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] p-5">
+          <p className="text-xs font-medium uppercase tracking-wide text-ecopet-green">Teleconsulta</p>
+          <h3 className="mt-2 text-2xl font-semibold">TELECONSULTA E LAUDOS</h3>
+          <p className="mt-2 text-sm text-[var(--ep-fg-muted)]">Agendamento, pagamento, prontuário e documento com CRMV.</p>
+          <Button asChild className="mt-4">
+            <Link href="/marketplace/saude/teleconsulta">Abrir teleconsulta</Link>
           </Button>
         </article>
         <article className="rounded-[20px] border border-red-200 bg-red-50 p-5 dark:border-red-900 dark:bg-red-950/30">
@@ -26,11 +34,15 @@ export function MarketplaceSaudeRail() {
       </div>
       <div className="flex gap-2 overflow-x-auto pb-1">
         {[
-          { href: "/marketplace/servicos?group=health&category=consulta", label: "Consulta" },
+          { href: "/marketplace/saude/exames?group=consultas", label: "Consulta" },
           { href: "/marketplace/servicos?group=health&category=vacinacao", label: "Vacinação" },
           { href: "/marketplace/servicos?group=health&category=veterinario", label: "Check-up" },
           { href: "/marketplace/servicos?group=health&category=consultoria", label: "Nutrição" },
-          { href: "/marketplace/servicos?group=health&category=exames", label: "Exames" },
+          { href: "/marketplace/saude/exames?group=exames", label: "Exames" },
+          { href: "/marketplace/saude/exames?group=laudos", label: "Laudos" },
+          { href: "/marketplace/saude/teleconsulta", label: "Teleatendimento" },
+          { href: "/marketplace/seguro", label: "Seguro" },
+          { href: "/marketplace/entretenimento", label: "Entretenimento" },
         ].map((item) => (
           <Link
             key={item.href}

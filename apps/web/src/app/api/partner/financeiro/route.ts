@@ -106,7 +106,8 @@ export async function GET() {
     mpConnection: connection,
     split: {
       splitReady: false,
-      splitImplemented: false,
+      splitImplemented: true,
+      partnerSplitReady: Boolean(connection.status === "CONNECTED" && connection.mpUserId),
       decision: cap.decision,
       topology: cap.topology,
       reasons: cap.reasons,
@@ -122,9 +123,9 @@ export async function GET() {
       chargebackOpenAmount: (chargebackAgg._sum.amountCents ?? 0) / 100,
       grossApprovedEstimated: gross,
       blockedInDisputeEstimated: disputed,
-      splitImplemented: false,
+      splitImplemented: true,
       splitReady: false,
-      note: "GMV ≠ receita EccoPet ≠ payout. Split/repasse automático Mercado Pago não está ativo. Estimativa não é saldo disponível.",
+      note: "GMV ≠ receita EccoPet ≠ payout. Split real só ocorre no pedido se o parceiro estiver CONNECTED no Mercado Pago. Estimativa não é saldo disponível.",
     },
   });
 }

@@ -11,6 +11,8 @@ import {
 } from "@/lib/mercado-pago/client";
 import { writeAuditLog } from "@/lib/audit-log";
 import { createInternalNotification } from "@/lib/notifications/internal";
+import { proportionalApplicationFee } from "@/lib/finance/split-capability";
+import { getUsablePartnerMpAccessToken } from "@/lib/mercado-pago/partner-oauth";
 
 const LOCK_MS = 30_000;
 const MONEY_EPS = 0.009;
@@ -48,6 +50,16 @@ async function releaseRefundLock(paymentId: string, adminId: string): Promise<vo
     where: { id: paymentId, refundLockBy: adminId },
     data: { refundLockUntil: null, refundLockBy: null },
   });
+}
+
+async function sellerTokenForMarketplaceRefund(payment: {
+  partnerId: string | null;
+  metadata: Prisma.JsonValue | null;
+}): Promise<string | undefined> {
+  const meta = (payment.metadata ?? {}) as Record<string, unknown>;
+  if (meta.mpProduct !== "payments_api_marketplace" || !payment.partnerId) return undefined;
+  const token = await getUsablePartnerMpAccessToken(payment.partnerId);
+  return token.ok ? token.accessToken : undefined;
 }
 
 export type ExecuteRefundInput = {
@@ -227,7 +239,8 @@ export async function executePaymentRefund(input: ExecuteRefundInput): Promise<{
         : await refundMercadoPagoLegacyPayment(
             payment.providerPaymentId,
             refundRow.idempotencyKey || idempotencyKey,
-            isFull ? undefined : amount
+            isFull ? undefined : amount,
+            await sellerTokenForMarketplaceRefund(payment)
           );
 
     if (!mpResult.ok) {
@@ -299,7 +312,15 @@ export async function executePaymentRefund(input: ExecuteRefundInput): Promise<{
           eventType: isFull ? "refund:full" : "refund:partial",
           status: paymentStatus,
           message: reason.slice(0, 280),
-          metadata: { amount, providerRefundId } as Prisma.InputJsonValue,
+          metadata: {
+            amount,
+            providerRefundId,
+            applicationFeeRefunded: proportionalApplicationFee({
+              originalAmount: payment.amount,
+              refundAmount: amount,
+              applicationFee: Number(((payment.metadata as Record<string, unknown> | null) ?? {}).applicationFee ?? 0),
+            }),
+          } as Prisma.InputJsonValue,
         },
       });
     });
@@ -307,6 +328,9 @@ export async function executePaymentRefund(input: ExecuteRefundInput): Promise<{
     if (fullyRefunded) {
       void import("@/lib/ai-commerce/entitlement-service").then(({ revokeEntitlementsForOrder }) =>
         revokeEntitlementsForOrder(payment.orderId, "REFUNDED")
+      );
+      void import("@/lib/commerce-catalog/fulfill").then(({ revokeCatalogPurchase }) =>
+        revokeCatalogPurchase(payment.orderId, "REFUNDED")
       );
       void import("@/lib/ai-commerce/audit").then(({ writeAiCommerceAudit, AI_AUDIT }) =>
         writeAiCommerceAudit({

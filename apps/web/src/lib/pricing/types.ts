@@ -45,7 +45,8 @@ export type PricingCommercialAvailability =
   | "CATALOG_ONLY"
   | "FEATURE_FLAGGED"
   | "PARTNER_REQUIRED"
-  | "DISABLED";
+  | "DISABLED"
+  | "PRICE_PENDING";
 
 export type PricingRevenueRecognition =
   | "COMMISSION_AND_FEE"
@@ -112,6 +113,7 @@ export type CatalogItem = {
   urgentEligible?: boolean;
   complexProcedure?: boolean;
   allowZero?: boolean;
+  billingEnabled?: boolean;
   capabilityId?: string;
   portfolioSuiteId: string;
   mediaPassThrough?: boolean;

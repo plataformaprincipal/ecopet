@@ -420,6 +420,7 @@ enum PricingCommercialAvailability {
   FEATURE_FLAGGED
   PARTNER_REQUIRED
   DISABLED
+  PRICE_PENDING
 }
 
 enum PricingRevenueRecognition {
@@ -730,6 +731,13 @@ model User {
   aiWorkbooks         AIWorkbook[]
   aiCommerceFeedbacks AICommerceFeedback[]
   petHealthProfiles   PetHealthProfile[]
+  catalogSubscriptions CatalogSubscription[]
+  catalogEntitlements  CatalogEntitlement[]
+  creditLedgerEntries  CreditLedgerEntry[]
+  healthCasesAsTutor   HealthClinicalCase[] @relation("HealthCaseTutor")
+  healthCasesAsPro     HealthClinicalCase[] @relation("HealthCaseProfessional")
+  protectionEnrollments ProtectionEnrollment[]
+  entertainmentMemberships EntertainmentMembership[]
 
   @@index([email])
   @@index([username])
@@ -851,6 +859,10 @@ model Pet {
   aiSubscriptions   AISubscription[]
   aiWorkbooks       AIWorkbook[]
   petHealthProfile  PetHealthProfile?
+  catalogEntitlements CatalogEntitlement[]
+  healthClinicalCases HealthClinicalCase[]
+  protectionEnrollments ProtectionEnrollment[]
+  entertainmentMemberships EntertainmentMembership[]
 
   @@index([ownerId])
   @@index([ongId])
@@ -1581,6 +1593,11 @@ model Order {
   financialReconciliations FinancialReconciliation[]
   partnerPayouts    PartnerPayout[]
   aiEntitlements    AIEntitlement[]
+  catalogSubscriptions CatalogSubscription[]
+  catalogEntitlements  CatalogEntitlement[]
+  healthClinicalCases  HealthClinicalCase[]
+  protectionEnrollments ProtectionEnrollment[]
+  entertainmentMemberships EntertainmentMembership[]
 
   @@index([userId])
   @@index([partnerId])
@@ -5616,6 +5633,7 @@ model PricingCatalogItem {
   urgentEligible           Boolean                       @default(false)
   complexProcedure         Boolean                       @default(false)
   allowZero                Boolean                       @default(false)
+  billingEnabled           Boolean                       @default(false)
   capabilityId             String?
   portfolioSuiteId         String?
   mediaPassThrough         Boolean                       @default(false)
@@ -6036,4 +6054,272 @@ model AICommerceFeedback {
   execution   AIExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
+}
+
+// ─── Catálogo comercial PFO (assinaturas, saúde, proteção, créditos) ────────
+
+enum CatalogSubscriptionStatus {
+  PENDING
+  ACTIVE
+  PAST_DUE
+  CANCEL_SCHEDULED
+  CANCELLED
+  EXPIRED
+  DRAFT
+}
+
+enum CatalogEntitlementStatus {
+  AVAILABLE
+  ACTIVE
+  CONSUMED
+  CANCELLED
+  REFUNDED
+  EXPIRED
+  REVOKED
+}
+
+enum CreditLedgerStatus {
+  AVAILABLE
+  CONSUMED
+  EXPIRED
+  REVOKED
+}
+
+enum HealthCaseKind {
+  TELECONSULT
+  TELEORIENTATION
+  SECOND_OPINION
+  EXAM_REVIEW
+  REPORT
+  CERTIFICATE
+  TRIAGE
+}
+
+enum HealthCaseStatus {
+  DRAFT
+  AWAITING_PAYMENT
+  PAID
+  SCHEDULED
+  IN_PROGRESS
+  AWAITING_PROFESSIONAL
+  READY_FOR_REVIEW
+  ISSUED
+  CANCELLED
+  REFUNDED
+}
+
+enum ProtectionEnrollmentStatus {
+  CATALOG
+  PENDING_PARTNER
+  ACTIVE
+  CANCELLED
+  EXPIRED
+}
+
+enum EntertainmentMembershipStatus {
+  DRAFT
+  PRICE_PENDING
+  ACTIVE
+  CANCELLED
+}
+
+model CatalogSubscription {
+  id                  String                     @id @default(cuid())
+  userId              String
+  partnerId           String?
+  sku                 String
+  family              String
+  billingCycle        String
+  status              CatalogSubscriptionStatus  @default(PENDING)
+  amountCents         Int
+  annualAmountCents   Int?
+  setupAmountCents    Int?
+  currency            String                     @default("BRL")
+  pricingVersion      String
+  pricingSnapshot     Json?
+  billingEnabled      Boolean                    @default(true)
+  cancelAtPeriodEnd   Boolean                    @default(false)
+  currentPeriodStart  DateTime?
+  currentPeriodEnd    DateTime?
+  cancelledAt         DateTime?
+  cancelReason        String?
+  mpPreapprovalId     String?
+  orderId             String?
+  createdAt           DateTime                   @default(now())
+  updatedAt           DateTime                   @updatedAt
+  user                User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order               Order?                     @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  entitlements        CatalogEntitlement[]
+
+  @@index([userId, status])
+  @@index([sku, status])
+  @@index([orderId])
+  @@index([currentPeriodEnd])
+}
+
+model CatalogEntitlement {
+  id               String                    @id @default(cuid())
+  userId           String
+  petId            String?
+  partnerId        String?
+  sku              String
+  family           String
+  status           CatalogEntitlementStatus  @default(AVAILABLE)
+  usageLimit       Int                       @default(1)
+  usageCount       Int                       @default(0)
+  startsAt         DateTime                  @default(now())
+  endsAt           DateTime?
+  orderId          String?
+  orderItemId      String?                   @unique
+  subscriptionId   String?
+  paymentId        String?
+  metadata         Json?
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+  user             User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pet              Pet?                      @relation(fields: [petId], references: [id], onDelete: SetNull)
+  order            Order?                    @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  subscription     CatalogSubscription?      @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+
+  @@index([userId, status])
+  @@index([sku])
+  @@index([petId])
+  @@index([orderId])
+  @@index([subscriptionId])
+}
+
+model CreditLedgerEntry {
+  id          String             @id @default(cuid())
+  userId      String
+  source      String
+  amountCents Int
+  currency    String             @default("BRL")
+  grantedAt   DateTime           @default(now())
+  expiresAt   DateTime?
+  consumedAt  DateTime?
+  reference   String?
+  status      CreditLedgerStatus @default(AVAILABLE)
+  metadata    Json?
+  createdAt   DateTime           @default(now())
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([expiresAt])
+  @@index([reference])
+}
+
+model HealthClinicalCase {
+  id                   String            @id @default(cuid())
+  kind                 HealthCaseKind
+  status               HealthCaseStatus  @default(DRAFT)
+  sku                  String
+  userId               String
+  petId                String
+  professionalUserId   String?
+  orderId              String?
+  entitlementId        String?
+  scheduledAt          DateTime?
+  intakeJson           Json?
+  aiDraftJson          Json?
+  professionalNotes    String?
+  crmv                 String?
+  issuedAt             DateTime?
+  auditTrail           Json?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  user                 User              @relation("HealthCaseTutor", fields: [userId], references: [id], onDelete: Cascade)
+  professional         User?             @relation("HealthCaseProfessional", fields: [professionalUserId], references: [id], onDelete: SetNull)
+  pet                  Pet               @relation(fields: [petId], references: [id], onDelete: Cascade)
+  order                Order?            @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  documents            HealthClinicalDocument[]
+
+  @@index([userId, status])
+  @@index([professionalUserId, status])
+  @@index([petId])
+  @@index([sku])
+  @@index([orderId])
+}
+
+model HealthClinicalDocument {
+  id            String             @id @default(cuid())
+  caseId        String
+  kind          String
+  title         String
+  storageKey    String?
+  pdfIdentified Boolean            @default(false)
+  isFinal       Boolean            @default(false)
+  signedByCrmv  String?
+  createdAt     DateTime           @default(now())
+  case          HealthClinicalCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@index([caseId])
+}
+
+model ProtectionEnrollment {
+  id             String                      @id @default(cuid())
+  userId         String
+  petId          String?
+  sku            String
+  status         ProtectionEnrollmentStatus  @default(PENDING_PARTNER)
+  amountCents    Int
+  partnerCode    String?
+  coverageJson   Json?
+  exclusionsJson Json?
+  startsAt       DateTime?
+  endsAt         DateTime?
+  orderId        String?
+  createdAt      DateTime                    @default(now())
+  updatedAt      DateTime                    @updatedAt
+  user           User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pet            Pet?                        @relation(fields: [petId], references: [id], onDelete: SetNull)
+  order          Order?                      @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  claims         ProtectionClaim[]
+
+  @@index([userId, status])
+  @@index([sku])
+  @@index([petId])
+}
+
+model ProtectionClaim {
+  id           String                @id @default(cuid())
+  enrollmentId String
+  status       String                @default("OPEN")
+  description  String
+  documentsJson Json?
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  enrollment   ProtectionEnrollment  @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+
+  @@index([enrollmentId, status])
+}
+
+model EntertainmentMembership {
+  id          String                         @id @default(cuid())
+  userId      String
+  petId       String?
+  sku         String                         @default("ENT-DRAFT")
+  status      EntertainmentMembershipStatus  @default(PRICE_PENDING)
+  billingEnabled Boolean                     @default(false)
+  orderId     String?
+  startsAt    DateTime?
+  endsAt      DateTime?
+  createdAt   DateTime                       @default(now())
+  updatedAt   DateTime                       @updatedAt
+  user        User                           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pet         Pet?                           @relation(fields: [petId], references: [id], onDelete: SetNull)
+  order       Order?                         @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([userId, status])
+  @@index([sku])
+}
+
+model SkuRefundPolicy {
+  id                      String   @id @default(cuid())
+  sku                     String   @unique
+  beforeAcceptRefund      Boolean  @default(true)
+  afterStartPolicy        String   @default("SKU_SPECIFIC")
+  noShowProviderMaxBps    Int      @default(5000)
+  payoutDays              Int?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
 }

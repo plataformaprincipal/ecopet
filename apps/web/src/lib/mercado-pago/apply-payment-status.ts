@@ -373,6 +373,9 @@ export async function applyInternalPaymentStatus(params: {
       void import("@/lib/ai-commerce/entitlement-service").then(({ revokeEntitlementsForOrder }) =>
         revokeEntitlementsForOrder(payment.orderId, "CHARGEBACK")
       );
+      void import("@/lib/commerce-catalog/fulfill").then(({ revokeCatalogPurchase }) =>
+        revokeCatalogPurchase(payment.orderId, "CHARGEBACK")
+      );
     } catch {
       /* ignore */
     }
@@ -437,6 +440,20 @@ export async function applyInternalPaymentStatus(params: {
               : `Seu ${toolName} está disponível.`,
             type: "AI_ENTITLEMENT_CREATED",
             actionUrl: "/minha-conta/ia",
+            data: { orderId: payment.order.id },
+          });
+        })
+        .catch(() => undefined);
+      void import("@/lib/commerce-catalog/fulfill")
+        .then(({ grantCatalogPurchase }) => grantCatalogPurchase({ orderId: payment.orderId, paymentId: payment.id }))
+        .then(async (result) => {
+          if (!result.created) return;
+          await createInternalNotification({
+            userId: payment.order.userId,
+            title: "Produto comercial ativado",
+            body: "Seu entitlement foi liberado após o pagamento.",
+            type: "PAYMENT",
+            actionUrl: "/cliente/assinaturas",
             data: { orderId: payment.order.id },
           });
         })

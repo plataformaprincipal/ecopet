@@ -246,6 +246,7 @@ export function AdminPricingPanel() {
           <CardContent className="grid gap-1 text-sm sm:grid-cols-2">
             <p>Modo: {selected.pricingMode}</p>
             <p>Disponibilidade: {selected.commercialAvailability}</p>
+            <p>billingEnabled: {String((selected as { billingEnabled?: boolean }).billingEnabled ?? selected.commercialAvailability === "PURCHASABLE")}</p>
             <p>Referência/ticket: {brl(selected.referenceTicketCents ?? selected.amountCents)}</p>
             <p>Tutor ref.: {brl(selected.referenceTutorCents)}</p>
             <p>Base prestador: {brl(selected.providerBaseCents)}</p>

@@ -1,7 +1,8 @@
 import type { PrismaClient } from "@prisma/client";
 import { OFFICIAL_CATALOG, officialActiveVersion } from "../../../apps/web/src/lib/pricing/catalog";
-import { OFFICIAL_RULES } from "../../../apps/web/src/lib/pricing/official-rules";
 import { OFFICIAL_PRICING_VERSION } from "../../../apps/web/src/lib/pricing/types";
+import { OFFICIAL_RULES } from "../../../apps/web/src/lib/pricing/official-rules";
+import { DEFAULT_REFUND_POLICIES } from "../../../apps/web/src/lib/commerce-catalog/refund-policy";
 
 export async function seedOfficialPricing(prisma: PrismaClient) {
   const official = officialActiveVersion();
@@ -102,6 +103,7 @@ export async function seedOfficialPricing(prisma: PrismaClient) {
         urgentEligible: Boolean(sku.urgentEligible),
         complexProcedure: Boolean(sku.complexProcedure),
         allowZero: Boolean(sku.allowZero),
+        billingEnabled: Boolean(sku.billingEnabled ?? sku.commercialAvailability === "PURCHASABLE"),
         capabilityId: sku.capabilityId ?? null,
         portfolioSuiteId: sku.portfolioSuiteId,
         mediaPassThrough: Boolean(sku.mediaPassThrough),
@@ -135,6 +137,7 @@ export async function seedOfficialPricing(prisma: PrismaClient) {
         urgentEligible: Boolean(sku.urgentEligible),
         complexProcedure: Boolean(sku.complexProcedure),
         allowZero: Boolean(sku.allowZero),
+        billingEnabled: Boolean(sku.billingEnabled ?? sku.commercialAvailability === "PURCHASABLE"),
         capabilityId: sku.capabilityId ?? null,
         portfolioSuiteId: sku.portfolioSuiteId,
         mediaPassThrough: Boolean(sku.mediaPassThrough),
@@ -174,6 +177,25 @@ export async function seedOfficialPricing(prisma: PrismaClient) {
       activePricingVersionId: version.id,
     },
   });
+
+  for (const policy of DEFAULT_REFUND_POLICIES) {
+    await prisma.skuRefundPolicy.upsert({
+      where: { sku: policy.skuPattern },
+      update: {
+        beforeAcceptRefund: policy.beforeAcceptRefund,
+        afterStartPolicy: policy.afterStartPolicy,
+        noShowProviderMaxBps: policy.noShowProviderMaxBps,
+        payoutDays: policy.payoutDays,
+      },
+      create: {
+        sku: policy.skuPattern,
+        beforeAcceptRefund: policy.beforeAcceptRefund,
+        afterStartPolicy: policy.afterStartPolicy,
+        noShowProviderMaxBps: policy.noShowProviderMaxBps,
+        payoutDays: policy.payoutDays,
+      },
+    });
+  }
 
   return { versionId: version.id, skuCount: OFFICIAL_CATALOG.length };
 }

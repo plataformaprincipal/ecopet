@@ -36,8 +36,13 @@ const root = path.resolve(import.meta.dirname, "..");
 load(path.join(root, ".env"));
 load(path.join(root, "packages/database/.env"));
 load(path.join(root, "apps/web/.env"));
-load(path.join(root, "apps/web/.env.local"));
+load(path.join(root, "apps/web/.env.production.verify"));
+const target = (process.env.ECOPET_DB_TARGET || "production").toLowerCase();
+if (target === "preview") {
+  load(path.join(root, "apps/web/.env.local"));
+}
 
+console.log("migrate status — target:", target);
 console.log("migrate status — runtime host:", hostOf(process.env.DATABASE_URL || ""));
 if (process.env.DIRECT_URL) {
   console.log("migrate status — direct host:", hostOf(process.env.DIRECT_URL));

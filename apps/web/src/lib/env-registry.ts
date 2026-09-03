@@ -957,7 +957,7 @@ export const ENV_REGISTRY: EnvVarDefinition[] = [
     tier: "optional",
     scopes: ["web"],
     environments: ["Production", "Preview"],
-    purpose: "Fail-closed. Mesmo true não marca splitReady enquanto o checkout for Orders API da plataforma.",
+    purpose: "Kill-switch. 0/false impede split mesmo com parceiro CONNECTED. Ausente: split por pedido se o seller estiver conectado.",
     usedIn: ["apps/web/src/lib/finance/split-capability.ts"],
     example: "false",
     secret: false,

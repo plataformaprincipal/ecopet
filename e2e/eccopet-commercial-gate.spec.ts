@@ -79,23 +79,20 @@ test.describe("EccoPet commercial release gate", () => {
     await expect(page.getByRole("heading", { name: "SAÚDE ECCOPET" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "PLANO DE SAÚDE PET" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "EMERGÊNCIA VETERINÁRIA" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Consulta" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Consulta", exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: "Vacinação" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Check-up" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Nutrição" })).toBeVisible();
   });
 
-  test("Plano Saúde declara CATALOG_ONLY e 30 dias manuais", async ({ page }) => {
+  test("Plano Saúde declara PARTNER_REQUIRED e SKUs PRT", async ({ page }) => {
     await isolateBrowser(page);
-    await page.goto("/marketplace/saude");
-    await expect(page.getByRole("heading", { name: /saúde do seu pet/i })).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByText(/compra paga ainda não está habilitada/i)).toBeVisible();
-    await expect(page.getByText(/CATALOG_ONLY/i).first()).toBeVisible();
-    await expect(page.getByText(/renovação manual/i)).toBeVisible();
-    await expect(page.getByText(/SAU-006/).first()).toBeVisible();
-    await expect(page.getByText(/SAU-007/).first()).toBeVisible();
-    await expect(page.getByText(/SAU-055/).first()).toBeVisible();
-    await expect(page.getByRole("button", { name: /30 dias/i }).first()).toBeVisible();
+    await page.goto("/marketplace/saude/planos");
+    await expect(page.getByRole("heading", { name: /eccopet saúde/i })).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText(/PARTNER_REQUIRED/i).first()).toBeVisible();
+    await expect(page.getByText(/PRT-001/).first()).toBeVisible();
+    await expect(page.getByText(/PRT-002/).first()).toBeVisible();
+    await expect(page.getByText(/PRT-003/).first()).toBeVisible();
   });
 
   test("Emergência abre Bubis imediatamente", async ({ page }) => {

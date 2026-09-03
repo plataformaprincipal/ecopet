@@ -34,13 +34,18 @@ const root = path.resolve(import.meta.dirname, "..");
 load(path.join(root, ".env"));
 load(path.join(root, "packages/database/.env"));
 load(path.join(root, "apps/web/.env"));
-load(path.join(root, "apps/web/.env.local"));
+load(path.join(root, "apps/web/.env.production.verify"));
+const target = (process.env.ECOPET_DB_TARGET || "production").toLowerCase();
+if (target === "preview") {
+  load(path.join(root, "apps/web/.env.local"));
+}
 
 if (!process.env.DATABASE_URL) {
   console.error("DATABASE_URL ausente após carregar env da Web.");
   process.exit(1);
 }
 
+console.log("seed — target:", target);
 console.log("seed — runtime host:", hostOf(process.env.DATABASE_URL));
 
 const result = spawnSync("npx", ["tsx", "prisma/seed.ts"], {

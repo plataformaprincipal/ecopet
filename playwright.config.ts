@@ -3,7 +3,19 @@ import { loadWebRuntimeEnv } from "./e2e/helpers/load-web-env";
 
 loadWebRuntimeEnv();
 
-const baseURL = process.env.WEB_URL || "http://localhost:3000";
+function isHttpUrl(value: string): boolean {
+  try {
+    const u = new URL(value);
+    return u.protocol === "http:" || u.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+/** E2E local por padrão. WEB_URL de produção no .env não deve sequestrar o gate. */
+const explicit = (process.env.E2E_BASE_URL || process.env.PLAYWRIGHT_BASE_URL || "").trim();
+const baseURL = isHttpUrl(explicit) ? new URL(explicit).origin : "http://localhost:3000";
+const useRemoteServer = isHttpUrl(explicit);
 
 export default defineConfig({
   testDir: "./e2e",
@@ -18,12 +30,12 @@ export default defineConfig({
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer:
-    process.env.CI || process.env.WEB_URL
+    process.env.CI || useRemoteServer
       ? undefined
       : {
           command: "npm run dev -w @ecopet/web",
           url: baseURL,
           reuseExistingServer: true,
-          timeout: 120_000,
+          timeout: 180_000,
         },
 });

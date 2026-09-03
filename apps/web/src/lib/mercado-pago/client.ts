@@ -85,10 +85,12 @@ async function mpFetch<T>(
     method: "GET" | "POST" | "PUT";
     body?: unknown;
     idempotencyKey?: string;
+    accessToken?: string;
   }
 ): Promise<MpClientResult<T>> {
   const config = resolveConfig();
-  if (!config) {
+  const accessToken = init.accessToken?.trim() || config?.accessToken;
+  if (!config || !accessToken) {
     return {
       ok: false,
       status: 503,
@@ -103,7 +105,7 @@ async function mpFetch<T>(
 
   try {
     const headers: Record<string, string> = {
-      Authorization: `Bearer ${config.accessToken}`,
+      Authorization: `Bearer ${accessToken}`,
       "Content-Type": "application/json",
       Accept: "application/json",
     };
@@ -207,11 +209,46 @@ export async function getMercadoPagoMerchantOrder(
   return mpFetch<Record<string, unknown>>(`/merchant_orders/${id}`, { method: "GET" });
 }
 
+export type CreateMpMarketplacePaymentRequest = {
+  transaction_amount: number;
+  description: string;
+  payment_method_id: string;
+  token?: string;
+  installments?: number;
+  payer: {
+    email: string;
+    first_name?: string;
+    last_name?: string;
+    identification?: { type: string; number: string };
+  };
+  application_fee: number;
+  external_reference: string;
+  binary_mode?: boolean;
+  date_of_expiration?: string;
+};
+
+/**
+ * POST /v1/payments — marketplace real: token do seller + application_fee (conta recebedora do parceiro).
+ */
+export async function createMercadoPagoMarketplacePayment(
+  body: CreateMpMarketplacePaymentRequest,
+  idempotencyKey: string,
+  sellerAccessToken: string
+): Promise<MpClientResult<Record<string, unknown>>> {
+  return mpFetch<Record<string, unknown>>("/v1/payments", {
+    method: "POST",
+    body,
+    idempotencyKey,
+    accessToken: sellerAccessToken,
+  });
+}
+
 /** POST /v1/payments/{id}/refunds — estorno total (body vazio) ou parcial `{ amount }`. */
 export async function refundMercadoPagoLegacyPayment(
   paymentId: string,
   idempotencyKey: string,
-  amount?: number
+  amount?: number,
+  sellerAccessToken?: string
 ): Promise<MpClientResult<Record<string, unknown>>> {
   const id = encodeURIComponent(paymentId);
   const body =
@@ -222,6 +259,7 @@ export async function refundMercadoPagoLegacyPayment(
     method: "POST",
     body,
     idempotencyKey,
+    accessToken: sellerAccessToken,
   });
 }
 
