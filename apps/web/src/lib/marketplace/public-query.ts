@@ -237,6 +237,7 @@ export async function queryPublicServices(filters: PublicServiceFilters) {
           select: {
             id: true,
             name: true,
+            veterinarianProfile: { select: { crmv: true, crmvState: true, specialties: true } },
             partnerProfile: {
               select: {
                 ...partnerProfileSelect,

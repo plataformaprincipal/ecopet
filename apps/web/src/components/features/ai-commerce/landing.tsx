@@ -21,10 +21,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { analyticsService } from "@/lib/analytics/service";
 import { AiEvents } from "@/lib/analytics/events";
-import { useAuthSession } from "@/hooks/use-auth-session";
-import { useTranslation } from "@/providers/i18n-provider";
-import type { TranslationKey } from "@/lib/i18n/types";
 import { AI_COMMERCE_SKUS } from "@/lib/ai-commerce/flags";
+import { AI_COMMERCE_PRODUCTS } from "@/lib/ai-commerce/catalog";
+import { getSpecialistExperience } from "@/lib/ai-commerce/specialist-experience";
 
 type CatalogProduct = {
   sku: string;
@@ -37,13 +36,18 @@ type CatalogProduct = {
   href: string;
   free?: boolean;
   requiresPayment?: boolean;
+  avgFillMinutes?: number | null;
+  priceInCents?: number;
+  currency?: string;
+  unitLabel?: string;
 };
 
-const HUB_GROUPS: Array<{ labelKey: TranslationKey; skus: string[] }> = [
-  { labelKey: "ecopetAi.hub.groups.saude", skus: [AI_COMMERCE_SKUS.ECCOVET, AI_COMMERCE_SKUS.TRIAGE, AI_COMMERCE_SKUS.CHECKUP, AI_COMMERCE_SKUS.HEALTH_PROFILE] },
-  { labelKey: "ecopetAi.hub.groups.exames", skus: [AI_COMMERCE_SKUS.EXAMS, AI_COMMERCE_SKUS.VISION, AI_COMMERCE_SKUS.REPORT, AI_COMMERCE_SKUS.DENTAL] },
-  { labelKey: "ecopetAi.hub.groups.nutricao", skus: [AI_COMMERCE_SKUS.NUTRI, AI_COMMERCE_SKUS.PESO] },
-  { labelKey: "ecopetAi.hub.groups.prevencao", skus: [AI_COMMERCE_SKUS.VACCINE, AI_COMMERCE_SKUS.MED, AI_COMMERCE_SKUS.BEHAVIOR] },
+const STORE_GROUPS: Array<{ id: string; label: string; skus: string[] }> = [
+  { id: "used", label: "Mais usados", skus: [AI_COMMERCE_SKUS.ECCOVET, AI_COMMERCE_SKUS.TRIAGE, AI_COMMERCE_SKUS.EXAMS, AI_COMMERCE_SKUS.HEALTH_PROFILE] },
+  { id: "saude", label: "Saúde", skus: [AI_COMMERCE_SKUS.ECCOVET, AI_COMMERCE_SKUS.TRIAGE, AI_COMMERCE_SKUS.CHECKUP, AI_COMMERCE_SKUS.VISION] },
+  { id: "nutri", label: "Nutrição e bem-estar", skus: [AI_COMMERCE_SKUS.NUTRI, AI_COMMERCE_SKUS.PESO, AI_COMMERCE_SKUS.BEHAVIOR] },
+  { id: "prev", label: "Prevenção", skus: [AI_COMMERCE_SKUS.VACCINE, AI_COMMERCE_SKUS.MED, AI_COMMERCE_SKUS.DENTAL] },
+  { id: "docs", label: "Documentos e histórico", skus: [AI_COMMERCE_SKUS.REPORT, AI_COMMERCE_SKUS.EXAMS, AI_COMMERCE_SKUS.HEALTH_PROFILE] },
 ];
 
 const ICONS: Record<string, typeof Stethoscope> = {
@@ -62,26 +66,47 @@ const ICONS: Record<string, typeof Stethoscope> = {
   [AI_COMMERCE_SKUS.BEHAVIOR]: Sparkles,
 };
 
-function assistantHref(role?: string) {
-  if (role === "PARTNER") return "/partner/eccopet/assistente";
-  if (role === "ONG") return "/ngo/eccopet/assistente";
-  if (role === "CLIENT") return "/client/eccopet/assistente";
-  return "/eccopet/assistente";
+function formatPrice(p: CatalogProduct) {
+  if (p.free || p.priceInCents == null) return "Grátis no beta";
+  return (p.priceInCents / 100).toLocaleString("pt-BR", { style: "currency", currency: p.currency ?? "BRL" });
+}
+
+function fromDefs(): CatalogProduct[] {
+  return AI_COMMERCE_PRODUCTS.map((p) => ({
+    sku: p.sku,
+    slug: p.slug,
+    name: p.name,
+    tag: p.tag,
+    category: p.category,
+    shortDescription: p.shortDescription,
+    ctaLabel: p.ctaLabel,
+    href: p.href,
+    free: true,
+    avgFillMinutes: p.avgFillMinutes,
+  }));
 }
 
 export function EccoPetAiLanding() {
-  const { t } = useTranslation();
-  const { data } = useAuthSession();
-  const role = data?.user?.role;
-  const [products, setProducts] = useState<CatalogProduct[] | null>(null);
+  const [products, setProducts] = useState<CatalogProduct[] | null>(fromDefs());
   const [query, setQuery] = useState("");
 
   useEffect(() => {
     analyticsService.track(AiEvents.CATALOG_VIEW, { screen: "eccopet_hub" });
-    fetch("/api/ai-commerce/catalog")
+    const ac = new AbortController();
+    const timer = window.setTimeout(() => ac.abort(), 10_000);
+    fetch("/api/ai-commerce/catalog", { signal: ac.signal })
       .then((r) => r.json())
-      .then((d) => setProducts(d.success ? d.data.products : []))
-      .catch(() => setProducts([]));
+      .then((d) => {
+        if (d.success && Array.isArray(d.data.products) && d.data.products.length) {
+          setProducts(d.data.products);
+        }
+      })
+      .catch(() => undefined)
+      .finally(() => window.clearTimeout(timer));
+    return () => {
+      window.clearTimeout(timer);
+      ac.abort();
+    };
   }, []);
 
   const visible = useMemo(() => {
@@ -96,36 +121,30 @@ export function EccoPetAiLanding() {
       <header className="max-w-3xl">
         <p className="text-sm font-medium tracking-wide text-ecopet-green">EccoPet AI</p>
         <h1 className="mt-3 text-4xl font-semibold tracking-tight text-[var(--ep-fg)] sm:text-5xl">
-          {t("ecopetAi.hub.headline")}
+          13 especialistas de IA. Um único histórico de saúde para seu pet.
         </h1>
         <p className="mt-4 max-w-2xl text-base leading-relaxed text-[var(--ep-fg-muted)]">
-          {t("ecopetAi.hub.subhead")}
+          Converse com o especialista certo. Cada produto tem protocolo, resultado e relatório próprios.
         </p>
-        <p className="mt-3 inline-flex rounded-full border border-[var(--ep-border)] bg-[var(--ep-bg-muted)] px-3 py-1 text-xs font-medium text-[var(--ep-fg)]">
-          {t("ecopetAi.hub.freeBadge")}
-        </p>
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-          <Button asChild>
-            <a href="#ferramentas">{t("ecopetAi.hub.explore")}</a>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href={assistantHref(role)}>{t("ecopetAi.hub.openAssistant")}</Link>
-          </Button>
-        </div>
       </header>
 
-      <section id="ferramentas" className="mt-14">
-        <label className="block text-sm font-medium text-[var(--ep-fg)]" htmlFor="ai-search">
-          {t("ecopetAi.hub.searchLabel")}
-        </label>
+      <form
+        className="mt-8 flex gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const match = visible[0];
+          if (match) window.location.href = match.href;
+        }}
+      >
         <input
           id="ai-search"
-          className="mt-2 w-full max-w-xl rounded-xl border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] px-4 py-3 text-[var(--ep-fg)]"
-          placeholder={t("ecopetAi.hub.searchPlaceholder")}
+          className="w-full max-w-xl rounded-full border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] px-5 py-3 text-[var(--ep-fg)]"
+          placeholder="Pergunte ou busque um especialista…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-      </section>
+        <Button type="submit">Abrir</Button>
+      </form>
 
       {!products && (
         <div className="mt-10 grid gap-5 sm:grid-cols-2">
@@ -141,33 +160,44 @@ export function EccoPetAiLanding() {
         </div>
       )}
 
-      {HUB_GROUPS.map((group) => {
+      {STORE_GROUPS.map((group) => {
         const items = visible.filter((p) => group.skus.includes(p.sku));
         if (!items.length) return null;
         return (
-          <section key={group.labelKey} className="mt-14">
-            <h2 className="text-2xl font-semibold text-[var(--ep-fg)]">{t(group.labelKey)}</h2>
+          <section key={group.id} className="mt-14" id={group.id === "used" ? "ferramentas" : group.id}>
+            <h2 className="text-2xl font-semibold text-[var(--ep-fg)]">{group.label}</h2>
             <div className="mt-6 grid gap-5 sm:grid-cols-2">
               {items.map((p) => {
                 const Icon = ICONS[p.sku] ?? Sparkles;
+                const experience = getSpecialistExperience(p.sku);
                 return (
                   <article
-                    key={p.sku}
+                    key={`${group.id}-${p.sku}`}
                     className="flex flex-col rounded-2xl border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] p-6 shadow-[var(--shadow-sm)]"
                   >
-                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-ecopet-green/10 text-ecopet-green">
+                    <span
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-white"
+                      style={{ background: experience?.accentColor ?? "#0F8A5F" }}
+                    >
                       <Icon className="h-5 w-5" aria-hidden />
                     </span>
-                    <p className="mt-4 text-xs font-medium uppercase tracking-wide text-ecopet-green">{p.tag}</p>
+                    <p className="mt-4 text-xs font-medium uppercase tracking-wide" style={{ color: experience?.accentColor }}>
+                      {p.tag}
+                    </p>
                     <h3 className="mt-2 text-xl font-semibold text-[var(--ep-fg)]">{p.name}</h3>
-                    <p className="mt-2 flex-1 text-sm leading-relaxed text-[var(--ep-fg-muted)]">{p.shortDescription}</p>
-                    <p className="mt-4 text-sm font-medium text-[var(--ep-fg)]">{t("ecopetAi.hub.free")}</p>
+                    <p className="mt-2 text-sm font-medium">{p.shortDescription}</p>
+                    <p className="mt-2 flex-1 text-sm leading-relaxed text-[var(--ep-fg-muted)]">
+                      {experience?.whatItDoes ?? p.tag}
+                    </p>
+                    <p className="mt-4 text-sm">
+                      ~{p.avgFillMinutes ?? experience?.estimatedMinutes ?? 5} min · {formatPrice(p)}
+                    </p>
                     <Button asChild className="mt-5">
                       <Link
                         href={p.href}
                         onClick={() => analyticsService.track(AiEvents.MODULE_OPEN, { screen: "eccopet_hub", label: p.sku })}
                       >
-                        {p.ctaLabel ?? t("ecopetAi.hub.useNow")}
+                        {p.ctaLabel ?? "Usar agora"}
                       </Link>
                     </Button>
                   </article>

@@ -51,6 +51,7 @@ ok("getDefaultDashboardPath CLIENT → /cliente", getDefaultDashboardPath("CLIEN
 // Acesso à experiência do cliente (/client/* e /cliente/*)
 ok("CLIENT acessa /client", canAccessRoute("CLIENT", "/client"));
 ok("CLIENT acessa /cliente", canAccessRoute("CLIENT", "/cliente"));
+ok("CLIENT acessa sessão EccoPet AI", canAccessRoute("CLIENT", "/eccopet/vet/session/abc"));
 ok("CLIENT acessa /client/social", canAccessRoute("CLIENT", "/client/social"));
 ok("CLIENT acessa /client/marketplace", canAccessRoute("CLIENT", "/client/marketplace"));
 ok("PARTNER NÃO acessa /client", !canAccessRoute("PARTNER", "/client"));

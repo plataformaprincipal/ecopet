@@ -13,12 +13,11 @@ test.describe("EccoPet AI hub", () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/eccopet");
     await expect(
-      page.getByRole("heading", { name: /inteligência para cuidar melhor do seu pet/i })
+      page.getByRole("heading", { name: /13 especialistas de IA/i })
     ).toBeVisible({ timeout: 20_000 });
     await expect(page.getByText("EccoPet AI").first()).toBeVisible();
-    await expect(page.getByRole("link", { name: /explorar ferramentas/i })).toBeVisible();
-    await expect(page.getByRole("link", { name: /usar agora/i }).first()).toBeVisible();
-    await expect(page.getByText(/^grátis$/i).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: /conversar com dr\. ecco|usar agora|fazer triagem/i }).first()).toBeVisible();
+    await expect(page.getByText(/grátis no beta|^grátis$/i).first()).toBeVisible();
     await expect(page.getByText(/eccovet ai/i).first()).toBeVisible({ timeout: 20_000 });
     await expect(page.getByText(/eccovet vision/i).first()).toBeVisible();
     await expect(page.getByText(/eccovet exames/i).first()).toBeVisible();
@@ -27,9 +26,9 @@ test.describe("EccoPet AI hub", () => {
 
   test("product page EccoVet is public", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
-    await page.goto("/eccopet/vet");
+    await page.goto("/eccopet/vet", { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("heading", { name: /eccovet ai/i })).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByRole("button", { name: /usar agora/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /conversar com dr\. ecco|usar agora/i })).toBeVisible();
     await expect(page.getByRole("button", { name: /adicionar ao carrinho/i })).toHaveCount(0);
   });
 
@@ -44,7 +43,7 @@ test.describe("EccoPet AI hub", () => {
       await page.setViewportSize({ width: 1280, height: 800 });
       await page.goto("/eccopet");
       await expect(
-        page.getByRole("heading", { name: /inteligência para cuidar melhor do seu pet/i })
+        page.getByRole("heading", { name: /13 especialistas de IA/i })
       ).toBeVisible({ timeout: 20_000 });
       if (theme === "dark") {
         const bg = await page.locator("body").evaluate((el) => getComputedStyle(el).backgroundColor);
@@ -75,7 +74,7 @@ test.describe("legacy assistant shell (internal)", () => {
     await page.addInitScript(() => localStorage.setItem("ecopet-theme", "black"));
     await page.goto("/eccopet");
     await expect(
-      page.getByRole("heading", { name: /inteligência para cuidar melhor do seu pet/i })
+      page.getByRole("heading", { name: /13 especialistas de IA/i })
     ).toBeVisible({ timeout: 20_000 });
     const bg = await page.locator("body").evaluate((el) => getComputedStyle(el).backgroundColor);
     expect(bg).not.toBe("rgb(255, 255, 255)");

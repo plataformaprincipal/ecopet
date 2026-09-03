@@ -10,6 +10,50 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
+export async function GET(request: Request) {
+  const { user, error } = await requireAuth();
+  if (error) return error;
+  const url = new URL(request.url);
+  const sku = url.searchParams.get("sku") ?? undefined;
+  const petId = url.searchParams.get("petId") ?? undefined;
+  const take = Math.min(20, Math.max(1, Number(url.searchParams.get("take") ?? 8) || 8));
+  const where: {
+    userId: string;
+    status: "COMPLETED";
+    entitlement?: { sku: string };
+    petId?: string;
+  } = { userId: user!.id, status: "COMPLETED" };
+  if (sku && isAiCommerceSku(sku)) where.entitlement = { sku };
+  if (petId) where.petId = petId;
+  const rows = await prisma.aIExecution.findMany({
+    where,
+    orderBy: { completedAt: "desc" },
+    take,
+    select: {
+      id: true,
+      capabilityId: true,
+      completedAt: true,
+      structuredOutput: true,
+      pet: { select: { id: true, name: true } },
+      entitlement: { select: { sku: true } },
+    },
+  });
+  return apiSuccess({
+    executions: rows.map((row) => {
+      const out = (row.structuredOutput ?? {}) as Record<string, unknown>;
+      return {
+        id: row.id,
+        sku: row.entitlement.sku,
+        capabilityId: row.capabilityId,
+        petId: row.pet.id,
+        petName: row.pet.name,
+        completedAt: row.completedAt,
+        summary: String(out.summary ?? out.clinicalOverview ?? "").slice(0, 220),
+      };
+    }),
+  });
+}
+
 const bodySchema = z.object({
   entitlementId: z.string().min(1).optional(),
   sku: z.string().optional(),

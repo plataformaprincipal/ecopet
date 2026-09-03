@@ -82,6 +82,12 @@ const steps = [
     ],
     env: { TSX_TSCONFIG_PATH: "apps/web/tsconfig.json" },
   },
+  {
+    name: "test:ai:commerce",
+    cmd: "npm",
+    args: ["run", "test:ai:commerce", "-w", "@ecopet/web"],
+    env: { TSX_TSCONFIG_PATH: "" },
+  },
 ];
 
 let failed = 0;
@@ -90,11 +96,13 @@ console.log("=== EcoPet — npm run test ===\n");
 
 for (const step of steps) {
   console.log(`→ ${step.name}`);
+  const env = { ...process.env, ...(step.env ?? {}) };
+  if (!step.env?.TSX_TSCONFIG_PATH) delete env.TSX_TSCONFIG_PATH;
   const result = spawnSync(step.cmd, step.args, {
     cwd: root,
     stdio: "inherit",
     shell: process.platform === "win32",
-    env: step.env ? { ...process.env, ...step.env } : process.env,
+    env,
   });
   if (result.status !== 0) {
     failed++;

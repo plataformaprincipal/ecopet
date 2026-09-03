@@ -100,7 +100,7 @@ ok("rota /ngo/adocoes exige aprovação", ngoExperienceRouteRequiresApproval("/n
 ok("rota /ngo/campanhas exige aprovação", ngoExperienceRouteRequiresApproval("/ngo/campanhas"));
 ok("rota /ngo/social exige aprovação", ngoExperienceRouteRequiresApproval("/ngo/social"));
 ok("rota /ngo/supporters exige aprovação", ngoExperienceRouteRequiresApproval("/ngo/supporters"));
-ok("rota /ngo/eccopet exige aprovação", ngoExperienceRouteRequiresApproval("/ngo/eccopet"));
+ok("rota /ngo/eccopet NÃO exige aprovação", !ngoExperienceRouteRequiresApproval("/ngo/eccopet"));
 ok("rota /ngo (home) NÃO exige aprovação", !ngoExperienceRouteRequiresApproval("/ngo"));
 ok("rota /ngo/profile NÃO exige aprovação", !ngoExperienceRouteRequiresApproval("/ngo/profile"));
 ok(

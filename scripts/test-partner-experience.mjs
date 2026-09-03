@@ -104,7 +104,7 @@ ok("rota /partner/products exige aprovação", partnerExperienceRouteRequiresApp
 ok("rota /partner/orders exige aprovação", partnerExperienceRouteRequiresApproval("/partner/orders"));
 ok("rota /partner/appointments exige aprovação", partnerExperienceRouteRequiresApproval("/partner/appointments"));
 ok("rota /partner/marketplace exige aprovação", partnerExperienceRouteRequiresApproval("/partner/marketplace"));
-ok("rota /partner/eccopet exige aprovação", partnerExperienceRouteRequiresApproval("/partner/eccopet"));
+ok("rota /partner/eccopet NÃO exige aprovação", !partnerExperienceRouteRequiresApproval("/partner/eccopet"));
 ok("rota /partner (home) NÃO exige aprovação", !partnerExperienceRouteRequiresApproval("/partner"));
 ok("rota /partner/social NÃO exige aprovação", !partnerExperienceRouteRequiresApproval("/partner/social"));
 ok("rota /partner/profile NÃO exige aprovação", !partnerExperienceRouteRequiresApproval("/partner/profile"));

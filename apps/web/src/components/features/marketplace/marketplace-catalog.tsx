@@ -29,6 +29,7 @@ import { useMarketplaceQuery } from "@/hooks/use-marketplace-query";
 import { useUserLocation } from "@/hooks/use-user-location";
 import { useTranslation } from "@/providers/i18n-provider";
 import { cn } from "@/lib/utils";
+import { MarketplaceSaudeRail } from "./marketplace-saude-rail";
 
 const TABS: { id: MarketplaceResultType; labelKey: string }[] = [
   { id: "all", labelKey: "pub.marketplace.tabAll" },
@@ -164,6 +165,7 @@ export function MarketplaceCatalog({ defaultType = "all" }: { defaultType?: Mark
 
   return (
     <div className="space-y-4">
+      <MarketplaceSaudeRail />
       <div className="flex flex-col gap-3 sm:flex-row">
         <form
           role="search"

@@ -9,29 +9,36 @@ export async function GET(request: Request) {
     return apiFailure("VALIDATION", "Coordenadas inválidas.", 400);
   }
 
-  const result = await queryPublicServices({
-    q: parsed.q,
-    category: parsed.serviceCategory,
-    species: parsed.species,
-    city: parsed.city,
-    state: parsed.state,
-    partnerId: parsed.partnerId,
-    minPrice: parsed.minPrice,
-    maxPrice: parsed.maxPrice,
-    minRating: parsed.minRating,
-    telehealth: parsed.telehealth,
-    emergency24h: parsed.emergency24h,
-    homeService: parsed.homeService,
-    verifiedOnly: parsed.verifiedOnly,
-    openToday: parsed.openToday,
-    group: parsed.group,
-    lat: parsed.lat,
-    lng: parsed.lng,
-    radiusKm: parsed.radiusKm,
-    sort: parsed.sort,
-    page: parsed.page,
-    pageSize: parsed.pageSize,
-  });
-
-  return apiSuccess(result);
+  try {
+    const result = await queryPublicServices({
+      q: parsed.q,
+      category: parsed.serviceCategory,
+      species: parsed.species,
+      city: parsed.city,
+      state: parsed.state,
+      partnerId: parsed.partnerId,
+      minPrice: parsed.minPrice,
+      maxPrice: parsed.maxPrice,
+      minRating: parsed.minRating,
+      telehealth: parsed.telehealth,
+      emergency24h: parsed.emergency24h,
+      homeService: parsed.homeService,
+      verifiedOnly: parsed.verifiedOnly,
+      openToday: parsed.openToday,
+      group: parsed.group,
+      lat: parsed.lat,
+      lng: parsed.lng,
+      radiusKm: parsed.radiusKm,
+      sort: parsed.sort,
+      page: parsed.page,
+      pageSize: parsed.pageSize,
+    });
+    return apiSuccess(result);
+  } catch {
+    return apiFailure(
+      "SERVICE_UNAVAILABLE",
+      "Não foi possível consultar a disponibilidade agora. Tente novamente. Se houver emergência, procure uma clínica presencial.",
+      503
+    );
+  }
 }

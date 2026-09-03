@@ -51,6 +51,7 @@ export const ROLE_ROUTE_PREFIXES: Record<AppRole, readonly string[]> = {
     "/marketplace",
     "/notificacoes",
     "/ia",
+    "/eccopet",
     "/agenda",
     "/health",
     "/iot",
@@ -94,6 +95,7 @@ export const ROLE_ROUTE_PREFIXES: Record<AppRole, readonly string[]> = {
     "/agenda",
     "/configuracoes",
     "/pedidos",
+    "/eccopet",
     "/conta",
   ],
   ONG: [
@@ -116,6 +118,7 @@ export const ROLE_ROUTE_PREFIXES: Record<AppRole, readonly string[]> = {
     "/notificacoes",
     "/social/mensagens",
     "/configuracoes",
+    "/eccopet",
     "/conta",
   ],
   ADMIN: [
