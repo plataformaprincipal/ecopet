@@ -17,7 +17,7 @@ function productAction(sku: string, reason: string): NextBestAction | null {
     capabilityId: def.capabilityId,
     slug: def.slug,
     href: def.href,
-    label: `Fazer uma análise no ${def.name}`,
+    label: `Abrir ${def.name}`,
     reason,
   };
 }
@@ -48,14 +48,21 @@ export function computeNextBestAction(params: {
     return productAction("AI_ECCOVET_REPORT", "Gerar um relatório organizado para a consulta.");
   }
   if (kind === "triage") {
-    return productAction("AI_ECCOVET", "Depois da triagem, organize o caso no EccoVet AI.");
+    return {
+      sku: "AI_ECCOVET_TRIAGE",
+      capabilityId: "eccovet.triage",
+      slug: "emergencia",
+      href: "/marketplace/emergencia",
+      label: "Emergência",
+      reason: "Se a triagem apontou urgência, a Bubis continua o atendimento.",
+    };
   }
   if (kind === "vision") {
     if (/dent|boca|dente/.test(text)) return productAction("AI_ECCODENTAL", "A região visível sugere avaliação oral dedicada.");
     return productAction("AI_ECCOVET", "Levar o resumo visual para uma análise clínica estruturada.");
   }
   if (kind === "dental") return productAction("AI_ECCOCHECKUP", "Incluir saúde oral no checkup preventivo.");
-  if (kind === "exams") return productAction("AI_PET_HEALTH_PROFILE", "Adicionar os exames ao Health Profile.");
+  if (kind === "exams") return productAction("AI_ECCOVET_REPORT", "Gerar um relatório para levar ao veterinário.");
   if (kind === "peso") return productAction("AI_ECCONUTRI", "Acompanhar peso com orientação nutricional.");
   if (kind === "nutri") return productAction("AI_ECCOPESO", "Registrar a evolução de peso junto da rotina alimentar.");
   if (kind === "behavior") return productAction("AI_PET_HEALTH_PROFILE", "Adicionar o padrão comportamental ao histórico.");

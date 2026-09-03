@@ -57,6 +57,22 @@ export function getSpecialistProtocol(sku: string): SpecialistProtocol | undefin
   return BY_SKU.get(sku as AiCommerceSku);
 }
 
+/** First user message/chip becomes structured interview input without inventing answers. */
+export function initialInterviewInput(sku: string, message?: string): Record<string, unknown> {
+  const text = message?.trim();
+  if (!text) return {};
+  const protocol = getSpecialistProtocol(sku);
+  const first = protocol?.questionTree[0];
+  if (first?.options?.length) {
+    const matched = first.options.find((opt) => opt.toLowerCase() === text.toLowerCase());
+    if (matched) return { [first.id]: matched };
+  }
+  if (first && (first.type === "textarea" || first.type === "text")) {
+    return { [first.id]: text };
+  }
+  return { chiefComplaint: text };
+}
+
 export function getSpecialistProtocolByCapability(capabilityId: string): SpecialistProtocol | undefined {
   const exact = PROTOCOLS.find((p) => p.capabilityId === capabilityId);
   if (exact) return exact;

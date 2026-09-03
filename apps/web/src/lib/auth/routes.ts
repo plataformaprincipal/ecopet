@@ -58,6 +58,8 @@ export function isPublicMarketplacePath(pathname: string): boolean {
   if (pathname.startsWith("/parceiros/")) return true;
   if (pathname.startsWith("/lojas/")) return true;
   if (pathname === "/carrinho") return true;
+  if (pathname === "/marketplace/emergencia") return true;
+  if (pathname === "/marketplace/saude" || pathname.startsWith("/marketplace/saude/")) return true;
   return false;
 }
 
@@ -77,6 +79,7 @@ export function isPrivateMarketplacePath(pathname: string): boolean {
 export function isPublicClientPath(pathname: string): boolean {
   if (pathname === "/explorar" || pathname === "/explore") return true;
   if (pathname === "/eccopet") return true;
+  if (pathname === "/eccopet/checkout") return true;
   if (/^\/eccopet\/(vet|triagem|relatorio|exames|vision|nutri|peso|dental|behavior|vacina|med|checkup|health-profile|lab)$/.test(pathname)) return true;
   if (pathname === "/eccopet/assistente") return true;
   if (pathname === "/ia") return true;

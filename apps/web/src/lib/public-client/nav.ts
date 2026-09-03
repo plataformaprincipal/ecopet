@@ -53,6 +53,8 @@ export function isPublicClientShellPath(pathname: string): boolean {
   if (pathname === "/marketplace/produtos") return true;
   if (pathname === "/marketplace/servicos") return true;
   if (pathname === "/marketplace/busca") return true;
+  if (pathname === "/marketplace/emergencia") return true;
+  if (pathname === "/marketplace/saude" || pathname.startsWith("/marketplace/saude/")) return true;
   if (pathname === "/produtos" || pathname.startsWith("/produtos/")) return true;
   if (pathname === "/servicos" || pathname.startsWith("/servicos/")) return true;
   if (pathname.startsWith("/parceiros/") || pathname.startsWith("/lojas/")) return true;

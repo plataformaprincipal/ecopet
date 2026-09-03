@@ -1,3 +1,4 @@
+import { detectRedFlags } from "../red-flags";
 import type { InterviewContext, InterviewQuestion, SpecialistProtocol } from "./types";
 
 function asRec(value: unknown): Record<string, unknown> {
@@ -173,7 +174,8 @@ export function answeredRedFlag(
 }
 
 export function shouldInterruptInterview(protocol: SpecialistProtocol, answers: Record<string, unknown>): boolean {
-  return Boolean(answeredRedFlag(protocol, answers));
+  if (answeredRedFlag(protocol, answers)) return true;
+  return detectRedFlags(answers).length > 0;
 }
 
 export function missingMinimumData(

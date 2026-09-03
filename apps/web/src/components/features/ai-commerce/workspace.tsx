@@ -6,11 +6,13 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { getProductDefBySku, getProductDefBySlug } from "@/lib/ai-commerce/catalog";
 import { getCapabilityRuntime } from "@/lib/ai-commerce/capability-runtime";
-import { getSpecialistProtocol, isInterviewReady, petNameFromContext } from "@/lib/ai-commerce/specialist-protocols";
+import { getSpecialistProtocol, initialInterviewInput, isInterviewReady, petNameFromContext } from "@/lib/ai-commerce/specialist-protocols";
 import { analyticsService } from "@/lib/analytics/service";
 import { AiEvents } from "@/lib/analytics/events";
 import { PetHealthProfilePanel } from "./health-profile";
 import { SmartInputWizard } from "./smart-wizard";
+import { SpecialistProductShell } from "./specialist-product-shell";
+import { SpecialistStartSurface } from "./specialist-start-surface";
 import {
   AIProgress,
   ArtifactActions,
@@ -57,84 +59,6 @@ type Execution = {
   };
 };
 
-function ageLabel(birthDate: string | null | undefined) {
-  if (!birthDate) return null;
-  const years = Math.floor((Date.now() - new Date(birthDate).getTime()) / (365.25 * 24 * 3600 * 1000));
-  return years > 0 ? `${years} anos` : "menos de 1 ano";
-}
-
-function ModuleBrief({ sku }: { sku: string }) {
-  const runtime = getCapabilityRuntime(sku);
-  const def = getProductDefBySku(sku);
-  const protocol = getSpecialistProtocol(sku);
-  if (!runtime || !def) return null;
-  return (
-    <header className="rounded-[18px] border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] p-5">
-      <p className="text-xs font-medium uppercase tracking-wide text-ecopet-green">Dr. Ecco · Veterinário Virtual EccoPet</p>
-      <h1 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--ep-fg)] sm:text-3xl">
-        {protocol?.specialistTitle ?? runtime.specialistTitle ?? def.name}
-      </h1>
-      <p className="mt-1 text-sm text-[var(--ep-fg-muted)]">Análise assistida por inteligência artificial</p>
-      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--ep-fg)]">
-        {protocol?.commercialValue ?? runtime.description}
-      </p>
-    </header>
-  );
-}
-
-function listNames(value: unknown): string {
-  if (!Array.isArray(value) || !value.length) return "Não registrado";
-  return value
-    .map((item) => {
-      if (item && typeof item === "object" && "name" in item) return String((item as { name?: unknown }).name ?? "");
-      return String(item);
-    })
-    .filter(Boolean)
-    .slice(0, 3)
-    .join(", ");
-}
-
-function PetPanel({ pet, petContext }: { pet: Pet; petContext?: Record<string, unknown> | null }) {
-  const health = (petContext?.health ?? {}) as Record<string, unknown>;
-  return (
-    <aside className="rounded-[18px] border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-ecopet-green">Pet</p>
-      <div className="mt-3 flex items-center gap-3">
-        {pet.photo ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={pet.photo} alt="" className="h-12 w-12 rounded-2xl object-cover" />
-        ) : (
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-ecopet-green/10 text-lg font-semibold">
-            {pet.name.slice(0, 1)}
-          </div>
-        )}
-        <div>
-          <p className="font-semibold">{pet.name}</p>
-          <p className="text-sm text-[var(--ep-fg-muted)]">{pet.breed || pet.species}</p>
-        </div>
-      </div>
-      <dl className="mt-4 space-y-2 text-sm">
-        <div className="flex justify-between gap-3">
-          <dt className="text-[var(--ep-fg-muted)]">Peso</dt>
-          <dd>{pet.weight ? `${pet.weight} kg` : "—"}</dd>
-        </div>
-        <div className="flex justify-between gap-3">
-          <dt className="text-[var(--ep-fg-muted)]">Idade</dt>
-          <dd>{ageLabel(pet.birthDate) ?? "—"}</dd>
-        </div>
-        <div>
-          <dt className="text-[var(--ep-fg-muted)]">Alergias</dt>
-          <dd className="mt-0.5">{listNames(health.allergies)}</dd>
-        </div>
-        <div>
-          <dt className="text-[var(--ep-fg-muted)]">Medicações</dt>
-          <dd className="mt-0.5">{listNames(petContext?.medications)}</dd>
-        </div>
-      </dl>
-    </aside>
-  );
-}
-
 export function AiWorkspace({ executionId }: { executionId: string }) {
   const [ex, setEx] = useState<Execution | null>(null);
   const [input, setInput] = useState<Record<string, unknown>>({});
@@ -142,6 +66,8 @@ export function AiWorkspace({ executionId }: { executionId: string }) {
   const [phase, setPhase] = useState("IDLE");
   const [msg, setMsg] = useState("");
   const [stepIndex, setStepIndex] = useState(0);
+  const [history, setHistory] = useState<Array<{ id: string; href: string; summary: string; when: string }>>([]);
+  const [saved, setSaved] = useState(false);
 
   const load = useCallback(
     async (signal?: AbortSignal) => {
@@ -160,6 +86,27 @@ export function AiWorkspace({ executionId }: { executionId: string }) {
         if (data.data.inputSnapshot) setInput(data.data.inputSnapshot);
         if (data.data.status === "COMPLETED") setPhase("COMPLETED");
         if (data.data.status === "FAILED") setPhase("FAILED");
+        const sku = data.data.sku as string | undefined;
+        const petId = data.data.pet?.id as string | undefined;
+        if (sku && petId) {
+          const hist = await fetch(`/api/ai-commerce/executions?sku=${encodeURIComponent(sku)}&petId=${encodeURIComponent(petId)}`, {
+            credentials: "include",
+          });
+          const histJson = await hist.json();
+          if (histJson.success) {
+            const def = getProductDefBySku(sku);
+            setHistory(
+              (histJson.data.executions as Array<{ id: string; summary: string; completedAt: string }>)
+                .filter((row) => row.id !== executionId)
+                .map((row) => ({
+                  id: row.id,
+                  href: def ? def.workspaceHref(row.id) : `/eccopet/vet/session/${row.id}`,
+                  summary: row.summary,
+                  when: row.completedAt ? new Date(row.completedAt).toLocaleString("pt-BR") : "",
+                }))
+            );
+          }
+        }
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") return;
         setMsg("Não encontrado.");
@@ -170,8 +117,15 @@ export function AiWorkspace({ executionId }: { executionId: string }) {
 
   useEffect(() => {
     const ac = new AbortController();
-    void load(ac.signal);
-    return () => ac.abort();
+    const timer = window.setTimeout(() => {
+      ac.abort();
+      setMsg((current) => current || "Não foi possível carregar. Tente novamente.");
+    }, 15_000);
+    void load(ac.signal).finally(() => window.clearTimeout(timer));
+    return () => {
+      window.clearTimeout(timer);
+      ac.abort();
+    };
   }, [load]);
 
   async function persist(next: Record<string, unknown>) {
@@ -237,7 +191,16 @@ export function AiWorkspace({ executionId }: { executionId: string }) {
   }
 
   if (!ex) {
-    return <p className="p-8 text-sm text-[var(--ep-fg-muted)]">{msg || "Carregando a ferramenta…"}</p>;
+    return (
+      <div className="p-8 text-sm text-[var(--ep-fg-muted)]">
+        <p>{msg || "Carregando a ferramenta…"}</p>
+        {msg ? (
+          <Button className="mt-3" variant="outline" onClick={() => void load()}>
+            Tentar novamente
+          </Button>
+        ) : null}
+      </div>
+    );
   }
 
   const def = getProductDefBySku(ex.sku);
@@ -249,59 +212,80 @@ export function AiWorkspace({ executionId }: { executionId: string }) {
   const canAnalyze = protocol ? isInterviewReady(protocol, input, petContext) : Object.keys(input).length > 0;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
-      <p className="text-sm text-[var(--ep-fg-muted)]">
+    <SpecialistProductShell sku={ex.sku} pet={ex.pet} petContext={petContext} history={history}>
+      <p className="mb-3 text-sm text-[var(--ep-fg-muted)]">
         <Link href="/eccopet" className="text-ecopet-green hover:underline">
           EccoPet AI
         </Link>
-        {def ? ` > ${def.name} Grátis · IA` : ""}
+        {def ? ` › ${def.name}` : ""}
       </p>
-      <div className="mt-4">
-        <ModuleBrief sku={ex.sku} />
-      </div>
-      <div className="mt-6 grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <PetPanel pet={ex.pet} petContext={petContext} />
-        <div>
-          {ex.status !== "COMPLETED" && runtime && (
-            <>
-              <SmartInputWizard
-                runtime={runtime}
-                input={input}
-                onChange={(next) => void persist(next)}
-                onUpload={upload}
-                petContext={petContext}
-                stepIndex={stepIndex}
-                onStepIndex={setStepIndex}
-              />
-              <div className="sticky bottom-4 mt-6">
-                <Button
-                  className="w-full sm:w-auto"
-                  onClick={() => void analyze()}
-                  loading={busy}
-                  disabled={busy || !canAnalyze}
-                >
-                  Gerar análise de {petNameFromContext(petContext, ex.pet.name)}
-                </Button>
-              </div>
-            </>
-          )}
-          {busy || (phase !== "IDLE" && phase !== "COMPLETED" && !out) ? <div className="mt-6"><AIProgress phase={phase} /></div> : null}
-          {msg && (
-            <p className="mt-4 text-sm text-red-600" role="alert">
-              {msg}
-            </p>
-          )}
+      {ex.status !== "COMPLETED" && runtime && (
+        <>
+          <SmartInputWizard
+            runtime={runtime}
+            input={input}
+            onChange={(next) => void persist(next)}
+            onUpload={upload}
+            petContext={petContext}
+            stepIndex={stepIndex}
+            onStepIndex={setStepIndex}
+          />
+          <div className="sticky bottom-20 z-20 mt-6 sm:bottom-4">
+            <Button
+              className="w-full sm:w-auto"
+              onClick={() => void analyze()}
+              loading={busy}
+              disabled={busy || !canAnalyze}
+            >
+              Gerar análise de {petNameFromContext(petContext, ex.pet.name)}
+            </Button>
+          </div>
+        </>
+      )}
+      {busy || (phase !== "IDLE" && phase !== "COMPLETED" && phase !== "FAILED" && !out) ? (
+        <div className="mt-6">
+          <AIProgress phase={phase} />
         </div>
-      </div>
-
+      ) : null}
+      {msg && (
+        <p className="mt-4 text-sm text-red-600" role="alert">
+          {msg}
+        </p>
+      )}
       {out && (
-        <div className="mt-8 space-y-5">
+        <div className="mt-8 space-y-5" data-testid="specialist-result">
           <UrgencyBanner output={out} />
           <p className="text-base leading-relaxed text-[var(--ep-fg)]">{String(out.clinicalOverview ?? out.summary ?? "")}</p>
           <DiagnosticImpressionCard output={out} />
           <EvidenceTrace output={out} />
           <ModuleResultBody kind={kind} output={out} extras={ex.extras} />
           {kind === "profile" ? <PetHealthProfilePanel petId={ex.pet.id} /> : null}
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              onClick={async () => {
+                const res = await fetch(`/api/ai-commerce/executions/${executionId}/add-to-profile`, {
+                  method: "POST",
+                  credentials: "include",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ items: [String(out.summary ?? out.clinicalOverview ?? "Análise")] }),
+                });
+                const data = await res.json();
+                setSaved(Boolean(data.success));
+                if (!data.success) setMsg(data.error?.message ?? "Não foi possível salvar no perfil.");
+              }}
+            >
+              {saved ? "Salvo no perfil" : "Salvar no perfil"}
+            </Button>
+            {kind === "triage" ? (
+              <Button asChild>
+                <Link href="/marketplace/emergencia">Fazer triagem / Emergência</Link>
+              </Button>
+            ) : null}
+            <Button asChild variant="outline">
+              <Link href="/marketplace/servicos?emergency24h=true">Encontrar veterinário</Link>
+            </Button>
+          </div>
           <ArtifactActions executionId={executionId} sku={ex.sku} output={out} runtime={runtime} />
           <NextBestActionCard output={out} />
           <SpecialistFollowUpChat
@@ -313,7 +297,7 @@ export function AiWorkspace({ executionId }: { executionId: string }) {
           />
         </div>
       )}
-    </div>
+    </SpecialistProductShell>
   );
 }
 
@@ -326,10 +310,13 @@ export function AiWorkbench({ slug }: { slug: string }) {
   const [guest, setGuest] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
+  const [draft, setDraft] = useState("");
 
   useEffect(() => {
     if (def) analyticsService.track(AiEvents.MODULE_OPEN, { screen: `eccopet_${slug}`, label: def.sku });
-    fetch("/api/ai-commerce/pets", { credentials: "include" })
+    const ac = new AbortController();
+    const timer = window.setTimeout(() => ac.abort(), 12_000);
+    fetch("/api/ai-commerce/pets", { credentials: "include", signal: ac.signal })
       .then(async (r) => ({ status: r.status, json: await r.json() }))
       .then(({ status, json }) => {
         if (json.success) {
@@ -339,15 +326,27 @@ export function AiWorkbench({ slug }: { slug: string }) {
         } else {
           setPets([]);
           setGuest(status === 401);
+          if (status >= 500) setMsg("Não foi possível carregar seus pets. Tente novamente.");
         }
       })
-      .catch(() => {
+      .catch((err) => {
+        if (err instanceof DOMException && err.name === "AbortError") {
+          setPets([]);
+          setMsg("Não foi possível carregar seus pets. Tente novamente.");
+          return;
+        }
         setPets([]);
         setGuest(true);
-      });
+        setMsg("Não foi possível carregar seus pets. Tente novamente.");
+      })
+      .finally(() => window.clearTimeout(timer));
+    return () => {
+      window.clearTimeout(timer);
+      ac.abort();
+    };
   }, [def, slug]);
 
-  async function startTool() {
+  async function startTool(firstMessage?: string) {
     if (!def) return;
     if (!pets || pets.length === 0) {
       if (guest) {
@@ -371,8 +370,8 @@ export function AiWorkbench({ slug }: { slug: string }) {
       body: JSON.stringify({ sku: def.sku, petId }),
     });
     const data = await res.json();
-    setBusy(false);
     if (!data.success) {
+      setBusy(false);
       const code = data.error?.code as string | undefined;
       if (code === "AUTH_REQUIRED" || res.status === 401) {
         router.push(`/login?callbackUrl=${encodeURIComponent(`/eccopet/${slug}`)}`);
@@ -389,81 +388,76 @@ export function AiWorkbench({ slug }: { slug: string }) {
       setMsg(data.error?.message ?? "Esta ferramenta está temporariamente indisponível.");
       return;
     }
+    const executionId = data.data.executionId as string;
+    const seeded = initialInterviewInput(def.sku, firstMessage ?? draft);
+    if (Object.keys(seeded).length) {
+      await fetch(`/api/ai-commerce/executions/${executionId}`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ input: seeded }),
+      });
+    }
     analyticsService.track(AiEvents.EXECUTION_STARTED, { screen: `eccopet_${slug}`, label: def.sku });
-    router.replace(def.workspaceHref(data.data.executionId));
+    router.replace(def.workspaceHref(executionId));
   }
+
+  const selectedPet = pets?.find((p) => p.id === petId) ?? pets?.[0] ?? null;
 
   if (!def || !runtime) {
     return <div className="mx-auto max-w-3xl px-4 py-16 text-sm">Ferramenta não encontrada.</div>;
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
-      <p className="text-sm text-[var(--ep-fg-muted)]">
+    <SpecialistProductShell sku={def.sku} pet={selectedPet}>
+      <p className="mb-3 text-sm text-[var(--ep-fg-muted)]">
         <Link href="/eccopet" className="text-ecopet-green hover:underline">
           EccoPet AI
         </Link>
-        {` > ${def.name} Grátis · IA`}
+        {` › ${def.name}`}
       </p>
-      <div className="mt-4">
-        <ModuleBrief sku={def.sku} />
-      </div>
-      <div className="mt-6 grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <aside className="rounded-[18px] border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] p-4">
-          <p className="text-sm font-medium">Para qual pet?</p>
-          {pets === null && <p className="mt-2 text-sm text-[var(--ep-fg-muted)]">Carregando pets…</p>}
-          {pets && pets.length === 0 && (
-            <div className="mt-3">
-              <p className="text-sm">Cadastre um pet para usar a ferramenta.</p>
-              <Button asChild className="mt-3">
-                <Link href={`/onboarding/pet?callbackUrl=${encodeURIComponent(`/eccopet/${slug}`)}`}>Cadastrar pet</Link>
-              </Button>
-            </div>
-          )}
-          {pets && pets.length > 0 && (
-            <select
-              className="mt-3 w-full rounded-[16px] border border-[var(--ep-border)] bg-[var(--ep-bg)] px-3 py-2"
-              value={petId}
-              onChange={(e) => setPetId(e.target.value)}
-              aria-label="Para qual pet?"
-            >
-              <option value="">Selecionar</option>
-              {pets.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name} · {p.breed || p.species}
-                </option>
-              ))}
-            </select>
-          )}
-        </aside>
-        <section className="rounded-[18px] border border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] p-5">
-          <h2 className="text-lg font-semibold">Como esta ferramenta funciona</h2>
-          <ol className="mt-3 space-y-2 text-sm text-[var(--ep-fg-muted)]">
-            {runtime.steps.map((s, i) => (
-              <li key={s.id}>
-                {i + 1}. {s.title}
-              </li>
-            ))}
-          </ol>
-          {runtime.quickActions.length > 0 && (
-            <div className="mt-4 flex flex-wrap gap-2">
-              {runtime.quickActions.map((a) => (
-                <span key={a} className="rounded-full border border-[var(--ep-border)] px-3 py-1 text-xs">
-                  {a}
-                </span>
-              ))}
-            </div>
-          )}
-          <Button className="mt-6" loading={busy} disabled={busy} onClick={() => void startTool()}>
-            {runtime.ctaLabel ?? def.ctaLabel ?? "Conversar com Dr. Ecco"}
+      <label className="block text-sm font-medium">Para qual pet?</label>
+      {pets === null && <p className="mt-2 text-sm text-[var(--ep-fg-muted)]">Carregando pets…</p>}
+      {pets && pets.length === 0 && (
+        <div className="mt-3">
+          <p className="text-sm">Cadastre um pet para usar a ferramenta.</p>
+          <Button asChild className="mt-3">
+            <Link href={`/onboarding/pet?callbackUrl=${encodeURIComponent(`/eccopet/${slug}`)}`}>Cadastrar pet</Link>
           </Button>
-          {msg ? (
-            <p className="mt-3 text-sm text-red-600" role="alert">
-              {msg}
-            </p>
-          ) : null}
-        </section>
+        </div>
+      )}
+      {pets && pets.length > 0 && (
+        <select
+          className="mt-3 w-full max-w-md rounded-[16px] border border-[var(--ep-border)] bg-[var(--ep-bg)] px-3 py-2"
+          value={petId}
+          onChange={(e) => setPetId(e.target.value)}
+          aria-label="Para qual pet?"
+        >
+          <option value="">Selecionar</option>
+          {pets.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name} · {p.breed || p.species}
+            </option>
+          ))}
+        </select>
+      )}
+      <SpecialistStartSurface
+        sku={def.sku}
+        pet={selectedPet}
+        draft={draft}
+        onDraft={setDraft}
+        onStart={(chip) => void startTool(chip)}
+      />
+      <div className="mt-4">
+        <Button className="w-full sm:w-auto" loading={busy} disabled={busy} onClick={() => void startTool(draft || undefined)}>
+          {runtime.ctaLabel ?? def.ctaLabel ?? "Conversar com Dr. Ecco"}
+        </Button>
       </div>
-    </div>
+      {msg ? (
+        <p className="mt-3 text-sm text-red-600" role="alert">
+          {msg}
+        </p>
+      ) : null}
+    </SpecialistProductShell>
   );
 }

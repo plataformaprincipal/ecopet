@@ -188,6 +188,20 @@ export async function createPartnerAppointmentFixture(partnerId: string) {
   return { owner, pet, appointment };
 }
 
+export async function ensureClientWithPet(label: string) {
+  const user = await ensureClientUser(label);
+  const pet = await prisma.pet.create({
+    data: {
+      ownerId: user.id,
+      name: "Thor",
+      species: PetSpecies.DOG,
+      breed: "SRD",
+      weight: 12,
+    },
+  });
+  return { user, pet };
+}
+
 export async function loginContext(ctx: BrowserContext, email: string) {
   let res = await ctx.request.post("/api/auth/login", {
     data: { email, password: TEST_PASSWORD, identifier: email },

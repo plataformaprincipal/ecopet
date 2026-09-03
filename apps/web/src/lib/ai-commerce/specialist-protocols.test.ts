@@ -12,6 +12,7 @@ import {
   missingMinimumData,
   nextInterviewQuestion,
   shouldInterruptInterview,
+  initialInterviewInput,
 } from "./specialist-protocols";
 
 const marley = {
@@ -93,6 +94,25 @@ describe("13 protocolos especializados", () => {
     assert.equal(isInterviewReady(triage, answers, marley), true);
     const next = nextInterviewQuestion(triage, answers, marley);
     assert.ok(!next || next.id !== "chiefComplaint" || shouldInterruptInterview(triage, answers));
+  });
+
+  it("texto livre de convulsão interrompe na hora; vômito isolado com pet brincando não", () => {
+    const triage = getSpecialistProtocol("AI_ECCOVET_TRIAGE")!;
+    assert.equal(
+      shouldInterruptInterview(triage, { chiefComplaint: "Meu cachorro está convulsionando." }),
+      true
+    );
+    assert.equal(shouldInterruptInterview(triage, { chiefComplaint: "Convulsão" }), true);
+    assert.equal(
+      shouldInterruptInterview(triage, {
+        chiefComplaint: "Meu cachorro vomitou uma vez hoje mas está brincando normalmente.",
+      }),
+      false
+    );
+    assert.deepEqual(initialInterviewInput("AI_ECCONUTRI", "Manutenção"), { goal: "Manutenção" });
+    assert.deepEqual(initialInterviewInput("AI_ECCOVET", "Meu cachorro está sem apetite desde ontem."), {
+      chiefComplaint: "Meu cachorro está sem apetite desde ontem.",
+    });
   });
 
   it("Behavior exige ABC na ordem A → B → C", () => {

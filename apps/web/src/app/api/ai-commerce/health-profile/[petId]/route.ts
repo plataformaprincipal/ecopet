@@ -34,9 +34,11 @@ export async function GET(_req: Request, ctx: Ctx) {
     ]);
     const last = (cap: string) =>
       executions.find((e) => e.capabilityId.includes(cap) || getProductDefBySku(e.entitlement.sku)?.workspaceKind === cap);
+    const summary = (profile?.lastSummary as Record<string, unknown> | null) ?? {};
     return apiSuccess({
       pet,
       activated: Boolean(profile),
+      eccopetSaudePlan: summary.eccopetSaudePlan ?? null,
       cards: {
         weight: pet?.weight ?? weights[0]?.weight ?? null,
         vaccines: vaccines.length,

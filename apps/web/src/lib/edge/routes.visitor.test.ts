@@ -26,6 +26,8 @@ describe("visitor public routes", () => {
   it("keeps marketplace browse and cart public, checkout private via marketplace rules", () => {
     assert.equal(requiresAuth("/marketplace"), false);
     assert.equal(requiresAuth("/marketplace/parceiros"), false);
+    assert.equal(requiresAuth("/marketplace/emergencia"), false);
+    assert.equal(requiresAuth("/marketplace/saude"), false);
     assert.equal(requiresAuth("/carrinho"), false);
     assert.equal(requiresAuth("/adocao"), false);
     assert.equal(requiresAuth("/explorar"), false);
@@ -37,7 +39,8 @@ describe("visitor public routes", () => {
     assert.equal(requiresAuth("/eccopet"), false);
     assert.equal(requiresAuth("/eccopet/triagem"), false);
     assert.equal(requiresAuth("/eccopet/health-profile"), false);
-    assert.equal(requiresAuth("/eccopet/checkout"), true);
+    assert.equal(requiresAuth("/eccopet/checkout"), false);
+    assert.equal(requiresAuth("/eccopet/vet/session/abc"), true);
     assert.equal(requiresAuth("/minha-conta/ia"), true);
   });
 });

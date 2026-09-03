@@ -15,7 +15,7 @@ import {
   TrendingDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ClientPageHeader } from "../client-page-header";
+import { HomeAiComposer } from "../home-ai-composer";
 import { ClientPageSkeleton } from "../client-skeleton";
 import { PetOsCard, PetOsMetric, PetOsEmpty } from "../petos/petos-card";
 import type { PetOsOverview } from "@/lib/client/petos-overview";
@@ -58,14 +58,20 @@ export function ClientDashboardHome({ userName }: ClientDashboardHomeProps) {
     void load();
   }, [load]);
 
-  if (loading) return <ClientPageSkeleton />;
-
-  const firstName = userName.split(" ")[0];
+  if (loading) {
+    return (
+      <div className="space-y-8 animate-fade-in">
+        <HomeAiComposer userName={userName} />
+        <ClientPageSkeleton />
+      </div>
+    );
+  }
 
   if (error) {
     return (
-      <div className="space-y-4 animate-fade-in">
-        <ClientPageHeader title={`Olá, ${firstName}`} description="Seu painel no ecossistema EcoPet." />
+      <div className="space-y-8 animate-fade-in">
+        <HomeAiComposer userName={userName} />
+        <p className="text-sm text-[var(--ep-fg-muted)]">Não foi possível carregar o resumo do painel.</p>
         <div className="rounded-[var(--radius-xl)] border border-ep-danger/30 bg-ep-danger/10 p-5 text-sm text-ep-danger" role="alert">
           {error}
           <Button variant="outline" size="sm" className="ml-3" onClick={load}>Tentar novamente</Button>
@@ -77,21 +83,9 @@ export function ClientDashboardHome({ userName }: ClientDashboardHomeProps) {
 
   return (
     <div className="space-y-8 animate-fade-in" data-testid="client-ops-dashboard">
-      <ClientPageHeader
-        title={`Olá, ${firstName}`}
-        description="Resumo do dia, saúde, agenda, finanças e recomendações do seu pet."
-        actions={
-          <div className="flex flex-wrap gap-2">
-            <Button asChild size="sm" variant="outline">
-              <Link href="/cliente/pets">Meus pets</Link>
-            </Button>
-            <Button asChild size="sm">
-              <Link href="/cliente/agenda">Agendar serviço</Link>
-            </Button>
-          </div>
-        }
-      />
+      <HomeAiComposer userName={userName} />
 
+      <h2 className="text-xl font-semibold">Resumo</h2>
       {/* Linha 1: métricas do dia */}
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <PetOsCard title="Resumo do dia" icon={Sparkles} accent="emerald">
