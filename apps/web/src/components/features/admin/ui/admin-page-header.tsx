@@ -12,7 +12,7 @@ type Props = {
 
 export function AdminPageHeader({ title, description, breadcrumbs, children }: Props) {
   return (
-    <header className="border-b bg-white px-4 py-4 dark:bg-gray-950 sm:px-6">
+    <header className="border-b border-border bg-header px-4 py-4 sm:px-6">
       {breadcrumbs && breadcrumbs.length > 0 && (
         <nav aria-label="Breadcrumb" className="mb-2 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
           {breadcrumbs.map((crumb, i) => (

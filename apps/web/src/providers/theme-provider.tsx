@@ -1,7 +1,7 @@
 "use client";
 
 import { ThemeProvider as NextThemesProvider } from "next-themes";
-import { ECOPET_THEME_STORAGE_KEY, ECOPET_THEMES } from "@/lib/theme/ecopet-theme";
+import { ECOPET_THEME_STORAGE_KEY } from "@/lib/theme/ecopet-theme";
 
 /**
  * next-themes aplica `value` via classList.add/remove.
@@ -12,10 +12,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   return (
     <NextThemesProvider
       attribute="class"
-      defaultTheme="light"
+      defaultTheme="system"
       enableSystem
-      themes={[...ECOPET_THEMES]}
-      value={{ light: "light", dark: "dark", system: "system" }}
       storageKey={ECOPET_THEME_STORAGE_KEY}
       disableTransitionOnChange
     >

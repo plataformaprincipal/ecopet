@@ -49,7 +49,7 @@ export function ClientOrdersList() {
           ))}
         </div>
       ) : orders.length === 0 ? (
-        <div className="rounded-2xl border border-zinc-200/80 bg-white p-8 text-center dark:border-white/10 dark:bg-zinc-900/60">
+        <div className="rounded-2xl border border-zinc-200/80 bg-white p-8 text-center dark:border-white/10 dark:bg-card">
           <Package className="mx-auto h-10 w-10 text-zinc-300" aria-hidden />
           <p className="mt-3 text-sm text-zinc-500">{t("clientArea.orders.empty")}</p>
           <Link
@@ -64,7 +64,7 @@ export function ClientOrdersList() {
           {orders.map((order) => (
             <li
               key={order.id}
-              className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60"
+              className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-card"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">

@@ -27,10 +27,11 @@
 
 .ep-float-a11y {
   position: fixed;
-  z-index: var(--z-a11y, 10050);
+  z-index: var(--z-a11y, 45);
   right: var(--ep-float-gutter);
   left: auto;
   bottom: var(--ep-float-bottom-mobile);
+  pointer-events: auto;
 }
 
 @media (min-width: 1024px) {

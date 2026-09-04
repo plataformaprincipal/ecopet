@@ -11,18 +11,18 @@ export function OngPageSkeleton() {
         {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={i}
-            className="h-24 rounded-2xl border border-zinc-200/80 bg-white dark:border-white/10 dark:bg-zinc-900/60"
+            className="h-24 rounded-2xl border border-zinc-200/80 bg-white dark:border-white/10 dark:bg-card"
           />
         ))}
       </div>
-      <div className="h-40 rounded-2xl border border-zinc-200/80 bg-white dark:border-white/10 dark:bg-zinc-900/60" />
+      <div className="h-40 rounded-2xl border border-zinc-200/80 bg-white dark:border-white/10 dark:bg-card" />
     </div>
   );
 }
 
 export function OngCardSkeleton() {
   return (
-    <div className="animate-pulse rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60">
+    <div className="animate-pulse rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-card">
       <div className="aspect-video rounded-xl bg-zinc-200 dark:bg-zinc-800" />
       <div className="mt-3 h-5 w-2/3 rounded bg-zinc-200 dark:bg-zinc-800" />
       <div className="mt-2 h-4 w-1/2 rounded bg-zinc-200 dark:bg-zinc-800" />

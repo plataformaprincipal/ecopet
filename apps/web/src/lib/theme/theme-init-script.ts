@@ -1,0 +1,2 @@
+/** Inline blocking script — aplica tema antes da hidratação (sem flash). */
+export const ECOPET_THEME_INIT_SCRIPT = `(function(){try{var k="ecopet-theme";var s=localStorage.getItem(k);if(s==="black")s="dark";var sys=window.matchMedia("(prefers-color-scheme: dark)").matches;var dark=s==="dark"||((s==="system"||!s)&&sys);var r=document.documentElement;r.classList.remove("light","dark","black","system");r.classList.add(dark?"dark":"light");r.style.colorScheme=dark?"dark":"light";}catch(e){}})();`;

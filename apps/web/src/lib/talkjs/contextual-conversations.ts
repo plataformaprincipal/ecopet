@@ -8,6 +8,21 @@ import { prisma } from "@/lib/prisma";
 import { ChatError } from "@/lib/messages/utils";
 import { createOrGetTalkJsConversation } from "@/lib/messages/talkjs-conversations";
 import { isMessagingFlagEnabled } from "./config";
+import { isNativeMarketplaceChatEnabled } from "@/lib/commerce-chat/flag";
+import { createOrGetNativeMarketplaceConversation } from "@/lib/commerce-chat/open-conversation";
+
+async function openPair(input: {
+  creatorId: string;
+  participantUserId: string;
+  contextType?: ConversationContextType;
+  contextId?: string | null;
+  title?: string;
+}) {
+  if (isNativeMarketplaceChatEnabled()) {
+    return createOrGetNativeMarketplaceConversation(input);
+  }
+  return createOrGetTalkJsConversation(input);
+}
 
 export async function openProductConversation(input: {
   creatorId: string;
@@ -23,7 +38,7 @@ export async function openProductConversation(input: {
   if (!product || product.approvalStatus !== "APPROVED") {
     throw new ChatError("Produto não disponível.", "NOT_FOUND", 404);
   }
-  return createOrGetTalkJsConversation({
+  return openPair({
     creatorId: input.creatorId,
     participantUserId: product.sellerId,
     contextType: "PRODUCT",
@@ -46,7 +61,7 @@ export async function openServiceConversation(input: {
   if (!service || service.approvalStatus !== "APPROVED") {
     throw new ChatError("Serviço não disponível.", "NOT_FOUND", 404);
   }
-  return createOrGetTalkJsConversation({
+  return openPair({
     creatorId: input.creatorId,
     participantUserId: service.providerId,
     contextType: "SERVICE",
@@ -75,7 +90,7 @@ export async function openOrderConversation(input: {
   }
 
   const otherId = isBuyer ? order.partnerId : order.userId;
-  return createOrGetTalkJsConversation({
+  return openPair({
     creatorId: input.creatorId,
     participantUserId: otherId,
     contextType: "ORDER",
@@ -92,7 +107,7 @@ export async function openAdoptionConversation(input: {
   if (!isMessagingFlagEnabled("adoption_chat") && !isMessagingFlagEnabled("ngo_chat")) {
     throw new ChatError("Chat de adoção desativado.", "FLAG_DISABLED", 503);
   }
-  return createOrGetTalkJsConversation({
+  return openPair({
     creatorId: input.creatorId,
     participantUserId: input.animalOrPostOwnerId,
     contextType: "ADOPTION",
@@ -123,7 +138,7 @@ export async function openSupportConversation(input: {
     throw new ChatError("Nenhum atendente disponível.", "UNAVAILABLE", 503);
   }
 
-  return createOrGetTalkJsConversation({
+  return openPair({
     creatorId: input.creatorId,
     participantUserId: adminId,
     contextType: "SUPPORT",
@@ -165,7 +180,7 @@ export async function openContextualConversation(input: {
       if (!input.participantUserId) {
         throw new ChatError("participantUserId obrigatório.", "VALIDATION", 400);
       }
-      return createOrGetTalkJsConversation({
+      return openPair({
         creatorId: input.creatorId,
         participantUserId: input.participantUserId,
         contextType: input.contextType,

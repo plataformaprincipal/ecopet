@@ -6,7 +6,7 @@ import { LanguageSelector } from "@/components/features/i18n/language-selector";
 
 export function OngAccessibilitySettings() {
   return (
-    <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-zinc-900/60">
+    <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-card">
       <div className="flex items-center gap-2">
         <Accessibility className="h-5 w-5 text-emerald-600" aria-hidden />
         <h3 className="font-medium text-zinc-900 dark:text-white">Acessibilidade</h3>
@@ -27,7 +27,7 @@ export function OngAccessibilitySettings() {
 
 export function OngTranslationSettings() {
   return (
-    <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-zinc-900/60">
+    <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-card">
       <h3 className="font-medium text-zinc-900 dark:text-white">Idioma</h3>
       <p className="mt-1 text-sm text-zinc-500">Escolha o idioma da interface EcoPet.</p>
       <div className="mt-4">

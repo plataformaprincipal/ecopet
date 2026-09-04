@@ -11,7 +11,7 @@ export function FilterPanel({ children, className = "" }: FilterPanelProps) {
   const { t } = useTranslation();
   return (
     <aside
-      className={`hidden rounded-[20px] border border-zinc-200/80 bg-white/80 p-5 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-zinc-900/60 lg:block ${className}`}
+      className={`hidden rounded-[20px] border border-zinc-200/80 bg-white/80 p-5 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-card lg:block ${className}`}
       aria-label={t("pub.marketplace.filters")}
     >
       <h2 className="mb-4 font-semibold text-zinc-900 dark:text-white">{t("pub.marketplace.filters")}</h2>
@@ -30,4 +30,4 @@ export function FilterField({ label, children }: { label: string; children: Reac
 }
 
 export const filterInputClass =
-  "w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm dark:border-white/10 dark:bg-zinc-950";
+  "w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm dark:border-white/10 dark:bg-card";

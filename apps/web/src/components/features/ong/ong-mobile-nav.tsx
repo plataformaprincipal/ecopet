@@ -17,7 +17,7 @@ export function OngMobileNav({ accessLevel }: OngMobileNavProps) {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-200/80 bg-white/90 backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/90 lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-bottom-nav/90 backdrop-blur-xl lg:hidden"
       aria-label="Menu mobile da ONG"
     >
       <div

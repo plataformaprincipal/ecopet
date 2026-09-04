@@ -49,7 +49,7 @@ const NAV = [
 export function GestorSidebar() {
   const pathname = usePathname();
   return (
-    <aside className="w-64 shrink-0 border-r bg-white dark:bg-gray-950">
+    <aside className="w-64 shrink-0 border-r bg-card">
       <div className="border-b p-4">
         <Link href="/dashboard/admin/gestor" className="font-display text-lg font-bold text-ecopet-green">
           Gestor EccoPet

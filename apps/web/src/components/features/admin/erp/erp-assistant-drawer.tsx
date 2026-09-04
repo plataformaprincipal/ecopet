@@ -48,7 +48,7 @@ export function ErpAssistantDrawer() {
       </Button>
       {open && (
         <div className="fixed inset-0 z-50 flex justify-end bg-black/40">
-          <div className="flex h-full w-full max-w-lg flex-col bg-white shadow-xl dark:bg-gray-950">
+          <div className="flex h-full w-full max-w-lg flex-col bg-white shadow-xl dark:bg-card">
             <div className="flex items-center justify-between border-b p-4">
               <h2 className="font-semibold">Assistente Executivo EcoPet</h2>
               <button type="button" onClick={() => setOpen(false)} aria-label="Fechar">

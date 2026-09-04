@@ -18,7 +18,7 @@ export function AiHelpModal() {
   return (
     <>
       <div className="fixed inset-0 z-50 bg-black/50" onClick={close} />
-      <div className="fixed left-1/2 top-1/2 z-50 w-[min(420px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-2xl border bg-white p-6 shadow-2xl dark:bg-[#0f1419]">
+      <div className="fixed left-1/2 top-1/2 z-50 w-[min(420px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-2xl border bg-white p-6 shadow-2xl dark:bg-card">
         <div className="flex flex-col items-center text-center">
           <Sparkles className="mb-3 h-10 w-10 text-ecopet-green" />
           <h3 className="font-display text-lg font-bold">{t("empty.ai.marketplaceTitle")}</h3>

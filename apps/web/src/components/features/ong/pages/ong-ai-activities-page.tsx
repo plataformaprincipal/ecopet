@@ -18,7 +18,7 @@ import type { OngDashboardSummary, OngAiInsight } from "@/lib/ong/ai-insights";
 const priorityTone: Record<OngAiInsight["priority"], string> = {
   high: "border-red-200/80 bg-red-50/50 dark:border-red-500/20 dark:bg-red-500/5",
   medium: "border-amber-200/80 bg-amber-50/50 dark:border-amber-500/20 dark:bg-amber-500/5",
-  low: "border-zinc-200/80 bg-white dark:border-white/10 dark:bg-zinc-900/60",
+  low: "border-zinc-200/80 bg-white dark:border-white/10 dark:bg-card",
 };
 
 function formatDate(iso: string) {
@@ -85,7 +85,7 @@ export function OngAIActivitiesPage() {
         ].map(({ label, value, icon: Icon }) => (
           <div
             key={label}
-            className="rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900/60"
+            className="rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-card"
           >
             <div className="flex items-center justify-between">
               <p className="text-xs text-zinc-500">{label}</p>
@@ -141,7 +141,7 @@ export function OngAIActivitiesPage() {
               <Link
                 key={animal.id}
                 href="/ong/adocoes"
-                className="block rounded-xl border border-zinc-200/80 bg-white p-3 text-sm dark:border-white/10 dark:bg-zinc-900/60"
+                className="block rounded-xl border border-zinc-200/80 bg-white p-3 text-sm dark:border-white/10 dark:bg-card"
               >
                 <p className="font-medium">{animal.name}</p>
                 <p className="text-zinc-500">
@@ -164,7 +164,7 @@ export function OngAIActivitiesPage() {
               <Link
                 key={action.href}
                 href={action.href}
-                className="block rounded-xl border border-zinc-200/80 bg-white px-3 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-50 dark:border-white/10 dark:bg-zinc-900/60 dark:text-emerald-400 dark:hover:bg-emerald-500/10"
+                className="block rounded-xl border border-zinc-200/80 bg-white px-3 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-50 dark:border-white/10 dark:bg-card dark:text-emerald-400 dark:hover:bg-emerald-500/10"
               >
                 {action.label}
               </Link>

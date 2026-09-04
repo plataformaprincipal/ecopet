@@ -6,6 +6,7 @@ import { handleChatRouteError } from "@/lib/messages/api-handler";
 import { requireActiveChatUser } from "@/lib/messages/permissions";
 import { openContextualConversation } from "@/lib/talkjs/contextual-conversations";
 import { isTalkJsServerConfigured } from "@/lib/talkjs/server";
+import { isNativeMarketplaceChatEnabled } from "@/lib/commerce-chat/flag";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,7 @@ export async function POST(request: Request) {
 
     await requireActiveChatUser(user.id);
 
-    if (!isTalkJsServerConfigured()) {
+    if (!isNativeMarketplaceChatEnabled() && !isTalkJsServerConfigured()) {
       return apiFailure("TALKJS_NOT_CONFIGURED", "Mensagens temporariamente indisponíveis.", 503);
     }
 
@@ -45,7 +46,7 @@ export async function POST(request: Request) {
       {
         conversation: result.conversation,
         conversationId: result.conversation.id,
-        talkjsConversationId: result.conversation.talkjsConversationId,
+        talkjsConversationId: result.conversation.talkjsConversationId ?? null,
         created: result.created,
       },
       result.created ? 201 : 200

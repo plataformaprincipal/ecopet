@@ -42,7 +42,6 @@ export async function POST(req: Request, { params }: Params) {
       conversationId,
       senderId: user!.id,
       content: body.content,
-      type: body.type,
       attachments: body.attachments,
     });
     return apiSuccess({ message }, 201);

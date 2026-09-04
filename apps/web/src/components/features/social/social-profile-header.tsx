@@ -18,7 +18,7 @@ export function SocialProfileHeader({ profile }: SocialProfileHeaderProps) {
   const isFollowing = useSocialStore((s) => s.isFollowing(profile.id));
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-ecopet-gray/10 bg-white shadow-sm dark:bg-[#0f1419]">
+    <div className="overflow-hidden rounded-2xl border border-ecopet-gray/10 bg-white shadow-sm dark:bg-card">
       <div className="relative h-32 bg-gradient-to-r from-ecopet-dark to-ecopet-green lg:h-40">
         {profile.cover && (
           <Image src={profile.cover} alt="" fill className="object-cover opacity-60" />

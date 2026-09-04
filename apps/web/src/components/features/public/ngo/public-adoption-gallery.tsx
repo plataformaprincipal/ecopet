@@ -179,7 +179,7 @@ export function PublicAdoptionGallery() {
     <div
       {...(panelId ? { id: panelId } : {})}
       className={cn(
-        "rounded-3xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60",
+        "rounded-3xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-card",
         "lg:sticky lg:top-24"
       )}
     >
@@ -197,7 +197,7 @@ export function PublicAdoptionGallery() {
           <input
             value={draft.q}
             onChange={(e) => setDraft((d) => ({ ...d, q: e.target.value }))}
-            className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/15 dark:bg-zinc-950 dark:text-white"
+            className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/15 dark:bg-card dark:text-white"
             placeholder="Nome do animal"
           />
         </label>
@@ -206,7 +206,7 @@ export function PublicAdoptionGallery() {
           <select
             value={draft.species}
             onChange={(e) => setDraft((d) => ({ ...d, species: e.target.value }))}
-            className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/15 dark:bg-zinc-950 dark:text-white"
+            className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/15 dark:bg-card dark:text-white"
           >
             {SPECIES_OPTIONS.map((o) => (
               <option key={o.value || "all"} value={o.value}>
@@ -220,7 +220,7 @@ export function PublicAdoptionGallery() {
           <select
             value={draft.sex}
             onChange={(e) => setDraft((d) => ({ ...d, sex: e.target.value }))}
-            className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/15 dark:bg-zinc-950 dark:text-white"
+            className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/15 dark:bg-card dark:text-white"
           >
             {SEX_OPTIONS.map((o) => (
               <option key={o.value || "all"} value={o.value}>
@@ -234,7 +234,7 @@ export function PublicAdoptionGallery() {
           <select
             value={draft.size}
             onChange={(e) => setDraft((d) => ({ ...d, size: e.target.value }))}
-            className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/15 dark:bg-zinc-950 dark:text-white"
+            className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/15 dark:bg-card dark:text-white"
           >
             {SIZE_OPTIONS.map((o) => (
               <option key={o.value || "all"} value={o.value}>
@@ -248,7 +248,7 @@ export function PublicAdoptionGallery() {
           <select
             value={draft.age}
             onChange={(e) => setDraft((d) => ({ ...d, age: e.target.value }))}
-            className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/15 dark:bg-zinc-950 dark:text-white"
+            className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/15 dark:bg-card dark:text-white"
           >
             {AGE_OPTIONS.map((o) => (
               <option key={o.value || "all"} value={o.value}>
@@ -262,7 +262,7 @@ export function PublicAdoptionGallery() {
           <input
             value={draft.city}
             onChange={(e) => setDraft((d) => ({ ...d, city: e.target.value }))}
-            className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/15 dark:bg-zinc-950 dark:text-white"
+            className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/15 dark:bg-card dark:text-white"
             placeholder="Ex.: João Pessoa"
           />
         </label>
@@ -345,7 +345,7 @@ export function PublicAdoptionGallery() {
               aria-label="Fechar filtros"
               onClick={() => setFiltersOpen(false)}
             />
-            <div className="absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-3xl bg-[var(--surface,#fff)] p-4 shadow-2xl dark:bg-zinc-950">
+            <div className="absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-3xl bg-[var(--surface,#fff)] p-4 shadow-2xl dark:bg-card">
               <div className="mb-2 flex justify-end">
                 <Button type="button" size="icon" variant="ghost" onClick={() => setFiltersOpen(false)} aria-label="Fechar">
                   <X className="h-5 w-5" />
@@ -364,7 +364,7 @@ export function PublicAdoptionGallery() {
               ))}
             </div>
           ) : animals.length === 0 ? (
-            <div className="rounded-3xl border border-zinc-200/80 bg-white p-12 text-center dark:border-white/10 dark:bg-zinc-900/60">
+            <div className="rounded-3xl border border-zinc-200/80 bg-white p-12 text-center dark:border-white/10 dark:bg-card">
               <PawPrint className="mx-auto h-12 w-12 text-zinc-300" aria-hidden />
               <p className="mt-4 text-zinc-500">{t("ngoArea.public.emptyAnimals")}</p>
               <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
@@ -394,7 +394,7 @@ export function PublicAdoptionGallery() {
                     <Link
                       key={a.id}
                       href={`/adoption/${a.id}`}
-                      className="group overflow-hidden rounded-3xl border border-zinc-200/80 bg-white transition hover:shadow-xl dark:border-white/10 dark:bg-zinc-900/60"
+                      className="group overflow-hidden rounded-3xl border border-zinc-200/80 bg-white transition hover:shadow-xl dark:border-white/10 dark:bg-card"
                     >
                       <div className="relative aspect-[4/3] overflow-hidden bg-zinc-100 dark:bg-white/5">
                         {/* eslint-disable-next-line @next/next/no-img-element */}

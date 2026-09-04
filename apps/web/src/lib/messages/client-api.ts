@@ -26,8 +26,22 @@ export const messagesApi = {
       `/api/messages/conversations?${qs}`
     );
   },
-  createConversation: (body: { type?: string; participantUserIds: string[]; title?: string }) =>
-    chatFetch<{ conversation: ConversationItem }>("/api/messages/conversations", {
+  createConversation: (body: {
+    type?: string;
+    participantUserIds?: string[];
+    participantUserId?: string;
+    title?: string;
+    contextType?: string;
+    contextId?: string | null;
+    petId?: string | null;
+    productId?: string | null;
+    serviceId?: string | null;
+    description?: string | null;
+    quantity?: number | null;
+    deadline?: string | null;
+    address?: string | null;
+  }) =>
+    chatFetch<{ conversation: ConversationItem; conversationId?: string }>("/api/messages/conversations", {
       method: "POST",
       body: JSON.stringify(body),
     }),
@@ -89,6 +103,60 @@ export const supportApi = {
     }),
 };
 
+export const commerceQuotesApi = {
+  list: (conversationId: string) =>
+    chatFetch<{ quotes: CommerceQuote[] }>(`/api/messages/conversations/${conversationId}/quotes`),
+  create: (
+    conversationId: string,
+    body: {
+      name?: string;
+      items: Array<{ description: string; quantity: number; unitPrice: number }>;
+      discountAmount?: number;
+      shippingAmount?: number;
+      total?: number;
+      notes?: string;
+      validUntil: string;
+    }
+  ) =>
+    chatFetch<{ quote: CommerceQuote }>(`/api/messages/conversations/${conversationId}/quotes`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  accept: (quoteId: string, claimedTotal?: number) =>
+    chatFetch<{ quote: CommerceQuote; checkoutHref: string }>(`/api/messages/quotes/${quoteId}?action=accept`, {
+      method: "POST",
+      body: JSON.stringify({ total: claimedTotal }),
+    }),
+  reject: (quoteId: string, reason?: string) =>
+    chatFetch<{ quote: CommerceQuote }>(`/api/messages/quotes/${quoteId}?action=reject`, {
+      method: "POST",
+      body: JSON.stringify({ reason }),
+    }),
+};
+
+export type CommerceQuote = {
+  id: string;
+  conversationId: string | null;
+  requesterId: string;
+  providerId: string;
+  name: string;
+  description: string;
+  status: string;
+  validUntil: string;
+  notes: string | null;
+  rejectionReason: string | null;
+  subtotalAmount: number;
+  discountAmount: number;
+  shippingAmount: number;
+  totalAmount: number;
+  items: Array<{
+    id: string;
+    description: string;
+    quantity: number;
+    unitPrice: number;
+  }>;
+};
+
 export type ConversationItem = {
   id: string;
   type: string;
@@ -109,6 +177,7 @@ export type ChatMessage = {
   sender: { id: string; name: string; role: string; avatarUrl: string | null };
   content: string;
   type: string;
+  metadata?: Record<string, unknown> | null;
   isDeleted: boolean;
   isEdited: boolean;
   createdAt: string;

@@ -37,8 +37,8 @@ export function EmptyState({
       <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-[var(--radius-lg)] bg-ecopet-green/10 text-ecopet-green">
         <Icon className="h-7 w-7" strokeWidth={2} aria-hidden />
       </div>
-      <h3 className="font-display text-lg font-bold tracking-tight text-ecopet-dark dark:text-white">{title}</h3>
-      <p className="mt-2 max-w-sm text-sm leading-relaxed text-ecopet-gray dark:text-white/70">{description}</p>
+      <h3 className="font-display text-lg font-bold tracking-tight text-foreground">{title}</h3>
+      <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">{description}</p>
       {actionLabel && actionHref && (
         <Button asChild className="mt-6 rounded-[var(--radius-button)]" size="sm">
           <Link href={actionHref}>{actionLabel}</Link>

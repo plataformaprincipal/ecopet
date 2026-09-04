@@ -17,7 +17,14 @@ export function isEcopetAppearanceTheme(value: string | undefined): value is Eco
   return ECOPET_APPEARANCE_THEMES.includes(value as EcopetAppearanceTheme);
 }
 
-/** Ciclo header: claro ↔ escuro */
+/** Ciclo header: claro → escuro → sistema */
+export function cycleThemePreference(current: string | undefined): EcopetTheme {
+  if (current === "dark") return "system";
+  if (current === "system") return "light";
+  return "dark";
+}
+
+/** Ciclo header: claro ↔ escuro (resolved) */
 export function cycleAppearanceTheme(resolved: string | undefined): EcopetAppearanceTheme {
   return normalizeAppearanceTheme(resolved) === "light" ? "dark" : "light";
 }

@@ -610,6 +610,24 @@ export const ENV_REGISTRY: EnvVarDefinition[] = [
     usedIn: ["apps/web/src/app/api/webhooks/talkjs/route.ts"],
     example: "1",
   },
+  {
+    name: "NATIVE_MARKETPLACE_CHAT",
+    tier: "optional",
+    scopes: ["web"],
+    environments: ["Production", "Preview", "Development"],
+    purpose: "true = Marketplace CLIENT↔PARTNER usa chat nativo (TalkJS só fallback)",
+    usedIn: ["apps/web/src/lib/commerce-chat/flag.ts"],
+    example: "true",
+  },
+  {
+    name: "NEXT_PUBLIC_NATIVE_MARKETPLACE_CHAT",
+    tier: "optional",
+    scopes: ["web"],
+    environments: ["Production", "Preview", "Development"],
+    purpose: "Espelho público da flag de chat nativo do Marketplace",
+    usedIn: ["apps/web/src/lib/commerce-chat/flag.ts", "apps/web/src/components/messages/MessagesPageContent.tsx"],
+    example: "true",
+  },
 
   // ─── IA ───
   {

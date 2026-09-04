@@ -5,6 +5,41 @@
 @import "./motion.css";
 
 @theme {
+  /* Semantic surfaces — follow CSS variables from themes.css */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-muted: var(--surface-muted);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-header: var(--header);
+  --color-bottom-nav: var(--bottom-nav);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-muted: var(--primary-muted);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-destructive: var(--destructive);
+  --color-info: var(--info);
+  --color-overlay: var(--overlay);
+  --color-hover: var(--hover);
+  --color-selected: var(--selected);
+  --color-skeleton: var(--skeleton);
+
   /* Brand scale (Tailwind utilities) */
   --color-ecopet-brand: #003b16;
   --color-ecopet-brand-secondary: #0f6f34;
@@ -19,15 +54,15 @@
   --color-ecopet-green-900: #003b16;
   /* Accent only — not primary brand */
   --color-ecopet-yellow: #c9a227;
-  --color-ecopet-gray: #4a5560;
+  --color-ecopet-gray: #5c6b62;
   --color-ecopet-cream: #f4f7f4;
-  --color-ecopet-surface: #ffffff;
-  --color-ecopet-dark-bg: #0f1713;
-  --color-ecopet-dark-card: #15211b;
-  --color-ep-success: #15803d;
-  --color-ep-warning: #b45309;
-  --color-ep-danger: #dc2626;
-  --color-ep-info: #2563eb;
+  --color-ecopet-surface: var(--card);
+  --color-ecopet-dark-bg: var(--background);
+  --color-ecopet-dark-card: var(--card);
+  --color-ep-success: var(--success);
+  --color-ep-warning: var(--warning);
+  --color-ep-danger: var(--destructive);
+  --color-ep-info: var(--info);
 
   --font-sans: var(--font-inter), "SF Pro Display", system-ui, sans-serif;
   --font-display: var(--font-jakarta), var(--font-inter), "SF Pro Display", system-ui, sans-serif;
@@ -48,13 +83,13 @@
   }
 
   * {
-    @apply border-ecopet-gray/20;
+    border-color: var(--border);
   }
 
   body {
     @apply antialiased;
-    background-color: var(--ep-bg);
-    color: var(--ep-fg);
+    background-color: var(--background);
+    color: var(--foreground);
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
@@ -65,60 +100,60 @@
 
   /* Typography scale */
   .text-display {
-    @apply font-display font-bold tracking-tight text-ecopet-dark dark:text-white;
+    @apply font-display font-bold tracking-tight text-foreground;
     font-size: clamp(1.75rem, 1.4rem + 1.5vw, 2.5rem);
     line-height: 1.15;
   }
 
   h1,
   .heading-1 {
-    @apply font-display font-bold tracking-tight text-ecopet-dark dark:text-white;
+    @apply font-display font-bold tracking-tight text-foreground;
     font-size: clamp(1.5rem, 1.3rem + 1vw, 2.25rem);
     line-height: 1.2;
   }
 
   h2,
   .heading-2 {
-    @apply font-display text-2xl font-bold tracking-tight text-ecopet-dark dark:text-white;
+    @apply font-display text-2xl font-bold tracking-tight text-foreground;
     font-size: clamp(1.25rem, 1.15rem + 0.6vw, 1.75rem);
   }
 
   h3,
   .heading-3 {
-    @apply font-display text-xl font-semibold text-ecopet-dark dark:text-white;
+    @apply font-display text-xl font-semibold text-foreground;
   }
 
   h4,
   .heading-4 {
-    @apply font-display text-lg font-semibold text-ecopet-dark dark:text-white;
+    @apply font-display text-lg font-semibold text-foreground;
   }
 
   .section-title {
-    @apply font-display text-lg font-semibold text-ecopet-dark dark:text-white;
+    @apply font-display text-lg font-semibold text-foreground;
   }
 
   .body-large {
-    @apply text-base leading-relaxed text-ecopet-gray dark:text-white/85;
+    @apply text-base leading-relaxed text-muted-foreground;
   }
 
   .body-text {
-    @apply text-sm leading-relaxed text-ecopet-gray dark:text-white/80;
+    @apply text-sm leading-relaxed text-muted-foreground;
   }
 
   .body-small {
-    @apply text-xs leading-relaxed text-ecopet-gray dark:text-white/70;
+    @apply text-xs leading-relaxed text-muted-foreground;
   }
 
   .label-text {
-    @apply text-sm font-medium text-ecopet-dark dark:text-white;
+    @apply text-sm font-medium text-foreground;
   }
 
   .caption-text {
-    @apply text-xs text-ecopet-gray/80 dark:text-white/60;
+    @apply text-xs text-muted-foreground;
   }
 
   .overline-text {
-    @apply text-[11px] font-semibold uppercase tracking-widest text-ecopet-gray dark:text-white/55;
+    @apply text-[11px] font-semibold uppercase tracking-widest text-muted-foreground;
   }
 
   .button-text {
@@ -126,7 +161,7 @@
   }
 
   .secondary-text {
-    @apply text-sm text-ecopet-gray dark:text-white/70;
+    @apply text-sm text-muted-foreground;
   }
 }
 

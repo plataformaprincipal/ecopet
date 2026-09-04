@@ -577,7 +577,7 @@ export function AdminIntegracoesPanel() {
       {/* ERP legado — mantido para não quebrar fluxos existentes */}
       <div className="space-y-4 border-t border-zinc-200/80 pt-4 dark:border-white/10">
         <AdminModulePage moduleId="integracoes" />
-        <section className="mx-4 mb-6 rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-zinc-900/60 sm:mx-6">
+        <section className="mx-4 mb-6 rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-card sm:mx-6">
           <h2 className="mb-3 font-semibold">ERP — testar e ativar integrações</h2>
           {erpFeedback ? (
             <p className="mb-3 text-sm text-zinc-600 dark:text-zinc-400">{erpFeedback}</p>

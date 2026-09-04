@@ -37,7 +37,7 @@ export function CategoryChips({ items, activeId, onSelect, className }: Category
               "inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all",
               active
                 ? "bg-ecopet-green text-white shadow-md shadow-ecopet-green/20"
-                : "border border-zinc-200/80 bg-white/80 text-zinc-700 backdrop-blur-sm hover:border-ecopet-green/30 dark:border-white/10 dark:bg-zinc-900/60 dark:text-zinc-200"
+                : "border border-zinc-200/80 bg-white/80 text-zinc-700 backdrop-blur-sm hover:border-ecopet-green/30 dark:border-white/10 dark:bg-card dark:text-zinc-200"
             )}
           >
             {Icon ? <Icon className="h-4 w-4" aria-hidden /> : null}

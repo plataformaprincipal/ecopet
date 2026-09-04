@@ -35,7 +35,7 @@ export function ClientGamificacaoPage() {
       <ClientPageHeader title="Gamificação" description="Missões, conquistas, níveis e desafios." />
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-zinc-900/60">
+        <div className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-card">
           <p className="text-xs text-zinc-500">Nível</p>
           <p className="text-3xl font-bold">{data.profile.level}</p>
           <div className="mt-2 h-2 overflow-hidden rounded-full bg-zinc-100 dark:bg-white/10">
@@ -43,18 +43,18 @@ export function ClientGamificacaoPage() {
           </div>
           <p className="mt-1 text-xs text-zinc-500">{data.profile.points} / {data.profile.nextLevelAt} pts</p>
         </div>
-        <div className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-zinc-900/60">
+        <div className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-card">
           <Trophy className="h-5 w-5 text-amber-500" aria-hidden />
           <p className="mt-2 text-sm font-medium">{data.personalRank.label}</p>
         </div>
-        <div className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-zinc-900/60">
+        <div className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-card">
           <Medal className="h-5 w-5 text-sky-500" aria-hidden />
           <p className="mt-2 text-2xl font-bold">{data.badges.filter((b) => b.earned).length}</p>
           <p className="text-xs text-zinc-500">Badges conquistados</p>
         </div>
       </div>
 
-      <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-zinc-900/60">
+      <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-card">
         <div className="mb-3 flex items-center gap-2">
           <Zap className="h-5 w-5 text-amber-500" aria-hidden />
           <h2 className="font-semibold">Missões</h2>
@@ -75,7 +75,7 @@ export function ClientGamificacaoPage() {
         </ul>
       </section>
 
-      <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-zinc-900/60">
+      <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-card">
         <div className="mb-3 flex items-center gap-2">
           <Award className="h-5 w-5 text-emerald-600" aria-hidden />
           <h2 className="font-semibold">Conquistas e badges</h2>
@@ -95,7 +95,7 @@ export function ClientGamificacaoPage() {
       </section>
 
       {data.challenges.length > 0 ? (
-        <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-zinc-900/60">
+        <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-card">
           <h2 className="mb-3 font-semibold">Desafios ativos</h2>
           <ul className="space-y-1 text-sm">
             {data.challenges.map((c) => (

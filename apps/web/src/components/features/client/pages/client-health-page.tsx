@@ -34,7 +34,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-zinc-900/60">
+    <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-card">
       <div className="mb-3 flex items-center gap-2">
         <Icon className="h-5 w-5 text-emerald-600" aria-hidden />
         <h2 className="font-semibold text-zinc-900 dark:text-white">{title}</h2>
@@ -126,7 +126,7 @@ export function ClientHealthPage() {
           { label: "Alergias", value: data.counts.allergies },
           { label: "Pesagens", value: data.counts.weightRecords },
         ].map((c) => (
-          <div key={c.label} className="rounded-2xl border border-zinc-200/80 bg-white p-4 text-center dark:border-white/10 dark:bg-zinc-900/60">
+          <div key={c.label} className="rounded-2xl border border-zinc-200/80 bg-white p-4 text-center dark:border-white/10 dark:bg-card">
             <p className="text-2xl font-semibold text-zinc-900 dark:text-white">{c.value}</p>
             <p className="text-xs text-zinc-500">{c.label}</p>
           </div>

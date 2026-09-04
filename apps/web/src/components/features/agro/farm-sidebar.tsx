@@ -20,7 +20,7 @@ export function FarmSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden w-56 shrink-0 border-r border-ecopet-gray/10 bg-white dark:border-white/10 dark:bg-[#0f1419] xl:block">
+    <aside className="hidden w-56 shrink-0 border-r border-ecopet-gray/10 bg-white dark:border-white/10 dark:bg-card xl:block">
       <div className="sticky top-16 max-h-[calc(100vh-4rem)] overflow-y-auto p-4">
         <p className="mb-3 text-xs font-bold uppercase tracking-wider text-ecopet-green">Agro Inteligente</p>
         <nav className="space-y-0.5">

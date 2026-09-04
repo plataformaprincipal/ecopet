@@ -177,7 +177,7 @@ export function ClientMarketplacePage() {
             return (
               <article
                 key={product.id}
-                className="overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-sm dark:border-white/10 dark:bg-zinc-900/60"
+                className="overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-sm dark:border-white/10 dark:bg-card"
               >
                 <div className="relative aspect-[4/3] bg-zinc-100 dark:bg-zinc-800">
                   {img ? (

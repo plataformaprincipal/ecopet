@@ -105,14 +105,14 @@
   --ep-header-height: 4rem;
   --ep-touch-min: 44px;
 
-  /* Z-index */
+  /* Z-index — a11y abaixo de modal/checkout/chat */
   --z-base: 0;
   --z-sticky: 40;
   --z-dropdown: 50;
+  --z-a11y: 45;
   --z-overlay: 9998;
   --z-modal: 9999;
   --z-toast: 10000;
-  --z-a11y: 10050;
 
   /* Opacity */
   --opacity-disabled: 0.5;

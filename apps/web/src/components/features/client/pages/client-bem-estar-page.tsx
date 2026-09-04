@@ -57,7 +57,7 @@ export function ClientBemEstarPage() {
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {data.factors.map((f) => (
-          <div key={f.key} className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60">
+          <div key={f.key} className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-card">
             <div className="flex items-center justify-between">
               <p className="font-medium">{f.label}</p>
               <span className="text-sm font-semibold text-emerald-600">{f.score}/{f.maxScore}</span>

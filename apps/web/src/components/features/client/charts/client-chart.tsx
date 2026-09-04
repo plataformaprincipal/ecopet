@@ -15,7 +15,7 @@ const COLORS = ["#003B16", "#22c55e", "#f59e0b", "#3b82f6", "#a855f7", "#ef4444"
 export function ClientChart({ title, points, type = "bar", valuePrefix = "", className }: Props) {
   if (points.length === 0) {
     return (
-      <div className={`rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-zinc-900/60 ${className ?? ""}`}>
+      <div className={`rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-card ${className ?? ""}`}>
         <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">{title}</h3>
         <p className="mt-2 text-sm text-zinc-500">Sem dados no período.</p>
       </div>
@@ -33,7 +33,7 @@ export function ClientChart({ title, points, type = "bar", valuePrefix = "", cla
       return `${x},${y}`;
     });
     return (
-      <div className={`rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-zinc-900/60 ${className ?? ""}`}>
+      <div className={`rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-card ${className ?? ""}`}>
         <h3 className="mb-3 text-sm font-semibold text-zinc-900 dark:text-white">{title}</h3>
         <svg viewBox={`0 0 ${w} ${h}`} className="h-32 w-full">
           <polyline fill="none" stroke="#003B16" strokeWidth="2" points={coords.join(" ")} />
@@ -48,7 +48,7 @@ export function ClientChart({ title, points, type = "bar", valuePrefix = "", cla
   }
 
   return (
-    <div className={`rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-zinc-900/60 ${className ?? ""}`}>
+    <div className={`rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-card ${className ?? ""}`}>
       <h3 className="mb-3 text-sm font-semibold text-zinc-900 dark:text-white">{title}</h3>
       <div className="space-y-2">
         {points.map((p, i) => (

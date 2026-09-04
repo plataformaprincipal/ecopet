@@ -57,7 +57,7 @@ export default function ParceiroPublicPage() {
 
   return (
     <main className="mx-auto max-w-4xl space-y-6 p-4 lg:p-8">
-      <header className="rounded-2xl border bg-white p-6 dark:bg-[#0f1419]">
+      <header className="rounded-2xl border bg-white p-6 dark:bg-card">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold">{partner.businessName}</h1>

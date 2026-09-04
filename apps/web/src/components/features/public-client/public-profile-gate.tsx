@@ -39,7 +39,7 @@ export function PublicProfileGate() {
         {BENEFITS.map(({ icon: Icon, title, description }) => (
           <div
             key={title}
-            className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-zinc-900/60"
+            className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-card"
           >
             <Icon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" aria-hidden />
             <h3 className="mt-3 font-medium text-zinc-900 dark:text-white">{title}</h3>

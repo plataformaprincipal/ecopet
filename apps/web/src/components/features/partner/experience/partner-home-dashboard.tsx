@@ -31,7 +31,7 @@ function StatCard({
   value: string | number;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60">
+    <div className="flex items-center gap-3 rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-card">
       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-ecopet-green/10">
         <Icon className="h-5 w-5 text-ecopet-green" aria-hidden />
       </span>
@@ -128,7 +128,7 @@ export function PartnerHomeDashboard({ businessName }: Props) {
               <Link
                 key={insight.id}
                 href={insight.actionHref ?? "/partner"}
-                className="flex items-start justify-between gap-3 rounded-2xl border border-zinc-200/80 bg-white p-4 transition hover:shadow-md dark:border-white/10 dark:bg-zinc-900/60"
+                className="flex items-start justify-between gap-3 rounded-2xl border border-zinc-200/80 bg-white p-4 transition hover:shadow-md dark:border-white/10 dark:bg-card"
               >
                 <div className="min-w-0">
                   <p className="font-medium text-zinc-900 dark:text-white">{insight.title}</p>
@@ -154,7 +154,7 @@ export function PartnerHomeDashboard({ businessName }: Props) {
               <Link
                 key={o.id}
                 href="/partner/orders"
-                className="block rounded-xl border border-zinc-200/80 bg-white p-3 text-sm dark:border-white/10 dark:bg-zinc-900/60"
+                className="block rounded-xl border border-zinc-200/80 bg-white p-3 text-sm dark:border-white/10 dark:bg-card"
               >
                 <div className="flex items-center justify-between">
                   <span className="font-medium">{o.userName ?? "—"}</span>
@@ -180,7 +180,7 @@ export function PartnerHomeDashboard({ businessName }: Props) {
               <Link
                 key={a.id}
                 href="/partner/appointments"
-                className="block rounded-xl border border-zinc-200/80 bg-white p-3 text-sm dark:border-white/10 dark:bg-zinc-900/60"
+                className="block rounded-xl border border-zinc-200/80 bg-white p-3 text-sm dark:border-white/10 dark:bg-card"
               >
                 <div className="flex items-center justify-between">
                   <span className="font-medium">{a.serviceName ?? "—"}</span>
@@ -206,7 +206,7 @@ export function PartnerHomeDashboard({ businessName }: Props) {
               <Link
                 key={p.id}
                 href="/partner/products"
-                className="flex items-center justify-between rounded-xl border border-zinc-200/80 bg-white p-3 text-sm dark:border-white/10 dark:bg-zinc-900/60"
+                className="flex items-center justify-between rounded-xl border border-zinc-200/80 bg-white p-3 text-sm dark:border-white/10 dark:bg-card"
               >
                 <span className="truncate font-medium">{p.name}</span>
                 <span className="ml-2 shrink-0 font-semibold text-red-600">{p.stock}</span>

@@ -45,7 +45,7 @@ export function NgoSupportersList() {
           ))}
         </div>
       ) : supporters.length === 0 ? (
-        <div className="rounded-2xl border border-zinc-200/80 bg-white p-8 text-center dark:border-white/10 dark:bg-zinc-900/60">
+        <div className="rounded-2xl border border-zinc-200/80 bg-white p-8 text-center dark:border-white/10 dark:bg-card">
           <HandHeart className="mx-auto h-10 w-10 text-zinc-300" aria-hidden />
           <p className="mt-3 text-sm text-zinc-500">{t("ngoArea.supporters.empty")}</p>
         </div>
@@ -61,7 +61,7 @@ export function NgoSupportersList() {
             return (
               <li
                 key={s.userId}
-                className="flex items-center gap-4 rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60"
+                className="flex items-center gap-4 rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-card"
               >
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-rose-500/15 text-sm font-semibold text-rose-600">
                   {initials || "?"}

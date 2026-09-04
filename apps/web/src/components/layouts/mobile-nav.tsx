@@ -17,7 +17,7 @@ export function MobileNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-ecopet-gray/10 bg-white/95 backdrop-blur-lg dark:border-white/10 dark:bg-[#0f1419]/95 lg:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-bottom-nav/95 backdrop-blur-lg lg:hidden">
       <div className="flex items-end justify-around py-1.5">
         {items.slice(0, 2).map(({ href, icon: Icon, label, match }) => {
           const active = (match ?? [href]).some((m) => pathname.startsWith(m));

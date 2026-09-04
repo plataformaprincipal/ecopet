@@ -76,7 +76,7 @@ export function NgoIntegracoesPanel() {
   return (
     <div className="space-y-4">
       <NgoErpModulePanel config={NGO_ERP_MODULE_CONFIG.integracoes} />
-      <section className="mx-4 mb-6 rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-zinc-900/60 sm:mx-6">
+      <section className="mx-4 mb-6 rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-card sm:mx-6">
         <h2 className="mb-3 font-semibold">Ações de integração</h2>
         {feedback ? <p className="mb-3 text-sm text-zinc-600 dark:text-zinc-400">{feedback}</p> : null}
         <div className="space-y-2">

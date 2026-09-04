@@ -14,6 +14,13 @@ export type StartConversationButtonProps = {
   participantUserId: string;
   contextType?: ConversationContextType;
   contextId?: string | null;
+  productId?: string | null;
+  serviceId?: string | null;
+  petId?: string | null;
+  description?: string | null;
+  quantity?: number | null;
+  deadline?: string | null;
+  address?: string | null;
   title?: string;
   label?: string;
   variant?: "default" | "outline" | "secondary" | "ghost";
@@ -26,6 +33,13 @@ export function StartConversationButton({
   participantUserId,
   contextType = "GENERAL",
   contextId = null,
+  productId,
+  serviceId,
+  petId,
+  description,
+  quantity,
+  deadline,
+  address,
   title,
   label,
   variant = "default",
@@ -51,6 +65,13 @@ export function StartConversationButton({
           participantUserId,
           contextType,
           contextId,
+          productId,
+          serviceId,
+          petId,
+          description,
+          quantity,
+          deadline,
+          address,
           title,
         }),
       });

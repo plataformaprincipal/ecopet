@@ -47,7 +47,7 @@ export function PartnerCustomersList() {
           ))}
         </div>
       ) : customers.length === 0 ? (
-        <div className="rounded-2xl border border-zinc-200/80 bg-white p-8 text-center dark:border-white/10 dark:bg-zinc-900/60">
+        <div className="rounded-2xl border border-zinc-200/80 bg-white p-8 text-center dark:border-white/10 dark:bg-card">
           <Users className="mx-auto h-10 w-10 text-zinc-300" aria-hidden />
           <p className="mt-3 text-sm text-zinc-500">{t("partnerArea.customers.empty")}</p>
         </div>
@@ -63,7 +63,7 @@ export function PartnerCustomersList() {
             return (
               <li
                 key={c.userId}
-                className="flex items-center gap-4 rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60"
+                className="flex items-center gap-4 rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-card"
               >
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ecopet-green/15 text-sm font-semibold text-ecopet-green">
                   {initials || "?"}

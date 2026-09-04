@@ -63,7 +63,7 @@ export function ClientAnalyticsPage() {
       )}
 
       {data.petActivities.length > 0 ? (
-        <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-zinc-900/60">
+        <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-card">
           <div className="mb-3 flex items-center gap-2">
             <Activity className="h-5 w-5 text-sky-600" aria-hidden />
             <h2 className="font-semibold">Atividades do pet</h2>
@@ -84,7 +84,7 @@ export function ClientAnalyticsPage() {
 
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-2xl border border-zinc-200/80 bg-white p-4 text-center dark:border-white/10 dark:bg-zinc-900/60">
+    <div className="rounded-2xl border border-zinc-200/80 bg-white p-4 text-center dark:border-white/10 dark:bg-card">
       <p className="text-2xl font-semibold">{value}</p>
       <p className="text-xs text-zinc-500">{label}</p>
     </div>

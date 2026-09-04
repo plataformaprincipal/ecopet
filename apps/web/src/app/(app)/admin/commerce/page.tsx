@@ -8,6 +8,19 @@ type Payload = {
   counts: Record<string, number>;
   recentCases: Array<{ id: string; sku: string; status: string; crmv: string | null }>;
   recentEnrollments: Array<{ id: string; sku: string; status: string; amountCents: number }>;
+  recentQuotes?: Array<{
+    id: string;
+    status: string;
+    totalAmount?: number;
+    value: number;
+    conversationId: string | null;
+  }>;
+  recentConversations?: Array<{
+    id: string;
+    title: string | null;
+    status: string;
+    contextType: string | null;
+  }>;
   splitReady: boolean;
   entertainment: { sku: string; status: string; billingEnabled: boolean };
 };
@@ -43,6 +56,35 @@ export default function AdminCommercePage() {
           : null}
       </div>
       <p className="text-sm">splitReady={String(data?.splitReady ?? false)} · entretenimento {data?.entertainment.status} billing={String(data?.entertainment.billingEnabled)}</p>
+      <Card>
+        <CardHeader>
+          <CardTitle>Chat comercial nativo</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2 text-sm">
+          {(data?.recentConversations ?? []).map((c) => (
+            <p key={c.id}>
+              <a className="text-ecopet-green underline" href={`/dashboard/messages/${c.id}`}>
+                {c.title || c.id}
+              </a>{" "}
+              · {c.status} · {c.contextType ?? "—"}
+            </p>
+          ))}
+          {(data?.recentQuotes ?? []).map((q) => (
+            <p key={q.id}>
+              Orçamento {q.id.slice(0, 8)} · {q.status} · R$ {(q.totalAmount || q.value).toFixed(2)}
+              {q.conversationId ? (
+                <>
+                  {" "}
+                  ·{" "}
+                  <a className="text-ecopet-green underline" href={`/dashboard/messages/${q.conversationId}`}>
+                    conversa
+                  </a>
+                </>
+              ) : null}
+            </p>
+          ))}
+        </CardContent>
+      </Card>
       <Card>
         <CardHeader>
           <CardTitle>Casos recentes</CardTitle>

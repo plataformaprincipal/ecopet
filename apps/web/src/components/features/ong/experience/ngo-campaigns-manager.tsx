@@ -93,7 +93,7 @@ export function NgoCampaignsManager({ initialCreate = false }: Props) {
       {showForm ? (
         <form
           onSubmit={submit}
-          className="space-y-4 rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-zinc-900/60"
+          className="space-y-4 rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-card"
         >
           <div>
             <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
@@ -188,7 +188,7 @@ export function NgoCampaignsManager({ initialCreate = false }: Props) {
           ))}
         </div>
       ) : campaigns.length === 0 ? (
-        <div className="rounded-2xl border border-zinc-200/80 bg-white p-8 text-center dark:border-white/10 dark:bg-zinc-900/60">
+        <div className="rounded-2xl border border-zinc-200/80 bg-white p-8 text-center dark:border-white/10 dark:bg-card">
           <Megaphone className="mx-auto h-10 w-10 text-zinc-300" aria-hidden />
           <p className="mt-3 text-sm text-zinc-500">{t("ngoArea.campaigns.empty")}</p>
         </div>
@@ -197,7 +197,7 @@ export function NgoCampaignsManager({ initialCreate = false }: Props) {
           {campaigns.map((c) => (
             <article
               key={c.id}
-              className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60"
+              className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-card"
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="rounded-full bg-rose-500/10 px-2 py-0.5 text-xs font-medium text-rose-600">

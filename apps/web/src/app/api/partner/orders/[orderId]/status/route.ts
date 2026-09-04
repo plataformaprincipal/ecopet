@@ -158,6 +158,18 @@ export async function PATCH(request: Request, context: RouteContext) {
     });
   }
 
+  void import("@/lib/commerce-chat/events")
+    .then(({ postOrderCommercialEvent, labelForOrderStatus }) => {
+      const event = labelForOrderStatus(nextStatus);
+      if (!event) return;
+      return postOrderCommercialEvent({
+        orderId,
+        event,
+        actorId: user!.id,
+      });
+    })
+    .catch(() => undefined);
+
   return apiSuccess({ order: updated });
 }
 

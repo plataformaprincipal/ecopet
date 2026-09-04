@@ -17,6 +17,14 @@ export function MessageBubble({
   onBlock: () => void;
 }) {
   const mine = isMine;
+  const isSystem = message.type === "SYSTEM";
+  if (isSystem) {
+    return (
+      <div className="flex justify-center" data-testid="commercial-event">
+        <p className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">{message.content}</p>
+      </div>
+    );
+  }
   return (
     <div className={cn("group flex", mine ? "justify-end" : "justify-start")}>
       <div

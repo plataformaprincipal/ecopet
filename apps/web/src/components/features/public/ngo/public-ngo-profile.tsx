@@ -85,7 +85,7 @@ export function PublicNgoProfile({ ngoId }: { ngoId: string }) {
               <Link
                 key={a.id}
                 href={`/adoption/${a.id}`}
-                className="overflow-hidden rounded-2xl border border-zinc-200/80 bg-white transition hover:shadow-lg dark:border-white/10 dark:bg-zinc-900/60"
+                className="overflow-hidden rounded-2xl border border-zinc-200/80 bg-white transition hover:shadow-lg dark:border-white/10 dark:bg-card"
               >
                 <div className="aspect-square bg-zinc-100 dark:bg-white/5">
                   {a.photos[0] ? (
@@ -120,7 +120,7 @@ export function PublicNgoProfile({ ngoId }: { ngoId: string }) {
               <Link
                 key={c.id}
                 href={`/campaigns/${c.id}`}
-                className="rounded-2xl border border-zinc-200/80 bg-white p-4 transition hover:shadow-md dark:border-white/10 dark:bg-zinc-900/60"
+                className="rounded-2xl border border-zinc-200/80 bg-white p-4 transition hover:shadow-md dark:border-white/10 dark:bg-card"
               >
                 <span className="rounded-full bg-rose-500/10 px-2 py-0.5 text-xs font-medium text-rose-600">
                   {t(`ngoArea.campaigns.cat.${c.category}` as string)}

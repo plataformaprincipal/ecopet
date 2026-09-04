@@ -135,7 +135,7 @@ export function ClientRoutinePage() {
       ) : (
         <>
           {data.appointments.length > 0 && (
-            <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-zinc-900/60">
+            <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-card">
               <h2 className="mb-3 font-semibold">Próximas consultas e serviços</h2>
               <ul className="space-y-2">
                 {data.appointments.map((a) => (
@@ -153,7 +153,7 @@ export function ClientRoutinePage() {
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {orderedLabels.map((label) => (
-              <section key={label} className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-zinc-900/60">
+              <section key={label} className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-card">
                 <h3 className="mb-3 font-semibold">{label}</h3>
                 <ul className="space-y-2">
                   {(grouped.get(label) ?? []).map((r) => (

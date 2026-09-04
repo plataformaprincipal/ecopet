@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "@/styles/globals.css";
 import { ThemeProvider } from "@/providers/theme-provider";
+import { ECOPET_THEME_INIT_SCRIPT } from "@/lib/theme/theme-init-script";
 import { ThemeAccessibilitySync } from "@/providers/theme-accessibility-sync";
 import { AuthSessionProvider } from "@/providers/session-provider";
 import { AuthGateProvider } from "@/providers/auth-gate-provider";
@@ -72,14 +73,17 @@ export const metadata: Metadata = {
 
 export const viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#003B16" },
-    { media: "(prefers-color-scheme: dark)", color: "#003B16" },
+    { media: "(prefers-color-scheme: light)", color: "#f3f6f3" },
+    { media: "(prefers-color-scheme: dark)", color: "#151c19" },
   ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: ECOPET_THEME_INIT_SCRIPT }} />
+      </head>
       <body className={`${inter.variable} ${jakarta.variable} font-sans antialiased`}>
         <ThemeProvider>
           <ThemeAccessibilitySync />

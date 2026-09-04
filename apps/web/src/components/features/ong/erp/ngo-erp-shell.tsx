@@ -110,7 +110,7 @@ export function NgoErpShell({ title, description, data, loading, error, locked }
           {kpis.map((k) => (
             <div
               key={k.key}
-              className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60"
+              className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-card"
             >
               <p className="text-lg font-semibold text-zinc-900 dark:text-white">{formatKpiValue(k.value)}</p>
               <p className="text-xs text-zinc-500">{k.label}</p>
@@ -124,7 +124,7 @@ export function NgoErpShell({ title, description, data, loading, error, locked }
       ))}
 
       {tables.map((t) => (
-        <section key={t.id} className="overflow-x-auto rounded-2xl border border-zinc-200/80 bg-white dark:border-white/10 dark:bg-zinc-900/60">
+        <section key={t.id} className="overflow-x-auto rounded-2xl border border-zinc-200/80 bg-white dark:border-white/10 dark:bg-card">
           <h3 className="border-b border-zinc-100 px-4 py-3 text-sm font-semibold dark:border-white/10">{t.label}</h3>
           {t.rows.length === 0 ? (
             <p className="p-4 text-sm text-zinc-500">Nenhum registro.</p>

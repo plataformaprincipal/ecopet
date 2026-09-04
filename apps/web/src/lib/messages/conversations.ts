@@ -1,8 +1,9 @@
-import type { ConversationType, Prisma } from "@prisma/client";
+import type { ConversationContextType, ConversationType, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { DEFAULT_PAGE_SIZE } from "@/lib/messages/constants";
 import {
   assertConversationParticipant,
+  assertConversationParticipantOrAdmin,
   canUseMessaging,
   requireActiveChatUser,
 } from "@/lib/messages/permissions";
@@ -136,7 +137,7 @@ export async function listUserConversations(params: {
 }
 
 export async function getConversationDetail(conversationId: string, userId: string) {
-  await assertConversationParticipant(conversationId, userId);
+  await assertConversationParticipantOrAdmin(conversationId, userId);
   const conversation = await prisma.conversation.findUnique({
     where: { id: conversationId },
     include: {
@@ -148,9 +149,28 @@ export async function getConversationDetail(conversationId: string, userId: stri
 
   const me = conversation.participants.find((p) => p.userId === userId);
   return {
-    ...conversation,
+    id: conversation.id,
+    type: conversation.type,
+    status: conversation.status,
+    title: conversation.title,
+    metadata: conversation.metadata,
+    contextType: conversation.contextType,
+    contextId: conversation.contextId,
+    lastMessageAt: conversation.lastMessageAt,
+    participants: conversation.participants.map((p) => ({
+      id: p.userId,
+      name: p.user.name,
+      role: p.user.role,
+      avatarUrl: p.user.avatarUrl,
+      isMuted: p.isMuted,
+      isArchived: p.isArchived,
+    })),
     permissions: {
-      canSend: conversation.status !== "CLOSED" && conversation.status !== "BLOCKED" && !me?.isBlocked,
+      canSend:
+        Boolean(me) &&
+        conversation.status !== "CLOSED" &&
+        conversation.status !== "BLOCKED" &&
+        !me?.isBlocked,
       canArchive: true,
       canMute: true,
       canBlock: conversation.type === "DIRECT",
@@ -171,6 +191,9 @@ export async function createConversation(params: {
   type?: ConversationType;
   title?: string;
   participantUserIds: string[];
+  contextType?: ConversationContextType;
+  contextId?: string | null;
+  metadata?: Prisma.InputJsonValue;
 }) {
   const creator = await requireActiveChatUser(params.creatorId);
   const resolved = (
@@ -228,6 +251,9 @@ export async function createConversation(params: {
       status: "ACTIVE",
       createdById: creator.id,
       directKey,
+      contextType: params.contextType ?? undefined,
+      contextId: params.contextId ?? undefined,
+      metadata: params.metadata ?? undefined,
       participants: {
         create: allIds.map((userId) => {
           const user = userId === creator.id ? creator : participants.find((p) => p.id === userId);

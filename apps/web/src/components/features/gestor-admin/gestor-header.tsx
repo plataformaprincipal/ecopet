@@ -7,7 +7,7 @@ type Props = { title: string; description?: string };
 
 export function GestorHeader({ title, description }: Props) {
   return (
-    <header className="border-b bg-white px-6 py-4 dark:bg-gray-950">
+    <header className="border-b bg-white px-6 py-4 dark:bg-card">
       <Link href="/dashboard/admin" className="mb-2 inline-flex items-center gap-1 text-xs text-muted-foreground hover:underline">
         <ArrowLeft className="h-3 w-3" /> Admin
       </Link>

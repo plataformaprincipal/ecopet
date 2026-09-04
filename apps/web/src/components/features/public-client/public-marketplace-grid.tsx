@@ -56,7 +56,7 @@ export function PublicMarketplaceGrid({
         return (
           <article
             key={product.id}
-            className="group flex flex-col overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-zinc-900/60"
+            className="group flex flex-col overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-card"
           >
             <div className="relative aspect-[4/3] bg-zinc-100 dark:bg-zinc-800">
               {img ? (
@@ -119,13 +119,13 @@ export function PublicMarketplaceFilters({
 }) {
   const { t } = useTranslation();
   return (
-    <div className="grid gap-3 rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-3 rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-card sm:grid-cols-2 lg:grid-cols-4">
       <label className="block text-sm">
         <span className="mb-1 block font-medium text-zinc-700 dark:text-zinc-300">{t("pub.marketplace.category")}</span>
         <select
           value={category}
           onChange={(e) => onCategoryChange(e.target.value)}
-          className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-zinc-950"
+          className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-card"
           aria-label={t("pub.marketplace.filterByCategory")}
         >
           <option value="">{t("pub.marketplace.catAll")}</option>
@@ -143,7 +143,7 @@ export function PublicMarketplaceFilters({
           min={0}
           value={minPrice}
           onChange={(e) => onMinPriceChange(e.target.value)}
-          className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-zinc-950"
+          className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-card"
           aria-label={t("pub.marketplace.minPrice")}
         />
       </label>
@@ -154,7 +154,7 @@ export function PublicMarketplaceFilters({
           min={0}
           value={maxPrice}
           onChange={(e) => onMaxPriceChange(e.target.value)}
-          className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-zinc-950"
+          className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-card"
           aria-label={t("pub.marketplace.maxPrice")}
         />
       </label>

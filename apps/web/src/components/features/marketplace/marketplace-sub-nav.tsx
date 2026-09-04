@@ -12,7 +12,7 @@ export function MarketplaceSubNav() {
 
   return (
     <nav
-      className="sticky top-16 z-30 -mx-4 border-b border-ecopet-gray/10 bg-white/90 px-4 backdrop-blur-md dark:border-white/10 dark:bg-[#0f1419]/90 lg:-mx-8 lg:px-8"
+      className="sticky top-16 z-30 -mx-4 border-b border-ecopet-gray/10 bg-white/90 px-4 backdrop-blur-md dark:border-white/10 dark:bg-card/90 lg:-mx-8 lg:px-8"
       aria-label={t("common.marketplace")}
     >
       <div className="flex gap-1 overflow-x-auto py-2 scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

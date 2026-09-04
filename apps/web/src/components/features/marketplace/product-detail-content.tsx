@@ -160,9 +160,24 @@ export function ProductDetailContent({ id }: ProductDetailContentProps) {
             participantUserId={product.partnerId}
             contextType="PRODUCT"
             contextId={product.id}
+            productId={product.id}
             title={product.name}
             label={t("messagesModule.askAboutProduct")}
             ariaLabel={t("messagesModule.askAboutProduct")}
+          />
+          <StartConversationButton
+            className="mt-2 w-full"
+            variant="secondary"
+            size="lg"
+            participantUserId={product.partnerId}
+            contextType="PRODUCT"
+            contextId={product.id}
+            productId={product.id}
+            description={`Solicito orçamento para ${product.name}`}
+            quantity={qty}
+            title={product.name}
+            label="Solicitar orçamento"
+            ariaLabel="Solicitar orçamento"
           />
 
           <Link href="/marketplace/checkout" className="mt-3 block">

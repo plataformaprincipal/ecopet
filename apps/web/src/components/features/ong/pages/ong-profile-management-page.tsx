@@ -84,7 +84,7 @@ export function OngProfileManagementPage({
           <Link
             key={title}
             href={href}
-            className="rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-sm transition hover:border-zinc-300 hover:shadow-md dark:border-white/10 dark:bg-zinc-900/60"
+            className="rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-sm transition hover:border-zinc-300 hover:shadow-md dark:border-white/10 dark:bg-card"
           >
             <Icon className="h-5 w-5 text-zinc-500" />
             <h3 className="mt-3 font-medium text-zinc-900 dark:text-white">{title}</h3>
@@ -95,7 +95,7 @@ export function OngProfileManagementPage({
 
       <section
         id="editar-perfil"
-        className="rounded-2xl border border-zinc-200/80 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-zinc-900/60"
+        className="rounded-2xl border border-zinc-200/80 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-card"
       >
         <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>

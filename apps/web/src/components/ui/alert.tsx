@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 const alertVariants = cva("relative w-full rounded-[var(--radius-md)] border px-4 py-3 text-sm", {
   variants: {
     variant: {
-      default: "border-ecopet-gray/20 bg-ecopet-cream/60 text-ecopet-dark dark:bg-white/5 dark:text-white",
+      default: "border-border bg-muted text-foreground",
       success: "border-ep-success/30 bg-ep-success/10 text-ep-success",
       warning: "border-ep-warning/30 bg-ep-warning/10 text-ep-warning",
       danger: "border-ep-danger/30 bg-ep-danger/10 text-ep-danger",

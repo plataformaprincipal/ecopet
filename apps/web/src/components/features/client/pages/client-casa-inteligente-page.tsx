@@ -46,7 +46,7 @@ export function ClientCasaInteligentePage() {
         <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">Plataformas</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           {data.smartHome.platforms.map((p) => (
-            <div key={p.id} className="flex items-center justify-between rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60">
+            <div key={p.id} className="flex items-center justify-between rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-card">
               <div className="flex items-center gap-3">
                 <Plug className="h-5 w-5 text-zinc-400" aria-hidden />
                 <span className="font-medium">{p.name}</span>
@@ -63,7 +63,7 @@ export function ClientCasaInteligentePage() {
         <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">Cenários de automação</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {data.smartHome.scenarios.map((s) => (
-            <article key={s.id} className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60">
+            <article key={s.id} className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-card">
               <div className="flex items-center gap-2">
                 <Home className="h-4 w-4 text-emerald-600" aria-hidden />
                 <p className="font-medium">{s.name}</p>

@@ -44,7 +44,7 @@ export function PostTypeFilters({
               "rounded-full border px-3 py-1 text-xs font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ecopet-green",
               active
                 ? "border-ecopet-green bg-ecopet-green/10 text-ecopet-dark dark:text-white"
-                : "border-ecopet-gray/20 bg-white text-muted-foreground hover:border-ecopet-green/40 dark:border-white/10 dark:bg-zinc-900/60 dark:text-zinc-300"
+                : "border-ecopet-gray/20 bg-white text-muted-foreground hover:border-ecopet-green/40 dark:border-white/10 dark:bg-card dark:text-zinc-300"
             )}
           >
             {label}

@@ -85,7 +85,7 @@ export function ClientDocumentsPage() {
           actionHref="/cliente/pets"
         />
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-zinc-200/80 bg-white dark:border-white/10 dark:bg-zinc-900/60">
+        <div className="overflow-hidden rounded-2xl border border-zinc-200/80 bg-white dark:border-white/10 dark:bg-card">
           <table className="w-full text-left text-sm">
             <thead className="border-b border-zinc-100 text-xs uppercase tracking-wide text-zinc-500 dark:border-white/5">
               <tr>

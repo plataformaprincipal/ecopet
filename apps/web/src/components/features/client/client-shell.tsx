@@ -12,7 +12,7 @@ type ClientShellProps = {
 
 export function ClientShell({ userName, children }: ClientShellProps) {
   return (
-    <div className="flex min-h-screen bg-ecopet-cream/50 dark:bg-ecopet-dark-bg">
+    <div className="flex min-h-screen bg-background">
       <ClientSidebar userName={userName} />
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="glass sticky top-0 z-30 border-b border-ecopet-gray/10 px-4 py-3 lg:hidden dark:border-white/10">

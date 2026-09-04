@@ -38,7 +38,7 @@
     "test:loyalty": "node --import tsx --test src/lib/loyalty/rules.test.ts src/lib/loyalty/ledger.rules.test.ts",
     "test:coupon": "node --import tsx --test src/lib/commerce/apply-coupon.test.ts",
     "test:observability": "node --require ./scripts/stub-server-only.cjs --import tsx --test src/lib/observability/observability.test.ts",
-    "test:talkjs": "node --import tsx --test src/lib/talkjs/server.test.ts",
+    "test:commerce-chat": "node --import tsx --test src/lib/commerce-chat/quotes-math.test.ts",
     "test:ai": "node --import tsx --test ../../scripts/test-foundation-ai.mjs",
     "test:ai:foundation": "node --require ./scripts/stub-server-only.cjs --import tsx --test src/lib/ai/foundation.test.ts",
     "test:ai:assistant": "node --require ./scripts/stub-server-only.cjs --import tsx --test src/lib/ai/assistant.test.ts",

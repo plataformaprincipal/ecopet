@@ -86,7 +86,7 @@ export function AdminBiIntelligencePanel({ domain = "executive" }: Props) {
     <div className="grid gap-4 lg:grid-cols-[240px_1fr]">
       <nav
         aria-label="Módulos BI"
-        className="h-fit rounded-xl border border-zinc-200/80 bg-white p-3 m-4 mb-0 lg:mb-4 dark:border-white/10 dark:bg-zinc-900/60 sm:ml-6"
+        className="h-fit rounded-xl border border-zinc-200/80 bg-white p-3 m-4 mb-0 lg:mb-4 dark:border-white/10 dark:bg-card sm:ml-6"
       >
         <p className="mb-1 px-2 text-sm font-semibold">Centro de Inteligência</p>
         <p className="mb-3 px-2 text-xs text-muted-foreground">

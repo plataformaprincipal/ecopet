@@ -107,7 +107,7 @@ export function FeedPostCard({ post, showCommentsDefault = false }: FeedPostCard
                 <MoreHorizontal className="h-5 w-5 text-ecopet-gray" />
               </button>
               {menuOpen && (
-                <div className="absolute right-0 top-full z-20 mt-1 w-48 rounded-xl border border-ecopet-gray/10 bg-white py-1 shadow-lg dark:bg-[#1a1f26]">
+                <div className="absolute right-0 top-full z-20 mt-1 w-48 rounded-xl border border-ecopet-gray/10 bg-white py-1 shadow-lg dark:bg-popover">
                   {[
                     { icon: Repeat2, label: "Repostar" },
                     { icon: Link2, label: "Copiar link" },

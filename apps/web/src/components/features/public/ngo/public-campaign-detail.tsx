@@ -87,7 +87,7 @@ export function PublicCampaignDetail({ campaignId }: { campaignId: string }) {
       </Link>
 
       {campaign.goalAmount ? (
-        <div className="mt-4 rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60">
+        <div className="mt-4 rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-card">
           <div className="h-2 overflow-hidden rounded-full bg-zinc-100 dark:bg-white/10">
             <div className="h-full bg-rose-500" style={{ width: `${pct}%` }} />
           </div>

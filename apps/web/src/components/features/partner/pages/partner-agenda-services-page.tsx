@@ -117,7 +117,7 @@ export function PartnerAgendaServicesPage({ partnerId }: { partnerId: string }) 
         ].map((stat) => (
           <div
             key={stat.label}
-            className="rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900/60"
+            className="rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-card"
           >
             <p className="text-xs text-zinc-500">{stat.label}</p>
             <p className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-white">{stat.value}</p>
@@ -163,7 +163,7 @@ export function PartnerAgendaServicesPage({ partnerId }: { partnerId: string }) 
             {services.map((service) => (
               <div
                 key={service.id}
-                className="flex flex-col gap-3 rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between dark:border-white/10 dark:bg-zinc-900/60"
+                className="flex flex-col gap-3 rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between dark:border-white/10 dark:bg-card"
               >
                 <div>
                   <p className="font-medium text-zinc-900 dark:text-white">{service.name}</p>
@@ -194,7 +194,7 @@ export function PartnerAgendaServicesPage({ partnerId }: { partnerId: string }) 
               <Link
                 key={apt.id}
                 href={`/dashboard/partner/appointments/${apt.id}`}
-                className="block rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-sm transition hover:border-zinc-300 dark:border-white/10 dark:bg-zinc-900/60"
+                className="block rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-sm transition hover:border-zinc-300 dark:border-white/10 dark:bg-card"
               >
                 <div className="flex items-center justify-between gap-3">
                   <div>
@@ -225,7 +225,7 @@ export function PartnerAgendaServicesPage({ partnerId }: { partnerId: string }) 
             {history.map((apt) => (
               <div
                 key={apt.id}
-                className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60"
+                className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-card"
               >
                 <p className="font-medium text-zinc-900 dark:text-white">
                   {apt.service?.name} · {apt.user?.name}
@@ -248,7 +248,7 @@ export function PartnerAgendaServicesPage({ partnerId }: { partnerId: string }) 
           {reviews.map((review) => (
             <div
               key={review.id}
-              className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60"
+              className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-card"
             >
               <div className="flex items-center gap-2">
                 <Star className="h-4 w-4 fill-amber-400 text-amber-400" />

@@ -13,7 +13,7 @@ export function ClientStatsCards({ items }: ClientStatsCardsProps) {
       {items.map(({ label, value, icon: Icon }) => (
         <div
           key={label}
-          className="rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900/60"
+          className="rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-card"
         >
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium text-zinc-500">{label}</p>

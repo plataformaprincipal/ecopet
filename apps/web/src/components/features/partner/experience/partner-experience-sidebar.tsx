@@ -31,16 +31,16 @@ export function PartnerExperienceSidebar({ businessName, accessLevel, statusLabe
   const { t } = useTranslation();
 
   return (
-    <aside className="hidden w-72 shrink-0 flex-col border-r border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] backdrop-blur-xl lg:flex">
-      <div className="border-b border-zinc-200/80 px-5 py-5 dark:border-white/10">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-400">
+    <aside className="hidden w-72 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground backdrop-blur-xl lg:flex">
+      <div className="border-b border-sidebar-border px-5 py-5">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
           {t("partnerArea.area")}
         </p>
         <div className="mt-2 flex items-center gap-2">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-900">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
             <Store className="h-4 w-4" aria-hidden />
           </span>
-          <h2 className="min-w-0 flex-1 truncate font-display text-base font-semibold text-zinc-900 dark:text-white">
+          <h2 className="min-w-0 flex-1 truncate font-display text-base font-semibold text-sidebar-foreground">
             {businessName}
           </h2>
         </div>
@@ -62,8 +62,8 @@ export function PartnerExperienceSidebar({ businessName, accessLevel, statusLabe
               className={cn(
                 "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
                 active
-                  ? "bg-zinc-900 text-white shadow-sm dark:bg-white dark:text-zinc-900"
-                  : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-white/5"
+                  ? "bg-sidebar-accent text-primary shadow-sm"
+                  : "text-muted-foreground hover:bg-hover hover:text-foreground"
               )}
             >
               <Icon className="h-4 w-4 shrink-0" aria-hidden />

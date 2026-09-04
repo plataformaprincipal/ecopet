@@ -87,9 +87,9 @@ export function SearchPanel() {
         onClick={() => setSearchPanelOpen(false)}
       />
       <aside
-        className="fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col overflow-y-auto bg-white shadow-2xl dark:bg-[#0f1419] lg:max-w-lg"
+        className="fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col overflow-y-auto bg-white shadow-2xl dark:bg-card lg:max-w-lg"
       >
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-ecopet-gray/10 bg-white px-4 py-4 dark:bg-[#0f1419]">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-ecopet-gray/10 bg-white px-4 py-4 dark:bg-card">
           <div className="flex items-center gap-2">
             <SlidersHorizontal className="h-5 w-5 text-ecopet-green" />
             <h2 className="font-display text-lg font-bold">Busca avançada</h2>

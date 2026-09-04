@@ -36,7 +36,7 @@ export function PublicSearchBar({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder ?? t("pub.search.default")}
         aria-label={ariaLabel ?? t("common.search")}
-        className="h-12 rounded-xl border-zinc-200 bg-white pl-11 text-base shadow-sm dark:border-white/10 dark:bg-zinc-900/60"
+        className="h-12 rounded-xl border-zinc-200 bg-white pl-11 text-base shadow-sm dark:border-white/10 dark:bg-card"
       />
     </div>
   );

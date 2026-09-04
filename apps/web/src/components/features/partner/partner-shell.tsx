@@ -33,7 +33,7 @@ export function PartnerShell({
   const allowed = canAccessPartnerRoute(pathname, accessLevel);
 
   return (
-    <div className="flex min-h-screen bg-ecopet-cream/50 dark:bg-ecopet-dark-bg">
+    <div className="flex min-h-screen bg-background">
       <PartnerSidebar
         businessName={businessName}
         accessLevel={accessLevel}

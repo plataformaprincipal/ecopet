@@ -154,9 +154,23 @@ export function ServiceDetailContent({ id }: ServiceDetailContentProps) {
               participantUserId={service.partnerId}
               contextType="SERVICE"
               contextId={service.id}
+              serviceId={service.id}
               title={service.name}
               label={t("messagesModule.askAboutService")}
               ariaLabel={t("messagesModule.askAboutService")}
+            />
+            <StartConversationButton
+              variant="secondary"
+              size="lg"
+              className="shrink-0"
+              participantUserId={service.partnerId}
+              contextType="SERVICE"
+              contextId={service.id}
+              serviceId={service.id}
+              description={`Solicito orçamento para ${service.name}`}
+              title={service.name}
+              label="Solicitar orçamento"
+              ariaLabel="Solicitar orçamento"
             />
             <Button size="lg" variant="outline" className={cn(fav && "text-red-500")} onClick={() => toggleFavoriteService(service.id)}>
               <Heart className={cn("h-5 w-5", fav && "fill-red-500")} />

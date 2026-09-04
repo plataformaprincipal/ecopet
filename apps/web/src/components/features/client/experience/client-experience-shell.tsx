@@ -38,7 +38,7 @@ export function ClientExperienceShell({ userName, primaryPet, children }: Props)
   const showRightPanel = CLIENT_RIGHT_PANEL_ROUTES.includes(pathname);
 
   return (
-    <div className="flex min-h-screen bg-zinc-50 dark:bg-zinc-950">
+    <div className="flex min-h-screen bg-background">
       <ClientExperienceSidebar userName={userName} primaryPet={primaryPet} />
 
       <div className="flex min-w-0 flex-1 flex-col">
@@ -75,7 +75,7 @@ export function ClientExperienceShell({ userName, primaryPet, children }: Props)
           <Link
             href="/client/social"
             aria-label={t("clientArea.shell.newPost")}
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-900 text-white shadow-lg transition hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ecopet-green focus-visible:ring-offset-2 dark:bg-white dark:text-zinc-900"
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-sidebar text-sidebar-foreground shadow-lg ring-1 ring-border transition hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ecopet-green focus-visible:ring-offset-2"
           >
             <Plus className="h-5 w-5" aria-hidden />
           </Link>
@@ -88,17 +88,17 @@ export function ClientExperienceShell({ userName, primaryPet, children }: Props)
           <button
             type="button"
             aria-label="Close menu"
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 bg-overlay"
             onClick={() => setMenuOpen(false)}
           />
-          <div className="absolute inset-y-0 left-0 flex w-72 max-w-[80vw] flex-col bg-white shadow-xl dark:bg-zinc-950">
-            <div className="flex items-center justify-between border-b border-zinc-200/80 px-4 py-4 dark:border-white/10">
-              <span className="font-display text-lg font-semibold text-zinc-900 dark:text-white">EccoPet</span>
+          <div className="absolute inset-y-0 left-0 flex w-72 max-w-[80vw] flex-col bg-sidebar shadow-xl">
+            <div className="flex items-center justify-between border-b border-sidebar-border px-4 py-4">
+              <span className="font-display text-lg font-semibold text-sidebar-foreground">EccoPet</span>
               <button
                 type="button"
                 onClick={() => setMenuOpen(false)}
                 aria-label="Close"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-zinc-500 hover:bg-zinc-100 dark:hover:bg-white/5"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground hover:bg-hover"
               >
                 <X className="h-5 w-5" aria-hidden />
               </button>
@@ -115,8 +115,8 @@ export function ClientExperienceShell({ userName, primaryPet, children }: Props)
                     className={cn(
                       "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium",
                       active
-                        ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
-                        : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-white/5"
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-hover hover:text-foreground"
                     )}
                   >
                     <Icon className="h-4 w-4 shrink-0" aria-hidden />
@@ -126,7 +126,7 @@ export function ClientExperienceShell({ userName, primaryPet, children }: Props)
               })}
               <Link
                 href="/client/cart"
-                className="mt-2 flex items-center gap-3 rounded-xl bg-zinc-100 px-3 py-2.5 text-sm font-medium text-zinc-700 dark:bg-white/5 dark:text-zinc-300"
+                className="mt-2 flex items-center gap-3 rounded-xl bg-muted px-3 py-2.5 text-sm font-medium text-foreground"
               >
                 <ShoppingCart className="h-4 w-4 shrink-0" aria-hidden />
                 {t("clientArea.nav.cart")}

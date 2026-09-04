@@ -27,7 +27,7 @@ export function AgroAiChat() {
       />
       <aside
         className={cn(
-          "fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col border-l border-ecopet-green/20 bg-white shadow-2xl transition-transform duration-300 dark:bg-[#0f1419]",
+          "fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col border-l border-ecopet-green/20 bg-white shadow-2xl transition-transform duration-300 dark:bg-card",
           aiChatOpen ? "translate-x-0" : "translate-x-full"
         )}
       >

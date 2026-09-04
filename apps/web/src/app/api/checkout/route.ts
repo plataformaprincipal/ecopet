@@ -48,7 +48,10 @@ export async function POST(request: Request) {
             ? e.message
             : "Erro no checkout.";
     const map: Record<string, [string, string, number]> = {
-      CART_EMPTY: ["VALIDATION", "Carrinho vazio.", 400],
+      QUOTE_EXPIRED: ["VALIDATION", "Orçamento expirado.", 409],
+      QUOTE_NOT_ACCEPTED: ["VALIDATION", "Orçamento não aceito.", 400],
+      QUOTE_NOT_FOUND: ["VALIDATION", "Orçamento indisponível.", 400],
+      QUOTE_FORBIDDEN: ["FORBIDDEN", "Orçamento não pertence a você.", 403],
       MULTI_PARTNER_CART: ["CONFLICT", "Carrinho com produtos de parceiros diferentes.", 409],
       INSUFFICIENT_STOCK: ["CONFLICT", "Estoque insuficiente para um ou mais itens.", 409],
       PRODUCT_NOT_FOUND: ["VALIDATION", "Produto indisponível.", 400],

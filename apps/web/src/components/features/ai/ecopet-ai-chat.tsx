@@ -9,6 +9,7 @@ import {
   AiUnavailableBanner,
   isAiNotConfiguredErrorCode,
 } from "@/components/features/ai/ai-unavailable-banner";
+import { AiProcessingStatus } from "@/components/features/ai/ai-processing-status";
 
 type Message = { id: string; role: "user" | "assistant"; content: string };
 
@@ -101,20 +102,20 @@ export function EcoPetAIChat({ locale = "pt-BR", petId, conversationId, onConver
         <AiUnavailableBanner message={unavailableMessage ?? undefined} />
       )}
       <div
-        className="flex-1 space-y-3 overflow-y-auto rounded-2xl border border-zinc-200 bg-white/70 p-3 dark:border-zinc-800 dark:bg-zinc-950/50"
+        className="flex-1 space-y-3 overflow-y-auto rounded-2xl border border-border bg-card/80 p-3"
         aria-live="polite"
         aria-relevant="additions"
       >
         {messages.length === 0 && !loading && !unavailable && (
-          <p className="text-sm text-zinc-500">Envie uma mensagem para começar.</p>
+          <p className="text-sm text-muted-foreground">Envie uma mensagem para começar.</p>
         )}
         {messages.map((m) => (
           <div
             key={m.id}
             className={
               m.role === "user"
-                ? "ml-8 rounded-2xl bg-emerald-600 px-3 py-2 text-sm text-white"
-                : "mr-8 rounded-2xl bg-zinc-100 px-3 py-2 text-sm text-zinc-900 dark:bg-zinc-900 dark:text-zinc-100"
+                ? "ml-8 rounded-2xl bg-primary px-3 py-2 text-sm text-primary-foreground"
+                : "mr-8 rounded-2xl bg-muted px-3 py-2 text-sm text-foreground"
             }
           >
             <div className="whitespace-pre-wrap break-words">{m.content}</div>
@@ -123,11 +124,7 @@ export function EcoPetAIChat({ locale = "pt-BR", petId, conversationId, onConver
             )}
           </div>
         ))}
-        {loading && (
-          <p className="text-sm text-zinc-500" role="status">
-            Gerando resposta…
-          </p>
-        )}
+        {loading && <AiProcessingStatus />}
         <div ref={liveRef} />
       </div>
       {error && !unavailable && <AIErrorState message={error} onRetry={() => void send()} />}
@@ -145,7 +142,7 @@ export function EcoPetAIChat({ locale = "pt-BR", petId, conversationId, onConver
               void send();
             }
           }}
-          className="flex-1 rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:border-zinc-700 dark:bg-zinc-950"
+          className="flex-1 rounded-xl border border-input bg-card px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
           placeholder={unavailable ? "IA indisponível neste ambiente" : "Pergunte à EcoPet AI…"}
           disabled={loading || unavailable}
         />
@@ -153,7 +150,7 @@ export function EcoPetAIChat({ locale = "pt-BR", petId, conversationId, onConver
           <EcoPetAIButton
             onClick={() => abortRef.current?.abort()}
             label="Cancelar"
-            className="rounded-xl bg-zinc-700 px-3 py-2 text-sm text-white"
+            className="rounded-xl bg-muted px-3 py-2 text-sm text-foreground"
           >
             Cancelar
           </EcoPetAIButton>

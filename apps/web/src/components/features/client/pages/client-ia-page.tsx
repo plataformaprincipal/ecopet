@@ -48,7 +48,7 @@ export function ClientIaPage() {
         }
       />
 
-      <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-zinc-900/60">
+      <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-card">
         <div className="flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-emerald-600" aria-hidden />
           <h2 className="font-semibold">Status do provedor</h2>
@@ -60,7 +60,7 @@ export function ClientIaPage() {
         )}
       </section>
 
-      <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-zinc-900/60">
+      <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-card">
         <div className="mb-3 flex items-center gap-2">
           <Brain className="h-5 w-5 text-violet-600" aria-hidden />
           <h2 className="font-semibold">Memória do tutor</h2>
@@ -84,7 +84,7 @@ export function ClientIaPage() {
         )}
       </section>
 
-      <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-zinc-900/60">
+      <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-card">
         <div className="mb-3 flex items-center gap-2">
           <Target className="h-5 w-5 text-sky-600" aria-hidden />
           <h2 className="font-semibold">Contexto dos pets</h2>
@@ -107,7 +107,7 @@ export function ClientIaPage() {
       </section>
 
       {memory && memory.conversations.length > 0 ? (
-        <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-zinc-900/60">
+        <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-card">
           <h2 className="mb-3 font-semibold">Histórico de conversas</h2>
           <ul className="space-y-2">
             {memory.conversations.slice(0, 8).map((c) => (

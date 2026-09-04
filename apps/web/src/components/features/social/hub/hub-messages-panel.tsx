@@ -36,7 +36,7 @@ export function HubMessagesPanel({
   return (
     <section
       className={cn(
-        "rounded-[20px] border border-zinc-200/80 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900/60",
+        "rounded-[20px] border border-zinc-200/80 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-card",
         className
       )}
       aria-label={t("hub.messages.title")}

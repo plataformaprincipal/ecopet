@@ -262,7 +262,7 @@ export function AdminApprovalsPanel() {
             aria-modal="true"
             aria-labelledby="confirm-title"
           >
-            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-950">
+            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-card">
               <h2 id="confirm-title" className="font-semibold">
                 Confirmar ação
               </h2>

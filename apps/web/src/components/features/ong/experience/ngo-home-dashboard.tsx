@@ -28,7 +28,7 @@ function StatCard({
   value: string | number;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60">
+    <div className="flex items-center gap-3 rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-card">
       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500/10">
         <Icon className="h-5 w-5 text-rose-500" aria-hidden />
       </span>
@@ -109,7 +109,7 @@ export function NgoHomeDashboard({ ngoName }: Props) {
               <Link
                 key={insight.id}
                 href={insight.href ?? "/ngo"}
-                className="flex items-start justify-between gap-3 rounded-2xl border border-zinc-200/80 bg-white p-4 transition hover:shadow-md dark:border-white/10 dark:bg-zinc-900/60"
+                className="flex items-start justify-between gap-3 rounded-2xl border border-zinc-200/80 bg-white p-4 transition hover:shadow-md dark:border-white/10 dark:bg-card"
               >
                 <div className="min-w-0">
                   <p className="font-medium text-zinc-900 dark:text-white">{insight.title}</p>
@@ -135,7 +135,7 @@ export function NgoHomeDashboard({ ngoName }: Props) {
               <Link
                 key={r.id}
                 href="/ngo/adocoes"
-                className="block rounded-xl border border-zinc-200/80 bg-white p-3 text-sm dark:border-white/10 dark:bg-zinc-900/60"
+                className="block rounded-xl border border-zinc-200/80 bg-white p-3 text-sm dark:border-white/10 dark:bg-card"
               >
                 <div className="flex items-center justify-between">
                   <span className="font-medium">{r.animalName ?? "—"}</span>
@@ -161,7 +161,7 @@ export function NgoHomeDashboard({ ngoName }: Props) {
               <Link
                 key={a.id}
                 href="/ngo/animais"
-                className="block rounded-xl border border-zinc-200/80 bg-white p-3 text-sm dark:border-white/10 dark:bg-zinc-900/60"
+                className="block rounded-xl border border-zinc-200/80 bg-white p-3 text-sm dark:border-white/10 dark:bg-card"
               >
                 <div className="flex items-center justify-between">
                   <span className="font-medium">{a.name}</span>

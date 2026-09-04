@@ -54,7 +54,7 @@ export function ClientMetasPage() {
     <div className="space-y-6">
       <ClientPageHeader title="Metas" description="Objetivos de saúde, rotina e economia." />
 
-      <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-zinc-900/60">
+      <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-card">
         <h2 className="mb-3 font-semibold">Criar meta</h2>
         <div className="flex flex-wrap gap-2">
           {GOAL_TYPES.map((t) => (
@@ -83,7 +83,7 @@ export function ClientMetasPage() {
 
 function GoalList({ title, goals }: { title: string; goals: ClientGoal[] }) {
   return (
-    <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-zinc-900/60">
+    <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-card">
       <h2 className="mb-3 font-semibold">{title}</h2>
       <ul className="space-y-2">
         {goals.map((g) => (

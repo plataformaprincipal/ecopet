@@ -67,7 +67,7 @@ export function PublicCategoryGrid({
           "flex flex-col rounded-2xl border p-4 transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500",
           active
             ? "border-zinc-900 bg-zinc-900 text-white shadow-md dark:border-white dark:bg-white dark:text-zinc-900"
-            : "border-zinc-200/80 bg-white hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-zinc-900/60"
+            : "border-zinc-200/80 bg-white hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-card"
         );
 
         if (onSelect) {

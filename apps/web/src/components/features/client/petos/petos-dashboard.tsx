@@ -328,7 +328,7 @@ export function PetOsDashboard({ userName }: PetOsDashboardProps) {
               <Link
                 key={o.id}
                 href={`/dashboard/client/orders/${o.id}`}
-                className="rounded-2xl border border-zinc-200/80 bg-white p-4 text-sm transition hover:shadow-md dark:border-white/10 dark:bg-zinc-900/60"
+                className="rounded-2xl border border-zinc-200/80 bg-white p-4 text-sm transition hover:shadow-md dark:border-white/10 dark:bg-card"
               >
                 <p className="font-semibold text-zinc-900 dark:text-white">{brl(o.total)}</p>
                 <p className="text-zinc-500">{o.status} · {formatDay(o.createdAt)}</p>

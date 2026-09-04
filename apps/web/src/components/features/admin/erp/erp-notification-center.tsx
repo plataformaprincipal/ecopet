@@ -40,7 +40,7 @@ export function ErpNotificationCenter() {
       {open && (
         <>
           <button type="button" className="fixed inset-0 z-40" aria-label="Fechar" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 z-50 mt-2 w-80 rounded-xl border bg-white shadow-lg dark:bg-gray-950">
+          <div className="absolute right-0 z-50 mt-2 w-80 rounded-xl border bg-white shadow-lg dark:bg-card">
             <div className="border-b p-3 text-sm font-semibold">Centro de notificações</div>
             <div className="max-h-80 overflow-y-auto">
               {items.length === 0 ? (

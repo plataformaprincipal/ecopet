@@ -65,7 +65,7 @@ export function ClientRelatoriosPage() {
 
       <div className="grid gap-4 lg:grid-cols-3">
         {cards.map((c) => (
-          <article key={c.key} className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-zinc-900/60">
+          <article key={c.key} className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-card">
             <h2 className="font-semibold">{c.label}</h2>
             <ul className="mt-3 space-y-1 text-sm text-zinc-500">
               <li>Pets: {c.summary.petsCount}</li>

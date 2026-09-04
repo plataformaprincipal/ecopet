@@ -115,7 +115,7 @@ function DocumentCard({
           ? "border-amber-300 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/20"
           : uploaded
             ? "border-emerald-300 bg-emerald-50/40 dark:border-emerald-800"
-            : "border-gray-200 bg-white dark:border-white/10 dark:bg-[#0f1419]"
+            : "border-gray-200 bg-white dark:border-white/10 dark:bg-card"
       )}
     >
       <div className="flex items-start gap-3">

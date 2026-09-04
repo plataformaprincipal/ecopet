@@ -15,7 +15,9 @@
   }
 
   .glass {
-    @apply border border-white/20 bg-white/80 backdrop-blur-md dark:border-white/10 dark:bg-ecopet-dark-card/80;
+    border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+    background: color-mix(in srgb, var(--card) 82%, transparent);
+    backdrop-filter: blur(12px);
   }
 
   .glass-dark {
@@ -122,22 +124,12 @@
   .skeleton-shimmer {
     background: linear-gradient(
       90deg,
-      rgba(0, 0, 0, 0.04) 25%,
-      rgba(0, 0, 0, 0.08) 50%,
-      rgba(0, 0, 0, 0.04) 75%
+      var(--skeleton) 25%,
+      color-mix(in srgb, var(--foreground) 12%, transparent) 50%,
+      var(--skeleton) 75%
     );
     background-size: 200% 100%;
     animation: ep-shimmer 1.5s linear infinite;
-  }
-
-  .dark .skeleton-shimmer {
-    background: linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.04) 25%,
-      rgba(255, 255, 255, 0.1) 50%,
-      rgba(255, 255, 255, 0.04) 75%
-    );
-    background-size: 200% 100%;
   }
 
   .sr-only {

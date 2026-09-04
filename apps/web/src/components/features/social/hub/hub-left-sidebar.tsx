@@ -53,7 +53,7 @@ export function HubLeftSidebar({ className }: { className?: string }) {
   return (
     <aside className={cn("space-y-4", className)} aria-label="Navegação da rede social">
       {user ? (
-        <div className="rounded-[20px] border border-zinc-200/80 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900/60">
+        <div className="rounded-[20px] border border-zinc-200/80 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-card">
           <div className="flex items-center gap-3">
             <Avatar className="h-12 w-12 ring-2 ring-ecopet-green/20">
               <AvatarFallback>{user.name.slice(0, 2).toUpperCase()}</AvatarFallback>
@@ -68,7 +68,7 @@ export function HubLeftSidebar({ className }: { className?: string }) {
         </div>
       ) : null}
 
-      <nav className="rounded-[20px] border border-zinc-200/80 bg-white p-2 shadow-sm dark:border-white/10 dark:bg-zinc-900/60">
+      <nav className="rounded-[20px] border border-zinc-200/80 bg-white p-2 shadow-sm dark:border-white/10 dark:bg-card">
         <ul>
           {NAV_LINKS.map((item) => {
             const active = pathname === item.href;
@@ -93,7 +93,7 @@ export function HubLeftSidebar({ className }: { className?: string }) {
         </ul>
       </nav>
 
-      <div className="rounded-[20px] border border-zinc-200/80 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900/60">
+      <div className="rounded-[20px] border border-zinc-200/80 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-card">
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">Meus pets</h3>
           <Link href="/meu-pet" className="text-ecopet-green" aria-label="Adicionar pet">
@@ -119,7 +119,7 @@ export function HubLeftSidebar({ className }: { className?: string }) {
         )}
       </div>
 
-      <div className="rounded-[20px] border border-zinc-200/80 bg-white p-2 shadow-sm dark:border-white/10 dark:bg-zinc-900/60">
+      <div className="rounded-[20px] border border-zinc-200/80 bg-white p-2 shadow-sm dark:border-white/10 dark:bg-card">
         <h3 className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-zinc-400">Atalhos rápidos</h3>
         <ul>
           {SHORTCUTS.map((item) => (

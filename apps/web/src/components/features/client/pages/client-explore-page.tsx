@@ -133,7 +133,7 @@ export function ClientExplorePage() {
                 {data!.partners.map((p) => (
                   <div
                     key={p.id}
-                    className="flex flex-col gap-3 rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60 sm:flex-row sm:items-center sm:justify-between"
+                    className="flex flex-col gap-3 rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-card sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div>
                       <p className="font-medium">{p.name}</p>
@@ -165,7 +165,7 @@ export function ClientExplorePage() {
                   <Link
                     key={s.id}
                     href={`/marketplace/servico/${s.id}`}
-                    className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60"
+                    className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-card"
                   >
                     <p className="font-medium">{s.name}</p>
                     <p className="text-emerald-700">{formatPrice(s.price)}</p>
@@ -188,7 +188,7 @@ export function ClientExplorePage() {
                 {data!.products.map((p) => (
                   <div
                     key={p.id}
-                    className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60"
+                    className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-card"
                   >
                     <p className="font-medium">{p.name}</p>
                     <p className="text-emerald-700">{formatPrice(p.price)}</p>

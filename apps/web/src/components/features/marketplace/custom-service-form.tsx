@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { FileText, CheckCircle2, Clock, MessageSquare, Handshake, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,8 @@ const STATUS_STEPS = [
 ] as const;
 
 export function CustomServiceForm() {
+  const searchParams = useSearchParams();
+  const partnerId = searchParams.get("partner");
   const { submitCustomRequest, customRequests } = useMarketplaceStore();
   const [submittedId, setSubmittedId] = useState<string | null>(null);
   const [form, setForm] = useState({
@@ -54,6 +57,21 @@ export function CustomServiceForm() {
       notes: form.notes,
     });
     setSubmittedId(id);
+    if (partnerId) {
+      void fetch("/api/messages/conversations", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          participantUserId: partnerId,
+          contextType: "SERVICE",
+          description: form.description || form.need,
+          address: form.location,
+          deadline: form.desiredDate,
+          quantity: 1,
+        }),
+      }).catch(() => undefined);
+    }
   }
 
   const latest = submittedId ? customRequests.find((r) => r.id === submittedId) : null;

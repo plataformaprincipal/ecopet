@@ -123,7 +123,7 @@ export function ClientAssistantChat({ className, petId }: Props) {
   }
 
   return (
-    <div className={cn("flex flex-col rounded-2xl border border-zinc-200/80 bg-white dark:border-white/10 dark:bg-zinc-900/60", className)}>
+    <div className={cn("flex flex-col rounded-2xl border border-zinc-200/80 bg-white dark:border-white/10 dark:bg-card", className)}>
       <div className="border-b p-3">
         <p className="mb-2 text-xs font-medium uppercase tracking-wide text-zinc-500">Assuntos</p>
         <div className="flex flex-wrap gap-2">

@@ -31,7 +31,15 @@ export function MessagesHub({ initialConversationId }: { initialConversationId?:
     setBootstrapping(true);
     setBootstrapError("");
     void messagesApi
-      .createConversation({ participantUserIds: [partner] })
+      .createConversation({
+        participantUserIds: [partner],
+        participantUserId: partner,
+        contextType: searchParams.get("contextType") ?? undefined,
+        contextId: searchParams.get("contextId") ?? undefined,
+        productId: searchParams.get("productId"),
+        serviceId: searchParams.get("serviceId"),
+        description: searchParams.get("description"),
+      })
       .then((data) => {
         if (cancelled) return;
         const id = data.conversation.id;
@@ -68,14 +76,14 @@ export function MessagesHub({ initialConversationId }: { initialConversationId?:
     router.push(`/dashboard/messages/${id}`);
   }
 
-  const listLoading = (loading || bootstrapping) && !error && !bootstrapError;
+  const listLoading = (loading || bootstrapping) && items.length === 0 && !error && !bootstrapError && !selectedId;
 
   return (
     <div className="mx-auto flex h-[calc(100vh-8rem)] max-w-6xl flex-col gap-0 p-0 lg:flex-row lg:gap-0">
       <aside className={cn("flex w-full flex-col border-r border-[var(--ep-border)] bg-[var(--ep-bg-elevated)] lg:w-96", selectedId && "hidden lg:flex")}>
-        <div className="border-b border-ecopet-gray/10 p-4 dark:border-white/10">
+        <div className="border-b border-border p-4">
           <div className="mb-3 flex items-center justify-between">
-            <h1 className="text-lg font-bold text-ecopet-dark dark:text-white">Mensagens</h1>
+            <h1 className="text-lg font-bold text-foreground">Mensagens</h1>
             <div className="flex gap-2">
               <Button size="icon" variant="ghost" onClick={() => void refresh()} aria-label="Atualizar">
                 <RefreshCw className="h-4 w-4" />
@@ -107,7 +115,7 @@ export function MessagesHub({ initialConversationId }: { initialConversationId?:
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          {listLoading && <p className="p-4 text-sm text-muted-foreground">Carregando conversas...</p>}
+          {listLoading && <p className="p-4 text-sm text-muted-foreground" data-testid="conversations-loading">Carregando conversas...</p>}
           {(error || bootstrapError) && (
             <div className="flex flex-col gap-2 p-4 text-sm text-red-600">
               <span className="flex items-center gap-2">

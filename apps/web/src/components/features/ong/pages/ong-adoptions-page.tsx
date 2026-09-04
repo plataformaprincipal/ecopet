@@ -250,7 +250,7 @@ export function OngAdoptionsPage({ accessLevel }: OngAdoptionsPageProps) {
         </div>
       ) : null}
 
-      <div className="inline-flex rounded-xl border border-zinc-200/80 bg-white p-1 shadow-sm dark:border-white/10 dark:bg-zinc-900/60">
+      <div className="inline-flex rounded-xl border border-zinc-200/80 bg-white p-1 shadow-sm dark:border-white/10 dark:bg-card">
         {(
           [
             ["animais", "Animais"],
@@ -375,7 +375,7 @@ export function OngAdoptionsPage({ accessLevel }: OngAdoptionsPageProps) {
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               />
               <select
-                className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-zinc-950"
+                className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-card"
                 value={form.species}
                 onChange={(e) => setForm((f) => ({ ...f, species: e.target.value as PetSpecies }))}
               >
@@ -388,7 +388,7 @@ export function OngAdoptionsPage({ accessLevel }: OngAdoptionsPageProps) {
               <Input placeholder="Raça" value={form.breed} onChange={(e) => setForm((f) => ({ ...f, breed: e.target.value }))} />
               <Input placeholder="Idade aproximada" value={form.age} onChange={(e) => setForm((f) => ({ ...f, age: e.target.value }))} />
               <select
-                className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-zinc-950"
+                className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-card"
                 value={form.size}
                 onChange={(e) => setForm((f) => ({ ...f, size: e.target.value }))}
               >
@@ -428,25 +428,25 @@ export function OngAdoptionsPage({ accessLevel }: OngAdoptionsPageProps) {
                 <Input placeholder="Estado" value={form.state} onChange={(e) => setForm((f) => ({ ...f, state: e.target.value }))} />
               </div>
               <textarea
-                className="min-h-[80px] w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-zinc-950"
+                className="min-h-[80px] w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-card"
                 placeholder="URLs das fotos (uma por linha)"
                 value={form.photos}
                 onChange={(e) => setForm((f) => ({ ...f, photos: e.target.value }))}
               />
               <textarea
-                className="min-h-[100px] w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-zinc-950"
+                className="min-h-[100px] w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-card"
                 placeholder="Descrição *"
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
               />
               <textarea
-                className="min-h-[60px] w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-zinc-950"
+                className="min-h-[60px] w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-card"
                 placeholder="Requisitos para adoção"
                 value={form.requirementsText}
                 onChange={(e) => setForm((f) => ({ ...f, requirementsText: e.target.value }))}
               />
               <select
-                className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-zinc-950"
+                className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-card"
                 value={form.displayStatus}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, displayStatus: e.target.value as OngAnimalDisplayStatus }))
@@ -475,7 +475,7 @@ export function OngAdoptionsPage({ accessLevel }: OngAdoptionsPageProps) {
           <div className="w-full max-w-sm rounded-2xl border border-zinc-200 bg-white p-6 shadow-xl dark:border-white/10 dark:bg-zinc-900">
             <h3 className="font-semibold text-zinc-900 dark:text-white">Alterar status</h3>
             <select
-              className="mt-4 w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-zinc-950"
+              className="mt-4 w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-card"
               value={newStatus}
               onChange={(e) => setNewStatus(e.target.value as OngAnimalDisplayStatus)}
             >

@@ -10,6 +10,7 @@ import {
 import {
   assertCanSendMessage,
   assertConversationParticipant,
+  assertConversationParticipantOrAdmin,
   requireChatUser,
 } from "@/lib/messages/permissions";
 import { auditChatAction, notifyNewMessage } from "@/lib/messages/notifications";
@@ -32,6 +33,7 @@ export function serializeMessage(message: {
   deletedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
+  metadata?: Prisma.JsonValue | null;
   sender: { id: string; name: string; role: string; avatarUrl: string | null };
   attachments?: Array<{
     id: string;
@@ -50,6 +52,7 @@ export function serializeMessage(message: {
     sender: message.sender,
     type: message.type,
     content: sanitizeMessageContent(message.content, message.deletedAt),
+    metadata: message.metadata ?? null,
     isDeleted: Boolean(message.deletedAt),
     isEdited: Boolean(message.editedAt),
     editedAt: message.editedAt,
@@ -67,7 +70,7 @@ export async function listMessages(params: {
   order?: "asc" | "desc";
   includeInternal?: boolean;
 }) {
-  await assertConversationParticipant(params.conversationId, params.userId);
+  await assertConversationParticipantOrAdmin(params.conversationId, params.userId);
   const limit = Math.min(100, Math.max(1, params.limit ?? DEFAULT_PAGE_SIZE));
   const order = params.order ?? "desc";
 
@@ -143,6 +146,9 @@ export async function sendMessage(params: {
   }
 
   const type = params.type ?? (hasAttachments ? "FILE" : "TEXT");
+  if (type === "SYSTEM" || type === "QUOTE") {
+    throw new ChatError("Tipo de mensagem reservado.", "FORBIDDEN", 403);
+  }
   const now = new Date();
 
   const message = await prisma.$transaction(async (tx) => {
@@ -218,6 +224,9 @@ export async function editMessage(messageId: string, userId: string, content: st
 
   const message = await prisma.message.findUnique({ where: { id: messageId } });
   if (!message || message.deletedAt) throw new ChatError("Mensagem não encontrada.", "NOT_FOUND", 404);
+  if (message.type === "SYSTEM" || message.type === "QUOTE") {
+    throw new ChatError("Eventos comerciais não podem ser editados.", "FORBIDDEN", 403);
+  }
   if (message.senderId !== userId) {
     throw new ChatError("Só o autor pode editar.", "FORBIDDEN", 403);
   }
@@ -237,6 +246,9 @@ export async function editMessage(messageId: string, userId: string, content: st
 export async function deleteMessage(messageId: string, userId: string, isAdmin = false, reason?: string) {
   const message = await prisma.message.findUnique({ where: { id: messageId } });
   if (!message || message.deletedAt) throw new ChatError("Mensagem não encontrada.", "NOT_FOUND", 404);
+  if (message.type === "SYSTEM" || message.type === "QUOTE") {
+    throw new ChatError("Eventos comerciais não podem ser apagados.", "FORBIDDEN", 403);
+  }
   if (message.senderId !== userId && !isAdmin) {
     throw new ChatError("Sem permissão para apagar.", "FORBIDDEN", 403);
   }

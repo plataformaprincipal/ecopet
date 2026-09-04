@@ -7,7 +7,7 @@ describe("PFO AI add-ons", () => {
   it("keeps 13 official specialists separate from 33 PFO modules", () => {
     assert.equal(AI_COMMERCE_PRODUCTS.length, 13);
     assert.equal(PFO_AI_MODULES.length, 33);
-    const specialistSkus = new Set(AI_COMMERCE_PRODUCTS.map((p) => p.sku));
+    const specialistSkus = new Set<string>(AI_COMMERCE_PRODUCTS.map((p) => p.sku));
     for (const mod of PFO_AI_MODULES) {
       assert.equal(specialistSkus.has(mod.sku), false, mod.sku);
     }

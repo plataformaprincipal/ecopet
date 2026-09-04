@@ -53,7 +53,7 @@ export function NgoIaErpPage() {
   return (
     <div className="space-y-4">
       <NgoErpModulePanel config={NGO_ERP_MODULE_CONFIG.ia} />
-      <section className="mx-4 mb-6 rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-zinc-900/60 sm:mx-6">
+      <section className="mx-4 mb-6 rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-card sm:mx-6">
         <div className="mb-3 flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-rose-600" aria-hidden />
           <h2 className="font-semibold">Assistentes IA ONG</h2>

@@ -40,7 +40,7 @@ export function NgoRightPanel() {
   );
 
   return (
-    <aside className="hidden w-80 shrink-0 space-y-4 overflow-y-auto border-l border-zinc-200/80 bg-white/40 px-4 py-5 dark:border-white/10 dark:bg-zinc-950/40 xl:block">
+    <aside className="hidden w-80 shrink-0 space-y-4 overflow-y-auto border-l border-border bg-surface-muted/40 px-4 py-5 xl:block">
       <section className="rounded-2xl border border-rose-500/20 bg-rose-500/[0.06] p-4">
         <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-white">
           <Sparkles className="h-4 w-4 text-rose-500" aria-hidden />
@@ -55,7 +55,7 @@ export function NgoRightPanel() {
         </Link>
       </section>
 
-      <section className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60">
+      <section className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-card">
         <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-white">
           <Heart className="h-4 w-4" aria-hidden />
           {t("ngoArea.right.pendingAdoptions")}
@@ -74,7 +74,7 @@ export function NgoRightPanel() {
         )}
       </section>
 
-      <section className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60">
+      <section className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-card">
         <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-white">
           <Megaphone className="h-4 w-4" aria-hidden />
           {t("ngoArea.right.urgentCampaigns")}
@@ -95,7 +95,7 @@ export function NgoRightPanel() {
         )}
       </section>
 
-      <section className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60">
+      <section className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-card">
         <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-white">
           <Lightbulb className="h-4 w-4 text-rose-500" aria-hidden />
           {t("ngoArea.right.tip")}

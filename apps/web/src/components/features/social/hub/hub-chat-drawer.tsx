@@ -110,7 +110,7 @@ export function HubChatDrawer({
           </button>
         </header>
 
-        <div ref={scrollRef} className="flex-1 space-y-2 overflow-y-auto bg-zinc-50 p-4 dark:bg-zinc-950/40">
+        <div ref={scrollRef} className="flex-1 space-y-2 overflow-y-auto bg-zinc-50 p-4 dark:bg-background/40">
           {messages.length === 0 ? (
             <p className="py-10 text-center text-sm text-zinc-500">Inicie a conversa enviando uma mensagem.</p>
           ) : (
@@ -178,7 +178,7 @@ export function HubChatDrawer({
             onChange={(e) => onInputChange(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && void handleSend()}
             placeholder="Mensagem..."
-            className="flex-1 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm focus:border-ecopet-green focus:outline-none dark:border-white/10 dark:bg-zinc-950"
+            className="flex-1 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm focus:border-ecopet-green focus:outline-none dark:border-white/10 dark:bg-card"
             aria-label="Escrever mensagem"
           />
           <Button size="icon" className="rounded-xl" onClick={() => void handleSend()} disabled={sending || !input.trim()}>

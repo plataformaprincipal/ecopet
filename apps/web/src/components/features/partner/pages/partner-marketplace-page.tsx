@@ -110,7 +110,7 @@ export function PartnerMarketplacePage() {
         }
       />
 
-      <div className="inline-flex rounded-xl border border-zinc-200/80 bg-white p-1 shadow-sm dark:border-white/10 dark:bg-zinc-900/60">
+      <div className="inline-flex rounded-xl border border-zinc-200/80 bg-white p-1 shadow-sm dark:border-white/10 dark:bg-card">
         {[
           { key: "mine" as const, label: "Meus produtos" },
           { key: "platform" as const, label: "Produtos EcoPet" },
@@ -159,7 +159,7 @@ export function PartnerMarketplacePage() {
             return (
               <article
                 key={product.id}
-                className="group overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-zinc-900/60"
+                className="group overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-card"
               >
                 <div className="relative aspect-[4/3] bg-zinc-100 dark:bg-zinc-800">
                   {img ? (

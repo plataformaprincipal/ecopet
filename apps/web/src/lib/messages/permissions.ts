@@ -48,6 +48,16 @@ export async function assertConversationParticipant(conversationId: string, user
   return participant;
 }
 
+export async function assertConversationParticipantOrAdmin(conversationId: string, userId: string) {
+  const user = await requireChatUser(userId);
+  if (user.role === UserRole.ADMIN) {
+    const conversation = await prisma.conversation.findUnique({ where: { id: conversationId } });
+    if (!conversation) throw new ChatError("Conversa não encontrada.", "NOT_FOUND", 404);
+    return { admin: true as const, conversation, userId };
+  }
+  return assertConversationParticipant(conversationId, userId);
+}
+
 export async function assertCanSendMessage(conversationId: string, senderId: string) {
   const participant = await assertConversationParticipant(conversationId, senderId);
   const conversation = participant.conversation;

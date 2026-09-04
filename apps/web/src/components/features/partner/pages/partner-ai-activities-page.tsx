@@ -19,7 +19,7 @@ import type { PartnerDashboardSummary, PartnerAiInsight } from "@/lib/partner/ai
 const priorityTone: Record<PartnerAiInsight["priority"], string> = {
   high: "border-red-200/80 bg-red-50/50 dark:border-red-500/20 dark:bg-red-500/5",
   medium: "border-amber-200/80 bg-amber-50/50 dark:border-amber-500/20 dark:bg-amber-500/5",
-  low: "border-zinc-200/80 bg-white dark:border-white/10 dark:bg-zinc-900/60",
+  low: "border-zinc-200/80 bg-white dark:border-white/10 dark:bg-card",
 };
 
 function formatDate(iso: string) {
@@ -88,7 +88,7 @@ export function PartnerAIActivitiesPage() {
         ].map(({ label, value, icon: Icon }) => (
           <div
             key={label}
-            className="rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900/60"
+            className="rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-card"
           >
             <div className="flex items-center justify-between">
               <p className="text-xs text-zinc-500">{label}</p>
@@ -142,7 +142,7 @@ export function PartnerAIActivitiesPage() {
               <Link
                 key={order.id}
                 href={`/dashboard/partner/orders/${order.id}`}
-                className="block rounded-xl border border-zinc-200/80 bg-white p-3 text-sm dark:border-white/10 dark:bg-zinc-900/60"
+                className="block rounded-xl border border-zinc-200/80 bg-white p-3 text-sm dark:border-white/10 dark:bg-card"
               >
                 <p className="font-medium">{order.userName ?? "Cliente"}</p>
                 <p className="text-zinc-500">
@@ -162,7 +162,7 @@ export function PartnerAIActivitiesPage() {
               <Link
                 key={apt.id}
                 href={`/dashboard/partner/appointments/${apt.id}`}
-                className="block rounded-xl border border-zinc-200/80 bg-white p-3 text-sm dark:border-white/10 dark:bg-zinc-900/60"
+                className="block rounded-xl border border-zinc-200/80 bg-white p-3 text-sm dark:border-white/10 dark:bg-card"
               >
                 <p className="font-medium">{apt.serviceName ?? "Serviço"}</p>
                 <p className="text-zinc-500">
@@ -203,7 +203,7 @@ export function PartnerAIActivitiesPage() {
             summary.recentReviews.map((review) => (
               <div
                 key={review.id}
-                className="rounded-xl border border-zinc-200/80 bg-white p-3 text-sm dark:border-white/10 dark:bg-zinc-900/60"
+                className="rounded-xl border border-zinc-200/80 bg-white p-3 text-sm dark:border-white/10 dark:bg-card"
               >
                 <p className="font-medium">{review.rating}/5 · {review.serviceName}</p>
                 <p className="text-zinc-500">{review.comment ?? "Sem comentário"}</p>

@@ -24,7 +24,7 @@ export function CompareBar() {
   if (items.length === 0) return null;
 
   return (
-    <div className="fixed bottom-20 left-4 right-4 z-40 rounded-2xl border border-ecopet-green/30 bg-white p-4 shadow-xl dark:bg-[#0f1419] lg:bottom-4 lg:left-auto lg:right-8 lg:w-96">
+    <div className="fixed bottom-20 left-4 right-4 z-40 rounded-2xl border border-ecopet-green/30 bg-white p-4 shadow-xl dark:bg-card lg:bottom-4 lg:left-auto lg:right-8 lg:w-96">
       <div className="mb-2 flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm font-semibold">
           <Scale className="h-4 w-4 text-ecopet-green" />

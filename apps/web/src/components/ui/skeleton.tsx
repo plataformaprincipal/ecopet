@@ -5,7 +5,7 @@ export function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivEl
   return (
     <div
       className={cn(
-        "rounded-xl bg-ecopet-gray/10 skeleton-shimmer dark:bg-white/10",
+        "rounded-xl bg-skeleton skeleton-shimmer",
         "motion-reduce:animate-none",
         className
       )}

@@ -33,7 +33,7 @@ export function OngShell({
   const allowed = canAccessOngRoute(pathname, accessLevel);
 
   return (
-    <div className="flex min-h-screen bg-ecopet-cream/50 dark:bg-ecopet-dark-bg">
+    <div className="flex min-h-screen bg-background">
       <OngSidebar
         ongName={ongName}
         accessLevel={accessLevel}

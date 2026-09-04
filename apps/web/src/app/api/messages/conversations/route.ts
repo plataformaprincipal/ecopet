@@ -6,6 +6,8 @@ import { listUserConversations, createConversation } from "@/lib/messages/conver
 import { createOrGetTalkJsConversation } from "@/lib/messages/talkjs-conversations";
 import { requireActiveChatUser } from "@/lib/messages/permissions";
 import { isTalkJsServerConfigured } from "@/lib/talkjs/server";
+import { isNativeMarketplaceChatEnabled } from "@/lib/commerce-chat/flag";
+import { createOrGetNativeMarketplaceConversation } from "@/lib/commerce-chat/open-conversation";
 
 export async function GET(req: Request) {
   try {
@@ -44,6 +46,33 @@ export async function POST(req: Request) {
     const contextId = body.contextId as string | null | undefined;
 
     if (participantUserId) {
+      if (isNativeMarketplaceChatEnabled()) {
+        const result = await createOrGetNativeMarketplaceConversation({
+          creatorId: user!.id,
+          participantUserId,
+          contextType,
+          contextId,
+          title: body.title,
+          commercialContext: {
+            petId: body.petId ?? null,
+            productId: body.productId ?? (contextType === "PRODUCT" ? contextId : null),
+            serviceId: body.serviceId ?? (contextType === "SERVICE" ? contextId : null),
+            description: body.description ?? body.requestDescription ?? null,
+            quantity: body.quantity ?? null,
+            deadline: body.deadline ?? body.prazo ?? null,
+            address: body.address ?? body.local ?? null,
+            attachments: body.contextAttachments ?? null,
+          },
+        });
+        return apiSuccess(
+          {
+            conversation: result.conversation,
+            conversationId: result.conversation.id,
+            created: result.created,
+          },
+          result.created ? 201 : 200
+        );
+      }
       if (isTalkJsServerConfigured()) {
         const result = await createOrGetTalkJsConversation({
           creatorId: user!.id,

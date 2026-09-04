@@ -60,7 +60,33 @@
   }
 }
 
+.ep-interactive {
+  transition:
+    background-color var(--duration-fast) var(--easing-standard),
+    border-color var(--duration-fast) var(--easing-standard),
+    box-shadow var(--duration-normal) var(--easing-standard),
+    transform var(--duration-fast) var(--easing-standard),
+    opacity var(--duration-fast) var(--easing-standard);
+}
+
+.ep-interactive:hover {
+  background-color: var(--hover);
+}
+
+.ep-interactive:active {
+  transform: scale(0.98);
+}
+
+.ep-pressable:active {
+  transform: scale(0.98);
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .ep-interactive:active,
+  .ep-pressable:active {
+    transform: none;
+  }
+
   *,
   *::before,
   *::after {

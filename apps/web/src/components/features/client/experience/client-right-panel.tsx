@@ -26,7 +26,7 @@ export function ClientRightPanel() {
   }, []);
 
   return (
-    <aside className="hidden w-80 shrink-0 space-y-4 overflow-y-auto border-l border-zinc-200/80 bg-white/40 px-4 py-5 dark:border-white/10 dark:bg-zinc-950/40 xl:block">
+    <aside className="hidden w-80 shrink-0 space-y-4 overflow-y-auto border-l border-border bg-surface-muted/40 px-4 py-5 xl:block">
       <section className="rounded-2xl border border-ecopet-green/20 bg-ecopet-green/[0.06] p-4">
         <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-white">
           <Sparkles className="h-4 w-4 text-ecopet-green" aria-hidden />
@@ -41,7 +41,7 @@ export function ClientRightPanel() {
         </Link>
       </section>
 
-      <section className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60">
+      <section className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-card">
         <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-white">
           <CalendarDays className="h-4 w-4" aria-hidden />
           {t("clientArea.right.appointments")}
@@ -60,7 +60,7 @@ export function ClientRightPanel() {
         )}
       </section>
 
-      <section className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60">
+      <section className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-card">
         <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-white">
           <ShoppingCart className="h-4 w-4" aria-hidden />
           {t("clientArea.right.cart")}

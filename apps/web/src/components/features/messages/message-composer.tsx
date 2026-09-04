@@ -78,7 +78,7 @@ export function MessageComposer({
   }
 
   return (
-    <div className="border-t border-ecopet-gray/10 bg-white/80 dark:border-white/10 dark:bg-zinc-950/40">
+    <div className="border-t border-border bg-card/80 backdrop-blur-md">
       {uploadError && <p className="px-4 pt-2 text-xs text-red-600 dark:text-red-400">{uploadError}</p>}
       <form onSubmit={submit} className="flex items-end gap-2 px-3 py-3 sm:px-4">
         <MessageAttachmentUploader

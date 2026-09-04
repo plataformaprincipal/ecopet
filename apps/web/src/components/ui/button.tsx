@@ -10,14 +10,14 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-ecopet-green text-white hover:bg-ecopet-green-700 active:bg-ecopet-green-800 shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)]",
+          "bg-primary text-primary-foreground hover:bg-primary-hover active:bg-ecopet-green-800 shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)]",
         primary:
-          "bg-ecopet-green text-white hover:bg-ecopet-green-700 active:bg-ecopet-green-800 shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)]",
+          "bg-primary text-primary-foreground hover:bg-primary-hover active:bg-ecopet-green-800 shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)]",
         secondary:
-          "bg-ecopet-green/10 text-ecopet-green-800 hover:bg-ecopet-green/15 dark:bg-white/10 dark:text-white dark:hover:bg-white/15",
+          "bg-primary-muted text-ecopet-green-800 hover:bg-primary/20 dark:text-primary",
         outline:
-          "border-2 border-ecopet-green bg-transparent text-ecopet-green hover:bg-ecopet-green/5 dark:text-ecopet-green-500",
-        ghost: "hover:bg-ecopet-green/10 text-ecopet-dark dark:text-white",
+          "border-2 border-primary bg-transparent text-primary hover:bg-primary-muted",
+        ghost: "hover:bg-primary-muted text-foreground",
         dark: "bg-ecopet-dark text-white hover:bg-ecopet-green",
         destructive: "bg-ep-danger text-white hover:bg-red-700",
         success: "bg-ep-success text-white hover:bg-green-800",

@@ -11,6 +11,8 @@ import { ensureAiCommerceProducts } from "@/lib/ai-commerce/product-service";
 import { firstProductImageUrl } from "@/lib/catalog/images";
 import { computeEarnPoints, DEFAULT_LOYALTY_POLICY } from "@/lib/loyalty/rules";
 
+export const QUOTE_CART_ITEM_TYPE = "QUOTE";
+
 export const CART_SESSION_COOKIE = "ecopet-cart-session";
 
 const cartInclude = {
@@ -69,6 +71,10 @@ function productLineKey(productId: string) {
 
 function aiLineKey(sku: string, petId: string) {
   return `ai:${sku}:${petId}`;
+}
+
+export function quoteLineKey(quoteId: string) {
+  return `quote:${quoteId}`;
 }
 
 export async function mergeAnonymousCart(userId: string, sessionId: string) {
@@ -130,6 +136,30 @@ export function serializeCart(cart: Awaited<ReturnType<typeof getOrCreateCart>>)
   const hideAi = isAiMonetizationFree();
   const items = cart.items
     .map((item) => {
+      if (item.itemType === QUOTE_CART_ITEM_TYPE) {
+        const meta = (item.metadata as Record<string, unknown> | null) ?? {};
+        return {
+          id: item.id,
+          itemType: QUOTE_CART_ITEM_TYPE,
+          productId: null,
+          sku: item.sku,
+          petId: item.petId,
+          petName: typeof meta.petName === "string" ? meta.petName : null,
+          quantity: item.quantity,
+          unitPrice: item.unitPriceSnapshot ?? 0,
+          name: typeof meta.name === "string" ? meta.name : "Orçamento personalizado",
+          tag: "Orçamento",
+          images: null,
+          image: null as string | null,
+          sellerId: typeof meta.partnerId === "string" ? meta.partnerId : null,
+          sellerName: typeof meta.partnerName === "string" ? meta.partnerName : null,
+          variant: null as string | null,
+          stock: 1,
+          pricingVersion: item.pricingVersion,
+          checkoutHref: "/checkout",
+          quoteId: typeof meta.quoteId === "string" ? meta.quoteId : item.lineKey.replace(/^quote:/, ""),
+        };
+      }
       if (item.itemType === AI_COMMERCE_ITEM_TYPE || !item.product) {
         const meta = (item.metadata as Record<string, unknown> | null) ?? {};
         return {
@@ -177,7 +207,7 @@ export function serializeCart(cart: Awaited<ReturnType<typeof getOrCreateCart>>)
       };
     })
     .filter((item) => !(hideAi && item.itemType === AI_COMMERCE_ITEM_TYPE));
-  const productItems = items.filter((i) => i.itemType === "product");
+  const productItems = items.filter((i) => i.itemType === "product" || i.itemType === QUOTE_CART_ITEM_TYPE);
   const aiItems = items.filter((i) => i.itemType === AI_COMMERCE_ITEM_TYPE);
   const partnerIds = new Set(productItems.map((i) => i.sellerId).filter(Boolean));
   const productSubtotal = productItems.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
@@ -318,6 +348,76 @@ export async function addAiToCart(params: {
   return getOrCreateCart(params.cart.userId, params.cart.sessionId);
 }
 
+export async function addQuoteToCart(cart: Awaited<ReturnType<typeof getOrCreateCart>>, quoteId: string) {
+  const quote = await prisma.customQuote.findUnique({
+    where: { id: quoteId },
+    include: { provider: { select: { id: true, name: true, partnerProfile: { select: { businessName: true } } } } },
+  });
+  if (!quote) throw new Error("QUOTE_NOT_FOUND");
+  if (quote.status !== "ACCEPTED") throw new Error("QUOTE_NOT_ACCEPTED");
+  if (quote.validUntil.getTime() <= Date.now()) throw new Error("QUOTE_EXPIRED");
+  if (!cart.userId || cart.userId !== quote.requesterId) throw new Error("QUOTE_FORBIDDEN");
+
+  const extras = (quote.includedItems && typeof quote.includedItems === "object" && !Array.isArray(quote.includedItems)
+    ? quote.includedItems
+    : {}) as Record<string, unknown>;
+  const totalAmount = Number(extras.totalAmount ?? quote.value);
+  const pricingVersion = typeof extras.pricingVersion === "string" ? extras.pricingVersion : null;
+  const petId = typeof extras.petId === "string" ? extras.petId : null;
+
+  const partnerId = quote.providerId;
+  const existingSellers = new Set(
+    cart.items
+      .filter((i) => i.itemType !== AI_COMMERCE_ITEM_TYPE)
+      .map((i) => {
+        if (i.product) return i.product.sellerId;
+        const meta = (i.metadata as Record<string, unknown> | null) ?? {};
+        return typeof meta.partnerId === "string" ? meta.partnerId : null;
+      })
+      .filter(Boolean)
+  );
+  if (existingSellers.size > 0 && !existingSellers.has(partnerId)) {
+    throw new Error("MULTI_PARTNER_CART");
+  }
+
+  const lineKey = quoteLineKey(quote.id);
+  const metadata = {
+    quoteId: quote.id,
+    name: quote.name,
+    partnerId,
+    partnerName: quote.provider.partnerProfile?.businessName || quote.provider.name,
+  };
+  const existing = cart.items.find((i) => i.lineKey === lineKey);
+  if (existing) {
+    await prisma.cartItem.update({
+      where: { id: existing.id },
+      data: {
+        quantity: 1,
+        unitPriceSnapshot: totalAmount,
+        pricingVersion,
+        metadata,
+        itemType: QUOTE_CART_ITEM_TYPE,
+      },
+    });
+  } else {
+    await prisma.cartItem.create({
+      data: {
+        cartId: cart.id,
+        productId: null,
+        itemType: QUOTE_CART_ITEM_TYPE,
+        lineKey,
+        sku: null,
+        petId,
+        quantity: 1,
+        unitPriceSnapshot: totalAmount,
+        pricingVersion,
+        metadata,
+      },
+    });
+  }
+  return getOrCreateCart(cart.userId, cart.sessionId);
+}
+
 export async function updateCartItem(
   cart: Awaited<ReturnType<typeof getOrCreateCart>>,
   itemId: string,
@@ -331,6 +431,8 @@ export async function updateCartItem(
   } else if (item.itemType === AI_COMMERCE_ITEM_TYPE) {
     if (quantity > 10) throw new Error("INVALID_QUANTITY");
     await prisma.cartItem.update({ where: { id: itemId }, data: { quantity } });
+  } else if (item.itemType === QUOTE_CART_ITEM_TYPE) {
+    await prisma.cartItem.update({ where: { id: itemId }, data: { quantity: 1 } });
   } else {
     if (!item.product) throw new Error("ITEM_NOT_FOUND");
     if (quantity > item.product.stock) throw insufficientStockError(item.product.stock);

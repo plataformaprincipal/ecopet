@@ -20,7 +20,7 @@ export function AdminShellHeader({ onMenuToggle }: Props) {
   const [q, setQ] = useState("");
 
   return (
-    <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-ecopet-gray/12 bg-ecopet-cream/95 px-4 py-3 backdrop-blur-xl dark:border-white/10 dark:bg-ecopet-dark-bg/95 sm:px-6">
+    <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-header/95 px-4 py-3 backdrop-blur-xl sm:px-6">
       <Button
         type="button"
         variant="ghost"

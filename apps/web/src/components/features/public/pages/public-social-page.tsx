@@ -27,7 +27,7 @@ const FEED_CATEGORIES = [
 function TrendingSidebar({ hashtags }: { hashtags: Array<{ name: string; slug: string; usageCount: number }> }) {
   return (
     <aside className="hidden space-y-4 xl:block" aria-label="Tendências">
-      <div className="rounded-[20px] border border-zinc-200/80 bg-white/80 p-5 backdrop-blur-md dark:border-white/10 dark:bg-zinc-900/60">
+      <div className="rounded-[20px] border border-zinc-200/80 bg-white/80 p-5 backdrop-blur-md dark:border-white/10 dark:bg-card">
         <h2 className="flex items-center gap-2 font-semibold text-zinc-900 dark:text-white">
           <TrendingUp className="h-5 w-5 text-ecopet-green" aria-hidden />
           Em alta
@@ -74,7 +74,7 @@ function CategoriesSidebar({
 }) {
   return (
     <aside className="hidden space-y-2 lg:block" aria-label="Categorias do feed">
-      <div className="rounded-[20px] border border-zinc-200/80 bg-white/80 p-4 backdrop-blur-md dark:border-white/10 dark:bg-zinc-900/60">
+      <div className="rounded-[20px] border border-zinc-200/80 bg-white/80 p-4 backdrop-blur-md dark:border-white/10 dark:bg-card">
         <h2 className="mb-3 flex items-center gap-2 font-semibold text-zinc-900 dark:text-white">
           <Flame className="h-5 w-5 text-ecopet-yellow" aria-hidden />
           Categorias

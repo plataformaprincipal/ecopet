@@ -37,7 +37,7 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-white px-6 text-center dark:bg-[#0f1419]">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-white px-6 text-center dark:bg-card">
       <EcoPetLogo variant="light" size="lg" showText />
       <div>
         <h1 className="font-display text-2xl font-extrabold text-[#102015] dark:text-[#F7F4DC]">

@@ -79,7 +79,7 @@ export function ClientIotPage() {
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
           {data.devices.map((d) => (
-            <article key={d.id} className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-zinc-900/60">
+            <article key={d.id} className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-card">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="font-semibold text-zinc-900 dark:text-white">{d.name}</p>
@@ -134,7 +134,7 @@ export function ClientIotPage() {
 
 function MetricCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-2xl border border-zinc-200/80 bg-white p-4 text-center dark:border-white/10 dark:bg-zinc-900/60">
+    <div className="rounded-2xl border border-zinc-200/80 bg-white p-4 text-center dark:border-white/10 dark:bg-card">
       <p className="text-2xl font-semibold text-zinc-900 dark:text-white">{value}</p>
       <p className="text-xs text-zinc-500">{label}</p>
     </div>

@@ -110,7 +110,7 @@ export function HubAssistantPanel({ className }: { className?: string }) {
   return (
     <section
       className={cn(
-        "flex h-[420px] flex-col overflow-hidden rounded-[20px] border border-zinc-200/80 bg-white shadow-sm dark:border-white/10 dark:bg-zinc-900/60",
+        "flex h-[420px] flex-col overflow-hidden rounded-[20px] border border-zinc-200/80 bg-white shadow-sm dark:border-white/10 dark:bg-card",
         className
       )}
       aria-label="EccoPet Assistant"
@@ -192,7 +192,7 @@ export function HubAssistantPanel({ className }: { className?: string }) {
             onKeyDown={(e) => e.key === "Enter" && void send()}
             placeholder={unavailable ? t("empty.ai.unavailable") : t("social.assistant.placeholder")}
             disabled={loading || unavailable}
-            className="flex-1 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm focus:border-ecopet-green focus:outline-none disabled:opacity-60 dark:border-white/10 dark:bg-zinc-950"
+            className="flex-1 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm focus:border-ecopet-green focus:outline-none disabled:opacity-60 dark:border-white/10 dark:bg-card"
           />
           <Button size="icon" className="rounded-xl" onClick={() => void send()} disabled={loading || unavailable || !input.trim()}>
             <Send className="h-4 w-4" aria-hidden />

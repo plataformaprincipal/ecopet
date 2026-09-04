@@ -144,6 +144,19 @@ export const handleDisputeWebhook: MpWebhookHandler = async ({ event, normalized
     });
   }
 
+  if (payment?.orderId) {
+    void import("@/lib/commerce-chat/events")
+      .then(({ postOrderCommercialEvent, COMMERCIAL_EVENT }) =>
+        postOrderCommercialEvent({
+          orderId: payment.orderId,
+          event: COMMERCIAL_EVENT.DISPUTED,
+          actorId: payment.partnerId,
+          payload: { disputeId: dispute.id, status },
+        })
+      )
+      .catch(() => undefined);
+  }
+
   return {
     processingStatus: "PROCESSED",
     orderId: payment?.orderId ?? null,

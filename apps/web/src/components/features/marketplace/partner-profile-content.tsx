@@ -5,9 +5,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
-  Heart, MessageCircle, Share2, Flag, MapPin, Clock, BadgeCheck, Star,
+  Heart, Share2, Flag, MapPin, Clock, BadgeCheck, Star,
   Shield, BarChart3, Settings, Sparkles, Package, Wrench,
 } from "lucide-react";
+import { StartConversationButton } from "@/components/messages/StartConversationButton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -100,7 +101,13 @@ export function PartnerProfileContent({ id, expanded, tabOnly }: PartnerProfileC
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button size="sm" variant="default" asChild><Link href={`/marketplace/chat?partner=${partner.id}`}><MessageCircle className="h-4 w-4" /> Conversar</Link></Button>
+            <StartConversationButton
+              size="sm"
+              participantUserId={partner.id}
+              contextType="GENERAL"
+              label="Conversar"
+              ariaLabel="Conversar com parceiro"
+            />
             <Button size="sm" variant={fav ? "default" : "outline"} onClick={() => toggleFavoritePartner(partner.id)}>
               <Heart className={cn("h-4 w-4", fav && "fill-white")} /> Seguir
             </Button>

@@ -29,6 +29,7 @@ import {
   Settings2,
   Moon,
   Sun,
+  Monitor,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
@@ -59,8 +60,9 @@ export function AccessibilityToolbar() {
   const announce = useAriaAnnounce();
   const { t } = useTranslation();
   const { s } = useSimpleLanguage();
-  const { resolvedTheme, setTheme } = useTheme();
+  const { theme, resolvedTheme, setTheme } = useTheme();
   const appearance = normalizeAppearanceTheme(resolvedTheme);
+  const preference = theme === "system" ? "system" : appearance;
 
   const fontScale = useAccessibilityStore((s) => s.fontScale);
   const brailleEnabled = useAccessibilityStore((s) => s.brailleEnabled);
@@ -178,7 +180,7 @@ export function AccessibilityToolbar() {
       {open && !minimized && (
         <div
           id="ecopet-a11y-toolbar"
-          className="mb-3 flex max-h-[min(75vh,620px)] w-[min(calc(100vw-2rem),360px)] flex-col overflow-hidden rounded-2xl border border-ecopet-green/25 bg-white shadow-2xl animate-fade-in motion-reduce:animate-none dark:border-white/10 dark:bg-ecopet-dark-card"
+          className="mb-3 flex max-h-[min(75vh,620px)] w-[min(calc(100vw-2rem),360px)] flex-col overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-2xl animate-fade-in motion-reduce:animate-none"
         >
           <div className="flex shrink-0 items-center justify-between bg-ecopet-dark px-4 py-3 text-white">
             <div className="flex items-center gap-2">
@@ -264,7 +266,7 @@ export function AccessibilityToolbar() {
                   key={themeOption}
                   icon={themeOption === "light" ? Sun : Moon}
                   label={t(appearanceThemeLabelKey(themeOption))}
-                  active={appearance === themeOption}
+                  active={preference === themeOption}
                   onClick={() => {
                     setTheme(themeOption);
                     if (invertedContrast && themeOption === "light") {
@@ -274,9 +276,10 @@ export function AccessibilityToolbar() {
                   }}
                 />
               ))}
-              <ToolBtn
-                icon={Settings2}
+              <ToggleBtn
+                icon={Monitor}
                 label={t("a11y.themeSystem")}
+                active={preference === "system"}
                 onClick={() => {
                   setTheme("system");
                   announce(t("a11y.themeSystemActivated"), "polite");

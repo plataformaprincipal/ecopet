@@ -46,7 +46,7 @@ export function NewConversationModal({
           <div>
             <label className="text-sm font-medium">Tipo</label>
             <select
-              className="mt-1 flex h-10 w-full rounded-md border border-ecopet-gray/20 bg-white px-3 text-sm dark:border-white/15 dark:bg-zinc-950 dark:text-white"
+              className="mt-1 flex h-10 w-full rounded-md border border-ecopet-gray/20 bg-white px-3 text-sm dark:border-white/15 dark:bg-card dark:text-white"
               value={type}
               onChange={(e) => setType(e.target.value)}
             >

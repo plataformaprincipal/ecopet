@@ -42,7 +42,7 @@ export function PartnerCommunityPage({ partnerId, accessLevel }: PartnerCommunit
         <PartnerPendingBanner accessLevel={accessLevel} />
       ) : null}
 
-      <div className="inline-flex rounded-xl border border-zinc-200/80 bg-white p-1 shadow-sm dark:border-white/10 dark:bg-zinc-900/60">
+      <div className="inline-flex rounded-xl border border-zinc-200/80 bg-white p-1 shadow-sm dark:border-white/10 dark:bg-card">
         <button
           type="button"
           onClick={() => setTab("ecosystem")}

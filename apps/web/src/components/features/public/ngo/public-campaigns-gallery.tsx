@@ -60,7 +60,7 @@ export function PublicCampaignsGallery() {
           ))}
         </div>
       ) : campaigns.length === 0 ? (
-        <div className="rounded-3xl border border-zinc-200/80 bg-white p-12 text-center dark:border-white/10 dark:bg-zinc-900/60">
+        <div className="rounded-3xl border border-zinc-200/80 bg-white p-12 text-center dark:border-white/10 dark:bg-card">
           <Megaphone className="mx-auto h-12 w-12 text-zinc-300" aria-hidden />
           <p className="mt-4 text-zinc-500">{t("ngoArea.public.emptyCampaigns")}</p>
         </div>
@@ -72,7 +72,7 @@ export function PublicCampaignsGallery() {
               <Link
                 key={c.id}
                 href={`/campaigns/${c.id}`}
-                className="group flex flex-col overflow-hidden rounded-3xl border border-zinc-200/80 bg-white transition hover:shadow-xl dark:border-white/10 dark:bg-zinc-900/60"
+                className="group flex flex-col overflow-hidden rounded-3xl border border-zinc-200/80 bg-white transition hover:shadow-xl dark:border-white/10 dark:bg-card"
               >
                 {c.photos[0] ? (
                   // eslint-disable-next-line @next/next/no-img-element

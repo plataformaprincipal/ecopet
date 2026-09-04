@@ -59,8 +59,8 @@ export function FeedbackState({
       <div className={cn("flex h-14 w-14 items-center justify-center rounded-2xl", ICON_STYLES[variant])}>
         <Icon className="h-7 w-7" strokeWidth={2} aria-hidden />
       </div>
-      <h3 className="mt-5 font-display text-lg font-semibold text-ecopet-dark dark:text-white">{title}</h3>
-      <p className="mt-2 max-w-md text-sm text-ecopet-gray dark:text-white/65">{description}</p>
+      <h3 className="mt-5 font-display text-lg font-semibold text-foreground">{title}</h3>
+      <p className="mt-2 max-w-md text-sm text-muted-foreground">{description}</p>
       {actionLabel && actionHref ? (
         <Button asChild className="mt-6 rounded-xl" size="sm">
           <Link href={actionHref}>{actionLabel}</Link>

@@ -25,7 +25,7 @@ export function ClientConfiguracoesPage() {
             key={label}
             href={href}
             {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-            className="flex items-start gap-3 rounded-2xl border border-zinc-200/80 bg-white p-4 transition hover:shadow-md dark:border-white/10 dark:bg-zinc-900/60"
+            className="flex items-start gap-3 rounded-2xl border border-zinc-200/80 bg-white p-4 transition hover:shadow-md dark:border-white/10 dark:bg-card"
           >
             <Icon className="mt-0.5 h-5 w-5 text-emerald-600" aria-hidden />
             <div>

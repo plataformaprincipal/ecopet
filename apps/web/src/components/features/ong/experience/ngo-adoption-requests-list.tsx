@@ -70,7 +70,7 @@ export function NgoAdoptionRequestsList() {
           ))}
         </div>
       ) : requests.length === 0 ? (
-        <div className="rounded-2xl border border-zinc-200/80 bg-white p-8 text-center dark:border-white/10 dark:bg-zinc-900/60">
+        <div className="rounded-2xl border border-zinc-200/80 bg-white p-8 text-center dark:border-white/10 dark:bg-card">
           <Heart className="mx-auto h-10 w-10 text-zinc-300" aria-hidden />
           <p className="mt-3 text-sm text-zinc-500">{t("ngoArea.adoptions.empty")}</p>
         </div>
@@ -79,7 +79,7 @@ export function NgoAdoptionRequestsList() {
           {requests.map((req) => (
             <li
               key={req.id}
-              className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60"
+              className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-card"
             >
               <div className="flex items-start gap-4">
                 {req.animal?.photo ? (

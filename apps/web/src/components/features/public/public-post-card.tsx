@@ -30,7 +30,7 @@ export function PublicPostCard({ post }: PublicPostCardProps) {
   const mainImage = post.media.find((m) => m.mediaType === "IMAGE")?.fileUrl;
 
   return (
-    <article className="overflow-hidden rounded-[20px] border border-zinc-200/80 bg-white shadow-sm transition hover:shadow-lg dark:border-white/10 dark:bg-zinc-900/60">
+    <article className="overflow-hidden rounded-[20px] border border-zinc-200/80 bg-white shadow-sm transition hover:shadow-lg dark:border-white/10 dark:bg-card">
       <header className="flex items-center gap-3 p-4">
         <Link href={`/feed/profile/${post.author.id}`}>
           <Avatar className="h-11 w-11 ring-2 ring-ecopet-green/20">

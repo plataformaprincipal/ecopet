@@ -114,7 +114,7 @@ export default function AiPrivacySettingsPage() {
               value={settings.retentionDays}
               onChange={(e) => setSettings({ ...settings, retentionDays: Number(e.target.value) })}
               onBlur={() => void save({ retentionDays: settings.retentionDays })}
-              className="w-24 rounded border px-2 py-1 dark:border-zinc-700 dark:bg-zinc-950"
+              className="w-24 rounded border px-2 py-1 dark:border-zinc-700 dark:bg-card"
               disabled={loading}
             />
           </label>

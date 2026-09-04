@@ -6,16 +6,18 @@ import {
   PaymentMethod,
   Prisma,
   ProductCatalogStatus,
+  QuoteStatus,
   VerificationStatus,
 } from "@prisma/client";
 import { createInternalNotification } from "@/lib/notifications/internal";
 import { emailOrderEvent } from "@/lib/mail/event-dispatch";
 import { getUserEmailLocale } from "@/lib/email/templates";
-import { getOrCreateCart } from "@/lib/cart/cart-service";
+import { getOrCreateCart, QUOTE_CART_ITEM_TYPE } from "@/lib/cart/cart-service";
 import { writeAuditLog } from "@/lib/audit-log";
 import { assertCheckoutEnabled } from "@/lib/commerce/checkout-flags";
 import { consumeCouponInCheckout, quoteCouponInTx } from "@/lib/commerce/apply-coupon";
 import { PricingError, serverQuoteProduct, quoteToOrderFloats, couponToEngineInput } from "@/lib/pricing/service";
+import { linesAfterDiscount } from "@/lib/commerce-chat/quotes-math";
 
 const PAYMENT_AT_DELIVERY_LABEL: Record<PaymentMethod, string> = {
   PIX: "PIX na entrega",
@@ -50,6 +52,10 @@ export async function checkoutFromCart(params: {
   }
 
   const cart = await getOrCreateCart(params.userId);
+  const quoteCartItems = cart.items.filter((i) => i.itemType === QUOTE_CART_ITEM_TYPE);
+  if (quoteCartItems.length) {
+    return checkoutQuoteFromCart({ ...params, cart, quoteCartItems });
+  }
   const physicalItems = cart.items.filter((i) => i.itemType !== "DIGITAL_AI" && i.productId);
   if (!physicalItems.length) throw new Error("CART_EMPTY");
 
@@ -321,6 +327,201 @@ export async function checkoutFromCart(params: {
       locale: getUserEmailLocale(user.preferences),
     });
   }
+
+  return order;
+}
+
+async function checkoutQuoteFromCart(params: {
+  userId: string;
+  deliveryMethod: DeliveryMethod;
+  paymentMethod?: PaymentMethod;
+  phone: string;
+  notes?: string | null;
+  address: Prisma.InputJsonValue;
+  idempotencyKey?: string | null;
+  couponCode?: string | null;
+  cart: Awaited<ReturnType<typeof getOrCreateCart>>;
+  quoteCartItems: Awaited<ReturnType<typeof getOrCreateCart>>["items"];
+}) {
+  const quoteIds = [
+    ...new Set(
+      params.quoteCartItems.map((item) => {
+        const meta = (item.metadata as Record<string, unknown> | null) ?? {};
+        return typeof meta.quoteId === "string" ? meta.quoteId : item.lineKey.replace(/^quote:/, "");
+      })
+    ),
+  ];
+  const quotes = await prisma.customQuote.findMany({
+    where: { id: { in: quoteIds } },
+  });
+  if (quotes.length !== quoteIds.length) throw new Error("QUOTE_NOT_FOUND");
+
+  const now = Date.now();
+  for (const quote of quotes) {
+    if (quote.requesterId !== params.userId) throw new Error("QUOTE_FORBIDDEN");
+    if (quote.status !== QuoteStatus.ACCEPTED) throw new Error("QUOTE_NOT_ACCEPTED");
+    if (quote.validUntil.getTime() <= now) throw new Error("QUOTE_EXPIRED");
+  }
+
+  const partnerIds = new Set(quotes.map((q) => q.providerId));
+  if (partnerIds.size !== 1) throw new Error("MULTI_PARTNER_CART");
+  const partnerId = [...partnerIds][0]!;
+
+  const paymentMethod = params.paymentMethod ?? PaymentMethod.PIX;
+  const paymentNote = PAYMENT_AT_DELIVERY_LABEL[paymentMethod] ?? paymentMethod;
+
+  const { serverQuoteProduct, quoteToOrderFloats, PricingError } = await import("@/lib/pricing/service");
+  const { markQuoteConverted, asPayload } = await import("@/lib/commerce-chat/quotes");
+  const { COMMERCIAL_EVENT, postCommercialEvent } = await import("@/lib/commerce-chat/events");
+
+  const quote = quotes[0]!;
+  const payload = asPayload(quote.includedItems);
+  let snap: ReturnType<typeof quoteToOrderFloats>;
+  let engineSnapshot: Record<string, unknown>;
+  try {
+    const discounted = linesAfterDiscount(payload.items, payload.discountAmount);
+    const quoted = await serverQuoteProduct({
+      lines: discounted.map((line) => ({
+        unitPrice: line.unitPrice,
+        quantity: line.quantity,
+        sku: line.sku ?? null,
+      })),
+      partnerVerified: true,
+      partnerId,
+      charging: true,
+    });
+    snap = quoteToOrderFloats(quoted.order);
+    engineSnapshot = quoted.order.snapshot as Record<string, unknown>;
+  } catch (e) {
+    if (e instanceof PricingError) throw e;
+    throw new PricingError("PRICING_UNAVAILABLE", "Motor de pricing indisponível. Checkout bloqueado (fail-closed).");
+  }
+
+  const total = Math.max(0, snap.total + payload.shippingAmount);
+  if (!(total > 0)) throw new Error("INVALID_TOTAL");
+
+  const order = await prisma.$transaction(async (tx) => {
+    const maxNum = (await tx.order.aggregate({ _max: { orderNumber: true } }))._max.orderNumber ?? 1000;
+
+    const created = await tx.order.create({
+      data: {
+        orderNumber: maxNum + 1,
+        userId: params.userId,
+        partnerId,
+        status: OrderStatus.PENDING_CONFIRMATION,
+        fulfillmentStatus: OrderStatus.PENDING_CONFIRMATION,
+        total,
+        shippingCost: payload.shippingAmount,
+        discount: payload.discountAmount,
+        grossAmount: snap.grossAmount,
+        platformFeeAmount: snap.platformFeeAmount,
+        partnerAmount: snap.partnerAmount,
+        platformPercentage: snap.platformPercentage,
+        platformFixedFee: snap.platformFixedFee,
+        gatewayFeeEstimated: snap.gatewayFeeEstimated,
+        reserveAmount: snap.reserveAmount,
+        taxEstimate: snap.taxEstimate,
+        pricingVersion: snap.pricingVersion,
+        pricingSnapshot: engineSnapshot as Prisma.InputJsonValue,
+        currency: "BRL",
+        idempotencyKey: params.idempotencyKey || null,
+        shippingAddress: { ...(params.address as Record<string, unknown>), phone: params.phone },
+        deliveryMethod: params.deliveryMethod,
+        paymentMethod,
+        deliveryNotes: params.notes ?? null,
+        items: {
+          create: payload.items.map((line) => ({
+            quoteId: quote.id,
+            itemType: QUOTE_CART_ITEM_TYPE,
+            name: line.description,
+            quantity: line.quantity,
+            price: line.unitPrice,
+            grossAmount: line.unitPrice * line.quantity,
+            platformFeeAmount: 0,
+            partnerAmount: line.unitPrice * line.quantity,
+            pricingVersion: snap.pricingVersion,
+            partnerId,
+            sku: line.sku,
+            petId: payload.petId,
+            productId: line.productId,
+            serviceId: line.serviceId,
+          })),
+        },
+        statusHistory: {
+          create: {
+            status: OrderStatus.PENDING_CONFIRMATION,
+            note: `Pedido de orçamento — pagamento: ${paymentNote} | pricing=${snap.pricingVersion}`,
+          },
+        },
+        payments: {
+          create: {
+            provider: "pending",
+            environment: process.env.MERCADO_PAGO_ENVIRONMENT === "production" ? "production" : "test",
+            amount: total,
+            currency: "BRL",
+            status: "PENDING",
+            paymentMethod: paymentMethod,
+            userId: params.userId,
+            partnerId,
+            metadata: {
+              source: "quote-checkout",
+              quoteId: quote.id,
+              pricingVersion: snap.pricingVersion,
+              splitReady: false,
+              logicalSplitOnly: true,
+              estimatesOnly: true,
+            },
+          },
+        },
+      },
+      include: { items: true, payments: true },
+    });
+
+    await tx.cartItem.deleteMany({
+      where: { cartId: params.cart.id, itemType: QUOTE_CART_ITEM_TYPE },
+    });
+    return created;
+  });
+
+  for (const quote of quotes) {
+    await markQuoteConverted(quote.id, order.id);
+    if (quote.conversationId) {
+      await postCommercialEvent({
+        conversationId: quote.conversationId,
+        senderId: params.userId,
+        event: COMMERCIAL_EVENT.PAYMENT_PENDING,
+        quoteId: quote.id,
+        orderId: order.id,
+      }).catch(() => undefined);
+    }
+  }
+
+  await Promise.all([
+    createInternalNotification({
+      userId: params.userId,
+      title: "Pedido criado",
+      body: `Seu pedido #${order.orderNumber} foi registrado.`,
+      type: "ORDER_CREATED",
+      actionUrl: `/client/orders`,
+      data: { orderId: order.id },
+    }),
+    createInternalNotification({
+      userId: partnerId,
+      title: "Novo pedido",
+      body: `Você recebeu o pedido #${order.orderNumber}.`,
+      type: "ORDER_RECEIVED",
+      actionUrl: `/partner/orders`,
+      data: { orderId: order.id },
+    }),
+    writeAuditLog({
+      actorId: params.userId,
+      action: "CREATE",
+      module: "commerce.checkout",
+      resource: "Order",
+      resourceId: order.id,
+      entityAfter: { orderNumber: order.orderNumber, source: "quote", total: order.total },
+    }).catch(() => undefined),
+  ]);
 
   return order;
 }

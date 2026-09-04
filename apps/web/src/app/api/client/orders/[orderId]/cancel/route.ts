@@ -89,5 +89,15 @@ export async function PATCH(_req: Request, context: RouteContext) {
     });
   }
 
+  void import("@/lib/commerce-chat/events")
+    .then(({ postOrderCommercialEvent, COMMERCIAL_EVENT }) =>
+      postOrderCommercialEvent({
+        orderId,
+        event: COMMERCIAL_EVENT.CANCELLED,
+        actorId: user!.id,
+      })
+    )
+    .catch(() => undefined);
+
   return apiSuccess({ order: updated });
 }

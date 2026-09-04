@@ -34,5 +34,26 @@ export async function POST(
   });
 
   if (!result.ok) return apiFailure(result.code, result.message, 400);
+
+  void import("@/lib/commerce-chat/events")
+    .then(({ postOrderCommercialEvent, COMMERCIAL_EVENT }) =>
+      postOrderCommercialEvent({
+        orderId,
+        event: COMMERCIAL_EVENT.CANCEL_REQUESTED,
+        actorId: user!.id,
+        payload: { paymentRefundId: result.paymentRefundId, reason: parsed.data.reason },
+      })
+    )
+    .catch(() => undefined);
+  void import("@/lib/commerce-chat/events")
+    .then(({ postOrderCommercialEvent, COMMERCIAL_EVENT }) =>
+      postOrderCommercialEvent({
+        orderId,
+        event: COMMERCIAL_EVENT.REFUND_PENDING,
+        actorId: user!.id,
+      })
+    )
+    .catch(() => undefined);
+
   return apiSuccess(result);
 }

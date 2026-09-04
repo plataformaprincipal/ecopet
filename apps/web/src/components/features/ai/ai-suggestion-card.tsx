@@ -9,7 +9,7 @@ type Props = {
 
 export function AISuggestionCard({ title, body, onApply, applyLabel = "Usar sugestão" }: Props) {
   return (
-    <article className="rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
+    <article className="rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-card">
       <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">{title}</h3>
       <p className="mt-2 whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-300">{body}</p>
       {onApply && (

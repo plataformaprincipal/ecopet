@@ -20,6 +20,7 @@ import {
   isAiNotConfiguredErrorCode,
 } from "@/components/features/ai/ai-unavailable-banner";
 import { AI_SAFETY_DISCLAIMER } from "@/lib/ai/ai-disclaimer";
+import { AiProcessingStatus } from "@/components/features/ai/ai-processing-status";
 
 type QuickCommand = { labelKey: string; icon: typeof ShoppingBag; prompt: string };
 
@@ -337,9 +338,7 @@ export function EcopetAIAssistant() {
                 ) : (
                   messages.map((m, i) => (
                     <div key={i} className={cn("rounded-xl px-3 py-2 text-sm", m.role === "user" ? "ml-8 bg-ecopet-green/10 dark:bg-ecopet-green/20" : "mr-8 bg-ecopet-gray/10 dark:bg-white/5")}>
-                      {m.pending && !m.content
-                        ? "EccoPet está pensando..."
-                        : m.content}
+                      {m.pending && !m.content ? <AiProcessingStatus /> : m.content}
                       {m.imageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={m.imageUrl} alt={m.imagePrompt || "Imagem gerada"} className="mt-2 max-h-56 w-full rounded-lg object-contain" />
@@ -400,7 +399,7 @@ export function EcopetAIAssistant() {
                     onKeyDown={(e) => e.key === "Enter" && void send()}
                     placeholder={unavailable ? t("empty.ai.unavailable") : t("empty.ai.placeholder")}
                     disabled={loading || unavailable}
-                    className="flex-1 rounded-xl border px-3 py-2 text-sm disabled:opacity-60 dark:border-white/10 dark:bg-zinc-950"
+                    className="flex-1 rounded-xl border border-input bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground disabled:opacity-60"
                   />
                   <Button size="icon" onClick={() => void send()} disabled={loading || unavailable || !message.trim()}>
                     <Send className="h-4 w-4" />

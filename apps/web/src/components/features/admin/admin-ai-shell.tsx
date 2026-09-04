@@ -31,7 +31,7 @@ export function AdminAiShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-full flex-col">
-      <div className="border-b bg-white px-6 py-4 dark:bg-gray-950">
+      <div className="border-b bg-white px-6 py-4 dark:bg-card">
         <h1 className="font-display text-xl font-bold">Plataforma AI-First</h1>
         <p className="text-sm text-muted-foreground">
           Infraestrutura desacoplada — pronta para OpenAI, Claude e Gemini.

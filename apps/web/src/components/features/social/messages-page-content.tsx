@@ -60,7 +60,7 @@ export function MessagesPageContent() {
       <AppHeader title={t("nav.messages")} />
       <SocialSubNav />
       <main className="mx-auto flex max-w-4xl flex-1 flex-col lg:h-[calc(100vh-8rem)] lg:flex-row lg:overflow-hidden lg:p-4 lg:gap-4">
-        <div className={cn("flex flex-col border-ecopet-gray/10 lg:w-80 lg:rounded-2xl lg:border lg:bg-white lg:dark:bg-[#0f1419]", activeId && "hidden lg:flex")}>
+        <div className={cn("flex flex-col border-ecopet-gray/10 lg:w-80 lg:rounded-2xl lg:border lg:bg-card", activeId && "hidden lg:flex")}>
           <div className="flex-1 overflow-y-auto">
             {conversations.length === 0 ? (
               <div className="p-4">
@@ -100,7 +100,7 @@ export function MessagesPageContent() {
           </div>
         </div>
 
-        <div className={cn("flex flex-1 flex-col lg:rounded-2xl lg:border lg:bg-white lg:dark:bg-[#0f1419]", !activeId && "hidden lg:flex")}>
+        <div className={cn("flex flex-1 flex-col lg:rounded-2xl lg:border lg:bg-card", !activeId && "hidden lg:flex")}>
           {activeConv ? (
             <>
               <div className="flex-1 space-y-3 overflow-y-auto p-4">

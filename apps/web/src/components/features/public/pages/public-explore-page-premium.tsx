@@ -116,7 +116,7 @@ export function PublicExplorePagePremium() {
               <Link
                 key={h.slug}
                 href={`/feed/hashtag/${h.slug}`}
-                className="inline-flex shrink-0 items-center gap-2 rounded-[20px] border border-zinc-200/80 bg-white px-4 py-3 text-sm shadow-sm dark:border-white/10 dark:bg-zinc-900/60"
+                className="inline-flex shrink-0 items-center gap-2 rounded-[20px] border border-zinc-200/80 bg-white px-4 py-3 text-sm shadow-sm dark:border-white/10 dark:bg-card"
               >
                 <Hash className="h-4 w-4 text-ecopet-green" aria-hidden />
                 {h.name}
@@ -172,7 +172,7 @@ export function PublicExplorePagePremium() {
                   <Link
                     key={animal.id}
                     href={`/adocao`}
-                    className="rounded-[20px] border border-zinc-200/80 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900/60"
+                    className="rounded-[20px] border border-zinc-200/80 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-card"
                   >
                     <p className="font-medium">{animal.name}</p>
                     <p className="text-xs text-zinc-500">{animal.species}</p>

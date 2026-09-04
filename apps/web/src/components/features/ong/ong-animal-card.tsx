@@ -37,7 +37,7 @@ export function OngAnimalCard({
   const photo = listing.photos[0];
 
   return (
-    <article className="overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-sm transition hover:shadow-md dark:border-white/10 dark:bg-zinc-900/60">
+    <article className="overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-sm transition hover:shadow-md dark:border-white/10 dark:bg-card">
       <div className="relative aspect-[4/3] bg-zinc-100 dark:bg-zinc-800">
         {photo ? (
           // eslint-disable-next-line @next/next/no-img-element

@@ -121,7 +121,7 @@ export function ClientFinanceiroPage() {
         </div>
       )}
 
-      <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-zinc-900/60">
+      <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-card">
         <h2 className="font-semibold">Orçamento mensal</h2>
         <div className="mt-3 flex flex-wrap gap-2">
           <Input type="number" min={0} placeholder="Ex: 500" value={budgetInput} onChange={(e) => setBudgetInput(e.target.value)} className="max-w-[200px]" />
@@ -132,7 +132,7 @@ export function ClientFinanceiroPage() {
         ) : null}
       </section>
 
-      <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-zinc-900/60">
+      <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-card">
         <div className="mb-3 flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-violet-600" aria-hidden />
           <h2 className="font-semibold">IA Financeira</h2>
@@ -156,7 +156,7 @@ export function ClientFinanceiroPage() {
 
 function Metric({ icon: Icon, label, value }: { icon: typeof Wallet; label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60">
+    <div className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-card">
       <div className="flex items-center gap-2 text-zinc-500">
         <Icon className="h-4 w-4" aria-hidden />
         <span className="text-xs">{label}</span>

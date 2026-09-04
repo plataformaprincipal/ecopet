@@ -20,7 +20,7 @@ type Props = { userName: string };
 
 function StatCard({ icon: Icon, label, value }: { icon: typeof PawPrint; label: string; value: number }) {
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60">
+    <div className="flex items-center gap-3 rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-card">
       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-ecopet-green/10">
         <Icon className="h-5 w-5 text-ecopet-green" aria-hidden />
       </span>
@@ -100,7 +100,7 @@ export function ClientHomeDashboard({ userName }: Props) {
       </div>
 
       {/* Pet card */}
-      <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-zinc-900/60">
+      <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-card">
         <h2 className="flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-white">
           <PawPrint className="h-4 w-4 text-ecopet-green" aria-hidden />
           {t("clientArea.home.petCard")}
@@ -139,7 +139,7 @@ export function ClientHomeDashboard({ userName }: Props) {
               <Link
                 key={rec.id}
                 href={rec.href}
-                className="rounded-2xl border border-zinc-200/80 bg-white p-4 transition hover:shadow-md dark:border-white/10 dark:bg-zinc-900/60"
+                className="rounded-2xl border border-zinc-200/80 bg-white p-4 transition hover:shadow-md dark:border-white/10 dark:bg-card"
               >
                 <p className="font-medium text-zinc-900 dark:text-white">{rec.title}</p>
                 <p className="mt-1 text-sm text-zinc-500">{rec.description}</p>
@@ -161,7 +161,7 @@ export function ClientHomeDashboard({ userName }: Props) {
             summary.upcomingReminders.map((r) => (
               <div
                 key={r.id}
-                className="rounded-xl border border-zinc-200/80 bg-white p-3 text-sm dark:border-white/10 dark:bg-zinc-900/60"
+                className="rounded-xl border border-zinc-200/80 bg-white p-3 text-sm dark:border-white/10 dark:bg-card"
               >
                 <p className="font-medium">{r.title}</p>
                 <p className="text-zinc-500">
@@ -184,7 +184,7 @@ export function ClientHomeDashboard({ userName }: Props) {
               <Link
                 key={a.id}
                 href="/client/appointments"
-                className="block rounded-xl border border-zinc-200/80 bg-white p-3 text-sm dark:border-white/10 dark:bg-zinc-900/60"
+                className="block rounded-xl border border-zinc-200/80 bg-white p-3 text-sm dark:border-white/10 dark:bg-card"
               >
                 <p className="font-medium">{a.serviceName ?? "—"}</p>
                 <p className="text-zinc-500">
@@ -207,7 +207,7 @@ export function ClientHomeDashboard({ userName }: Props) {
               <Link
                 key={o.id}
                 href="/client/orders"
-                className="block rounded-xl border border-zinc-200/80 bg-white p-3 text-sm dark:border-white/10 dark:bg-zinc-900/60"
+                className="block rounded-xl border border-zinc-200/80 bg-white p-3 text-sm dark:border-white/10 dark:bg-card"
               >
                 <p className="font-medium">{formatCurrency(o.total, locale)}</p>
                 <p className="text-zinc-500">
@@ -223,7 +223,7 @@ export function ClientHomeDashboard({ userName }: Props) {
             <MessageSquare className="h-4 w-4" aria-hidden />
             {t("clientArea.nav.messages")}
           </h2>
-          <div className="rounded-xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/60">
+          <div className="rounded-xl border border-zinc-200/80 bg-white p-4 dark:border-white/10 dark:bg-card">
             <p className="text-2xl font-semibold">{summary?.unreadMessages ?? 0}</p>
             <p className="text-sm text-zinc-500">{t("clientArea.home.unread")}</p>
             <Link href="/client/messages" className="mt-2 inline-flex text-sm font-semibold text-ecopet-green hover:underline">

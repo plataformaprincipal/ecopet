@@ -463,5 +463,28 @@ export async function applyInternalPaymentStatus(params: {
     /* ignore */
   }
 
+  if (isTerminalApproved(params.internalStatus)) {
+    void import("@/lib/commerce-chat/events")
+      .then(({ postOrderCommercialEvent, COMMERCIAL_EVENT }) =>
+        postOrderCommercialEvent({
+          orderId: payment.orderId,
+          event: COMMERCIAL_EVENT.PAID,
+          actorId: payment.order.partnerId,
+        })
+      )
+      .catch(() => undefined);
+  }
+  if (isRefundedStatus(params.internalStatus)) {
+    void import("@/lib/commerce-chat/events")
+      .then(({ postOrderCommercialEvent, COMMERCIAL_EVENT }) =>
+        postOrderCommercialEvent({
+          orderId: payment.orderId,
+          event: COMMERCIAL_EVENT.REFUNDED,
+          actorId: payment.order.partnerId,
+        })
+      )
+      .catch(() => undefined);
+  }
+
   return { changed: true };
 }
