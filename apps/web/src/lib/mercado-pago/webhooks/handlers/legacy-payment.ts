@@ -2,6 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/prisma";
 import { getMercadoPagoLegacyPayment, getMercadoPagoOrder } from "@/lib/mercado-pago/client";
+import { getUsablePartnerMpAccessToken } from "@/lib/mercado-pago/partner-oauth";
 import { mapMpOrderStatusToInternal } from "@/lib/mercado-pago/status";
 import { applyInternalPaymentStatus } from "@/lib/mercado-pago/apply-payment-status";
 import {
@@ -37,7 +38,16 @@ export const handleLegacyPaymentWebhook: MpWebhookHandler = async ({ event, norm
     };
   }
 
-  const remote = await getMercadoPagoLegacyPayment(resourceId);
+  const localPayment = await prisma.payment.findFirst({ where: { providerPaymentId: resourceId, provider: "mercado_pago" }, select: { partnerId: true, metadata: true } });
+  const meta = (localPayment?.metadata ?? {}) as Record<string, unknown>;
+  let sellerAccessToken: string | undefined;
+  if (meta.mpProduct === "payments_api_marketplace") {
+    if (!localPayment?.partnerId) return { processingStatus: "FAILED", failureCode: "MISSING_SELLER", failureReason: "Pagamento split sem parceiro", retryable: false };
+    const token = await getUsablePartnerMpAccessToken(localPayment.partnerId);
+    if (!token.ok) return { processingStatus: "RETRY_PENDING", failureCode: "SELLER_TOKEN_UNAVAILABLE", failureReason: token.reason, retryable: true };
+    sellerAccessToken = token.accessToken;
+  }
+  const remote = await getMercadoPagoLegacyPayment(resourceId, sellerAccessToken);
   if (!remote.ok) {
     return {
       processingStatus: remote.retryable ? "RETRY_PENDING" : "FAILED",

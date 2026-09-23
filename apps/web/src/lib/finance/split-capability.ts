@@ -115,8 +115,8 @@ export function evaluateMarketplaceSplit(params: {
 }): SplitCapability {
   const source = params.source ?? process.env;
   const sellerOAuthConfigured = oauthConfigured(source);
-  const killSwitch = envFlagOff(source, "MP_MARKETPLACE_SPLIT_ENABLED");
-  const marketplaceSplitEnvEnabled = !killSwitch;
+  const marketplaceSplitEnvEnabled = envFlag(source, "MP_MARKETPLACE_SPLIT_ENABLED");
+  const killSwitch = !marketplaceSplitEnvEnabled;
   const usable = connectionUsable(params.partnerConnection);
   const reasons: string[] = [];
 
@@ -140,7 +140,7 @@ export function evaluateMarketplaceSplit(params: {
     reasons.push("OAuth do vendedor não configurado (CLIENT_ID/SECRET).");
   }
   if (killSwitch) {
-    reasons.push("MP_MARKETPLACE_SPLIT_ENABLED=0 — kill-switch de plataforma.");
+    reasons.push("MP_MARKETPLACE_SPLIT_ENABLED precisa estar explicitamente ativo para pagamentos Marketplace.");
   }
   if (!usable.ok) {
     reasons.push("Parceiro sem conexão Mercado Pago CONNECTED com collector (mpUserId) válido.");

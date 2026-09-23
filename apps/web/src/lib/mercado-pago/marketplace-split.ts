@@ -63,7 +63,7 @@ export async function createSplitMarketplacePayment(params: {
   description: string;
   paymentMethodId: string;
   cardToken?: string;
-  installments?: number;
+  installments?: 1;
   payerEmail: string;
   payerFirstName?: string;
   payerLastName?: string;
@@ -79,7 +79,7 @@ export async function createSplitMarketplacePayment(params: {
     transaction_amount: Number(params.amount.toFixed(2)),
     description: params.description,
     payment_method_id: methodId,
-    installments: params.cardToken ? params.installments && params.installments > 0 ? params.installments : 1 : 1,
+    installments: 1,
     payer: {
       email: params.payerEmail,
       ...(params.payerFirstName ? { first_name: params.payerFirstName } : {}),

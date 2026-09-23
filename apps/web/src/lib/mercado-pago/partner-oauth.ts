@@ -271,3 +271,15 @@ export async function getUsablePartnerMpAccessToken(partnerId: string): Promise<
     return { ok: false, reason: "Não foi possível abrir as credenciais do vendedor." };
   }
 }
+
+
+/** Erases local OAuth credentials; the seller may reconnect later. */
+export async function disconnectPartnerMpOAuth(partnerId: string): Promise<void> {
+  const row = await prisma.partnerMpConnection.findUnique({ where: { partnerId } });
+  if (!row) return;
+  await prisma.partnerMpConnection.update({
+    where: { id: row.id },
+    data: { status: "NOT_CONNECTED", accessTokenEnc: null, refreshTokenEnc: null, oauthState: null, expiresAt: null, revokedAt: new Date(), lastError: null },
+  });
+  await writeAuditLog({ action: "UPDATE", module: "finance", resource: "PartnerMpConnection", resourceId: row.id, actorId: partnerId, observation: "partner.mp.oauth.disconnected" }).catch(() => undefined);
+}

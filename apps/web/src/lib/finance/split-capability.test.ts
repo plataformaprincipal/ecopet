@@ -75,7 +75,7 @@ describe("split capability", () => {
     assert.equal(cap.decision, "ARCHITECTURE_BLOCKED");
   });
 
-  it("activates order split from partner connection even if platform flag unset", () => {
+  it("requires explicit Marketplace split enablement", () => {
     const cap = evaluateMarketplaceSplit({
       source: {
         MERCADO_PAGO_CLIENT_ID: "app",
@@ -85,7 +85,7 @@ describe("split capability", () => {
       applicationFeeAmount: 12.5,
       transactionAmount: 100,
     });
-    assert.equal(cap.splitReady, true);
+    assert.equal(cap.splitReady, false);
   });
 
   it("honors explicit platform kill-switch", () => {

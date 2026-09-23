@@ -20,7 +20,6 @@ import { applyInternalPaymentStatus } from "@/lib/mercado-pago/apply-payment-sta
 import type { CreateMpOrderRequest } from "@/lib/mercado-pago/types";
 import { metricsFromOrderRow } from "@/lib/finance/metrics";
 import { validateOnlinePaymentMethod } from "@/lib/mercado-pago/payment-policy";
-import { marketplaceParamsForOrdersApi } from "@/lib/finance/split-capability";
 import {
   createSplitMarketplacePayment,
   resolveOrderMarketplaceSplit,
@@ -99,8 +98,9 @@ export async function createMercadoPagoCheckoutOrder(
     applicationFeeAmount: snapshotMetrics.platformRevenue,
   });
   const split = splitEval.capability;
-  if (!split.splitReady) {
-    void marketplaceParamsForOrdersApi(split);
+  // Marketplace orders must be collected by the connected seller. Never fall back to EcoPet's collector.
+  if (splitEval.partnerId && !split.splitReady) {
+    throw new Error("MARKETPLACE_SELLER_NOT_CONNECTED");
   }
 
   const methodId = input.paymentMethodId.toLowerCase();

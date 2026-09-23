@@ -102,6 +102,10 @@ export async function POST(request: Request) {
         status: 400,
         message: "Use PIX ou cartão de crédito à vista.",
       },
+      MARKETPLACE_SELLER_NOT_CONNECTED: {
+        status: 409,
+        message: "Este vendedor precisa conectar uma conta Mercado Pago antes de aceitar pagamentos.",
+      },
       PAYER_EMAIL_REQUIRED: {
         status: 400,
         message: "E-mail do pagador obrigatório.",
