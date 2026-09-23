@@ -1,10 +1,21 @@
 import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiFailure } from "@/lib/api-response";
-import { requireActivePartner, requireApprovedPartner } from "@/lib/auth/require-auth";
+import {
+  requireActivePartner,
+  requireApprovedPartner,
+} from "@/lib/auth/require-auth";
 import { productSchema } from "@/schemas/product";
-import { ContentApprovalStatus, Prisma, ProductCatalogStatus } from "@prisma/client";
+import {
+  ContentApprovalStatus,
+  Prisma,
+  ProductCatalogStatus,
+} from "@prisma/client";
+import { getPartnerFinancialEligibility } from "@/lib/partner/financial-eligibility";
 
-function buildProductData(sellerId: string, data: z.infer<typeof productSchema>) {
+function buildProductData(
+  sellerId: string,
+  data: z.infer<typeof productSchema>,
+) {
   const status = data.status ?? ProductCatalogStatus.ACTIVE;
   return {
     sellerId,
@@ -55,12 +66,29 @@ export async function POST(request: Request) {
 
   const parsed = productSchema.safeParse(await request.json());
   if (!parsed.success) {
-    return apiFailure("VALIDATION", parsed.error.errors[0]?.message ?? "Inválido", 400);
+    return apiFailure(
+      "VALIDATION",
+      parsed.error.errors[0]?.message ?? "Inválido",
+      400,
+    );
   }
 
   const data = parsed.data;
+  const financial = await getPartnerFinancialEligibility(user!.id);
+  const requestedActive =
+    (data.status ?? ProductCatalogStatus.ACTIVE) ===
+    ProductCatalogStatus.ACTIVE;
+  if (requestedActive && !financial.canPublish) {
+    return apiFailure(
+      "FINANCIAL_SETUP_REQUIRED",
+      "Configure seus dados de recebimento antes de publicar. O produto pode ser salvo como rascunho.",
+      409,
+    );
+  }
   const product = await prisma.$transaction(async (tx) => {
-    const created = await tx.product.create({ data: buildProductData(user!.id, data) });
+    const created = await tx.product.create({
+      data: buildProductData(user!.id, data),
+    });
     if (created.stock > 0) {
       await tx.inventoryLog.create({
         data: {
