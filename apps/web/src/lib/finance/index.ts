@@ -6,7 +6,6 @@ export { releaseEligiblePartnerBalances } from "./reserve";
 export {
   createPartnerPayout,
   approvePartnerPayout,
-  markPartnerPayoutPaidSandbox,
   cancelPartnerPayout,
 } from "./payout";
 export { postLedgerForRefund } from "./refund-ledger";

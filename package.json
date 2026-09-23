@@ -2,7 +2,7 @@
   "name": "ecopet",
   "version": "1.0.0",
   "private": true,
-  "description": "ECOPET — Ecossistema pet inteligente: marketplace, rede social, healthtech e IA",
+  "description": "ECOPET \u2014 Ecossistema pet inteligente: marketplace, rede social, healthtech e IA",
   "workspaces": [
     "apps/*",
     "packages/*"
@@ -97,7 +97,7 @@
     "test": "node scripts/test.mjs",
     "test:i18n": "node scripts/test-i18n.mjs",
     "lint": "npm run lint -w @ecopet/web",
-    "type-check": "npm run type-check -w @ecopet/database && npm run type-check -w @ecopet/web && npm run type-check -w @ecopet/api"
+    "type-check": "npm run build -w @ecopet/database && NODE_OPTIONS=--max-old-space-size=3072 npm run type-check -w @ecopet/web && npm run type-check -w @ecopet/api"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.0",

@@ -141,9 +141,9 @@ function buildPerformanceChecks(): ProductionCheckItem[] {
     {
       id: "perf-fonts",
       area: "Performance",
-      title: "Fonts next/font",
+      title: "Fonts locais",
       status: "PASS",
-      detail: "Inter + Plus Jakarta Sans via next/font (self-host).",
+      detail: "Pilha de fontes do sistema; build não faz download externo de fontes.",
     },
     {
       id: "perf-images",

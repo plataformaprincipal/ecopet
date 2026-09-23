@@ -2,7 +2,6 @@ import { apiFailure, apiSuccess } from "@/lib/api-response";
 import { requireAdmin } from "@/lib/auth/guards";
 import {
   approvePartnerPayout,
-  markPartnerPayoutPaidSandbox,
   cancelPartnerPayout,
 } from "@/lib/finance/payout";
 import { prisma } from "@/lib/prisma";
@@ -10,7 +9,9 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
-  const { error } = await requireAdmin({ path: "/api/admin/financeiro/payouts" });
+  const { error } = await requireAdmin({
+    path: "/api/admin/financeiro/payouts",
+  });
   if (error) return error;
   const url = new URL(req.url);
   const status = url.searchParams.get("status") || undefined;
@@ -23,7 +24,9 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const { user, error } = await requireAdmin({ path: "/api/admin/financeiro/payouts" });
+  const { user, error } = await requireAdmin({
+    path: "/api/admin/financeiro/payouts",
+  });
   if (error) return error;
 
   const body = await req.json().catch(() => ({}));
@@ -38,14 +41,13 @@ export async function POST(req: Request) {
     return apiSuccess(r);
   }
   if (action === "mark_paid_sandbox") {
-    const r = await markPartnerPayoutPaidSandbox({
-      payoutId,
-      paidById: user!.id,
-      externalReference: body.externalReference,
-    });
-    if (!r.ok) return apiFailure(r.code, r.message, 400);
-    return apiSuccess(r);
+    return apiFailure(
+      "PAYOUT_PROVIDER_NOT_CONFIGURED",
+      "Repasse só pode ser marcado como pago após confirmação externa real.",
+      409,
+    );
   }
+
   if (action === "cancel") {
     const r = await cancelPartnerPayout({
       payoutId,

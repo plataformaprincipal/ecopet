@@ -52,7 +52,7 @@ export default async function PartnerFinanceiroPage() {
       <h1 className="text-2xl font-semibold">Financeiro do parceiro</h1>
       <p className="text-sm text-muted-foreground">
         Split lógico interno. GMV não é lucro. Valor estimado não é disponível; disponível não é
-        repasse concluído. Split Mercado Pago automático não está ativo. Reserva de 1,5% é
+        repasse concluído. Repasse centralizado permanece bloqueado até uma transferência confirmada pelo provedor. Reserva de 1,5% é
         planejamento — não é hold do PSP.
       </p>
       <section className="rounded-2xl border p-4 text-sm" data-testid="partner-mp-connection">
@@ -102,7 +102,7 @@ export default async function PartnerFinanceiroPage() {
           <p className="text-lg font-medium">R$ {balances.asFloats.available.toFixed(2)}</p>
         </div>
         <div>
-          <p className="text-muted-foreground">Payout pago (sandbox)</p>
+          <p className="text-muted-foreground">Repasses confirmados</p>
           <p className="text-lg font-medium">R$ {balances.asFloats.paid.toFixed(2)}</p>
         </div>
       </section>

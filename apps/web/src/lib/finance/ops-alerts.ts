@@ -94,7 +94,7 @@ export async function scanFinanceOpsAlerts(opts?: { lookbackHours?: number; take
     alerts.push({
       code: "PAYOUT_FAILED",
       severity: "P1",
-      message: p.failureReason ?? "Repasse sandbox falhou.",
+      message: p.failureReason ?? "Repasse não confirmado pelo provedor.",
       partnerId: p.partnerId,
     });
   }
