@@ -12,11 +12,14 @@ import {
   getMercadoPagoEnvironment,
   isMercadoPagoCheckoutAvailable,
 } from "@/lib/mercado-pago/config";
-import { mapMpLegacyPaymentStatusToInternal, mapMpOrderStatusToInternal } from "@/lib/mercado-pago/status";
+import {
+  mapMpLegacyPaymentStatusToInternal,
+  mapMpOrderStatusToInternal,
+} from "@/lib/mercado-pago/status";
 import { applyInternalPaymentStatus } from "@/lib/mercado-pago/apply-payment-status";
 import type { CreateMpOrderRequest } from "@/lib/mercado-pago/types";
 import { metricsFromOrderRow } from "@/lib/finance/metrics";
-import { marketplaceParamsForOrdersApi } from "@/lib/finance/split-capability";
+import { validateOnlinePaymentMethod } from "@/lib/mercado-pago/payment-policy";
 import {
   createSplitMarketplacePayment,
   resolveOrderMarketplaceSplit,
@@ -29,7 +32,7 @@ export type CreateCheckoutOrderInput = {
   paymentMethodId: string;
   paymentMethodType?: string;
   cardToken?: string;
-  installments?: number;
+  installments?: 1;
   payerEmail: string;
   payerFirstName?: string;
   payerLastName?: string;
@@ -45,7 +48,9 @@ function formatAmount(value: number): string {
  * Cria order na API Orders do Mercado Pago para um pedido EcoPet existente.
  * Recalcula total no servidor; nunca confia no valor do cliente.
  */
-export async function createMercadoPagoCheckoutOrder(input: CreateCheckoutOrderInput) {
+export async function createMercadoPagoCheckoutOrder(
+  input: CreateCheckoutOrderInput,
+) {
   if (!isMercadoPagoCheckoutAvailable()) {
     throw new Error("MP_NOT_CONFIGURED");
   }
@@ -60,7 +65,11 @@ export async function createMercadoPagoCheckoutOrder(input: CreateCheckoutOrderI
 
   if (!order) throw new Error("ORDER_NOT_FOUND");
   if (order.userId !== input.userId) throw new Error("ORDER_FORBIDDEN");
-  if (order.status === "PAID" || order.status === "CANCELLED" || order.status === "REFUNDED") {
+  if (
+    order.status === "PAID" ||
+    order.status === "CANCELLED" ||
+    order.status === "REFUNDED"
+  ) {
     throw new Error("ORDER_NOT_PAYABLE");
   }
 
@@ -71,12 +80,16 @@ export async function createMercadoPagoCheckoutOrder(input: CreateCheckoutOrderI
   const openAttempt = order.payments.find(
     (p) =>
       p.provider === "mercado_pago" &&
-      (p.status === "PENDING" || p.status === "CREATED" || p.status === "PROCESSING" || p.status === "ACTION_REQUIRED") &&
-      p.idempotencyKey
+      (p.status === "PENDING" ||
+        p.status === "CREATED" ||
+        p.status === "PROCESSING" ||
+        p.status === "ACTION_REQUIRED") &&
+      p.idempotencyKey,
   );
 
   const amount = Number(order.total);
-  if (!Number.isFinite(amount) || amount <= 0) throw new Error("INVALID_AMOUNT");
+  if (!Number.isFinite(amount) || amount <= 0)
+    throw new Error("INVALID_AMOUNT");
   const snapshotMetrics = metricsFromOrderRow(order);
   const splitEval = await resolveOrderMarketplaceSplit({
     partnerId: order.partnerId,
@@ -85,12 +98,15 @@ export async function createMercadoPagoCheckoutOrder(input: CreateCheckoutOrderI
     applicationFeeAmount: snapshotMetrics.platformRevenue,
   });
   const split = splitEval.capability;
-  if (!split.splitReady) {
-    void marketplaceParamsForOrdersApi(split);
+  // Marketplace orders must be collected by the connected seller. Never fall back to EcoPet's collector.
+  if (splitEval.partnerId && !split.splitReady) {
+    throw new Error("MARKETPLACE_SELLER_NOT_CONNECTED");
   }
 
   const methodId = input.paymentMethodId.toLowerCase();
   const isCard = Boolean(input.cardToken);
+  const policyError = validateOnlinePaymentMethod(input);
+  if (policyError) throw new Error(policyError);
   if (isCard && (!input.cardToken || input.cardToken.length < 32)) {
     throw new Error("INVALID_CARD_TOKEN");
   }
@@ -98,7 +114,9 @@ export async function createMercadoPagoCheckoutOrder(input: CreateCheckoutOrderI
     throw new Error("PAYER_EMAIL_REQUIRED");
   }
 
-  const externalReference = `ecopet_${order.id}`.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 150);
+  const externalReference = `ecopet_${order.id}`
+    .replace(/[^a-zA-Z0-9_-]/g, "")
+    .slice(0, 150);
   const idempotencyKey = openAttempt?.idempotencyKey || newIdempotencyKey();
   const environment = getMercadoPagoEnvironment();
 
@@ -117,8 +135,9 @@ export async function createMercadoPagoCheckoutOrder(input: CreateCheckoutOrderI
         idempotencyKey,
         externalReference,
         paymentMethod: methodId,
-        paymentType: input.paymentMethodType ?? (isCard ? "credit_card" : methodId),
-        installments: isCard ? input.installments ?? 1 : 1,
+        paymentType:
+          input.paymentMethodType ?? (isCard ? "credit_card" : methodId),
+        installments: 1,
         metadata: {
           platformFeeEstimated: snapshotMetrics.platformRevenue,
           partnerNetEstimated: snapshotMetrics.estimatedPayout,
@@ -129,7 +148,9 @@ export async function createMercadoPagoCheckoutOrder(input: CreateCheckoutOrderI
           splitDecision: split.decision,
           mpProduct: split.mpProduct,
           collectorId: split.collectorId,
-          applicationFee: split.splitReady ? snapshotMetrics.platformRevenue : 0,
+          applicationFee: split.splitReady
+            ? snapshotMetrics.platformRevenue
+            : 0,
           topology: split.topology,
           items: order.items.map((i) => ({
             partnerId: i.partnerId,
@@ -145,13 +166,17 @@ export async function createMercadoPagoCheckoutOrder(input: CreateCheckoutOrderI
   if (openAttempt?.providerOrderId) {
     const existing = await getMercadoPagoOrder(openAttempt.providerOrderId);
     if (existing.ok) {
-      const internal = mapMpOrderStatusToInternal(existing.data.status, existing.data.status_detail);
+      const internal = mapMpOrderStatusToInternal(
+        existing.data.status,
+        existing.data.status_detail,
+      );
       await applyInternalPaymentStatus({
         paymentId: payment.id,
         internalStatus: internal,
         statusDetail: existing.data.status_detail,
         providerOrderId: existing.data.id,
-        providerPaymentId: existing.data.transactions?.payments?.[0]?.id ?? null,
+        providerPaymentId:
+          existing.data.transactions?.payments?.[0]?.id ?? null,
         source: "poll",
       });
       return {
@@ -165,24 +190,38 @@ export async function createMercadoPagoCheckoutOrder(input: CreateCheckoutOrderI
   }
 
   if (openAttempt?.providerPaymentId && !openAttempt.providerOrderId) {
-    const existingPay = await getMercadoPagoLegacyPayment(openAttempt.providerPaymentId);
+    const existingPay = await getMercadoPagoLegacyPayment(
+      openAttempt.providerPaymentId,
+    );
     if (existingPay.ok) {
       const internal = mapMpLegacyPaymentStatusToInternal(
-        typeof existingPay.data.status === "string" ? existingPay.data.status : undefined,
-        typeof existingPay.data.status_detail === "string" ? existingPay.data.status_detail : undefined
+        typeof existingPay.data.status === "string"
+          ? existingPay.data.status
+          : undefined,
+        typeof existingPay.data.status_detail === "string"
+          ? existingPay.data.status_detail
+          : undefined,
       );
       await applyInternalPaymentStatus({
         paymentId: payment.id,
         internalStatus: internal,
-        statusDetail: typeof existingPay.data.status_detail === "string" ? existingPay.data.status_detail : null,
-        providerPaymentId: String(existingPay.data.id ?? openAttempt.providerPaymentId),
+        statusDetail:
+          typeof existingPay.data.status_detail === "string"
+            ? existingPay.data.status_detail
+            : null,
+        providerPaymentId: String(
+          existingPay.data.id ?? openAttempt.providerPaymentId,
+        ),
         source: "poll",
       });
       return {
         paymentId: payment.id,
         providerOrderId: null,
         status: internal,
-        statusDetail: typeof existingPay.data.status_detail === "string" ? existingPay.data.status_detail : null,
+        statusDetail:
+          typeof existingPay.data.status_detail === "string"
+            ? existingPay.data.status_detail
+            : null,
         mpOrder: sanitizeMarketplacePaymentForClient(existingPay.data),
       };
     }
@@ -196,7 +235,8 @@ export async function createMercadoPagoCheckoutOrder(input: CreateCheckoutOrderI
         provider: "mercado_pago",
         eventType: "create_marketplace_payment_request",
         status: "CREATED",
-        message: "Enviando pagamento marketplace (application_fee + collector do seller)",
+        message:
+          "Enviando pagamento marketplace (application_fee + collector do seller)",
       },
     });
     const splitResult = await createSplitMarketplacePayment({
@@ -208,7 +248,7 @@ export async function createMercadoPagoCheckoutOrder(input: CreateCheckoutOrderI
       description: `EcoPet pedido #${order.orderNumber}`,
       paymentMethodId: methodId,
       cardToken: input.cardToken,
-      installments: input.installments,
+      installments: 1,
       payerEmail: input.payerEmail,
       payerFirstName: input.payerFirstName,
       payerLastName: input.payerLastName,
@@ -235,12 +275,16 @@ export async function createMercadoPagoCheckoutOrder(input: CreateCheckoutOrderI
     }
     const mapped = splitResult.mappedStatus;
     const persistedStatus = mapped === "APPROVED" ? "PROCESSING" : mapped;
-    const providerPaymentId = splitResult.data.id != null ? String(splitResult.data.id) : null;
+    const providerPaymentId =
+      splitResult.data.id != null ? String(splitResult.data.id) : null;
     payment = await prisma.payment.update({
       where: { id: payment.id },
       data: {
         status: persistedStatus,
-        statusDetail: typeof splitResult.data.status_detail === "string" ? splitResult.data.status_detail : null,
+        statusDetail:
+          typeof splitResult.data.status_detail === "string"
+            ? splitResult.data.status_detail
+            : null,
         providerPaymentId,
         externalId: providerPaymentId,
         paymentMethod: methodId,
@@ -268,7 +312,10 @@ export async function createMercadoPagoCheckoutOrder(input: CreateCheckoutOrderI
       await applyInternalPaymentStatus({
         paymentId: payment.id,
         internalStatus: mapped,
-        statusDetail: typeof splitResult.data.status_detail === "string" ? splitResult.data.status_detail : null,
+        statusDetail:
+          typeof splitResult.data.status_detail === "string"
+            ? splitResult.data.status_detail
+            : null,
         providerPaymentId,
         source: "api",
       });
@@ -277,22 +324,24 @@ export async function createMercadoPagoCheckoutOrder(input: CreateCheckoutOrderI
       paymentId: payment.id,
       providerOrderId: null,
       status: persistedStatus,
-      statusDetail: typeof splitResult.data.status_detail === "string" ? splitResult.data.status_detail : null,
+      statusDetail:
+        typeof splitResult.data.status_detail === "string"
+          ? splitResult.data.status_detail
+          : null,
       mpOrder: sanitizeMarketplacePaymentForClient(splitResult.data),
     };
   }
 
-  const paymentMethod: CreateMpOrderRequest["transactions"]["payments"][0]["payment_method"] = {
-    id: methodId,
-  };
+  const paymentMethod: CreateMpOrderRequest["transactions"]["payments"][0]["payment_method"] =
+    {
+      id: methodId,
+    };
   if (isCard && input.cardToken) {
     paymentMethod.token = input.cardToken;
-    paymentMethod.installments = input.installments && input.installments > 0 ? input.installments : 1;
-    paymentMethod.type = input.paymentMethodType === "debit_card" ? "debit_card" : "credit_card";
+    paymentMethod.installments = 1;
+    paymentMethod.type = "credit_card";
   } else if (methodId === "pix") {
     paymentMethod.type = "bank_transfer";
-  } else if (methodId === "boleto") {
-    paymentMethod.type = "ticket";
   }
 
   const body: CreateMpOrderRequest = {
@@ -454,31 +503,58 @@ export async function getMercadoPagoCheckoutOrderForUser(params: {
       provider: "mercado_pago",
       userId: params.userId,
       ...(params.paymentId ? { id: params.paymentId } : {}),
-      ...(params.providerOrderId ? { providerOrderId: params.providerOrderId } : {}),
+      ...(params.providerOrderId
+        ? { providerOrderId: params.providerOrderId }
+        : {}),
       ...(params.orderId ? { orderId: params.orderId } : {}),
     },
     orderBy: { createdAt: "desc" },
-    include: { order: { select: { id: true, orderNumber: true, userId: true, total: true, status: true } } },
+    include: {
+      order: {
+        select: {
+          id: true,
+          orderNumber: true,
+          userId: true,
+          total: true,
+          status: true,
+        },
+      },
+    },
   });
-  if (!payment || payment.order.userId !== params.userId) throw new Error("ORDER_FORBIDDEN");
+  if (!payment || payment.order.userId !== params.userId)
+    throw new Error("ORDER_FORBIDDEN");
   if (!payment.providerOrderId && payment.providerPaymentId) {
-    const remotePay = await getMercadoPagoLegacyPayment(payment.providerPaymentId);
+    const remotePay = await getMercadoPagoLegacyPayment(
+      payment.providerPaymentId,
+    );
     if (remotePay.ok) {
       const internal = mapMpLegacyPaymentStatusToInternal(
-        typeof remotePay.data.status === "string" ? remotePay.data.status : undefined,
-        typeof remotePay.data.status_detail === "string" ? remotePay.data.status_detail : undefined
+        typeof remotePay.data.status === "string"
+          ? remotePay.data.status
+          : undefined,
+        typeof remotePay.data.status_detail === "string"
+          ? remotePay.data.status_detail
+          : undefined,
       );
       await applyInternalPaymentStatus({
         paymentId: payment.id,
         internalStatus: internal,
-        statusDetail: typeof remotePay.data.status_detail === "string" ? remotePay.data.status_detail : null,
-        providerPaymentId: String(remotePay.data.id ?? payment.providerPaymentId),
+        statusDetail:
+          typeof remotePay.data.status_detail === "string"
+            ? remotePay.data.status_detail
+            : null,
+        providerPaymentId: String(
+          remotePay.data.id ?? payment.providerPaymentId,
+        ),
         source: "poll",
       });
       return {
         paymentId: payment.id,
         status: internal,
-        statusDetail: typeof remotePay.data.status_detail === "string" ? remotePay.data.status_detail : null,
+        statusDetail:
+          typeof remotePay.data.status_detail === "string"
+            ? remotePay.data.status_detail
+            : null,
         mpOrder: sanitizeMarketplacePaymentForClient(remotePay.data),
         order: payment.order,
       };
@@ -495,7 +571,10 @@ export async function getMercadoPagoCheckoutOrderForUser(params: {
 
   const remote = await getMercadoPagoOrder(payment.providerOrderId);
   if (remote.ok) {
-    const internal = mapMpOrderStatusToInternal(remote.data.status, remote.data.status_detail);
+    const internal = mapMpOrderStatusToInternal(
+      remote.data.status,
+      remote.data.status_detail,
+    );
     await applyInternalPaymentStatus({
       paymentId: payment.id,
       internalStatus: internal,

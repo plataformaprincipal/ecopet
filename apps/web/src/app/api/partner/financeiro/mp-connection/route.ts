@@ -1,6 +1,6 @@
 import { apiFailure, apiSuccess } from "@/lib/api-response";
 import { requireActivePartner } from "@/lib/auth/require-auth";
-import { getPartnerMpConnectionView, startPartnerMpOAuth } from "@/lib/mercado-pago/partner-oauth";
+import { disconnectPartnerMpOAuth, getPartnerMpConnectionView, startPartnerMpOAuth } from "@/lib/mercado-pago/partner-oauth";
 
 export const dynamic = "force-dynamic";
 
@@ -17,4 +17,11 @@ export async function POST() {
   const started = await startPartnerMpOAuth(user!.id);
   if (!started.ok) return apiFailure(started.code, started.message, 409);
   return apiSuccess({ authorizationUrl: started.url, status: "PENDING" });
+}
+
+export async function DELETE() {
+  const { user, error } = await requireActivePartner();
+  if (error) return error;
+  await disconnectPartnerMpOAuth(user!.id);
+  return apiSuccess({ status: "NOT_CONNECTED" });
 }

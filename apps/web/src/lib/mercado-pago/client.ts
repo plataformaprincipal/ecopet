@@ -179,10 +179,11 @@ export async function getMercadoPagoOrder(
 
 /** GET /v1/payments/{id} — Payments API legada (compatibilidade webhook). */
 export async function getMercadoPagoLegacyPayment(
-  paymentId: string
+  paymentId: string,
+  accessToken?: string
 ): Promise<MpClientResult<Record<string, unknown>>> {
   const id = encodeURIComponent(paymentId);
-  return mpFetch<Record<string, unknown>>(`/v1/payments/${id}`, { method: "GET" });
+  return mpFetch<Record<string, unknown>>(`/v1/payments/${id}`, { method: "GET", accessToken });
 }
 
 /** GET /v1/claims/{id} */

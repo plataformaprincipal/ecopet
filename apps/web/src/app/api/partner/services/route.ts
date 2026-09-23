@@ -1,8 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiFailure } from "@/lib/api-response";
-import { requireActivePartner, requireApprovedPartner } from "@/lib/auth/require-auth";
+import {
+  requireActivePartner,
+  requireApprovedPartner,
+} from "@/lib/auth/require-auth";
 import { partnerServiceSchema } from "@/schemas/partner-service";
 import { ContentApprovalStatus, PartnerServiceStatus } from "@prisma/client";
+import { getPartnerFinancialEligibility } from "@/lib/partner/financial-eligibility";
 
 export async function GET() {
   const { user, error } = await requireActivePartner();
@@ -23,11 +27,23 @@ export async function POST(request: Request) {
 
   const parsed = partnerServiceSchema.safeParse(await request.json());
   if (!parsed.success) {
-    return apiFailure("VALIDATION", parsed.error.errors[0]?.message ?? "Inválido", 400);
+    return apiFailure(
+      "VALIDATION",
+      parsed.error.errors[0]?.message ?? "Inválido",
+      400,
+    );
   }
 
   const data = parsed.data;
   const status = data.status ?? PartnerServiceStatus.ACTIVE;
+  const financial = await getPartnerFinancialEligibility(user!.id);
+  if (status === PartnerServiceStatus.ACTIVE && !financial.canPublish) {
+    return apiFailure(
+      "FINANCIAL_SETUP_REQUIRED",
+      "Configure seus dados de recebimento antes de publicar. O serviço pode ser salvo como rascunho.",
+      409,
+    );
+  }
   const service = await prisma.service.create({
     data: {
       providerId: user!.id,

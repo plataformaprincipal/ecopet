@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "@/styles/globals.css";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { ECOPET_THEME_INIT_SCRIPT } from "@/lib/theme/theme-init-script";
@@ -21,9 +20,6 @@ import { ForegroundNotificationListener } from "@/components/notifications/foreg
 import { GoogleAnalyticsProvider } from "@/providers/google-analytics-provider";
 import { GoogleTagManagerProvider } from "@/providers/google-tag-manager-provider";
 import { ConsentBanner } from "@/components/shared/consent/consent-banner";
-
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-jakarta", weight: ["500", "600", "700", "800"] });
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "https://ecopet-web.vercel.app";
 
@@ -84,7 +80,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: ECOPET_THEME_INIT_SCRIPT }} />
       </head>
-      <body className={`${inter.variable} ${jakarta.variable} font-sans antialiased`}>
+      <body className="font-sans antialiased">
         <ThemeProvider>
           <ThemeAccessibilitySync />
           <AccessibilityProvider>

@@ -1,9 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiFailure } from "@/lib/api-response";
-import { requireActivePartner, requireApprovedPartner } from "@/lib/auth/require-auth";
+import {
+  requireActivePartner,
+  requireApprovedPartner,
+} from "@/lib/auth/require-auth";
 import { partnerServiceUpdateSchema } from "@/schemas/partner-service";
 import { getServiceDeleteBlockReason } from "@/lib/catalog/delete-guards";
 import { ContentApprovalStatus } from "@prisma/client";
+import { getPartnerFinancialEligibility } from "@/lib/partner/financial-eligibility";
 
 type RouteContext = { params: Promise<{ serviceId: string }> };
 
@@ -31,31 +35,61 @@ export async function PUT(request: Request, context: RouteContext) {
 
   const parsed = partnerServiceUpdateSchema.safeParse(await request.json());
   if (!parsed.success) {
-    return apiFailure("VALIDATION", parsed.error.errors[0]?.message ?? "Inválido", 400);
+    return apiFailure(
+      "VALIDATION",
+      parsed.error.errors[0]?.message ?? "Inválido",
+      400,
+    );
   }
   const data = parsed.data;
+  if (data.status === "ACTIVE") {
+    const financial = await getPartnerFinancialEligibility(user!.id);
+    if (!financial.canPublish) {
+      return apiFailure(
+        "FINANCIAL_SETUP_REQUIRED",
+        "Configure seus dados de recebimento antes de publicar.",
+        409,
+      );
+    }
+  }
 
   const service = await prisma.service.update({
     where: { id: serviceId },
     data: {
       ...(data.name !== undefined ? { name: data.name.trim() } : {}),
-      ...(data.description !== undefined ? { description: data.description.trim() } : {}),
-      ...(data.shortDescription !== undefined ? { shortDescription: data.shortDescription?.trim() ?? null } : {}),
-      ...(data.subcategory !== undefined ? { subcategory: data.subcategory?.trim() ?? null } : {}),
+      ...(data.description !== undefined
+        ? { description: data.description.trim() }
+        : {}),
+      ...(data.shortDescription !== undefined
+        ? { shortDescription: data.shortDescription?.trim() ?? null }
+        : {}),
+      ...(data.subcategory !== undefined
+        ? { subcategory: data.subcategory?.trim() ?? null }
+        : {}),
       ...(data.category !== undefined ? { category: data.category } : {}),
       ...(data.price !== undefined ? { price: data.price } : {}),
-      ...(data.priceOnRequest !== undefined ? { priceOnRequest: data.priceOnRequest } : {}),
-      ...(data.durationMin !== undefined ? { durationMin: data.durationMin } : {}),
+      ...(data.priceOnRequest !== undefined
+        ? { priceOnRequest: data.priceOnRequest }
+        : {}),
+      ...(data.durationMin !== undefined
+        ? { durationMin: data.durationMin }
+        : {}),
       ...(data.status !== undefined
         ? { status: data.status, isActive: data.status === "ACTIVE" }
         : {}),
       ...(data.modality !== undefined ? { modality: data.modality } : {}),
-      ...(data.speciesTarget !== undefined ? { speciesTarget: data.speciesTarget } : {}),
+      ...(data.speciesTarget !== undefined
+        ? { speciesTarget: data.speciesTarget }
+        : {}),
       ...(data.city !== undefined ? { city: data.city?.trim() ?? null } : {}),
       ...(data.state !== undefined ? { state: data.state ?? null } : {}),
-      ...(data.serviceLocation !== undefined ? { serviceLocation: data.serviceLocation?.trim() ?? null } : {}),
+      ...(data.serviceLocation !== undefined
+        ? { serviceLocation: data.serviceLocation?.trim() ?? null }
+        : {}),
       ...(data.tags !== undefined ? { tags: data.tags ?? undefined } : {}),
-      ...(data.extraDetails !== undefined ? { extraDetails: data.extraDetails ?? undefined } : {}),
+      ...(data.extraDetails !== undefined
+        ? { extraDetails: data.extraDetails ?? undefined }
+        : {}),
       ...(data.notes !== undefined ? { notes: data.notes } : {}),
       ...(data.image !== undefined ? { image: data.image } : {}),
       approvalStatus: ContentApprovalStatus.APPROVED,
@@ -80,7 +114,7 @@ export async function DELETE(_req: Request, context: RouteContext) {
     return apiFailure(
       "CONFLICT",
       "Não é possível excluir serviço com agendamentos ativos. Desative-o em vez disso.",
-      409
+      409,
     );
   }
 

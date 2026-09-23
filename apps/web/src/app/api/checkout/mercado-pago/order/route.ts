@@ -11,9 +11,9 @@ export const dynamic = "force-dynamic";
 const bodySchema = z.object({
   orderId: z.string().min(1).max(64),
   paymentMethodId: z.string().min(1).max(64),
-  paymentMethodType: z.string().max(32).optional(),
+  paymentMethodType: z.enum(["credit_card"]).optional(),
   cardToken: z.string().min(32).max(64).optional(),
-  installments: z.number().int().min(1).max(24).optional(),
+  installments: z.literal(1).optional(),
   payerEmail: z.string().email().max(120),
   payerFirstName: z.string().max(80).optional(),
   payerLastName: z.string().max(80).optional(),
@@ -27,17 +27,29 @@ export async function POST(request: Request) {
   if (error) return error;
 
   if (!checkRateLimit(`mp-checkout:${user!.id}`, 10, 60_000)) {
-    return apiFailure("RATE_LIMIT", "Muitas tentativas. Aguarde um momento.", 429);
+    return apiFailure(
+      "RATE_LIMIT",
+      "Muitas tentativas. Aguarde um momento.",
+      429,
+    );
   }
 
   try {
     assertCheckoutEnabled();
   } catch {
-    return apiFailure("CHECKOUT_DISABLED", "Checkout temporariamente indisponível.", 503);
+    return apiFailure(
+      "CHECKOUT_DISABLED",
+      "Checkout temporariamente indisponível.",
+      503,
+    );
   }
 
   if (!isMercadoPagoCheckoutAvailable()) {
-    return apiFailure("NOT_CONFIGURED", "Mercado Pago indisponível neste ambiente.", 503);
+    return apiFailure(
+      "NOT_CONFIGURED",
+      "Mercado Pago indisponível neste ambiente.",
+      503,
+    );
   }
 
   const contentLength = Number(request.headers.get("content-length") || "0");
@@ -54,7 +66,11 @@ export async function POST(request: Request) {
 
   const parsed = bodySchema.safeParse(json);
   if (!parsed.success) {
-    return apiFailure("VALIDATION", parsed.error.errors[0]?.message ?? "Dados inválidos.", 400);
+    return apiFailure(
+      "VALIDATION",
+      parsed.error.errors[0]?.message ?? "Dados inválidos.",
+      400,
+    );
   }
 
   try {
@@ -67,16 +83,49 @@ export async function POST(request: Request) {
     const code = e instanceof Error ? e.message : "INTERNAL";
     const map: Record<string, { status: number; message: string }> = {
       ORDER_NOT_FOUND: { status: 404, message: "Pedido não encontrado." },
-      ORDER_FORBIDDEN: { status: 403, message: "Pedido não pertence a este usuário." },
-      ORDER_NOT_PAYABLE: { status: 409, message: "Pedido não está disponível para pagamento." },
+      ORDER_FORBIDDEN: {
+        status: 403,
+        message: "Pedido não pertence a este usuário.",
+      },
+      ORDER_NOT_PAYABLE: {
+        status: 409,
+        message: "Pedido não está disponível para pagamento.",
+      },
       ALREADY_PAID: { status: 409, message: "Pedido já pago." },
       INVALID_AMOUNT: { status: 400, message: "Valor do pedido inválido." },
       INVALID_CARD_TOKEN: { status: 400, message: "Token de cartão inválido." },
-      PAYER_EMAIL_REQUIRED: { status: 400, message: "E-mail do pagador obrigatório." },
-      MP_NOT_CONFIGURED: { status: 503, message: "Mercado Pago não configurado." },
-      MP_UNAUTHORIZED: { status: 502, message: "Falha de autenticação com Mercado Pago." },
-      MP_VALIDATION: { status: 422, message: "Dados rejeitados pelo Mercado Pago." },
-      MP_RATE_LIMIT: { status: 429, message: "Limite do Mercado Pago. Tente novamente." },
+      INSTALLMENTS_NOT_ALLOWED: {
+        status: 400,
+        message: "Pagamento com cartão deve ser à vista.",
+      },
+      PAYMENT_METHOD_NOT_ALLOWED: {
+        status: 400,
+        message: "Use PIX ou cartão de crédito à vista.",
+      },
+      MARKETPLACE_SELLER_NOT_CONNECTED: {
+        status: 409,
+        message: "Este vendedor precisa conectar uma conta Mercado Pago antes de aceitar pagamentos.",
+      },
+      PAYER_EMAIL_REQUIRED: {
+        status: 400,
+        message: "E-mail do pagador obrigatório.",
+      },
+      MP_NOT_CONFIGURED: {
+        status: 503,
+        message: "Mercado Pago não configurado.",
+      },
+      MP_UNAUTHORIZED: {
+        status: 502,
+        message: "Falha de autenticação com Mercado Pago.",
+      },
+      MP_VALIDATION: {
+        status: 422,
+        message: "Dados rejeitados pelo Mercado Pago.",
+      },
+      MP_RATE_LIMIT: {
+        status: 429,
+        message: "Limite do Mercado Pago. Tente novamente.",
+      },
       MP_TIMEOUT: { status: 504, message: "Timeout no Mercado Pago." },
       MP_UNAVAILABLE: { status: 502, message: "Mercado Pago indisponível." },
     };
@@ -86,7 +135,11 @@ export async function POST(request: Request) {
       return apiFailure(code, "Dados rejeitados pelo Mercado Pago.", 422);
     }
     if (code === "MP_PAYMENT_REQUIRED") {
-      return apiFailure(code, "Conta Mercado Pago sem permissão de cobrança.", 402);
+      return apiFailure(
+        code,
+        "Conta Mercado Pago sem permissão de cobrança.",
+        402,
+      );
     }
     return apiFailure("INTERNAL", "Erro ao processar pagamento.", 500);
   }

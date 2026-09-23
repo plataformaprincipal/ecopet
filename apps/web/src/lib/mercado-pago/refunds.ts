@@ -119,6 +119,17 @@ export async function executePaymentRefund(input: ExecuteRefundInput): Promise<{
       };
     }
 
+    const meta = (payment.metadata ?? {}) as Record<string, unknown>;
+    const isMarketplaceSplit = meta.mpProduct === "payments_api_marketplace";
+    const sellerToken = isMarketplaceSplit ? await sellerTokenForMarketplaceRefund(payment) : undefined;
+    if (isMarketplaceSplit && !sellerToken) {
+      return {
+        ok: false,
+        code: "REQUIRES_REVIEW",
+        message: "Estorno Marketplace requer reconexão válida do vendedor no Mercado Pago.",
+      };
+    }
+
     const balance = refundableBalance(payment);
     if (balance <= MONEY_EPS) {
       return { ok: false, code: "NOTHING_TO_REFUND", message: "Não há saldo reembolsável." };
@@ -168,7 +179,7 @@ export async function executePaymentRefund(input: ExecuteRefundInput): Promise<{
         };
       }
     } else {
-      const remote = await getMercadoPagoLegacyPayment(payment.providerPaymentId);
+      const remote = await getMercadoPagoLegacyPayment(payment.providerPaymentId, sellerToken);
       if (!remote.ok) {
         return {
           ok: false,
@@ -240,7 +251,7 @@ export async function executePaymentRefund(input: ExecuteRefundInput): Promise<{
             payment.providerPaymentId,
             refundRow.idempotencyKey || idempotencyKey,
             isFull ? undefined : amount,
-            await sellerTokenForMarketplaceRefund(payment)
+            sellerToken
           );
 
     if (!mpResult.ok) {
