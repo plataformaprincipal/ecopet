@@ -63,13 +63,12 @@ function isPlaceholder(value: string | undefined): boolean {
 export function getMercadoPagoEnvironment(
   source: NodeJS.ProcessEnv = process.env
 ): MercadoPagoEnvironment {
-  const raw = (env("MERCADO_PAGO_ENVIRONMENT", source) || "test").toLowerCase();
+  const vercelEnv = (env("VERCEL_ENV", source) || "").toLowerCase();
+  if (vercelEnv === "production") {
+    return "production";
+  }
+  const raw = (env("MERCADO_PAGO_ENVIRONMENT", source) || "").toLowerCase();
   if (raw === "production" || raw === "prod" || raw === "live") {
-    // Segurança: só production se explicitamente pedido E token parece APP_USR (não TEST)
-    const token = env("MERCADO_PAGO_ACCESS_TOKEN", source) || "";
-    if (token.startsWith("TEST-") || token.includes("TEST")) {
-      return "test";
-    }
     return "production";
   }
   return "test";
@@ -110,22 +109,24 @@ export function getMercadoPagoServerConfig(
   };
 }
 
-/** PAYMENT_PROVIDER deve ser mercado_pago; none|manual desliga o canal online. */
+/** PAYMENT_PROVIDER none|manual desliga o canal online. Ausente + credenciais LIVE = habilitado. */
 export function isMercadoPagoPaymentEnabled(source: NodeJS.ProcessEnv = process.env): boolean {
-  const preferred = (env("PAYMENT_PROVIDER", source) || "").toLowerCase();
-  // COD / manual: nunca expor checkout MP (mesmo com keys residuais no env).
-  if (!preferred || preferred === "none" || preferred === "manual") return false;
-  if (preferred !== "mercado_pago" && preferred !== "mercadopago") return false;
-  return true;
+  const preferred = (env("PAYMENT_PROVIDER", source) || "").toLowerCase().replace(/-/g, "_");
+  if (preferred === "none" || preferred === "manual") return false;
+  if (!preferred) {
+    return Boolean(isMercadoPagoConfigured(source) && getMercadoPagoPublicKey(source));
+  }
+  return preferred === "mercado_pago" || preferred === "mercadopago";
 }
 
-/** Pronto para criar cobrança / expor Brick: provider + keys + não-TEST em Production. */
+/** Pronto para Checkout Transparente LIVE: Access Token + Public Key LIVE presentes. */
 export function isMercadoPagoCheckoutAvailable(source: NodeJS.ProcessEnv = process.env): boolean {
   return getMercadoPagoPublicConfig(source).configured;
 }
 
 /**
- * Config pública do Brick/SDK. Em Production Vercel, modo TEST nunca é exposto ao cliente.
+ * Config pública do SDK. Usa somente credenciais LIVE.
+ * Não aplica regras de /checkout-test (prefixo TEST-, isolamento sandbox).
  */
 export function getMercadoPagoPublicConfig(
   source: NodeJS.ProcessEnv = process.env
@@ -136,10 +137,7 @@ export function getMercadoPagoPublicConfig(
     publicKey && !isPlaceholder(publicKey) && isMercadoPagoConfigured(source)
   );
   const enabled = isMercadoPagoPaymentEnabled(source);
-  const isVercelProduction = source.VERCEL_ENV === "production";
-  // Bloqueia checkout de teste para usuários de Production (homologação só no Preview).
-  const allowEnvironment = !(isVercelProduction && environment === "test");
-  const configured = enabled && keysOk && allowEnvironment;
+  const configured = enabled && keysOk;
 
   return {
     publicKey: configured ? publicKey! : "",

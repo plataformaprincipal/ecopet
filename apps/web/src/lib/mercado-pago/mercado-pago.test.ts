@@ -32,24 +32,31 @@ describe("mercado-pago config", () => {
     assert.equal(isMercadoPagoConfigured(), false);
   });
 
-  it("configuração válida em modo test", () => {
-    process.env.MERCADO_PAGO_ACCESS_TOKEN = "TEST-abc123validtokenvalue";
-    process.env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY = "TEST-pk-valid-key-value";
+  it("configuração válida em modo test (preview/dev)", () => {
+    process.env.MERCADO_PAGO_ACCESS_TOKEN = "APP_USR-abc123validtokenvalue";
+    process.env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY = "APP_USR-pk-valid-key-value";
     process.env.MERCADO_PAGO_ENVIRONMENT = "test";
+    delete process.env.VERCEL_ENV;
     process.env.PAYMENT_PROVIDER = "mercado_pago";
     assert.equal(isMercadoPagoConfigured(), true);
     assert.equal(isMercadoPagoTestMode(), true);
     assert.equal(getMercadoPagoEnvironment(), "test");
     const pub = getMercadoPagoPublicConfig();
     assert.equal(pub.configured, true);
-    assert.ok(pub.publicKey.startsWith("TEST-"));
     assert.equal(getMercadoPagoSanitizedStatus().status, "TEST_READY");
   });
 
-  it("token TEST força test mesmo com environment=production", () => {
-    process.env.MERCADO_PAGO_ACCESS_TOKEN = "TEST-abc123validtokenvalue";
-    process.env.MERCADO_PAGO_ENVIRONMENT = "production";
-    assert.equal(getMercadoPagoEnvironment(), "test");
+  it("Vercel Production + credenciais LIVE não bloqueia por prefixo TEST-", () => {
+    process.env.MERCADO_PAGO_ACCESS_TOKEN = "APP_USR-live-token-contains-TEST-ok";
+    process.env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY = "APP_USR-live-public-key";
+    process.env.MERCADO_PAGO_ENVIRONMENT = "test";
+    process.env.VERCEL_ENV = "production";
+    delete process.env.PAYMENT_PROVIDER;
+    assert.equal(getMercadoPagoEnvironment(), "production");
+    const pub = getMercadoPagoPublicConfig();
+    assert.equal(pub.configured, true);
+    assert.equal(pub.environment, "production");
+    assert.ok(pub.publicKey.length > 0);
   });
 
   it("status sanitizado nunca inclui access token", () => {
@@ -120,6 +127,14 @@ describe("mercado-pago webhook signature", () => {
       secret,
     });
     assert.equal(ok.valid, true);
+
+    const rotated = verifyMercadoPagoWebhookSignature({
+      xSignature: `ts=${ts},v1=deadbeef,v1=${v1}`,
+      xRequestId: requestId,
+      dataId,
+      secret,
+    });
+    assert.equal(rotated.valid, true);
 
     const bad = verifyMercadoPagoWebhookSignature({
       xSignature: `ts=${ts},v1=deadbeef`,

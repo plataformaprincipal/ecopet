@@ -51,15 +51,26 @@ describe("checkout LIVE UI — sem pagamento na entrega", () => {
     assert.ok(panel.includes("Cartão"));
     assert.ok(panel.includes("Pix"));
     assert.ok(panel.includes("Boleto"));
-    assert.ok(panel.includes("Pagar com Mercado Pago"));
+    assert.ok(panel.includes("Forma de recebimento"));
+    assert.ok(panel.includes("Retirada"));
+    assert.ok(panel.includes("Entrega"));
+    assert.ok(panel.includes("Pagamento online"));
+    assert.ok(panel.includes("Resumo financeiro"));
+    assert.equal(panel.includes("Usado para combinar entrega e pagamento"), false);
+    const paymentIdx = panel.indexOf("Pagamento online");
+    const financeIdx = panel.indexOf("Resumo financeiro");
+    const payButtonIdx = panel.indexOf("<MercadoPagoCheckout");
+    assert.ok(paymentIdx > -1 && financeIdx > paymentIdx);
+    assert.ok(payButtonIdx > financeIdx);
   });
 
   it("Brick/SDK LIVE não volta para pagamento na entrega", () => {
     const mp = readSrc("src/components/features/marketplace/mercado-pago-checkout.tsx");
     assert.equal(mp.includes("Usar pagamento na entrega"), false);
     assert.ok(mp.includes("createCardToken"));
-    assert.ok(mp.includes("Gerar PIX"));
+    assert.ok(mp.includes("Gerar Pix"));
     assert.ok(mp.includes("Gerar boleto"));
+    assert.ok(mp.includes("Pix — aprovação rápida"));
   });
 });
 
@@ -89,19 +100,19 @@ describe("checkout LIVE Mercado Pago — TEST nunca entra", () => {
     assert.equal(src.includes("NEXT_PUBLIC_MERCADO_PAGO_TEST_PUBLIC_KEY"), false);
   });
 
-  it("mock: credenciais LIVE configuradas sem chamar a API de cobrança", () => {
+  it("mock: Vercel Production considera LIVE configurado sem PAYMENT_PROVIDER", () => {
     const prev = { ...process.env };
     process.env.MERCADO_PAGO_ACCESS_TOKEN = "APP_USR-mock-live-token-value-xxxx";
     process.env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY = "APP_USR-mock-live-public-key";
-    process.env.MERCADO_PAGO_ENVIRONMENT = "production";
-    process.env.PAYMENT_PROVIDER = "mercado_pago";
-    delete process.env.VERCEL_ENV;
+    process.env.VERCEL_ENV = "production";
+    delete process.env.PAYMENT_PROVIDER;
+    delete process.env.MERCADO_PAGO_ENVIRONMENT;
     try {
       assert.equal(isMercadoPagoConfigured(), true);
       const pub = getMercadoPagoPublicConfig();
       assert.equal(pub.configured, true);
-      assert.equal(pub.apiOrders, true);
       assert.equal(pub.environment, "production");
+      assert.ok(pub.publicKey.length > 0);
     } finally {
       process.env = { ...prev };
     }

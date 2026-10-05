@@ -167,15 +167,16 @@ export function verifyMercadoPagoWebhookSignature(params: {
   }
 
   let ts: string | undefined;
-  let v1: string | undefined;
+  const v1List: string[] = [];
   for (const part of params.xSignature.split(",")) {
     const eq = part.indexOf("=");
     if (eq === -1) continue;
     const k = part.slice(0, eq).trim().toLowerCase();
     const v = part.slice(eq + 1).trim();
     if (k === "ts") ts = v;
-    if (k === "v1") v1 = v;
+    if (k === "v1" && v) v1List.push(v);
   }
+  const v1 = v1List[0];
   if (!ts || !v1) {
     return {
       valid: false,
@@ -258,26 +259,31 @@ export function verifyMercadoPagoWebhookSignature(params: {
   };
 
   try {
-    const provided = Buffer.from(v1, "utf8");
-    for (const a of uniqueAttempts) {
-      const manifest = buildMercadoPagoWebhookManifest({
-        dataId: a.dataId,
-        requestId,
-        ts,
-      });
-      const expected = createHmac("sha256", secret).update(manifest).digest("hex");
-      const buf = Buffer.from(expected, "utf8");
-      if (buf.length === provided.length && timingSafeEqual(buf, provided)) {
-        return {
-          valid: true,
-          ts: tsNum,
-          diagnostics: {
-            ...diagnostics,
-            candidateUsed: a.label,
-            manifestSha8Primary: sha8(manifest),
-            expectedHmacSha8Primary: sha8(expected),
-          },
-        };
+    for (const providedV1 of v1List) {
+      const provided = Buffer.from(providedV1, "utf8");
+      for (const a of uniqueAttempts) {
+        const manifest = buildMercadoPagoWebhookManifest({
+          dataId: a.dataId,
+          requestId,
+          ts,
+        });
+        const expected = createHmac("sha256", secret).update(manifest).digest("hex");
+        const buf = Buffer.from(expected, "utf8");
+        if (buf.length === provided.length && timingSafeEqual(buf, provided)) {
+          return {
+            valid: true,
+            ts: tsNum,
+            diagnostics: {
+              ...diagnostics,
+              receivedV1Sha8: sha8(providedV1),
+              receivedHmacSha8: sha8(providedV1),
+              candidateUsed: a.label,
+              manifestSha8Primary: sha8(manifest),
+              expectedHmacSha8Primary: sha8(expected),
+              candidatesTried: uniqueAttempts.length * v1List.length,
+            },
+          };
+        }
       }
     }
   } catch {

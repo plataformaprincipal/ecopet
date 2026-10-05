@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,16 @@ import { analyticsService } from "@/lib/analytics/service";
 
 type PaymentMethod = "PIX" | "CARD" | "BOLETO";
 
+const PAYMENT_METHODS: {
+  value: PaymentMethod;
+  label: string;
+  hint: string;
+}[] = [
+  { value: "CARD", label: "Cartão", hint: "Crédito online, tokenizado pelo Mercado Pago." },
+  { value: "PIX", label: "Pix", hint: "Pix — aprovação rápida." },
+  { value: "BOLETO", label: "Boleto", hint: "Boleto bancário, pago na compensação." },
+];
+
 export function CheckoutPanel() {
   const router = useRouter();
   const [cart, setCart] = useState<Record<string, unknown> | null>(null);
@@ -20,13 +30,14 @@ export function CheckoutPanel() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [mpAvailable, setMpAvailable] = useState<boolean | null>(null);
-  const [mpEnvironment, setMpEnvironment] = useState<"test" | "production" | "">("");
+  const [mpConfigMessage, setMpConfigMessage] = useState("");
   const [pendingOrder, setPendingOrder] = useState<{
     id: string;
     total: number;
   } | null>(null);
   const [payerEmail, setPayerEmail] = useState("");
   const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
+  const pendingRef = useRef<{ id: string; total: number } | null>(null);
   const [form, setForm] = useState({
     deliveryMethod: "PICKUP_LOCAL",
     paymentMethod: "CARD" as PaymentMethod,
@@ -54,35 +65,32 @@ export function CheckoutPanel() {
       })
       .catch(() => undefined);
     fetch("/api/checkout/mercado-pago/config", { credentials: "include" })
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.success && d.data?.publicKey) {
+      .then(async (r) => {
+        const d = await r.json().catch(() => ({}));
+        if (r.ok && d.success && d.data?.publicKey) {
           setMpAvailable(true);
-          const env = String(d.data.environment || "").toLowerCase();
-          setMpEnvironment(env === "production" ? "production" : env === "test" ? "test" : "");
+          setMpConfigMessage("");
         } else {
           setMpAvailable(false);
+          setMpConfigMessage(
+            d.error?.message ?? "Não foi possível carregar a configuração do Mercado Pago."
+          );
         }
       })
-      .catch(() => setMpAvailable(false));
+      .catch(() => {
+        setMpAvailable(false);
+        setMpConfigMessage("Não foi possível carregar a configuração do Mercado Pago.");
+      });
   }, []);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (saving) return;
+  const ensureOrder = useCallback(async () => {
+    if (pendingOrder) return pendingOrder;
+    if (!payerEmail.trim()) {
+      throw new Error("Faça login com um e-mail válido para pagar online.");
+    }
     setSaving(true);
     setError("");
     setFieldErrors({});
-    if (mpAvailable !== true) {
-      setSaving(false);
-      setError("Checkout online indisponível. Somente pagamento via Mercado Pago é aceito.");
-      return;
-    }
-    if (!payerEmail.trim()) {
-      setSaving(false);
-      setError("Faça login com um e-mail válido para pagar online.");
-      return;
-    }
     analyticsService.track(OrderEvents.BEGIN_CHECKOUT, {
       params: { payment_method: form.paymentMethod, delivery_method: form.deliveryMethod },
     });
@@ -113,106 +121,23 @@ export function CheckoutPanel() {
     if (!data.success) {
       const fields = (data.error?.fields ?? {}) as Record<string, string>;
       setFieldErrors(fields);
-      setError(data.error?.message ?? "Erro ao finalizar pedido.");
-      const firstKey = Object.keys(fields)[0];
-      if (firstKey) {
-        const el = document.getElementById(
-          firstKey === "street" || firstKey === "city" || firstKey === "state" || firstKey === "zipCode" || firstKey === "number"
-            ? `checkout-${firstKey}`
-            : firstKey === "phone"
-              ? "checkout-phone"
-              : `checkout-${firstKey}`
-        );
-        el?.focus();
-      }
-      return;
+      throw new Error(data.error?.message ?? "Erro ao finalizar pedido.");
     }
-
     setIdempotencyKey(crypto.randomUUID());
     const order = data.data.order as { id: string; total: number };
+    const next = { id: order.id, total: Number(order.total) };
     analyticsService.track(OrderEvents.ORDER_COMPLETE, {
-      value: Number(order.total),
-      params: { order_id: order.id, pay_mode: "online" },
+      value: next.total,
+      params: { order_id: next.id, pay_mode: "online" },
     });
     analyticsService.track(PaymentEvents.PAYMENT_START, {
-      value: Number(order.total),
-      params: { order_id: order.id, provider: "mercado_pago" },
+      value: next.total,
+      params: { order_id: next.id, provider: "mercado_pago" },
     });
-    setPendingOrder({ id: order.id, total: Number(order.total) });
-  }
-
-  if (pendingOrder) {
-    return (
-      <div className="mx-auto max-w-lg space-y-4">
-        <p className="text-sm text-muted-foreground">
-          Pedido criado. Conclua o pagamento online com segurança.
-        </p>
-        <MercadoPagoCheckout
-          orderId={pendingOrder.id}
-          amount={pendingOrder.total}
-          payerEmail={payerEmail}
-          initialMethod={
-            form.paymentMethod === "PIX" ? "pix" : form.paymentMethod === "BOLETO" ? "boleto" : "card"
-          }
-          onPaid={async (result) => {
-            const approved = String(result.status).toUpperCase() === "APPROVED";
-            const processing = ["PROCESSING", "IN_PROCESS", "PENDING"].includes(
-              String(result.status).toUpperCase()
-            );
-            if (approved || !processing) {
-              analyticsService.track(
-                approved ? PaymentEvents.PAYMENT_APPROVED : PaymentEvents.PAYMENT_DENIED,
-              {
-                value: pendingOrder.total,
-                params: {
-                  order_id: pendingOrder.id,
-                  status: result.status,
-                  provider: "mercado_pago",
-                },
-              }
-              );
-            }
-            if (approved) {
-              // Claim server-side (sobrevive reload) + dedupe client.
-              let allowPurchase = true;
-              try {
-                const claimRes = await fetch("/api/telemetry/transactional-claim", {
-                  method: "POST",
-                  credentials: "include",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    eventName: "purchase",
-                    entityType: "order",
-                    entityId: pendingOrder.id,
-                  }),
-                });
-                const claimJson = await claimRes.json();
-                if (claimRes.ok && claimJson.success && claimJson.data?.claimed === false) {
-                  allowPurchase = false;
-                }
-              } catch {
-                /* se claim falhar, gtag ainda aplica sessionStorage dedupe */
-              }
-              if (allowPurchase) {
-                analyticsService.track(OrderEvents.PURCHASE, {
-                  value: pendingOrder.total,
-                  params: {
-                    order_id: pendingOrder.id,
-                    transaction_id: pendingOrder.id,
-                    currency: "BRL",
-                  },
-                });
-              }
-            }
-            router.push(
-              `/checkout/sucesso/${pendingOrder.id}?payment=${result.paymentId}&status=${result.status}`
-            );
-          }}
-          onCancel={() => router.push(`/checkout/sucesso/${pendingOrder.id}`)}
-        />
-      </div>
-    );
-  }
+    setPendingOrder(next);
+    pendingRef.current = next;
+    return next;
+  }, [form, idempotencyKey, payerEmail, pendingOrder]);
 
   if (!cart) return <p className="text-sm">Carregando...</p>;
   const items = (cart.items as Record<string, unknown>[]) ?? [];
@@ -237,173 +162,213 @@ export function CheckoutPanel() {
     );
   }
 
-  const paymentHintId = "checkout-payment-hint";
+  const subtotal = Number(cart.subtotal);
+  const total = pendingOrder?.total ?? subtotal;
 
   return (
-    <div className="grid gap-6 md:grid-cols-2">
+    <div className="mx-auto max-w-2xl space-y-6">
       <Card>
-        <CardContent className="space-y-3 p-4">
-          <h2 className="font-medium">Resumo do pedido</h2>
+        <CardContent className="space-y-3 p-5">
+          <h2 className="text-lg font-semibold">Resumo do pedido</h2>
           {items.map((item) => (
-            <p key={String(item.id)} className="text-sm">
-              {String(item.name)} · {Number(item.quantity)}x · R${" "}
-              {Number(item.unitPrice).toFixed(2)}
+            <p key={String(item.id)} className="flex justify-between gap-3 text-sm">
+              <span>
+                {String(item.name)} · {Number(item.quantity)}x
+              </span>
+              <span>R$ {(Number(item.unitPrice) * Number(item.quantity)).toFixed(2)}</span>
             </p>
           ))}
-          <p className="font-medium">Subtotal: R$ {Number(cart.subtotal).toFixed(2)}</p>
         </CardContent>
       </Card>
+
       <Card>
-        <CardContent className="p-4">
-          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-            <div>
-              <label htmlFor="checkout-delivery" className="mb-1 block text-sm font-medium">
-                Forma de recebimento
-              </label>
-              <select
-                id="checkout-delivery"
-                className="w-full rounded border px-3 py-2 text-sm"
-                value={form.deliveryMethod}
-                onChange={(e) => setForm({ ...form, deliveryMethod: e.target.value })}
-                required
+        <CardContent className="space-y-3 p-5">
+          <h2 className="text-lg font-semibold">Forma de recebimento</h2>
+          <div className="grid grid-cols-2 gap-3">
+            {(
+              [
+                { value: "PICKUP_LOCAL", label: "Retirada", hint: "Retire na loja." },
+                { value: "DELIVERY_LOCAL", label: "Entrega", hint: "Entrega local." },
+              ] as const
+            ).map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                className={`rounded-xl border px-4 py-3 text-left transition ${
+                  form.deliveryMethod === opt.value
+                    ? "border-primary bg-primary/5 shadow-sm"
+                    : "hover:border-primary/40"
+                }`}
+                onClick={() => setForm({ ...form, deliveryMethod: opt.value })}
               >
-                <option value="PICKUP_LOCAL">Retirada na loja</option>
-                <option value="DELIVERY_LOCAL">Entrega local</option>
-              </select>
-            </div>
-
-            {mpAvailable === false ? (
-              <p className="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800" role="alert">
-                Checkout online indisponível. Somente pagamento via Mercado Pago é aceito.
-              </p>
-            ) : (
-              <fieldset>
-                <legend className="mb-2 text-sm font-medium">Pagamento online</legend>
-                <p id={paymentHintId} className="mb-2 text-xs text-muted-foreground">
-                  Somente Mercado Pago Checkout Transparente
-                  {mpEnvironment === "production"
-                    ? " · produção"
-                    : mpEnvironment === "test"
-                      ? " · ambiente de teste"
-                      : ""}
-                  . Valores são recalculados no servidor. O pedido só fica pago após confirmação do Mercado Pago.
-                </p>
-                <div className="flex flex-col gap-2" role="radiogroup" aria-describedby={paymentHintId}>
-                  {(
-                    [
-                      { value: "CARD" as const, label: "Cartão", hint: "Cartão de crédito online." },
-                      { value: "PIX" as const, label: "Pix", hint: "Pix online com QR Code e copia-e-cola." },
-                      { value: "BOLETO" as const, label: "Boleto", hint: "Boleto bancário online." },
-                    ] as const
-                  ).map((opt) => (
-                    <label
-                      key={opt.value}
-                      className="flex cursor-pointer items-start gap-2 rounded border px-3 py-2 text-sm has-[:checked]:border-primary"
-                    >
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value={opt.value}
-                        checked={form.paymentMethod === opt.value}
-                        onChange={() => setForm({ ...form, paymentMethod: opt.value })}
-                        required
-                        className="mt-1"
-                      />
-                      <span>
-                        <span className="font-medium">{opt.label}</span>
-                        <span className="block text-xs text-muted-foreground">{opt.hint}</span>
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </fieldset>
-            )}
-
-            <div>
-              <label htmlFor="checkout-phone" className="mb-1 block text-sm font-medium">
-                Telefone para contato
-              </label>
-              <Input
-                id="checkout-phone"
-                type="tel"
-                placeholder="Ex.: (11) 99999-9999"
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                required
-                aria-invalid={fieldErrors.phone ? true : undefined}
-                aria-describedby={fieldErrors.phone ? "checkout-phone-error checkout-phone-hint" : "checkout-phone-hint"}
-                className={fieldErrors.phone ? "border-red-500" : undefined}
-              />
-              {fieldErrors.phone ? (
-                <p id="checkout-phone-error" className="mt-1 text-xs text-red-500">
-                  {fieldErrors.phone}
-                </p>
-              ) : null}
-              <p id="checkout-phone-hint" className="mt-1 text-xs text-muted-foreground">
-                Usado para combinar entrega e pagamento.
-              </p>
-            </div>
-
-            <AddressByCepField
-              idPrefix="checkout"
-              title="Endereço de entrega"
-              variant="plain"
-              showReference={false}
-              value={{
-                zipCode: form.zipCode,
-                street: form.street,
-                number: form.number,
-                district: form.district ?? "",
-                city: form.city,
-                state: form.state,
-              }}
-              onChange={(address) =>
-                setForm((current) => ({
-                  ...current,
-                  zipCode: address.zipCode,
-                  street: address.street,
-                  number: address.number,
-                  district: address.district,
-                  city: address.city,
-                  state: address.state,
-                }))
-              }
-              errors={fieldErrors}
-            />
-
-            <div>
-              <label htmlFor="checkout-notes" className="mb-1 block text-sm font-medium">
-                Observações
-              </label>
-              <textarea
-                id="checkout-notes"
-                className="w-full rounded border px-3 py-2 text-sm"
-                rows={2}
-                placeholder="Instruções de entrega, ponto de referência..."
-                value={form.notes}
-                onChange={(e) => setForm({ ...form, notes: e.target.value })}
-              />
-            </div>
-
-            {error && (
-              <p id="checkout-error" className="text-sm text-red-600" role="alert" aria-live="polite">
-                {error}
-              </p>
-            )}
-
-            <Button
-              type="submit"
-              disabled={saving || mpAvailable !== true}
-              aria-describedby={error ? "checkout-error" : undefined}
-            >
-              {saving ? "Processando..." : "Pagar com Mercado Pago"}
-            </Button>
-            <Button asChild variant="ghost">
-              <Link href="/carrinho">Voltar</Link>
-            </Button>
-          </form>
+                <span className="block font-medium">{opt.label}</span>
+                <span className="mt-1 block text-xs text-muted-foreground">{opt.hint}</span>
+              </button>
+            ))}
+          </div>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardContent className="space-y-4 p-5">
+          <h2 className="text-lg font-semibold">Dados necessários de entrega</h2>
+          <div>
+            <label htmlFor="checkout-phone" className="mb-1 block text-sm font-medium">
+              Telefone para contato
+            </label>
+            <Input
+              id="checkout-phone"
+              type="tel"
+              placeholder="Ex.: (11) 99999-9999"
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              required
+              aria-invalid={fieldErrors.phone ? true : undefined}
+              aria-describedby={fieldErrors.phone ? "checkout-phone-error checkout-phone-hint" : "checkout-phone-hint"}
+              className={fieldErrors.phone ? "border-red-500" : undefined}
+            />
+            {fieldErrors.phone ? (
+              <p id="checkout-phone-error" className="mt-1 text-xs text-red-500">
+                {fieldErrors.phone}
+              </p>
+            ) : null}
+            <p id="checkout-phone-hint" className="mt-1 text-xs text-muted-foreground">
+              Usado para combinar a retirada ou a entrega.
+            </p>
+          </div>
+          <AddressByCepField
+            idPrefix="checkout"
+            title={form.deliveryMethod === "PICKUP_LOCAL" ? "Endereço de referência" : "Endereço de entrega"}
+            variant="plain"
+            showReference={false}
+            value={{
+              zipCode: form.zipCode,
+              street: form.street,
+              number: form.number,
+              district: form.district ?? "",
+              city: form.city,
+              state: form.state,
+            }}
+            onChange={(address) =>
+              setForm((current) => ({
+                ...current,
+                zipCode: address.zipCode,
+                street: address.street,
+                number: address.number,
+                district: address.district,
+                city: address.city,
+                state: address.state,
+              }))
+            }
+            errors={fieldErrors}
+          />
+          <div>
+            <label htmlFor="checkout-notes" className="mb-1 block text-sm font-medium">
+              Observações
+            </label>
+            <textarea
+              id="checkout-notes"
+              className="w-full rounded border px-3 py-2 text-sm"
+              rows={2}
+              placeholder="Ponto de referência, horário preferido..."
+              value={form.notes}
+              onChange={(e) => setForm({ ...form, notes: e.target.value })}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="space-y-4 p-5">
+          <h2 className="text-lg font-semibold">Pagamento online</h2>
+          {mpAvailable === false ? (
+            <p
+              className="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950/40 dark:text-red-200"
+              role="alert"
+            >
+              {mpConfigMessage || "Configuração do Mercado Pago indisponível neste momento."}
+            </p>
+          ) : (
+            <>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {PAYMENT_METHODS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    className={`rounded-xl border px-4 py-3 text-left transition ${
+                      form.paymentMethod === opt.value
+                        ? "border-primary bg-primary/5 shadow-sm"
+                        : "hover:border-primary/40"
+                    }`}
+                    onClick={() => setForm({ ...form, paymentMethod: opt.value })}
+                  >
+                    <span className="block font-semibold">{opt.label}</span>
+                    <span className="mt-1 block text-xs text-muted-foreground">{opt.hint}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="space-y-2 p-5">
+          <h2 className="text-lg font-semibold">Resumo financeiro</h2>
+          <p className="flex justify-between text-sm">
+            <span>Subtotal</span>
+            <span>R$ {subtotal.toFixed(2)}</span>
+          </p>
+          <p className="flex justify-between font-semibold">
+            <span>Total</span>
+            <span>R$ {total.toFixed(2)}</span>
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Frete, desconto e total são recalculados no servidor. O pedido só fica pago após
+            confirmação do Mercado Pago.
+          </p>
+          {saving ? <p className="text-xs text-muted-foreground">Preparando pedido…</p> : null}
+          {error ? (
+            <p id="checkout-error" className="text-sm text-red-600" role="alert" aria-live="polite">
+              {error}
+            </p>
+          ) : null}
+        </CardContent>
+      </Card>
+
+      {mpAvailable !== false ? (
+        <MercadoPagoCheckout
+          amount={total}
+          payerEmail={payerEmail}
+          initialMethod={
+            form.paymentMethod === "PIX"
+              ? "pix"
+              : form.paymentMethod === "BOLETO"
+                ? "boleto"
+                : "card"
+          }
+          methodLocked
+          ensureOrder={ensureOrder}
+          onPaid={async (result) => {
+            const order = pendingRef.current;
+            if (!order) return;
+            const approved = String(result.status).toUpperCase() === "APPROVED";
+            if (approved) {
+              analyticsService.track(PaymentEvents.PAYMENT_APPROVED, {
+                value: order.total,
+                params: { order_id: order.id, status: result.status, provider: "mercado_pago" },
+              });
+            }
+            router.push(
+              `/checkout/sucesso/${order.id}?payment=${result.paymentId}&status=${result.status}`
+            );
+          }}
+        />
+      ) : null}
+
+      <Button asChild variant="ghost" className="px-0">
+        <Link href="/carrinho">Voltar ao carrinho</Link>
+      </Button>
     </div>
   );
 }

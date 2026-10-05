@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CheckoutPaymentPoller } from "@/components/features/marketplace/checkout-payment-poller";
 
 type MpConfig = {
   publicKey: string;
@@ -26,10 +27,12 @@ type PayResult = {
 };
 
 type Props = {
-  orderId: string;
+  orderId?: string;
   amount: number;
   payerEmail: string;
   initialMethod?: "card" | "pix" | "boleto";
+  methodLocked?: boolean;
+  ensureOrder?: () => Promise<{ id: string; total: number }>;
   onPaid: (result: PayResult) => void;
   onCancel?: () => void;
 };
@@ -72,9 +75,19 @@ function loadMpSdk(): Promise<void> {
  * Checkout Transparente — tokenização no browser (Public Key).
  * Nunca envia PAN/CVV ao backend EcoPet; apenas cardToken.
  */
-export function MercadoPagoCheckout({ orderId, amount, payerEmail, initialMethod = "card", onPaid, onCancel }: Props) {
+export function MercadoPagoCheckout({
+  orderId: orderIdProp,
+  amount,
+  payerEmail,
+  initialMethod = "card",
+  methodLocked = false,
+  ensureOrder,
+  onPaid,
+  onCancel,
+}: Props) {
   const [config, setConfig] = useState<MpConfig | null>(null);
   const [method, setMethod] = useState<"card" | "pix" | "boleto">(initialMethod);
+  const [orderId, setOrderId] = useState(orderIdProp ?? "");
   const [enabledMethods, setEnabledMethods] = useState<Array<"card" | "pix" | "boleto">>([
     "card",
     "pix",
@@ -133,7 +146,7 @@ export function MercadoPagoCheckout({ orderId, amount, payerEmail, initialMethod
           if (ids.includes("boleto")) next.push("boleto");
           if (next.length) {
             setEnabledMethods(next);
-            setMethod(next[0]);
+            if (!methodLocked) setMethod(next[0]);
           }
         }
         if (!cancelled) {
@@ -150,7 +163,23 @@ export function MercadoPagoCheckout({ orderId, amount, payerEmail, initialMethod
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [methodLocked]);
+
+  useEffect(() => {
+    setMethod(initialMethod);
+  }, [initialMethod]);
+
+  useEffect(() => {
+    if (orderIdProp) setOrderId(orderIdProp);
+  }, [orderIdProp]);
+
+  const resolveOrderId = useCallback(async () => {
+    if (orderId) return orderId;
+    if (!ensureOrder) throw new Error("Pedido indisponível para pagamento.");
+    const created = await ensureOrder();
+    setOrderId(created.id);
+    return created.id;
+  }, [ensureOrder, orderId]);
 
   useEffect(() => {
     const digits = card.cardNumber.replace(/\D/g, "");
@@ -162,7 +191,10 @@ export function MercadoPagoCheckout({ orderId, amount, payerEmail, initialMethod
             method: "POST",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ orderId, bin: digits.slice(0, 6) }),
+            body: JSON.stringify({
+              ...(orderId ? { orderId } : {}),
+              bin: digits.slice(0, 6),
+            }),
           });
           const json = await res.json();
           if (res.ok && json.success) {
@@ -181,7 +213,10 @@ export function MercadoPagoCheckout({ orderId, amount, payerEmail, initialMethod
       const res = await fetch("/api/checkout/mercado-pago/order", {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-Idempotency-Key": crypto.randomUUID(),
+        },
         body: JSON.stringify(body),
       });
       const json = await res.json();
@@ -219,8 +254,9 @@ export function MercadoPagoCheckout({ orderId, amount, payerEmail, initialMethod
         identificationNumber: card.identificationNumber.replace(/\D/g, ""),
       });
 
+      const liveOrderId = await resolveOrderId();
       const paid = await payOnline({
-        orderId,
+        orderId: liveOrderId,
         paymentMethodId: pm.id,
         paymentMethodType: pm.payment_type_id?.includes("debit") ? "debit_card" : "credit_card",
         cardToken: token.id,
@@ -258,8 +294,9 @@ export function MercadoPagoCheckout({ orderId, amount, payerEmail, initialMethod
           throw new Error("Informe nome, sobrenome e CPF do pagador para emitir o boleto.");
         }
       }
+      const liveOrderId = await resolveOrderId();
       const paid = await payOnline({
-        orderId,
+        orderId: liveOrderId,
         paymentMethodId: alt,
         payerEmail,
         ...(alt === "boleto"
@@ -312,10 +349,15 @@ export function MercadoPagoCheckout({ orderId, amount, payerEmail, initialMethod
     <div className="space-y-4 rounded-lg border p-4" aria-label="Checkout Mercado Pago">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <p className="text-sm font-medium">Pagar online (Mercado Pago)</p>
+          <p className="text-sm font-medium">
+            {method === "pix"
+              ? "Pix — aprovação rápida"
+              : method === "boleto"
+                ? "Boleto bancário"
+                : "Cartão de crédito"}
+          </p>
           <p className="text-xs text-muted-foreground">
-            Ambiente {config.environment === "test" ? "TESTE" : "produção"} · R${" "}
-            {amount.toFixed(2)} · API Orders
+            Mercado Pago · R$ {amount.toFixed(2)}
           </p>
         </div>
         {onCancel ? (
@@ -325,6 +367,7 @@ export function MercadoPagoCheckout({ orderId, amount, payerEmail, initialMethod
         ) : null}
       </div>
 
+      {!methodLocked ? (
       <div className="flex gap-2" role="tablist" aria-label="Método de pagamento online">
         {(
           [
@@ -350,6 +393,7 @@ export function MercadoPagoCheckout({ orderId, amount, payerEmail, initialMethod
             </button>
           ))}
       </div>
+      ) : null}
 
       {error ? (
         <p className="text-sm text-red-600" role="alert">
@@ -398,6 +442,7 @@ export function MercadoPagoCheckout({ orderId, amount, payerEmail, initialMethod
               <p className="text-xs text-muted-foreground">
                 Pix aguardando pagamento. O pedido só será marcado como pago após confirmação do Mercado Pago.
               </p>
+              {orderId ? <CheckoutPaymentPoller orderId={orderId} paymentId={result.paymentId} /> : null}
             </div>
           ) : null}
           {result.mpOrder?.digitableLine ? (
@@ -418,14 +463,28 @@ export function MercadoPagoCheckout({ orderId, amount, payerEmail, initialMethod
             <p className="break-all font-mono text-xs">Código de barras: {result.mpOrder.barcode}</p>
           ) : null}
           {result.mpOrder?.ticketUrl ? (
-            <a
-              href={result.mpOrder.ticketUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block underline"
-            >
-              Abrir boleto
-            </a>
+            <div className="flex flex-wrap gap-3">
+              <a
+                href={result.mpOrder.ticketUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block underline"
+              >
+                Abrir boleto
+              </a>
+              <a
+                href={result.mpOrder.ticketUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                download
+                className="inline-block underline"
+              >
+                Baixar boleto
+              </a>
+            </div>
+          ) : null}
+          {(result.mpOrder?.ticketUrl || result.mpOrder?.digitableLine) && orderId ? (
+            <CheckoutPaymentPoller orderId={orderId} paymentId={result.paymentId} />
           ) : null}
           <Button type="button" className="w-full" onClick={() => onPaid(result)}>
             Continuar
@@ -558,14 +617,17 @@ export function MercadoPagoCheckout({ orderId, amount, payerEmail, initialMethod
       ) : null}
 
       {method === "pix" && !result ? (
-        <Button
-          type="button"
-          className="w-full"
-          disabled={submitting}
-          onClick={() => void handleAltPay("pix")}
-        >
-          {submitting ? "Gerando PIX…" : "Gerar PIX"}
-        </Button>
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">Pix — aprovação rápida.</p>
+          <Button
+            type="button"
+            className="w-full"
+            disabled={submitting}
+            onClick={() => void handleAltPay("pix")}
+          >
+            {submitting ? "Gerando Pix…" : "Gerar Pix"}
+          </Button>
+        </div>
       ) : null}
 
       {method === "boleto" && !result ? (
