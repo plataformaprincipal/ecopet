@@ -89,7 +89,7 @@ describe("checkout-test source contracts", () => {
     assert.equal(panel.includes("paymentMethod"), false);
   });
 
-  it("credenciais TEST sem fallback LIVE", () => {
+  it("credenciais TEST sem fallback LIVE e sem validação de prefixo", () => {
     process.env.MERCADO_PAGO_ACCESS_TOKEN = "APP_USR-live-secret-token-value";
     process.env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY = "APP_USR-live-public-key-value";
     delete process.env.MERCADO_PAGO_TEST_ACCESS_TOKEN;
@@ -99,6 +99,11 @@ describe("checkout-test source contracts", () => {
     const client = readSrc("src/lib/mercado-pago/test-client.ts");
     assert.equal(client.includes("MERCADO_PAGO_ACCESS_TOKEN"), false);
     assert.ok(client.includes("getMercadoPagoTestServerConfig"));
+    const creds = readSrc("src/lib/mercado-pago/test-credentials.ts");
+    assert.equal(creds.includes('startsWith("TEST-")'), false);
+    assert.equal(creds.includes("isSandboxCredential"), false);
+    assert.ok(creds.includes("MERCADO_PAGO_TEST_ACCESS_TOKEN"));
+    assert.ok(creds.includes("NEXT_PUBLIC_MERCADO_PAGO_TEST_PUBLIC_KEY"));
   });
 
   it("não baixa estoque nem posta ledger LIVE", () => {

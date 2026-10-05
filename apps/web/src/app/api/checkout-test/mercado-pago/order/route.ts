@@ -3,7 +3,7 @@ import { apiFailure, apiSuccess } from "@/lib/api-response";
 import { requireAuth } from "@/lib/auth/require-auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { createMercadoPagoCheckoutTestOrder } from "@/lib/mercado-pago/create-checkout-test-order";
-import { isMercadoPagoTestCheckoutConfigured } from "@/lib/mercado-pago/test-credentials";
+import { getMercadoPagoTestCheckoutBlock } from "@/lib/mercado-pago/test-credentials";
 import { assertCheckoutEnabled } from "@/lib/commerce/checkout-flags";
 
 export const dynamic = "force-dynamic";
@@ -36,13 +36,8 @@ export async function POST(request: Request) {
     return apiFailure("CHECKOUT_DISABLED", "Checkout temporariamente indisponível.", 503);
   }
 
-  if (!isMercadoPagoTestCheckoutConfigured()) {
-    return apiFailure(
-      "MP_TEST_NOT_CONFIGURED",
-      "Checkout de teste bloqueado: credenciais TEST ausentes (sem fallback LIVE).",
-      503
-    );
-  }
+  const block = getMercadoPagoTestCheckoutBlock();
+  if (block) return apiFailure(block.code, block.message, 503);
 
   const contentLength = Number(request.headers.get("content-length") || "0");
   if (contentLength > 32_000) {
@@ -79,6 +74,7 @@ export async function POST(request: Request) {
       INVALID_CARD_TOKEN: { status: 400, message: "Token de cartão inválido." },
       PAYER_EMAIL_REQUIRED: { status: 400, message: "E-mail do pagador obrigatório." },
       MP_TEST_NOT_CONFIGURED: { status: 503, message: "Credenciais de teste Mercado Pago ausentes." },
+      MP_TEST_MATCHES_LIVE: { status: 503, message: "Credenciais TEST coincidem com LIVE." },
       MP_UNAUTHORIZED: { status: 502, message: "Falha de autenticação com Mercado Pago TEST." },
       MP_VALIDATION: { status: 422, message: "Dados rejeitados pelo Mercado Pago TEST." },
       MP_RATE_LIMIT: { status: 429, message: "Limite do Mercado Pago. Tente novamente." },

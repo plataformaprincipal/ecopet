@@ -2,11 +2,13 @@ import "server-only";
 
 /**
  * Credenciais EXCLUSIVAS do checkout de teste isolado (`/checkout-test`).
- * Nunca lê MERCADO_PAGO_ACCESS_TOKEN / NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY.
- * Nunca faz fallback para LIVE.
+ * Lê somente MERCADO_PAGO_TEST_* / NEXT_PUBLIC_MERCADO_PAGO_TEST_*.
+ * Nunca faz fallback para LIVE. Não valida prefixo (TEST-/APP_USR).
  */
 
 export const CHECKOUT_TEST_NOTE_PREFIX = "[CHECKOUT-TEST]";
+
+export const MP_TEST_MATCHES_LIVE_MESSAGE = "Credenciais TEST coincidem com LIVE.";
 
 type EnvLike = Record<string, string | undefined>;
 
@@ -15,37 +17,48 @@ function env(key: string, source: EnvLike = process.env): string | undefined {
   return v || undefined;
 }
 
-function isPlaceholder(value: string | undefined): boolean {
-  if (!value) return true;
-  const v = value.toLowerCase();
-  return (
-    v.includes("xxxxxxxxx") ||
-    v.includes("your_") ||
-    v.includes("changeme") ||
-    v.includes("replace") ||
-    v === "test" ||
-    v === "xxx"
-  );
-}
-
-/** Aceita apenas credenciais de sandbox (TEST-). APP_USR é rejeitado. */
-function isSandboxCredential(value: string | undefined): boolean {
-  if (!value || isPlaceholder(value)) return false;
-  return value.startsWith("TEST-") && value.length > 12;
-}
-
 export function getMercadoPagoTestAccessToken(source: EnvLike = process.env): string | undefined {
-  const token = env("MERCADO_PAGO_TEST_ACCESS_TOKEN", source);
-  return isSandboxCredential(token) ? token : undefined;
+  return env("MERCADO_PAGO_TEST_ACCESS_TOKEN", source);
 }
 
 export function getMercadoPagoTestPublicKey(source: EnvLike = process.env): string | undefined {
-  const key = env("NEXT_PUBLIC_MERCADO_PAGO_TEST_PUBLIC_KEY", source);
-  return isSandboxCredential(key) ? key : undefined;
+  return env("NEXT_PUBLIC_MERCADO_PAGO_TEST_PUBLIC_KEY", source);
+}
+
+function testCredentialsMatchLive(source: EnvLike = process.env): boolean {
+  const testToken = getMercadoPagoTestAccessToken(source);
+  const testPublicKey = getMercadoPagoTestPublicKey(source);
+  const liveToken = env("MERCADO_PAGO_ACCESS_TOKEN", source);
+  const livePublicKey = env("NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY", source);
+  if (testToken && liveToken && testToken === liveToken) return true;
+  if (testPublicKey && livePublicKey && testPublicKey === livePublicKey) return true;
+  return false;
+}
+
+export function getMercadoPagoTestCheckoutBlock(source: EnvLike = process.env): {
+  code: "MP_TEST_NOT_CONFIGURED" | "MP_TEST_MATCHES_LIVE";
+  message: string;
+} | null {
+  const accessToken = getMercadoPagoTestAccessToken(source);
+  const publicKey = getMercadoPagoTestPublicKey(source);
+  if (!accessToken || !publicKey) {
+    return {
+      code: "MP_TEST_NOT_CONFIGURED",
+      message:
+        "Checkout de teste bloqueado: MERCADO_PAGO_TEST_ACCESS_TOKEN e NEXT_PUBLIC_MERCADO_PAGO_TEST_PUBLIC_KEY são obrigatórias.",
+    };
+  }
+  if (testCredentialsMatchLive(source)) {
+    return {
+      code: "MP_TEST_MATCHES_LIVE",
+      message: MP_TEST_MATCHES_LIVE_MESSAGE,
+    };
+  }
+  return null;
 }
 
 export function isMercadoPagoTestCheckoutConfigured(source: EnvLike = process.env): boolean {
-  return Boolean(getMercadoPagoTestAccessToken(source) && getMercadoPagoTestPublicKey(source));
+  return getMercadoPagoTestCheckoutBlock(source) === null;
 }
 
 export function getMercadoPagoTestServerConfig(source: EnvLike = process.env): {
@@ -58,6 +71,7 @@ export function getMercadoPagoTestServerConfig(source: EnvLike = process.env): {
   if (typeof process !== "undefined" && process.env.NEXT_PHASE === "phase-production-build") {
     return null;
   }
+  if (getMercadoPagoTestCheckoutBlock(source)) return null;
   const accessToken = getMercadoPagoTestAccessToken(source);
   const publicKey = getMercadoPagoTestPublicKey(source);
   if (!accessToken || !publicKey) return null;

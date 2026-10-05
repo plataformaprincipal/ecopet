@@ -3,7 +3,7 @@ import { requireAuth } from "@/lib/auth/require-auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { PricingError } from "@/lib/pricing/service";
 import { checkoutTestFromCart } from "@/lib/mercado-pago/checkout-test-from-cart";
-import { isMercadoPagoTestCheckoutConfigured } from "@/lib/mercado-pago/test-credentials";
+import { getMercadoPagoTestCheckoutBlock } from "@/lib/mercado-pago/test-credentials";
 
 export const dynamic = "force-dynamic";
 
@@ -16,12 +16,9 @@ export async function POST(request: Request) {
     return apiFailure("RATE_LIMIT", "Muitas tentativas. Aguarde um momento.", 429);
   }
 
-  if (!isMercadoPagoTestCheckoutConfigured()) {
-    return apiFailure(
-      "MP_TEST_NOT_CONFIGURED",
-      "Checkout de teste bloqueado: MERCADO_PAGO_TEST_ACCESS_TOKEN e NEXT_PUBLIC_MERCADO_PAGO_TEST_PUBLIC_KEY são obrigatórias.",
-      503
-    );
+  const block = getMercadoPagoTestCheckoutBlock();
+  if (block) {
+    return apiFailure(block.code, block.message, 503);
   }
 
   const idempotencyKey =

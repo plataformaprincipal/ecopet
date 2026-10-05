@@ -2,7 +2,7 @@ import { apiFailure, apiSuccess } from "@/lib/api-response";
 import { requireAuth } from "@/lib/auth/require-auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getMercadoPagoCheckoutTestOrderForUser } from "@/lib/mercado-pago/create-checkout-test-order";
-import { isMercadoPagoTestCheckoutConfigured } from "@/lib/mercado-pago/test-credentials";
+import { getMercadoPagoTestCheckoutBlock } from "@/lib/mercado-pago/test-credentials";
 
 export const dynamic = "force-dynamic";
 
@@ -13,9 +13,8 @@ export async function GET(request: Request, context: Ctx) {
   const { user, error } = await requireAuth();
   if (error) return error;
 
-  if (!isMercadoPagoTestCheckoutConfigured()) {
-    return apiFailure("MP_TEST_NOT_CONFIGURED", "Checkout de teste indisponível.", 503);
-  }
+  const block = getMercadoPagoTestCheckoutBlock();
+  if (block) return apiFailure(block.code, block.message, 503);
 
   if (!checkRateLimit(`mp-test-order-get:${user!.id}`, 30, 60_000)) {
     return apiFailure("RATE_LIMIT", "Muitas consultas. Aguarde.", 429);

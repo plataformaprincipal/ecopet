@@ -1,6 +1,9 @@
 import "server-only";
 
-import { getMercadoPagoTestServerConfig } from "@/lib/mercado-pago/test-credentials";
+import {
+  getMercadoPagoTestCheckoutBlock,
+  getMercadoPagoTestServerConfig,
+} from "@/lib/mercado-pago/test-credentials";
 import type {
   CreateMpOrderRequest,
   MpApiErrorBody,
@@ -64,6 +67,16 @@ async function testMpFetch<T>(
   path: string,
   init: { method: "GET" | "POST"; body?: unknown; idempotencyKey?: string }
 ): Promise<MpClientResult<T>> {
+  const block = getMercadoPagoTestCheckoutBlock();
+  if (block) {
+    return {
+      ok: false,
+      status: 503,
+      code: block.code,
+      message: block.message,
+      retryable: false,
+    };
+  }
   const config = getMercadoPagoTestServerConfig();
   if (!config) {
     return {

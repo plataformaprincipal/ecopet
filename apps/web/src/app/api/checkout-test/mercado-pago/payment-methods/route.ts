@@ -1,6 +1,6 @@
 import { apiFailure, apiSuccess } from "@/lib/api-response";
 import { requireAuth } from "@/lib/auth/require-auth";
-import { isMercadoPagoTestCheckoutConfigured } from "@/lib/mercado-pago/test-credentials";
+import { getMercadoPagoTestCheckoutBlock } from "@/lib/mercado-pago/test-credentials";
 import { getTestMercadoPagoPaymentMethods } from "@/lib/mercado-pago/test-client";
 
 export const dynamic = "force-dynamic";
@@ -38,9 +38,8 @@ const LABELS: Record<EcoPetPaymentMethodId, string> = {
 export async function GET() {
   const { error } = await requireAuth();
   if (error) return error;
-  if (!isMercadoPagoTestCheckoutConfigured()) {
-    return apiFailure("MP_TEST_NOT_CONFIGURED", "Checkout de teste indisponível.", 503);
-  }
+  const block = getMercadoPagoTestCheckoutBlock();
+  if (block) return apiFailure(block.code, block.message, 503);
 
   const remote = await getTestMercadoPagoPaymentMethods();
   const ids = remote.ok ? detectSupported(remote.data || []) : (["credit_card"] as EcoPetPaymentMethodId[]);

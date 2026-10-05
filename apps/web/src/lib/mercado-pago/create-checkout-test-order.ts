@@ -8,8 +8,8 @@ import {
   getTestMercadoPagoOrder,
 } from "@/lib/mercado-pago/test-client";
 import {
+  getMercadoPagoTestCheckoutBlock,
   isCheckoutTestOrderNotes,
-  isMercadoPagoTestCheckoutConfigured,
 } from "@/lib/mercado-pago/test-credentials";
 import { mapMpOrderStatusToInternal } from "@/lib/mercado-pago/status";
 import type { CreateMpOrderRequest } from "@/lib/mercado-pago/types";
@@ -100,9 +100,8 @@ async function persistTestPaymentLocally(input: {
  * marcado como checkout-test. Sem split, sem credenciais LIVE.
  */
 export async function createMercadoPagoCheckoutTestOrder(input: CreateCheckoutTestOrderInput) {
-  if (!isMercadoPagoTestCheckoutConfigured()) {
-    throw new Error("MP_TEST_NOT_CONFIGURED");
-  }
+  const block = getMercadoPagoTestCheckoutBlock();
+  if (block) throw new Error(block.code);
 
   const order = await prisma.order.findUnique({
     where: { id: input.orderId },
