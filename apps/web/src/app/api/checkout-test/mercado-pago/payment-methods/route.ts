@@ -1,5 +1,6 @@
+import { checkCheckoutTestRateLimit } from "@/lib/mercado-pago/checkout-test-rate-limit";
 import { apiFailure, apiSuccess } from "@/lib/api-response";
-import { requireAdmin } from "@/lib/auth/guards";
+import { requireAuth } from "@/lib/auth/guards";
 import { isMercadoPagoTestCheckoutConfigured } from "@/lib/mercado-pago/test-credentials";
 import { getTestMercadoPagoPaymentMethods } from "@/lib/mercado-pago/test-client";
 
@@ -36,8 +37,11 @@ const LABELS: Record<EcoPetPaymentMethodId, string> = {
 
 /** GET — meios da conta TEST. Não sincroniza PaymentMethodConfiguration LIVE. */
 export async function GET() {
-  const { error } = await requireAdmin({ path: "/api/checkout-test/mercado-pago/payment-methods" });
+  const { user, error } = await requireAuth();
   if (error) return error;
+  if (!(await checkCheckoutTestRateLimit(`checkout-test:payment-methods:${user!.id}`, 12, 60_000))) {
+    return apiFailure("RATE_LIMIT", "Muitas consultas de teste. Aguarde.", 429);
+  }
   if (!isMercadoPagoTestCheckoutConfigured()) {
     return apiFailure("MP_TEST_NOT_CONFIGURED", "Checkout de teste indisponível.", 503);
   }

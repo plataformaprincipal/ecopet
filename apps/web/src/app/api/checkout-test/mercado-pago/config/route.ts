@@ -1,13 +1,17 @@
+import { checkCheckoutTestRateLimit } from "@/lib/mercado-pago/checkout-test-rate-limit";
 import { apiFailure, apiSuccess } from "@/lib/api-response";
-import { requireAdmin } from "@/lib/auth/guards";
+import { requireAuth } from "@/lib/auth/guards";
 import { getMercadoPagoTestPublicConfig } from "@/lib/mercado-pago/test-credentials";
 
 export const dynamic = "force-dynamic";
 
 /** GET — Public Key TEST apenas. Nunca Access Token. Sem fallback LIVE. */
 export async function GET() {
-  const { error } = await requireAdmin({ path: "/api/checkout-test/mercado-pago/config" });
+  const { user, error } = await requireAuth();
   if (error) return error;
+  if (!(await checkCheckoutTestRateLimit(`checkout-test:config:${user!.id}`, 12, 60_000))) {
+    return apiFailure("RATE_LIMIT", "Muitas consultas de teste. Aguarde.", 429);
+  }
 
   const publicConfig = getMercadoPagoTestPublicConfig();
 

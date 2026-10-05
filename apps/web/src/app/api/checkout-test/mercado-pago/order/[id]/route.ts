@@ -1,6 +1,6 @@
 import { apiFailure, apiSuccess } from "@/lib/api-response";
-import { requireAdmin } from "@/lib/auth/guards";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { requireAuth } from "@/lib/auth/guards";
+import { checkCheckoutTestRateLimit } from "@/lib/mercado-pago/checkout-test-rate-limit";
 import { getMercadoPagoCheckoutTestOrderForUser } from "@/lib/mercado-pago/create-checkout-test-order";
 import { isMercadoPagoTestCheckoutConfigured } from "@/lib/mercado-pago/test-credentials";
 
@@ -10,14 +10,14 @@ type Ctx = { params: Promise<{ id: string }> };
 
 /** GET /api/checkout-test/mercado-pago/order/[id] — consulta TEST only. */
 export async function GET(request: Request, context: Ctx) {
-  const { user, error } = await requireAdmin({ path: "/api/checkout-test/mercado-pago/order" });
+  const { user, error } = await requireAuth();
   if (error) return error;
 
   if (!isMercadoPagoTestCheckoutConfigured()) {
     return apiFailure("MP_TEST_NOT_CONFIGURED", "Checkout de teste indisponível.", 503);
   }
 
-  if (!checkRateLimit(`mp-test-order-get:${user!.id}`, 30, 60_000)) {
+  if (!(await checkCheckoutTestRateLimit(`mp-test-order-get:${user!.id}`, 20, 60_000))) {
     return apiFailure("RATE_LIMIT", "Muitas consultas. Aguarde.", 429);
   }
 

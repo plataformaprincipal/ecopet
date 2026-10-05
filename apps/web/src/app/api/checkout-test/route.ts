@@ -1,7 +1,8 @@
 import { apiSuccess, apiFailure } from "@/lib/api-response";
-import { requireAdmin } from "@/lib/auth/guards";
+import { requireAuth } from "@/lib/auth/guards";
 import { checkoutSchema } from "@/schemas/product";
-import { checkoutFromCart } from "@/lib/orders/checkout-service";
+import { checkoutTestFromCart } from "@/lib/mercado-pago/checkout-test-service";
+import { checkCheckoutTestRateLimit } from "@/lib/mercado-pago/checkout-test-rate-limit";
 import { CouponError } from "@/lib/commerce/apply-coupon";
 import { PricingError } from "@/lib/pricing/service";
 import { firstFieldError, zodIssuesToFieldMap } from "@/lib/validation/field-errors";
@@ -14,7 +15,7 @@ export const dynamic = "force-dynamic";
 
 /** POST /api/checkout-test — cria Order válida via carrinho, marcada como TEST. */
 export async function POST(request: Request) {
-  const { user, error } = await requireAdmin({ path: "/api/checkout-test" });
+  const { user, error } = await requireAuth();
   if (error) return error;
 
   if (!isMercadoPagoTestCheckoutConfigured()) {
@@ -23,6 +24,10 @@ export async function POST(request: Request) {
       "Checkout de teste bloqueado: MERCADO_PAGO_TEST_ACCESS_TOKEN e NEXT_PUBLIC_MERCADO_PAGO_TEST_PUBLIC_KEY são obrigatórias.",
       503
     );
+  }
+
+  if (!(await checkCheckoutTestRateLimit(`checkout-test:create:${user!.id}`, 3, 60_000))) {
+    return apiFailure("RATE_LIMIT", "Muitas tentativas de teste. Aguarde.", 429);
   }
 
   const parsed = checkoutSchema.safeParse(await request.json());
@@ -36,21 +41,16 @@ export async function POST(request: Request) {
     );
   }
 
-  const idempotencyKey =
-    request.headers.get("idempotency-key")?.trim() ||
-    request.headers.get("x-idempotency-key")?.trim() ||
-    null;
-
   try {
-    const order = await checkoutFromCart({
+    const order = await checkoutTestFromCart({
       userId: user!.id,
       deliveryMethod: parsed.data.deliveryMethod,
       paymentMethod: parsed.data.paymentMethod,
       phone: parsed.data.phone,
       notes: buildCheckoutTestNotes(parsed.data.notes),
       address: parsed.data.address,
-      idempotencyKey,
-      couponCode: parsed.data.couponCode,
+
+
     });
     return apiSuccess({ order }, 201);
   } catch (e) {
@@ -63,6 +63,8 @@ export async function POST(request: Request) {
             ? e.message
             : "Erro no checkout.";
     const map: Record<string, [string, string, number]> = {
+      LEGACY_TEST_ORDER: ["CONFLICT", "Já existe um pedido TEST anterior. Não será criado outro pedido.", 409],
+      CART_EMPTY: ["VALIDATION", "Carrinho sem produtos para teste.", 400],
       QUOTE_EXPIRED: ["VALIDATION", "Orçamento expirado.", 409],
       QUOTE_NOT_ACCEPTED: ["VALIDATION", "Orçamento não aceito.", 400],
       QUOTE_NOT_FOUND: ["VALIDATION", "Orçamento indisponível.", 400],

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { apiFailure, apiSuccess } from "@/lib/api-response";
-import { requireAdmin } from "@/lib/auth/guards";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { requireAuth } from "@/lib/auth/guards";
+import { checkCheckoutTestRateLimit } from "@/lib/mercado-pago/checkout-test-rate-limit";
 import { createMercadoPagoCheckoutTestOrder } from "@/lib/mercado-pago/create-checkout-test-order";
 import { isMercadoPagoTestCheckoutConfigured } from "@/lib/mercado-pago/test-credentials";
 import { assertCheckoutEnabled } from "@/lib/commerce/checkout-flags";
@@ -23,10 +23,10 @@ const bodySchema = z.object({
 
 /** POST /api/checkout-test/mercado-pago/order — API Orders TEST only. */
 export async function POST(request: Request) {
-  const { user, error } = await requireAdmin({ path: "/api/checkout-test/mercado-pago/order" });
+  const { user, error } = await requireAuth();
   if (error) return error;
 
-  if (!checkRateLimit(`mp-checkout-test:${user!.id}`, 10, 60_000)) {
+  if (!(await checkCheckoutTestRateLimit(`mp-checkout-test:${user!.id}`, 3, 60_000))) {
     return apiFailure("RATE_LIMIT", "Muitas tentativas. Aguarde um momento.", 429);
   }
 
@@ -70,6 +70,7 @@ export async function POST(request: Request) {
   } catch (e) {
     const code = e instanceof Error ? e.message : "INTERNAL";
     const map: Record<string, { status: number; message: string }> = {
+      IDEMPOTENCY_CONFLICT: { status: 409, message: "Este pedido já possui uma tentativa TEST. Consulte o resultado existente." },
       ORDER_NOT_FOUND: { status: 404, message: "Pedido não encontrado." },
       ORDER_FORBIDDEN: { status: 403, message: "Pedido não pertence a este usuário." },
       ORDER_NOT_TEST: { status: 403, message: "Pedido não é de checkout de teste." },

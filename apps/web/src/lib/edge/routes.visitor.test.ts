@@ -22,12 +22,12 @@ describe("visitor public routes", () => {
     assert.equal(requiresAuth("/pedidos"), true);
     assert.equal(requiresAuth("/checkout"), true);
     assert.equal(requiresAuth("/checkout-test"), true);
-    assert.equal(isAdminOnlyPath("/checkout-test"), true);
-    assert.equal(isAdminOnlyPath("/checkout-test/sucesso/abc"), true);
+    assert.equal(isAdminOnlyPath("/checkout-test"), false);
+    assert.equal(isAdminOnlyPath("/checkout-test/sucesso/abc"), false);
     assert.equal(isAdminOnlyPath("/checkout"), false);
     assert.equal(canAccessRoute("ADMIN", "/checkout-test"), true);
-    assert.equal(canAccessRoute("CLIENT", "/checkout-test"), false);
-    assert.equal(canAccessRoute("PARTNER", "/checkout-test"), false);
+    assert.equal(canAccessRoute("CLIENT", "/checkout-test"), true);
+    assert.equal(canAccessRoute("PARTNER", "/checkout-test"), true);
     assert.equal(canAccessRoute("CLIENT", "/checkout"), true);
     assert.equal(requiresAuth("/cadastro/google"), false);
   });
