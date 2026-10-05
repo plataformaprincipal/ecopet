@@ -12,10 +12,10 @@ export async function GET() {
   const publicConfig = getMercadoPagoPublicConfig();
   const status = getMercadoPagoSanitizedStatus();
 
-  if (!publicConfig.configured) {
+  if (!publicConfig.configured || !publicConfig.publicKey) {
     return apiFailure(
       "NOT_CONFIGURED",
-      `Checkout Mercado Pago indisponível (${status.status}).`,
+      status.sanitizedMessage ?? "Checkout Mercado Pago indisponível: credenciais LIVE ausentes.",
       503
     );
   }

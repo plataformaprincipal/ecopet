@@ -405,9 +405,9 @@ export function MercadoPagoCheckout({
         <div className="space-y-2 rounded border border-dashed p-3 text-sm" role="status">
           <p>
             {result.mpOrder?.qrCode
-              ? "Pix aguardando pagamento"
+              ? "Aguardando pagamento"
               : result.mpOrder?.ticketUrl || result.mpOrder?.digitableLine
-                ? "Boleto emitido"
+                ? "Aguardando compensação"
                 : "Pagamento pendente"}
             {": "}
             <strong>{result.status}</strong>
@@ -440,7 +440,7 @@ export function MercadoPagoCheckout({
                 Copiar código Pix
               </Button>
               <p className="text-xs text-muted-foreground">
-                Pix aguardando pagamento. O pedido só será marcado como pago após confirmação do Mercado Pago.
+                Aguardando pagamento. O pedido só será marcado como pago após confirmação do Mercado Pago.
               </p>
               {orderId ? <CheckoutPaymentPoller orderId={orderId} paymentId={result.paymentId} /> : null}
             </div>
@@ -639,7 +639,7 @@ export function MercadoPagoCheckout({
           }}
         >
           <p className="text-xs text-muted-foreground">
-            O boleto permanece pendente até a compensação. O pedido não é marcado como pago na emissão.
+            O boleto permanece em “Aguardando compensação”. O pedido não é marcado como pago na emissão.
           </p>
           <div className="grid grid-cols-2 gap-2">
             <div>

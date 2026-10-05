@@ -109,14 +109,13 @@ export function getMercadoPagoServerConfig(
   };
 }
 
-/** PAYMENT_PROVIDER none|manual desliga o canal online. Ausente + credenciais LIVE = habilitado. */
+/**
+ * Canal online LIVE: Access Token + Public Key.
+ * PAYMENT_PROVIDER não pode 503 o checkout quando as credenciais LIVE já estão ACTIVE.
+ */
 export function isMercadoPagoPaymentEnabled(source: NodeJS.ProcessEnv = process.env): boolean {
-  const preferred = (env("PAYMENT_PROVIDER", source) || "").toLowerCase().replace(/-/g, "_");
-  if (preferred === "none" || preferred === "manual") return false;
-  if (!preferred) {
-    return Boolean(isMercadoPagoConfigured(source) && getMercadoPagoPublicKey(source));
-  }
-  return preferred === "mercado_pago" || preferred === "mercadopago";
+  const publicKey = getMercadoPagoPublicKey(source);
+  return Boolean(isMercadoPagoConfigured(source) && publicKey && !isPlaceholder(publicKey));
 }
 
 /** Pronto para Checkout Transparente LIVE: Access Token + Public Key LIVE presentes. */
@@ -136,14 +135,12 @@ export function getMercadoPagoPublicConfig(
   const keysOk = Boolean(
     publicKey && !isPlaceholder(publicKey) && isMercadoPagoConfigured(source)
   );
-  const enabled = isMercadoPagoPaymentEnabled(source);
-  const configured = enabled && keysOk;
 
   return {
-    publicKey: configured ? publicKey! : "",
+    publicKey: keysOk ? publicKey! : "",
     environment,
     apiOrders: true,
-    configured,
+    configured: keysOk,
   };
 }
 

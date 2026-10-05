@@ -18,9 +18,9 @@ const PAYMENT_METHODS: {
   label: string;
   hint: string;
 }[] = [
-  { value: "CARD", label: "Cartão", hint: "Crédito online, tokenizado pelo Mercado Pago." },
-  { value: "PIX", label: "Pix", hint: "Pix — aprovação rápida." },
-  { value: "BOLETO", label: "Boleto", hint: "Boleto bancário, pago na compensação." },
+  { value: "CARD", label: "CARTÃO", hint: "Crédito online, tokenizado pelo Mercado Pago." },
+  { value: "PIX", label: "PIX", hint: "Aprovação rápida." },
+  { value: "BOLETO", label: "BOLETO", hint: "Pago na compensação bancária." },
 ];
 
 export function CheckoutPanel() {
@@ -39,12 +39,12 @@ export function CheckoutPanel() {
   const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
   const pendingRef = useRef<{ id: string; total: number } | null>(null);
   const [form, setForm] = useState({
-    deliveryMethod: "PICKUP_LOCAL",
     paymentMethod: "CARD" as PaymentMethod,
     phone: "",
     notes: "",
     street: "",
     number: "",
+    complement: "",
     city: "",
     state: "",
     zipCode: "",
@@ -92,7 +92,7 @@ export function CheckoutPanel() {
     setError("");
     setFieldErrors({});
     analyticsService.track(OrderEvents.BEGIN_CHECKOUT, {
-      params: { payment_method: form.paymentMethod, delivery_method: form.deliveryMethod },
+      params: { payment_method: form.paymentMethod, delivery_method: "DELIVERY_LOCAL" },
     });
     const res = await fetch("/api/checkout", {
       method: "POST",
@@ -102,13 +102,14 @@ export function CheckoutPanel() {
         "Idempotency-Key": idempotencyKey,
       },
       body: JSON.stringify({
-        deliveryMethod: form.deliveryMethod,
+        deliveryMethod: "DELIVERY_LOCAL",
         paymentMethod: form.paymentMethod,
         phone: form.phone,
         notes: form.notes || null,
         address: {
           street: form.street,
           number: form.number || undefined,
+          complement: form.complement || undefined,
           city: form.city,
           state: form.state,
           zipCode: form.zipCode || undefined,
@@ -163,7 +164,9 @@ export function CheckoutPanel() {
   }
 
   const subtotal = Number(cart.subtotal);
-  const total = pendingOrder?.total ?? subtotal;
+  const shipping = cart.shipping == null ? null : Number(cart.shipping);
+  const discount = Number(cart.discount ?? 0);
+  const total = pendingOrder?.total ?? subtotal - (Number.isFinite(discount) ? discount : 0) + (shipping ?? 0);
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -182,39 +185,11 @@ export function CheckoutPanel() {
       </Card>
 
       <Card>
-        <CardContent className="space-y-3 p-5">
-          <h2 className="text-lg font-semibold">Forma de recebimento</h2>
-          <div className="grid grid-cols-2 gap-3">
-            {(
-              [
-                { value: "PICKUP_LOCAL", label: "Retirada", hint: "Retire na loja." },
-                { value: "DELIVERY_LOCAL", label: "Entrega", hint: "Entrega local." },
-              ] as const
-            ).map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                className={`rounded-xl border px-4 py-3 text-left transition ${
-                  form.deliveryMethod === opt.value
-                    ? "border-primary bg-primary/5 shadow-sm"
-                    : "hover:border-primary/40"
-                }`}
-                onClick={() => setForm({ ...form, deliveryMethod: opt.value })}
-              >
-                <span className="block font-medium">{opt.label}</span>
-                <span className="mt-1 block text-xs text-muted-foreground">{opt.hint}</span>
-              </button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
         <CardContent className="space-y-4 p-5">
-          <h2 className="text-lg font-semibold">Dados necessários de entrega</h2>
+          <h2 className="text-lg font-semibold">Dados de entrega</h2>
           <div>
             <label htmlFor="checkout-phone" className="mb-1 block text-sm font-medium">
-              Telefone para contato
+              Telefone
             </label>
             <Input
               id="checkout-phone"
@@ -224,7 +199,7 @@ export function CheckoutPanel() {
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
               required
               aria-invalid={fieldErrors.phone ? true : undefined}
-              aria-describedby={fieldErrors.phone ? "checkout-phone-error checkout-phone-hint" : "checkout-phone-hint"}
+              aria-describedby={fieldErrors.phone ? "checkout-phone-error" : undefined}
               className={fieldErrors.phone ? "border-red-500" : undefined}
             />
             {fieldErrors.phone ? (
@@ -232,13 +207,10 @@ export function CheckoutPanel() {
                 {fieldErrors.phone}
               </p>
             ) : null}
-            <p id="checkout-phone-hint" className="mt-1 text-xs text-muted-foreground">
-              Usado para combinar a retirada ou a entrega.
-            </p>
           </div>
           <AddressByCepField
             idPrefix="checkout"
-            title={form.deliveryMethod === "PICKUP_LOCAL" ? "Endereço de referência" : "Endereço de entrega"}
+            title=""
             variant="plain"
             showReference={false}
             value={{
@@ -248,6 +220,7 @@ export function CheckoutPanel() {
               district: form.district ?? "",
               city: form.city,
               state: form.state,
+              complement: form.complement,
             }}
             onChange={(address) =>
               setForm((current) => ({
@@ -258,6 +231,7 @@ export function CheckoutPanel() {
                 district: address.district,
                 city: address.city,
                 state: address.state,
+                complement: address.complement ?? "",
               }))
             }
             errors={fieldErrors}
@@ -295,18 +269,45 @@ export function CheckoutPanel() {
                   <button
                     key={opt.value}
                     type="button"
-                    className={`rounded-xl border px-4 py-3 text-left transition ${
+                    className={`rounded-2xl border-2 px-4 py-6 text-center transition ${
                       form.paymentMethod === opt.value
                         ? "border-primary bg-primary/5 shadow-sm"
                         : "hover:border-primary/40"
                     }`}
                     onClick={() => setForm({ ...form, paymentMethod: opt.value })}
                   >
-                    <span className="block font-semibold">{opt.label}</span>
+                    <span className="block text-base font-bold tracking-wide">{opt.label}</span>
                     <span className="mt-1 block text-xs text-muted-foreground">{opt.hint}</span>
                   </button>
                 ))}
               </div>
+              <MercadoPagoCheckout
+                amount={total}
+                payerEmail={payerEmail}
+                initialMethod={
+                  form.paymentMethod === "PIX"
+                    ? "pix"
+                    : form.paymentMethod === "BOLETO"
+                      ? "boleto"
+                      : "card"
+                }
+                methodLocked
+                ensureOrder={ensureOrder}
+                onPaid={async (result) => {
+                  const order = pendingRef.current;
+                  if (!order) return;
+                  const approved = String(result.status).toUpperCase() === "APPROVED";
+                  if (approved) {
+                    analyticsService.track(PaymentEvents.PAYMENT_APPROVED, {
+                      value: order.total,
+                      params: { order_id: order.id, status: result.status, provider: "mercado_pago" },
+                    });
+                  }
+                  router.push(
+                    `/checkout/sucesso/${order.id}?payment=${result.paymentId}&status=${result.status}`
+                  );
+                }}
+              />
             </>
           )}
         </CardContent>
@@ -319,6 +320,18 @@ export function CheckoutPanel() {
             <span>Subtotal</span>
             <span>R$ {subtotal.toFixed(2)}</span>
           </p>
+          {shipping != null && Number.isFinite(shipping) ? (
+            <p className="flex justify-between text-sm">
+              <span>Frete</span>
+              <span>R$ {shipping.toFixed(2)}</span>
+            </p>
+          ) : null}
+          {discount > 0 ? (
+            <p className="flex justify-between text-sm">
+              <span>Descontos</span>
+              <span>- R$ {discount.toFixed(2)}</span>
+            </p>
+          ) : null}
           <p className="flex justify-between font-semibold">
             <span>Total</span>
             <span>R$ {total.toFixed(2)}</span>
@@ -333,42 +346,11 @@ export function CheckoutPanel() {
               {error}
             </p>
           ) : null}
+          <Button asChild variant="ghost" className="px-0">
+            <Link href="/carrinho">Voltar ao carrinho</Link>
+          </Button>
         </CardContent>
       </Card>
-
-      {mpAvailable !== false ? (
-        <MercadoPagoCheckout
-          amount={total}
-          payerEmail={payerEmail}
-          initialMethod={
-            form.paymentMethod === "PIX"
-              ? "pix"
-              : form.paymentMethod === "BOLETO"
-                ? "boleto"
-                : "card"
-          }
-          methodLocked
-          ensureOrder={ensureOrder}
-          onPaid={async (result) => {
-            const order = pendingRef.current;
-            if (!order) return;
-            const approved = String(result.status).toUpperCase() === "APPROVED";
-            if (approved) {
-              analyticsService.track(PaymentEvents.PAYMENT_APPROVED, {
-                value: order.total,
-                params: { order_id: order.id, status: result.status, provider: "mercado_pago" },
-              });
-            }
-            router.push(
-              `/checkout/sucesso/${order.id}?payment=${result.paymentId}&status=${result.status}`
-            );
-          }}
-        />
-      ) : null}
-
-      <Button asChild variant="ghost" className="px-0">
-        <Link href="/carrinho">Voltar ao carrinho</Link>
-      </Button>
     </div>
   );
 }

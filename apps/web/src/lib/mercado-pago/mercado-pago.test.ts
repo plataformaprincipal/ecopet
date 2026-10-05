@@ -59,6 +59,19 @@ describe("mercado-pago config", () => {
     assert.ok(pub.publicKey.length > 0);
   });
 
+  it("PAYMENT_PROVIDER legado não impede config LIVE ACTIVE", () => {
+    process.env.MERCADO_PAGO_ACCESS_TOKEN = "APP_USR-live-token-value-xxxx";
+    process.env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY = "APP_USR-live-public-key";
+    process.env.MERCADO_PAGO_WEBHOOK_SECRET = "whsec_live_mock";
+    process.env.VERCEL_ENV = "production";
+    process.env.PAYMENT_PROVIDER = "none";
+    delete process.env.MERCADO_PAGO_ENVIRONMENT;
+    const pub = getMercadoPagoPublicConfig();
+    assert.equal(pub.configured, true);
+    assert.equal(getMercadoPagoSanitizedStatus().status, "ACTIVE");
+    assert.ok(pub.publicKey.length > 0);
+  });
+
   it("status sanitizado nunca inclui access token", () => {
     process.env.MERCADO_PAGO_ACCESS_TOKEN = "TEST-supersecret-token-xyz";
     process.env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY = "TEST-pk-ok";

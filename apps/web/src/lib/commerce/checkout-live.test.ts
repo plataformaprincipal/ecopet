@@ -4,7 +4,7 @@ import { describe, it } from "node:test";
 import path from "node:path";
 import { checkoutSchema } from "@/schemas/product";
 import { evaluateMarketplaceSplit } from "@/lib/finance/split-capability";
-import { getMercadoPagoPublicConfig, isMercadoPagoConfigured } from "@/lib/mercado-pago/config";
+import { getMercadoPagoPublicConfig, getMercadoPagoSanitizedStatus, isMercadoPagoConfigured } from "@/lib/mercado-pago/config";
 
 function readSrc(rel: string) {
   return readFileSync(path.resolve(process.cwd(), rel), "utf8");
@@ -48,20 +48,26 @@ describe("checkout LIVE UI — sem pagamento na entrega", () => {
     assert.equal(panel.includes("Dinheiro"), false);
     assert.equal(panel.includes("Na entrega ou retirada"), false);
     assert.equal(panel.includes("momento da entrega"), false);
-    assert.ok(panel.includes("Cartão"));
-    assert.ok(panel.includes("Pix"));
-    assert.ok(panel.includes("Boleto"));
-    assert.ok(panel.includes("Forma de recebimento"));
-    assert.ok(panel.includes("Retirada"));
-    assert.ok(panel.includes("Entrega"));
+    assert.ok(panel.includes("CARTÃO"));
+    assert.ok(panel.includes("PIX"));
+    assert.ok(panel.includes("BOLETO"));
+    assert.equal(panel.includes("Forma de recebimento"), false);
+    assert.equal(panel.includes("Retirada"), false);
+    assert.equal(panel.includes("PICKUP_LOCAL"), false);
+    assert.ok(panel.includes("DELIVERY_LOCAL"));
+    assert.ok(panel.includes("Dados de entrega"));
     assert.ok(panel.includes("Pagamento online"));
     assert.ok(panel.includes("Resumo financeiro"));
     assert.equal(panel.includes("Usado para combinar entrega e pagamento"), false);
+    assert.equal(panel.includes("combinar a retirada"), false);
+    const summaryIdx = panel.indexOf("Resumo do pedido");
+    const deliveryIdx = panel.indexOf("Dados de entrega");
     const paymentIdx = panel.indexOf("Pagamento online");
     const financeIdx = panel.indexOf("Resumo financeiro");
     const payButtonIdx = panel.indexOf("<MercadoPagoCheckout");
-    assert.ok(paymentIdx > -1 && financeIdx > paymentIdx);
-    assert.ok(payButtonIdx > financeIdx);
+    assert.ok(summaryIdx > -1 && deliveryIdx > summaryIdx);
+    assert.ok(paymentIdx > deliveryIdx);
+    assert.ok(payButtonIdx > paymentIdx && payButtonIdx < financeIdx);
   });
 
   it("Brick/SDK LIVE não volta para pagamento na entrega", () => {
@@ -70,7 +76,8 @@ describe("checkout LIVE UI — sem pagamento na entrega", () => {
     assert.ok(mp.includes("createCardToken"));
     assert.ok(mp.includes("Gerar Pix"));
     assert.ok(mp.includes("Gerar boleto"));
-    assert.ok(mp.includes("Pix — aprovação rápida"));
+    assert.ok(mp.includes("Aguardando pagamento"));
+    assert.ok(mp.includes("Aguardando compensação"));
   });
 });
 
@@ -98,6 +105,8 @@ describe("checkout LIVE Mercado Pago — TEST nunca entra", () => {
     assert.ok(src.includes("NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY"));
     assert.equal(src.includes("MERCADO_PAGO_TEST_ACCESS_TOKEN"), false);
     assert.equal(src.includes("NEXT_PUBLIC_MERCADO_PAGO_TEST_PUBLIC_KEY"), false);
+    const route = readSrc("src/app/api/checkout/mercado-pago/config/route.ts");
+    assert.equal(route.includes("indisponível (${status.status})"), false);
   });
 
   it("mock: Vercel Production considera LIVE configurado sem PAYMENT_PROVIDER", () => {
@@ -113,6 +122,24 @@ describe("checkout LIVE Mercado Pago — TEST nunca entra", () => {
       assert.equal(pub.configured, true);
       assert.equal(pub.environment, "production");
       assert.ok(pub.publicKey.length > 0);
+    } finally {
+      process.env = { ...prev };
+    }
+  });
+
+  it("PAYMENT_PROVIDER legado não 503 o checkout LIVE quando keys e status ACTIVE", () => {
+    const prev = { ...process.env };
+    process.env.MERCADO_PAGO_ACCESS_TOKEN = "APP_USR-mock-live-token-value-xxxx";
+    process.env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY = "APP_USR-mock-live-public-key";
+    process.env.MERCADO_PAGO_WEBHOOK_SECRET = "whsec_live_mock_secret";
+    process.env.VERCEL_ENV = "production";
+    process.env.PAYMENT_PROVIDER = "PAGARME";
+    delete process.env.MERCADO_PAGO_ENVIRONMENT;
+    try {
+      const pub = getMercadoPagoPublicConfig();
+      assert.equal(pub.configured, true);
+      assert.ok(pub.publicKey.length > 0);
+      assert.equal(getMercadoPagoSanitizedStatus().status, "ACTIVE");
     } finally {
       process.env = { ...prev };
     }
