@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { apiFailure, apiSuccess } from "@/lib/api-response";
-import { requireAdmin } from "@/lib/auth/guards";
+import { requireAuth } from "@/lib/auth/require-auth";
 import { prisma } from "@/lib/prisma";
 import { isCheckoutTestOrderNotes, isMercadoPagoTestCheckoutConfigured } from "@/lib/mercado-pago/test-credentials";
 import { getTestMercadoPagoInstallments } from "@/lib/mercado-pago/test-client";
@@ -14,7 +14,7 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
-  const { user, error } = await requireAdmin({ path: "/api/checkout-test/mercado-pago/installments" });
+  const { user, error } = await requireAuth();
   if (error) return error;
   if (!isMercadoPagoTestCheckoutConfigured()) {
     return apiFailure("MP_TEST_NOT_CONFIGURED", "Checkout de teste indisponível.", 503);

@@ -1,5 +1,5 @@
 import { apiFailure, apiSuccess } from "@/lib/api-response";
-import { requireAdmin } from "@/lib/auth/guards";
+import { requireAuth } from "@/lib/auth/require-auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getMercadoPagoCheckoutTestOrderForUser } from "@/lib/mercado-pago/create-checkout-test-order";
 import { isMercadoPagoTestCheckoutConfigured } from "@/lib/mercado-pago/test-credentials";
@@ -10,7 +10,7 @@ type Ctx = { params: Promise<{ id: string }> };
 
 /** GET /api/checkout-test/mercado-pago/order/[id] — consulta TEST only. */
 export async function GET(request: Request, context: Ctx) {
-  const { user, error } = await requireAdmin({ path: "/api/checkout-test/mercado-pago/order" });
+  const { user, error } = await requireAuth();
   if (error) return error;
 
   if (!isMercadoPagoTestCheckoutConfigured()) {

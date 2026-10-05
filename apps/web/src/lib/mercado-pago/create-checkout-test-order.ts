@@ -12,7 +12,6 @@ import {
   isMercadoPagoTestCheckoutConfigured,
 } from "@/lib/mercado-pago/test-credentials";
 import { mapMpOrderStatusToInternal } from "@/lib/mercado-pago/status";
-import { applyInternalPaymentStatus } from "@/lib/mercado-pago/apply-payment-status";
 import type { CreateMpOrderRequest } from "@/lib/mercado-pago/types";
 import { metricsFromOrderRow } from "@/lib/finance/metrics";
 
@@ -72,6 +71,28 @@ function isTestPayment(payment: { environment: string; metadata: Prisma.JsonValu
   if (payment.environment !== "test") return false;
   const meta = (payment.metadata as Record<string, unknown> | null) ?? {};
   return meta.checkoutTest === true;
+}
+
+/** Atualiza Payment TEST localmente. Nunca marca Order PAID nem posta ledger. */
+async function persistTestPaymentLocally(input: {
+  paymentId: string;
+  internalStatus: string;
+  statusDetail?: string | null;
+  providerOrderId?: string | null;
+  providerPaymentId?: string | null;
+}) {
+  await prisma.payment.update({
+    where: { id: input.paymentId },
+    data: {
+      status: input.internalStatus,
+      statusDetail: input.statusDetail ?? null,
+      environment: "test",
+      ...(input.providerOrderId
+        ? { providerOrderId: input.providerOrderId, externalId: input.providerOrderId }
+        : {}),
+      ...(input.providerPaymentId ? { providerPaymentId: input.providerPaymentId } : {}),
+    },
+  });
 }
 
 /**
@@ -159,13 +180,12 @@ export async function createMercadoPagoCheckoutTestOrder(input: CreateCheckoutTe
     const existing = await getTestMercadoPagoOrder(openAttempt.providerOrderId);
     if (existing.ok) {
       const internal = mapMpOrderStatusToInternal(existing.data.status, existing.data.status_detail);
-      await applyInternalPaymentStatus({
+      await persistTestPaymentLocally({
         paymentId: payment.id,
         internalStatus: internal,
         statusDetail: existing.data.status_detail,
         providerOrderId: existing.data.id,
         providerPaymentId: existing.data.transactions?.payments?.[0]?.id ?? null,
-        source: "poll",
       });
       return {
         paymentId: payment.id,
@@ -287,13 +307,12 @@ export async function createMercadoPagoCheckoutTestOrder(input: CreateCheckoutTe
   });
 
   if (mapped !== "APPROVED") {
-    await applyInternalPaymentStatus({
+    await persistTestPaymentLocally({
       paymentId: payment.id,
       internalStatus: mapped,
       statusDetail: mp.status_detail,
       providerOrderId: mp.id,
       providerPaymentId,
-      source: "api",
     });
   }
 
@@ -352,13 +371,12 @@ export async function getMercadoPagoCheckoutTestOrderForUser(params: {
   const remote = await getTestMercadoPagoOrder(payment.providerOrderId);
   if (remote.ok) {
     const internal = mapMpOrderStatusToInternal(remote.data.status, remote.data.status_detail);
-    await applyInternalPaymentStatus({
+    await persistTestPaymentLocally({
       paymentId: payment.id,
       internalStatus: internal,
       statusDetail: remote.data.status_detail,
       providerOrderId: remote.data.id,
       providerPaymentId: remote.data.transactions?.payments?.[0]?.id ?? null,
-      source: "poll",
     });
     return {
       paymentId: payment.id,

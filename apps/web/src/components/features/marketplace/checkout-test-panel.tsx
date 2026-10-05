@@ -1,20 +1,28 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { MercadoPagoTestCheckout } from "@/components/features/marketplace/mercado-pago-test-checkout";
 import { CheckoutTestBanner } from "@/components/features/marketplace/checkout-test-banner";
-import { AddressByCepField } from "@/components/shared/address/address-by-cep-field";
+
+const IDEMPOTENCY_STORAGE_KEY = "checkout-test-idempotency";
+
+function readIdempotencyKey(): string {
+  if (typeof window === "undefined") return crypto.randomUUID();
+  const existing = sessionStorage.getItem(IDEMPOTENCY_STORAGE_KEY);
+  if (existing) return existing;
+  const next = crypto.randomUUID();
+  sessionStorage.setItem(IDEMPOTENCY_STORAGE_KEY, next);
+  return next;
+}
 
 export function CheckoutTestPanel() {
   const router = useRouter();
   const [cart, setCart] = useState<Record<string, unknown> | null>(null);
   const [error, setError] = useState("");
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [testReady, setTestReady] = useState<boolean | null>(null);
   const [configMessage, setConfigMessage] = useState("");
@@ -23,18 +31,8 @@ export function CheckoutTestPanel() {
     total: number;
   } | null>(null);
   const [payerEmail, setPayerEmail] = useState("");
-  const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
-  const [form, setForm] = useState({
-    deliveryMethod: "PICKUP_LOCAL",
-    phone: "",
-    notes: "",
-    street: "",
-    number: "",
-    city: "",
-    state: "",
-    zipCode: "",
-    district: "",
-  });
+  const [idempotencyKey] = useState(readIdempotencyKey);
+  const submitLock = useRef(false);
 
   useEffect(() => {
     fetch("/api/cart", { credentials: "include" })
@@ -68,14 +66,14 @@ export function CheckoutTestPanel() {
       });
   }, []);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (saving || !testReady) return;
+  async function handlePay() {
+    if (submitLock.current || saving || !testReady) return;
+    submitLock.current = true;
     setSaving(true);
     setError("");
-    setFieldErrors({});
     if (!payerEmail.trim()) {
       setSaving(false);
+      submitLock.current = false;
       setError("Faça login com um e-mail válido para o checkout de teste.");
       return;
     }
@@ -86,30 +84,15 @@ export function CheckoutTestPanel() {
         "Content-Type": "application/json",
         "Idempotency-Key": idempotencyKey,
       },
-      body: JSON.stringify({
-        deliveryMethod: form.deliveryMethod,
-        paymentMethod: "CARD",
-        phone: form.phone,
-        notes: form.notes || null,
-        address: {
-          street: form.street,
-          number: form.number || undefined,
-          city: form.city,
-          state: form.state,
-          zipCode: form.zipCode || undefined,
-          district: form.district || undefined,
-        },
-      }),
+      body: JSON.stringify({}),
     });
     const data = await res.json();
     setSaving(false);
+    submitLock.current = false;
     if (!data.success) {
-      const fields = (data.error?.fields ?? {}) as Record<string, string>;
-      setFieldErrors(fields);
       setError(data.error?.message ?? "Erro ao criar pedido de teste.");
       return;
     }
-    setIdempotencyKey(crypto.randomUUID());
     const order = data.data.order as { id: string; total: number };
     setPendingOrder({ id: order.id, total: Number(order.total) });
   }
@@ -118,7 +101,10 @@ export function CheckoutTestPanel() {
     return (
       <div className="space-y-4">
         <CheckoutTestBanner />
-        <p className="rounded border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:bg-red-950/40 dark:text-red-200" role="alert">
+        <p
+          className="rounded border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:bg-red-950/40 dark:text-red-200"
+          role="alert"
+        >
           {configMessage || "Checkout de teste bloqueado."}
         </p>
       </div>
@@ -129,14 +115,13 @@ export function CheckoutTestPanel() {
     return (
       <div className="mx-auto max-w-lg space-y-4">
         <CheckoutTestBanner />
-        <p className="text-sm text-muted-foreground">
-          Pedido de teste #{pendingOrder.id.slice(-6)} criado. Conclua o pagamento TEST.
-        </p>
+        <p className="text-sm font-medium">Pagar com Mercado Pago TEST</p>
         <MercadoPagoTestCheckout
           orderId={pendingOrder.id}
           amount={pendingOrder.total}
           payerEmail={payerEmail}
           onPaid={(result) => {
+            sessionStorage.removeItem(IDEMPOTENCY_STORAGE_KEY);
             const qs = new URLSearchParams({
               payment: result.paymentId,
               status: result.status,
@@ -164,130 +149,38 @@ export function CheckoutTestPanel() {
       </div>
     );
   }
-  if (Boolean(cart.multiPartner)) {
-    return (
-      <div className="space-y-4">
-        <CheckoutTestBanner />
-        <p className="text-sm text-red-600">
-          Remova itens de outras lojas — apenas um parceiro por pedido.{" "}
-          <Link href="/carrinho" className="underline">
-            Voltar ao carrinho
-          </Link>
-        </p>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-4">
       <CheckoutTestBanner />
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardContent className="space-y-3 p-4">
-            <h2 className="font-medium">Resumo do pedido de teste</h2>
-            {items.map((item) => (
-              <p key={String(item.id)} className="text-sm">
-                {String(item.name)} · {Number(item.quantity)}x · R${" "}
-                {Number(item.unitPrice).toFixed(2)}
-              </p>
-            ))}
-            <p className="font-medium">Subtotal: R$ {Number(cart.subtotal).toFixed(2)}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-              <div>
-                <label htmlFor="checkout-test-delivery" className="mb-1 block text-sm font-medium">
-                  Forma de recebimento
-                </label>
-                <select
-                  id="checkout-test-delivery"
-                  className="w-full rounded border px-3 py-2 text-sm"
-                  value={form.deliveryMethod}
-                  onChange={(e) => setForm({ ...form, deliveryMethod: e.target.value })}
-                  required
-                >
-                  <option value="PICKUP_LOCAL">Retirada na loja</option>
-                  <option value="DELIVERY_LOCAL">Entrega local</option>
-                </select>
-              </div>
-
-              <p className="text-xs text-muted-foreground">
-                Após confirmar, o pagamento usa exclusivamente as credenciais TEST do Mercado Pago.
-              </p>
-
-              <div>
-                <label htmlFor="checkout-test-phone" className="mb-1 block text-sm font-medium">
-                  Telefone para contato
-                </label>
-                <Input
-                  id="checkout-test-phone"
-                  type="tel"
-                  placeholder="Ex.: (11) 99999-9999"
-                  value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  required
-                  aria-invalid={fieldErrors.phone ? true : undefined}
-                />
-                {fieldErrors.phone ? (
-                  <p className="mt-1 text-xs text-red-500">{fieldErrors.phone}</p>
-                ) : null}
-              </div>
-
-              <AddressByCepField
-                idPrefix="checkout-test"
-                title="Endereço de entrega"
-                variant="plain"
-                showReference={false}
-                value={{
-                  zipCode: form.zipCode,
-                  street: form.street,
-                  number: form.number,
-                  district: form.district ?? "",
-                  city: form.city,
-                  state: form.state,
-                }}
-                onChange={(address) =>
-                  setForm((current) => ({
-                    ...current,
-                    zipCode: address.zipCode,
-                    street: address.street,
-                    number: address.number,
-                    district: address.district,
-                    city: address.city,
-                    state: address.state,
-                  }))
-                }
-                errors={fieldErrors}
-              />
-
-              <div>
-                <label htmlFor="checkout-test-notes" className="mb-1 block text-sm font-medium">
-                  Observações
-                </label>
-                <textarea
-                  id="checkout-test-notes"
-                  className="w-full rounded border px-3 py-2 text-sm"
-                  rows={2}
-                  value={form.notes}
-                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                />
-              </div>
-
-              {error ? (
-                <p className="text-sm text-red-600" role="alert" aria-live="polite">
-                  {error}
-                </p>
-              ) : null}
-
-              <Button type="submit" disabled={saving || !testReady}>
-                {saving ? "Criando pedido de teste..." : "Criar pedido e pagar (TEST)"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardContent className="space-y-3 p-4">
+          <h2 className="font-medium">Resumo do pedido de teste</h2>
+          {items.map((item) => (
+            <p key={String(item.id)} className="text-sm">
+              {String(item.name)} · {Number(item.quantity)}x · R$ {Number(item.unitPrice).toFixed(2)}
+            </p>
+          ))}
+          <p className="font-medium">Subtotal: R$ {Number(cart.subtotal).toFixed(2)}</p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent className="space-y-4 p-4">
+          <p className="text-sm font-medium">Pagar com Mercado Pago TEST</p>
+          <p className="text-xs text-muted-foreground">
+            Única opção deste fluxo. Não há PIX, cartão ou dinheiro na entrega. Credenciais LIVE não
+            são usadas.
+          </p>
+          {error ? (
+            <p className="text-sm text-red-600" role="alert" aria-live="polite">
+              {error}
+            </p>
+          ) : null}
+          <Button type="button" disabled={saving || !testReady} onClick={() => void handlePay()} className="w-full">
+            {saving ? "Preparando pagamento TEST..." : "Pagar com Mercado Pago TEST"}
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }

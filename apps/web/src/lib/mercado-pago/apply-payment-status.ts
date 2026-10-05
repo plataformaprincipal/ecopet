@@ -122,6 +122,23 @@ export async function applyInternalPaymentStatus(params: {
   });
   if (!payment) return { changed: false };
 
+  const testMeta = (payment.metadata as Record<string, unknown> | null) ?? {};
+  if (testMeta.checkoutTest === true) {
+    await prisma.payment.update({
+      where: { id: payment.id },
+      data: {
+        status: params.internalStatus,
+        statusDetail: params.statusDetail ?? payment.statusDetail,
+        environment: "test",
+        ...(params.providerOrderId
+          ? { providerOrderId: params.providerOrderId, externalId: params.providerOrderId }
+          : {}),
+        ...(params.providerPaymentId ? { providerPaymentId: params.providerPaymentId } : {}),
+      },
+    });
+    return { changed: true };
+  }
+
   // Identificador externo já vinculado a outro pedido
   if (params.providerPaymentId || params.providerOrderId) {
     const conflict = await prisma.payment.findFirst({

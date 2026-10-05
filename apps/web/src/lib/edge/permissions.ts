@@ -6,7 +6,7 @@ import type { AppRole } from "@/lib/edge/types";
 
 export type { AppRole };
 
-export const ADMIN_ONLY_PREFIXES = ["/gestor", "/admin", "/checkout-test"] as const;
+export const ADMIN_ONLY_PREFIXES = ["/gestor", "/admin"] as const;
 
 export const PARTNER_ONLY_PREFIXES = ["/partner", "/parceiro", "/dashboard/partner"] as const;
 
@@ -235,6 +235,10 @@ export function pathMatchesPrefix(pathname: string, prefix: string): boolean {
 }
 
 export function canAccessRoute(role: AppRole, pathname: string): boolean {
+  if (pathMatchesPrefix(pathname, "/checkout-test")) {
+    return true;
+  }
+
   if (isAdminOnlyPath(pathname)) {
     return role === "ADMIN";
   }

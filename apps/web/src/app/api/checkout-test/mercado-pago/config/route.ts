@@ -1,12 +1,12 @@
 import { apiFailure, apiSuccess } from "@/lib/api-response";
-import { requireAdmin } from "@/lib/auth/guards";
+import { requireAuth } from "@/lib/auth/require-auth";
 import { getMercadoPagoTestPublicConfig } from "@/lib/mercado-pago/test-credentials";
 
 export const dynamic = "force-dynamic";
 
 /** GET — Public Key TEST apenas. Nunca Access Token. Sem fallback LIVE. */
 export async function GET() {
-  const { error } = await requireAdmin({ path: "/api/checkout-test/mercado-pago/config" });
+  const { error } = await requireAuth();
   if (error) return error;
 
   const publicConfig = getMercadoPagoTestPublicConfig();

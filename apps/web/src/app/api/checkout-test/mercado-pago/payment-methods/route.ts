@@ -1,5 +1,5 @@
 import { apiFailure, apiSuccess } from "@/lib/api-response";
-import { requireAdmin } from "@/lib/auth/guards";
+import { requireAuth } from "@/lib/auth/require-auth";
 import { isMercadoPagoTestCheckoutConfigured } from "@/lib/mercado-pago/test-credentials";
 import { getTestMercadoPagoPaymentMethods } from "@/lib/mercado-pago/test-client";
 
@@ -36,7 +36,7 @@ const LABELS: Record<EcoPetPaymentMethodId, string> = {
 
 /** GET — meios da conta TEST. Não sincroniza PaymentMethodConfiguration LIVE. */
 export async function GET() {
-  const { error } = await requireAdmin({ path: "/api/checkout-test/mercado-pago/payment-methods" });
+  const { error } = await requireAuth();
   if (error) return error;
   if (!isMercadoPagoTestCheckoutConfigured()) {
     return apiFailure("MP_TEST_NOT_CONFIGURED", "Checkout de teste indisponível.", 503);

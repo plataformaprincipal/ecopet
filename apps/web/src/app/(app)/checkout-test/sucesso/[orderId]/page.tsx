@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { UserRole } from "@prisma/client";
+import { redirect, notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { prisma } from "@/lib/prisma";
@@ -24,95 +23,97 @@ export const metadata: Metadata = {
 export default async function CheckoutTestSuccessPage({ params }: PageProps) {
   const { orderId } = await params;
   const user = await getCurrentUser();
-  if (!user || user.role !== UserRole.ADMIN) notFound();
+  if (!user) redirect("/login?callbackUrl=/checkout-test");
 
-  const order = user
-    ? await prisma.order.findFirst({
-        where: { id: orderId, userId: user.id },
+  const order = await prisma.order.findFirst({
+    where: { id: orderId, userId: user.id },
+    select: {
+      id: true,
+      orderNumber: true,
+      status: true,
+      total: true,
+      deliveryNotes: true,
+      payments: {
+        where: { provider: "mercado_pago", environment: "test" },
+        orderBy: { createdAt: "desc" },
+        take: 1,
         select: {
           id: true,
-          orderNumber: true,
           status: true,
-          total: true,
-          deliveryNotes: true,
-          payments: {
-            where: { provider: "mercado_pago", environment: "test" },
-            orderBy: { createdAt: "desc" },
-            take: 1,
-            select: {
-              id: true,
-              status: true,
-              paymentMethod: true,
-              statusDetail: true,
-              amount: true,
-              providerOrderId: true,
-              metadata: true,
-            },
-          },
+          paymentMethod: true,
+          statusDetail: true,
+          amount: true,
+          providerOrderId: true,
+          providerPaymentId: true,
+          metadata: true,
         },
-      })
-    : null;
+      },
+    },
+  });
 
-  const isTestOrder = Boolean(order && isCheckoutTestOrderNotes(order.deliveryNotes));
-  const payment = isTestOrder ? order?.payments[0] : undefined;
+  if (!order || !isCheckoutTestOrderNotes(order.deliveryNotes)) {
+    notFound();
+  }
+
+  const payment = order.payments[0];
   const meta = (payment?.metadata as Record<string, unknown> | null) ?? {};
   const mpOrderId =
     payment?.providerOrderId ||
     (typeof meta.mercadoPagoOrderId === "string" ? meta.mercadoPagoOrderId : null);
-  const statusLabel = payment?.status || order?.status || "PENDING";
+  const mpPaymentId = payment?.providerPaymentId ?? null;
+  const statusLabel = payment?.status || order.status || "PENDING";
   const confirming =
-    order?.status === "PENDING_CONFIRMATION" ||
     payment?.status === "PROCESSING" ||
-    payment?.status === "IN_PROCESS";
-  const paid = order?.status === "PAID";
-  const failed = ["REJECTED", "CANCELLED", "EXPIRED", "ERROR"].includes(
-    String(payment?.status || statusLabel)
-  );
+    payment?.status === "IN_PROCESS" ||
+    payment?.status === "PENDING" ||
+    payment?.status === "CREATED";
+  const paid = payment?.status === "APPROVED";
+  const failed = ["REJECTED", "CANCELLED", "EXPIRED", "ERROR"].includes(String(statusLabel));
 
   return (
     <main className="mx-auto max-w-lg space-y-4 p-6">
       <CheckoutTestBanner />
       <Card>
         <CardContent className="space-y-4 p-6 text-center">
+          <p className="text-xs font-bold tracking-wide text-amber-800 dark:text-amber-200">
+            AMBIENTE: TESTE
+          </p>
+          <p className="text-xs font-bold tracking-wide text-amber-800 dark:text-amber-200">
+            PAGAMENTO REAL: NÃO
+          </p>
           <h1 className="text-2xl font-semibold">
-            {!isTestOrder
-              ? "Pedido de teste não encontrado"
-              : paid
-                ? "Pagamento de teste confirmado"
-                : confirming
-                  ? "Pagamento de teste em confirmação"
-                  : failed
-                    ? "Pagamento de teste não concluído"
-                    : "Pedido de teste registrado"}
+            {paid
+              ? "Pagamento de teste confirmado"
+              : confirming
+                ? "Pagamento de teste em confirmação"
+                : failed
+                  ? "Pagamento de teste não concluído"
+                  : "Pedido de teste registrado"}
           </h1>
-          {isTestOrder && order ? (
-            <p className="text-sm">
-              Pedido #{order.orderNumber} · R$ {Number(order.total).toFixed(2)}
-            </p>
-          ) : null}
+          <p className="text-sm">
+            Pedido #{order.orderNumber} · R$ {Number(order.total).toFixed(2)}
+          </p>
           {mpOrderId ? (
             <div className="rounded border border-dashed px-3 py-2 text-sm">
               <p className="text-xs text-muted-foreground">Mercado Pago Order ID</p>
               <p className="break-all font-mono font-semibold">{mpOrderId}</p>
             </div>
-          ) : isTestOrder ? (
+          ) : (
             <p className="text-xs text-muted-foreground">
-              Mercado Pago Order ID ainda não persistido. Aguarde a confirmação.
+              Mercado Pago Order ID ainda não persistido.
             </p>
+          )}
+          {mpPaymentId ? (
+            <div className="rounded border border-dashed px-3 py-2 text-sm">
+              <p className="text-xs text-muted-foreground">Payment ID</p>
+              <p className="break-all font-mono font-semibold">{mpPaymentId}</p>
+            </div>
           ) : null}
-          {payment ? (
-            <p className="text-sm text-muted-foreground">
-              Status: {payment.status}
-              {payment.statusDetail ? ` (${payment.statusDetail})` : ""}
-            </p>
-          ) : null}
-          {confirming && isTestOrder && order ? (
+          <p className="text-sm text-muted-foreground">Status: {statusLabel}</p>
+          {confirming && !paid ? (
             <CheckoutTestPaymentPoller orderId={order.id} paymentId={payment?.id} />
           ) : null}
           <div className="flex flex-wrap justify-center gap-3">
-            <Button asChild>
-              <Link href="/admin">Painel admin</Link>
-            </Button>
             <Button asChild variant="outline">
               <Link href="/checkout-test">Nova tentativa de teste</Link>
             </Button>

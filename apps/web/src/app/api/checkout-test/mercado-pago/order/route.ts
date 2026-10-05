@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { apiFailure, apiSuccess } from "@/lib/api-response";
-import { requireAdmin } from "@/lib/auth/guards";
+import { requireAuth } from "@/lib/auth/require-auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { createMercadoPagoCheckoutTestOrder } from "@/lib/mercado-pago/create-checkout-test-order";
 import { isMercadoPagoTestCheckoutConfigured } from "@/lib/mercado-pago/test-credentials";
@@ -23,7 +23,7 @@ const bodySchema = z.object({
 
 /** POST /api/checkout-test/mercado-pago/order — API Orders TEST only. */
 export async function POST(request: Request) {
-  const { user, error } = await requireAdmin({ path: "/api/checkout-test/mercado-pago/order" });
+  const { user, error } = await requireAuth();
   if (error) return error;
 
   if (!checkRateLimit(`mp-checkout-test:${user!.id}`, 10, 60_000)) {
