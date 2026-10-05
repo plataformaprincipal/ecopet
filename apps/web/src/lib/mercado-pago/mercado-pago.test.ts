@@ -359,12 +359,17 @@ describe("mercado-pago secret leak patterns", () => {
       path.resolve(process.cwd(), "src/components/features/marketplace/mercado-pago-checkout.tsx"),
       path.resolve(process.cwd(), "src/components/features/marketplace/checkout-panel.tsx"),
       path.resolve(process.cwd(), "src/components/features/marketplace/checkout-pay-again.tsx"),
+      path.resolve(process.cwd(), "src/components/features/marketplace/mercado-pago-test-checkout.tsx"),
+      path.resolve(process.cwd(), "src/components/features/marketplace/checkout-test-panel.tsx"),
     ];
     for (const file of clients) {
       const content = await fs.readFile(file, "utf8");
       assert.ok(!content.includes("@/lib/mercado-pago/config"));
       assert.ok(!content.includes("@/lib/mercado-pago/client"));
+      assert.ok(!content.includes("@/lib/mercado-pago/test-credentials"));
+      assert.ok(!content.includes("@/lib/mercado-pago/test-client"));
       assert.ok(!content.includes("MERCADO_PAGO_ACCESS_TOKEN"));
+      assert.ok(!content.includes("MERCADO_PAGO_TEST_ACCESS_TOKEN"));
       assert.ok(!/APP_USR-[A-Za-z0-9_-]{16,}/.test(content));
     }
   });

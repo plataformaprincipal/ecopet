@@ -23,6 +23,7 @@ export default function robots(): MetadataRoute.Robots {
           "/configuracoes",
           "/carrinho",
           "/checkout",
+          "/checkout-test",
           "/eccopet/checkout",
           "/eccopet/confirmacao",
           "/minha-conta",

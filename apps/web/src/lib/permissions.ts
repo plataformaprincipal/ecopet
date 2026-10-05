@@ -3,7 +3,7 @@
 export type AppRole = "CLIENT" | "PARTNER" | "ONG" | "ADMIN";
 
 /** Rotas exclusivas de administrador */
-export const ADMIN_ONLY_PREFIXES = ["/gestor", "/admin"] as const;
+export const ADMIN_ONLY_PREFIXES = ["/gestor", "/admin", "/checkout-test"] as const;
 
 /** Prefixos permitidos por role (middleware + navegação) */
 export const ROLE_ROUTE_PREFIXES: Record<AppRole, readonly string[]> = {

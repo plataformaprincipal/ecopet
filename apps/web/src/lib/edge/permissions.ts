@@ -6,7 +6,7 @@ import type { AppRole } from "@/lib/edge/types";
 
 export type { AppRole };
 
-export const ADMIN_ONLY_PREFIXES = ["/gestor", "/admin"] as const;
+export const ADMIN_ONLY_PREFIXES = ["/gestor", "/admin", "/checkout-test"] as const;
 
 export const PARTNER_ONLY_PREFIXES = ["/partner", "/parceiro", "/dashboard/partner"] as const;
 
