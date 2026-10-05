@@ -18,15 +18,19 @@ import { assertCheckoutEnabled } from "@/lib/commerce/checkout-flags";
 import { consumeCouponInCheckout, quoteCouponInTx } from "@/lib/commerce/apply-coupon";
 import { PricingError, serverQuoteProduct, quoteToOrderFloats, couponToEngineInput } from "@/lib/pricing/service";
 import { linesAfterDiscount } from "@/lib/commerce-chat/quotes-math";
+import { isMercadoPagoCheckoutAvailable } from "@/lib/mercado-pago/config";
+import { resolveOrderMarketplaceSplit } from "@/lib/mercado-pago/marketplace-split";
 
-const PAYMENT_AT_DELIVERY_LABEL: Record<PaymentMethod, string> = {
-  PIX: "PIX na entrega",
-  CARD: "Cartão na entrega",
-  CASH: "Dinheiro na entrega",
+const ONLINE_PAYMENT_LABEL: Record<PaymentMethod, string> = {
+  PIX: "Pix online (Mercado Pago)",
+  CARD: "Cartão online (Mercado Pago)",
+  CASH: "Dinheiro",
   TRANSFER: "Transferência",
   WALLET: "Carteira",
-  BOLETO: "Boleto",
+  BOLETO: "Boleto online (Mercado Pago)",
 };
+
+const COD_METHODS = new Set<PaymentMethod>([PaymentMethod.CASH, PaymentMethod.TRANSFER, PaymentMethod.WALLET]);
 
 export async function checkoutFromCart(params: {
   userId: string;
@@ -39,6 +43,13 @@ export async function checkoutFromCart(params: {
   couponCode?: string | null;
 }) {
   assertCheckoutEnabled();
+
+  if (!isMercadoPagoCheckoutAvailable()) {
+    throw new Error("MP_NOT_CONFIGURED");
+  }
+  if (params.paymentMethod && COD_METHODS.has(params.paymentMethod)) {
+    throw new Error("COD_NOT_ALLOWED");
+  }
 
   if (params.idempotencyKey) {
     const existing = await prisma.order.findUnique({
@@ -59,8 +70,8 @@ export async function checkoutFromCart(params: {
   const physicalItems = cart.items.filter((i) => i.itemType !== "DIGITAL_AI" && i.productId);
   if (!physicalItems.length) throw new Error("CART_EMPTY");
 
-  const paymentMethod = params.paymentMethod ?? PaymentMethod.PIX;
-  const paymentNote = PAYMENT_AT_DELIVERY_LABEL[paymentMethod] ?? paymentMethod;
+  const paymentMethod = params.paymentMethod ?? PaymentMethod.CARD;
+  const paymentNote = ONLINE_PAYMENT_LABEL[paymentMethod] ?? paymentMethod;
 
   const order = await prisma.$transaction(async (tx) => {
     // Recarrega produtos do servidor — nunca confia em preço do cliente
@@ -169,6 +180,17 @@ export async function checkoutFromCart(params: {
     }
     if (snap.grossAmount <= 0) throw new Error("INVALID_TOTAL");
 
+    const amount = Math.max(0, snap.grossAmount - snap.discountAmount);
+    const splitEval = await resolveOrderMarketplaceSplit({
+      partnerId,
+      itemPartnerIds: [partnerId],
+      amount,
+      applicationFeeAmount: snap.platformFeeAmount,
+    });
+    if (!splitEval.capability.splitReady) {
+      throw new Error("SELLER_SPLIT_UNAVAILABLE");
+    }
+
     for (const line of lines) {
       const updated = await tx.product.updateMany({
         where: { id: line.productId, stock: { gte: line.quantity }, deletedAt: null },
@@ -257,9 +279,9 @@ export async function checkoutFromCart(params: {
               gatewayFeeEstimated: snap.gatewayFeeEstimated,
               reserveAmount: snap.reserveAmount,
               taxEstimate: snap.taxEstimate,
-              splitReady: false,
-              logicalSplitOnly: true,
-              estimatesOnly: true,
+              splitReady: true,
+              logicalSplitOnly: false,
+              estimatesOnly: false,
             },
           },
         },
@@ -367,8 +389,8 @@ async function checkoutQuoteFromCart(params: {
   if (partnerIds.size !== 1) throw new Error("MULTI_PARTNER_CART");
   const partnerId = [...partnerIds][0]!;
 
-  const paymentMethod = params.paymentMethod ?? PaymentMethod.PIX;
-  const paymentNote = PAYMENT_AT_DELIVERY_LABEL[paymentMethod] ?? paymentMethod;
+  const paymentMethod = params.paymentMethod ?? PaymentMethod.CARD;
+  const paymentNote = ONLINE_PAYMENT_LABEL[paymentMethod] ?? paymentMethod;
 
   const { serverQuoteProduct, quoteToOrderFloats, PricingError } = await import("@/lib/pricing/service");
   const { markQuoteConverted, asPayload } = await import("@/lib/commerce-chat/quotes");
@@ -399,6 +421,16 @@ async function checkoutQuoteFromCart(params: {
 
   const total = Math.max(0, snap.total + payload.shippingAmount);
   if (!(total > 0)) throw new Error("INVALID_TOTAL");
+
+  const quoteSplit = await resolveOrderMarketplaceSplit({
+    partnerId,
+    itemPartnerIds: [partnerId],
+    amount: total,
+    applicationFeeAmount: snap.platformFeeAmount,
+  });
+  if (!quoteSplit.capability.splitReady) {
+    throw new Error("SELLER_SPLIT_UNAVAILABLE");
+  }
 
   const order = await prisma.$transaction(async (tx) => {
     const maxNum = (await tx.order.aggregate({ _max: { orderNumber: true } }))._max.orderNumber ?? 1000;
@@ -467,9 +499,9 @@ async function checkoutQuoteFromCart(params: {
               source: "quote-checkout",
               quoteId: quote.id,
               pricingVersion: snap.pricingVersion,
-              splitReady: false,
-              logicalSplitOnly: true,
-              estimatesOnly: true,
+              splitReady: true,
+              logicalSplitOnly: false,
+              estimatesOnly: false,
             },
           },
         },

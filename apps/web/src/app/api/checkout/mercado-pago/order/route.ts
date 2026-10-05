@@ -73,6 +73,16 @@ export async function POST(request: Request) {
       INVALID_AMOUNT: { status: 400, message: "Valor do pedido inválido." },
       INVALID_CARD_TOKEN: { status: 400, message: "Token de cartão inválido." },
       PAYER_EMAIL_REQUIRED: { status: 400, message: "E-mail do pagador obrigatório." },
+      SELLER_SPLIT_UNAVAILABLE: {
+        status: 409,
+        message:
+          "Este parceiro ainda não está habilitado para receber pagamentos no Mercado Pago. A venda não pode ser concluída agora.",
+      },
+      SELLER_TOKEN_UNAVAILABLE: {
+        status: 409,
+        message:
+          "Este parceiro ainda não está habilitado para receber pagamentos no Mercado Pago. A venda não pode ser concluída agora.",
+      },
       MP_NOT_CONFIGURED: { status: 503, message: "Mercado Pago não configurado." },
       MP_UNAUTHORIZED: { status: 502, message: "Falha de autenticação com Mercado Pago." },
       MP_VALIDATION: { status: 422, message: "Dados rejeitados pelo Mercado Pago." },

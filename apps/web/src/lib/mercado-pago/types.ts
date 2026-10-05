@@ -59,7 +59,11 @@ export type MpOrderPayment = {
     ticket_url?: string;
     qr_code?: string;
     qr_code_base64?: string;
+    barcode?: string;
+    digitable_line?: string;
+    date_of_expiration?: string;
   };
+  date_of_expiration?: string;
 };
 
 export type MpOrderResponse = {

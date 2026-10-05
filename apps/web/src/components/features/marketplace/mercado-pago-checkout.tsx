@@ -19,6 +19,9 @@ type PayResult = {
     ticketUrl?: string | null;
     qrCode?: string | null;
     qrCodeBase64?: string | null;
+    barcode?: string | null;
+    digitableLine?: string | null;
+    expiration?: string | null;
   } | null;
 };
 
@@ -26,6 +29,7 @@ type Props = {
   orderId: string;
   amount: number;
   payerEmail: string;
+  initialMethod?: "card" | "pix" | "boleto";
   onPaid: (result: PayResult) => void;
   onCancel?: () => void;
 };
@@ -68,9 +72,9 @@ function loadMpSdk(): Promise<void> {
  * Checkout Transparente — tokenização no browser (Public Key).
  * Nunca envia PAN/CVV ao backend EcoPet; apenas cardToken.
  */
-export function MercadoPagoCheckout({ orderId, amount, payerEmail, onPaid, onCancel }: Props) {
+export function MercadoPagoCheckout({ orderId, amount, payerEmail, initialMethod = "card", onPaid, onCancel }: Props) {
   const [config, setConfig] = useState<MpConfig | null>(null);
-  const [method, setMethod] = useState<"card" | "pix" | "boleto">("card");
+  const [method, setMethod] = useState<"card" | "pix" | "boleto">(initialMethod);
   const [enabledMethods, setEnabledMethods] = useState<Array<"card" | "pix" | "boleto">>([
     "card",
     "pix",
@@ -99,6 +103,12 @@ export function MercadoPagoCheckout({ orderId, amount, payerEmail, onPaid, onCan
     identificationType: "CPF",
     identificationNumber: "",
     installments: 1,
+  });
+  const [boleto, setBoleto] = useState({
+    firstName: "",
+    lastName: "",
+    identificationNumber: "",
+    zipCode: "",
   });
 
   useEffect(() => {
@@ -224,7 +234,7 @@ export function MercadoPagoCheckout({ orderId, amount, payerEmail, onPaid, onCan
       const status = String(paid.status).toUpperCase();
       if (["REJECTED", "CANCELLED", "EXPIRED", "ERROR"].includes(status)) {
         setError(
-          "Não foi possível concluir o pagamento. Seu pedido não foi cobrado. Tente novamente ou escolha outra forma de pagamento."
+          "Pagamento recusado. Seu pedido não foi cobrado. Tente novamente ou escolha outra forma de pagamento."
         );
         return;
       }
@@ -243,20 +253,32 @@ export function MercadoPagoCheckout({ orderId, amount, payerEmail, onPaid, onCan
     setSubmitting(true);
     setError("");
     try {
+      if (alt === "boleto") {
+        if (!boleto.firstName.trim() || !boleto.lastName.trim() || boleto.identificationNumber.replace(/\D/g, "").length < 11) {
+          throw new Error("Informe nome, sobrenome e CPF do pagador para emitir o boleto.");
+        }
+      }
       const paid = await payOnline({
         orderId,
         paymentMethodId: alt,
         payerEmail,
+        ...(alt === "boleto"
+          ? {
+              payerFirstName: boleto.firstName.trim(),
+              payerLastName: boleto.lastName.trim(),
+              identificationType: "CPF",
+              identificationNumber: boleto.identificationNumber.replace(/\D/g, ""),
+            }
+          : {}),
       });
       setResult(paid);
       const status = String(paid.status).toUpperCase();
       if (["REJECTED", "CANCELLED", "EXPIRED", "ERROR"].includes(status)) {
         setError(
-          "Não foi possível concluir o pagamento. Seu pedido não foi cobrado. Tente novamente ou escolha outra forma de pagamento."
+          "Pagamento recusado. Seu pedido não foi cobrado. Tente novamente ou escolha outra forma de pagamento."
         );
         return;
       }
-      onPaid(paid);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao iniciar pagamento");
     } finally {
@@ -279,7 +301,7 @@ export function MercadoPagoCheckout({ orderId, amount, payerEmail, onPaid, onCan
         <p>{error || "Checkout online indisponível."}</p>
         {onCancel ? (
           <Button type="button" variant="outline" size="sm" onClick={onCancel}>
-            Usar pagamento na entrega
+            Voltar
           </Button>
         ) : null}
       </div>
@@ -338,24 +360,21 @@ export function MercadoPagoCheckout({ orderId, amount, payerEmail, onPaid, onCan
       {result ? (
         <div className="space-y-2 rounded border border-dashed p-3 text-sm" role="status">
           <p>
-            Status: <strong>{result.status}</strong>
+            {result.mpOrder?.qrCode
+              ? "Pix aguardando pagamento"
+              : result.mpOrder?.ticketUrl || result.mpOrder?.digitableLine
+                ? "Boleto emitido"
+                : "Pagamento pendente"}
+            {": "}
+            <strong>{result.status}</strong>
             {result.statusDetail ? ` (${result.statusDetail})` : ""}
           </p>
-          {result.mpOrder?.qrCode ? (
-            <div className="space-y-2">
-              <p className="break-all font-mono text-xs">PIX: {result.mpOrder.qrCode}</p>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => void navigator.clipboard.writeText(result.mpOrder?.qrCode || "")}
-              >
-                Copiar código Pix
-              </Button>
-              <p className="text-xs text-muted-foreground">
-                Aguardando pagamento. O pedido só será marcado como pago após confirmação oficial.
-              </p>
-            </div>
+          {result.mpOrder?.expiration ? (
+            <p className="text-xs text-muted-foreground">
+              Expiração: {new Date(result.mpOrder.expiration).toLocaleString("pt-BR")}
+            </p>
+          ) : result.mpOrder?.qrCode ? (
+            <p className="text-xs text-muted-foreground">Expiração: 24 horas após a geração.</p>
           ) : null}
           {result.mpOrder?.qrCodeBase64 ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -365,16 +384,52 @@ export function MercadoPagoCheckout({ orderId, amount, payerEmail, onPaid, onCan
               className="h-40 w-40"
             />
           ) : null}
+          {result.mpOrder?.qrCode ? (
+            <div className="space-y-2">
+              <p className="break-all font-mono text-xs">Pix copia-e-cola: {result.mpOrder.qrCode}</p>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => void navigator.clipboard.writeText(result.mpOrder?.qrCode || "")}
+              >
+                Copiar código Pix
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Pix aguardando pagamento. O pedido só será marcado como pago após confirmação do Mercado Pago.
+              </p>
+            </div>
+          ) : null}
+          {result.mpOrder?.digitableLine ? (
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground">Linha digitável</p>
+              <p className="break-all font-mono text-xs">{result.mpOrder.digitableLine}</p>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => void navigator.clipboard.writeText(result.mpOrder?.digitableLine || "")}
+              >
+                Copiar linha digitável
+              </Button>
+            </div>
+          ) : null}
+          {result.mpOrder?.barcode && result.mpOrder.barcode !== result.mpOrder.digitableLine ? (
+            <p className="break-all font-mono text-xs">Código de barras: {result.mpOrder.barcode}</p>
+          ) : null}
           {result.mpOrder?.ticketUrl ? (
             <a
               href={result.mpOrder.ticketUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="underline"
+              className="inline-block underline"
             >
               Abrir boleto
             </a>
           ) : null}
+          <Button type="button" className="w-full" onClick={() => onPaid(result)}>
+            Continuar
+          </Button>
         </div>
       ) : null}
 
@@ -514,14 +569,71 @@ export function MercadoPagoCheckout({ orderId, amount, payerEmail, onPaid, onCan
       ) : null}
 
       {method === "boleto" && !result ? (
-        <Button
-          type="button"
-          className="w-full"
-          disabled={submitting}
-          onClick={() => void handleAltPay("boleto")}
+        <form
+          className="space-y-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void handleAltPay("boleto");
+          }}
         >
-          {submitting ? "Gerando boleto…" : "Gerar boleto"}
-        </Button>
+          <p className="text-xs text-muted-foreground">
+            O boleto permanece pendente até a compensação. O pedido não é marcado como pago na emissão.
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label htmlFor="mp-boleto-first" className="mb-1 block text-sm font-medium">
+                Nome
+              </label>
+              <Input
+                id="mp-boleto-first"
+                value={boleto.firstName}
+                onChange={(e) => setBoleto({ ...boleto, firstName: e.target.value })}
+                required
+                disabled={submitting}
+              />
+            </div>
+            <div>
+              <label htmlFor="mp-boleto-last" className="mb-1 block text-sm font-medium">
+                Sobrenome
+              </label>
+              <Input
+                id="mp-boleto-last"
+                value={boleto.lastName}
+                onChange={(e) => setBoleto({ ...boleto, lastName: e.target.value })}
+                required
+                disabled={submitting}
+              />
+            </div>
+          </div>
+          <div>
+            <label htmlFor="mp-boleto-cpf" className="mb-1 block text-sm font-medium">
+              CPF do pagador
+            </label>
+            <Input
+              id="mp-boleto-cpf"
+              inputMode="numeric"
+              value={boleto.identificationNumber}
+              onChange={(e) => setBoleto({ ...boleto, identificationNumber: e.target.value })}
+              required
+              disabled={submitting}
+            />
+          </div>
+          <div>
+            <label htmlFor="mp-boleto-zip" className="mb-1 block text-sm font-medium">
+              CEP
+            </label>
+            <Input
+              id="mp-boleto-zip"
+              inputMode="numeric"
+              value={boleto.zipCode}
+              onChange={(e) => setBoleto({ ...boleto, zipCode: e.target.value })}
+              disabled={submitting}
+            />
+          </div>
+          <Button type="submit" className="w-full" disabled={submitting}>
+            {submitting ? "Gerando boleto…" : "Gerar boleto"}
+          </Button>
+        </form>
       ) : null}
     </div>
   );

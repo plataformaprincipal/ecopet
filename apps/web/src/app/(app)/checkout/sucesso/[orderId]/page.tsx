@@ -39,16 +39,22 @@ export default async function CheckoutSuccessPage({ params }: PageProps) {
     : null;
 
   const payment = order?.payments[0];
+  const method = String(payment?.paymentMethod || "").toLowerCase();
   // Query ?status= só é dica de UI; confirmação de pago vem apenas do banco.
   const statusLabel = payment?.status || order?.status || "PENDING";
   const confirming =
     order?.status === "PENDING_CONFIRMATION" ||
     payment?.status === "PROCESSING" ||
-    payment?.status === "IN_PROCESS";
+    payment?.status === "IN_PROCESS" ||
+    payment?.status === "PENDING" ||
+    payment?.status === "CREATED" ||
+    payment?.status === "ACTION_REQUIRED";
   const paid = order?.status === "PAID";
   const failed = ["REJECTED", "CANCELLED", "EXPIRED", "ERROR"].includes(
     String(payment?.status || statusLabel)
   );
+  const pixWaiting = !paid && !failed && (method === "pix" || method.includes("pix"));
+  const boletoIssued = !paid && !failed && (method === "boleto" || method === "ticket" || method.includes("bol"));
   const canRetry =
     Boolean(order) &&
     order!.status !== "PAID" &&
@@ -64,27 +70,31 @@ export default async function CheckoutSuccessPage({ params }: PageProps) {
         <CardContent className="space-y-4 p-6 text-center">
           <h1 className="text-2xl font-semibold">
             {paid
-              ? "Pagamento confirmado"
-              : confirming
-                ? "Pagamento em confirmação"
-                : failed
-                  ? "Pagamento não concluído"
-                  : "Pedido registrado"}
+              ? "Pagamento aprovado"
+              : failed
+                ? "Pagamento recusado"
+                : boletoIssued
+                  ? "Boleto emitido"
+                  : pixWaiting
+                    ? "Pix aguardando pagamento"
+                    : confirming
+                      ? "Pagamento pendente"
+                      : "Pagamento pendente"}
           </h1>
           <p className="text-sm text-muted-foreground">
             {paid
-              ? "Recebemos a confirmação do pagamento. O pedido segue para o parceiro."
-              : confirming
-                ? "Recebemos seu pedido e estamos confirmando o pagamento com o provedor. Isso pode levar alguns instantes — atualize esta página em breve. Não tente pagar de novo até ver o status final."
-                : failed
-                  ? `Não foi possível concluir o pagamento (${payment?.status || statusLabel}${
-                      payment?.statusDetail ? ` · ${payment.statusDetail}` : ""
-                    }). Você pode tentar novamente.`
-                  : payment
-                    ? `Status do pagamento: ${payment.status}${
-                        payment.statusDetail ? ` (${payment.statusDetail})` : ""
-                      }.`
-                    : "Seu pedido foi criado. Se escolheu pagamento na entrega, combine com o parceiro."}
+              ? "Recebemos a confirmação do Mercado Pago. O pedido segue para o parceiro."
+              : failed
+                ? `Pagamento recusado (${payment?.status || statusLabel}${
+                    payment?.statusDetail ? ` · ${payment.statusDetail}` : ""
+                  }). Você pode tentar novamente.`
+                : boletoIssued
+                  ? "Boleto emitido. O pedido permanece pendente até a compensação. Não marcamos como pago na emissão."
+                  : pixWaiting
+                    ? "Pix aguardando pagamento. O pedido só será marcado como pago após confirmação do Mercado Pago."
+                    : confirming
+                      ? "Pagamento pendente. Estamos confirmando com o Mercado Pago. Não tente pagar de novo até ver o status final."
+                      : "Conclua o pagamento online com cartão, Pix ou boleto. Pagamento na entrega não está disponível."}
           </p>
           {order ? (
             <p className="text-sm">

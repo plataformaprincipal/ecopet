@@ -37,7 +37,7 @@ export async function resolveOrderMarketplaceSplit(params: {
 
 export function sanitizeMarketplacePaymentForClient(mp: Record<string, unknown>) {
   const poi = mp.point_of_interaction as
-    | { transaction_data?: { ticket_url?: string; qr_code?: string; qr_code_base64?: string } }
+    | { transaction_data?: { ticket_url?: string; qr_code?: string; qr_code_base64?: string; barcode?: string; digitable_line?: string } }
     | undefined;
   const tx = poi?.transaction_data;
   return {
@@ -49,6 +49,9 @@ export function sanitizeMarketplacePaymentForClient(mp: Record<string, unknown>)
     ticketUrl: tx?.ticket_url ?? null,
     qrCode: tx?.qr_code ?? null,
     qrCodeBase64: tx?.qr_code_base64 ?? null,
+    barcode: tx?.barcode ?? null,
+    digitableLine: tx?.digitable_line ?? tx?.barcode ?? null,
+    expiration: typeof mp.date_of_expiration === "string" ? mp.date_of_expiration : null,
     methodId: typeof mp.payment_method_id === "string" ? mp.payment_method_id : null,
     methodType: typeof mp.payment_type_id === "string" ? mp.payment_type_id : null,
   };

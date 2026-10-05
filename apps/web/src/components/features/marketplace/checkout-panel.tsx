@@ -11,14 +11,7 @@ import { AddressByCepField } from "@/components/shared/address/address-by-cep-fi
 import { OrderEvents, PaymentEvents } from "@/lib/analytics/events";
 import { analyticsService } from "@/lib/analytics/service";
 
-type PaymentMethod = "PIX" | "CARD" | "CASH";
-type PayMode = "delivery" | "online";
-
-const PAYMENT_OPTIONS: { value: PaymentMethod; label: string; hint: string }[] = [
-  { value: "PIX", label: "PIX", hint: "Pagamento via PIX no momento da entrega ou retirada." },
-  { value: "CARD", label: "Cartão", hint: "Pagamento com cartão no momento da entrega ou retirada." },
-  { value: "CASH", label: "Dinheiro", hint: "Pagamento em dinheiro no momento da entrega ou retirada." },
-];
+type PaymentMethod = "PIX" | "CARD" | "BOLETO";
 
 export function CheckoutPanel() {
   const router = useRouter();
@@ -26,9 +19,8 @@ export function CheckoutPanel() {
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
-  const [mpAvailable, setMpAvailable] = useState(false);
+  const [mpAvailable, setMpAvailable] = useState<boolean | null>(null);
   const [mpEnvironment, setMpEnvironment] = useState<"test" | "production" | "">("");
-  const [payMode, setPayMode] = useState<PayMode>("delivery");
   const [pendingOrder, setPendingOrder] = useState<{
     id: string;
     total: number;
@@ -37,7 +29,7 @@ export function CheckoutPanel() {
   const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
   const [form, setForm] = useState({
     deliveryMethod: "PICKUP_LOCAL",
-    paymentMethod: "PIX" as PaymentMethod,
+    paymentMethod: "CARD" as PaymentMethod,
     phone: "",
     notes: "",
     street: "",
@@ -68,9 +60,11 @@ export function CheckoutPanel() {
           setMpAvailable(true);
           const env = String(d.data.environment || "").toLowerCase();
           setMpEnvironment(env === "production" ? "production" : env === "test" ? "test" : "");
+        } else {
+          setMpAvailable(false);
         }
       })
-      .catch(() => undefined);
+      .catch(() => setMpAvailable(false));
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -79,7 +73,12 @@ export function CheckoutPanel() {
     setSaving(true);
     setError("");
     setFieldErrors({});
-    if (payMode === "online" && mpAvailable && !payerEmail.trim()) {
+    if (mpAvailable !== true) {
+      setSaving(false);
+      setError("Checkout online indisponível. Somente pagamento via Mercado Pago é aceito.");
+      return;
+    }
+    if (!payerEmail.trim()) {
       setSaving(false);
       setError("Faça login com um e-mail válido para pagar online.");
       return;
@@ -133,17 +132,13 @@ export function CheckoutPanel() {
     const order = data.data.order as { id: string; total: number };
     analyticsService.track(OrderEvents.ORDER_COMPLETE, {
       value: Number(order.total),
-      params: { order_id: order.id, pay_mode: payMode },
+      params: { order_id: order.id, pay_mode: "online" },
     });
-    if (payMode === "online" && mpAvailable) {
-      analyticsService.track(PaymentEvents.PAYMENT_START, {
-        value: Number(order.total),
-        params: { order_id: order.id, provider: "mercado_pago" },
-      });
-      setPendingOrder({ id: order.id, total: Number(order.total) });
-      return;
-    }
-    router.push(`/checkout/sucesso/${order.id}`);
+    analyticsService.track(PaymentEvents.PAYMENT_START, {
+      value: Number(order.total),
+      params: { order_id: order.id, provider: "mercado_pago" },
+    });
+    setPendingOrder({ id: order.id, total: Number(order.total) });
   }
 
   if (pendingOrder) {
@@ -156,6 +151,9 @@ export function CheckoutPanel() {
           orderId={pendingOrder.id}
           amount={pendingOrder.total}
           payerEmail={payerEmail}
+          initialMethod={
+            form.paymentMethod === "PIX" ? "pix" : form.paymentMethod === "BOLETO" ? "boleto" : "card"
+          }
           onPaid={async (result) => {
             const approved = String(result.status).toUpperCase() === "APPROVED";
             const processing = ["PROCESSING", "IN_PROCESS", "PENDING"].includes(
@@ -274,58 +272,30 @@ export function CheckoutPanel() {
               </select>
             </div>
 
-            {mpAvailable ? (
+            {mpAvailable === false ? (
+              <p className="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800" role="alert">
+                Checkout online indisponível. Somente pagamento via Mercado Pago é aceito.
+              </p>
+            ) : (
               <fieldset>
-                <legend className="mb-2 text-sm font-medium">Quando pagar</legend>
-                <div className="flex flex-col gap-2">
-                  <label className="flex cursor-pointer items-start gap-2 rounded border px-3 py-2 text-sm has-[:checked]:border-primary">
-                    <input
-                      type="radio"
-                      name="payMode"
-                      checked={payMode === "delivery"}
-                      onChange={() => setPayMode("delivery")}
-                      className="mt-1"
-                    />
-                    <span>
-                      <span className="font-medium">Na entrega ou retirada</span>
-                      <span className="block text-xs text-muted-foreground">
-                        Sem cobrança online agora.
-                      </span>
-                    </span>
-                  </label>
-                  <label className="flex cursor-pointer items-start gap-2 rounded border px-3 py-2 text-sm has-[:checked]:border-primary">
-                    <input
-                      type="radio"
-                      name="payMode"
-                      checked={payMode === "online"}
-                      onChange={() => setPayMode("online")}
-                      className="mt-1"
-                    />
-                    <span>
-                      <span className="font-medium">Pagar agora (Mercado Pago)</span>
-                      <span className="block text-xs text-muted-foreground">
-                        Checkout transparente
-                        {mpEnvironment === "production"
-                          ? " · produção"
-                          : mpEnvironment === "test"
-                            ? " · ambiente de teste"
-                            : ""}
-                        {" · cartão / PIX / boleto."}
-                      </span>
-                    </span>
-                  </label>
-                </div>
-              </fieldset>
-            ) : null}
-
-            {payMode === "delivery" ? (
-              <fieldset>
-                <legend className="mb-2 text-sm font-medium">Pagamento na entrega ou retirada</legend>
+                <legend className="mb-2 text-sm font-medium">Pagamento online</legend>
                 <p id={paymentHintId} className="mb-2 text-xs text-muted-foreground">
-                  O pagamento não é cobrado agora. Você escolhe como pagar quando receber o pedido.
+                  Somente Mercado Pago Checkout Transparente
+                  {mpEnvironment === "production"
+                    ? " · produção"
+                    : mpEnvironment === "test"
+                      ? " · ambiente de teste"
+                      : ""}
+                  . Valores são recalculados no servidor. O pedido só fica pago após confirmação do Mercado Pago.
                 </p>
                 <div className="flex flex-col gap-2" role="radiogroup" aria-describedby={paymentHintId}>
-                  {PAYMENT_OPTIONS.map((opt) => (
+                  {(
+                    [
+                      { value: "CARD" as const, label: "Cartão", hint: "Cartão de crédito online." },
+                      { value: "PIX" as const, label: "Pix", hint: "Pix online com QR Code e copia-e-cola." },
+                      { value: "BOLETO" as const, label: "Boleto", hint: "Boleto bancário online." },
+                    ] as const
+                  ).map((opt) => (
                     <label
                       key={opt.value}
                       className="flex cursor-pointer items-start gap-2 rounded border px-3 py-2 text-sm has-[:checked]:border-primary"
@@ -347,11 +317,6 @@ export function CheckoutPanel() {
                   ))}
                 </div>
               </fieldset>
-            ) : (
-              <p className="text-xs text-muted-foreground">
-                Após confirmar o pedido, você será direcionado ao checkout seguro do Mercado Pago.
-                Valores são recalculados no servidor.
-              </p>
             )}
 
             <div>
@@ -426,12 +391,12 @@ export function CheckoutPanel() {
               </p>
             )}
 
-            <Button type="submit" disabled={saving} aria-describedby={error ? "checkout-error" : undefined}>
-              {saving
-                ? "Processando..."
-                : payMode === "online"
-                  ? "Criar pedido e pagar"
-                  : "Confirmar pedido"}
+            <Button
+              type="submit"
+              disabled={saving || mpAvailable !== true}
+              aria-describedby={error ? "checkout-error" : undefined}
+            >
+              {saving ? "Processando..." : "Pagar com Mercado Pago"}
             </Button>
             <Button asChild variant="ghost">
               <Link href="/carrinho">Voltar</Link>

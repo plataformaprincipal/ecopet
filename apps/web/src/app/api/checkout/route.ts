@@ -62,6 +62,13 @@ export async function POST(request: Request) {
       INVALID_UNIT_PRICE: ["VALIDATION", "Preço inválido.", 400],
       INVALID_QUANTITY: ["VALIDATION", "Quantidade inválida.", 400],
       IDEMPOTENCY_CONFLICT: ["CONFLICT", "Chave de idempotência já utilizada.", 409],
+      COD_NOT_ALLOWED: ["VALIDATION", "Pagamento na entrega não está disponível. Use cartão, Pix ou boleto online.", 400],
+      MP_NOT_CONFIGURED: ["NOT_CONFIGURED", "Checkout online indisponível: Mercado Pago não configurado.", 503],
+      SELLER_SPLIT_UNAVAILABLE: [
+        "CONFLICT",
+        "Este parceiro ainda não está habilitado para receber pagamentos no Mercado Pago. A venda não pode ser concluída agora.",
+        409,
+      ],
       CHECKOUT_DISABLED: [
         "CHECKOUT_DISABLED",
         "Checkout temporariamente indisponível.",

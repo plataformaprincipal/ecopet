@@ -71,7 +71,7 @@ export const stockPatchSchema = z.object({
 
 export const checkoutSchema = z.object({
   deliveryMethod: z.enum(["DELIVERY_LOCAL", "PICKUP_LOCAL"]),
-  paymentMethod: z.enum(["PIX", "CARD", "CASH"]).default("PIX"),
+  paymentMethod: z.enum(["PIX", "CARD", "BOLETO"]).default("CARD"),
   phone: z
     .string()
     .min(1, "Informe um telefone.")

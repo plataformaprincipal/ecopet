@@ -16,7 +16,6 @@ import { mapMpLegacyPaymentStatusToInternal, mapMpOrderStatusToInternal } from "
 import { applyInternalPaymentStatus } from "@/lib/mercado-pago/apply-payment-status";
 import type { CreateMpOrderRequest } from "@/lib/mercado-pago/types";
 import { metricsFromOrderRow } from "@/lib/finance/metrics";
-import { marketplaceParamsForOrdersApi } from "@/lib/finance/split-capability";
 import {
   createSplitMarketplacePayment,
   resolveOrderMarketplaceSplit,
@@ -86,7 +85,7 @@ export async function createMercadoPagoCheckoutOrder(input: CreateCheckoutOrderI
   });
   const split = splitEval.capability;
   if (!split.splitReady) {
-    void marketplaceParamsForOrdersApi(split);
+    throw new Error("SELLER_SPLIT_UNAVAILABLE");
   }
 
   const methodId = input.paymentMethodId.toLowerCase();
@@ -125,11 +124,11 @@ export async function createMercadoPagoCheckoutOrder(input: CreateCheckoutOrderI
           riskReserveEstimate: snapshotMetrics.reserveAmount,
           pricingVersion: order.pricingVersion,
           splitReady: split.splitReady,
-          logicalSplitOnly: !split.splitReady,
+          logicalSplitOnly: false,
           splitDecision: split.decision,
           mpProduct: split.mpProduct,
           collectorId: split.collectorId,
-          applicationFee: split.splitReady ? snapshotMetrics.platformRevenue : 0,
+          applicationFee: snapshotMetrics.platformRevenue,
           topology: split.topology,
           items: order.items.map((i) => ({
             partnerId: i.partnerId,
@@ -422,9 +421,13 @@ function sanitizeMpOrderForClient(mp: {
         ticket_url?: string;
         qr_code?: string;
         qr_code_base64?: string;
+        barcode?: string;
+        digitable_line?: string;
+        date_of_expiration?: string;
         id?: string;
         type?: string;
       };
+      date_of_expiration?: string;
     }>;
   };
 }) {
@@ -438,6 +441,9 @@ function sanitizeMpOrderForClient(mp: {
     ticketUrl: pay?.payment_method?.ticket_url ?? null,
     qrCode: pay?.payment_method?.qr_code ?? null,
     qrCodeBase64: pay?.payment_method?.qr_code_base64 ?? null,
+    barcode: pay?.payment_method?.barcode ?? null,
+    digitableLine: pay?.payment_method?.digitable_line ?? null,
+    expiration: pay?.date_of_expiration ?? pay?.payment_method?.date_of_expiration ?? null,
     methodId: pay?.payment_method?.id ?? null,
     methodType: pay?.payment_method?.type ?? null,
   };
