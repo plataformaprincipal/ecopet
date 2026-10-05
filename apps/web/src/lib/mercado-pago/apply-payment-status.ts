@@ -1,5 +1,6 @@
 import "server-only";
 
+import { applyCheckoutTestPaymentStatus } from "./apply-checkout-test-status";
 import { OrderStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { createInternalNotification } from "@/lib/notifications/internal";
@@ -121,6 +122,10 @@ export async function applyInternalPaymentStatus(params: {
     },
   });
   if (!payment) return { changed: false };
+
+  if (payment.environment === "test" && (payment.metadata as Record<string, unknown> | null)?.checkoutTest === true) {
+    return applyCheckoutTestPaymentStatus(params);
+  }
 
   // Identificador externo já vinculado a outro pedido
   if (params.providerPaymentId || params.providerOrderId) {

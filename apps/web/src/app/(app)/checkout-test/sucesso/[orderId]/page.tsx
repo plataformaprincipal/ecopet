@@ -1,7 +1,7 @@
+import { checkoutTestAmount, testStatus } from "@/lib/mercado-pago/checkout-test-isolation";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { UserRole } from "@prisma/client";
+import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { prisma } from "@/lib/prisma";
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 export default async function CheckoutTestSuccessPage({ params }: PageProps) {
   const { orderId } = await params;
   const user = await getCurrentUser();
-  if (!user || user.role !== UserRole.ADMIN) notFound();
+  if (!user) redirect("/login?callbackUrl=/checkout-test");
 
   const order = user
     ? await prisma.order.findFirst({
@@ -35,6 +35,7 @@ export default async function CheckoutTestSuccessPage({ params }: PageProps) {
           status: true,
           total: true,
           deliveryNotes: true,
+          pricingSnapshot: true,
           payments: {
             where: { provider: "mercado_pago", environment: "test" },
             orderBy: { createdAt: "desc" },
@@ -59,14 +60,14 @@ export default async function CheckoutTestSuccessPage({ params }: PageProps) {
   const mpOrderId =
     payment?.providerOrderId ||
     (typeof meta.mercadoPagoOrderId === "string" ? meta.mercadoPagoOrderId : null);
-  const statusLabel = payment?.status || order?.status || "PENDING";
+  const statusLabel = (payment ? testStatus(payment.status) : null) || order?.status || "PENDING";
   const confirming =
     order?.status === "PENDING_CONFIRMATION" ||
-    payment?.status === "PROCESSING" ||
-    payment?.status === "IN_PROCESS";
-  const paid = order?.status === "PAID";
+    (payment && testStatus(payment.status) === "PROCESSING") ||
+    (payment && testStatus(payment.status) === "IN_PROCESS");
+  const paid = payment && testStatus(payment.status) === "APPROVED";
   const failed = ["REJECTED", "CANCELLED", "EXPIRED", "ERROR"].includes(
-    String(payment?.status || statusLabel)
+    String(payment ? testStatus(payment.status) : statusLabel)
   );
 
   return (
@@ -87,7 +88,7 @@ export default async function CheckoutTestSuccessPage({ params }: PageProps) {
           </h1>
           {isTestOrder && order ? (
             <p className="text-sm">
-              Pedido #{order.orderNumber} · R$ {Number(order.total).toFixed(2)}
+              Pedido #{order.orderNumber} · R$ {checkoutTestAmount(order).toFixed(2)}
             </p>
           ) : null}
           {mpOrderId ? (
@@ -102,7 +103,7 @@ export default async function CheckoutTestSuccessPage({ params }: PageProps) {
           ) : null}
           {payment ? (
             <p className="text-sm text-muted-foreground">
-              Status: {payment.status}
+              Status TEST: {testStatus(payment.status)}
               {payment.statusDetail ? ` (${payment.statusDetail})` : ""}
             </p>
           ) : null}
@@ -111,10 +112,10 @@ export default async function CheckoutTestSuccessPage({ params }: PageProps) {
           ) : null}
           <div className="flex flex-wrap justify-center gap-3">
             <Button asChild>
-              <Link href="/admin">Painel admin</Link>
+              <Link href="/inicio">Voltar ao EccoPet</Link>
             </Button>
             <Button asChild variant="outline">
-              <Link href="/checkout-test">Nova tentativa de teste</Link>
+              <Link href="/checkout-test">Consultar teste</Link>
             </Button>
           </div>
         </CardContent>

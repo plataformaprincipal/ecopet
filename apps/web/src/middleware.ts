@@ -16,7 +16,7 @@ import type { AccountStatus } from "@/lib/edge/types";
 
 function loginRedirect(request: NextRequest, pathname: string) {
   const loginUrl = new URL("/login", request.url);
-  loginUrl.searchParams.set("callbackUrl", pathname);
+  loginUrl.searchParams.set("callbackUrl", pathname === "/checkout-test" || pathname.startsWith("/checkout-test/") ? "/checkout-test" : pathname);
   return NextResponse.redirect(loginUrl);
 }
 

@@ -2,7 +2,8 @@ import "server-only";
 
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { newIdempotencyKey } from "@/lib/mercado-pago/crypto-utils";
+import { createHash } from "node:crypto";
+import { checkoutTestAmount, checkoutTestPublicOrder, testStatus } from "./checkout-test-isolation";
 import {
   createTestMercadoPagoOrder,
   getTestMercadoPagoOrder,
@@ -12,9 +13,8 @@ import {
   isMercadoPagoTestCheckoutConfigured,
 } from "@/lib/mercado-pago/test-credentials";
 import { mapMpOrderStatusToInternal } from "@/lib/mercado-pago/status";
-import { applyInternalPaymentStatus } from "@/lib/mercado-pago/apply-payment-status";
+import { applyCheckoutTestPaymentStatus } from "./apply-checkout-test-status";
 import type { CreateMpOrderRequest } from "@/lib/mercado-pago/types";
-import { metricsFromOrderRow } from "@/lib/finance/metrics";
 
 export type CreateCheckoutTestOrderInput = {
   userId: string;
@@ -87,7 +87,7 @@ export async function createMercadoPagoCheckoutTestOrder(input: CreateCheckoutTe
     where: { id: input.orderId },
     include: {
       items: true,
-      payments: { orderBy: { createdAt: "desc" }, take: 5 },
+      payments: { orderBy: { createdAt: "desc" }, take: 20 },
     },
   });
 
@@ -98,20 +98,12 @@ export async function createMercadoPagoCheckoutTestOrder(input: CreateCheckoutTe
     throw new Error("ORDER_NOT_PAYABLE");
   }
 
-  const existingApproved = order.payments.find((p) => p.status === "APPROVED");
+  const existingApproved = order.payments.find((p) => testStatus(p.status) === "APPROVED");
   if (existingApproved) throw new Error("ALREADY_PAID");
 
-  const openAttempt = order.payments.find(
-    (p) =>
-      isTestPayment(p) &&
-      p.provider === "mercado_pago" &&
-      (p.status === "PENDING" || p.status === "CREATED" || p.status === "PROCESSING" || p.status === "ACTION_REQUIRED") &&
-      p.idempotencyKey
-  );
-
-  const amount = Number(order.total);
-  if (!Number.isFinite(amount) || amount <= 0) throw new Error("INVALID_AMOUNT");
-  const snapshotMetrics = metricsFromOrderRow(order);
+  const openAttempt = order.payments.find((p) => isTestPayment(p) && p.provider === "mercado_pago" && p.idempotencyKey);
+  const amount = checkoutTestAmount(order);
+  if (!amount) throw new Error("ORDER_NOT_TEST");
 
   const methodId = input.paymentMethodId.toLowerCase();
   const isCard = Boolean(input.cardToken);
@@ -123,20 +115,22 @@ export async function createMercadoPagoCheckoutTestOrder(input: CreateCheckoutTe
   }
 
   const externalReference = `ecopet_test_${order.id}`.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 150);
-  const idempotencyKey = openAttempt?.idempotencyKey || newIdempotencyKey();
+  const idempotencyKey = createHash("sha256").update(`checkout-test:${order.id}`).digest("hex");
+  const requestFingerprint = createHash("sha256").update(JSON.stringify(input)).digest("hex");
 
   let payment =
     openAttempt ||
-    (await prisma.payment.create({
-      data: {
+    (await prisma.payment.upsert({
+      where: { idempotencyKey }, update: {},
+      create: {
         orderId: order.id,
         userId: order.userId,
-        partnerId: order.partnerId,
+        partnerId: null,
         provider: "mercado_pago",
         environment: "test",
-        amount,
+        amount: 0,
         currency: "BRL",
-        status: "CREATED",
+        status: "TEST_CREATED",
         idempotencyKey,
         externalReference,
         paymentMethod: methodId,
@@ -144,22 +138,21 @@ export async function createMercadoPagoCheckoutTestOrder(input: CreateCheckoutTe
         installments: isCard ? input.installments ?? 1 : 1,
         metadata: {
           checkoutTest: true,
-          platformFeeEstimated: snapshotMetrics.platformRevenue,
-          partnerNetEstimated: snapshotMetrics.estimatedPayout,
-          riskReserveEstimate: snapshotMetrics.reserveAmount,
-          pricingVersion: order.pricingVersion,
-          splitReady: false,
-          logicalSplitOnly: true,
+          isolated: true,
+          testAmount: amount,
+          requestFingerprint,
           mpProduct: "orders_api_test",
         },
       },
     }));
 
-  if (openAttempt?.providerOrderId) {
-    const existing = await getTestMercadoPagoOrder(openAttempt.providerOrderId);
+  const meta = payment.metadata as Record<string, unknown> | null;
+  if (meta?.requestFingerprint !== requestFingerprint) throw new Error("IDEMPOTENCY_CONFLICT");
+  if (payment.providerOrderId) {
+    const existing = await getTestMercadoPagoOrder(payment.providerOrderId);
     if (existing.ok) {
       const internal = mapMpOrderStatusToInternal(existing.data.status, existing.data.status_detail);
-      await applyInternalPaymentStatus({
+      await applyCheckoutTestPaymentStatus({
         paymentId: payment.id,
         internalStatus: internal,
         statusDetail: existing.data.status_detail,
@@ -236,7 +229,7 @@ export async function createMercadoPagoCheckoutTestOrder(input: CreateCheckoutTe
   if (!result.ok) {
     await prisma.payment.update({
       where: { id: payment.id },
-      data: { status: "ERROR", statusDetail: result.code },
+      data: { status: "TEST_ERROR", statusDetail: result.code },
     });
     await prisma.paymentEvent.create({
       data: {
@@ -255,12 +248,12 @@ export async function createMercadoPagoCheckoutTestOrder(input: CreateCheckoutTe
   const mp = result.data;
   const mapped = mapMpOrderStatusToInternal(mp.status, mp.status_detail);
   const providerPaymentId = mp.transactions?.payments?.[0]?.id ?? null;
-  const persistedStatus = mapped === "APPROVED" ? "PROCESSING" : mapped;
+  const persistedStatus = mapped;
 
   payment = await prisma.payment.update({
     where: { id: payment.id },
     data: {
-      status: persistedStatus,
+      status: `TEST_${persistedStatus}`,
       statusDetail: mp.status_detail ?? null,
       providerOrderId: mp.id,
       externalId: mp.id,
@@ -287,7 +280,7 @@ export async function createMercadoPagoCheckoutTestOrder(input: CreateCheckoutTe
   });
 
   if (mapped !== "APPROVED") {
-    await applyInternalPaymentStatus({
+    await applyCheckoutTestPaymentStatus({
       paymentId: payment.id,
       internalStatus: mapped,
       statusDetail: mp.status_detail,
@@ -331,28 +324,29 @@ export async function getMercadoPagoCheckoutTestOrderForUser(params: {
           total: true,
           status: true,
           deliveryNotes: true,
+          pricingSnapshot: true,
         },
       },
     },
   });
   if (!payment || payment.order.userId !== params.userId) throw new Error("ORDER_FORBIDDEN");
-  if (!isCheckoutTestOrderNotes(payment.order.deliveryNotes)) throw new Error("ORDER_NOT_TEST");
+  if (!checkoutTestAmount(payment.order)) throw new Error("ORDER_NOT_TEST");
 
   if (!payment.providerOrderId) {
     return {
       paymentId: payment.id,
       providerOrderId: null,
-      status: payment.status,
+      status: testStatus(payment.status),
       statusDetail: payment.statusDetail,
       mpOrder: null,
-      order: payment.order,
+      order: checkoutTestPublicOrder(payment.order),
     };
   }
 
   const remote = await getTestMercadoPagoOrder(payment.providerOrderId);
   if (remote.ok) {
     const internal = mapMpOrderStatusToInternal(remote.data.status, remote.data.status_detail);
-    await applyInternalPaymentStatus({
+    await applyCheckoutTestPaymentStatus({
       paymentId: payment.id,
       internalStatus: internal,
       statusDetail: remote.data.status_detail,
@@ -366,16 +360,16 @@ export async function getMercadoPagoCheckoutTestOrderForUser(params: {
       status: internal,
       statusDetail: remote.data.status_detail ?? null,
       mpOrder: sanitizeMpOrderForClient(remote.data),
-      order: payment.order,
+      order: checkoutTestPublicOrder(payment.order),
     };
   }
 
   return {
     paymentId: payment.id,
     providerOrderId: payment.providerOrderId,
-    status: payment.status,
+    status: testStatus(payment.status),
     statusDetail: payment.statusDetail,
     mpOrder: null,
-    order: payment.order,
+    order: checkoutTestPublicOrder(payment.order),
   };
 }

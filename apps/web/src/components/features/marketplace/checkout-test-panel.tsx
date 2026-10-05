@@ -10,7 +10,7 @@ import { MercadoPagoTestCheckout } from "@/components/features/marketplace/merca
 import { CheckoutTestBanner } from "@/components/features/marketplace/checkout-test-banner";
 import { AddressByCepField } from "@/components/shared/address/address-by-cep-field";
 
-export function CheckoutTestPanel() {
+export function CheckoutTestPanel({ initialOrder = null }: { initialOrder?: { id: string; total: number } | null }) {
   const router = useRouter();
   const [cart, setCart] = useState<Record<string, unknown> | null>(null);
   const [error, setError] = useState("");
@@ -21,9 +21,9 @@ export function CheckoutTestPanel() {
   const [pendingOrder, setPendingOrder] = useState<{
     id: string;
     total: number;
-  } | null>(null);
+  } | null>(initialOrder);
   const [payerEmail, setPayerEmail] = useState("");
-  const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
+  const [idempotencyKey] = useState(() => crypto.randomUUID());
   const [form, setForm] = useState({
     deliveryMethod: "PICKUP_LOCAL",
     phone: "",
@@ -109,7 +109,6 @@ export function CheckoutTestPanel() {
       setError(data.error?.message ?? "Erro ao criar pedido de teste.");
       return;
     }
-    setIdempotencyKey(crypto.randomUUID());
     const order = data.data.order as { id: string; total: number };
     setPendingOrder({ id: order.id, total: Number(order.total) });
   }

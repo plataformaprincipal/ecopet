@@ -1,6 +1,8 @@
+import { checkCheckoutTestRateLimit } from "@/lib/mercado-pago/checkout-test-rate-limit";
+import { checkoutTestAmount } from "@/lib/mercado-pago/checkout-test-isolation";
 import { z } from "zod";
 import { apiFailure, apiSuccess } from "@/lib/api-response";
-import { requireAdmin } from "@/lib/auth/guards";
+import { requireAuth } from "@/lib/auth/guards";
 import { prisma } from "@/lib/prisma";
 import { isCheckoutTestOrderNotes, isMercadoPagoTestCheckoutConfigured } from "@/lib/mercado-pago/test-credentials";
 import { getTestMercadoPagoInstallments } from "@/lib/mercado-pago/test-client";
@@ -14,8 +16,11 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
-  const { user, error } = await requireAdmin({ path: "/api/checkout-test/mercado-pago/installments" });
+  const { user, error } = await requireAuth();
   if (error) return error;
+  if (!(await checkCheckoutTestRateLimit(`checkout-test:installments:${user!.id}`, 12, 60_000))) {
+    return apiFailure("RATE_LIMIT", "Muitas consultas de teste. Aguarde.", 429);
+  }
   if (!isMercadoPagoTestCheckoutConfigured()) {
     return apiFailure("MP_TEST_NOT_CONFIGURED", "Checkout de teste indisponível.", 503);
   }
@@ -25,13 +30,13 @@ export async function POST(request: Request) {
 
   const order = await prisma.order.findUnique({
     where: { id: parsed.data.orderId },
-    select: { id: true, userId: true, total: true, deliveryNotes: true },
+    select: { id: true, userId: true, total: true, deliveryNotes: true, pricingSnapshot: true },
   });
   if (!order || order.userId !== user!.id || !isCheckoutTestOrderNotes(order.deliveryNotes)) {
     return apiFailure("FORBIDDEN", "Pedido de teste inválido.", 403);
   }
 
-  const amount = Number(order.total);
+  const amount = checkoutTestAmount(order);
   if (!(amount > 0)) {
     return apiFailure("INVALID_AMOUNT", "Valor inválido.", 400);
   }
@@ -54,5 +59,5 @@ export async function POST(request: Request) {
     recommendedMessage: String(c.recommended_message ?? ""),
   }));
 
-  return apiSuccess({ options, amount: order.total });
+  return apiSuccess({ options, amount });
 }
