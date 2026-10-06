@@ -53,6 +53,13 @@ export async function POST(request: Request) {
   } catch (e) {
     const handled = handleAiCommerceError(e);
     const message = e instanceof Error ? e.message : "";
+    if (message === "SELLER_NOT_ENABLED") {
+      return apiFailure(
+        "SELLER_NOT_ENABLED",
+        "Este parceiro ainda não está habilitado para receber pagamentos. Escolha outro vendedor ou tente novamente mais tarde.",
+        409
+      );
+    }
     if (message === "PRODUCT_NOT_FOUND") {
       return apiFailure("NOT_FOUND", "Produto indisponível.", 404);
     }

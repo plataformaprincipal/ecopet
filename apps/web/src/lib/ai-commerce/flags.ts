@@ -1,7 +1,6 @@
 /**
  * Feature flag, monetização e SKUs oficiais do ecossistema EccoPet AI (13 produtos).
- * Commerce (checkout) permanece fail-closed até AI_COMMERCE_ENABLED=1.
- * Ferramentas gratuitas usam AI_MONETIZATION_MODE=FREE_BETA (default).
+ * Produção vende os 13 SKUs (PAID). FREE_BETA só fora de Production e se for explícito.
  */
 type EnvLike = Record<string, string | undefined>;
 
@@ -14,7 +13,7 @@ function parseFlag(raw: string | undefined, defaultOn: boolean): boolean {
 }
 
 export function isAiCommerceEnabled(env: EnvLike = process.env): boolean {
-  return parseFlag(env.AI_COMMERCE_ENABLED, false);
+  return parseFlag(env.AI_COMMERCE_ENABLED, true);
 }
 
 export function areAiCommercePricesConfirmed(env: EnvLike = process.env): boolean {
@@ -32,11 +31,13 @@ export function assertAiCommerceEnabled(env: EnvLike = process.env): void {
 export const AI_MONETIZATION_MODES = ["FREE_BETA", "PAID"] as const;
 export type AiMonetizationMode = (typeof AI_MONETIZATION_MODES)[number];
 
-/** Fonte canônica: backend decide. Default FREE_BETA. */
+/** Produção sempre PAID. Fora dela, default PAID; FREE_BETA só se explícito. */
 export function getAiMonetizationMode(env: EnvLike = process.env): AiMonetizationMode {
+  const vercelEnv = String(env.VERCEL_ENV ?? "").trim().toLowerCase();
+  if (vercelEnv === "production") return "PAID";
   const raw = String(env.AI_MONETIZATION_MODE ?? "").trim().toUpperCase();
-  if (raw === "PAID") return "PAID";
-  return "FREE_BETA";
+  if (raw === "FREE_BETA") return "FREE_BETA";
+  return "PAID";
 }
 
 export function isAiMonetizationFree(env: EnvLike = process.env): boolean {

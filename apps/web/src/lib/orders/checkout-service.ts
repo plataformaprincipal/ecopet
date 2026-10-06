@@ -20,6 +20,8 @@ import { PricingError, serverQuoteProduct, quoteToOrderFloats, couponToEngineInp
 import { linesAfterDiscount } from "@/lib/commerce-chat/quotes-math";
 import { isMercadoPagoCheckoutAvailable } from "@/lib/mercado-pago/config";
 import { resolveOrderMarketplaceSplit } from "@/lib/mercado-pago/marketplace-split";
+import { isSellerSellable } from "@/lib/seller/eligibility";
+import { isOngFeeExemptCategory } from "@/lib/ong/onboarding";
 
 const ONLINE_PAYMENT_LABEL: Record<PaymentMethod, string> = {
   PIX: "Pix online (Mercado Pago)",
@@ -85,6 +87,7 @@ export async function checkoutFromCart(params: {
             accountStatus: true,
             role: true,
             partnerProfile: { select: { verificationStatus: true, approvedAt: true } },
+            ongProfile: { select: { verificationStatus: true, approvedAt: true } },
           },
         },
       },
@@ -110,13 +113,21 @@ export async function checkoutFromCart(params: {
       if (product.stock < item.quantity) throw new Error("INSUFFICIENT_STOCK");
 
       const seller = product.seller;
-      if (
-        seller.role !== "PARTNER" ||
-        seller.accountStatus !== AccountStatus.ACTIVE ||
-        seller.partnerProfile?.verificationStatus !== VerificationStatus.APPROVED ||
-        !seller.partnerProfile.approvedAt
-      ) {
+      const partnerApproved =
+        seller.role === "PARTNER" &&
+        seller.accountStatus === AccountStatus.ACTIVE &&
+        seller.partnerProfile?.verificationStatus === VerificationStatus.APPROVED &&
+        Boolean(seller.partnerProfile.approvedAt);
+      const ongApproved =
+        seller.role === "ONG" &&
+        seller.accountStatus === AccountStatus.ACTIVE &&
+        seller.ongProfile?.verificationStatus === VerificationStatus.APPROVED &&
+        Boolean(seller.ongProfile.approvedAt);
+      if (!partnerApproved && !ongApproved) {
         throw new Error("PARTNER_NOT_APPROVED");
+      }
+      if (!(await isSellerSellable(product.sellerId))) {
+        throw new Error("SELLER_NOT_ENABLED");
       }
 
       lines.push({
@@ -162,6 +173,13 @@ export async function checkoutFromCart(params: {
         partnerVerified: true,
         partnerId,
         charging: true,
+        feeExempt: lines.every((l) => {
+          const product = byId.get(l.productId);
+          return (
+            product?.seller.role === "ONG" &&
+            isOngFeeExemptCategory(`${product.catalogCategory ?? ""} ${product.name} ${product.pricingCatalogSku ?? ""}`)
+          );
+        }),
       });
       snap = quoteToOrderFloats(quoted.order);
       engineSnapshot = quoted.order.snapshot;
@@ -388,6 +406,9 @@ async function checkoutQuoteFromCart(params: {
   const partnerIds = new Set(quotes.map((q) => q.providerId));
   if (partnerIds.size !== 1) throw new Error("MULTI_PARTNER_CART");
   const partnerId = [...partnerIds][0]!;
+  if (!(await isSellerSellable(partnerId))) {
+    throw new Error("SELLER_NOT_ENABLED");
+  }
 
   const paymentMethod = params.paymentMethod ?? PaymentMethod.CARD;
   const paymentNote = ONLINE_PAYMENT_LABEL[paymentMethod] ?? paymentMethod;

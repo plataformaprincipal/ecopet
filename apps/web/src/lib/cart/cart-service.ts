@@ -10,6 +10,7 @@ import { resolveAiProductPrice } from "@/lib/ai-commerce/pricing";
 import { ensureAiCommerceProducts } from "@/lib/ai-commerce/product-service";
 import { firstProductImageUrl } from "@/lib/catalog/images";
 import { computeEarnPoints, DEFAULT_LOYALTY_POLICY } from "@/lib/loyalty/rules";
+import { isSellerSellable, listConnectedPartnerIds } from "@/lib/seller/eligibility";
 
 export const QUOTE_CART_ITEM_TYPE = "QUOTE";
 
@@ -128,7 +129,13 @@ export async function validateProductForCart(productId: string) {
         },
       },
     },
+    select: { id: true, sellerId: true, stock: true, price: true },
   });
+  if (!product) return null;
+  const connected = await listConnectedPartnerIds();
+  if (!connected.includes(product.sellerId) || !(await isSellerSellable(product.sellerId))) {
+    throw new Error("SELLER_NOT_ENABLED");
+  }
   return product;
 }
 

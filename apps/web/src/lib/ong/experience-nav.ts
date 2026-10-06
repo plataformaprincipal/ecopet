@@ -38,7 +38,7 @@ export const NGO_EXPERIENCE_NAV: NgoExperienceNavItem[] = [
   { href: "/ngo/campanhas", labelKey: "ngoArea.nav.campanhas", icon: Megaphone, requiresApproval: true },
   { href: "/ngo/social", labelKey: "ngoArea.nav.social", icon: UsersRound, requiresApproval: true },
   { href: "/ngo/voluntariado", labelKey: "ngoArea.nav.voluntariado", icon: Users, requiresApproval: true },
-  { href: "/ngo/financeiro", labelKey: "ngoArea.nav.financeiro", icon: DollarSign, requiresApproval: true },
+  { href: "/ngo/financeiro", labelKey: "ngoArea.nav.financeiro", icon: DollarSign, requiresApproval: false },
   { href: "/ngo/administrativo", labelKey: "ngoArea.nav.administrativo", icon: ClipboardList, requiresApproval: true },
   { href: "/ngo/espaco-fisico", labelKey: "ngoArea.nav.espacoFisico", icon: Building, requiresApproval: true },
   { href: "/ngo/parcerias", labelKey: "ngoArea.nav.parcerias", icon: Handshake, requiresApproval: true },

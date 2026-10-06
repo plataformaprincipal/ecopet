@@ -210,6 +210,7 @@ export async function serverQuoteProduct(params: {
   partnerVerified?: boolean;
   partnerId?: string | null;
   charging?: boolean;
+  feeExempt?: boolean;
 }): Promise<{ order: PricingQuote; lines: PricingQuote[] }> {
   const version = await resolveActivePricingVersion({ charging: params.charging ?? true });
   const contractOverride = await loadActiveContractOverride({
@@ -227,6 +228,7 @@ export async function serverQuoteProduct(params: {
     coupon: params.coupon,
     partnerVerified: params.partnerVerified,
     contractOverride,
+    feeExempt: params.feeExempt,
   });
 }
 

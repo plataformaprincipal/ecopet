@@ -10,6 +10,8 @@ export type PartnerMpConnectionStatus =
   | "NOT_CONNECTED"
   | "PENDING"
   | "CONNECTED"
+  | "RESTRICTED"
+  | "DISCONNECTED"
   | "ERROR"
   | "REAUTH_REQUIRED";
 
@@ -59,6 +61,7 @@ export async function getPartnerMpConnectionView(partnerId: string): Promise<Par
     return disconnected(configured ? null : "OAuth Mercado Pago do vendedor não configurado (CLIENT_ID/SECRET).");
   }
   let status = row.status as PartnerMpConnectionStatus;
+  if (row.revokedAt) status = "DISCONNECTED";
   if (status === "CONNECTED" && row.expiresAt && row.expiresAt.getTime() < Date.now()) {
     status = "REAUTH_REQUIRED";
   }

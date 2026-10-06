@@ -4,7 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { getProductDefBySku, getProductDefBySlug } from "@/lib/ai-commerce/catalog";
+import { getProductDefBySku, getProductDefBySlug, purchaseCta } from "@/lib/ai-commerce/catalog";
+import { getCatalogBySku } from "@/lib/pricing/catalog";
 import { getCapabilityRuntime } from "@/lib/ai-commerce/capability-runtime";
 import { getSpecialistProtocol, initialInterviewInput, isInterviewReady, petNameFromContext } from "@/lib/ai-commerce/specialist-protocols";
 import { analyticsService } from "@/lib/analytics/service";
@@ -346,6 +347,42 @@ export function AiWorkbench({ slug }: { slug: string }) {
     };
   }, [def, slug]);
 
+  async function addPaidSkuToCart() {
+    if (!def) return;
+    if (guest) {
+      router.push(`/login?callbackUrl=${encodeURIComponent(`/eccopet/${slug}`)}`);
+      return;
+    }
+    if (!pets || pets.length === 0) {
+      router.push(`/onboarding/pet?callbackUrl=${encodeURIComponent(`/eccopet/${slug}`)}`);
+      return;
+    }
+    if (!petId) {
+      setMsg("Selecione um pet antes de continuar.");
+      return;
+    }
+    setBusy(true);
+    setMsg("");
+    const add = await fetch("/api/cart/items", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sku: def.sku, petId }),
+    });
+    const json = await add.json();
+    setBusy(false);
+    if (!json.success) {
+      if (add.status === 401) {
+        router.push(`/login?callbackUrl=${encodeURIComponent(`/eccopet/${slug}`)}`);
+        return;
+      }
+      setMsg(json.error?.message ?? "Não foi possível adicionar ao carrinho.");
+      return;
+    }
+    analyticsService.track(AiEvents.ADD_TO_CART, { screen: `eccopet_${slug}`, label: def.sku });
+    router.push("/eccopet/checkout");
+  }
+
   async function startTool(firstMessage?: string) {
     if (!def) return;
     if (!pets || pets.length === 0) {
@@ -385,6 +422,10 @@ export function AiWorkbench({ slug }: { slug: string }) {
         setMsg("Selecione um pet antes de continuar.");
         return;
       }
+      if (code === "ENTITLEMENT_UNAVAILABLE" || code === "AI_PAID_REQUIRED") {
+        await addPaidSkuToCart();
+        return;
+      }
       setMsg(data.error?.message ?? "Esta ferramenta está temporariamente indisponível.");
       return;
     }
@@ -416,6 +457,16 @@ export function AiWorkbench({ slug }: { slug: string }) {
         </Link>
         {` › ${def.name}`}
       </p>
+      {(() => {
+        const cents = getCatalogBySku(def.sku)?.amountCents;
+        if (!cents) return null;
+        return (
+          <p className="mb-4 text-lg font-semibold">
+            {(cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+            <span className="ml-2 text-sm font-normal text-[var(--ep-fg-muted)]">{def.unitLabel}</span>
+          </p>
+        );
+      })()}
       <label className="block text-sm font-medium">Para qual pet?</label>
       {pets === null && <p className="mt-2 text-sm text-[var(--ep-fg-muted)]">Carregando pets…</p>}
       {pets && pets.length === 0 && (
@@ -448,9 +499,12 @@ export function AiWorkbench({ slug }: { slug: string }) {
         onDraft={setDraft}
         onStart={(chip) => void startTool(chip)}
       />
-      <div className="mt-4">
-        <Button className="w-full sm:w-auto" loading={busy} disabled={busy} onClick={() => void startTool(draft || undefined)}>
-          {runtime.ctaLabel ?? def.ctaLabel ?? "Conversar com Dr. Ecco"}
+      <div className="mt-4 flex flex-wrap gap-3">
+        <Button className="w-full sm:w-auto" loading={busy} disabled={busy} onClick={() => void addPaidSkuToCart()}>
+          Adicionar ao carrinho
+        </Button>
+        <Button className="w-full sm:w-auto" variant="outline" loading={busy} disabled={busy} onClick={() => void startTool(draft || undefined)}>
+          {purchaseCta(def)}
         </Button>
       </div>
       {msg ? (

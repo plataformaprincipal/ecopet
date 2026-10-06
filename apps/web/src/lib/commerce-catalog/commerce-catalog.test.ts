@@ -32,10 +32,17 @@ describe("commerce catalog PFO", () => {
     assert.equal(plus.amountCents, 1990);
     assert.equal(plus.annualAmountCents, 19900);
     assert.equal(plus.commercialAvailability, "PURCHASABLE");
+    assert.equal(getCatalogBySku("ONE-000")?.amountCents, 0);
+    assert.equal(getCatalogBySku("ONE-002")?.amountCents, 3990);
+    assert.equal(getCatalogBySku("ONE-003")?.amountCents, 6990);
+    assert.equal(getCatalogBySku("ONE-004")?.amountCents, 9990);
     const starter = getCatalogBySku("PRO-001")!;
     assert.equal(starter.amountCents, 8990);
     assert.equal(starter.setupAmountCents, 24900);
     assert.equal(starter.commercialAvailability, "PURCHASABLE");
+    assert.equal(getCatalogBySku("PRO-002")?.amountCents, 22990);
+    assert.equal(getCatalogBySku("PRO-003")?.amountCents, 39990);
+    assert.equal(getCatalogBySku("PRO-004")?.amountCents, 149990);
   });
 
   it("teleconsulta stays PARTNER_REQUIRED until licensed partner", () => {

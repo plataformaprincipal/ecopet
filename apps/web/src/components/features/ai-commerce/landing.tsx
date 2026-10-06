@@ -24,6 +24,7 @@ import { AiEvents } from "@/lib/analytics/events";
 import { AI_COMMERCE_SKUS } from "@/lib/ai-commerce/flags";
 import { AI_COMMERCE_PRODUCTS } from "@/lib/ai-commerce/catalog";
 import { getSpecialistExperience } from "@/lib/ai-commerce/specialist-experience";
+import { getCatalogBySku } from "@/lib/pricing/catalog";
 
 type CatalogProduct = {
   sku: string;
@@ -67,23 +68,35 @@ const ICONS: Record<string, typeof Stethoscope> = {
 };
 
 function formatPrice(p: CatalogProduct) {
-  if (p.free || p.priceInCents == null) return "Grátis no beta";
-  return (p.priceInCents / 100).toLocaleString("pt-BR", { style: "currency", currency: p.currency ?? "BRL" });
+  if (p.free && (p.priceInCents == null || p.priceInCents === 0)) return "Grátis no beta";
+  if (p.priceInCents == null) return "Consulte";
+  const amount = (p.priceInCents / 100).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: p.currency ?? "BRL",
+  });
+  return p.unitLabel ? `${amount} · ${p.unitLabel}` : amount;
 }
 
 function fromDefs(): CatalogProduct[] {
-  return AI_COMMERCE_PRODUCTS.map((p) => ({
-    sku: p.sku,
-    slug: p.slug,
-    name: p.name,
-    tag: p.tag,
-    category: p.category,
-    shortDescription: p.shortDescription,
-    ctaLabel: p.ctaLabel,
-    href: p.href,
-    free: true,
-    avgFillMinutes: p.avgFillMinutes,
-  }));
+  return AI_COMMERCE_PRODUCTS.map((p) => {
+    const catalog = getCatalogBySku(p.sku);
+    return {
+      sku: p.sku,
+      slug: p.slug,
+      name: p.name,
+      tag: p.tag,
+      category: p.category,
+      shortDescription: p.shortDescription,
+      ctaLabel: "Adicionar ao carrinho",
+      href: p.href,
+      free: false,
+      requiresPayment: true,
+      avgFillMinutes: p.avgFillMinutes,
+      priceInCents: catalog?.amountCents,
+      currency: "BRL",
+      unitLabel: p.unitLabel,
+    };
+  });
 }
 
 export function EccoPetAiLanding() {
@@ -197,7 +210,7 @@ export function EccoPetAiLanding() {
                         href={p.href}
                         onClick={() => analyticsService.track(AiEvents.MODULE_OPEN, { screen: "eccopet_hub", label: p.sku })}
                       >
-                        {p.ctaLabel ?? "Usar agora"}
+                        {p.ctaLabel ?? "Adicionar ao carrinho"}
                       </Link>
                     </Button>
                   </article>

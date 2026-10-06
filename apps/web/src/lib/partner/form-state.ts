@@ -63,6 +63,7 @@ export type PartnerFormState = {
   pixKeyType: string;
   pixKey: string;
   bankName: string;
+  bankCode: string;
   bankNameOther: string;
   agency: string;
   accountNumber: string;
@@ -116,6 +117,7 @@ export const INITIAL_PARTNER_FORM: PartnerFormState = {
   pixKeyType: "",
   pixKey: "",
   bankName: "",
+  bankCode: "",
   bankNameOther: "",
   agency: "",
   accountNumber: "",
@@ -195,6 +197,7 @@ export function formToRegisterPayload(
       pixKeyType: form.pixKeyType || undefined,
       pixKey: form.pixKey || undefined,
       bankName: form.bankName || undefined,
+      bankCode: form.bankCode || undefined,
       bankNameOther: form.bankNameOther || undefined,
       agency: form.agency || undefined,
       accountNumber: form.accountNumber || undefined,

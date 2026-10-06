@@ -1,4 +1,4 @@
-import { AccountStatus, PartnerServiceStatus, ProductCatalogStatus, Prisma, VerificationStatus } from "@prisma/client";
+import { PartnerServiceStatus, ProductCatalogStatus, Prisma, VerificationStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { boundingBox, haversineDistanceKm } from "@/lib/google-maps/distance";
 import { isValidLatLng } from "@/lib/google-maps/validation";
@@ -11,7 +11,8 @@ import {
   relevanceScore,
   textMatchScore,
 } from "@/lib/marketplace/ranking";
-import { publicPartnerAccountWhere, publicVerificationWhere } from "@/lib/marketplace/parse-request";
+import { publicVerificationWhere } from "@/lib/marketplace/parse-request";
+import { sellableSellerWhere } from "@/lib/seller/eligibility";
 import { MARKETPLACE_FEATURES } from "@/lib/marketplace/query-model";
 import { serviceEnumsForGroup, getServiceVertical } from "@/lib/marketplace/service-verticals";
 import { compareServiceValue, isOpenOnWeekday, servicePersonalizationScore, weekdayInSaoPaulo } from "@/lib/marketplace/service-personalize";
@@ -195,20 +196,15 @@ export async function queryPublicServices(filters: PublicServiceFilters) {
     status: PartnerServiceStatus.ACTIVE,
     isActive: true,
     approvalStatus: "APPROVED",
-    provider: {
-      ...publicPartnerAccountWhere,
-      partnerProfile: {
-        is: {
-          ...publicVerificationWhere(filters.verifiedOnly),
-          ...geoProfileWhere(origin, filters.radiusKm),
-          ...(filters.city ? { city: { contains: filters.city, mode: "insensitive" as const } } : {}),
-          ...(filters.state ? { state: { equals: filters.state, mode: "insensitive" as const } } : {}),
-          ...(filters.openToday
-            ? { availabilitySlots: { some: { isActive: true, weekday: todayWeekday } } }
-            : {}),
-        },
-      },
-    },
+    provider: await sellableSellerWhere({
+      ...publicVerificationWhere(filters.verifiedOnly),
+      ...geoProfileWhere(origin, filters.radiusKm),
+      ...(filters.city ? { city: { contains: filters.city, mode: "insensitive" as const } } : {}),
+      ...(filters.state ? { state: { equals: filters.state, mode: "insensitive" as const } } : {}),
+      ...(filters.openToday
+        ? { availabilitySlots: { some: { isActive: true, weekday: todayWeekday } } }
+        : {}),
+    }),
     ...(typeof categoryFilter === "string"
       ? { category: categoryFilter as never }
       : Array.isArray(categoryFilter)
@@ -368,17 +364,12 @@ export async function queryPublicProducts(filters: PublicProductFilters) {
     status: ProductCatalogStatus.ACTIVE,
     approvalStatus: "APPROVED",
     stock: filters.inStock === false ? undefined : { gt: 0 },
-    seller: {
-      ...publicPartnerAccountWhere,
-      partnerProfile: {
-        is: {
-          ...publicVerificationWhere(filters.verifiedOnly),
-          ...geoProfileWhere(origin, filters.radiusKm),
-          ...(filters.city ? { city: { contains: filters.city, mode: "insensitive" as const } } : {}),
-          ...(filters.state ? { state: { equals: filters.state, mode: "insensitive" as const } } : {}),
-        },
-      },
-    },
+    seller: await sellableSellerWhere({
+      ...publicVerificationWhere(filters.verifiedOnly),
+      ...geoProfileWhere(origin, filters.radiusKm),
+      ...(filters.city ? { city: { contains: filters.city, mode: "insensitive" as const } } : {}),
+      ...(filters.state ? { state: { equals: filters.state, mode: "insensitive" as const } } : {}),
+    }),
     ...(filters.category ? { catalogCategory: filters.category as never } : {}),
     ...(filters.species ? { speciesTarget: filters.species as never } : {}),
     ...(filters.brand ? { brand: { contains: filters.brand, mode: "insensitive" } } : {}),
@@ -542,9 +533,7 @@ function sortMapped<T extends RankedRow>(rows: T[], sort?: PublicSort): T[] {
 export async function getPublicPartner(partnerId: string) {
   const partner = await prisma.user.findFirst({
     where: {
-      id: partnerId,
-      ...publicPartnerAccountWhere,
-      partnerProfile: { is: {} },
+      AND: [{ id: partnerId }, await sellableSellerWhere()],
     },
     select: {
       id: true,
@@ -621,26 +610,27 @@ export async function queryPublicPartners(filters: PublicPartnerFilters) {
   const inMemory = needsInMemoryPage(filters.sort, origin, Boolean(filters.q) || Boolean(filters.minRating));
 
   const where: Prisma.UserWhereInput = {
-    ...publicPartnerAccountWhere,
-    partnerProfile: {
-      is: {
+    AND: [
+      await sellableSellerWhere({
         ...publicVerificationWhere(filters.verifiedOnly),
         ...geoProfileWhere(origin, filters.radiusKm),
         ...(filters.category ? { category: { contains: filters.category, mode: "insensitive" as const } } : {}),
         ...(filters.city ? { city: { contains: filters.city, mode: "insensitive" as const } } : {}),
         ...(filters.state ? { state: { equals: filters.state, mode: "insensitive" as const } } : {}),
-      },
-    },
-    ...(filters.q
-      ? {
-          OR: [
-            { name: { contains: filters.q, mode: "insensitive" } },
-            { partnerProfile: { is: { businessName: { contains: filters.q, mode: "insensitive" } } } },
-            { partnerProfile: { is: { description: { contains: filters.q, mode: "insensitive" } } } },
-            { partnerProfile: { is: { category: { contains: filters.q, mode: "insensitive" } } } },
-          ],
-        }
-      : {}),
+      }),
+      ...(filters.q
+        ? [
+            {
+              OR: [
+                { name: { contains: filters.q, mode: "insensitive" as const } },
+                { partnerProfile: { is: { businessName: { contains: filters.q, mode: "insensitive" as const } } } },
+                { partnerProfile: { is: { description: { contains: filters.q, mode: "insensitive" as const } } } },
+                { partnerProfile: { is: { category: { contains: filters.q, mode: "insensitive" as const } } } },
+              ],
+            },
+          ]
+        : []),
+    ],
   };
 
   const [partners, total] = await Promise.all([

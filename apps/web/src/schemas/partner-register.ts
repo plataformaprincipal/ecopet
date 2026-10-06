@@ -62,6 +62,7 @@ const financialDetailsSchema = z.object({
   pixKeyType: z.string().optional(),
   pixKey: z.string().optional(),
   bankName: z.string().optional(),
+  bankCode: z.string().optional(),
   bankNameOther: z.string().optional(),
   agency: z.string().optional(),
   accountNumber: z.string().optional(),

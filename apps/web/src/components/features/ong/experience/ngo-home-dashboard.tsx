@@ -15,6 +15,8 @@ import {
 import { useTranslation } from "@/providers/i18n-provider";
 import { formatDate } from "@/lib/i18n/format";
 import type { OngDashboardSummary } from "@/lib/ong/ai-insights";
+import { OngOnboardingChecklist } from "@/components/features/ong/ong-onboarding-checklist";
+import type { OngOnboardingSnapshot } from "@/lib/ong/onboarding";
 
 type Props = { ngoName: string };
 
@@ -43,6 +45,7 @@ function StatCard({
 export function NgoHomeDashboard({ ngoName }: Props) {
   const { t, locale } = useTranslation();
   const [summary, setSummary] = useState<OngDashboardSummary | null>(null);
+  const [onboarding, setOnboarding] = useState<OngOnboardingSnapshot | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -50,6 +53,12 @@ export function NgoHomeDashboard({ ngoName }: Props) {
       .then((r) => r.json())
       .then((json) => {
         if (active && json?.success) setSummary(json.data?.summary ?? null);
+      })
+      .catch(() => undefined);
+    fetch("/api/ong/onboarding", { credentials: "include" })
+      .then((r) => r.json())
+      .then((json) => {
+        if (active && json?.success) setOnboarding(json.data?.snapshot ?? null);
       })
       .catch(() => undefined);
     return () => {
@@ -85,6 +94,8 @@ export function NgoHomeDashboard({ ngoName }: Props) {
           </Link>
         </div>
       </header>
+
+      {onboarding && !onboarding.sellable ? <OngOnboardingChecklist snapshot={onboarding} /> : null}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         <StatCard icon={PawPrint} label={t("ngoArea.home.stats.availableAnimals")} value={summary?.availableAnimals ?? 0} />

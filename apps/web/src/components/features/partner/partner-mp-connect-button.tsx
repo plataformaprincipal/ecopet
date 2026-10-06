@@ -3,7 +3,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
-export function PartnerMpConnectButton({ oauthConfigured }: { oauthConfigured: boolean }) {
+export function PartnerMpConnectButton({
+  oauthConfigured,
+  endpoint = "/api/partner/financeiro/mp-connection",
+}: {
+  oauthConfigured: boolean;
+  endpoint?: string;
+}) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -20,7 +26,7 @@ export function PartnerMpConnectButton({ oauthConfigured }: { oauthConfigured: b
     setBusy(true);
     setError("");
     try {
-      const res = await fetch("/api/partner/financeiro/mp-connection", {
+      const res = await fetch(endpoint, {
         method: "POST",
         credentials: "include",
       });
@@ -38,7 +44,7 @@ export function PartnerMpConnectButton({ oauthConfigured }: { oauthConfigured: b
   return (
     <div className="space-y-2">
       <Button type="button" onClick={() => void connect()} disabled={busy}>
-        Autorizar Mercado Pago
+        {busy ? "Conectando…" : "CONECTAR MERCADO PAGO"}
       </Button>
       {error ? (
         <p className="text-sm text-red-600" role="alert">

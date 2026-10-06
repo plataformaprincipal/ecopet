@@ -69,7 +69,7 @@ export const AI_COMMERCE_CATALOG: CatalogItem[] = COMMERCE_ROWS.map((row) => ({
     unit: row.unit,
     costReferenceCents: brl(row.cost),
     capabilityId: row.capabilityId,
-    commercialAvailability: "FEATURE_FLAGGED",
+    commercialAvailability: "PURCHASABLE",
     revenueRecognition: "SUBSCRIPTION",
     portfolioSuiteId: "ai",
     sourceSection: row.sourceSection,

@@ -6,6 +6,8 @@ import { getPartnerBalances } from "@/lib/finance/balances";
 import { prisma } from "@/lib/prisma";
 import { getPartnerMpConnectionView } from "@/lib/mercado-pago/partner-oauth";
 import { PartnerMpConnectButton } from "@/components/features/partner/partner-mp-connect-button";
+import { maskFinancialDetails } from "@/lib/partner/onboarding";
+import Link from "next/link";
 
 export default async function PartnerFinanceiroPage() {
   const user = await getCurrentUser();
@@ -46,17 +48,27 @@ export default async function PartnerFinanceiroPage() {
   const partnerEconomic = paidAgg._sum.partnerAmount ?? 0;
   const reserve = paidAgg._sum.reserveAmount ?? 0;
   const mpConnection = await getPartnerMpConnectionView(user.id);
+  const [profile, subscription] = await Promise.all([
+    prisma.partnerProfile.findUnique({
+      where: { userId: user.id },
+      select: { financialDetails: true },
+    }),
+    prisma.subscription.findFirst({
+      where: { userId: user.id, active: true },
+      orderBy: { createdAt: "desc" },
+    }),
+  ]);
+  const bank = maskFinancialDetails(profile?.financialDetails);
 
   return (
     <main className="mx-auto max-w-4xl space-y-4 p-6">
       <h1 className="text-2xl font-semibold">Financeiro do parceiro</h1>
       <p className="text-sm text-muted-foreground">
-        Split lógico interno. GMV não é lucro. Valor estimado não é disponível; disponível não é
-        repasse concluído. Split Mercado Pago automático não está ativo. Reserva de 1,5% é
-        planejamento — não é hold do PSP.
+        Recebimento principal via Mercado Pago Marketplace (split na origem). Dados bancários são
+        cadastrais; não substituem a conta Mercado Pago conectada.
       </p>
       <section className="rounded-2xl border p-4 text-sm" data-testid="partner-mp-connection">
-        <h2 className="font-medium">Mercado Pago do vendedor</h2>
+        <h2 className="font-medium">Conta de pagamento</h2>
         <p className="mt-1 text-muted-foreground">
           Status: <strong>{mpConnection.status}</strong>
           {mpConnection.mpUserId ? ` · conta ${mpConnection.mpUserId}` : ""}
@@ -68,7 +80,31 @@ export default async function PartnerFinanceiroPage() {
           <div className="mt-3">
             <PartnerMpConnectButton oauthConfigured={mpConnection.oauthConfigured} />
           </div>
-        ) : null}
+        ) : (
+          <div className="mt-3">
+            <p className="text-xs text-muted-foreground">
+              Última sincronização: {mpConnection.connectedAt ?? "—"}
+            </p>
+            <PartnerMpConnectButton oauthConfigured={mpConnection.oauthConfigured} />
+          </div>
+        )}
+      </section>
+      <section className="rounded-2xl border p-4 text-sm" data-testid="partner-bank-masked">
+        <h2 className="font-medium">Dados bancários</h2>
+        <p className="mt-2 text-muted-foreground">
+          Banco {bank.bankName ?? "—"} {bank.bankCode ? `(${bank.bankCode})` : ""} · agência {bank.agency ?? "—"} ·
+          conta {bank.accountNumber ?? "—"} · titular {bank.accountHolder ?? "—"} · Pix {bank.pixKey ?? "—"}
+        </p>
+      </section>
+      <section className="rounded-2xl border p-4 text-sm" data-testid="partner-plan">
+        <h2 className="font-medium">Plano</h2>
+        <p className="mt-2 text-muted-foreground">
+          Plano atual: <strong>{subscription?.plan ?? "PARCEIRO MARKETPLACE"}</strong> · marketplace básico R$ 0/mês.
+          Pro é opcional.
+        </p>
+        <Link href="/partner/planos" className="mt-3 inline-flex text-sm font-semibold text-ecopet-green hover:underline">
+          Upgrade, downgrade ou cancelar
+        </Link>
       </section>
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-sm" data-testid="partner-finance-snapshots">
         <div>

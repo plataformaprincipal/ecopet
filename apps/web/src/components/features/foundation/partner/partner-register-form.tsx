@@ -868,6 +868,7 @@ export function PartnerRegisterForm({ embedded }: { embedded?: boolean }) {
                 </select>
               </div>
               <Field label={p.fields.accountHolder} id="partner-holder" value={form.accountHolder} onChange={(v) => patch({ accountHolder: v })} required tv={tv} />
+              <Field label="Código do banco" id="partner-bank-code" value={form.bankCode} onChange={(v) => patch({ bankCode: v })} tv={tv} />
               <Field label={p.fields.accountHolderDoc} id="partner-holder-doc" value={form.accountHolderDocument} onChange={(v) => patch({ accountHolderDocument: v })} tv={tv} />
             </div>
           )}

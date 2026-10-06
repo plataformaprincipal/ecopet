@@ -4,7 +4,7 @@ import { EccoPetAiLanding } from "@/components/features/ai-commerce/landing";
 export const metadata: Metadata = {
   title: "EccoPet AI — Inteligência para cuidar melhor do seu pet",
   description:
-    "Ferramentas gratuitas de inteligência artificial para saúde, prevenção, nutrição, comportamento e cuidados com pets.",
+    "13 ferramentas de inteligência artificial para saúde, prevenção, nutrição, comportamento e cuidados com pets.",
   alternates: { canonical: "/eccopet" },
   openGraph: {
     title: "EccoPet AI",

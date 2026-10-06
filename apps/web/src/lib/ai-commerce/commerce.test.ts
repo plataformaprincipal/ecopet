@@ -25,27 +25,43 @@ import { AiEvents } from "@/lib/analytics/events";
 import { buildXlsx } from "./workbook";
 
 describe("AI commerce flags", () => {
-  it("fica desligado por padrão", () => {
-    assert.equal(isAiCommerceEnabled({}), false);
+  it("fica ligado por padrão (PAID)", () => {
+    assert.equal(isAiCommerceEnabled({}), true);
     assert.equal(isAiCommerceEnabled({ AI_COMMERCE_ENABLED: "true" }), true);
     assert.equal(areAiCommercePricesConfirmed({}), false);
   });
 
-  it("FREE_BETA é o default e não exige checkout", () => {
-    assert.equal(getAiMonetizationMode({}), "FREE_BETA");
-    assert.equal(isAiMonetizationFree({}), true);
-    assert.equal(isAiPaidCheckoutEnabled({ AI_COMMERCE_ENABLED: "true" }), false);
-    assert.equal(isAiPaidCheckoutEnabled({ AI_MONETIZATION_MODE: "PAID", AI_COMMERCE_ENABLED: "true" }), true);
-    assert.equal(isAiPaidCheckoutEnabled({ AI_MONETIZATION_MODE: "PAID" }), false);
+  it("PAID é o default e exige checkout; Production ignora FREE_BETA", () => {
+    assert.equal(getAiMonetizationMode({}), "PAID");
+    assert.equal(isAiMonetizationFree({}), false);
+    assert.equal(isAiPaidCheckoutEnabled({}), true);
+    assert.equal(isAiPaidCheckoutEnabled({ AI_COMMERCE_ENABLED: "true" }), true);
+    assert.equal(getAiMonetizationMode({ AI_MONETIZATION_MODE: "FREE_BETA" }), "FREE_BETA");
+    assert.equal(getAiMonetizationMode({ VERCEL_ENV: "production", AI_MONETIZATION_MODE: "FREE_BETA" }), "PAID");
   });
 
-  it("FREE_BETA preserva os 13 capabilityIds e não zera preço canônico", () => {
+  it("os 13 SKUs canônicos têm preço > 0 e capabilityId", () => {
     assert.equal(AI_COMMERCE_SKU_LIST.length, 13);
     for (const product of AI_COMMERCE_PRODUCTS) {
       assert.ok(product.capabilityId.length > 3);
       assert.ok(product.sku.startsWith("AI_"));
     }
     assert.equal(getCatalogBySku("AI_ECCOVET")?.amountCents, 2990);
+    assert.equal(getCatalogBySku("AI_ECCOVET_TRIAGE")?.amountCents, 3990);
+    assert.equal(getCatalogBySku("AI_ECCOVET_REPORT")?.amountCents, 1990);
+    assert.equal(getCatalogBySku("AI_ECCOVET_EXAMS")?.amountCents, 1490);
+    assert.equal(getCatalogBySku("AI_ECCOVET_VISION")?.amountCents, 1490);
+    assert.equal(getCatalogBySku("AI_ECCONUTRI")?.amountCents, 1490);
+    assert.equal(getCatalogBySku("AI_ECCOPESO")?.amountCents, 990);
+    assert.equal(getCatalogBySku("AI_ECCODENTAL")?.amountCents, 1490);
+    assert.equal(getCatalogBySku("AI_ECCOBEHAVIOR")?.amountCents, 1490);
+    assert.equal(getCatalogBySku("AI_ECCOVACCINE")?.amountCents, 1490);
+    assert.equal(getCatalogBySku("AI_ECCOMED")?.amountCents, 990);
+    assert.equal(getCatalogBySku("AI_ECCOCHECKUP")?.amountCents, 2990);
+    assert.equal(getCatalogBySku("AI_PET_HEALTH_PROFILE")?.amountCents, 4990);
+    for (const sku of AI_COMMERCE_SKU_LIST) {
+      assert.ok((getCatalogBySku(sku)?.amountCents ?? 0) > 0, sku);
+    }
   });
 
   it("classifica custo para rate limit sem expor números ao usuário", () => {

@@ -71,8 +71,9 @@ describe("13/13 capability runtime", () => {
   it("product page abre o workbench e chama executions", () => {
     const product = readSrc("components/features/ai-commerce/product-page.tsx");
     assert.match(product, /AiWorkbench/);
-    assert.match(product, /\/api\/ai-commerce\/executions/);
     const workspace = readSrc("components/features/ai-commerce/workspace.tsx");
+    assert.match(workspace, /\/api\/ai-commerce\/executions/);
+    assert.match(workspace, /\/api\/cart\/items/);
     assert.match(workspace, /SmartInputWizard/);
     assert.match(workspace, /SpecialistFollowUpChat/);
     assert.match(workspace, /DiagnosticImpressionCard/);
@@ -80,11 +81,11 @@ describe("13/13 capability runtime", () => {
   });
 });
 
-describe("FREE_BETA", () => {
-  it("permanece gratuito e fora de checkout", () => {
-    assert.equal(isAiMonetizationFree({}), true);
+describe("PAID default", () => {
+  it("não libera execução gratuita por padrão", () => {
+    assert.equal(isAiMonetizationFree({}), false);
     const landing = readSrc("components/features/ai-commerce/landing.tsx");
-    assert.ok(!landing.includes("Adicionar ao carrinho"));
+    assert.ok(landing.includes("Adicionar ao carrinho"));
   });
 });
 

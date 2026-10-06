@@ -2,6 +2,7 @@ import { apiSuccess } from "@/lib/api-response";
 import { listPublicCatalog } from "@/lib/ai-commerce/pricing";
 import { ensureAiCommerceProducts } from "@/lib/ai-commerce/product-service";
 import { getAiMonetizationMode, isAiCommerceEnabled, isAiMonetizationFree, isAiPaidCheckoutEnabled } from "@/lib/ai-commerce/flags";
+import { getCatalogBySku } from "@/lib/pricing/catalog";
 import { AI_COMMERCE_PRODUCTS } from "@/lib/ai-commerce/catalog";
 
 export const dynamic = "force-dynamic";
@@ -27,7 +28,7 @@ export async function GET() {
       unitLabel: p.unitLabel,
       billingType: p.billingType,
       shortDescription: p.shortDescription,
-      ctaLabel: p.ctaLabel,
+      ctaLabel: free ? p.ctaLabel : "Adicionar ao carrinho",
       included: p.included,
       avgFillMinutes: p.avgFillMinutes,
       maxImages: p.maxImages,
@@ -35,12 +36,12 @@ export async function GET() {
       capabilityId: p.capabilityId,
       free,
       requiresPayment: !free,
-      purchasable: !free && Boolean(p.price?.purchasable) && isAiPaidCheckoutEnabled(),
+      purchasable: !free && (Boolean(p.price?.purchasable) || (p.price?.priceInCents ?? 0) > 0) && isAiPaidCheckoutEnabled(),
       ...(free
         ? {}
         : {
             priceInCents: p.price?.priceInCents,
-            currency: p.price?.currency,
+            currency: p.price?.currency ?? "BRL",
             commercialPending: p.price?.commercialPending,
             priceSource: p.price?.source,
           }),
@@ -53,6 +54,18 @@ export async function GET() {
     const items = await listPublicCatalog();
     return apiSuccess(payloadFromDefs(items));
   } catch {
-    return apiSuccess(payloadFromDefs(AI_COMMERCE_PRODUCTS));
+    return apiSuccess(
+      payloadFromDefs(
+        AI_COMMERCE_PRODUCTS.map((p) => ({
+          ...p,
+          price: {
+            purchasable: true,
+            priceInCents: getCatalogBySku(p.sku)?.amountCents,
+            currency: "BRL",
+            source: "DOCUMENT",
+          },
+        }))
+      )
+    );
   }
 }

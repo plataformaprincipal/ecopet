@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { getProductDefBySku } from "@/lib/ai-commerce/catalog";
 import { getSpecialistProtocol } from "@/lib/ai-commerce/specialist-protocols";
 import { getSpecialistExperience } from "@/lib/ai-commerce/specialist-experience";
-import { isAiMonetizationFree } from "@/lib/ai-commerce/flags";
+import { getCatalogBySku } from "@/lib/pricing/catalog";
 import { cn } from "@/lib/utils";
 
 type Pet = {
@@ -71,7 +71,12 @@ export function SpecialistProductShell({
   const protocol = getSpecialistProtocol(sku);
   const experience = getSpecialistExperience(sku);
   const [drawer, setDrawer] = useState(false);
-  const free = isAiMonetizationFree();
+  const catalogPrice = getCatalogBySku(sku)?.amountCents;
+  const resolvedPrice =
+    priceLabel ??
+    (catalogPrice
+      ? (catalogPrice / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+      : def?.unitLabel);
   const health = (petContext?.health ?? {}) as Record<string, unknown>;
 
   useEffect(() => {
@@ -164,7 +169,7 @@ export function SpecialistProductShell({
             </p>
             <h1 className="truncate text-lg font-semibold sm:text-xl">{def.name}</h1>
             <p className="text-sm text-[var(--ep-fg-muted)]">
-              {pet ? pet.name : "Selecione um pet"} · {free ? "Grátis no beta" : priceLabel ?? def.unitLabel}
+              {pet ? pet.name : "Selecione um pet"} · {resolvedPrice}
             </p>
           </div>
         </div>

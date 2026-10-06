@@ -29,6 +29,19 @@ describe("pricing engine — official formulas", () => {
     assert.equal(q.labels.payout, "Estimativa");
   });
 
+  it("ONG adoção/doação zera comissão e taxa EccoPet", () => {
+    const q = quotePricing({
+      kind: "PRODUCT",
+      baseAmountCents: 12000,
+      version: version(),
+      partnerVerified: true,
+      feeExempt: true,
+    });
+    assert.equal(q.eccopetCommissionCents, 0);
+    assert.equal(q.fixedFeeCents, 0);
+    assert.equal(q.commissionPercentBps, 0);
+  });
+
   it("small product cannot produce negative payout", () => {
     assert.throws(
       () =>

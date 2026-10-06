@@ -18,6 +18,8 @@ import { useTranslation } from "@/providers/i18n-provider";
 import { formatCurrency, formatDateTime } from "@/lib/i18n/format";
 import { translateOrderStatus, translateAppointmentStatus } from "@/lib/i18n/enum-labels";
 import type { PartnerDashboardSummary } from "@/lib/partner/ai-insights";
+import { PartnerOnboardingChecklist } from "@/components/features/partner/partner-onboarding-checklist";
+import type { PartnerOnboardingSnapshot } from "@/lib/partner/onboarding";
 
 type Props = { businessName: string };
 
@@ -46,6 +48,7 @@ function StatCard({
 export function PartnerHomeDashboard({ businessName }: Props) {
   const { t, locale } = useTranslation();
   const [summary, setSummary] = useState<PartnerDashboardSummary | null>(null);
+  const [onboarding, setOnboarding] = useState<PartnerOnboardingSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -58,6 +61,11 @@ export function PartnerHomeDashboard({ businessName }: Props) {
       })
       .finally(() => {
         if (active) setLoading(false);
+      });
+    fetch("/api/partner/onboarding", { credentials: "include" })
+      .then((r) => r.json())
+      .then((json) => {
+        if (active && json?.success) setOnboarding(json.data?.snapshot ?? null);
       });
     return () => {
       active = false;
@@ -100,6 +108,8 @@ export function PartnerHomeDashboard({ businessName }: Props) {
           </Link>
         </div>
       </header>
+
+      {onboarding && !onboarding.sellable ? <PartnerOnboardingChecklist snapshot={onboarding} /> : null}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         <StatCard icon={ShoppingBag} label={t("partnerArea.home.stats.recentOrders")} value={summary?.stats.ordersCount ?? 0} />

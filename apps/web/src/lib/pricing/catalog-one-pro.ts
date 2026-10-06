@@ -4,7 +4,7 @@ import type { CatalogItem } from "./types";
 const ONE_SECTION = "8. Planos de assinatura para tutores";
 const PRO_SECTION = "9. Planos de assinatura para parceiros";
 
-/** Billing One permanece FEATURE_FLAGGED — catálogo sem checkout funcional. */
+/** Billing One e Pro estão PURCHASABLE no catálogo canônico BR-2026.08-v1. */
 export const ONE_CATALOG: CatalogItem[] = [
   fixedSku({
     sku: "ONE-000",

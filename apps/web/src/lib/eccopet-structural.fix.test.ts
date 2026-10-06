@@ -28,14 +28,15 @@ describe("EccoPet AI wiring", () => {
     }
   });
 
-  it("landing e product page em FREE_BETA não vendem", () => {
+  it("landing e product page vendem os 13 SKUs com preço e carrinho", () => {
     const landing = readSrc("components/features/ai-commerce/landing.tsx");
     const product = readSrc("components/features/ai-commerce/product-page.tsx");
-    assert.ok(!landing.includes("Adicionar ao carrinho"));
-    assert.ok(!landing.includes("priceInCents"));
-    assert.ok(!product.includes("Adicionar ao carrinho"));
-    assert.ok(!product.includes("/api/cart/items"));
-    assert.match(product, /\/api\/ai-commerce\/executions/);
+    const workspace = readSrc("components/features/ai-commerce/workspace.tsx");
+    assert.ok(landing.includes("Adicionar ao carrinho"));
+    assert.ok(landing.includes("priceInCents"));
+    assert.ok(workspace.includes("Adicionar ao carrinho"));
+    assert.ok(workspace.includes("/api/cart/items"));
+    assert.match(product, /Loja paga|workbench/i);
     const checkout = readSrc("app/(app)/eccopet/checkout/page.tsx");
     assert.match(checkout, /isAiMonetizationFree/);
     assert.match(checkout, /redirect\("\/eccopet"\)/);
@@ -59,7 +60,7 @@ describe("EccoPet AI wiring", () => {
     assert.equal(pt.nav.ia, "EccoPet AI");
     assert.equal(pt.pub.home.areaEccopet, "EccoPet AI");
     assert.match(pt.pub.home.aiCta, /EccoPet AI/);
-    assert.match(pt.pub.home.aiSubtitle, /gratuitas|free/i);
+    assert.match(pt.pub.home.aiSubtitle, /IA|inteligentes/i);
     const partnerNav = readSrc("lib/partner/experience-nav.ts");
     assert.match(partnerNav, /href: "\/partner\/eccopet".*requiresApproval: false/);
     const ngoNav = readSrc("lib/ong/experience-nav.ts");

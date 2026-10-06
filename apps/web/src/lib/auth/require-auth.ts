@@ -75,7 +75,7 @@ export async function requireActivePartner() {
 }
 
 export async function requireClient() {
-  return requireRole(UserRole.CLIENT);
+  return requireRole(UserRole.CLIENT, UserRole.TUTOR, UserRole.PARTNER, UserRole.ONG);
 }
 
 export async function requireOng() {

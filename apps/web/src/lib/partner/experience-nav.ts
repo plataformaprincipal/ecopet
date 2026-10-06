@@ -36,7 +36,7 @@ export const PARTNER_EXPERIENCE_NAV: PartnerExperienceNavItem[] = [
   { href: "/partner/appointments", labelKey: "partnerArea.nav.appointments", icon: CalendarDays, requiresApproval: true },
   { href: "/partner/orders", labelKey: "partnerArea.nav.orders", icon: ShoppingBag, requiresApproval: true },
   { href: "/partner/customers", labelKey: "partnerArea.nav.customers", icon: Users, requiresApproval: true },
-  { href: "/partner/financeiro", labelKey: "partnerArea.nav.financeiro", icon: DollarSign, requiresApproval: true },
+  { href: "/partner/financeiro", labelKey: "partnerArea.nav.financeiro", icon: DollarSign, requiresApproval: false },
   { href: "/partner/planos", labelKey: "partnerArea.nav.financeiro", icon: DollarSign, requiresApproval: true },
   { href: "/partner/ads", labelKey: "partnerArea.nav.marketplace", icon: ShoppingBag, requiresApproval: true },
   { href: "/partner/teleconsulta", labelKey: "partnerArea.nav.appointments", icon: CalendarDays, requiresApproval: true },

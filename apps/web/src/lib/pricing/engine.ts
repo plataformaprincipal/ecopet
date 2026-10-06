@@ -179,6 +179,10 @@ export function quotePricing(input: QuoteInput & { omitFixedFee?: boolean }): Pr
       : 0;
   let extraFixedFromOverride = 0;
 
+  if (input.feeExempt) {
+    commissionPercentBps = 0;
+  }
+
   if (isProduct || isService) {
     const resolved = validateOverride(input, at, commissionPercentBps, kind);
     commissionPercentBps = resolved.percentBps;
@@ -186,12 +190,12 @@ export function quotePricing(input: QuoteInput & { omitFixedFee?: boolean }): Pr
   }
 
   const commissionCents = percentBpsOfCents(lineBase, commissionPercentBps);
-  const productFixedCents = input.omitFixedFee
+  const productFixedCents = input.feeExempt || input.omitFixedFee
     ? 0
     : isProduct
       ? rules.productFixedFeeCents + extraFixedFromOverride
       : extraFixedFromOverride;
-  const bookingFeeCents = isService ? rules.serviceBookingFeeCents : 0;
+  const bookingFeeCents = input.feeExempt ? 0 : isService ? rules.serviceBookingFeeCents : 0;
   const urgentFeeCents = isService && urgentRequested && urgentEligible ? rules.serviceUrgentFeeCents : 0;
 
   let customerAmountCents = isService ? lineBase + bookingFeeCents + urgentFeeCents : lineBase;
@@ -364,6 +368,7 @@ export function quoteProductOrder(params: {
   partnerVerified?: boolean;
   pricingDate?: Date;
   contractOverride?: QuoteInput["contractOverride"];
+  feeExempt?: boolean;
 }): {
   lines: PricingQuote[];
   order: PricingQuote;
@@ -381,6 +386,7 @@ export function quoteProductOrder(params: {
       pricingDate: params.pricingDate,
       contractOverride: params.contractOverride,
       omitFixedFee: true,
+      feeExempt: params.feeExempt,
     })
   );
 
@@ -395,6 +401,7 @@ export function quoteProductOrder(params: {
     partnerVerified: params.partnerVerified,
     pricingDate: params.pricingDate,
     contractOverride: params.contractOverride,
+    feeExempt: params.feeExempt,
   });
 
   return {

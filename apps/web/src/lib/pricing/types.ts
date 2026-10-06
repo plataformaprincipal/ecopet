@@ -192,6 +192,9 @@ export type QuoteInput = {
   urgentEligible?: boolean;
   partnerVerified?: boolean;
   allowZero?: boolean;
+  omitFixedFee?: boolean;
+  /** Adoção/doação de ONG: comissão e taxa EccoPet = 0. */
+  feeExempt?: boolean;
   pricingDate?: Date;
   version: ResolvedPricingVersion;
   catalogItem?: CatalogItem | null;
