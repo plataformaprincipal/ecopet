@@ -14,9 +14,25 @@ export function computeSellerAcceptBy(from = new Date()) {
 export async function stampSellerAcceptDeadline(orderId: string) {
   const order = await prisma.order.findUnique({
     where: { id: orderId },
-    select: { id: true, partnerId: true, sellerAcceptBy: true, status: true },
+    select: {
+      id: true,
+      partnerId: true,
+      sellerAcceptBy: true,
+      status: true,
+      items: { select: { sku: true, itemType: true, partnerId: true } },
+    },
   });
   if (!order?.partnerId || order.sellerAcceptBy) return order;
+  const { isEccopetSelfFulfilledItem } = await import("@/lib/commerce/eccopet-access");
+  const needsPartner = order.items.some(
+    (item) =>
+      !isEccopetSelfFulfilledItem({
+        sku: item.sku,
+        itemType: item.itemType,
+        partnerId: item.partnerId ?? order.partnerId,
+      })
+  );
+  if (!needsPartner) return order;
   const sellerAcceptBy = computeSellerAcceptBy();
   return prisma.order.update({
     where: { id: orderId },
@@ -42,6 +58,20 @@ export async function expireUnconfirmedPartnerOrders(limit = 40) {
   const expired: string[] = [];
   for (const order of orders) {
     if (!order.partnerId) continue;
+    const full = await prisma.order.findUnique({
+      where: { id: order.id },
+      select: { items: { select: { sku: true, itemType: true, partnerId: true } } },
+    });
+    const { isEccopetSelfFulfilledItem } = await import("@/lib/commerce/eccopet-access");
+    const needsPartner = (full?.items ?? []).some(
+      (item) =>
+        !isEccopetSelfFulfilledItem({
+          sku: item.sku,
+          itemType: item.itemType,
+          partnerId: item.partnerId ?? order.partnerId,
+        })
+    );
+    if (!needsPartner) continue;
     try {
       await partnerRejectOrder({
         orderId: order.id,

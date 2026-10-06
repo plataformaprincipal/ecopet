@@ -7,6 +7,7 @@ import { enforceAiCommerceRateLimit, handleAiCommerceError } from "@/lib/ai-comm
 import { isAiCommerceSku, isAiMonetizationFree } from "@/lib/ai-commerce/flags";
 import { AI_TOOL_GLOBAL_HOURLY_LIMIT, AI_TOOL_RATE_WINDOW_MS, aiToolHourlyLimit } from "@/lib/ai-commerce/rate-policy";
 import { prisma } from "@/lib/prisma";
+import { AIEntitlementStatus } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -98,15 +99,25 @@ export async function POST(request: Request) {
         });
         entitlementId = granted.id;
       } else {
-        const found = await prisma.aIEntitlement.findFirst({
-          where: {
-            userId: user!.id,
-            sku,
-            petId: parsed.data.petId,
-            status: { in: ["AVAILABLE", "IN_USE"] },
-          },
+        const usableStatuses: AIEntitlementStatus[] = ["AVAILABLE", "ACTIVE", "IN_USE", "RESERVED"];
+        const usable = {
+          userId: user!.id,
+          sku,
+          petId: parsed.data.petId,
+          status: { in: usableStatuses },
+        };
+        let found = await prisma.aIEntitlement.findFirst({
+          where: usable,
           orderBy: { purchasedAt: "asc" },
         });
+        if (!found) {
+          const { reconcilePaidPlatformOrders } = await import("@/lib/commerce/fulfill-approved-order");
+          await reconcilePaidPlatformOrders({ userId: user!.id, sku, limit: 10 }).catch(() => undefined);
+          found = await prisma.aIEntitlement.findFirst({
+            where: usable,
+            orderBy: { purchasedAt: "asc" },
+          });
+        }
         if (!found) {
           return apiFailure("ENTITLEMENT_UNAVAILABLE", "Nenhuma utilização disponível para esta ferramenta.", 409);
         }

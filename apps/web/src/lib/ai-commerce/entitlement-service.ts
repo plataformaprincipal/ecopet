@@ -7,13 +7,33 @@ import { AiCommerceError } from "./errors";
 import { grantAccessForPaidItem } from "./subscription-service";
 import { AI_ENTITLEMENT_SOURCE_FREE_BETA, isAiCommerceSku, isAiMonetizationFree } from "./flags";
 
+async function resolveOwnedPetId(
+  tx: Prisma.TransactionClient,
+  userId: string,
+  itemPetId: string | null | undefined
+) {
+  if (itemPetId) {
+    const owned = await tx.pet.findFirst({
+      where: { id: itemPetId, ownerId: userId, deletedAt: null },
+      select: { id: true },
+    });
+    if (owned) return owned.id;
+  }
+  const first = await tx.pet.findFirst({
+    where: { ownerId: userId, deletedAt: null },
+    orderBy: { createdAt: "asc" },
+    select: { id: true },
+  });
+  return first?.id ?? null;
+}
+
 export async function grantEntitlementsForPaidOrder(orderId: string, paymentId?: string | null) {
   const order = await prisma.order.findUnique({
     where: { id: orderId },
     include: { items: true, payments: true },
   });
   if (!order) return { created: 0 };
-  const aiItems = order.items.filter((i) => i.itemType === "DIGITAL_AI" && i.sku && i.petId);
+  const aiItems = order.items.filter((i) => i.itemType === "DIGITAL_AI" && i.sku);
   if (!aiItems.length) return { created: 0 };
 
   let created = 0;
@@ -22,22 +42,25 @@ export async function grantEntitlementsForPaidOrder(orderId: string, paymentId?:
       const existing = await tx.aIEntitlement.findUnique({ where: { orderItemId: item.id } });
       if (existing) continue;
       const product = await tx.aIProduct.findUnique({ where: { sku: item.sku! } });
-      const pet = await tx.pet.findFirst({
-        where: { id: item.petId!, ownerId: order.userId, deletedAt: null },
-        select: { id: true },
-      });
-      if (!pet) continue;
-      await grantAccessForPaidItem({
-        tx,
-        userId: order.userId,
-        petId: pet.id,
-        sku: item.sku!,
-        orderId: order.id,
-        orderItemId: item.id,
-        paymentId: paymentId ?? order.payments.find((p) => p.status === "APPROVED")?.id ?? null,
-        quantity: item.quantity,
-        productId: product?.id ?? null,
-      });
+      const petId = await resolveOwnedPetId(tx, order.userId, item.petId);
+      if (!petId) continue;
+      try {
+        await grantAccessForPaidItem({
+          tx,
+          userId: order.userId,
+          petId,
+          sku: item.sku!,
+          orderId: order.id,
+          orderItemId: item.id,
+          paymentId: paymentId ?? order.payments.find((p) => p.status === "APPROVED")?.id ?? null,
+          quantity: item.quantity,
+          productId: product?.id ?? null,
+        });
+      } catch (error) {
+        const code = (error as { code?: string } | null)?.code;
+        if (code === "P2002") continue;
+        throw error;
+      }
       created += 1;
       await writeAiCommerceAudit({
         tx,
@@ -46,7 +69,7 @@ export async function grantEntitlementsForPaidOrder(orderId: string, paymentId?:
         sku: item.sku,
         orderId: order.id,
         paymentId: paymentId ?? null,
-        metadata: { orderItemId: item.id, quantity: item.quantity },
+        metadata: { orderItemId: item.id, quantity: item.quantity, petId },
       });
     }
   });

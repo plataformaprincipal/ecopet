@@ -225,5 +225,7 @@ describe("checkout LIVE webhook", () => {
     assert.ok(pipeline.includes("verifyMercadoPagoWebhookSignature"));
     const handler = readSrc("src/lib/mercado-pago/webhooks/handlers/order.ts");
     assert.ok(handler.includes("applyInternalPaymentStatus"));
+    const apply = readSrc("src/lib/mercado-pago/apply-payment-status.ts");
+    assert.ok(apply.includes("fulfillApprovedOrder"));
   });
 });

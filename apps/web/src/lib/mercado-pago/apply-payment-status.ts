@@ -225,6 +225,9 @@ export async function applyInternalPaymentStatus(params: {
         source: `${params.source}:recovery`,
       });
     }
+    if (isTerminalApproved(params.internalStatus)) {
+      await invokePlatformFulfillment(payment.orderId, payment.id, payment.order.userId);
+    }
     return { changed: false };
   }
 
@@ -348,6 +351,19 @@ export async function applyInternalPaymentStatus(params: {
     await stampSellerAcceptDeadline(payment.orderId).catch(() => undefined);
   }
 
+  if (isTerminalApproved(params.internalStatus)) {
+    await invokePlatformFulfillment(payment.orderId, payment.id, payment.order.userId);
+  }
+
+  if (isRefundedStatus(params.internalStatus) && params.internalStatus !== "PARTIALLY_REFUNDED") {
+    void import("@/lib/ai-commerce/entitlement-service").then(({ revokeEntitlementsForOrder }) =>
+      revokeEntitlementsForOrder(payment.orderId, "REFUNDED")
+    );
+    void import("@/lib/commerce-catalog/fulfill").then(({ revokeCatalogPurchase }) =>
+      revokeCatalogPurchase(payment.orderId, "REFUNDED")
+    );
+  }
+
   void import("@/lib/loyalty/events").then(({ onOrderStatusForRewards, onOrderRefundedForRewards }) => {
     if (isTerminalApproved(params.internalStatus)) {
       return onOrderStatusForRewards(payment.orderId);
@@ -443,43 +459,6 @@ export async function applyInternalPaymentStatus(params: {
           locale: getUserEmailLocale(user.preferences),
         }).catch(() => undefined);
       }
-      void import("@/lib/ai-commerce/entitlement-service")
-        .then(({ grantEntitlementsForPaidOrder }) =>
-          grantEntitlementsForPaidOrder(payment.orderId, payment.id)
-        )
-        .then(async (result) => {
-          if (!result.created) return;
-          const first = await prisma.aIEntitlement.findFirst({
-            where: { orderId: payment.orderId },
-            include: { product: { select: { name: true } }, pet: { select: { name: true } } },
-          });
-          const toolName = first?.product?.name ?? "EccoPet AI";
-          await createInternalNotification({
-            userId: payment.order.userId,
-            title: `${toolName} disponível`,
-            body: first?.pet?.name
-              ? `Seu ${toolName} está disponível para ${first.pet.name}.`
-              : `Seu ${toolName} está disponível.`,
-            type: "AI_ENTITLEMENT_CREATED",
-            actionUrl: "/minha-conta/ia",
-            data: { orderId: payment.order.id },
-          });
-        })
-        .catch(() => undefined);
-      void import("@/lib/commerce-catalog/fulfill")
-        .then(({ grantCatalogPurchase }) => grantCatalogPurchase({ orderId: payment.orderId, paymentId: payment.id }))
-        .then(async (result) => {
-          if (!result.created) return;
-          await createInternalNotification({
-            userId: payment.order.userId,
-            title: "Produto comercial ativado",
-            body: "Seu entitlement foi liberado após o pagamento.",
-            type: "PAYMENT",
-            actionUrl: "/cliente/assinaturas",
-            data: { orderId: payment.order.id },
-          });
-        })
-        .catch(() => undefined);
     }
   } catch {
     /* ignore */
@@ -509,4 +488,40 @@ export async function applyInternalPaymentStatus(params: {
   }
 
   return { changed: true };
+}
+
+async function invokePlatformFulfillment(orderId: string, paymentId: string, userId: string) {
+  try {
+    const { fulfillApprovedOrder } = await import("@/lib/commerce/fulfill-approved-order");
+    const result = await fulfillApprovedOrder(orderId, paymentId);
+    if (!result.created) return;
+    const first = await prisma.aIEntitlement.findFirst({
+      where: { orderId },
+      include: { product: { select: { name: true } }, pet: { select: { name: true } } },
+    });
+    if (first) {
+      const toolName = first.product?.name ?? "EccoPet AI";
+      await createInternalNotification({
+        userId,
+        title: `${toolName} disponível`,
+        body: first.pet?.name
+          ? `Seu ${toolName} está disponível para ${first.pet.name}.`
+          : `Seu ${toolName} está disponível.`,
+        type: "AI_ENTITLEMENT_CREATED",
+        actionUrl: "/dashboard/client/orders",
+        data: { orderId },
+      });
+      return;
+    }
+    await createInternalNotification({
+      userId,
+      title: "Acesso liberado",
+      body: "Seu produto EccoPet está disponível em Meus pedidos.",
+      type: "PAYMENT",
+      actionUrl: "/dashboard/client/orders",
+      data: { orderId },
+    });
+  } catch {
+    /* retry via polling / Meus pedidos */
+  }
 }

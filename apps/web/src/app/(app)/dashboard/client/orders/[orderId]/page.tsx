@@ -13,7 +13,7 @@ export default async function ClientOrderDetailPage({ params }: PageProps) {
   if (user.role !== UserRole.CLIENT) redirect(dashboardPathForRole(user.role));
   const { orderId } = await params;
   return (
-    <main className="mx-auto max-w-2xl p-6">
+    <main className="mx-auto max-w-3xl p-6">
       <h1 className="mb-4 text-2xl font-semibold">Detalhe do pedido</h1>
       <ClientOrdersPanel mode="detail" orderId={orderId} />
       <Link href="/dashboard/client/orders" className="mt-4 inline-block text-sm underline">Voltar</Link>

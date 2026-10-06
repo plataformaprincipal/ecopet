@@ -7,6 +7,8 @@ import { CheckoutPayAgain } from "@/components/features/marketplace/checkout-pay
 import { CheckoutPaymentPoller } from "@/components/features/marketplace/checkout-payment-poller";
 import { CheckoutPolicies } from "@/components/features/marketplace/checkout-policies";
 import { PIX_WAIT_MS } from "@/lib/checkout/payment-wait";
+import { isEccopetSelfFulfilledItem, resolveEccopetAccess } from "@/lib/commerce/eccopet-access";
+import { fulfillApprovedOrder } from "@/lib/commerce/fulfill-approved-order";
 
 type PageProps = {
   params: Promise<{ orderId: string }>;
@@ -54,7 +56,10 @@ export default async function CheckoutSuccessPage({ params }: PageProps) {
     payment?.status === "PENDING" ||
     payment?.status === "CREATED" ||
     payment?.status === "ACTION_REQUIRED";
-  const paid = order?.status === "PAID";
+  const paid = order?.status === "PAID" || payment?.status === "APPROVED";
+  if (order && paid) {
+    await fulfillApprovedOrder(order.id, payment?.id ?? null).catch(() => undefined);
+  }
   const failed = ["REJECTED", "CANCELLED", "EXPIRED", "ERROR"].includes(
     String(payment?.status || statusLabel)
   );
@@ -70,12 +75,17 @@ export default async function CheckoutSuccessPage({ params }: PageProps) {
       ["REJECTED", "CANCELLED", "EXPIRED", "ERROR", "PENDING", "CREATED"].includes(payment.status));
 
   const items = order?.items ?? [];
-  const hasDigital = items.some((item) => DIGITAL_TYPES.has(item.itemType));
-  const partnerItem = Boolean(order?.partnerId) || items.some((item) => Boolean(item.partnerId));
+  const eccopetItems = items.filter((item) =>
+    isEccopetSelfFulfilledItem({ sku: item.sku, itemType: item.itemType, partnerId: item.partnerId })
+  );
+  const hasDigital = eccopetItems.some((item) => DIGITAL_TYPES.has(item.itemType) || Boolean(resolveEccopetAccess(item.sku)));
+  const partnerItem = items.some(
+    (item) => !isEccopetSelfFulfilledItem({ sku: item.sku, itemType: item.itemType, partnerId: item.partnerId ?? order?.partnerId })
+  );
   const trackHref = `/dashboard/client/orders/${orderId}`;
-  const accessHref = items.some((item) => item.itemType === "DIGITAL_AI")
-    ? "/minha-conta/ia"
-    : "/eccopet";
+  const accessLinks = eccopetItems
+    .map((item) => resolveEccopetAccess(item.sku))
+    .filter((row): row is NonNullable<typeof row> => Boolean(row));
 
   const title = paid
     ? "Pedido confirmado"
@@ -95,7 +105,9 @@ export default async function CheckoutSuccessPage({ params }: PageProps) {
         <CardContent className="space-y-4 p-6 text-center">
           <h1 className="text-2xl font-semibold">{title}</h1>
           <p className="text-sm text-muted-foreground">
-            {paid && hasDigital && !partnerItem
+            {paid && hasDigital && partnerItem
+              ? "Pagamento aprovado. Seu acesso EccoPet já está disponível. Itens de parceiro aguardam confirmação."
+              : paid && hasDigital
               ? "Pagamento aprovado. Seu acesso EccoPet foi liberado."
               : paid && partnerItem
                 ? "Pagamento aprovado. O parceiro recebeu o pedido e você já pode acompanhar o andamento."
@@ -138,9 +150,14 @@ export default async function CheckoutSuccessPage({ params }: PageProps) {
             />
           ) : null}
           <div className="flex flex-wrap justify-center gap-3">
-            {paid && hasDigital ? (
+            {paid && accessLinks.map((access) => (
+              <Button asChild key={access.sku}>
+                <Link href={access.href}>{access.ctaLabel}</Link>
+              </Button>
+            ))}
+            {paid && hasDigital && accessLinks.length === 0 ? (
               <Button asChild>
-                <Link href={accessHref}>Usar agora</Link>
+                <Link href="/eccopet">Usar agora</Link>
               </Button>
             ) : null}
             {paid && partnerItem ? (

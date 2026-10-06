@@ -37,6 +37,7 @@ describe("commerce ops policy", () => {
 
   it("separa rótulos de produto e serviço e exige motivo de recusa", () => {
     assert.equal(operationalLabel("PAID"), "Pagamento aprovado · aguardando o parceiro");
+    assert.equal(operationalLabel("PAID", "digital", "platform"), "Pagamento aprovado · acesso liberado");
     assert.equal(operationalLabel("CONFIRMED", "service"), "Aceito");
     assert.ok(SELLER_REJECT_REASONS.includes("OUT_OF_STOCK"));
     assert.ok(AFTERCARE_REASONS.includes("EXCHANGE"));

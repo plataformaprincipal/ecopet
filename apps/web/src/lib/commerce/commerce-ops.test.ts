@@ -45,6 +45,26 @@ describe("ciclo operacional comercial", () => {
     assert.ok(reviews.includes("verifiedPurchase"));
   });
 
+  it("fulfillment EccoPet usa a função canônica no webhook e no polling", () => {
+    const apply = readSrc("src/lib/mercado-pago/apply-payment-status.ts");
+    assert.ok(apply.includes("fulfillApprovedOrder"));
+    assert.ok(apply.includes("invokePlatformFulfillment"));
+    assert.equal(apply.includes("grantEntitlementsForPaidOrder"), false);
+    const fulfill = readSrc("src/lib/commerce/fulfill-approved-order.ts");
+    assert.ok(fulfill.includes("grantEntitlementsForPaidOrder"));
+    assert.ok(fulfill.includes("grantCatalogPurchase"));
+    assert.ok(fulfill.includes("6933611"));
+    const entitlement = readSrc("src/lib/ai-commerce/entitlement-service.ts");
+    assert.equal(entitlement.includes('i.itemType === "DIGITAL_AI" && i.sku && i.petId'), false);
+    assert.ok(entitlement.includes("resolveOwnedPetId"));
+    const hub = readSrc("src/components/features/marketplace/client-orders-hub.tsx");
+    assert.ok(hub.includes("Você ainda não possui pedidos."));
+    assert.ok(hub.includes("Conhecer EccoPet AI"));
+    assert.equal(hub.includes("aguardando o parceiro"), false);
+    const access = readSrc("src/lib/commerce/eccopet-access.ts");
+    assert.ok(access.includes("Acesso disponível"));
+  });
+
   it("testes não disparam pagamento LIVE", () => {
     const live = readSrc("src/lib/commerce/checkout-live.test.ts");
     assert.equal(live.includes("https://api.mercadopago.com"), false);

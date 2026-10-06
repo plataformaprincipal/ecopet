@@ -36,6 +36,7 @@ const nextConfig: NextConfig = {
       { source: "/partner/orders", destination: "/dashboard/partner/orders", permanent: false },
       { source: "/partner/appointments", destination: "/dashboard/partner/appointments", permanent: false },
       { source: "/explore", destination: "/explorar", permanent: false },
+      { source: "/meus-pedidos", destination: "/dashboard/client/orders", permanent: false },
     ];
   },
   async headers() {

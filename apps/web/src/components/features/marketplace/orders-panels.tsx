@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { StartConversationButton } from "@/components/messages/StartConversationButton";
 import { operationalLabel, partnerOrderTab, SELLER_REJECT_REASON_LABEL, SELLER_REJECT_REASONS, AFTERCARE_REASON_LABEL, AFTERCARE_REASONS } from "@/lib/commerce/ops-policy";
+import { ClientOrdersHub } from "@/components/features/marketplace/client-orders-hub";
 
 const PAYMENT_LABELS: Record<string, string> = {
   PIX: "Pix",
@@ -61,148 +62,10 @@ const PARTNER_NEXT: Record<string, string[]> = {
 };
 
 export function ClientOrdersPanel({ mode = "list", orderId }: { mode?: "list" | "detail"; orderId?: string }) {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [order, setOrder] = useState<Order | null>(null);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(true);
-
-  const load = () => {
-    const url = orderId ? `/api/client/orders/${orderId}` : "/api/client/orders";
-    return fetch(url, { credentials: "include" })
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.success) {
-          if (orderId && d.data.order) {
-            setOrder(d.data.order);
-            setOrders([d.data.order]);
-          } else if (d.data.orders) {
-            setOrders(d.data.orders);
-            if (orderId) setOrder(d.data.orders.find((o: Order) => o.id === orderId) ?? null);
-          }
-        }
-      })
-      .finally(() => setLoading(false));
-  };
-
-  useEffect(() => { load(); // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orderId]);
-
-  async function cancel() {
-    if (!orderId) return;
-    const res = await fetch(`/api/client/orders/${orderId}/cancel`, { method: "PATCH", credentials: "include" });
-    const data = await res.json();
-    if (data.success) setOrder(data.data.order);
-    else setError(data.error?.message ?? "Erro");
-  }
-
-  if (loading) return <p className="text-sm">Carregando...</p>;
-
-  if (mode === "detail") {
-    if (!order) return <p className="text-sm">Pedido não encontrado.</p>;
-    return (
-      <Card>
-        <CardContent className="space-y-3 p-4 text-sm">
-          <p><strong>Pedido:</strong> #{order.orderNumber}</p>
-          <p><strong>Status:</strong> {operationalLabel(order.status)}</p>
-          <p><strong>Total pago:</strong> R$ {Number(order.pricing?.customerPaid ?? order.total).toFixed(2)}</p>
-          {order.pricing ? (
-            <div className="space-y-1 rounded-lg border border-zinc-200 p-3 text-xs dark:border-white/10">
-              <p>Itens: R$ {order.pricing.itemsSubtotal.toFixed(2)}</p>
-              {order.pricing.discount > 0 ? <p>{order.pricing.labels.discount}: R$ {order.pricing.discount.toFixed(2)}</p> : null}
-              <p>{order.pricing.labels.platformFee}: R$ {order.pricing.platformFee.toFixed(2)}</p>
-              {order.pricingVersion ? <p>Tabela: {order.pricingVersion}</p> : null}
-            </div>
-          ) : null}
-          {order.paymentMethod && (
-            <p><strong>Pagamento:</strong> {PAYMENT_LABELS[order.paymentMethod] ?? order.paymentMethod}</p>
-          )}
-          <p><strong>Data:</strong> {new Date(order.createdAt).toLocaleString("pt-BR")}</p>
-          {order.items?.map((item, i) => (
-            <p key={i}>{item.name} · {item.quantity}x · R$ {Number(item.price).toFixed(2)}</p>
-          ))}
-          {order.statusHistory && order.statusHistory.length > 0 && (
-            <div className="mt-2 space-y-1 border-t pt-2">
-              <p className="font-medium">Andamento</p>
-              {order.statusHistory.map((h, i) => (
-                <p key={i} className="text-xs text-muted-foreground">
-                  {CLIENT_STATUS_LABELS[h.status] ?? h.status}
-                  {h.note ? ` — ${h.note}` : ""} · {new Date(h.createdAt).toLocaleString("pt-BR")}
-                </p>
-              ))}
-            </div>
-          )}
-          {order.status === "PENDING_CONFIRMATION" && (
-            <>
-              <p className="rounded-xl bg-[var(--surface-muted)] px-3 py-2 text-sm">Aguardando confirmação</p>
-              <Button size="sm" variant="outline" onClick={cancel}>Cancelar pedido</Button>
-            </>
-          )}
-          {order.trackingUrl || order.trackingCode ? (
-            <p>
-              <strong>Rastreio:</strong>{" "}
-              {order.trackingUrl ? (
-                <a className="text-ecopet-green underline" href={order.trackingUrl} target="_blank" rel="noreferrer">
-                  Rastrear pedido
-                </a>
-              ) : (
-                `${order.carrierName ?? ""} ${order.trackingCode}`
-              )}
-            </p>
-          ) : null}
-          {["DELIVERED", "COMPLETED", "PICKED_UP"].includes(order.status) ? (
-            <Button asChild size="sm" variant="outline">
-              <Link href="/dashboard/client/reviews">Avaliar</Link>
-            </Button>
-          ) : null}
-          {order.status !== "CANCELLED" && order.status !== "REFUNDED" ? (
-            <AftercareForm orderId={order.id} />
-          ) : null}
-          {order.partnerId ? (
-            <StartConversationButton
-              size="sm"
-              variant="default"
-              participantUserId={order.partnerId}
-              contextType="ORDER"
-              contextId={order.id}
-              title={`Pedido #${order.orderNumber}`}
-              label="Falar com o parceiro"
-              ariaLabel="Falar com o parceiro sobre este pedido"
-            />
-          ) : null}
-          {error && <p className="text-red-600">{error}</p>}
-          <Button asChild variant="ghost"><Link href="/dashboard/client/orders">Voltar</Link></Button>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (orders.length === 0) {
-    return (
-      <div className="rounded border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
-        <p className="font-medium text-[var(--ep-fg)]">Você ainda não fez nenhum pedido.</p>
-        <p className="mt-1">Explore produtos e serviços para começar.</p>
-        <Button asChild className="mt-4" size="sm">
-          <Link href="/marketplace">Explorar marketplace</Link>
-        </Button>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-3">
-      {orders.map((o) => (
-        <Card key={o.id}>
-          <CardContent className="flex justify-between p-4 text-sm">
-            <div>
-              <p className="font-medium">#{o.orderNumber}</p>
-              <p>{CLIENT_STATUS_LABELS[o.status] ?? o.status} · R$ {Number(o.total).toFixed(2)}</p>
-            </div>
-            <Button asChild size="sm" variant="outline">
-              <Link href={`/dashboard/client/orders/${o.id}`}>Acompanhar pedido</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      ))}
+    <div className="space-y-4">
+      <ClientOrdersHub mode={mode} orderId={orderId} />
+      {mode === "detail" && orderId ? <AftercareForm orderId={orderId} /> : null}
     </div>
   );
 }

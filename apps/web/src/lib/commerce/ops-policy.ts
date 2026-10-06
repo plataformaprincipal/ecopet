@@ -132,10 +132,31 @@ export function partnerOrderTab(status: string): "novos" | "aceitos" | "preparac
   }
 }
 
-export function operationalLabel(status: string, kind: "product" | "service" = "product") {
+export type OperationalKind = "product" | "service" | "digital";
+export type OperationalSellerKind = "partner" | "platform";
+
+export function operationalLabel(
+  status: string,
+  kind: OperationalKind = "product",
+  sellerKind: OperationalSellerKind = "partner"
+) {
+  if (sellerKind === "platform") {
+    const map: Record<string, string> = {
+      PENDING: "Aguardando pagamento",
+      PENDING_CONFIRMATION: "Aguardando pagamento",
+      PAID: kind === "digital" ? "Pagamento aprovado · acesso liberado" : "Pagamento aprovado",
+      CONFIRMED: "Pagamento aprovado · acesso liberado",
+      PREPARING: "Disponível para uso",
+      COMPLETED: "Concluído",
+      CANCELLED: "Cancelado",
+      REFUNDED: "Reembolsado",
+      PARTIALLY_REFUNDED: "Reembolso parcial",
+    };
+    return map[status] ?? status;
+  }
   if (kind === "service") {
     const map: Record<string, string> = {
-      PAID: "Pagamento aprovado",
+      PAID: "Pagamento aprovado · aguardando confirmação do parceiro",
       PENDING_CONFIRMATION: "Aguardando confirmação",
       CONFIRMED: "Aceito",
       PREPARING: "Agendando",

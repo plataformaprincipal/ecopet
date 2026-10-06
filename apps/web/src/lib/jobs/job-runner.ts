@@ -116,6 +116,18 @@ const handlers: Partial<Record<JobType, (job: JobRecord) => Promise<void>>> = {
       metadata: report as unknown as Record<string, unknown>,
     });
   },
+  PLATFORM_FULFILL_SWEEP: async () => {
+    const { reconcileKnownPaidEccopetOrders } = await import("@/lib/commerce/fulfill-approved-order");
+    const result = await reconcileKnownPaidEccopetOrders();
+    await writeAuditLog({
+      action: "SYNC",
+      module: "commerce.fulfillment",
+      resource: "Order",
+      resourceId: "sweep",
+      observation: `PLATFORM_FULFILL scanned=${result.scanned} fulfilled=${result.fulfilled}`,
+      metadata: result as unknown as Record<string, unknown>,
+    });
+  },
   SELLER_CONFIRMATION_SWEEP: async () => {
     const { expireUnconfirmedPartnerOrders } = await import("@/lib/orders/seller-confirmation");
     const result = await expireUnconfirmedPartnerOrders(50);

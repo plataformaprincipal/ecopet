@@ -154,9 +154,10 @@ describe("favorites opens favorites", () => {
 
 describe("orders empty state CTA", () => {
   it("pedidos vazios têm CTA para marketplace", () => {
-    const src = readSrc("components/features/marketplace/orders-panels.tsx");
-    assert.ok(src.includes("Você ainda não fez nenhum pedido"));
+    const src = readSrc("components/features/marketplace/client-orders-hub.tsx");
+    assert.ok(src.includes("Você ainda não possui pedidos."));
     assert.ok(src.includes('href="/marketplace"'));
+    assert.ok(src.includes('href="/eccopet"'));
   });
 });
 

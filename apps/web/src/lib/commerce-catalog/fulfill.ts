@@ -107,25 +107,31 @@ export async function grantCatalogPurchase(params: { orderId: string; paymentId?
       }
     }
 
-    await prisma.catalogEntitlement.create({
-      data: {
-        userId: order.userId,
-        petId: item.petId,
-        sku,
-        family,
-        status: "ACTIVE",
-        usageLimit: 1,
-        usageCount: 0,
-        startsAt: now,
-        endsAt: recurring ? periodEnd(quoted.billingCycle) : null,
-        orderId: order.id,
-        orderItemId: item.id,
-        subscriptionId,
-        paymentId: params.paymentId ?? order.payments.find((p) => p.status === "APPROVED")?.id ?? null,
-        metadata: { pricingVersion: item.pricingVersion },
-      },
-    });
-    created += 1;
+    try {
+      await prisma.catalogEntitlement.create({
+        data: {
+          userId: order.userId,
+          petId: item.petId,
+          sku,
+          family,
+          status: "ACTIVE",
+          usageLimit: 1,
+          usageCount: 0,
+          startsAt: now,
+          endsAt: recurring ? periodEnd(quoted.billingCycle) : null,
+          orderId: order.id,
+          orderItemId: item.id,
+          subscriptionId,
+          paymentId: params.paymentId ?? order.payments.find((p) => p.status === "APPROVED")?.id ?? null,
+          metadata: { pricingVersion: item.pricingVersion },
+        },
+      });
+      created += 1;
+    } catch (error) {
+      const code = (error as { code?: string } | null)?.code;
+      if (code === "P2002") continue;
+      throw error;
+    }
   }
   return { created };
 }
