@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { CheckoutPaymentPoller } from "@/components/features/marketplace/checkout-payment-poller";
+import { BoletoDueStatus, PaymentCountdown } from "@/components/features/marketplace/payment-wait-ui";
+import { PIX_WAIT_MS } from "@/lib/checkout/payment-wait";
 
 type MpConfig = {
   publicKey: string;
@@ -110,6 +112,9 @@ export function MercadoPagoCheckout({
   ]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [cardPhase, setCardPhase] = useState<"idle" | "processing" | "approved" | "rejected">("idle");
+  const [pixExpired, setPixExpired] = useState(false);
+  const [pixEndsAt, setPixEndsAt] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [result, setResult] = useState<PayResult | null>(null);
   const submitLock = useRef(false);
@@ -256,6 +261,7 @@ export function MercadoPagoCheckout({
     if (submitLock.current || submitting || !config) return;
     submitLock.current = true;
     setSubmitting(true);
+    setCardPhase("processing");
     setError("");
     try {
       if (!window.MercadoPago) throw new Error("SDK Mercado Pago não carregado");
@@ -292,11 +298,20 @@ export function MercadoPagoCheckout({
       setResult(paid);
       const status = String(paid.status).toUpperCase();
       if (["REJECTED", "CANCELLED", "EXPIRED", "ERROR"].includes(status)) {
+        setCardPhase("rejected");
         setError("Pagamento recusado pelo emissor.");
         return;
       }
+      if (status === "APPROVED" || status === "PAID") {
+        setCardPhase("approved");
+        await new Promise((resolve) => window.setTimeout(resolve, 900));
+        onPaid(paid);
+        return;
+      }
+      setCardPhase("processing");
       onPaid(paid);
     } catch (err) {
+      setCardPhase("rejected");
       setError(err instanceof Error ? mapCardPayError(err.message) : "Dados do cartão inválidos.");
     } finally {
       setSubmitting(false);
@@ -334,6 +349,10 @@ export function MercadoPagoCheckout({
       if (["REJECTED", "CANCELLED", "EXPIRED", "ERROR"].includes(status)) {
         setError("O pagamento não foi criado. Nenhuma cobrança foi realizada.");
         return;
+      }
+      if (alt === "pix") {
+        setPixExpired(false);
+        setPixEndsAt(Date.now() + PIX_WAIT_MS);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao iniciar pagamento");
@@ -420,26 +439,61 @@ export function MercadoPagoCheckout({
         </p>
       ) : null}
 
+      {method === "card" && (submitting || cardPhase !== "idle") ? (
+        <p
+          className={`rounded-xl px-3 py-2 text-sm font-medium ${
+            cardPhase === "approved"
+              ? "bg-ecopet-green/10 text-ecopet-green"
+              : cardPhase === "rejected"
+                ? "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-200"
+                : "bg-[var(--surface-muted)]"
+          }`}
+          role="status"
+        >
+          {cardPhase === "approved"
+            ? "Aprovado"
+            : cardPhase === "rejected"
+              ? "Recusado"
+              : "Processando pagamento..."}
+        </p>
+      ) : null}
+
       {result ? (
-        <div className="space-y-2 rounded border border-dashed p-3 text-sm" role="status">
+        <div className="space-y-3 rounded-2xl border border-dashed p-4 text-sm" role="status">
           <p>
-            {result.mpOrder?.qrCode
-              ? "Aguardando pagamento"
-              : result.mpOrder?.ticketUrl || result.mpOrder?.digitableLine
-                ? "Aguardando compensação"
-                : "Pagamento pendente"}
+            {pixExpired
+              ? "Recusado / expirado"
+              : result.mpOrder?.qrCode
+                ? "Aguardando pagamento / Processando"
+                : result.mpOrder?.ticketUrl || result.mpOrder?.digitableLine
+                  ? "Aguardando compensação"
+                  : cardPhase === "approved"
+                    ? "Aprovado"
+                    : cardPhase === "rejected"
+                      ? "Recusado"
+                      : "Pagamento pendente"}
             {": "}
-            <strong>{result.status}</strong>
+            <strong>{pixExpired ? "EXPIRED" : result.status}</strong>
             {result.statusDetail ? ` (${result.statusDetail})` : ""}
           </p>
-          {result.mpOrder?.expiration ? (
+          {result.mpOrder?.qrCode ? (
+            pixExpired ? (
+              <p className="font-medium text-red-600">Pix expirado. Nenhuma cobrança foi confirmada.</p>
+            ) : (
+              <PaymentCountdown
+                endsAt={pixEndsAt ?? Date.now() + PIX_WAIT_MS}
+                expiredLabel="Pix expirado"
+                onExpire={() => setPixExpired(true)}
+              />
+            )
+          ) : result.mpOrder?.ticketUrl || result.mpOrder?.digitableLine ? (
+            <BoletoDueStatus dueAt={result.mpOrder?.expiration ?? null} />
+          ) : result.mpOrder?.expiration ? (
             <p className="text-xs text-muted-foreground">
               Expiração: {new Date(result.mpOrder.expiration).toLocaleString("pt-BR")}
             </p>
-          ) : result.mpOrder?.qrCode ? (
-            <p className="text-xs text-muted-foreground">Expiração: 24 horas após a geração.</p>
           ) : null}
-          {result.mpOrder?.qrCodeBase64 ? (
+          {result.mpOrder?.qrCodeBase64 && !pixExpired ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={`data:image/png;base64,${result.mpOrder.qrCodeBase64}`}
@@ -447,7 +501,7 @@ export function MercadoPagoCheckout({
               className="h-40 w-40"
             />
           ) : null}
-          {result.mpOrder?.qrCode ? (
+          {result.mpOrder?.qrCode && !pixExpired ? (
             <div className="space-y-2">
               <p className="break-all font-mono text-xs">Pix copia-e-cola: {result.mpOrder.qrCode}</p>
               <Button
@@ -461,7 +515,20 @@ export function MercadoPagoCheckout({
               <p className="text-xs text-muted-foreground">
                 Aguardando pagamento. O pedido só será marcado como pago após confirmação do Mercado Pago.
               </p>
-              {orderId ? <CheckoutPaymentPoller orderId={orderId} paymentId={result.paymentId} /> : null}
+              {orderId ? (
+                <CheckoutPaymentPoller
+                  orderId={orderId}
+                  paymentId={result.paymentId}
+                  deadlineMs={PIX_WAIT_MS}
+                  awaitingLabel="Aguardando pagamento / Processando"
+                  onApproved={() => {
+                    setPixExpired(false);
+                    onPaid(result);
+                  }}
+                  onDeclined={() => setPixExpired(true)}
+                  onExpired={() => setPixExpired(true)}
+                />
+              ) : null}
             </div>
           ) : null}
           {result.mpOrder?.digitableLine ? (
@@ -503,9 +570,9 @@ export function MercadoPagoCheckout({
             </div>
           ) : null}
           {(result.mpOrder?.ticketUrl || result.mpOrder?.digitableLine) && orderId ? (
-            <CheckoutPaymentPoller orderId={orderId} paymentId={result.paymentId} />
+            <CheckoutPaymentPoller orderId={orderId} paymentId={result.paymentId} deadlineMs={7 * 24 * 60 * 60 * 1000} />
           ) : null}
-          <Button type="button" className="w-full" onClick={() => onPaid(result)}>
+          <Button type="button" className="w-full" onClick={() => onPaid(result)} disabled={pixExpired}>
             Continuar
           </Button>
         </div>

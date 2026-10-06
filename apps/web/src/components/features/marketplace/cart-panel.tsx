@@ -433,6 +433,7 @@ export function PublicProductDetail() {
   const id = String(params.productId);
   const [product, setProduct] = useState<Record<string, unknown> | null>(null);
   const [msg, setMsg] = useState("");
+  const [qty, setQty] = useState(1);
   const { requireAuth, AuthModal } = useMarketplaceAuthGate();
 
   useEffect(() => {
@@ -450,7 +451,7 @@ export function PublicProductDetail() {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId: id, quantity: 1 }),
+        body: JSON.stringify({ productId: id, quantity: qty }),
       });
       const data = await res.json();
       setMsg(data.success ? "Adicionado ao carrinho." : data.error?.message ?? "Erro");
@@ -483,9 +484,25 @@ export function PublicProductDetail() {
           <p>{String(product.description)}</p>
           <p className="font-medium">R$ {Number(product.price).toFixed(2)}</p>
           <p className="text-sm">Estoque: {Number(product.stock)}</p>
-          <Button onClick={addToCart} disabled={Number(product.stock) <= 0}>
-            Adicionar ao carrinho
-          </Button>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center rounded-xl border" role="group" aria-label="Quantidade">
+              <button type="button" className="px-3 py-2" onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="Diminuir quantidade">
+                −
+              </button>
+              <span className="w-10 text-center font-semibold">{qty}</span>
+              <button
+                type="button"
+                className="px-3 py-2"
+                onClick={() => setQty((q) => Math.min(Math.max(1, Number(product.stock) || 1), q + 1))}
+                aria-label="Aumentar quantidade"
+              >
+                +
+              </button>
+            </div>
+            <Button onClick={() => void addToCart()} disabled={Number(product.stock) <= 0}>
+              Adicionar ao carrinho
+            </Button>
+          </div>
           {msg && <p className="text-sm">{msg}</p>}
           <Button asChild variant="ghost">
             <Link href="/produtos">Voltar</Link>

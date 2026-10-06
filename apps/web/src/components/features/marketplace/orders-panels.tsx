@@ -7,9 +7,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { StartConversationButton } from "@/components/messages/StartConversationButton";
 
 const PAYMENT_LABELS: Record<string, string> = {
-  PIX: "PIX na entrega",
-  CARD: "Cartão na entrega",
-  CASH: "Dinheiro na entrega",
+  PIX: "Pix",
+  CARD: "Cartão",
+  BOLETO: "Boleto",
+  CASH: "Dinheiro",
 };
 
 type Order = {
@@ -126,7 +127,10 @@ export function ClientOrdersPanel({ mode = "list", orderId }: { mode?: "list" | 
             </div>
           )}
           {order.status === "PENDING_CONFIRMATION" && (
-            <Button size="sm" variant="outline" onClick={cancel}>Cancelar pedido</Button>
+            <>
+              <p className="rounded-xl bg-[var(--surface-muted)] px-3 py-2 text-sm">Aguardando confirmação</p>
+              <Button size="sm" variant="outline" onClick={cancel}>Cancelar pedido</Button>
+            </>
           )}
           {order.partnerId ? (
             <StartConversationButton
@@ -168,7 +172,9 @@ export function ClientOrdersPanel({ mode = "list", orderId }: { mode?: "list" | 
               <p className="font-medium">#{o.orderNumber}</p>
               <p>{CLIENT_STATUS_LABELS[o.status] ?? o.status} · R$ {Number(o.total).toFixed(2)}</p>
             </div>
-            <Button asChild size="sm" variant="outline"><Link href={`/dashboard/client/orders/${o.id}`}>Ver</Link></Button>
+            <Button asChild size="sm" variant="outline">
+              <Link href={`/dashboard/client/orders/${o.id}`}>Acompanhar pedido</Link>
+            </Button>
           </CardContent>
         </Card>
       ))}

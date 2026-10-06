@@ -65,16 +65,15 @@ export function AiConfirmation({ orderId }: { orderId: string }) {
 
   return (
     <div className="mx-auto max-w-xl px-4 py-16 text-center">
-      <h1 className="text-3xl font-semibold">{paid ? "Pagamento aprovado" : "Aguardando pagamento"}</h1>
+      <h1 className="text-3xl font-semibold">{paid ? "Pedido confirmado" : "Aguardando confirmação"}</h1>
       {paid ? (
         <p className="mt-3 text-muted-foreground">
-          {entitlement?.name ?? "EccoPet AI"} já está disponível.
+          Pagamento aprovado. {entitlement?.name ?? "EccoPet AI"} já está disponível.
           {entitlement?.petName ? ` Pet: ${entitlement.petName}.` : ""}
         </p>
       ) : (
         <p className="mt-3 text-muted-foreground">
-          Assim que o Mercado Pago confirmar, sua ferramenta será liberada. Não usamos o timer como prova de
-          pagamento.
+          Aguardando confirmação. Assim que o Mercado Pago confirmar, sua ferramenta será liberada.
         </p>
       )}
       {order && <p className="mt-2 text-sm text-muted-foreground">Pedido #{order.orderNumber}</p>}

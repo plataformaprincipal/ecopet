@@ -123,10 +123,10 @@ export function ProductDetailContent({ id }: ProductDetailContentProps) {
           </div>
 
           <div className="mt-6 flex flex-wrap items-center gap-3">
-            <div className="flex items-center rounded-xl border">
-              <button type="button" className="px-3 py-2" onClick={() => setQty(Math.max(1, qty - 1))}>−</button>
+            <div className="flex items-center rounded-xl border" role="group" aria-label="Quantidade">
+              <button type="button" className="px-3 py-2" onClick={() => setQty(Math.max(1, qty - 1))} aria-label="Diminuir quantidade">−</button>
               <span className="w-10 text-center font-semibold">{qty}</span>
-              <button type="button" className="px-3 py-2" onClick={() => setQty(qty + 1)}>+</button>
+              <button type="button" className="px-3 py-2" onClick={() => setQty(qty + 1)} aria-label="Aumentar quantidade">+</button>
             </div>
             <Button
               className="flex-1"
@@ -179,24 +179,6 @@ export function ProductDetailContent({ id }: ProductDetailContentProps) {
             label="Solicitar orçamento"
             ariaLabel="Solicitar orçamento"
           />
-
-            <Button
-              variant="secondary"
-              className="w-full"
-              size="lg"
-              disabled={!product.inStock || adding}
-              onClick={async () => {
-                setAdding(true);
-                try {
-                  await addProductToCart(product, qty);
-                  window.location.href = "/checkout";
-                } finally {
-                  setAdding(false);
-                }
-              }}
-            >
-              Comprar agora
-            </Button>
 
           <div className="mt-4 flex items-start gap-2 rounded-xl bg-amber-50 p-3 text-xs text-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
             <Shield className="h-4 w-4 shrink-0 mt-0.5" />

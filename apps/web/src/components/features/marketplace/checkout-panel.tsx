@@ -29,6 +29,7 @@ import {
   updateServerCartItem,
   type ServerCartItem,
 } from "@/lib/marketplace/cart-client";
+import { CheckoutPolicies } from "@/components/features/marketplace/checkout-policies";
 import { cn } from "@/lib/utils";
 
 type PaymentMethod = "PIX" | "CARD" | "BOLETO";
@@ -36,12 +37,13 @@ type PaymentMethod = "PIX" | "CARD" | "BOLETO";
 const PAYMENT_METHODS: {
   value: PaymentMethod;
   label: string;
+  title: string;
   hint: string;
   icon: typeof CreditCard;
 }[] = [
-  { value: "CARD", label: "CARTÃO", hint: "Crédito online, tokenizado pelo Mercado Pago.", icon: CreditCard },
-  { value: "PIX", label: "PIX", hint: "Aprovação rápida.", icon: QrCode },
-  { value: "BOLETO", label: "BOLETO", hint: "Pago na compensação bancária.", icon: Barcode },
+  { value: "CARD", label: "CARTÃO", title: "Cartão", hint: "Crédito online, tokenizado pelo Mercado Pago.", icon: CreditCard },
+  { value: "PIX", label: "PIX", title: "Pix", hint: "QR Code com prazo de 5 minutos.", icon: QrCode },
+  { value: "BOLETO", label: "BOLETO", title: "Boleto", hint: "Pago na compensação bancária.", icon: Barcode },
 ];
 
 type CheckoutGroup = {
@@ -493,7 +495,8 @@ export function CheckoutPanel() {
                               aria-pressed={selected}
                             >
                               <Icon className="mx-auto mb-2 h-5 w-5" aria-hidden />
-                              <span className="block text-base font-bold tracking-wide">{opt.label}</span>
+                              <span className="block text-base font-bold tracking-wide">{opt.title}</span>
+                              <span className="sr-only">{opt.label}</span>
                               <span className="mt-1 block text-xs text-muted-foreground">{opt.hint}</span>
                             </button>
                           );
@@ -540,6 +543,7 @@ export function CheckoutPanel() {
                       />
                     </>
                   )}
+                  <CheckoutPolicies className="border-t border-[var(--ep-border)] pt-4" />
                 </CardContent>
               </Card>
               </div>

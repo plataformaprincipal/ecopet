@@ -54,6 +54,11 @@ describe("checkout LIVE UI — sem pagamento na entrega", () => {
     assert.ok(panel.includes("Editar carrinho"));
     assert.ok(panel.includes("Item removido."));
     assert.ok(panel.includes("CARTÃO"));
+    assert.ok(panel.includes("Cartão"));
+    assert.ok(panel.includes("Pix"));
+    assert.ok(panel.includes("CheckoutPolicies"));
+    const policies = readSrc("src/components/features/marketplace/checkout-policies.tsx");
+    assert.ok(policies.includes("Troca, reembolso e cancelamento"));
     assert.ok(panel.includes("PIX"));
     assert.ok(panel.includes("BOLETO"));
     assert.equal(panel.includes("Forma de recebimento"), false);
@@ -82,7 +87,23 @@ describe("checkout LIVE UI — sem pagamento na entrega", () => {
     assert.ok(mp.includes("Gerar Pix"));
     assert.ok(mp.includes("Gerar boleto"));
     assert.ok(mp.includes("Aguardando pagamento"));
+    assert.ok(mp.includes("Processando pagamento..."));
+    assert.ok(mp.includes("PIX_WAIT_MS"));
+    assert.ok(mp.includes("BoletoDueStatus"));
+    assert.ok(mp.includes("Aprovado"));
+    assert.ok(mp.includes("Recusado"));
     assert.ok(mp.includes("Aguardando compensação"));
+  });
+});
+
+describe("checkout UX — CTA único e políticas", () => {
+  it("página de produto não duplica comprar agora e adicionar ao carrinho", () => {
+    const product = readSrc("src/components/features/marketplace/product-detail-content.tsx");
+    assert.ok(product.includes("Adicionar ao carrinho"));
+    assert.equal(product.includes("Comprar agora"), false);
+    const workspace = readSrc("src/components/features/ai-commerce/workspace.tsx");
+    assert.ok(workspace.includes("Adicionar ao carrinho"));
+    assert.equal(workspace.includes("Comprar agora"), false);
   });
 });
 

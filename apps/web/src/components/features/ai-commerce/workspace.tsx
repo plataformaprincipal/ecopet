@@ -509,12 +509,9 @@ export function AiWorkbench({ slug }: { slug: string }) {
         onDraft={setDraft}
         onStart={(chip) => void startTool(chip)}
       />
-      <div className="mt-4 flex flex-wrap gap-3">
+      <div className="mt-4">
         <Button className="w-full sm:w-auto" loading={busy} disabled={busy} onClick={() => void addToCartOnly()}>
           Adicionar ao carrinho
-        </Button>
-        <Button className="w-full sm:w-auto" variant="outline" loading={busy} disabled={busy} onClick={() => void buyNow()}>
-          Comprar agora
         </Button>
       </div>
       {msg ? (
