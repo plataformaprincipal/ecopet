@@ -7,6 +7,7 @@ import { createInternalNotification } from "@/lib/notifications/internal";
 import { CATALOG_ITEM_TYPE, ENTERTAINMENT_SKU, familyOfSku, getCommercialProduct } from "./products";
 import { quoteCatalogSku } from "./quote";
 import { grantCatalogPurchase } from "./fulfill";
+import { CHECKOUT_DB_TX, withCheckoutCreateRetry } from "@/lib/orders/order-number";
 
 export class CatalogCommerceError extends Error {
   constructor(
@@ -82,11 +83,11 @@ export async function checkoutCatalogSku(params: {
   const total = totalCents / 100;
   const snapshot = quoted.quote?.snapshot ?? { sku: params.sku, pricingVersion: quoted.pricingVersion };
 
-  const order = await prisma.$transaction(async (tx) => {
-    const maxNum = (await tx.order.aggregate({ _max: { orderNumber: true } }))._max.orderNumber ?? 1000;
+  const order = await withCheckoutCreateRetry((orderNumber) =>
+    prisma.$transaction(async (tx) => {
     const created = await tx.order.create({
       data: {
-        orderNumber: maxNum + 1,
+        orderNumber,
         userId: params.userId,
         partnerId: null,
         status: isFree ? OrderStatus.PAID : OrderStatus.PENDING,
@@ -142,7 +143,8 @@ export async function checkoutCatalogSku(params: {
       include: { items: true, payments: true },
     });
     return created;
-  });
+  }, CHECKOUT_DB_TX),
+  );
 
   await writeAuditLog({
     actorId: params.userId,

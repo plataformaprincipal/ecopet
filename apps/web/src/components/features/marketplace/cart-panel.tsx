@@ -330,7 +330,7 @@ export function CartPanel() {
       ) : null}
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] xl:grid-cols-[minmax(0,1fr)_22rem]">
-        <div className="space-y-6">
+        <div className="max-h-[min(70vh,44rem)] space-y-6 overflow-y-auto overflow-x-visible pr-1 lg:max-h-[calc(100vh-10rem)]">
           {groups.map((group) => (
             <section key={group.sellerId} className="space-y-3">
               {group.sellerName ? (

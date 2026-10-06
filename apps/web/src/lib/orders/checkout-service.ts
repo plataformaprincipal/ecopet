@@ -20,8 +20,9 @@ import { PricingError, serverQuoteProduct, quoteToOrderFloats, couponToEngineInp
 import { linesAfterDiscount } from "@/lib/commerce-chat/quotes-math";
 import { isMercadoPagoCheckoutAvailable } from "@/lib/mercado-pago/config";
 import { resolveOrderMarketplaceSplit } from "@/lib/mercado-pago/marketplace-split";
-import { isSellerSellable } from "@/lib/seller/eligibility";
+import { isSellerSellable, listSellablePartnerIdSet } from "@/lib/seller/eligibility";
 import { isOngFeeExemptCategory } from "@/lib/ong/onboarding";
+import { CHECKOUT_DB_TX, withCheckoutCreateRetry } from "@/lib/orders/order-number";
 
 const ONLINE_PAYMENT_LABEL: Record<PaymentMethod, string> = {
   PIX: "Pix online (Mercado Pago)",
@@ -87,10 +88,9 @@ export async function checkoutFromCart(params: {
   const paymentMethod = params.paymentMethod ?? PaymentMethod.CARD;
   const paymentNote = ONLINE_PAYMENT_LABEL[paymentMethod] ?? paymentMethod;
 
-  const order = await prisma.$transaction(async (tx) => {
-    // Recarrega produtos do servidor — nunca confia em preço do cliente
-    const productIds = physicalItems.map((i) => i.productId!).filter(Boolean);
-    const products = await tx.product.findMany({
+  const productIds = physicalItems.map((i) => i.productId!).filter(Boolean);
+  const [products, sellable] = await Promise.all([
+    prisma.product.findMany({
       where: { id: { in: productIds }, deletedAt: null },
       include: {
         seller: {
@@ -103,124 +103,126 @@ export async function checkoutFromCart(params: {
           },
         },
       },
+    }),
+    listSellablePartnerIdSet(),
+  ]);
+  const byId = new Map(products.map((p) => [p.id, p]));
+
+  const lines: {
+    productId: string;
+    name: string;
+    quantity: number;
+    unitPrice: number;
+    partnerId: string;
+  }[] = [];
+
+  for (const item of physicalItems) {
+    if (!item.productId) continue;
+    const product = byId.get(item.productId);
+    if (!product) throw new Error("PRODUCT_NOT_FOUND");
+    if (product.status !== ProductCatalogStatus.ACTIVE) throw new Error("PRODUCT_INACTIVE");
+    if (product.approvalStatus !== "APPROVED") throw new Error("PRODUCT_NOT_APPROVED");
+    if (product.price < 0) throw new Error("INVALID_UNIT_PRICE");
+    if (item.quantity <= 0) throw new Error("INVALID_QUANTITY");
+    if (product.stock < item.quantity) throw new Error("INSUFFICIENT_STOCK");
+
+    const seller = product.seller;
+    const partnerApproved =
+      seller.role === "PARTNER" &&
+      seller.accountStatus === AccountStatus.ACTIVE &&
+      seller.partnerProfile?.verificationStatus === VerificationStatus.APPROVED &&
+      Boolean(seller.partnerProfile.approvedAt);
+    const ongApproved =
+      seller.role === "ONG" &&
+      seller.accountStatus === AccountStatus.ACTIVE &&
+      seller.ongProfile?.verificationStatus === VerificationStatus.APPROVED &&
+      Boolean(seller.ongProfile.approvedAt);
+    if (!partnerApproved && !ongApproved) {
+      throw new Error("PARTNER_NOT_APPROVED");
+    }
+    if (!sellable.has(product.sellerId)) {
+      throw new Error("SELLER_NOT_ENABLED");
+    }
+
+    lines.push({
+      productId: product.id,
+      name: product.name,
+      quantity: item.quantity,
+      unitPrice: product.price,
+      partnerId: product.sellerId,
     });
-    const byId = new Map(products.map((p) => [p.id, p]));
+  }
 
-    const lines: {
-      productId: string;
-      name: string;
-      quantity: number;
-      unitPrice: number;
-      partnerId: string;
-    }[] = [];
+  const partnerIds = new Set(lines.map((l) => l.partnerId));
+  if (partnerIds.size !== 1) throw new Error("MULTI_PARTNER_CART");
+  const partnerId = [...partnerIds][0]!;
 
-    for (const item of physicalItems) {
-      if (!item.productId) continue;
-      const product = byId.get(item.productId);
-      if (!product) throw new Error("PRODUCT_NOT_FOUND");
-      if (product.status !== ProductCatalogStatus.ACTIVE) throw new Error("PRODUCT_INACTIVE");
-      if (product.approvalStatus !== "APPROVED") throw new Error("PRODUCT_NOT_APPROVED");
-      if (product.price < 0) throw new Error("INVALID_UNIT_PRICE");
-      if (item.quantity <= 0) throw new Error("INVALID_QUANTITY");
-      if (product.stock < item.quantity) throw new Error("INSUFFICIENT_STOCK");
+  const couponCode = params.couponCode?.trim().toUpperCase() || null;
+  let couponInput: ReturnType<typeof couponToEngineInput> | null = null;
+  if (couponCode) {
+    const quoted = await quoteCouponInTx(prisma, {
+      userId: params.userId,
+      code: couponCode,
+      grossBrl: lines.reduce((s, l) => s + l.unitPrice * l.quantity, 0),
+    });
+    couponInput = couponToEngineInput(quoted.coupon);
+  }
 
-      const seller = product.seller;
-      const partnerApproved =
-        seller.role === "PARTNER" &&
-        seller.accountStatus === AccountStatus.ACTIVE &&
-        seller.partnerProfile?.verificationStatus === VerificationStatus.APPROVED &&
-        Boolean(seller.partnerProfile.approvedAt);
-      const ongApproved =
-        seller.role === "ONG" &&
-        seller.accountStatus === AccountStatus.ACTIVE &&
-        seller.ongProfile?.verificationStatus === VerificationStatus.APPROVED &&
-        Boolean(seller.ongProfile.approvedAt);
-      if (!partnerApproved && !ongApproved) {
-        throw new Error("PARTNER_NOT_APPROVED");
-      }
-      if (!(await isSellerSellable(product.sellerId))) {
-        throw new Error("SELLER_NOT_ENABLED");
-      }
-
-      lines.push({
-        productId: product.id,
-        name: product.name,
-        quantity: item.quantity,
-        unitPrice: product.price,
-        partnerId: product.sellerId,
-      });
-    }
-
-    const partnerIds = new Set(lines.map((l) => l.partnerId));
-    if (partnerIds.size !== 1) throw new Error("MULTI_PARTNER_CART");
-    const partnerId = [...partnerIds][0]!;
-
-    const couponCode = params.couponCode?.trim().toUpperCase() || null;
-    let couponInput: ReturnType<typeof couponToEngineInput> | null = null;
-    let discountAmount = 0;
-    if (couponCode) {
-      const quoted = await quoteCouponInTx(tx, {
-        userId: params.userId,
-        code: couponCode,
-        grossBrl: lines.reduce((s, l) => s + l.unitPrice * l.quantity, 0),
-      });
-      discountAmount = quoted.discountAmount;
-      couponInput = couponToEngineInput(quoted.coupon);
-    }
-
-    let snap: ReturnType<typeof quoteToOrderFloats>;
-    let engineSnapshot: Record<string, unknown>;
-    let lineQuotes: { platformFeeAmount: number; partnerAmount: number; grossAmount: number; unitPrice: number }[];
-    try {
-      const quoted = await serverQuoteProduct({
-        lines: lines.map((l) => {
-          const product = byId.get(l.productId);
-          return {
-            unitPrice: l.unitPrice,
-            quantity: l.quantity,
-            sku: product?.pricingCatalogSku ?? null,
-          };
-        }),
-        coupon: couponInput,
-        partnerVerified: true,
-        partnerId,
-        charging: true,
-        feeExempt: lines.every((l) => {
-          const product = byId.get(l.productId);
-          return (
-            product?.seller.role === "ONG" &&
-            isOngFeeExemptCategory(`${product.catalogCategory ?? ""} ${product.name} ${product.pricingCatalogSku ?? ""}`)
-          );
-        }),
-      });
-      snap = quoteToOrderFloats(quoted.order);
-      engineSnapshot = quoted.order.snapshot;
-      lineQuotes = quoted.lines.map((line, idx) => ({
-        unitPrice: lines[idx]!.unitPrice,
-        grossAmount: line.baseAmountCents / 100,
-        platformFeeAmount: (line.eccopetCommissionCents + line.fixedFeeCents) / 100,
-        partnerAmount: line.estimatedPayoutCents / 100,
-      }));
-    } catch (e) {
-      if (e instanceof PricingError) throw e;
-      throw new PricingError(
-        "PRICING_UNAVAILABLE",
-        "Motor de pricing indisponível. Checkout bloqueado (fail-closed)."
-      );
-    }
-    if (snap.grossAmount <= 0) throw new Error("INVALID_TOTAL");
-
-    const amount = Math.max(0, snap.grossAmount - snap.discountAmount);
-    const splitEval = await resolveOrderMarketplaceSplit({
+  let snap: ReturnType<typeof quoteToOrderFloats>;
+  let engineSnapshot: Record<string, unknown>;
+  let lineQuotes: { platformFeeAmount: number; partnerAmount: number; grossAmount: number; unitPrice: number }[];
+  try {
+    const quoted = await serverQuoteProduct({
+      lines: lines.map((l) => {
+        const product = byId.get(l.productId);
+        return {
+          unitPrice: l.unitPrice,
+          quantity: l.quantity,
+          sku: product?.pricingCatalogSku ?? null,
+        };
+      }),
+      coupon: couponInput,
+      partnerVerified: true,
       partnerId,
-      itemPartnerIds: [partnerId],
-      amount,
-      applicationFeeAmount: snap.platformFeeAmount,
+      charging: true,
+      feeExempt: lines.every((l) => {
+        const product = byId.get(l.productId);
+        return (
+          product?.seller.role === "ONG" &&
+          isOngFeeExemptCategory(`${product.catalogCategory ?? ""} ${product.name} ${product.pricingCatalogSku ?? ""}`)
+        );
+      }),
     });
-    if (!splitEval.capability.splitReady) {
-      throw new Error("SELLER_SPLIT_UNAVAILABLE");
-    }
+    snap = quoteToOrderFloats(quoted.order);
+    engineSnapshot = quoted.order.snapshot;
+    lineQuotes = quoted.lines.map((line, idx) => ({
+      unitPrice: lines[idx]!.unitPrice,
+      grossAmount: line.baseAmountCents / 100,
+      platformFeeAmount: (line.eccopetCommissionCents + line.fixedFeeCents) / 100,
+      partnerAmount: line.estimatedPayoutCents / 100,
+    }));
+  } catch (e) {
+    if (e instanceof PricingError) throw e;
+    throw new PricingError(
+      "PRICING_UNAVAILABLE",
+      "Motor de pricing indisponível. Checkout bloqueado (fail-closed)."
+    );
+  }
+  if (snap.grossAmount <= 0) throw new Error("INVALID_TOTAL");
 
+  const amount = Math.max(0, snap.grossAmount - snap.discountAmount);
+  const splitEval = await resolveOrderMarketplaceSplit({
+    partnerId,
+    itemPartnerIds: [partnerId],
+    amount,
+    applicationFeeAmount: snap.platformFeeAmount,
+  });
+  if (!splitEval.capability.splitReady) {
+    throw new Error("SELLER_SPLIT_UNAVAILABLE");
+  }
+
+  const order = await withCheckoutCreateRetry((orderNumber) =>
+    prisma.$transaction(async (tx) => {
     for (const line of lines) {
       const updated = await tx.product.updateMany({
         where: { id: line.productId, stock: { gte: line.quantity }, deletedAt: null },
@@ -243,12 +245,9 @@ export async function checkoutFromCart(params: {
       }
     }
 
-    const maxNum =
-      (await tx.order.aggregate({ _max: { orderNumber: true } }))._max.orderNumber ?? 1000;
-
     const created = await tx.order.create({
       data: {
-        orderNumber: maxNum + 1,
+        orderNumber,
         userId: params.userId,
         partnerId,
         status: OrderStatus.PENDING_CONFIRMATION,
@@ -338,7 +337,8 @@ export async function checkoutFromCart(params: {
         : { cartId: cart.id, itemType: { not: "DIGITAL_AI" } },
     });
     return created;
-  });
+  }, CHECKOUT_DB_TX),
+  );
 
   await Promise.all([
     createInternalNotification({
@@ -479,12 +479,11 @@ async function checkoutQuoteFromCart(params: {
     throw new Error("SELLER_SPLIT_UNAVAILABLE");
   }
 
-  const order = await prisma.$transaction(async (tx) => {
-    const maxNum = (await tx.order.aggregate({ _max: { orderNumber: true } }))._max.orderNumber ?? 1000;
-
+  const order = await withCheckoutCreateRetry((orderNumber) =>
+    prisma.$transaction(async (tx) => {
     const created = await tx.order.create({
       data: {
-        orderNumber: maxNum + 1,
+        orderNumber,
         userId: params.userId,
         partnerId,
         status: OrderStatus.PENDING_CONFIRMATION,
@@ -565,7 +564,8 @@ async function checkoutQuoteFromCart(params: {
         : { cartId: params.cart.id, itemType: QUOTE_CART_ITEM_TYPE },
     });
     return created;
-  });
+  }, CHECKOUT_DB_TX),
+  );
 
   for (const quote of quotes) {
     await markQuoteConverted(quote.id, order.id);

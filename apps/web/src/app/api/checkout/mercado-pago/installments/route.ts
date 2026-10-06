@@ -7,8 +7,9 @@ import { prisma } from "@/lib/prisma";
 
 const schema = z.object({
   orderId: z.string().min(1).optional(),
-  bin: z.string().min(6).max(8).optional(),
-  paymentMethodId: z.string().optional(),
+  amount: z.number().positive().optional(),
+  bin: z.string().regex(/^\d{6,8}$/, "BIN incompleto"),
+  paymentMethodId: z.string().min(1).optional(),
 });
 
 export async function POST(request: Request) {
@@ -16,9 +17,11 @@ export async function POST(request: Request) {
   if (error) return error;
 
   const parsed = schema.safeParse(await request.json());
-  if (!parsed.success) return apiFailure("VALIDATION", "Dados inválidos.", 400);
+  if (!parsed.success) {
+    return apiFailure("VALIDATION", "Informe um BIN válido e um valor maior que zero.", 400);
+  }
 
-  let amount = 0;
+  let amount = Number(parsed.data.amount ?? 0);
   if (parsed.data.orderId) {
     const order = await prisma.order.findUnique({
       where: { id: parsed.data.orderId },
@@ -28,13 +31,13 @@ export async function POST(request: Request) {
       return apiFailure("FORBIDDEN", "Pedido inválido.", 403);
     }
     amount = Number(order.total);
-  } else {
+  } else if (!(amount > 0)) {
     const cart = await serializeCart(await getOrCreateCart(user!.id));
-    amount = Number(cart.productSubtotal ?? cart.subtotal);
+    amount = Number(cart.summary?.oneTimeTotal ?? cart.subtotal ?? 0);
   }
 
   if (!(amount > 0)) {
-    return apiFailure("INVALID_AMOUNT", "Valor inválido para parcelas.", 400);
+    return apiFailure("INVALID_AMOUNT", "Não foi possível calcular as parcelas.", 400);
   }
 
   const result = await fetchOfficialInstallments({
@@ -43,6 +46,8 @@ export async function POST(request: Request) {
     paymentMethodId: parsed.data.paymentMethodId,
   });
 
-  if (!result.ok) return apiFailure(result.code, "Não foi possível obter parcelas.", 503);
+  if (!result.ok) {
+    return apiFailure(result.code, "Não foi possível calcular as parcelas.", 503);
+  }
   return apiSuccess({ options: result.options, amount });
 }

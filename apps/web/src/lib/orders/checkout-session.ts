@@ -5,6 +5,8 @@ import { checkoutFromCart } from "@/lib/orders/checkout-service";
 import { checkoutAiFromCart } from "@/lib/ai-commerce/checkout-service";
 import { checkoutCatalogSku } from "@/lib/commerce-catalog/checkout";
 import { MP_SPLIT_MODE, MULTI_SELLER_STRATEGY, type PaymentGroupDraft } from "@/lib/cart/universal";
+import { moneyEquals } from "@/lib/orders/order-number";
+import { OrderStatus } from "@prisma/client";
 import type { DeliveryMethod, PaymentMethod, Prisma } from "@prisma/client";
 
 export type CheckoutSessionGroup = {
@@ -29,6 +31,56 @@ async function stampAndLoad(orderId: string) {
     where: { id: orderId },
     include: { items: true, payments: true, partner: { select: { id: true, name: true, partnerProfile: { select: { businessName: true } } } } },
   });
+}
+
+function assertGroupTotals(
+  draft: PaymentGroupDraft,
+  order: { total: number; discount: number | null; items: Array<{ price: number; quantity: number; grossAmount: number | null }> },
+  couponOnThisGroup: boolean
+) {
+  const itemSum = order.items.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
+  const orderTotal = Number(order.total);
+  const discounted = Math.max(0, Math.round((itemSum - Number(order.discount ?? 0)) * 100) / 100);
+  if (!moneyEquals(discounted, orderTotal) && !moneyEquals(itemSum, orderTotal)) {
+    console.error("[checkout] CHECKOUT_TOTAL_MISMATCH items-vs-order", {
+      itemSum,
+      discounted,
+      orderTotal,
+      sellerId: draft.sellerId,
+      kind: draft.kind,
+    });
+    throw new Error("CHECKOUT_TOTAL_MISMATCH");
+  }
+  if (!couponOnThisGroup && draft.kind !== "CATALOG" && draft.kind !== "SUBSCRIPTION") {
+    if (!moneyEquals(draft.grossAmount, orderTotal)) {
+      console.error("[checkout] CHECKOUT_TOTAL_MISMATCH group-vs-order", {
+        groupAmount: draft.grossAmount,
+        orderTotal,
+        sellerId: draft.sellerId,
+        kind: draft.kind,
+      });
+      throw new Error("CHECKOUT_TOTAL_MISMATCH");
+    }
+  }
+}
+
+export async function invalidateUnpaidCheckoutSession(userId: string, sessionId: string) {
+  const orders = await prisma.order.findMany({
+    where: { userId, idempotencyKey: { startsWith: `${sessionId}:` } },
+    include: { payments: true },
+  });
+  const unpaid = orders.filter((order) => {
+    const paid =
+      order.status === OrderStatus.PAID ||
+      order.payments.some((p) => p.status === "APPROVED");
+    return !paid;
+  });
+  if (!unpaid.length) return { cancelled: 0 };
+  await prisma.order.updateMany({
+    where: { id: { in: unpaid.map((o) => o.id) } },
+    data: { status: OrderStatus.CANCELLED, fulfillmentStatus: OrderStatus.CANCELLED },
+  });
+  return { cancelled: unpaid.length };
 }
 
 export async function checkoutUniversalFromCart(params: {
@@ -135,6 +187,7 @@ export async function checkoutUniversalFromCart(params: {
     }
 
     const loaded = await stampAndLoad(orderId);
+    assertGroupTotals(draft, loaded, Boolean(params.couponCode) && index === 0);
     groups.push({
       index,
       orderId: loaded.id,

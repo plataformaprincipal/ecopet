@@ -5,6 +5,17 @@ import { checkoutUniversalFromCart } from "@/lib/orders/checkout-session";
 import { CouponError } from "@/lib/commerce/apply-coupon";
 import { PricingError } from "@/lib/pricing/service";
 import { firstFieldError, zodIssuesToFieldMap } from "@/lib/validation/field-errors";
+import { randomUUID } from "crypto";
+
+function checkoutFailureCode(error: unknown): string {
+  if (error instanceof CouponError) return error.code;
+  if (error instanceof PricingError) return error.code;
+  const message = error instanceof Error ? error.message : "";
+  if (/Transaction already closed|expired transaction|Unable to start a transaction in the given time/i.test(message)) {
+    return "CHECKOUT_TX_TIMEOUT";
+  }
+  return message || "INTERNAL";
+}
 
 export async function POST(request: Request) {
   const { user, error } = await requireClient();
@@ -54,14 +65,8 @@ export async function POST(request: Request) {
       201
     );
   } catch (e) {
-    const message =
-      e instanceof CouponError
-        ? e.code
-        : e instanceof PricingError
-          ? e.code
-          : e instanceof Error
-            ? e.message
-            : "Erro no checkout.";
+    const correlationId = randomUUID();
+    const message = checkoutFailureCode(e);
     const map: Record<string, [string, string, number]> = {
       QUOTE_EXPIRED: ["VALIDATION", "Orçamento expirado.", 409],
       QUOTE_NOT_ACCEPTED: ["VALIDATION", "Orçamento não aceito.", 400],
@@ -73,6 +78,7 @@ export async function POST(request: Request) {
         "Há itens no carrinho que precisam de correção antes do pagamento.",
         409,
       ],
+      CART_EMPTY: ["VALIDATION", "Seu carrinho está vazio.", 400],
       INSUFFICIENT_STOCK: ["CONFLICT", "Estoque insuficiente para um ou mais itens.", 409],
       PRODUCT_NOT_FOUND: ["VALIDATION", "Produto indisponível.", 400],
       PRODUCT_INACTIVE: ["VALIDATION", "Produto inativo.", 400],
@@ -80,23 +86,34 @@ export async function POST(request: Request) {
       PARTNER_NOT_APPROVED: ["FORBIDDEN", "Parceiro não aprovado para venda.", 403],
       SELLER_NOT_ENABLED: [
         "CONFLICT",
-        "Este parceiro ainda não está habilitado para receber pagamentos. Escolha outro vendedor ou tente novamente mais tarde.",
+        "Um dos vendedores não está habilitado.",
         409,
       ],
       SELLER_SPLIT_UNAVAILABLE: [
         "CONFLICT",
-        "Este parceiro ainda não está habilitado para receber pagamentos. Escolha outro vendedor ou tente novamente mais tarde.",
+        "Um dos vendedores não está habilitado.",
         409,
       ],
       INVALID_TOTAL: ["VALIDATION", "Total do pedido inválido.", 400],
-      INVALID_UNIT_PRICE: ["VALIDATION", "Preço inválido.", 400],
+      INVALID_UNIT_PRICE: ["VALIDATION", "Este item teve o preço atualizado.", 400],
       INVALID_QUANTITY: ["VALIDATION", "Quantidade inválida.", 400],
+      PRICE_CHANGED: ["CONFLICT", "Este item teve o preço atualizado.", 409],
       IDEMPOTENCY_CONFLICT: ["CONFLICT", "Chave de idempotência já utilizada.", 409],
       COD_NOT_ALLOWED: ["VALIDATION", "Pagamento na entrega não está disponível. Use cartão, Pix ou boleto online.", 400],
       MP_NOT_CONFIGURED: ["NOT_CONFIGURED", "Checkout online indisponível: Mercado Pago não configurado.", 503],
       CHECKOUT_DISABLED: [
         "CHECKOUT_DISABLED",
         "Checkout temporariamente indisponível.",
+        503,
+      ],
+      CHECKOUT_TOTAL_MISMATCH: [
+        "CONFLICT",
+        "Os valores do pedido não coincidem. Recalcule e tente novamente. Nenhuma cobrança foi realizada.",
+        409,
+      ],
+      CHECKOUT_TX_TIMEOUT: [
+        "INTERNAL",
+        "Não foi possível criar o pedido. Tente novamente.",
         503,
       ],
       COUPON_NOT_FOUND: ["VALIDATION", "Cupom inválido.", 400],
@@ -112,8 +129,10 @@ export async function POST(request: Request) {
       PRICING_SCHEMA_UNAVAILABLE: ["VALIDATION", "Tabela de preços indisponível no momento.", 503],
     };
     const hit = map[message];
-    if (hit) return apiFailure(hit[0], hit[1], hit[2]);
-    console.error("[checkout]", message);
-    return apiFailure("INTERNAL", "Erro ao finalizar pedido.", 500);
+    console.error("[checkout]", { correlationId, code: message });
+    if (hit) return apiFailure(hit[0], hit[1], hit[2], { correlationId });
+    return apiFailure("INTERNAL", "Não foi possível criar o pedido. Tente novamente.", 500, {
+      correlationId,
+    });
   }
 }

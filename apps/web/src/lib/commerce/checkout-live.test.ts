@@ -48,6 +48,11 @@ describe("checkout LIVE UI — sem pagamento na entrega", () => {
     assert.equal(panel.includes("Dinheiro"), false);
     assert.equal(panel.includes("Na entrega ou retirada"), false);
     assert.equal(panel.includes("momento da entrega"), false);
+    assert.ok(panel.includes("Seu pedido"));
+    assert.ok(panel.includes("Resumo do pedido"));
+    assert.ok(panel.includes("Limpar carrinho"));
+    assert.ok(panel.includes("Editar carrinho"));
+    assert.ok(panel.includes("Item removido."));
     assert.ok(panel.includes("CARTÃO"));
     assert.ok(panel.includes("PIX"));
     assert.ok(panel.includes("BOLETO"));

@@ -17,6 +17,7 @@ import { AiCommerceError } from "./errors";
 import { writeAiCommerceAudit, AI_AUDIT } from "./audit";
 import { ensureAiCommerceProducts } from "./product-service";
 import { couponAllowsSku } from "./coupon-policy";
+import { CHECKOUT_DB_TX, withCheckoutCreateRetry } from "@/lib/orders/order-number";
 
 const ECCOPONTOS_DIGITAL_AI_POLICY = {
   redeemAllowed: false,
@@ -55,82 +56,82 @@ export async function checkoutAiFromCart(params: {
   );
   if (!aiItems.length) throw new AiCommerceError("CART_EMPTY", "Nenhum serviço de IA no carrinho.", 400);
 
-  const order = await prisma.$transaction(async (tx) => {
-    const lines: Array<{
-      sku: string;
-      petId: string;
-      name: string;
-      quantity: number;
-      unitPrice: number;
-      grossAmount: number;
-      platformFeeAmount: number;
-      pricingVersion: string;
-      snapshot: Record<string, unknown>;
-    }> = [];
+  const lines: Array<{
+    sku: string;
+    petId: string;
+    name: string;
+    quantity: number;
+    unitPrice: number;
+    grossAmount: number;
+    platformFeeAmount: number;
+    pricingVersion: string;
+    snapshot: Record<string, unknown>;
+  }> = [];
 
-    for (const item of aiItems) {
-      if (!item.sku || !isAiCommerceSku(item.sku)) {
-        throw new AiCommerceError("SKU_UNKNOWN", "SKU de IA inválido.", 400);
-      }
-      if (!item.petId) throw new AiCommerceError("PET_REQUIRED", "Selecione o pet para cada serviço.", 400);
-      await assertPetOwned(params.userId, item.petId);
-      const def = getProductDefBySku(item.sku);
-      if (!def) throw new AiCommerceError("SKU_UNKNOWN", "Ferramenta não encontrada.", 404);
-      const { quote, resolved } = await quoteAiSku({ sku: item.sku, quantity: item.quantity });
-      if (!resolved.purchasable || quote.blockedReasons.length) {
-        throw new AiCommerceError(
-          "NOT_PURCHASABLE",
-          resolved.commercialPending
-            ? "Preço em confirmação comercial. A compra está temporariamente indisponível."
-            : "Esta ferramenta não está disponível para compra.",
-          409
-        );
-      }
-      if (quote.customerAmountCents <= 0) {
-        throw new AiCommerceError("INVALID_AMOUNT", "Valor inválido.", 400);
-      }
-      lines.push({
-        sku: item.sku,
-        petId: item.petId,
-        name: def.name,
-        quantity: item.quantity,
-        unitPrice: resolved.priceInCents / 100,
-        grossAmount: quote.baseAmountCents / 100,
-        platformFeeAmount: (quote.eccopetCommissionCents + quote.fixedFeeCents) / 100,
-        pricingVersion: quote.pricingVersion,
-        snapshot: quote.snapshot,
-      });
+  for (const item of aiItems) {
+    if (!item.sku || !isAiCommerceSku(item.sku)) {
+      throw new AiCommerceError("SKU_UNKNOWN", "SKU de IA inválido.", 400);
     }
-
-    const grossBrl = lines.reduce((s, l) => s + l.unitPrice * l.quantity, 0);
-    const couponCode = params.couponCode?.trim().toUpperCase() || null;
-    let discountAmount = 0;
-    let couponInput: ReturnType<typeof couponToEngineInput> | null = null;
-    if (couponCode) {
-      const coupon = await tx.coupon.findUnique({ where: { code: couponCode } });
-      if (!coupon) throw new CouponError("Cupom inválido.", "COUPON_NOT_FOUND", 404);
-      const allEligible = lines.every((l) => couponAllowsSku(coupon.eligibleSkus, l.sku));
-      if (!allEligible) {
-        throw new AiCommerceError("COUPON_SKU", "Este cupom não se aplica aos serviços de IA selecionados.", 400);
-      }
-      const quoted = await quoteCouponInTx(tx, {
-        userId: params.userId,
-        code: couponCode,
-        grossBrl,
-      });
-      discountAmount = quoted.discountAmount;
-      couponInput = couponToEngineInput(quoted.coupon);
+    if (!item.petId) throw new AiCommerceError("PET_REQUIRED", "Selecione o pet para cada serviço.", 400);
+    await assertPetOwned(params.userId, item.petId);
+    const def = getProductDefBySku(item.sku);
+    if (!def) throw new AiCommerceError("SKU_UNKNOWN", "Ferramenta não encontrada.", 404);
+    const { quote, resolved } = await quoteAiSku({ sku: item.sku, quantity: item.quantity });
+    if (!resolved.purchasable || quote.blockedReasons.length) {
+      throw new AiCommerceError(
+        "NOT_PURCHASABLE",
+        resolved.commercialPending
+          ? "Preço em confirmação comercial. A compra está temporariamente indisponível."
+          : "Esta ferramenta não está disponível para compra.",
+        409
+      );
     }
-    void couponInput;
-    void ECCOPONTOS_DIGITAL_AI_POLICY;
+    if (quote.customerAmountCents <= 0) {
+      throw new AiCommerceError("INVALID_AMOUNT", "Valor inválido.", 400);
+    }
+    lines.push({
+      sku: item.sku,
+      petId: item.petId,
+      name: def.name,
+      quantity: item.quantity,
+      unitPrice: resolved.priceInCents / 100,
+      grossAmount: quote.baseAmountCents / 100,
+      platformFeeAmount: (quote.eccopetCommissionCents + quote.fixedFeeCents) / 100,
+      pricingVersion: quote.pricingVersion,
+      snapshot: quote.snapshot,
+    });
+  }
 
-    const total = Math.max(0, Math.round((grossBrl - discountAmount) * 100) / 100);
-    if (!(total > 0)) throw new AiCommerceError("INVALID_AMOUNT", "Total inválido.", 400);
+  const grossBrl = lines.reduce((s, l) => s + l.unitPrice * l.quantity, 0);
+  const couponCode = params.couponCode?.trim().toUpperCase() || null;
+  let discountAmount = 0;
+  let couponInput: ReturnType<typeof couponToEngineInput> | null = null;
+  if (couponCode) {
+    const coupon = await prisma.coupon.findUnique({ where: { code: couponCode } });
+    if (!coupon) throw new CouponError("Cupom inválido.", "COUPON_NOT_FOUND", 404);
+    const allEligible = lines.every((l) => couponAllowsSku(coupon.eligibleSkus, l.sku));
+    if (!allEligible) {
+      throw new AiCommerceError("COUPON_SKU", "Este cupom não se aplica aos serviços de IA selecionados.", 400);
+    }
+    const quoted = await quoteCouponInTx(prisma, {
+      userId: params.userId,
+      code: couponCode,
+      grossBrl,
+    });
+    discountAmount = quoted.discountAmount;
+    couponInput = couponToEngineInput(quoted.coupon);
+  }
+  void couponInput;
+  void ECCOPONTOS_DIGITAL_AI_POLICY;
 
-    const maxNum = (await tx.order.aggregate({ _max: { orderNumber: true } }))._max.orderNumber ?? 1000;
+  const total = Math.max(0, Math.round((grossBrl - discountAmount) * 100) / 100);
+  if (!(total > 0)) throw new AiCommerceError("INVALID_AMOUNT", "Total inválido.", 400);
+
+  const order = await withCheckoutCreateRetry((orderNumber) =>
+    prisma.$transaction(async (tx) => {
     const created = await tx.order.create({
       data: {
-        orderNumber: maxNum + 1,
+        orderNumber,
         userId: params.userId,
         partnerId: null,
         status: OrderStatus.PENDING,
@@ -211,7 +212,8 @@ export async function checkoutAiFromCart(params: {
         : { cartId: cart.id, itemType: AI_COMMERCE_ITEM_TYPE },
     });
     return created;
-  });
+  }, CHECKOUT_DB_TX),
+  );
 
   await Promise.all([
     createInternalNotification({

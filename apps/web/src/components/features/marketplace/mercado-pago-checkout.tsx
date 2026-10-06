@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import { CheckoutPaymentPoller } from "@/components/features/marketplace/checkout-payment-poller";
 
 type MpConfig = {
@@ -69,6 +70,20 @@ function loadMpSdk(): Promise<void> {
     script.onerror = () => reject(new Error("SDK_LOAD_FAILED"));
     document.body.appendChild(script);
   });
+}
+
+function mapCardPayError(message: string) {
+  const text = message.toLowerCase();
+  if (text.includes("bin") || text.includes("card") || text.includes("token") || text.includes("cvv") || text.includes("invalid")) {
+    return "Dados do cartão inválidos.";
+  }
+  if (text.includes("recus") || text.includes("rejected") || text.includes("issuer")) {
+    return "Pagamento recusado pelo emissor.";
+  }
+  if (text.includes("não foi criado") || text.includes("not created") || text.includes("mp_")) {
+    return "O pagamento não foi criado. Nenhuma cobrança foi realizada.";
+  }
+  return message || "O pagamento não foi criado. Nenhuma cobrança foi realizada.";
 }
 
 /**
@@ -183,7 +198,9 @@ export function MercadoPagoCheckout({
 
   useEffect(() => {
     const digits = card.cardNumber.replace(/\D/g, "");
-    if (digits.length < 6 || method !== "card") return;
+    if (method !== "card" || digits.length < 6 || !(amount > 0)) {
+      return;
+    }
     const t = setTimeout(() => {
       void (async () => {
         try {
@@ -193,20 +210,26 @@ export function MercadoPagoCheckout({
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               ...(orderId ? { orderId } : {}),
-              bin: digits.slice(0, 6),
+              bin: digits.slice(0, 8),
+              amount,
             }),
           });
           const json = await res.json();
           if (res.ok && json.success) {
             setInstallmentOptions(json.data.options ?? []);
+            setError((current) =>
+              current === "Não foi possível calcular as parcelas." ? "" : current
+            );
+          } else if (res.status !== 400) {
+            setError("Não foi possível calcular as parcelas.");
           }
         } catch {
-          /* ignore */
+          setError("Não foi possível calcular as parcelas.");
         }
       })();
-    }, 400);
+    }, 500);
     return () => clearTimeout(t);
-  }, [card.cardNumber, method, orderId]);
+  }, [card.cardNumber, method, orderId, amount]);
 
   const payOnline = useCallback(
     async (body: Record<string, unknown>) => {
@@ -269,14 +292,12 @@ export function MercadoPagoCheckout({
       setResult(paid);
       const status = String(paid.status).toUpperCase();
       if (["REJECTED", "CANCELLED", "EXPIRED", "ERROR"].includes(status)) {
-        setError(
-          "Pagamento recusado. Seu pedido não foi cobrado. Tente novamente ou escolha outra forma de pagamento."
-        );
+        setError("Pagamento recusado pelo emissor.");
         return;
       }
       onPaid(paid);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao pagar com cartão");
+      setError(err instanceof Error ? mapCardPayError(err.message) : "Dados do cartão inválidos.");
     } finally {
       setSubmitting(false);
       submitLock.current = false;
@@ -311,9 +332,7 @@ export function MercadoPagoCheckout({
       setResult(paid);
       const status = String(paid.status).toUpperCase();
       if (["REJECTED", "CANCELLED", "EXPIRED", "ERROR"].includes(status)) {
-        setError(
-          "Pagamento recusado. Seu pedido não foi cobrado. Tente novamente ou escolha outra forma de pagamento."
-        );
+        setError("O pagamento não foi criado. Nenhuma cobrança foi realizada.");
         return;
       }
     } catch (err) {
@@ -607,11 +626,17 @@ export function MercadoPagoCheckout({
             </p>
           </div>
           <p className="text-xs text-muted-foreground">
-            Dados do cartão são tokenizados pelo SDK Mercado Pago no seu navegador. O EcoPet não
-            armazena número nem CVV.
+            Pagamento processado com segurança pelo Mercado Pago. Dados do cartão não são armazenados pela EccoPet.
           </p>
-          <Button type="submit" disabled={submitting} className="w-full">
-            {submitting ? "Processando…" : `Pagar R$ ${amount.toFixed(2)}`}
+          <Button type="submit" disabled={submitting} className="w-full" aria-busy={submitting}>
+            {submitting ? (
+              <span className="inline-flex items-center justify-center gap-2">
+                <Spinner label="" />
+                Processando pagamento…
+              </span>
+            ) : (
+              `Pagar R$ ${amount.toFixed(2)}`
+            )}
           </Button>
         </form>
       ) : null}
