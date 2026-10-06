@@ -133,7 +133,7 @@ export async function readPublicPartners(query: string) {
 
 export async function readUserCart(userId: string) {
   const cart = await getOrCreateCart(userId);
-  const serialized = serializeCart(cart);
+  const serialized = await serializeCart(cart);
   return {
     itemCount: serialized.itemCount,
     subtotal: serialized.subtotal,

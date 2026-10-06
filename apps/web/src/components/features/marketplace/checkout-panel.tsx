@@ -23,6 +23,15 @@ const PAYMENT_METHODS: {
   { value: "BOLETO", label: "BOLETO", hint: "Pago na compensação bancária." },
 ];
 
+type CheckoutGroup = {
+  index: number;
+  orderId: string;
+  sellerName: string;
+  amount: number;
+  paymentStatus: string;
+  status: string;
+};
+
 export function CheckoutPanel() {
   const router = useRouter();
   const [cart, setCart] = useState<Record<string, unknown> | null>(null);
@@ -35,6 +44,9 @@ export function CheckoutPanel() {
     id: string;
     total: number;
   } | null>(null);
+  const [groups, setGroups] = useState<CheckoutGroup[]>([]);
+  const [sessionNotice, setSessionNotice] = useState<string | null>(null);
+  const [hasSubscription, setHasSubscription] = useState(false);
   const [payerEmail, setPayerEmail] = useState("");
   const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
   const pendingRef = useRef<{ id: string; total: number } | null>(null);
@@ -125,8 +137,16 @@ export function CheckoutPanel() {
       throw new Error(data.error?.message ?? "Erro ao finalizar pedido.");
     }
     setIdempotencyKey(crypto.randomUUID());
+    const sessionGroups = (data.data.groups ?? []) as CheckoutGroup[];
+    setGroups(sessionGroups);
+    setSessionNotice(typeof data.data.notice === "string" ? data.data.notice : null);
+    setHasSubscription(Boolean(data.data.hasSubscription));
     const order = data.data.order as { id: string; total: number };
-    const next = { id: order.id, total: Number(order.total) };
+    const nextPending =
+      sessionGroups.find((g) => g.paymentStatus !== "APPROVED" && g.status !== "PAID") ?? sessionGroups[0];
+    const next = nextPending
+      ? { id: nextPending.orderId, total: Number(nextPending.amount) }
+      : { id: order.id, total: Number(order.total) };
     analyticsService.track(OrderEvents.ORDER_COMPLETE, {
       value: next.total,
       params: { order_id: next.id, pay_mode: "online" },
@@ -142,7 +162,7 @@ export function CheckoutPanel() {
 
   if (!cart) return <p className="text-sm">Carregando...</p>;
   const items = (cart.items as Record<string, unknown>[]) ?? [];
-  if (items.length === 0) {
+  if (items.length === 0 && !pendingOrder) {
     return (
       <p className="rounded border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
         Carrinho vazio.{" "}
@@ -152,10 +172,10 @@ export function CheckoutPanel() {
       </p>
     );
   }
-  if (Boolean(cart.multiPartner)) {
+  if (Boolean(cart.blockedCount) && Number(cart.blockedCount) > 0) {
     return (
       <p className="text-sm text-red-600">
-        Remova itens de outras lojas — apenas um parceiro por pedido.{" "}
+        Há itens no carrinho que precisam de correção antes do pagamento.{" "}
         <Link href="/carrinho" className="underline">
           Voltar ao carrinho
         </Link>
@@ -173,6 +193,23 @@ export function CheckoutPanel() {
       <Card>
         <CardContent className="space-y-3 p-5">
           <h2 className="text-lg font-semibold">Resumo do pedido</h2>
+          {Boolean(cart.hasSubscription) || hasSubscription ? (
+            <p className="text-sm text-muted-foreground">Esta compra inclui uma assinatura recorrente.</p>
+          ) : null}
+          {sessionNotice ? <p className="text-sm text-muted-foreground">{sessionNotice}</p> : null}
+          {groups.length > 1 ? (
+            <p className="text-sm font-medium">
+              Pagamento {groups.filter((g) => g.paymentStatus === "APPROVED" || g.status === "PAID").length + 1} de {groups.length}
+            </p>
+          ) : null}
+          {groups.filter((g) => g.paymentStatus === "APPROVED" || g.status === "PAID").length > 0 &&
+          groups.some((g) => g.paymentStatus !== "APPROVED" && g.status !== "PAID") ? (
+            <p className="text-sm">
+              {groups.filter((g) => g.paymentStatus === "APPROVED" || g.status === "PAID").length} pagamento concluído.
+              {" "}
+              {groups.filter((g) => g.paymentStatus !== "APPROVED" && g.status !== "PAID").length} pagamentos ainda precisam ser finalizados.
+            </p>
+          ) : null}
           {items.map((item) => (
             <p key={String(item.id)} className="flex justify-between gap-3 text-sm">
               <span>
@@ -282,6 +319,7 @@ export function CheckoutPanel() {
                 ))}
               </div>
               <MercadoPagoCheckout
+                key={pendingOrder?.id ?? "checkout"}
                 amount={total}
                 payerEmail={payerEmail}
                 initialMethod={
@@ -302,6 +340,17 @@ export function CheckoutPanel() {
                       value: order.total,
                       params: { order_id: order.id, status: result.status, provider: "mercado_pago" },
                     });
+                    const updated = groups.map((g) =>
+                      g.orderId === order.id ? { ...g, paymentStatus: "APPROVED", status: "PAID" } : g
+                    );
+                    setGroups(updated);
+                    const nextGroup = updated.find((g) => g.paymentStatus !== "APPROVED" && g.status !== "PAID");
+                    if (nextGroup) {
+                      const next = { id: nextGroup.orderId, total: Number(nextGroup.amount) };
+                      setPendingOrder(next);
+                      pendingRef.current = next;
+                      return;
+                    }
                   }
                   router.push(
                     `/checkout/sucesso/${order.id}?payment=${result.paymentId}&status=${result.status}`

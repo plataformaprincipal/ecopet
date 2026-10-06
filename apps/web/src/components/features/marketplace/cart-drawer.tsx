@@ -23,7 +23,7 @@ export function CartDrawer() {
     if (cartOpen) void refresh();
   }, [cartOpen, refresh]);
 
-  const items = (cart?.items ?? []).filter((item) => item.itemType !== "DIGITAL_AI");
+  const items = cart?.items ?? [];
 
   async function changeQty(itemId: string, quantity: number) {
     const next = await updateServerCartItem(itemId, quantity);
@@ -89,6 +89,7 @@ export function CartDrawer() {
                       <p className="text-xs text-[var(--ep-fg-muted)]">{item.sellerName}</p>
                     ) : null}
                     <p className="text-[var(--ep-fg-muted)]">{formatMpPrice(item.unitPrice)}</p>
+                    {item.quantityApplies !== false ? (
                     <div className="mt-2 flex items-center gap-2">
                       <Button
                         size="icon"
@@ -123,6 +124,19 @@ export function CartDrawer() {
                         {t("cart.remove")}
                       </Button>
                     </div>
+                    ) : (
+                    <div className="mt-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        type="button"
+                        className="text-[var(--ep-danger)]"
+                        onClick={() => void removeItem(item.id)}
+                      >
+                        {t("cart.remove")}
+                      </Button>
+                    </div>
+                    )}
                   </div>
                 </div>
               ))}

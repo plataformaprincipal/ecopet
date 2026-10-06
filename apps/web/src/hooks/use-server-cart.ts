@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   fetchServerCart,
+  onCartUpdated,
   type ServerCart,
 } from "@/lib/marketplace/cart-client";
 
@@ -35,6 +36,10 @@ export function useServerCart(opts?: { enabled?: boolean; refreshToken?: number 
   useEffect(() => {
     void refresh();
   }, [refresh, refreshToken]);
+
+  useEffect(() => {
+    return onCartUpdated((next) => setCart(next));
+  }, []);
 
   return {
     cart,

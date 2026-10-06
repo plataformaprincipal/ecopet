@@ -43,6 +43,15 @@ export async function checkoutFromCart(params: {
   address: Prisma.InputJsonValue;
   idempotencyKey?: string | null;
   couponCode?: string | null;
+  itemIds?: string[];
+  checkoutSession?: {
+    id: string;
+    groupIndex: number;
+    groupCount: number;
+    sellerId: string;
+    sellerName: string;
+    kind: string;
+  };
 }) {
   assertCheckoutEnabled();
 
@@ -65,11 +74,14 @@ export async function checkoutFromCart(params: {
   }
 
   const cart = await getOrCreateCart(params.userId);
-  const quoteCartItems = cart.items.filter((i) => i.itemType === QUOTE_CART_ITEM_TYPE);
-  if (quoteCartItems.length) {
+  const scoped = params.itemIds?.length
+    ? cart.items.filter((i) => params.itemIds!.includes(i.id))
+    : cart.items;
+  const quoteCartItems = scoped.filter((i) => i.itemType === QUOTE_CART_ITEM_TYPE);
+  if (quoteCartItems.length && scoped.every((i) => i.itemType === QUOTE_CART_ITEM_TYPE)) {
     return checkoutQuoteFromCart({ ...params, cart, quoteCartItems });
   }
-  const physicalItems = cart.items.filter((i) => i.itemType !== "DIGITAL_AI" && i.productId);
+  const physicalItems = scoped.filter((i) => i.itemType !== "DIGITAL_AI" && i.itemType !== "CATALOG_SKU" && i.productId);
   if (!physicalItems.length) throw new Error("CART_EMPTY");
 
   const paymentMethod = params.paymentMethod ?? PaymentMethod.CARD;
@@ -252,7 +264,10 @@ export async function checkoutFromCart(params: {
         reserveAmount: snap.reserveAmount,
         taxEstimate: snap.taxEstimate,
         pricingVersion: snap.pricingVersion,
-        pricingSnapshot: engineSnapshot as Prisma.InputJsonValue,
+        pricingSnapshot: {
+          ...(engineSnapshot as Record<string, unknown>),
+          ...(params.checkoutSession ? { checkoutSession: params.checkoutSession } : {}),
+        } as Prisma.InputJsonValue,
         currency: "BRL",
         idempotencyKey: params.idempotencyKey || null,
         shippingAddress: { ...(params.address as Record<string, unknown>), phone: params.phone },
@@ -318,7 +333,9 @@ export async function checkoutFromCart(params: {
     }
 
     await tx.cartItem.deleteMany({
-      where: { cartId: cart.id, itemType: { not: "DIGITAL_AI" } },
+      where: params.itemIds?.length
+        ? { cartId: cart.id, id: { in: params.itemIds } }
+        : { cartId: cart.id, itemType: { not: "DIGITAL_AI" } },
     });
     return created;
   });
@@ -380,6 +397,15 @@ async function checkoutQuoteFromCart(params: {
   address: Prisma.InputJsonValue;
   idempotencyKey?: string | null;
   couponCode?: string | null;
+  itemIds?: string[];
+  checkoutSession?: {
+    id: string;
+    groupIndex: number;
+    groupCount: number;
+    sellerId: string;
+    sellerName: string;
+    kind: string;
+  };
   cart: Awaited<ReturnType<typeof getOrCreateCart>>;
   quoteCartItems: Awaited<ReturnType<typeof getOrCreateCart>>["items"];
 }) {
@@ -475,7 +501,10 @@ async function checkoutQuoteFromCart(params: {
         reserveAmount: snap.reserveAmount,
         taxEstimate: snap.taxEstimate,
         pricingVersion: snap.pricingVersion,
-        pricingSnapshot: engineSnapshot as Prisma.InputJsonValue,
+        pricingSnapshot: {
+          ...(engineSnapshot as Record<string, unknown>),
+          ...(params.checkoutSession ? { checkoutSession: params.checkoutSession } : {}),
+        } as Prisma.InputJsonValue,
         currency: "BRL",
         idempotencyKey: params.idempotencyKey || null,
         shippingAddress: { ...(params.address as Record<string, unknown>), phone: params.phone },
@@ -531,7 +560,9 @@ async function checkoutQuoteFromCart(params: {
     });
 
     await tx.cartItem.deleteMany({
-      where: { cartId: params.cart.id, itemType: QUOTE_CART_ITEM_TYPE },
+      where: params.itemIds?.length
+        ? { cartId: params.cart.id, id: { in: params.itemIds } }
+        : { cartId: params.cart.id, itemType: QUOTE_CART_ITEM_TYPE },
     });
     return created;
   });

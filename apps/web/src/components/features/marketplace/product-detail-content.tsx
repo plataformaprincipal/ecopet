@@ -180,9 +180,23 @@ export function ProductDetailContent({ id }: ProductDetailContentProps) {
             ariaLabel="Solicitar orçamento"
           />
 
-          <Link href="/marketplace/checkout" className="mt-3 block">
-            <Button variant="secondary" className="w-full" size="lg" disabled={!product.inStock}>Comprar agora</Button>
-          </Link>
+            <Button
+              variant="secondary"
+              className="w-full"
+              size="lg"
+              disabled={!product.inStock || adding}
+              onClick={async () => {
+                setAdding(true);
+                try {
+                  await addProductToCart(product, qty);
+                  window.location.href = "/checkout";
+                } finally {
+                  setAdding(false);
+                }
+              }}
+            >
+              Comprar agora
+            </Button>
 
           <div className="mt-4 flex items-start gap-2 rounded-xl bg-amber-50 p-3 text-xs text-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
             <Shield className="h-4 w-4 shrink-0 mt-0.5" />

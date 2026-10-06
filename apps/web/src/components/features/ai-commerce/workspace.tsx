@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { getProductDefBySku, getProductDefBySlug, purchaseCta } from "@/lib/ai-commerce/catalog";
+import { getProductDefBySku, getProductDefBySlug } from "@/lib/ai-commerce/catalog";
 import { getCatalogBySku } from "@/lib/pricing/catalog";
 import { getCapabilityRuntime } from "@/lib/ai-commerce/capability-runtime";
 import { getSpecialistProtocol, initialInterviewInput, isInterviewReady, petNameFromContext } from "@/lib/ai-commerce/specialist-protocols";
@@ -380,7 +380,17 @@ export function AiWorkbench({ slug }: { slug: string }) {
       return;
     }
     analyticsService.track(AiEvents.ADD_TO_CART, { screen: `eccopet_${slug}`, label: def.sku });
-    router.push("/eccopet/checkout");
+    return true;
+  }
+
+  async function addToCartOnly() {
+    const ok = await addPaidSkuToCart();
+    if (ok) router.push("/carrinho");
+  }
+
+  async function buyNow() {
+    const ok = await addPaidSkuToCart();
+    if (ok) router.push("/checkout");
   }
 
   async function startTool(firstMessage?: string) {
@@ -423,7 +433,7 @@ export function AiWorkbench({ slug }: { slug: string }) {
         return;
       }
       if (code === "ENTITLEMENT_UNAVAILABLE" || code === "AI_PAID_REQUIRED") {
-        await addPaidSkuToCart();
+        await buyNow();
         return;
       }
       setMsg(data.error?.message ?? "Esta ferramenta está temporariamente indisponível.");
@@ -500,11 +510,11 @@ export function AiWorkbench({ slug }: { slug: string }) {
         onStart={(chip) => void startTool(chip)}
       />
       <div className="mt-4 flex flex-wrap gap-3">
-        <Button className="w-full sm:w-auto" loading={busy} disabled={busy} onClick={() => void addPaidSkuToCart()}>
+        <Button className="w-full sm:w-auto" loading={busy} disabled={busy} onClick={() => void addToCartOnly()}>
           Adicionar ao carrinho
         </Button>
-        <Button className="w-full sm:w-auto" variant="outline" loading={busy} disabled={busy} onClick={() => void startTool(draft || undefined)}>
-          {purchaseCta(def)}
+        <Button className="w-full sm:w-auto" variant="outline" loading={busy} disabled={busy} onClick={() => void buyNow()}>
+          Comprar agora
         </Button>
       </div>
       {msg ? (

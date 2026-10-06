@@ -9,6 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { CartItem } from "@/components/features/marketplace/cart-item";
 import { firstProductImageUrl, resolveProductAlt } from "@/lib/catalog/images";
 import { formatMpPrice } from "@/lib/marketplace/config";
@@ -18,6 +25,7 @@ import { useFoundationSession } from "@/hooks/use-foundation-session";
 import { useTranslation } from "@/providers/i18n-provider";
 import {
   addProductToServerCart,
+  clearServerCart,
   removeServerCartItem,
   toggleServerFavorite,
   updateServerCartItem,
@@ -26,12 +34,66 @@ import {
 } from "@/lib/marketplace/cart-client";
 import { cn } from "@/lib/utils";
 
-type RemovedSnapshot = { productId: string; quantity: number; name: string };
+type RemovedSnapshot = { productId: string | null; quantity: number; name: string };
+
+function SummaryRows({
+  cart,
+  couponDiscount,
+  total,
+}: {
+  cart: ServerCart;
+  couponDiscount: number;
+  total: number;
+}) {
+  const { t } = useTranslation();
+  const summary = cart.summary;
+  return (
+    <dl className="mt-4 space-y-2 text-sm">
+      <div className="flex justify-between">
+        <dt className="text-[var(--ep-fg-muted)]">{t("cart.products")}</dt>
+        <dd>{formatMpPrice(summary?.products ?? cart.productSubtotal ?? 0)}</dd>
+      </div>
+      <div className="flex justify-between">
+        <dt className="text-[var(--ep-fg-muted)]">{t("cart.services")}</dt>
+        <dd>{formatMpPrice(summary?.services ?? 0)}</dd>
+      </div>
+      <div className="flex justify-between">
+        <dt className="text-[var(--ep-fg-muted)]">{t("cart.ai")}</dt>
+        <dd>{formatMpPrice(summary?.ai ?? cart.aiSubtotal ?? 0)}</dd>
+      </div>
+      {couponDiscount > 0 || (cart.discount ?? 0) > 0 ? (
+        <div className="flex justify-between text-ecopet-green">
+          <dt>{t("cart.discounts")}</dt>
+          <dd>-{formatMpPrice(couponDiscount + (cart.discount ?? 0))}</dd>
+        </div>
+      ) : null}
+      <div className="flex justify-between">
+        <dt className="text-[var(--ep-fg-muted)]">{t("cart.shipping")}</dt>
+        <dd className="text-[var(--ep-fg-muted)]">{t("cart.shippingCheckout")}</dd>
+      </div>
+      {(cart.estimatedRewards ?? 0) > 0 ? (
+        <div className="flex justify-between text-[var(--ep-fg-muted)]">
+          <dt>{t("cart.rewardsEarn").replace("{points}", String(cart.estimatedRewards))}</dt>
+        </div>
+      ) : null}
+      <div className="flex justify-between border-t border-[var(--ep-border)] pt-3 text-base font-bold">
+        <dt>{cart.hasSubscription ? t("cart.payToday") : t("cart.total")}</dt>
+        <dd className="text-ecopet-green">{formatMpPrice(total)}</dd>
+      </div>
+      {cart.hasSubscription ? (
+        <div className="flex justify-between text-sm">
+          <dt className="text-[var(--ep-fg-muted)]">{t("cart.recurring")}</dt>
+          <dd>{formatMpPrice(cart.recurringMonthly ?? 0)}{t("cart.perMonth")}</dd>
+        </div>
+      ) : null}
+    </dl>
+  );
+}
 
 export function CartPanel() {
   const { t } = useTranslation();
   const { isAuthenticated } = useFoundationSession();
-  const { cart, setCart, loading, error, refresh, itemCount, subtotal, estimatedRewards } = useServerCart();
+  const { cart, setCart, loading, error, itemCount, subtotal } = useServerCart();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [actionError, setActionError] = useState("");
   const [couponOpen, setCouponOpen] = useState(false);
@@ -40,16 +102,23 @@ export function CartPanel() {
   const [couponOk, setCouponOk] = useState(false);
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [removed, setRemoved] = useState<RemovedSnapshot | null>(null);
+  const [clearOpen, setClearOpen] = useState(false);
+  const [clearing, setClearing] = useState(false);
 
-  const items = (cart?.items ?? []).filter((item) => item.itemType !== "DIGITAL_AI");
+  const items = cart?.items ?? [];
+  const groups = cart?.groups?.length
+    ? cart.groups
+    : [{ sellerId: "all", sellerName: "", sellerType: "ECCOPET" as const, items, subtotal }];
   const ready = !loading || cart != null;
+  const blocked = (cart?.blockedCount ?? 0) > 0;
+  const ctaDisabled = items.length === 0 || blocked;
 
   async function applyCart(next: ServerCart) {
     setCart(next);
   }
 
   async function changeQty(item: ServerCartItem, quantity: number) {
-    if (!item.productId) return;
+    if (!item.quantityApplies) return;
     setActionError("");
     const previous = cart;
     if (cart) {
@@ -75,13 +144,12 @@ export function CartPanel() {
   }
 
   async function removeItem(item: ServerCartItem) {
-    if (!item.productId) return;
     setActionError("");
     setBusyId(item.id);
     try {
       const next = await removeServerCartItem(item.id);
       await applyCart(next);
-      setRemoved({ productId: item.productId, quantity: item.quantity, name: item.name });
+      setRemoved({ productId: item.productId, quantity: item.quantity, name: item.title || item.name });
     } catch (e) {
       setActionError(e instanceof Error ? e.message : t("cart.qtyUpdateFailed"));
     } finally {
@@ -90,7 +158,7 @@ export function CartPanel() {
   }
 
   async function undoRemove() {
-    if (!removed) return;
+    if (!removed?.productId) return;
     setActionError("");
     try {
       const next = await addProductToServerCart(removed.productId, removed.quantity);
@@ -116,6 +184,21 @@ export function CartPanel() {
       setActionError(e instanceof Error ? e.message : t("cart.qtyUpdateFailed"));
     } finally {
       setBusyId(null);
+    }
+  }
+
+  async function confirmClear() {
+    setClearing(true);
+    setActionError("");
+    try {
+      const next = await clearServerCart();
+      await applyCart(next);
+      setClearOpen(false);
+      setRemoved(null);
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : t("cart.clearFailed"));
+    } finally {
+      setClearing(false);
     }
   }
 
@@ -174,21 +257,20 @@ export function CartPanel() {
         <p className="mt-2 max-w-sm text-sm text-[var(--ep-fg-muted)]">{t("cart.emptyDescription")}</p>
         <div className="mt-6 flex w-full flex-col gap-2 sm:flex-row">
           <Button asChild className="flex-1">
-            <Link href="/marketplace">{t("cart.exploreProducts")}</Link>
+            <Link href="/marketplace">{t("cart.exploreMarketplace")}</Link>
           </Button>
           <Button asChild variant="outline" className="flex-1">
-            <Link href="/servicos">{t("cart.findServices")}</Link>
+            <Link href="/eccopet">{t("cart.exploreAi")}</Link>
           </Button>
         </div>
-        <Link href="/" className="mt-4 text-sm font-medium text-ecopet-green hover:underline">
-          {t("cart.continueExploring")}
-        </Link>
         {removed ? (
-          <div className="mt-6 flex items-center gap-3 rounded-xl bg-[var(--surface-muted)] px-4 py-3 text-sm">
+          <div className="mt-6 flex items-center gap-3 rounded-xl bg-[var(--surface-muted)] px-4 py-3 text-sm" role="status">
             <span>{t("cart.removed")}</span>
-            <Button type="button" size="sm" variant="ghost" onClick={() => void undoRemove()}>
-              {t("cart.undo")}
-            </Button>
+            {removed.productId ? (
+              <Button type="button" size="sm" variant="ghost" onClick={() => void undoRemove()}>
+                {t("cart.undo")}
+              </Button>
+            ) : null}
           </div>
         ) : null}
       </div>
@@ -197,11 +279,16 @@ export function CartPanel() {
 
   return (
     <div className="pb-24 lg:pb-0">
-      <div className="mb-6">
-        <h1 className="font-display text-2xl font-bold text-[var(--ep-fg)]">{t("cart.title")}</h1>
-        <p className="mt-1 text-sm text-[var(--ep-fg-muted)]">
-          {itemCount} {itemCount === 1 ? t("cart.itemSingular") : t("cart.itemPlural")}
-        </p>
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-display text-2xl font-bold text-[var(--ep-fg)]">{t("cart.title")}</h1>
+          <p className="mt-1 text-sm text-[var(--ep-fg-muted)]">
+            {itemCount} {itemCount === 1 ? t("cart.itemSingular") : t("cart.itemPlural")}
+          </p>
+        </div>
+        <Button type="button" variant="ghost" size="sm" className="text-[var(--ep-fg-muted)]" onClick={() => setClearOpen(true)}>
+          {t("cart.clearCart")}
+        </Button>
       </div>
 
       {actionError ? (
@@ -216,61 +303,64 @@ export function CartPanel() {
           role="status"
         >
           <span>{t("cart.removed")}</span>
-          <Button type="button" size="sm" variant="ghost" onClick={() => void undoRemove()}>
-            {t("cart.undo")}
-          </Button>
+          {removed.productId ? (
+            <Button type="button" size="sm" variant="ghost" onClick={() => void undoRemove()}>
+              {t("cart.undo")}
+            </Button>
+          ) : null}
         </div>
       ) : null}
 
+      {cart?.hasSubscription ? (
+        <p className="mb-4 rounded-xl border border-[var(--ep-border)] bg-[var(--surface-muted)] px-4 py-3 text-sm">
+          {t("cart.subscriptionNotice")}
+        </p>
+      ) : null}
+
+      {cart?.multiPartner ? (
+        <p className="mb-4 rounded-xl border border-[var(--ep-border)] bg-[var(--surface-muted)] px-4 py-3 text-sm">
+          {t("cart.multiSellerNotice")}
+        </p>
+      ) : null}
+
+      {blocked ? (
+        <p className="mb-4 text-sm text-[var(--ep-danger)]" role="alert">
+          {t("cart.blockedNotice")}
+        </p>
+      ) : null}
+
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] xl:grid-cols-[minmax(0,1fr)_22rem]">
-        <div className="space-y-3">
-          {items.map((item) => (
-            <CartItem
-              key={item.id}
-              item={item}
-              busy={busyId === item.id}
-              onQuantity={(qty) => void changeQty(item, qty)}
-              onRemove={() => void removeItem(item)}
-              onSaveForLater={() => void saveForLater(item)}
-              canSave
-            />
+        <div className="space-y-6">
+          {groups.map((group) => (
+            <section key={group.sellerId} className="space-y-3">
+              {group.sellerName ? (
+                <h2 className="font-display text-sm font-semibold uppercase tracking-wide text-[var(--ep-fg-muted)]">
+                  {group.sellerName}
+                </h2>
+              ) : null}
+              {group.items.map((item) => (
+                <CartItem
+                  key={item.id}
+                  item={item}
+                  busy={busyId === item.id}
+                  onQuantity={(qty) => void changeQty(item, qty)}
+                  onRemove={() => void removeItem(item)}
+                  onSaveForLater={() => void saveForLater(item)}
+                  canSave={Boolean(item.productId)}
+                />
+              ))}
+            </section>
           ))}
         </div>
 
         <aside className="hidden h-fit rounded-[16px] border border-[var(--ep-border)] bg-[var(--card)] p-5 lg:sticky lg:top-24 lg:block">
           <h2 className="font-display text-lg font-semibold">{t("cart.summary")}</h2>
-          <dl className="mt-4 space-y-2 text-sm">
-            <div className="flex justify-between">
-              <dt className="text-[var(--ep-fg-muted)]">{t("cart.subtotal")}</dt>
-              <dd>{formatMpPrice(subtotal)}</dd>
-            </div>
-            {couponDiscount > 0 ? (
-              <div className="flex justify-between text-ecopet-green">
-                <dt>{t("cart.discounts")}</dt>
-                <dd>-{formatMpPrice(couponDiscount)}</dd>
-              </div>
-            ) : null}
-            <div className="flex justify-between">
-              <dt className="text-[var(--ep-fg-muted)]">{t("cart.shipping")}</dt>
-              <dd className="text-[var(--ep-fg-muted)]">{t("cart.shippingCheckout")}</dd>
-            </div>
-            {estimatedRewards > 0 ? (
-              <div className="flex justify-between text-[var(--ep-fg-muted)]">
-                <dt>{t("cart.rewardsEarn").replace("{points}", String(estimatedRewards))}</dt>
-              </div>
-            ) : null}
-            <div className="flex justify-between border-t border-[var(--ep-border)] pt-3 text-base font-bold">
-              <dt>{t("cart.total")}</dt>
-              <dd className="text-ecopet-green">{formatMpPrice(total)}</dd>
-            </div>
-          </dl>
+          {cart ? <SummaryRows cart={cart} couponDiscount={couponDiscount} total={total} /> : null}
 
-          <Button asChild size="lg" className="mt-5 w-full" disabled={Boolean(cart?.multiPartner)}>
+          <Button asChild size="lg" className="mt-5 w-full" disabled={ctaDisabled}>
             <Link href="/checkout">{t("cart.continueToPayment")}</Link>
           </Button>
-          {cart?.multiPartner ? (
-            <p className="mt-2 text-xs text-[var(--ep-danger)]">{t("cart.multiPartner")}</p>
-          ) : null}
+          <p className="mt-2 text-center text-sm font-semibold text-ecopet-green">{formatMpPrice(total)}</p>
 
           <div className="mt-4">
             <button
@@ -312,11 +402,28 @@ export function CartPanel() {
             <p className="text-xs text-[var(--ep-fg-muted)]">{t("cart.total")}</p>
             <p className="text-lg font-bold text-[var(--ep-fg)]">{formatMpPrice(total)}</p>
           </div>
-          <Button asChild disabled={Boolean(cart?.multiPartner)}>
+          <Button asChild disabled={ctaDisabled}>
             <Link href="/checkout">{t("cart.continueToPayment")}</Link>
           </Button>
         </div>
       </div>
+
+      <Dialog open={clearOpen} onOpenChange={setClearOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("cart.clearConfirmTitle")}</DialogTitle>
+            <DialogDescription>{t("cart.clearConfirmBody")}</DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="ghost" onClick={() => setClearOpen(false)}>
+              {t("cart.cancel")}
+            </Button>
+            <Button type="button" variant="destructive" disabled={clearing} onClick={() => void confirmClear()}>
+              {t("cart.clearCart")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

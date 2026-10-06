@@ -79,7 +79,7 @@ export function evaluateSplitCapability(
   const marketplaceSplitEnvEnabled = envFlag(source, "MP_MARKETPLACE_SPLIT_ENABLED");
   const reasons = [
     "Checkout padrão é API Orders (/v1/orders) no token da plataforma (1 collector).",
-    "Carrinho/checkout são 1 pedido : 1 parceiro (MULTI_PARTNER_CART bloqueado).",
+    "Carrinho aceita vários vendedores; checkout usa Payment Groups (1 pedido : 1 parceiro) porque Split 1:N não está habilitado.",
     "Split real (Payments API + application_fee + collector do seller) só ativa por pedido quando o parceiro está CONNECTED.",
   ];
   if (!sellerOAuthConfigured) {
@@ -121,7 +121,7 @@ export function evaluateMarketplaceSplit(params: {
   const reasons: string[] = [];
 
   if (params.multiPartnerCart) {
-    reasons.push("Carrinho multi-parceiro bloqueado (ONE_ORDER_ONE_PARTNER).");
+    reasons.push("Pedido com vários parceiros no mesmo collector 1:N não está habilitado; usar Payment Groups.");
     return {
       topology: "ONE_ORDER_MULTI_PARTNER",
       mpProduct: "orders_api_platform_collector",

@@ -18,11 +18,14 @@ export async function GET() {
 
   return apiSuccess({
     orders: orders.map((o) => {
+      const snap = (o.pricingSnapshot as Record<string, unknown> | null) ?? {};
+      const checkoutSession = (snap.checkoutSession as Record<string, unknown> | null) ?? null;
       const { pricingSnapshot: _snap, ...rest } = o;
       void _snap;
       return {
         ...rest,
         partnerId: o.partnerId,
+        checkoutSession,
       };
     }),
     total: orders.length,

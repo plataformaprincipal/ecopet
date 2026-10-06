@@ -49,6 +49,13 @@ export async function sellableSellerWhere(
   };
 }
 
+/** Um único par de queries para revalidar o carrinho sem N+1 por item. */
+export async function listSellablePartnerIdSet(): Promise<Set<string>> {
+  const where = await sellableSellerWhere();
+  const rows = await prisma.user.findMany({ where, select: { id: true } });
+  return new Set(rows.map((row) => row.id));
+}
+
 export async function isSellerSellable(sellerId: string): Promise<boolean> {
   const [user, connection] = await Promise.all([
     prisma.user.findUnique({

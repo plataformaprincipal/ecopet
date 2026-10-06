@@ -1,7 +1,7 @@
 import { apiSuccess, apiFailure } from "@/lib/api-response";
 import { requireClient } from "@/lib/auth/require-auth";
 import { checkoutSchema } from "@/schemas/product";
-import { checkoutFromCart } from "@/lib/orders/checkout-service";
+import { checkoutUniversalFromCart } from "@/lib/orders/checkout-session";
 import { CouponError } from "@/lib/commerce/apply-coupon";
 import { PricingError } from "@/lib/pricing/service";
 import { firstFieldError, zodIssuesToFieldMap } from "@/lib/validation/field-errors";
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     null;
 
   try {
-    const order = await checkoutFromCart({
+    const result = await checkoutUniversalFromCart({
       userId: user!.id,
       deliveryMethod: parsed.data.deliveryMethod,
       paymentMethod: parsed.data.paymentMethod,
@@ -36,8 +36,23 @@ export async function POST(request: Request) {
       address: parsed.data.address,
       idempotencyKey,
       couponCode: parsed.data.couponCode,
+      role: user!.role,
     });
-    return apiSuccess({ order }, 201);
+    return apiSuccess(
+      {
+        order: result.order,
+        sessionId: result.sessionId,
+        groups: result.groups,
+        notice: result.notice,
+        status: result.status,
+        paidCount: result.paidCount,
+        pendingCount: result.pendingCount,
+        hasSubscription: result.hasSubscription,
+        splitMode: result.splitMode,
+        strategy: result.strategy,
+      },
+      201
+    );
   } catch (e) {
     const message =
       e instanceof CouponError
@@ -53,6 +68,11 @@ export async function POST(request: Request) {
       QUOTE_NOT_FOUND: ["VALIDATION", "Orçamento indisponível.", 400],
       QUOTE_FORBIDDEN: ["FORBIDDEN", "Orçamento não pertence a você.", 403],
       MULTI_PARTNER_CART: ["CONFLICT", "Carrinho com produtos de parceiros diferentes.", 409],
+      CART_HAS_BLOCKED_ITEMS: [
+        "CONFLICT",
+        "Há itens no carrinho que precisam de correção antes do pagamento.",
+        409,
+      ],
       INSUFFICIENT_STOCK: ["CONFLICT", "Estoque insuficiente para um ou mais itens.", 409],
       PRODUCT_NOT_FOUND: ["VALIDATION", "Produto indisponível.", 400],
       PRODUCT_INACTIVE: ["VALIDATION", "Produto inativo.", 400],

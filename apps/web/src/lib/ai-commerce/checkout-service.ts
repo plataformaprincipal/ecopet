@@ -28,6 +28,8 @@ export async function checkoutAiFromCart(params: {
   userId: string;
   idempotencyKey?: string | null;
   couponCode?: string | null;
+  itemIds?: string[];
+  checkoutSession?: Record<string, unknown>;
 }) {
   assertCheckoutEnabled();
   assertAiPaidCheckoutEnabled();
@@ -45,7 +47,12 @@ export async function checkoutAiFromCart(params: {
   }
 
   const cart = await getOrCreateCart(params.userId);
-  const aiItems = cart.items.filter((i) => i.itemType === AI_COMMERCE_ITEM_TYPE && i.sku);
+  const aiItems = cart.items.filter(
+    (i) =>
+      i.itemType === AI_COMMERCE_ITEM_TYPE &&
+      i.sku &&
+      (!params.itemIds?.length || params.itemIds.includes(i.id))
+  );
   if (!aiItems.length) throw new AiCommerceError("CART_EMPTY", "Nenhum serviço de IA no carrinho.", 400);
 
   const order = await prisma.$transaction(async (tx) => {
@@ -138,6 +145,7 @@ export async function checkoutAiFromCart(params: {
           kind: AI_COMMERCE_ITEM_TYPE,
           eccopontos: ECCOPONTOS_DIGITAL_AI_POLICY,
           lines: lines.map((l) => l.snapshot),
+          ...(params.checkoutSession ? { checkoutSession: params.checkoutSession } : {}),
         } as Prisma.InputJsonValue,
         currency: "BRL",
         idempotencyKey: params.idempotencyKey || null,
@@ -198,7 +206,9 @@ export async function checkoutAiFromCart(params: {
     }
 
     await tx.cartItem.deleteMany({
-      where: { cartId: cart.id, itemType: AI_COMMERCE_ITEM_TYPE },
+      where: params.itemIds?.length
+        ? { cartId: cart.id, id: { in: params.itemIds } }
+        : { cartId: cart.id, itemType: AI_COMMERCE_ITEM_TYPE },
     });
     return created;
   });

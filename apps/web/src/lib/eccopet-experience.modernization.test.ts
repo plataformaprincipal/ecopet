@@ -52,7 +52,9 @@ describe("Carrinho canônico", () => {
     assert.match(panel, /cart\.haveCoupon/);
     assert.match(content, /CartPanel/);
     assert.ok(!panel.includes("useMarketplaceStore"));
-    assert.ok(!panel.includes("DIGITAL_AI") || panel.includes('itemType !== "DIGITAL_AI"'));
+    assert.ok(!panel.includes("itemType !== \"DIGITAL_AI\""));
+    assert.match(panel, /clearCart/);
+    assert.match(panel, /multiSellerNotice/);
   });
 
   it("IA gratuita não entra no serialize do carrinho", () => {

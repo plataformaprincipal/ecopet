@@ -28,6 +28,8 @@ export async function checkoutCatalogSku(params: {
   caseId?: string | null;
   idempotencyKey?: string | null;
   role?: string;
+  cartItemId?: string | null;
+  checkoutSession?: Record<string, unknown>;
 }) {
   assertCheckoutEnabled();
   if (params.sku === ENTERTAINMENT_SKU) {
@@ -104,6 +106,7 @@ export async function checkoutCatalogSku(params: {
           billingCycle: quoted.billingCycle,
           splitReady: false,
           snapshot,
+          ...(params.checkoutSession ? { checkoutSession: params.checkoutSession } : {}),
         } as Prisma.InputJsonValue,
         currency: "BRL",
         idempotencyKey: params.idempotencyKey || null,
@@ -160,6 +163,10 @@ export async function checkoutCatalogSku(params: {
       actionUrl: "/cliente/assinaturas",
       data: { orderId: order.id, sku: params.sku },
     });
+  }
+
+  if (params.cartItemId) {
+    await prisma.cartItem.deleteMany({ where: { id: params.cartItemId, cart: { userId: params.userId } } });
   }
 
   return { order, free: isFree, quoted };

@@ -26,7 +26,7 @@ export async function PATCH(request: Request, context: RouteContext) {
 
   try {
     const updated = await updateCartItem(cart, itemId, parsed.data.quantity);
-    const response = apiSuccess({ cart: serializeCart(updated) });
+    const response = apiSuccess({ cart: await serializeCart(updated) });
     return applyCartSessionCookie(response, newSessionId);
   } catch (e) {
     const message = e instanceof Error ? e.message : "Erro ao atualizar item.";
@@ -51,7 +51,7 @@ export async function DELETE(_req: Request, context: RouteContext) {
 
   try {
     const updated = await updateCartItem(cart, itemId, 0);
-    const response = apiSuccess({ cart: serializeCart(updated) });
+    const response = apiSuccess({ cart: await serializeCart(updated) });
     return applyCartSessionCookie(response, newSessionId);
   } catch (e) {
     const message = e instanceof Error ? e.message : "Erro ao remover item.";

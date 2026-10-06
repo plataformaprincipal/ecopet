@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     }
     amount = Number(order.total);
   } else {
-    const cart = serializeCart(await getOrCreateCart(user!.id));
+    const cart = await serializeCart(await getOrCreateCart(user!.id));
     amount = Number(cart.productSubtotal ?? cart.subtotal);
   }
 
