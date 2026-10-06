@@ -53,7 +53,7 @@ jobs:
 
       - run: npm run db:generate
 
-      - run: npm run db:migrate:deploy
+      - run: npm run migrate:deploy
         working-directory: packages/database
 
       - run: npm run type-check

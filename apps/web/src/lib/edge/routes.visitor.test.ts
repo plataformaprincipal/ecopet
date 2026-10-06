@@ -31,6 +31,10 @@ describe("visitor public routes", () => {
     assert.equal(canAccessRoute("ONG", "/checkout-test"), true);
     assert.equal(canAccessRoute("CLIENT", "/checkout"), true);
     assert.equal(requiresAuth("/cadastro/google"), false);
+    assert.equal(requiresAuth("/legal/cliente/trocas"), false);
+    assert.equal(requiresAuth("/legal/cliente/cancelamento"), false);
+    assert.equal(requiresAuth("/legal/cliente/reembolso"), false);
+    assert.equal(requiresAuth("/legal/cliente/servicos"), false);
   });
 
   it("keeps marketplace browse and cart public, checkout private via marketplace rules", () => {
