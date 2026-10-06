@@ -4,7 +4,13 @@ import { prisma } from "@/lib/prisma";
 export type ApiSuccessBody<T = unknown> = { success: true; data?: T };
 export type ApiFailureBody = {
   success: false;
-  error: { code: string; message: string; fields?: Record<string, string>; correlationId?: string };
+  error: {
+    code: string;
+    message: string;
+    fields?: Record<string, string>;
+    correlationId?: string;
+    retryable?: boolean;
+  };
 };
 
 export function apiSuccess<T>(data?: T, status = 200) {
@@ -15,7 +21,7 @@ export function apiFailure(
   code: string,
   message: string,
   status = 400,
-  extra?: { fields?: Record<string, string>; correlationId?: string }
+  extra?: { fields?: Record<string, string>; correlationId?: string; retryable?: boolean }
 ) {
   return NextResponse.json(
     {
@@ -25,6 +31,7 @@ export function apiFailure(
         message,
         ...(extra?.fields ? { fields: extra.fields } : {}),
         ...(extra?.correlationId ? { correlationId: extra.correlationId } : {}),
+        ...(extra?.retryable ? { retryable: true } : {}),
       },
     } satisfies ApiFailureBody,
     { status }

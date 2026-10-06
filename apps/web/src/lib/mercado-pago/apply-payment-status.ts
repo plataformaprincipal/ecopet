@@ -441,7 +441,7 @@ export async function applyInternalPaymentStatus(params: {
         void emailOrderEvent("ORDER_CONFIRMED", user.email, payment.order.orderNumber, {
           name: user.name,
           locale: getUserEmailLocale(user.preferences),
-        });
+        }).catch(() => undefined);
       }
       void import("@/lib/ai-commerce/entitlement-service")
         .then(({ grantEntitlementsForPaidOrder }) =>

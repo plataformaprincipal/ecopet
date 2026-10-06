@@ -149,20 +149,25 @@ export function resolveMailConfig(): ResolvedMailConfig {
   };
 }
 
+export function sanitizeSmtpLogMessage(raw: string): string {
+  return raw
+    .replace(/pass(word)?[:=]\S+/gi, "pass=***")
+    .replace(/AUTH PLAIN[^\n]*/gi, "AUTH ***")
+    .replace(/Username and Password not accepted[^\n]*/gi, "credentials_rejected")
+    .replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, "***@***")
+    .slice(0, 180);
+}
+
 export function logSmtpError(context: string, error: unknown): void {
   const message = error instanceof Error ? error.message : String(error);
-  const safe = message.replace(/pass(word)?[:=]\S+/gi, "pass=***");
-  console.error(`[${context}] ${safe}`);
-  if (error && typeof error === "object") {
-    const smtpErr = error as { code?: string; command?: string; response?: string; responseCode?: number };
-    console.error(`[${context}:smtp]`, {
-      code: smtpErr.code,
-      command: smtpErr.command,
-      responseCode: smtpErr.responseCode,
-      response: smtpErr.response,
-      message: safe,
-    });
-  }
+  const smtpErr = error && typeof error === "object"
+    ? (error as { code?: string; responseCode?: number })
+    : {};
+  console.error(`[${context}] send_failed`, {
+    code: smtpErr.code ?? "SMTP_ERROR",
+    responseCode: smtpErr.responseCode,
+    message: sanitizeSmtpLogMessage(message),
+  });
 }
 
 /** Alias para compatibilidade com código legado. */

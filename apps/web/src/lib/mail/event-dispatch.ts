@@ -39,9 +39,8 @@ export async function dispatchEmail(
 
 /**
  * Envia e-mail transacional (templates premium EcoPet) através do dispatcher
- * multi-provedor `sendPlatformEmail` (Resend → SendGrid → Brevo → SMTP),
- * preservando o fallback de desenvolvimento (console) quando nada está
- * configurado. Não interrompe o fluxo principal (requireDelivery=false).
+ * `sendPlatformEmail` (Resend em Production; SMTP só se Resend não estiver configurado).
+ * Não interrompe o fluxo principal (requireDelivery=false).
  */
 export async function dispatchPremiumEmail(params: {
   event: TransactionalEmailEvent;
@@ -51,13 +50,17 @@ export async function dispatchPremiumEmail(params: {
   text: string;
   logPrefix?: string;
 }) {
-  return sendPlatformEmail({
-    event: params.event,
-    to: params.to,
-    subject: params.subject,
-    html: params.html,
-    text: params.text,
-  });
+  try {
+    return await sendPlatformEmail({
+      event: params.event,
+      to: params.to,
+      subject: params.subject,
+      html: params.html,
+      text: params.text,
+    });
+  } catch {
+    return { sent: false, errorCode: "EMAIL_SEND_FAILED" };
+  }
 }
 
 export async function emailRegisterCompleted(

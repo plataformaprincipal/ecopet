@@ -46,6 +46,9 @@ export function sanitizeEmailErrorMessage(raw: string | undefined): string {
     .replace(/re_[A-Za-z0-9_-]+/g, "re_***")
     .replace(/Bearer\s+\S+/gi, "Bearer ***")
     .replace(/api[_-]?key[=:]\s*\S+/gi, "api_key=***")
+    .replace(/pass(word)?[:=]\S+/gi, "pass=***")
+    .replace(/AUTH PLAIN[^\n]*/gi, "AUTH ***")
+    .replace(/Username and Password not accepted[^\n]*/gi, "credentials_rejected")
     .slice(0, 280);
 }
 

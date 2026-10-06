@@ -140,29 +140,57 @@ export async function setPaymentMethodEnabled(input: {
   return { ok: true as const, method: updated };
 }
 
+type OfficialInstallmentOption = {
+  installments: number;
+  installmentAmount: number;
+  totalAmount: number;
+  recommendedMessage: string;
+  installmentRate: number;
+};
+
+type OfficialInstallmentsResult =
+  | { ok: true; options: OfficialInstallmentOption[]; retryable?: boolean }
+  | { ok: false; code: string; options: never[]; retryable: boolean };
+
+const installmentsInflight = new Map<string, Promise<OfficialInstallmentsResult>>();
+
 export async function fetchOfficialInstallments(params: {
   amount: number;
   bin?: string;
   paymentMethodId?: string;
-}) {
+}): Promise<OfficialInstallmentsResult> {
   if (!isMercadoPagoConfigured()) {
-    return { ok: false as const, code: "MP_NOT_CONFIGURED", options: [] as never[] };
+    return { ok: false, code: "MP_NOT_CONFIGURED", options: [] as never[], retryable: false };
   }
   if (!(params.amount > 0)) {
-    return { ok: false as const, code: "INVALID_AMOUNT", options: [] as never[] };
+    return { ok: false, code: "INVALID_AMOUNT", options: [] as never[], retryable: false };
   }
-  const res = await getMercadoPagoInstallments(params);
-  if (!res.ok) return { ok: false as const, code: res.code, options: [] as never[] };
+  const key = `${params.bin ?? ""}:${params.amount.toFixed(2)}:${params.paymentMethodId ?? ""}`;
+  const pending = installmentsInflight.get(key);
+  if (pending) return pending;
 
-  const raw = Array.isArray(res.data) ? res.data : [];
-  const first = raw[0] as { payer_costs?: Array<Record<string, unknown>> } | undefined;
-  const costs = first?.payer_costs ?? [];
-  const options = costs.map((c) => ({
-    installments: Number(c.installments ?? 1),
-    installmentAmount: Number(c.installment_amount ?? 0),
-    totalAmount: Number(c.total_amount ?? params.amount),
-    recommendedMessage: String(c.recommended_message ?? ""),
-    installmentRate: Number(c.installment_rate ?? 0),
-  }));
-  return { ok: true as const, options };
+  const run = (async (): Promise<OfficialInstallmentsResult> => {
+    const res = await getMercadoPagoInstallments(params);
+    if (!res.ok) {
+      const retryable = Boolean(res.retryable) || res.status === 502 || res.status === 503 || res.status === 504;
+      return { ok: false, code: res.code, options: [] as never[], retryable };
+    }
+
+    const raw = Array.isArray(res.data) ? res.data : [];
+    const first = raw[0] as { payer_costs?: Array<Record<string, unknown>> } | undefined;
+    const costs = first?.payer_costs ?? [];
+    const options = costs.map((c) => ({
+      installments: Number(c.installments ?? 1),
+      installmentAmount: Number(c.installment_amount ?? 0),
+      totalAmount: Number(c.total_amount ?? params.amount),
+      recommendedMessage: String(c.recommended_message ?? ""),
+      installmentRate: Number(c.installment_rate ?? 0),
+    }));
+    return { ok: true, options, retryable: false };
+  })().finally(() => {
+    installmentsInflight.delete(key);
+  });
+
+  installmentsInflight.set(key, run);
+  return run;
 }

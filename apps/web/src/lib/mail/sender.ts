@@ -23,7 +23,11 @@ export type SendMailPayload = {
 
 function safeErrorMessage(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error);
-  return message.replace(/pass(word)?[:=]\S+/gi, "pass=***");
+  return message
+    .replace(/pass(word)?[:=]\S+/gi, "pass=***")
+    .replace(/AUTH PLAIN[^\n]*/gi, "AUTH ***")
+    .replace(/Username and Password not accepted[^\n]*/gi, "credentials_rejected")
+    .slice(0, 180);
 }
 
 export async function createMailTransporter(): Promise<Transporter> {

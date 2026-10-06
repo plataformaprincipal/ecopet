@@ -118,6 +118,8 @@ export function MercadoPagoCheckout({
   const [error, setError] = useState("");
   const [result, setResult] = useState<PayResult | null>(null);
   const submitLock = useRef(false);
+  const installmentsAbort = useRef<AbortController | null>(null);
+  const lastInstallmentsKey = useRef("");
   const [installmentOptions, setInstallmentOptions] = useState<
     Array<{
       installments: number;
@@ -126,6 +128,9 @@ export function MercadoPagoCheckout({
       recommendedMessage: string;
     }>
   >([]);
+  const [installmentsLoading, setInstallmentsLoading] = useState(false);
+  const [installmentsUnavailable, setInstallmentsUnavailable] = useState(false);
+  const [installmentsNonce, setInstallmentsNonce] = useState(0);
 
   const [card, setCard] = useState({
     cardNumber: "",
@@ -203,38 +208,68 @@ export function MercadoPagoCheckout({
 
   useEffect(() => {
     const digits = card.cardNumber.replace(/\D/g, "");
-    if (method !== "card" || digits.length < 6 || !(amount > 0)) {
+    const bin6 = digits.slice(0, 6);
+    const bin = digits.slice(0, 8);
+    if (method !== "card" || bin6.length < 6 || !(amount > 0)) {
+      setInstallmentsLoading(false);
+      return;
+    }
+    const key = `${bin6}:${amount.toFixed(2)}:${orderId || ""}`;
+    if (key === lastInstallmentsKey.current) {
       return;
     }
     const t = setTimeout(() => {
+      installmentsAbort.current?.abort();
+      const ac = new AbortController();
+      installmentsAbort.current = ac;
+      lastInstallmentsKey.current = key;
+      setInstallmentsLoading(true);
+      setInstallmentsUnavailable(false);
       void (async () => {
         try {
           const res = await fetch("/api/checkout/mercado-pago/installments", {
             method: "POST",
             credentials: "include",
+            signal: ac.signal,
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               ...(orderId ? { orderId } : {}),
-              bin: digits.slice(0, 8),
+              bin,
               amount,
             }),
           });
-          const json = await res.json();
-          if (res.ok && json.success) {
-            setInstallmentOptions(json.data.options ?? []);
-            setError((current) =>
-              current === "Não foi possível calcular as parcelas." ? "" : current
-            );
-          } else if (res.status !== 400) {
-            setError("Não foi possível calcular as parcelas.");
+          const json = await res.json().catch(() => null);
+          if (ac.signal.aborted) return;
+          if (res.ok && json?.success) {
+            const options = json.data.options ?? [];
+            setInstallmentOptions(options);
+            setInstallmentsUnavailable(false);
+            setCard((current) => {
+              const valid = options.some((opt: { installments: number }) => opt.installments === current.installments);
+              return valid ? current : { ...current, installments: options[0]?.installments ?? 1 };
+            });
+            return;
           }
-        } catch {
-          setError("Não foi possível calcular as parcelas.");
+          const transient = res.status === 502 || res.status === 503 || res.status === 504 || json?.error?.retryable;
+          setInstallmentOptions([]);
+          setInstallmentsUnavailable(true);
+          if (!transient && res.status === 400) {
+            setInstallmentsUnavailable(false);
+          }
+        } catch (err) {
+          if (ac.signal.aborted || (err instanceof DOMException && err.name === "AbortError")) return;
+          setInstallmentOptions([]);
+          setInstallmentsUnavailable(true);
+        } finally {
+          if (!ac.signal.aborted) setInstallmentsLoading(false);
         }
       })();
     }, 500);
-    return () => clearTimeout(t);
-  }, [card.cardNumber, method, orderId, amount]);
+    return () => {
+      clearTimeout(t);
+      installmentsAbort.current?.abort();
+    };
+  }, [card.cardNumber, method, orderId, amount, installmentsNonce]);
 
   const payOnline = useCallback(
     async (body: Record<string, unknown>) => {
@@ -264,6 +299,16 @@ export function MercadoPagoCheckout({
     setCardPhase("processing");
     setError("");
     try {
+      if (installmentsLoading) {
+        throw new Error("Aguarde o cálculo das parcelas.");
+      }
+      if (installmentsUnavailable || installmentOptions.length === 0) {
+        throw new Error("Calcule as parcelas antes de pagar.");
+      }
+      const selected = installmentOptions.find((opt) => opt.installments === card.installments);
+      if (!selected) {
+        throw new Error("Selecione uma parcela válida.");
+      }
       if (!window.MercadoPago) throw new Error("SDK Mercado Pago não carregado");
       const mp = new window.MercadoPago(config.publicKey, { locale: "pt-BR" });
       const bin = card.cardNumber.replace(/\D/g, "").slice(0, 6);
@@ -675,7 +720,7 @@ export function MercadoPagoCheckout({
               className="w-full rounded-md border px-3 py-2 text-sm"
               value={card.installments}
               onChange={(e) => setCard({ ...card, installments: Number(e.target.value) || 1 })}
-              disabled={submitting}
+              disabled={submitting || installmentsLoading || installmentsUnavailable}
             >
               {installmentOptions.length > 0 ? (
                 installmentOptions.map((opt) => (
@@ -688,14 +733,34 @@ export function MercadoPagoCheckout({
                 <option value={1}>1x de R$ {amount.toFixed(2)}</option>
               )}
             </select>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Opções oficiais do Mercado Pago (não hardcoded).
-            </p>
+            {installmentsLoading ? (
+              <p className="mt-1 text-xs text-muted-foreground" aria-live="polite">
+                Calculando parcelas...
+              </p>
+            ) : installmentsUnavailable ? (
+              <p className="mt-1 text-xs text-muted-foreground">
+                Parcelas temporariamente indisponíveis.{" "}
+                <button
+                  type="button"
+                  className="text-ecopet-green underline"
+                  onClick={() => {
+                    lastInstallmentsKey.current = "";
+                    setInstallmentsNonce((n) => n + 1);
+                  }}
+                >
+                  Tentar novamente
+                </button>
+              </p>
+            ) : (
+              <p className="mt-1 text-xs text-muted-foreground">
+                Opções oficiais do Mercado Pago (não hardcoded).
+              </p>
+            )}
           </div>
           <p className="text-xs text-muted-foreground">
             Pagamento processado com segurança pelo Mercado Pago. Dados do cartão não são armazenados pela EccoPet.
           </p>
-          <Button type="submit" disabled={submitting} className="w-full" aria-busy={submitting}>
+          <Button type="submit" disabled={submitting || installmentsLoading || installmentsUnavailable} className="w-full" aria-busy={submitting}>
             {submitting ? (
               <span className="inline-flex items-center justify-center gap-2">
                 <Spinner label="" />

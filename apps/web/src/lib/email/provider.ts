@@ -7,6 +7,7 @@ import { writeIntegrationLog } from "@/lib/integrations/log";
 import type { TransactionalEmailEvent } from "@/lib/mail/transactional";
 import { sendEmail } from "@/lib/email/email-service";
 import { getEmailFromRaw } from "@/lib/email/config";
+import { sanitizeEmailErrorMessage } from "@/lib/email/errors";
 
 export type EmailSendResult = {
   sent: boolean;
@@ -41,14 +42,13 @@ async function logEmail(
 }
 
 async function sendViaResend(payload: { to: string; subject: string; html: string; text: string }) {
-  const result = await sendEmail({
+  return sendEmail({
     to: payload.to,
     subject: payload.subject,
     html: payload.html,
     text: payload.text,
     logPrefix: "[email:provider]",
   });
-  return result.sent;
 }
 
 async function sendViaSendGrid(payload: { to: string; subject: string; html: string; text: string }) {
@@ -141,13 +141,36 @@ export async function sendPlatformEmail(params: {
 
   try {
     if (isResendConfigured()) {
-      const sent = await sendViaResend({ to, subject, html, text });
-      if (sent) {
+      const result = await sendViaResend({ to, subject, html, text });
+      if (result.sent) {
         await logEmail(event, to, subject, EmailStatus.SENT, "resend");
         await writeIntegrationLog({ integrationName: "resend", provider: "Resend", action: event, status: "OK" });
         return { sent: true, provider: "resend" };
       }
-      await logEmail(event, to, subject, EmailStatus.FAILED, "resend", "Falha na API Resend");
+      await logEmail(
+        event,
+        to,
+        subject,
+        EmailStatus.FAILED,
+        "resend",
+        sanitizeEmailErrorMessage(result.error?.message ?? result.errorCode ?? "send_failed")
+      );
+      await writeIntegrationLog({
+        integrationName: "resend",
+        provider: "Resend",
+        action: event,
+        status: "FAILED",
+        message: "send_failed",
+      });
+      if (process.env.NODE_ENV === "production") {
+        if (requireDelivery) {
+          throw new IntegrationNotConfiguredError(
+            INTEGRATION_ERROR_CODES.EMAIL_NOT_CONFIGURED,
+            "Falha ao enviar e-mail transacional."
+          );
+        }
+        return { sent: false, provider: "resend", errorCode: result.errorCode ?? "EMAIL_SEND_FAILED" };
+      }
     }
 
     if (process.env.SENDGRID_API_KEY?.trim()) {
@@ -168,24 +191,44 @@ export async function sendPlatformEmail(params: {
       }
     }
 
-    if (isSmtpConfigured()) {
-      await sendMail({ to, subject, html, text });
-      await logEmail(event, to, subject, EmailStatus.SENT, "smtp");
-      await writeIntegrationLog({ integrationName: "smtp", provider: "SMTP", action: event, status: "OK" });
-      return { sent: true, provider: "smtp" };
+    if (isSmtpConfigured() && !isResendConfigured()) {
+      try {
+        await sendMail({ to, subject, html, text });
+        await logEmail(event, to, subject, EmailStatus.SENT, "smtp");
+        await writeIntegrationLog({ integrationName: "smtp", provider: "SMTP", action: event, status: "OK" });
+        return { sent: true, provider: "smtp" };
+      } catch (smtpError) {
+        await logEmail(
+          event,
+          to,
+          subject,
+          EmailStatus.FAILED,
+          "smtp",
+          sanitizeEmailErrorMessage(smtpError instanceof Error ? smtpError.message : "send_failed")
+        );
+        await writeIntegrationLog({
+          integrationName: "smtp",
+          provider: "SMTP",
+          action: event,
+          status: "FAILED",
+          message: "send_failed",
+        });
+        if (requireDelivery) throw smtpError;
+        return { sent: false, provider: "smtp", errorCode: "EMAIL_SEND_FAILED" };
+      }
     }
 
-    await logEmail(event, to, subject, EmailStatus.FAILED, undefined, "Nenhum provedor disponível");
+    await logEmail(event, to, subject, EmailStatus.FAILED, undefined, "send_failed");
     return { sent: false, errorCode: "EMAIL_SEND_FAILED" };
   } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error);
+    const msg = sanitizeEmailErrorMessage(error instanceof Error ? error.message : "send_failed");
     await logEmail(event, to, subject, EmailStatus.FAILED, undefined, msg);
     await writeIntegrationLog({
       integrationName: "email",
       provider: isResendConfigured() ? "Resend" : "SMTP",
       action: event,
       status: "FAILED",
-      message: msg,
+      message: "send_failed",
     });
     if (requireDelivery) throw error;
     return { sent: false, errorCode: "EMAIL_SEND_FAILED" };

@@ -104,10 +104,18 @@ function logStructured(level: "info" | "error", payload: Record<string, unknown>
   delete safe.apiKey;
   delete safe.key;
   delete safe.authorization;
+  delete safe.token;
+  delete safe.password;
   const line = JSON.stringify({ scope: "email", level, ...safe });
   if (level === "error") console.error(line);
   else if (process.env.NODE_ENV !== "production") console.log(line);
 }
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+const RESEND_SEND_ATTEMPTS = 3;
 
 /**
  * Serviço centralizado de e-mail via Resend.
@@ -155,101 +163,125 @@ export async function sendEmail(params: SendEmailParams): Promise<SendEmailResul
     return { sent: false, errorCode: err.code, error: { message: err.message }, retryable: false };
   }
 
-  try {
-    const response = await client.emails.send({
-      from,
-      to: toList,
-      ...(cc ? { cc } : {}),
-      ...(bcc ? { bcc } : {}),
-      ...(replyTo?.length ? { replyTo: replyTo.length === 1 ? replyTo[0] : replyTo } : {}),
-      subject,
-      html: params.html,
-      text: params.text,
-      ...(params.headers
-        ? {
-            headers: Object.fromEntries(
-              Object.entries(params.headers).map(([k, v]) => [sanitizeHeaderValue(k), sanitizeHeaderValue(v)])
-            ),
-          }
-        : {}),
-      ...(params.tags?.length ? { tags: params.tags } : {}),
-      ...(params.attachments?.length
-        ? {
-            attachments: params.attachments.map((a) => ({
-              filename: sanitizeHeaderValue(a.filename),
-              content: typeof a.content === "string" ? a.content : a.content.toString("base64"),
-              ...(a.contentType ? { contentType: a.contentType } : {}),
-            })),
-          }
-        : {}),
-    });
+  const payload = {
+    from,
+    to: toList,
+    ...(cc ? { cc } : {}),
+    ...(bcc ? { bcc } : {}),
+    ...(replyTo?.length ? { replyTo: replyTo.length === 1 ? replyTo[0] : replyTo } : {}),
+    subject,
+    html: params.html,
+    text: params.text,
+    ...(params.headers
+      ? {
+          headers: Object.fromEntries(
+            Object.entries(params.headers).map(([k, v]) => [sanitizeHeaderValue(k), sanitizeHeaderValue(v)])
+          ),
+        }
+      : {}),
+    ...(params.tags?.length ? { tags: params.tags } : {}),
+    ...(params.attachments?.length
+      ? {
+          attachments: params.attachments.map((a) => ({
+            filename: sanitizeHeaderValue(a.filename),
+            content: typeof a.content === "string" ? a.content : a.content.toString("base64"),
+            ...(a.contentType ? { contentType: a.contentType } : {}),
+          })),
+        }
+      : {}),
+  };
 
-    logDev(prefix, "Resend data:", response.data ?? null);
-    logDev(prefix, "Resend error:", response.error ?? null);
+  let lastFail: SendEmailResult | null = null;
+  for (let attempt = 1; attempt <= RESEND_SEND_ATTEMPTS; attempt++) {
+    try {
+      const response = await client.emails.send(payload);
 
-    if (response.error) {
-      const mapped = mapResendError({
-        statusCode: (response.error as { statusCode?: number }).statusCode,
-        name: (response.error as { name?: string }).name,
-        message: sanitizeEmailErrorMessage((response.error as { message?: string }).message),
-      });
-      recordResendOperationalError(mapped.message);
-      logStructured("error", {
-        event: "send_failed",
-        code: mapped.code,
+      logDev(prefix, "Resend data:", response.data ?? null);
+      logDev(prefix, "Resend error:", response.error ?? null);
+
+      if (response.error) {
+        const mapped = mapResendError({
+          statusCode: (response.error as { statusCode?: number }).statusCode,
+          name: (response.error as { name?: string }).name,
+          message: sanitizeEmailErrorMessage((response.error as { message?: string }).message),
+        });
+        lastFail = {
+          sent: false,
+          errorCode: mapped.code,
+          error: { message: mapped.message },
+          retryable: mapped.retryable,
+          data: response.data,
+        };
+        if (!mapped.retryable || attempt === RESEND_SEND_ATTEMPTS) {
+          recordResendOperationalError(mapped.message);
+          logStructured("error", {
+            event: "send_failed",
+            code: mapped.code,
+            to: maskRecipientsForLog(toList),
+            subject,
+            attempt,
+          });
+          if (isObservabilityFlagEnabled("integrationTelemetry")) {
+            trackMetric(MetricNames.EMAILS_FAILED, 1, { code: mapped.code });
+            trackMetric(MetricNames.EMAIL_LATENCY_MS, Date.now() - started);
+          }
+          return lastFail;
+        }
+        await sleep(150 * attempt);
+        continue;
+      }
+
+      clearResendOperationalError();
+      logStructured("info", {
+        event: "send_ok",
+        id: response.data?.id,
         to: maskRecipientsForLog(toList),
         subject,
+        tags: params.tags?.map((t) => t.name),
+        metadataKeys: params.metadata ? Object.keys(params.metadata) : undefined,
       });
       if (isObservabilityFlagEnabled("integrationTelemetry")) {
-        trackMetric(MetricNames.EMAILS_FAILED, 1, { code: mapped.code });
+        trackMetric(MetricNames.EMAILS_SENT, 1);
         trackMetric(MetricNames.EMAIL_LATENCY_MS, Date.now() - started);
       }
-      return {
+      if (response.data?.id) {
+        logDev(prefix, "E-mail id:", response.data.id);
+      }
+
+      return { sent: true, id: response.data?.id, data: response.data };
+    } catch (error) {
+      const rawMessage = error instanceof Error ? error.message : String(error);
+      const mapped = mapResendError({ message: sanitizeEmailErrorMessage(rawMessage) });
+      lastFail = {
         sent: false,
         errorCode: mapped.code,
         error: { message: mapped.message },
         retryable: mapped.retryable,
-        data: response.data,
       };
+      if (!mapped.retryable || attempt === RESEND_SEND_ATTEMPTS) {
+        recordResendOperationalError(mapped.message);
+        logStructured("error", {
+          event: "send_failed",
+          code: mapped.code,
+          to: maskRecipientsForLog(toList),
+        });
+        if (isObservabilityFlagEnabled("integrationTelemetry")) {
+          trackMetric(MetricNames.EMAILS_FAILED, 1, { code: mapped.code });
+        }
+        return lastFail;
+      }
+      await sleep(150 * attempt);
     }
-
-    clearResendOperationalError();
-    logStructured("info", {
-      event: "send_ok",
-      id: response.data?.id,
-      to: maskRecipientsForLog(toList),
-      subject,
-      tags: params.tags?.map((t) => t.name),
-      metadataKeys: params.metadata ? Object.keys(params.metadata) : undefined,
-    });
-    if (isObservabilityFlagEnabled("integrationTelemetry")) {
-      trackMetric(MetricNames.EMAILS_SENT, 1);
-      trackMetric(MetricNames.EMAIL_LATENCY_MS, Date.now() - started);
-    }
-    if (response.data?.id) {
-      logDev(prefix, "E-mail id:", response.data.id);
-    }
-
-    return { sent: true, id: response.data?.id, data: response.data };
-  } catch (error) {
-    const rawMessage = error instanceof Error ? error.message : String(error);
-    const mapped = mapResendError({ message: sanitizeEmailErrorMessage(rawMessage) });
-    recordResendOperationalError(mapped.message);
-    logStructured("error", {
-      event: "send_exception",
-      code: mapped.code,
-      to: maskRecipientsForLog(toList),
-    });
-    if (isObservabilityFlagEnabled("integrationTelemetry")) {
-      trackMetric(MetricNames.EMAILS_FAILED, 1, { code: mapped.code });
-    }
-    return {
-      sent: false,
-      errorCode: mapped.code,
-      error: { message: mapped.message },
-      retryable: mapped.retryable,
-    };
   }
+
+  return (
+    lastFail ?? {
+      sent: false,
+      errorCode: "EMAIL_SEND_FAILED",
+      error: { message: publicEmailError("EMAIL_SEND_FAILED").message },
+      retryable: true,
+    }
+  );
 }
 
 /** Alias compatível com sendViaResendSdk legado. */

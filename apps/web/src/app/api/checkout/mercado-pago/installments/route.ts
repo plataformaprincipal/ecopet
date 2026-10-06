@@ -47,7 +47,10 @@ export async function POST(request: Request) {
   });
 
   if (!result.ok) {
-    return apiFailure(result.code, "Não foi possível calcular as parcelas.", 503);
+    const retryable = result.retryable !== false;
+    return apiFailure(result.code, "Não foi possível calcular as parcelas.", retryable ? 503 : 502, {
+      retryable,
+    });
   }
   return apiSuccess({ options: result.options, amount });
 }

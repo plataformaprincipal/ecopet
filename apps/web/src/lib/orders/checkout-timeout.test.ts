@@ -90,8 +90,22 @@ describe("installments endpoint guards", () => {
     assert.ok(src.includes("oneTimeTotal") || src.includes("subtotal"));
     assert.equal(src.includes("productSubtotal"), false);
     const ui = readSrc("src/components/features/marketplace/mercado-pago-checkout.tsx");
-    assert.ok(ui.includes("digits.length < 6"));
+    assert.ok(ui.includes("digits.length < 6") || ui.includes("bin6.length < 6"));
     assert.ok(ui.includes("amount > 0"));
     assert.ok(ui.includes("500"));
+  });
+
+  it("retries transient 502/503/504 without blocking checkout", () => {
+    const client = readSrc("src/lib/mercado-pago/client.ts");
+    assert.ok(client.includes("INSTALLMENTS_ATTEMPTS"));
+    assert.ok(client.includes("timeoutMs: INSTALLMENTS_TIMEOUT_MS"));
+    assert.ok(client.includes("/v1/orders"));
+    const ui = readSrc("src/components/features/marketplace/mercado-pago-checkout.tsx");
+    assert.ok(ui.includes("Calculando parcelas"));
+    assert.ok(ui.includes("Tentar novamente"));
+    assert.ok(ui.includes("502") && ui.includes("503") && ui.includes("504"));
+    assert.ok(ui.includes("installmentsUnavailable"));
+    const testCheckout = readSrc("src/app/api/checkout-test/mercado-pago/installments/route.ts");
+    assert.equal(testCheckout.includes("INSTALLMENTS_ATTEMPTS"), false);
   });
 });

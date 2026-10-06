@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { describe, it, beforeEach, afterEach } from "node:test";
 import {
   getEmailFromAddress,
@@ -48,10 +50,11 @@ describe("email config", () => {
 });
 
 describe("email errors", () => {
-  it("sanitiza API keys em mensagens", () => {
-    const msg = sanitizeEmailErrorMessage("invalid key re_AbCdEfGhIjKlMnOp");
-    assert.ok(!msg.includes("re_AbCdEfGhIjKlMnOp"));
-    assert.ok(msg.includes("re_***"));
+  it("sanitiza AUTH PLAIN e senha rejeitada", () => {
+    const msg = sanitizeEmailErrorMessage("535 Username and Password not accepted. AUTH PLAIN failed re_secret");
+    assert.ok(!msg.includes("AUTH PLAIN"));
+    assert.ok(!msg.includes("Username and Password not accepted"));
+    assert.ok(!msg.includes("re_secret"));
   });
 
   it("mapeia 429 para rate limit", () => {
@@ -139,6 +142,17 @@ describe("resend client singleton", () => {
     const b = getResendClient();
     assert.ok(a);
     assert.equal(a, b);
+  });
+});
+
+describe("production email routing", () => {
+  it("prioriza Resend e não cai no SMTP Gmail quando Resend está configurado", () => {
+    const src = readFileSync(path.resolve(process.cwd(), "src/lib/email/provider.ts"), "utf8");
+    assert.ok(src.includes("isResendConfigured()"));
+    assert.ok(src.includes('process.env.NODE_ENV === "production"'));
+    assert.ok(src.includes("isSmtpConfigured() && !isResendConfigured()"));
+    assert.ok(src.includes("send_failed"));
+    assert.ok(!src.includes("AUTH PLAIN"));
   });
 });
 

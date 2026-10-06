@@ -393,7 +393,7 @@ export async function checkoutFromCart(params: {
     void emailOrderEvent("ORDER_CREATED", user.email, order.orderNumber, {
       name: user.name,
       locale: getUserEmailLocale(user.preferences),
-    });
+    }).catch(() => undefined);
   }
 
   return order;

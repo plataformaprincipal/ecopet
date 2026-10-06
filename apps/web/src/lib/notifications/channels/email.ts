@@ -60,7 +60,7 @@ export class EmailChannelProvider implements NotificationChannelProvider {
       html,
       text: params.message,
       logPrefix: `[notify:email:${maskEmailForLog(user.email)}]`,
-    });
+    }).catch(() => ({ sent: false as const, errorCode: "EMAIL_SEND_FAILED" }));
 
     if (!result.sent) {
       const code = result.errorCode ?? "EMAIL_SEND_FAILED";

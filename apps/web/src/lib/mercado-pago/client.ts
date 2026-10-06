@@ -86,6 +86,7 @@ async function mpFetch<T>(
     body?: unknown;
     idempotencyKey?: string;
     accessToken?: string;
+    timeoutMs?: number;
   }
 ): Promise<MpClientResult<T>> {
   const config = resolveConfig();
@@ -101,7 +102,8 @@ async function mpFetch<T>(
   }
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), config.timeoutMs);
+  const timeoutMs = init.timeoutMs && init.timeoutMs > 0 ? init.timeoutMs : config.timeoutMs;
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const headers: Record<string, string> = {
@@ -322,6 +324,13 @@ export async function getMercadoPagoPaymentMethods(): Promise<
   return mpFetch<Array<Record<string, unknown>>>("/v1/payment_methods", { method: "GET" });
 }
 
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+const INSTALLMENTS_ATTEMPTS = 3;
+const INSTALLMENTS_TIMEOUT_MS = 5000;
+
 /** GET /v1/payment_methods/installments — opções oficiais de parcelamento. */
 export async function getMercadoPagoInstallments(params: {
   amount: number;
@@ -332,7 +341,14 @@ export async function getMercadoPagoInstallments(params: {
   q.set("amount", params.amount.toFixed(2));
   if (params.bin) q.set("bin", params.bin.slice(0, 8));
   if (params.paymentMethodId) q.set("payment_method_id", params.paymentMethodId);
-  return mpFetch<unknown>(`/v1/payment_methods/installments?${q.toString()}`, {
-    method: "GET",
-  });
+  const path = `/v1/payment_methods/installments?${q.toString()}`;
+  let last: MpClientResult<unknown> | null = null;
+  for (let attempt = 1; attempt <= INSTALLMENTS_ATTEMPTS; attempt++) {
+    last = await mpFetch<unknown>(path, { method: "GET", timeoutMs: INSTALLMENTS_TIMEOUT_MS });
+    if (last.ok) return last;
+    const transient = last.retryable || last.status === 502 || last.status === 503 || last.status === 504;
+    if (!transient || attempt === INSTALLMENTS_ATTEMPTS) return last;
+    await sleep(200 * attempt);
+  }
+  return last!;
 }
