@@ -8,9 +8,50 @@ import { postLedgerForRefund } from "@/lib/finance/refund-ledger";
 import { refundPolicyForSku } from "@/lib/commerce-catalog/refund-policy";
 import { COMMERCIAL_EVENT, postOrderCommercialEvent } from "@/lib/commerce-chat/events";
 import { cancelQuote, findQuoteByOrderId } from "@/lib/commerce-chat/quotes";
+import { assertOrderTransition } from "@/lib/commerce/order-state-machine";
+import { createInternalNotification } from "@/lib/notifications/internal";
 
 function approvedPayments<T extends { status: string }>(payments: T[]) {
   return payments.filter((p) => p.status === "APPROVED" || p.status === "PARTIALLY_REFUNDED");
+}
+
+export async function partnerAcceptOrder(params: { orderId: string; partnerId: string; note?: string }) {
+  const order = await prisma.order.findFirst({
+    where: { id: params.orderId, partnerId: params.partnerId },
+    include: { payments: true },
+  });
+  if (!order) throw new ChatError("Pedido não encontrado.", "NOT_FOUND", 404);
+  const paid = approvedPayments(order.payments);
+  if (!paid.length && order.status !== OrderStatus.PAID) {
+    throw new ChatError("Só é possível aceitar após o pagamento aprovado.", "VALIDATION", 409);
+  }
+  assertOrderTransition(order.status, OrderStatus.CONFIRMED, "partner");
+  const updated = await prisma.order.update({
+    where: { id: order.id },
+    data: {
+      status: OrderStatus.CONFIRMED,
+      fulfillmentStatus: OrderStatus.CONFIRMED,
+      sellerAcceptBy: null,
+      statusHistory: {
+        create: { status: OrderStatus.CONFIRMED, note: params.note ?? "Pedido aceito pelo parceiro" },
+      },
+    },
+    include: { items: true, statusHistory: { orderBy: { createdAt: "asc" } } },
+  });
+  await postOrderCommercialEvent({
+    orderId: order.id,
+    event: COMMERCIAL_EVENT.PARTNER_ACCEPTED,
+    actorId: params.partnerId,
+  }).catch(() => undefined);
+  await createInternalNotification({
+    userId: order.userId,
+    title: "Pedido aceito",
+    body: `O parceiro aceitou o pedido #${order.orderNumber}.`,
+    type: "ORDER_STATUS_UPDATED",
+    actionUrl: `/dashboard/client/orders/${order.id}`,
+    data: { orderId: order.id, status: "CONFIRMED" },
+  });
+  return updated;
 }
 
 export async function partnerRejectOrder(params: { orderId: string; partnerId: string; reason?: string }) {

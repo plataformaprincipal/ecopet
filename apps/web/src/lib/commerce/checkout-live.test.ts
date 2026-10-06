@@ -5,6 +5,7 @@ import path from "node:path";
 import { checkoutSchema } from "@/schemas/product";
 import { evaluateMarketplaceSplit } from "@/lib/finance/split-capability";
 import { getMercadoPagoPublicConfig, getMercadoPagoSanitizedStatus, isMercadoPagoConfigured } from "@/lib/mercado-pago/config";
+import { requiresExternalSellerGate } from "@/lib/seller/platform";
 
 function readSrc(rel: string) {
   return readFileSync(path.resolve(process.cwd(), rel), "utf8");
@@ -112,6 +113,8 @@ describe("checkout LIVE Mercado Pago — TEST nunca entra", () => {
     const src = readSrc("src/lib/mercado-pago/create-checkout-order.ts");
     assert.ok(src.includes("createMercadoPagoOrder"));
     assert.ok(src.includes("SELLER_SPLIT_UNAVAILABLE"));
+    assert.ok(src.includes("sellerRequiresMarketplaceSplit"));
+    assert.ok(src.includes("splitRequired && !split.splitReady"));
     assert.equal(src.includes("MERCADO_PAGO_TEST_ACCESS_TOKEN"), false);
     assert.equal(src.includes("test-credentials"), false);
     assert.equal(src.includes("test-client"), false);
@@ -121,6 +124,8 @@ describe("checkout LIVE Mercado Pago — TEST nunca entra", () => {
     const src = readSrc("src/lib/orders/checkout-service.ts");
     assert.ok(src.includes("COD_NOT_ALLOWED"));
     assert.ok(src.includes("SELLER_SPLIT_UNAVAILABLE"));
+    assert.ok(src.includes("requiresExternalSellerGate"));
+    assert.ok(src.includes("splitRequired && !splitEval.capability.splitReady"));
     assert.ok(src.includes("isMercadoPagoCheckoutAvailable"));
     assert.equal(src.includes("PIX na entrega"), false);
   });
@@ -185,6 +190,32 @@ describe("checkout LIVE split — sem desvio silencioso para a EccoPet", () => {
       transactionAmount: 100,
     });
     assert.equal(cap.splitReady, false);
+  });
+
+  it("seller gate não exige Connect para EccoPet/ADMIN e continua exigindo para PARTNER/ONG", () => {
+    assert.equal(requiresExternalSellerGate({ sellerId: null }), false);
+    assert.equal(requiresExternalSellerGate({ sellerId: "ECCOPET" }), false);
+    assert.equal(requiresExternalSellerGate({ sellerId: "admin-1", role: "ADMIN" }), false);
+    assert.equal(requiresExternalSellerGate({ sellerId: "partner-1", role: "PARTNER" }), true);
+    assert.equal(requiresExternalSellerGate({ sellerId: "ong-1", role: "ONG" }), true);
+  });
+
+  it("AI, planos e catálogo EccoPet criam pedido sem partnerId de split", () => {
+    const ai = readSrc("src/lib/ai-commerce/checkout-service.ts");
+    assert.ok(ai.includes("partnerId: null"));
+    assert.equal(ai.includes("SELLER_SPLIT_UNAVAILABLE"), false);
+    const catalog = readSrc("src/lib/commerce-catalog/checkout.ts");
+    assert.ok(catalog.includes("partnerId: null"));
+    assert.equal(catalog.includes("SELLER_SPLIT_UNAVAILABLE"), false);
+    const pay = readSrc("src/lib/mercado-pago/create-checkout-order.ts");
+    assert.ok(pay.includes("createMercadoPagoOrder"));
+    assert.ok(pay.includes("splitRequired && !split.splitReady"));
+  });
+
+  it("carrinho trata seller EccoPet/ADMIN como disponível sem MP CONNECTED", () => {
+    const src = readSrc("src/lib/cart/cart-service.ts");
+    assert.ok(src.includes("cartSellerIdentity"));
+    assert.ok(src.includes('identity.sellerType !== "ECCOPET"'));
   });
 });
 

@@ -21,6 +21,7 @@ import {
   resolveOrderMarketplaceSplit,
   sanitizeMarketplacePaymentForClient,
 } from "@/lib/mercado-pago/marketplace-split";
+import { sellerRequiresMarketplaceSplit } from "@/lib/seller/eligibility";
 
 export type CreateCheckoutOrderInput = {
   userId: string;
@@ -84,7 +85,8 @@ export async function createMercadoPagoCheckoutOrder(input: CreateCheckoutOrderI
     applicationFeeAmount: snapshotMetrics.platformRevenue,
   });
   const split = splitEval.capability;
-  if (!split.splitReady) {
+  const splitRequired = await sellerRequiresMarketplaceSplit(order.partnerId);
+  if (splitRequired && !split.splitReady) {
     throw new Error("SELLER_SPLIT_UNAVAILABLE");
   }
 

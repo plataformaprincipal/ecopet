@@ -41,6 +41,7 @@ describe("checkout transaction timeout regression", () => {
     assert.ok(beforeTx.includes("listSellablePartnerIdSet"));
     assert.ok(beforeTx.includes("serverQuoteProduct"));
     assert.ok(beforeTx.includes("resolveOrderMarketplaceSplit"));
+    assert.ok(beforeTx.includes("requiresExternalSellerGate"));
     const inner = innerTransactionBody(src);
     assert.equal(inner.includes("isSellerSellable"), false);
     assert.equal(inner.includes("resolveOrderMarketplaceSplit"), false);

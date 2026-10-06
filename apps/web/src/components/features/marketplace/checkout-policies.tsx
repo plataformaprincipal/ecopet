@@ -24,8 +24,20 @@ export function CheckoutPolicies({ className }: { className?: string }) {
         </li>
       </ul>
       <p className="mt-2 text-xs">
+        <Link href="/legal/cliente/trocas" className="text-ecopet-green underline">
+          Trocas e devoluções
+        </Link>
+        {" · "}
+        <Link href="/legal/cliente/cancelamento" className="text-ecopet-green underline">
+          Cancelamento
+        </Link>
+        {" · "}
+        <Link href="/legal/cliente/reembolso" className="text-ecopet-green underline">
+          Reembolso
+        </Link>
+        {" · "}
         <Link href="/legal/cliente/termos" className="text-ecopet-green underline">
-          Ver termos completos
+          Termos completos
         </Link>
       </p>
     </section>

@@ -108,7 +108,7 @@ export default async function CheckoutSuccessPage({ params }: PageProps) {
                     : boletoIssued
                       ? "Boleto emitido. Status pendente até a compensação. Após o vencimento, o boleto fica inválido/expirado."
                       : pixWaiting
-                        ? "Pix gerado. Aguardando pagamento / Processando. Se não for confirmado em 5 minutos, o status será recusado/expirado nesta tela."
+                        ? "Pix gerado. Estamos aguardando a confirmação do seu Pix. Se o prazo da tela expirar sem pagamento, o status fica expirado — isso não significa recusa do banco."
                         : confirming
                           ? "Aguardando confirmação. Acompanhe o pedido — não pague de novo até ver o status final."
                           : "Conclua o pagamento online com cartão, Pix ou boleto."}

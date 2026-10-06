@@ -230,9 +230,28 @@ export function ProductDetailContent({ id }: ProductDetailContentProps) {
                 <div className="flex items-center gap-2">
                   <RatingStars rating={r.rating} />
                   <span className="text-sm font-semibold">{r.author}</span>
+                  {r.verifiedPurchase ? (
+                    <span className="rounded-full bg-ecopet-green/10 px-2 py-0.5 text-[10px] font-medium text-ecopet-green">
+                      Compra verificada
+                    </span>
+                  ) : null}
                 </div>
                 <p className="mt-2 text-sm">{r.comment}</p>
                 {r.partnerReply && <p className="mt-2 text-xs text-ecopet-green">Resposta: {r.partnerReply}</p>}
+                <button
+                  type="button"
+                  className="mt-2 text-xs text-muted-foreground underline"
+                  onClick={() =>
+                    fetch("/api/commerce/reports", {
+                      method: "POST",
+                      credentials: "include",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ targetType: "review", targetId: r.id, reason: "OTHER" }),
+                    })
+                  }
+                >
+                  Denunciar
+                </button>
               </div>
             ))}
           </div>

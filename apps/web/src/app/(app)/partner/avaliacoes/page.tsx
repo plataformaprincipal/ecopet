@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { guardPartner } from "@/lib/auth/guards";
+import { PartnerReviewReply } from "@/components/features/partner/partner-review-reply";
 
 export default async function PartnerReviewsPage() {
   const user = await guardPartner("/partner/avaliacoes");
@@ -13,6 +14,7 @@ export default async function PartnerReviewsPage() {
         id: true,
         rating: true,
         comment: true,
+        partnerReply: true,
         createdAt: true,
         product: { select: { name: true } },
         user: { select: { name: true } },
@@ -41,7 +43,8 @@ export default async function PartnerReviewsPage() {
       createdAt: r.createdAt,
       subject: r.product.name,
       author: r.user.name,
-      kind: "Produto",
+      kind: "Produto" as const,
+      partnerReply: r.partnerReply,
     })),
     ...serviceReviews.map((r) => ({
       id: r.id,
@@ -50,7 +53,8 @@ export default async function PartnerReviewsPage() {
       createdAt: r.createdAt,
       subject: r.service.name,
       author: r.user.name,
-      kind: "Serviço",
+      kind: "Serviço" as const,
+      partnerReply: null as string | null,
     })),
   ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
@@ -73,6 +77,7 @@ export default async function PartnerReviewsPage() {
               </p>
               <p className="text-muted-foreground">{row.author}</p>
               {row.comment ? <p className="mt-2">{row.comment}</p> : null}
+              {row.kind === "Produto" ? <PartnerReviewReply reviewId={row.id} existing={row.partnerReply} /> : null}
             </li>
           ))}
         </ul>

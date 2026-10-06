@@ -343,6 +343,11 @@ export async function applyInternalPaymentStatus(params: {
     }
   });
 
+  if (isTerminalApproved(params.internalStatus) && payment.order.partnerId) {
+    const { stampSellerAcceptDeadline } = await import("@/lib/orders/seller-confirmation");
+    await stampSellerAcceptDeadline(payment.orderId).catch(() => undefined);
+  }
+
   void import("@/lib/loyalty/events").then(({ onOrderStatusForRewards, onOrderRefundedForRewards }) => {
     if (isTerminalApproved(params.internalStatus)) {
       return onOrderStatusForRewards(payment.orderId);
@@ -421,8 +426,8 @@ export async function applyInternalPaymentStatus(params: {
       if (payment.order.partnerId) {
         await createInternalNotification({
           userId: payment.order.partnerId,
-          title: "Pedido pago",
-          body: `Pedido #${payment.order.orderNumber} foi pago.`,
+          title: "Novo pedido",
+          body: `Novo pedido #${payment.order.orderNumber} — responda até o prazo de aceite.`,
           type: "ORDER_PAID",
           actionUrl: `/dashboard/partner/orders/${payment.order.id}`,
           data: { orderId: payment.order.id },

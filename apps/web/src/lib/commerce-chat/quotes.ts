@@ -77,6 +77,7 @@ export function serializeQuote(quote: {
   status: QuoteStatus;
   conditions: string | null;
   includedItems: Prisma.JsonValue | null;
+  version?: number;
 }) {
   const payload = asPayload(quote.includedItems);
   const status =
@@ -93,6 +94,7 @@ export function serializeQuote(quote: {
     name: quote.name,
     description: quote.description,
     status,
+    version: quote.version ?? 1,
     validUntil: quote.validUntil.toISOString(),
     executionDays: quote.executionDays,
     conditions: quote.conditions,
@@ -405,6 +407,73 @@ export async function cancelQuote(quoteId: string, actorId: string) {
       includedItems: mergePayload(quote, { cancelled: true }),
     },
   });
+}
+
+export async function reviseQuote(params: {
+  quoteId: string;
+  actorId: string;
+  items?: QuoteLineInput[];
+  discountAmount?: number;
+  shippingAmount?: number;
+  claimedTotal?: number;
+  validUntil?: Date;
+  notes?: string | null;
+  conditions?: string | null;
+  name?: string;
+  description?: string;
+}) {
+  const quote = await assertQuoteParticipant(params.quoteId, params.actorId);
+  if (quote.providerId !== params.actorId) {
+    throw new ChatError("Somente o parceiro pode alterar o orçamento.", "FORBIDDEN", 403);
+  }
+  if (quote.status === QuoteStatus.CONVERTED || quote.status === QuoteStatus.COMPLETED) {
+    throw new ChatError("Orçamento já convertido não pode ser alterado.", "VALIDATION", 409);
+  }
+  const current = asPayload(quote.includedItems);
+  const nextItems = params.items ?? current.items;
+  const financials = await computeServerTotals({
+    items: nextItems.length ? nextItems : [{ description: quote.name, quantity: 1, unitPrice: quote.value }],
+    discountAmount: params.discountAmount ?? current.discountAmount,
+    shippingAmount: params.shippingAmount ?? current.shippingAmount,
+    claimedTotal: params.claimedTotal,
+    partnerId: quote.providerId,
+  });
+  const priceChanged = Math.abs(financials.totalAmount - quote.value) > 0.009;
+  const requiresReaccept = quote.status === QuoteStatus.ACCEPTED && priceChanged;
+  const updated = await prisma.customQuote.update({
+    where: { id: quote.id },
+    data: {
+      version: { increment: 1 },
+      name: params.name ?? quote.name,
+      description: params.description ?? quote.description,
+      value: financials.totalAmount,
+      validUntil: params.validUntil ?? quote.validUntil,
+      conditions: params.conditions ?? quote.conditions,
+      status: requiresReaccept || quote.status === QuoteStatus.ACCEPTED ? QuoteStatus.SENT : quote.status,
+      includedItems: mergePayload(quote, {
+        items: financials.items,
+        discountAmount: financials.discountAmount,
+        shippingAmount: financials.shippingAmount,
+        subtotalAmount: financials.subtotalAmount,
+        commissionAmount: financials.commissionAmount,
+        taxAmount: financials.taxAmount,
+        totalAmount: financials.totalAmount,
+        pricingVersion: financials.pricingVersion,
+        pricingSnapshot: financials.pricingSnapshot,
+        notes: params.notes ?? current.notes,
+      }),
+    },
+  });
+  if (quote.conversationId) {
+    await postCommercialEvent({
+      conversationId: quote.conversationId,
+      senderId: params.actorId,
+      event: COMMERCIAL_EVENT.QUOTE_SENT,
+      quoteId: quote.id,
+      payload: { version: updated.version, requiresReaccept },
+    });
+  }
+  return serializeQuote(updated);
 }
 
 export async function findQuoteByOrderId(orderId: string) {

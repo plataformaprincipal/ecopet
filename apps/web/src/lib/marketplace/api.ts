@@ -372,6 +372,7 @@ export async function fetchReviews(targetId: string, type: "product" | "service"
       avatar: "",
       createdAt: r.createdAt,
       partnerReply: r.partnerReply ?? undefined,
+      verifiedPurchase: true,
     }));
   } catch {
     return [];

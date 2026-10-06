@@ -197,7 +197,14 @@ export function ServiceDetailContent({ id }: ServiceDetailContentProps) {
         ) : (
           reviews.map((r) => (
             <div key={r.id} className="mb-3 rounded-xl border p-4">
-              <RatingStars rating={r.rating} />
+              <div className="flex items-center gap-2">
+                <RatingStars rating={r.rating} />
+                {r.verifiedPurchase ? (
+                  <span className="rounded-full bg-ecopet-green/10 px-2 py-0.5 text-[10px] font-medium text-ecopet-green">
+                    Compra verificada
+                  </span>
+                ) : null}
+              </div>
               <p className="mt-2 text-sm">{r.comment}</p>
             </div>
           ))

@@ -16,6 +16,10 @@ import { writeAuditLog } from "@/lib/audit-log";
 const statusSchema = z.object({
   status: z.nativeEnum(OrderStatus),
   note: z.string().optional().nullable(),
+  trackingCode: z.string().max(80).optional(),
+  carrierName: z.string().max(80).optional(),
+  trackingUrl: z.string().url().max(500).optional().or(z.literal("")),
+  estimatedDelivery: z.string().datetime().optional(),
 });
 
 type RouteContext = { params: Promise<{ orderId: string }> };
@@ -109,6 +113,10 @@ export async function PATCH(request: Request, context: RouteContext) {
       data: {
         status: nextStatus,
         fulfillmentStatus: nextStatus,
+        ...(parsed.data.trackingCode ? { trackingCode: parsed.data.trackingCode } : {}),
+        ...(parsed.data.carrierName ? { carrierName: parsed.data.carrierName } : {}),
+        ...(parsed.data.trackingUrl !== undefined ? { trackingUrl: parsed.data.trackingUrl || null } : {}),
+        ...(parsed.data.estimatedDelivery ? { estimatedDelivery: new Date(parsed.data.estimatedDelivery) } : {}),
         statusHistory: {
           create: {
             status: nextStatus,

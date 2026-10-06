@@ -1,10 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { apiSuccess } from "@/lib/api-response";
 import { requireActivePartner } from "@/lib/auth/require-auth";
+import { expireUnconfirmedPartnerOrders } from "@/lib/orders/seller-confirmation";
 
 export async function GET() {
   const { user, error } = await requireActivePartner();
   if (error) return error;
+
+  await expireUnconfirmedPartnerOrders(20).catch(() => undefined);
 
   const orders = await prisma.order.findMany({
     where: { partnerId: user!.id },

@@ -2,8 +2,20 @@ import { AccountStatus, VerificationStatus, type Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { evaluateOngOnboarding } from "@/lib/ong/onboarding";
 import { evaluatePartnerOnboarding, SELLER_NOT_ENABLED_MESSAGE } from "@/lib/partner/onboarding";
+import { isExternalMarketplaceRole, requiresExternalSellerGate } from "@/lib/seller/platform";
 
 export { SELLER_NOT_ENABLED_MESSAGE };
+export { requiresExternalSellerGate, isPlatformSellerId, isExternalMarketplaceRole } from "@/lib/seller/platform";
+
+/** True when this seller must be MP CONNECTED before checkout can charge. */
+export async function sellerRequiresMarketplaceSplit(sellerId: string | null | undefined): Promise<boolean> {
+  if (!requiresExternalSellerGate({ sellerId })) return false;
+  const user = await prisma.user.findUnique({
+    where: { id: sellerId as string },
+    select: { role: true },
+  });
+  return requiresExternalSellerGate({ sellerId, role: user?.role ?? null });
+}
 
 export async function listConnectedPartnerIds(): Promise<string[]> {
   const rows = await prisma.partnerMpConnection.findMany({
@@ -99,6 +111,9 @@ export async function isSellerSellable(sellerId: string): Promise<boolean> {
     }),
   ]);
   if (!user) return false;
+  if (!isExternalMarketplaceRole(user.role)) {
+    return user.accountStatus === AccountStatus.ACTIVE;
+  }
   if (user.role === "ONG" && user.ongProfile) {
     const details = (user.ongProfile.profileDetails ?? {}) as Record<string, unknown>;
     return evaluateOngOnboarding({

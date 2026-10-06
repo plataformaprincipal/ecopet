@@ -66,7 +66,10 @@ export async function GET(request: Request) {
       orderBy: { createdAt: "desc" },
       take: 50,
     });
-    return apiSuccess({ reviews, total: reviews.length });
+    return apiSuccess({
+      reviews: reviews.map((r) => ({ ...r, verifiedPurchase: true })),
+      total: reviews.length,
+    });
   }
 
   if (!serviceId && !partnerId) {
@@ -87,7 +90,10 @@ export async function GET(request: Request) {
     take: 50,
   });
 
-  return apiSuccess({ reviews, total: reviews.length });
+  return apiSuccess({
+    reviews: reviews.map((r) => ({ ...r, verifiedPurchase: true })),
+    total: reviews.length,
+  });
 }
 
 export async function POST(request: Request) {
@@ -121,10 +127,17 @@ export async function POST(request: Request) {
     });
     if (existing) return apiFailure("CONFLICT", "Você já avaliou este produto.", 409);
 
-    const product = await prisma.product.findUnique({ where: { id: productId }, select: { sellerId: true, name: true } });
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      select: { sellerId: true, name: true, seller: { select: { role: true } } },
+    });
     if (!product) return apiFailure("NOT_FOUND", "Produto não encontrado.", 404);
     if (product.sellerId === user!.id) {
       return apiFailure("FORBIDDEN", "Não é possível avaliar seu próprio produto.", 403);
+    }
+    const { isExternalMarketplaceRole } = await import("@/lib/seller/platform");
+    if (!isExternalMarketplaceRole(product.seller.role)) {
+      return apiFailure("FORBIDDEN", "Produtos e serviços próprios da EccoPet não recebem avaliações públicas.", 403);
     }
 
   const review = await prisma.$transaction(async (tx) => {

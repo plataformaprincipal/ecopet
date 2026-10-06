@@ -11,6 +11,7 @@ import { ensureAiCommerceProducts } from "@/lib/ai-commerce/product-service";
 import { firstProductImageUrl } from "@/lib/catalog/images";
 import { computeEarnPoints, DEFAULT_LOYALTY_POLICY } from "@/lib/loyalty/rules";
 import { listSellablePartnerIdSet } from "@/lib/seller/eligibility";
+import { cartSellerIdentity } from "@/lib/seller/platform";
 import { CATALOG_ITEM_TYPE, familyOfSku, getCommercialProduct } from "@/lib/commerce-catalog/products";
 import { quoteCatalogSku } from "@/lib/commerce-catalog/quote";
 import {
@@ -204,7 +205,24 @@ function lineMoney(params: {
 
 export async function serializeCart(cart: Awaited<ReturnType<typeof getOrCreateCart>>) {
   const hideAi = isAiMonetizationFree();
-  const sellable = await listSellablePartnerIdSet();
+  const quoteSellerIds = [
+    ...new Set(
+      cart.items
+        .filter((item) => item.itemType === QUOTE_CART_ITEM_TYPE)
+        .map((item) => {
+          const meta = asMeta(item.metadata);
+          return typeof meta.partnerId === "string" ? meta.partnerId : null;
+        })
+        .filter((id): id is string => Boolean(id) && id !== ECCOPET_SELLER_ID)
+    ),
+  ];
+  const [sellable, quoteSellers] = await Promise.all([
+    listSellablePartnerIdSet(),
+    quoteSellerIds.length
+      ? prisma.user.findMany({ where: { id: { in: quoteSellerIds } }, select: { id: true, role: true } })
+      : Promise.resolve([] as Array<{ id: string; role: string }>),
+  ]);
+  const quoteSellerRole = new Map(quoteSellers.map((row) => [row.id, row.role]));
   const lines: UniversalCartLine[] = [];
 
   for (const item of cart.items) {
@@ -213,11 +231,15 @@ export async function serializeCart(cart: Awaited<ReturnType<typeof getOrCreateC
 
     if (item.itemType === QUOTE_CART_ITEM_TYPE) {
       const unitPrice = item.unitPriceSnapshot ?? 0;
-      const sellerId = typeof meta.partnerId === "string" ? meta.partnerId : ECCOPET_SELLER_ID;
+      const rawSellerId = typeof meta.partnerId === "string" ? meta.partnerId : ECCOPET_SELLER_ID;
+      const identity = cartSellerIdentity({
+        sellerId: rawSellerId,
+        role: quoteSellerRole.get(rawSellerId) ?? (rawSellerId === ECCOPET_SELLER_ID ? "ADMIN" : null),
+      });
       const expired = typeof meta.validUntil === "string" && Date.parse(meta.validUntil) <= Date.now();
       let status: CartAvailability = "AVAILABLE";
       if (expired) status = "EXPIRED";
-      else if (sellerId !== ECCOPET_SELLER_ID && !sellable.has(sellerId)) status = "MP_NOT_CONNECTED";
+      else if (identity.sellerType !== "ECCOPET" && !sellable.has(rawSellerId)) status = "MP_NOT_CONNECTED";
       const title = typeof meta.name === "string" ? meta.name : "Orçamento personalizado";
       lines.push({
         id: item.id,
@@ -227,9 +249,14 @@ export async function serializeCart(cart: Awaited<ReturnType<typeof getOrCreateC
         productId: null,
         serviceId: typeof meta.serviceId === "string" ? meta.serviceId : null,
         planId: null,
-        sellerId,
-        sellerType: sellerId === ECCOPET_SELLER_ID ? "ECCOPET" : "PARTNER",
-        sellerName: typeof meta.partnerName === "string" ? meta.partnerName : "Parceiro",
+        sellerId: identity.sellerId,
+        sellerType: identity.sellerType,
+        sellerName:
+          identity.sellerType === "ECCOPET"
+            ? ECCOPET_SELLER_NAME
+            : typeof meta.partnerName === "string"
+              ? meta.partnerName
+              : "Parceiro",
         sellerLogo: null,
         title,
         subtitle: "Serviço",
@@ -336,12 +363,15 @@ export async function serializeCart(cart: Awaited<ReturnType<typeof getOrCreateC
     }
 
     const seller = item.product.seller;
+    const identity = cartSellerIdentity({ sellerId: item.product.sellerId, role: seller?.role });
     const sellerName =
-      seller?.partnerProfile?.businessName ||
-      seller?.ongProfile?.ongName ||
-      seller?.ongProfile?.name ||
-      seller?.name ||
-      "Parceiro";
+      identity.sellerType === "ECCOPET"
+        ? ECCOPET_SELLER_NAME
+        : seller?.partnerProfile?.businessName ||
+          seller?.ongProfile?.ongName ||
+          seller?.ongProfile?.name ||
+          seller?.name ||
+          "Parceiro";
     const currentPrice = item.product.price;
     const snapshot = item.unitPriceSnapshot;
     const originalPrice = snapshot != null && snapshot !== currentPrice ? snapshot : null;
@@ -354,7 +384,7 @@ export async function serializeCart(cart: Awaited<ReturnType<typeof getOrCreateC
       status = "OUT_OF_STOCK";
     } else if (seller?.accountStatus !== "ACTIVE") {
       status = "SELLER_DISABLED";
-    } else if (!sellable.has(item.product.sellerId)) {
+    } else if (identity.sellerType !== "ECCOPET" && !sellable.has(item.product.sellerId)) {
       status = "MP_NOT_CONNECTED";
     } else if (originalPrice != null) {
       status = "PRICE_CHANGED";
@@ -365,8 +395,8 @@ export async function serializeCart(cart: Awaited<ReturnType<typeof getOrCreateC
       itemType: "product",
       sku: item.product.pricingCatalogSku,
       productId: item.productId,
-      sellerId: item.product.sellerId,
-      sellerType: seller?.role === "ONG" ? "ONG" : "PARTNER",
+      sellerId: identity.sellerId,
+      sellerType: identity.sellerType,
       sellerName,
       sellerLogo: seller?.avatar || null,
       title: item.product.name,

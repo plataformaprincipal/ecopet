@@ -650,6 +650,8 @@ model User {
   assignedTickets     SupportTicket[] @relation("TicketAssignee")
   contentReports      ContentReport[] @relation("ReportAuthor")
   reviewedReports     ContentReport[] @relation("ReportReviewer")
+  commerceCasesOpened CommerceCase[] @relation("CommerceCaseBuyer")
+  commerceCasesSelling CommerceCase[] @relation("CommerceCaseSeller")
   socialPostsAuthored SocialPost[] @relation("SocialPostAuthor")
   socialPostsModerated SocialPost[] @relation("SocialPostModerator")
   socialCommentsAuthored SocialComment[] @relation("SocialCommentAuthor")
@@ -1568,7 +1570,10 @@ model Order {
   stripePaymentId   String?
   walletTransactionId String?
   trackingCode      String?
+  trackingUrl       String?
   estimatedDelivery DateTime?
+  /// Prazo para o seller externo aceitar após pagamento APPROVED.
+  sellerAcceptBy    DateTime?
   /// Bloqueio de expedição (ex.: alerta de fraude Mercado Pago)
   fulfillmentBlocked Boolean       @default(false)
   fraudHold         Boolean        @default(false)
@@ -1598,6 +1603,7 @@ model Order {
   healthClinicalCases  HealthClinicalCase[]
   protectionEnrollments ProtectionEnrollment[]
   entertainmentMemberships EntertainmentMembership[]
+  commerceCases     CommerceCase[]
 
   @@index([userId])
   @@index([partnerId])
@@ -1614,6 +1620,7 @@ model OrderFulfillment {
   deliveryMethod  DeliveryMethod
   trackingCode    String?
   carrierName     String?
+  trackingUrl     String?
   estimatedAt     DateTime?
   deliveredAt     DateTime?
   notes           String?
@@ -2400,6 +2407,31 @@ model ContentReport {
 
   @@index([status])
   @@index([targetType, targetId])
+}
+
+model CommerceCase {
+  id                   String   @id @default(cuid())
+  protocol             String   @unique
+  orderId              String
+  itemId               String?
+  buyerId              String
+  sellerId             String?
+  reason               String
+  description          String
+  requestedResolution  String
+  status               String   @default("OPEN")
+  attachments          Json?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  closedAt             DateTime?
+  order                Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  buyer                User     @relation("CommerceCaseBuyer", fields: [buyerId], references: [id])
+  seller               User?    @relation("CommerceCaseSeller", fields: [sellerId], references: [id])
+
+  @@index([orderId])
+  @@index([buyerId])
+  @@index([sellerId])
+  @@index([status])
 }
 
 model CustomQuote {

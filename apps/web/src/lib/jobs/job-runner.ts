@@ -116,6 +116,18 @@ const handlers: Partial<Record<JobType, (job: JobRecord) => Promise<void>>> = {
       metadata: report as unknown as Record<string, unknown>,
     });
   },
+  SELLER_CONFIRMATION_SWEEP: async () => {
+    const { expireUnconfirmedPartnerOrders } = await import("@/lib/orders/seller-confirmation");
+    const result = await expireUnconfirmedPartnerOrders(50);
+    await writeAuditLog({
+      action: "SYNC",
+      module: "commerce.seller_accept",
+      resource: "Order",
+      resourceId: "sweep",
+      observation: `SELLER_CONFIRMATION_EXPIRED scanned=${result.scanned} expired=${result.expired.length}`,
+      metadata: result as unknown as Record<string, unknown>,
+    });
+  },
   REPROCESS_FAILED_JOB: async (job) => {
     const jobId = String((job.payload as { jobId?: string }).jobId ?? "");
     if (jobId) await processJobById(jobId);

@@ -21,6 +21,7 @@ import { linesAfterDiscount } from "@/lib/commerce-chat/quotes-math";
 import { isMercadoPagoCheckoutAvailable } from "@/lib/mercado-pago/config";
 import { resolveOrderMarketplaceSplit } from "@/lib/mercado-pago/marketplace-split";
 import { isSellerSellable, listSellablePartnerIdSet } from "@/lib/seller/eligibility";
+import { requiresExternalSellerGate } from "@/lib/seller/platform";
 import { isOngFeeExemptCategory } from "@/lib/ong/onboarding";
 import { CHECKOUT_DB_TX, withCheckoutCreateRetry } from "@/lib/orders/order-number";
 
@@ -113,7 +114,7 @@ export async function checkoutFromCart(params: {
     name: string;
     quantity: number;
     unitPrice: number;
-    partnerId: string;
+    partnerId: string | null;
   }[] = [];
 
   for (const item of physicalItems) {
@@ -127,6 +128,7 @@ export async function checkoutFromCart(params: {
     if (product.stock < item.quantity) throw new Error("INSUFFICIENT_STOCK");
 
     const seller = product.seller;
+    const externalSeller = requiresExternalSellerGate({ sellerId: product.sellerId, role: seller.role });
     const partnerApproved =
       seller.role === "PARTNER" &&
       seller.accountStatus === AccountStatus.ACTIVE &&
@@ -137,10 +139,10 @@ export async function checkoutFromCart(params: {
       seller.accountStatus === AccountStatus.ACTIVE &&
       seller.ongProfile?.verificationStatus === VerificationStatus.APPROVED &&
       Boolean(seller.ongProfile.approvedAt);
-    if (!partnerApproved && !ongApproved) {
+    if (externalSeller && !partnerApproved && !ongApproved) {
       throw new Error("PARTNER_NOT_APPROVED");
     }
-    if (!sellable.has(product.sellerId)) {
+    if (externalSeller && !sellable.has(product.sellerId)) {
       throw new Error("SELLER_NOT_ENABLED");
     }
 
@@ -149,13 +151,18 @@ export async function checkoutFromCart(params: {
       name: product.name,
       quantity: item.quantity,
       unitPrice: product.price,
-      partnerId: product.sellerId,
+      partnerId: externalSeller ? product.sellerId : null,
     });
   }
 
   const partnerIds = new Set(lines.map((l) => l.partnerId));
   if (partnerIds.size !== 1) throw new Error("MULTI_PARTNER_CART");
-  const partnerId = [...partnerIds][0]!;
+  const partnerId = [...partnerIds][0] ?? null;
+  const representative = byId.get(lines[0]!.productId);
+  const splitRequired = requiresExternalSellerGate({
+    sellerId: partnerId,
+    role: representative?.seller.role ?? null,
+  });
 
   const couponCode = params.couponCode?.trim().toUpperCase() || null;
   let couponInput: ReturnType<typeof couponToEngineInput> | null = null;
@@ -217,7 +224,7 @@ export async function checkoutFromCart(params: {
     amount,
     applicationFeeAmount: snap.platformFeeAmount,
   });
-  if (!splitEval.capability.splitReady) {
+  if (splitRequired && !splitEval.capability.splitReady) {
     throw new Error("SELLER_SPLIT_UNAVAILABLE");
   }
 
@@ -311,7 +318,7 @@ export async function checkoutFromCart(params: {
               gatewayFeeEstimated: snap.gatewayFeeEstimated,
               reserveAmount: snap.reserveAmount,
               taxEstimate: snap.taxEstimate,
-              splitReady: true,
+              splitReady: splitEval.capability.splitReady,
               logicalSplitOnly: false,
               estimatesOnly: false,
             },
@@ -349,14 +356,18 @@ export async function checkoutFromCart(params: {
       actionUrl: `/client/orders`,
       data: { orderId: order.id },
     }),
-    createInternalNotification({
-      userId: order.partnerId!,
-      title: "Novo pedido",
-      body: `Você recebeu o pedido #${order.orderNumber}.`,
-      type: "ORDER_RECEIVED",
-      actionUrl: `/partner/orders`,
-      data: { orderId: order.id },
-    }),
+    ...(order.partnerId
+      ? [
+          createInternalNotification({
+            userId: order.partnerId,
+            title: "Novo pedido",
+            body: `Você recebeu o pedido #${order.orderNumber}.`,
+            type: "ORDER_RECEIVED",
+            actionUrl: `/partner/orders`,
+            data: { orderId: order.id },
+          }),
+        ]
+      : []),
     writeAuditLog({
       actorId: params.userId,
       action: "CREATE",
@@ -431,10 +442,19 @@ async function checkoutQuoteFromCart(params: {
 
   const partnerIds = new Set(quotes.map((q) => q.providerId));
   if (partnerIds.size !== 1) throw new Error("MULTI_PARTNER_CART");
-  const partnerId = [...partnerIds][0]!;
-  if (!(await isSellerSellable(partnerId))) {
+  const providerId = [...partnerIds][0]!;
+  const provider = await prisma.user.findUnique({
+    where: { id: providerId },
+    select: { role: true },
+  });
+  const splitRequired = requiresExternalSellerGate({
+    sellerId: providerId,
+    role: provider?.role ?? null,
+  });
+  if (splitRequired && !(await isSellerSellable(providerId))) {
     throw new Error("SELLER_NOT_ENABLED");
   }
+  const partnerId = splitRequired ? providerId : null;
 
   const paymentMethod = params.paymentMethod ?? PaymentMethod.CARD;
   const paymentNote = ONLINE_PAYMENT_LABEL[paymentMethod] ?? paymentMethod;
@@ -475,7 +495,7 @@ async function checkoutQuoteFromCart(params: {
     amount: total,
     applicationFeeAmount: snap.platformFeeAmount,
   });
-  if (!quoteSplit.capability.splitReady) {
+  if (splitRequired && !quoteSplit.capability.splitReady) {
     throw new Error("SELLER_SPLIT_UNAVAILABLE");
   }
 
@@ -548,7 +568,7 @@ async function checkoutQuoteFromCart(params: {
               source: "quote-checkout",
               quoteId: quote.id,
               pricingVersion: snap.pricingVersion,
-              splitReady: true,
+              splitReady: quoteSplit.capability.splitReady,
               logicalSplitOnly: false,
               estimatesOnly: false,
             },
@@ -589,14 +609,18 @@ async function checkoutQuoteFromCart(params: {
       actionUrl: `/client/orders`,
       data: { orderId: order.id },
     }),
-    createInternalNotification({
-      userId: partnerId,
-      title: "Novo pedido",
-      body: `Você recebeu o pedido #${order.orderNumber}.`,
-      type: "ORDER_RECEIVED",
-      actionUrl: `/partner/orders`,
-      data: { orderId: order.id },
-    }),
+    ...(partnerId
+      ? [
+          createInternalNotification({
+            userId: partnerId,
+            title: "Novo pedido",
+            body: `Você recebeu o pedido #${order.orderNumber}.`,
+            type: "ORDER_RECEIVED",
+            actionUrl: `/partner/orders`,
+            data: { orderId: order.id },
+          }),
+        ]
+      : []),
     writeAuditLog({
       actorId: params.userId,
       action: "CREATE",

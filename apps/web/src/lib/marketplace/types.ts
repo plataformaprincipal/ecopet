@@ -123,6 +123,7 @@ export interface MarketplaceReview {
   comment: string;
   photos?: string[];
   partnerReply?: string;
+  verifiedPurchase?: boolean;
   createdAt: string;
 }
 
