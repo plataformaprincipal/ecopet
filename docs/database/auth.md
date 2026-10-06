@@ -1,8 +1,8 @@
-# Auth — EcoPet (vs Supabase Auth)
+# Auth — EccoPet (vs Supabase Auth)
 
 ## Conclusão
 
-O EcoPet **não** usa Supabase Auth como provedor de sessão.
+O EccoPet **não** usa Supabase Auth como provedor de sessão.
 
 | Componente | Implementação |
 |------------|---------------|

@@ -1,11 +1,11 @@
-# EcoPet Design System — Etapa 1 (UI Foundation)
+# EccoPet Design System — Etapa 1 (UI Foundation)
 
-Fundação visual premium do EcoPet: tokens, tipografia, marca, componentes-base, loading, motion e acessibilidade.
+Fundação visual premium do EccoPet: tokens, tipografia, marca, componentes-base, loading, motion e acessibilidade.
 
 ## Princípios
 
 - **Verde forte** como cor de marca (não amarelo fraco)
-- Wordmark **EcoPet** em `#FFFFFF` sobre fundos escuros/verdes
+- Wordmark **EccoPet** em `#FFFFFF` sobre fundos escuros/verdes
 - Mobile first, contraste adequado, `prefers-reduced-motion`
 - Apenas camada visual — sem mudança de regras de negócio
 
@@ -41,7 +41,7 @@ Fundação visual premium do EcoPet: tokens, tipografia, marca, componentes-base
 ## O que evitar
 
 - Amarelo claro como CTA primário
-- Branco acinzentado/cream no nome EcoPet em fundo escuro
+- Branco acinzentado/cream no nome EccoPet em fundo escuro
 - Gradientes em todos os elementos
 - Emojis como ícones de UI
 - Texto cru “Carregando...” em telas institucionais

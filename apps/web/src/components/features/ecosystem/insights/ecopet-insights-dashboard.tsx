@@ -38,7 +38,7 @@ export function EcoPetInsightsDashboard({ scope = "network" }: EcoPetInsightsDas
         <div>
           <h3 className="font-display text-lg font-bold">Métricas e Insights</h3>
           <p className="text-sm text-ecopet-gray">
-            {scope === "network" ? "Rede ECOPET completa" : scope === "partner" ? "Seu negócio" : scope === "ngo" ? "Impacto social" : "Sua jornada"}
+            {scope === "network" ? "Rede EccoPet completa" : scope === "partner" ? "Seu negócio" : scope === "ngo" ? "Impacto social" : "Sua jornada"}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -59,7 +59,7 @@ export function EcoPetInsightsDashboard({ scope = "network" }: EcoPetInsightsDas
       <IntegrationMetricsPanel />
 
       <AIInsightsPanel
-        title="IA de Insights ECOPET"
+        title="IA de Insights EccoPet"
         subtitle="Resumo automático, detecção de quedas e oportunidades"
         insights={[]}
       />

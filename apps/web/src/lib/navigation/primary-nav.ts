@@ -1,5 +1,5 @@
 /**
- * Navegação principal EcoPet — única fonte de verdade.
+ * Navegação principal EccoPet — única fonte de verdade.
  * Desktop público e mobile público usam recortes diferentes da mesma tabela.
  * CLIENT / PARTNER / ONG mantêm o atalho operacional de 5 itens.
  */

@@ -109,7 +109,7 @@ export function IoTDashboard() {
   if (!user || !token) {
     return (
       <>
-        <AppHeader title="IoT ECOPET" />
+        <AppHeader title="IoT EccoPet" />
         <main className="mx-auto max-w-6xl flex-1 p-6 text-center text-sm text-ecopet-gray">
           Entre na sua conta para gerenciar dispositivos IoT do pet.
         </main>
@@ -119,7 +119,7 @@ export function IoTDashboard() {
 
   return (
     <>
-      <AppHeader title="IoT ECOPET" />
+      <AppHeader title="IoT EccoPet" />
       <main className="relative mx-auto max-w-6xl flex-1 p-4 lg:p-6 space-y-6">
         <EcopetWatermark />
 

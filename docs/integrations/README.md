@@ -1,4 +1,4 @@
-# Integrações EcoPet — índice
+# Integrações EccoPet — índice
 
 Este diretório documenta como ativar provedores externos **somente com variáveis de ambiente**, sem hardcode de secrets.
 

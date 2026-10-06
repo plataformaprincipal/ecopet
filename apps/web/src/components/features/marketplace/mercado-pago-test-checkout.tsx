@@ -471,7 +471,7 @@ export function MercadoPagoTestCheckout({ orderId, amount, payerEmail, onPaid }:
             </select>
           </div>
           <p className="text-xs text-muted-foreground">
-            Use um cartão de teste do Mercado Pago. O EcoPet não armazena número nem CVV.
+            Use um cartão de teste do Mercado Pago. O EccoPet não armazena número nem CVV.
           </p>
           <Button type="submit" disabled={submitting} className="w-full">
             {submitting ? "Processando teste…" : `Pagar teste R$ ${amount.toFixed(2)}`}

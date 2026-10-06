@@ -1,4 +1,4 @@
-# EcoPet — Camada de Eventos GA4
+# EccoPet — Camada de Eventos GA4
 
 Catálogo enterprise em `apps/web/src/lib/analytics/events/`.
 

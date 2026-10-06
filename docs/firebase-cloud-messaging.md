@@ -1,4 +1,4 @@
-# Firebase Cloud Messaging (EcoPet)
+# Firebase Cloud Messaging (EccoPet)
 
 Integração FCM Web de ponta a ponta: cliente, service worker, Admin SDK (HTTP v1), banco, preferências, orquestrador de canais e painel admin.
 
@@ -11,7 +11,7 @@ Browser (Firebase Web SDK)
   → POST /api/notifications/push/register (sessão)
   → PushDevice (token cifrado + hash)
 
-Evento EcoPet
+Evento EccoPet
   → createInternalNotification / dispatchNotification
   → canais: IN_APP + PUSH (+ e-mail se habilitado)
   → sendPushToUser (Firebase Admin)
@@ -21,7 +21,7 @@ Background: public/firebase-messaging-sw.js
 Foreground: ForegroundNotificationListener (toast acessível)
 ```
 
-Firebase Authentication **não** é utilizado. A autenticação do EcoPet permanece a atual.
+Firebase Authentication **não** é utilizado. A autenticação do EccoPet permanece a atual.
 
 ## Variáveis (somente nomes)
 

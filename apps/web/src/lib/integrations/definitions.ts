@@ -271,7 +271,7 @@ export const INTEGRATION_DEFINITIONS: IntegrationDefinition[] = [
         ? "GTM configurado (dataLayer namespaced + Consent Mode v2)."
         : "NEXT_PUBLIC_GTM_ID ausente ou inválido.",
     recommendedAction:
-      "Defina NEXT_PUBLIC_GTM_ID=GTM-XXXX. Não duplique tags GA4 no container se o EcoPet já envia via gtag.",
+      "Defina NEXT_PUBLIC_GTM_ID=GTM-XXXX. Não duplique tags GA4 no container se o EccoPet já envia via gtag.",
   },
   {
     name: "mapbox",

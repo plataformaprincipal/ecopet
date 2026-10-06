@@ -1,5 +1,5 @@
 /**
- * Testes de cadastro de parceiro EcoPet — autônomo, corporativo e documentos legais.
+ * Testes de cadastro de parceiro EccoPet — autônomo, corporativo e documentos legais.
  */
 import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
@@ -109,7 +109,7 @@ function basePartnerPayload(ts, overrides = {}) {
 
 async function main() {
   const ts = Date.now();
-  console.log("=== EcoPet Partner Registration Tests ===\n");
+  console.log("=== EccoPet Partner Registration Tests ===\n");
 
   const health = await req("/api/health");
   assert(health.status === 200, "health 200");
@@ -468,7 +468,7 @@ async function main() {
   assert(!clientFormSrc.includes("PARTNER_LEGAL"), "cadastro cliente não referencia PARTNER_LEGAL");
   assert(!registerFormSrc.includes("/legal/parceiro/termos"), "form ONG/legado não exibe termos parceiro");
   assert(legalLinksSrc.includes("ONG_LEGAL"), "estrutura ONG preparada");
-  assert(partnerTermsContent.includes("Termos de Uso e de Parceria do Parceiro EcoPet"), "título termos parceiro");
+  assert(partnerTermsContent.includes("Termos de Uso e de Parceria do Parceiro EccoPet"), "título termos parceiro");
   assert(!partnerTermsContent.includes("tutores ou responsáveis"), "termos parceiro não reutilizam texto cliente");
   assert(clientTermsContent.includes("Clientes (tutores"), "termos cliente permanecem separados");
   assert(
@@ -479,11 +479,11 @@ async function main() {
 
   const partnerTermsPage = await reqHtml("/legal/parceiro/termos");
   assert(partnerTermsPage.status === 200, "página termos parceiro carrega");
-  assert(partnerTermsPage.text.includes("Parceiro EcoPet"), "termos parceiro identificados");
+  assert(partnerTermsPage.text.includes("Parceiro EccoPet"), "termos parceiro identificados");
   assert(partnerTermsPage.text.includes("Objeto da parceria"), "conteúdo termos parceiro");
   const partnerPrivacyPage = await reqHtml("/legal/parceiro/privacidade");
   assert(partnerPrivacyPage.status === 200, "página privacidade parceiro carrega");
-  assert(partnerPrivacyPage.text.includes("Política de Privacidade do Parceiro EcoPet") || partnerPrivacyPage.text.includes("Parceiro EcoPet"), "conteúdo privacidade parceiro");
+  assert(partnerPrivacyPage.text.includes("Política de Privacidade do Parceiro EccoPet") || partnerPrivacyPage.text.includes("Parceiro EccoPet"), "conteúdo privacidade parceiro");
   assert(partnerPrivacyPage.text.includes("LGPD"), "privacidade parceiro menciona LGPD");
   console.log("[legal] páginas /legal/parceiro/* → 200");
 

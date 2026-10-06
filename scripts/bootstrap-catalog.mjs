@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Bootstrap idempotente do catálogo institucional EcoPet.
+ * Bootstrap idempotente do catálogo institucional EccoPet.
  * Uso: npm run bootstrap:catalog
  */
 import { randomBytes } from "crypto";
@@ -22,7 +22,7 @@ const prisma = new PrismaClient();
 
 const CATALOG_EMAIL = "catalogo@ecopet.local";
 const CATALOG_CNPJ = "11222333000181";
-const CATALOG_BUSINESS = "EcoPet Oficial";
+const CATALOG_BUSINESS = "EccoPet Oficial";
 
 const CATALOG_IMAGE_BASE = "/catalog/ecopet-oficial";
 
@@ -231,7 +231,7 @@ async function ensurePartner(db) {
     create: {
       userId: user.id,
       businessName: CATALOG_BUSINESS,
-      legalName: "EcoPet Plataforma Digital LTDA",
+      legalName: "EccoPet Plataforma Digital LTDA",
       cnpj: CATALOG_CNPJ,
       category: "Plataforma institucional",
       address: "Av. Paulista, 1000",
@@ -239,8 +239,8 @@ async function ensurePartner(db) {
       state: "SP",
       zipCode: "01310-100",
       commercialEmail: CATALOG_EMAIL,
-      responsibleName: "EcoPet",
-      description: "Catálogo oficial operacional da plataforma EcoPet.",
+      responsibleName: "EccoPet",
+      description: "Catálogo oficial operacional da plataforma EccoPet.",
       businessHours: "Segunda a sábado, 08:00 às 18:00",
       verificationStatus: VerificationStatus.APPROVED,
       approvedAt: new Date(),
@@ -249,7 +249,7 @@ async function ensurePartner(db) {
       businessName: CATALOG_BUSINESS,
       verificationStatus: VerificationStatus.APPROVED,
       approvedAt: new Date(),
-      description: "Catálogo oficial operacional da plataforma EcoPet.",
+      description: "Catálogo oficial operacional da plataforma EccoPet.",
       businessHours: "Segunda a sábado, 08:00 às 18:00",
     },
   });
@@ -295,7 +295,7 @@ async function upsertProducts(db, sellerId) {
             partnerId: sellerId,
             delta: product.stock,
             stockAfter: product.stock,
-            reason: "Catálogo inicial EcoPet",
+            reason: "Catálogo inicial EccoPet",
             actorId: sellerId,
           },
         });
@@ -335,7 +335,7 @@ async function upsertServices(db, providerId) {
       modality: ServiceModality.PICKUP_DELIVERY,
       city: "São Paulo",
       state: "SP",
-      serviceLocation: "EcoPet Oficial — São Paulo/SP",
+      serviceLocation: "EccoPet Oficial — São Paulo/SP",
       image: def.imageUrl,
       extraDetails: { catalogKey: def.catalogKey, ...def.extraDetails, imageAlt: def.imageAlt },
       deletedAt: null,
@@ -373,7 +373,7 @@ async function ensureAvailability(db, partnerId) {
 }
 
 async function main() {
-  console.log("=== EcoPet Bootstrap Catálogo ===\n");
+  console.log("=== EccoPet Bootstrap Catálogo ===\n");
 
   const { user } = await ensurePartner(prisma);
   const products = await upsertProducts(prisma, user.id);

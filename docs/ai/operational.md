@@ -1,4 +1,4 @@
-# EcoPet IA — Camada Operacional
+# EccoPet IA — Camada Operacional
 
 Extensão transversal sobre foundation/assistant/modules/enterprise. **Não** é um segundo chatbot.
 

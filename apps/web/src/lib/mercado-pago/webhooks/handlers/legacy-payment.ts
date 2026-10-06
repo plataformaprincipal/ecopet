@@ -101,7 +101,7 @@ export const handleLegacyPaymentWebhook: MpWebhookHandler = async ({ event, norm
       data: {
         issueType: "LEGACY_PAYMENT_ORPHAN",
         severity: "medium",
-        message: `Payment legacy ${resourceId} sem vínculo EcoPet`,
+        message: `Payment legacy ${resourceId} sem vínculo EccoPet`,
         resourceId,
         details: { external_reference: externalRef, source: "PAYMENTS_LEGACY" },
       },

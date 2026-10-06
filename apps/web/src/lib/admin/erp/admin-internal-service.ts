@@ -81,9 +81,9 @@ export async function getAdminEmpresaModule(_filters: GestorFilters): Promise<Re
     tables: [
       {
         id: "company",
-        label: "EcoPet — visão corporativa",
+        label: "EccoPet — visão corporativa",
         rows: [
-          { id: "ecopet", nome: "EcoPet Platform", segmento: "PetTech", usuarios: users, parceiros: partners, ongs },
+          { id: "ecopet", nome: "EccoPet Platform", segmento: "PetTech", usuarios: users, parceiros: partners, ongs },
         ],
       },
       {

@@ -1,17 +1,17 @@
 import type { LegalSection } from "@/components/shared/legal/legal-page-layout";
 
-export const ONG_PRIVACY_TITLE = "Política de Privacidade da ONG EcoPet";
+export const ONG_PRIVACY_TITLE = "Política de Privacidade da ONG EccoPet";
 
 export const ONG_PRIVACY_PREVIEW =
-  "Esta Política descreve exclusivamente como a EcoPet trata dados de ONGs e protetores individuais — CPF, CNPJ, representante legal, contato, endereço, documentos, comprovantes, fotografias, imagens de animais, autenticação, cookies e histórico — em conformidade com a LGPD.";
+  "Esta Política descreve exclusivamente como a EccoPet trata dados de ONGs e protetores individuais — CPF, CNPJ, representante legal, contato, endereço, documentos, comprovantes, fotografias, imagens de animais, autenticação, cookies e histórico — em conformidade com a LGPD.";
 
 export const ONG_PRIVACY_SECTIONS: LegalSection[] = [
   {
     title: "1. Introdução e controlador",
     paragraphs: [
-      "Esta Política de Privacidade da ONG EcoPet («Política») descreve como a EcoPet trata dados pessoais e institucionais de Protetores Individuais e Organizações de Proteção Animal cadastrados na plataforma, em conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018).",
-      "Esta Política é exclusiva para ONGs e protetores individuais e não se confunde com a Política de Privacidade do Cliente EcoPet ou com a Política de Privacidade do Parceiro EcoPet, aplicáveis apenas às respectivas categorias de usuários.",
-      "Para fins da LGPD, a EcoPet atua como controladora dos dados tratados no contexto da colaboração ONG, salvo quando indicado tratamento por operadores ou parceiros tecnológicos contratados.",
+      "Esta Política de Privacidade da ONG EccoPet («Política») descreve como a EccoPet trata dados pessoais e institucionais de Protetores Individuais e Organizações de Proteção Animal cadastrados na plataforma, em conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018).",
+      "Esta Política é exclusiva para ONGs e protetores individuais e não se confunde com a Política de Privacidade do Cliente EccoPet ou com a Política de Privacidade do Parceiro EccoPet, aplicáveis apenas às respectivas categorias de usuários.",
+      "Para fins da LGPD, a EccoPet atua como controladora dos dados tratados no contexto da colaboração ONG, salvo quando indicado tratamento por operadores ou parceiros tecnológicos contratados.",
     ],
   },
   {
@@ -104,14 +104,14 @@ export const ONG_PRIVACY_SECTIONS: LegalSection[] = [
   {
     title: "14. Cookies e tecnologias similares",
     paragraphs: [
-      "Utilizamos cookies e tecnologias similares para manter sessões autenticadas, preferências, segurança e métricas de desempenho. Detalhes adicionais podem constar na Política de Cookies da EcoPet, quando aplicável ao acesso do Colaborador ONG.",
+      "Utilizamos cookies e tecnologias similares para manter sessões autenticadas, preferências, segurança e métricas de desempenho. Detalhes adicionais podem constar na Política de Cookies da EccoPet, quando aplicável ao acesso do Colaborador ONG.",
     ],
   },
   {
     title: "15. Segurança",
     paragraphs: [
       "Adotamos medidas técnicas e organizacionais compatíveis com o estado da técnica, incluindo controle de acesso, criptografia quando apropriado, segregação de ambientes, políticas internas de segurança e monitoramento.",
-      "Nenhum sistema é absolutamente invulnerável; recomendamos que o Colaborador ONG utilize senhas fortes, mantenha credenciais em sigilo e notifique a EcoPet sobre suspeitas de acesso indevido.",
+      "Nenhum sistema é absolutamente invulnerável; recomendamos que o Colaborador ONG utilize senhas fortes, mantenha credenciais em sigilo e notifique a EccoPet sobre suspeitas de acesso indevido.",
     ],
   },
   {
@@ -136,7 +136,7 @@ export const ONG_PRIVACY_SECTIONS: LegalSection[] = [
   {
     title: "18. Parceiros tecnológicos",
     paragraphs: [
-      "Podemos utilizar serviços de terceiros — como provedores de nuvem, CDN, armazenamento de arquivos, consulta de CEP/CNPJ/CPF, mensageria, hospedagem de imagens e ferramentas antifraude — que tratam dados enquanto operadores, conforme instruções da EcoPet e contratos de proteção de dados.",
+      "Podemos utilizar serviços de terceiros — como provedores de nuvem, CDN, armazenamento de arquivos, consulta de CEP/CNPJ/CPF, mensageria, hospedagem de imagens e ferramentas antifraude — que tratam dados enquanto operadores, conforme instruções da EccoPet e contratos de proteção de dados.",
     ],
   },
   {
@@ -201,7 +201,7 @@ export const ONG_PRIVACY_SECTIONS: LegalSection[] = [
   {
     title: "27. Canal de contato para privacidade",
     paragraphs: [
-      "Dúvidas, solicitações e exercício de direitos relacionados a esta Política podem ser encaminhados ao Encarregado de Proteção de Dados (DPO) da EcoPet pelos canais oficiais indicados na plataforma, pela página de privacidade ou pelo e-mail de privacidade disponibilizado no painel do Colaborador ONG.",
+      "Dúvidas, solicitações e exercício de direitos relacionados a esta Política podem ser encaminhados ao Encarregado de Proteção de Dados (DPO) da EccoPet pelos canais oficiais indicados na plataforma, pela página de privacidade ou pelo e-mail de privacidade disponibilizado no painel do Colaborador ONG.",
     ],
   },
   {

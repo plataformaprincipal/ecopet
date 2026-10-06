@@ -12,7 +12,7 @@
 
 ## Backup
 
-- Dados IA em Postgres (Supabase) — backup/PITR conforme política DB EcoPet
+- Dados IA em Postgres (Supabase) — backup/PITR conforme política DB EccoPet
 - Sem dependência de estado efêmero além de cache in-memory
 
 ## Rollback

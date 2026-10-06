@@ -44,7 +44,7 @@ export function resolveAppUrl(): string {
 export function buildPasswordResetEmailBody(resetLink: string): string {
   return `Olá,
 
-Recebemos uma solicitação para redefinir sua senha na EcoPet.
+Recebemos uma solicitação para redefinir sua senha na EccoPet.
 
 Clique no link abaixo para criar uma nova senha:
 
@@ -54,7 +54,7 @@ Este link expira em 30 minutos.
 
 Se você não solicitou essa alteração, ignore este e-mail.
 
-Equipe EcoPet`;
+Equipe EccoPet`;
 }
 
 export function buildPasswordResetEmailHtml(resetLink: string): string {
@@ -63,12 +63,12 @@ export function buildPasswordResetEmailHtml(resetLink: string): string {
 <html lang="pt-BR">
 <body style="font-family:system-ui,sans-serif;color:#102015;line-height:1.6">
 <p>Olá,</p>
-<p>Recebemos uma solicitação para redefinir sua senha na EcoPet.</p>
+<p>Recebemos uma solicitação para redefinir sua senha na EccoPet.</p>
 <p><a href="${escaped}" style="color:#0f5a2a;font-weight:600">Clique aqui para criar uma nova senha</a></p>
 <p style="word-break:break-all;font-size:14px;color:#4a4a5a">${escaped}</p>
 <p>Este link expira em 30 minutos.</p>
 <p>Se você não solicitou essa alteração, ignore este e-mail.</p>
-<p>Equipe EcoPet</p>
+<p>Equipe EccoPet</p>
 </body>
 </html>`;
 }

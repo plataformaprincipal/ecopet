@@ -99,7 +99,7 @@ export function PartnerMarketplacePage() {
     <div className="space-y-6">
       <PartnerPageHeader
         title="Vitrine e Marketplace"
-        description="Gerencie seus produtos cadastrados e explore o catálogo oficial EcoPet disponível para parceiros."
+        description="Gerencie seus produtos cadastrados e explore o catálogo oficial EccoPet disponível para parceiros."
         actions={
           <Button asChild size="sm" className="gap-2">
             <Link href="/dashboard/partner/products/new">
@@ -113,7 +113,7 @@ export function PartnerMarketplacePage() {
       <div className="inline-flex rounded-xl border border-zinc-200/80 bg-white p-1 shadow-sm dark:border-white/10 dark:bg-card">
         {[
           { key: "mine" as const, label: "Meus produtos" },
-          { key: "platform" as const, label: "Produtos EcoPet" },
+          { key: "platform" as const, label: "Produtos EccoPet" },
         ].map(({ key, label }) => (
           <button
             key={key}
@@ -135,7 +135,7 @@ export function PartnerMarketplacePage() {
       ) : products.length === 0 ? (
         <PartnerEmptyState
           icon={Package}
-          title={tab === "mine" ? "Nenhum produto cadastrado" : "Catálogo EcoPet vazio"}
+          title={tab === "mine" ? "Nenhum produto cadastrado" : "Catálogo EccoPet vazio"}
           description={
             tab === "mine"
               ? "Cadastre seu primeiro produto para exibir na vitrine do marketplace."

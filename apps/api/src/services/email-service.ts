@@ -85,7 +85,7 @@ export async function sendMasterAdminConfirmationEmail(params: {
   const now = new Date();
   const body = `Olá ${params.name},
 
-Sua conta de Super Administrador Master ECOPET foi criada com sucesso.
+Sua conta de Super Administrador Master EccoPet foi criada com sucesso.
 
 Data: ${now.toLocaleDateString("pt-BR")}
 Hora: ${now.toLocaleTimeString("pt-BR")}
@@ -97,11 +97,11 @@ IMPORTANTE — Segurança:
 • Utilize senha forte e exclusiva
 • O usuário temporário de ativação (gestorveras) foi permanentemente desativado
 
-Equipe ECOPET`;
+Equipe EccoPet`;
 
   return sendEmail({
     to: params.email,
-    subject: "Confirmação — Super Administrador Master ECOPET",
+    subject: "Confirmação — Super Administrador Master EccoPet",
     body,
     metadata: { type: "master_admin_confirmation" },
   });
@@ -110,17 +110,17 @@ Equipe ECOPET`;
 export async function sendPasswordChangeCodeEmail(email: string, name: string, code: string) {
   const body = `Olá ${name},
 
-Seu código de confirmação para alteração de senha ECOPET é:
+Seu código de confirmação para alteração de senha EccoPet é:
 
 ${code}
 
 Este código expira em 15 minutos. Se você não solicitou esta alteração, ignore este e-mail.
 
-Equipe ECOPET`;
+Equipe EccoPet`;
 
   return sendEmail({
     to: email,
-    subject: "Código de confirmação — Alteração de senha ECOPET",
+    subject: "Código de confirmação — Alteração de senha EccoPet",
     body,
     metadata: { type: "password_change_code" },
   });
@@ -134,18 +134,18 @@ export async function sendInternalUserInviteEmail(params: {
 }) {
   const body = `Olá ${params.name},
 
-Você foi convidado(a) para a equipe Gestor ECOPET.
+Você foi convidado(a) para a equipe Gestor EccoPet.
 
 Usuário: ${params.username}
 Senha temporária: ${params.tempPassword}
 
 Acesse o sistema e altere sua senha no primeiro login.
 
-Equipe ECOPET`;
+Equipe EccoPet`;
 
   return sendEmail({
     to: params.email,
-    subject: "Convite — Equipe Gestor ECOPET",
+    subject: "Convite — Equipe Gestor EccoPet",
     body,
     metadata: { type: "internal_user_invite", username: params.username },
   });
@@ -161,7 +161,7 @@ export async function sendPasswordResetEmail(params: { email: string; resetLink:
 
   return sendEmail({
     to: params.email,
-    subject: "Redefinição de senha — EcoPet",
+    subject: "Redefinição de senha — EccoPet",
     body,
     html,
     metadata: { type: "password_reset" },

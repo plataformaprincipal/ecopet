@@ -3,14 +3,14 @@ import { LegalPageLayout } from "@/components/shared/legal/legal-page-layout";
 
 export const metadata: Metadata = {
   title: "Política de Privacidade",
-  description: "Política de Privacidade e proteção de dados da ECOPET.",
+  description: "Política de Privacidade e proteção de dados da EccoPet.",
 };
 
 const SECTIONS = [
   {
     title: "1. Introdução",
     paragraphs: [
-      "A ECOPET respeita a privacidade de seus usuários e trata dados pessoais em conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018).",
+      "A EccoPet respeita a privacidade de seus usuários e trata dados pessoais em conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018).",
     ],
   },
   {
@@ -30,7 +30,7 @@ const SECTIONS = [
   {
     title: "5. Prevenção a bots (Turnstile) — nota técnica",
     paragraphs: [
-      "Para prevenir spam e abuso, formulários públicos e fluxos de autenticação de risco podem utilizar o Cloudflare Turnstile. O desafio envia um token de verificação ao provedor; a Secret Key permanece apenas no servidor. O EcoPet não armazena o token e registra apenas métricas sanitizadas (resultado, action, hostname, códigos de erro). [Revisão jurídica recomendada antes de tratar este parágrafo como cláusula contratual definitiva.]",
+      "Para prevenir spam e abuso, formulários públicos e fluxos de autenticação de risco podem utilizar o Cloudflare Turnstile. O desafio envia um token de verificação ao provedor; a Secret Key permanece apenas no servidor. O EccoPet não armazena o token e registra apenas métricas sanitizadas (resultado, action, hostname, códigos de erro). [Revisão jurídica recomendada antes de tratar este parágrafo como cláusula contratual definitiva.]",
     ],
   },
 ];

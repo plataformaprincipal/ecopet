@@ -4,7 +4,7 @@ import { LegalPageLayout } from "@/components/shared/legal/legal-page-layout";
 
 export const metadata: Metadata = {
   title: "LGPD — Direitos do Titular",
-  description: "Como exercer seus direitos na ECOPET conforme a LGPD.",
+  description: "Como exercer seus direitos na EccoPet conforme a LGPD.",
 };
 
 const SECTIONS = [

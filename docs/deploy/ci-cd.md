@@ -1,4 +1,4 @@
-# CI/CD — EcoPet
+# CI/CD — EccoPet
 
 ## Workflow
 

@@ -48,7 +48,7 @@ export async function buildMyPetAiSummary(userId: string): Promise<MyPetAiSummar
   ];
 
   const safetyNotices = [
-    "A EcoPet IA não diagnostica, não prescreve e não substitui atendimento veterinário.",
+    "A EccoPet IA não diagnostica, não prescreve e não substitui atendimento veterinário.",
     "Em emergência (dificuldade respiratória, convulsão, trauma, intoxicação), busque atendimento imediato.",
     "Dados médicos integrais não são enviados à OpenAI; apenas resumos mínimos autorizados.",
   ];

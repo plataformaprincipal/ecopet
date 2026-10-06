@@ -39,12 +39,12 @@ export function AgroHomeContent() {
     <div className="space-y-8">
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-ecopet-dark via-[#1a4d32] to-ecopet-green p-6 text-white lg:p-10">
         <div className="relative z-10 max-w-2xl">
-          <p className="text-sm font-semibold text-ecopet-yellow">ECOPET Agro Inteligente</p>
+          <p className="text-sm font-semibold text-ecopet-yellow">EccoPet Agro Inteligente</p>
           <h1 className="mt-2 font-display text-2xl font-bold lg:text-4xl">
             Agricultura de precisão com IA, IoT, robôs e drones
           </h1>
           <p className="mt-3 text-sm text-white/80">
-            Plataforma integrada de monitoramento, automação, análise preditiva e gestão produtiva — conectada ao ecossistema ECOPET.
+            Plataforma integrada de monitoramento, automação, análise preditiva e gestão produtiva — conectada ao ecossistema EccoPet.
           </p>
           <div className="mt-6 flex flex-wrap gap-2">
             <Link href="/agro/dashboard"><Button variant="secondary">Abrir Dashboard</Button></Link>

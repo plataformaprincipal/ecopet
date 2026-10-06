@@ -15,7 +15,7 @@
         "cmd":  "test:no-mocks",
         "code":  0,
         "ms":  2081,
-        "tail":  " | === EcoPet ÔÇö test:no-mocks === |  | Ô£ô nenhum arquivo mock-data no app runtime | Ô£ô tests/fixtures ausente (ok se n├úo houver fixtures) | Ô£ô seed.ts n├úo cria usu├írios/pets/produtos/posts/notifica├º├Áes fake |  | 3 passaram, 0 falharam"
+        "tail":  " | === EccoPet ÔÇö test:no-mocks === |  | Ô£ô nenhum arquivo mock-data no app runtime | Ô£ô tests/fixtures ausente (ok se n├úo houver fixtures) | Ô£ô seed.ts n├úo cria usu├írios/pets/produtos/posts/notifica├º├Áes fake |  | 3 passaram, 0 falharam"
     },
     {
         "cmd":  "test:foundation:auth",
@@ -57,7 +57,7 @@
         "cmd":  "test:foundation:notifications",
         "code":  1,
         "ms":  1474,
-        "tail":  " | \u003e ecopet@1.0.0 test:foundation:notifications | \u003e node scripts/test-foundation-notifications.mjs |  | === EcoPet Foundation Notifications Tests === |  | System.Management.Automation.RemoteException | ÔØî CLIENT register: 429 {\"success\":false,\"error\":{\"code\":\"RATE_LIMITED\",\"message\":\"Muitas tentativas de cadastro. Tente novamente mais tarde.\"}}"
+        "tail":  " | \u003e ecopet@1.0.0 test:foundation:notifications | \u003e node scripts/test-foundation-notifications.mjs |  | === EccoPet Foundation Notifications Tests === |  | System.Management.Automation.RemoteException | ÔØî CLIENT register: 429 {\"success\":false,\"error\":{\"code\":\"RATE_LIMITED\",\"message\":\"Muitas tentativas de cadastro. Tente novamente mais tarde.\"}}"
     },
     {
         "cmd":  "test:security",

@@ -1,7 +1,7 @@
 # Segurança TalkJS / mensagens
 
 - Secret Key apenas no servidor
-- Usuário TalkJS = sessão EcoPet (nunca userId arbitrário do body)
+- Usuário TalkJS = sessão EccoPet (nunca userId arbitrário do body)
 - HMAC Identity Verification
 - Webhook: HMAC-SHA256(`timestamp.body`) hex uppercase
 - Produção exige `TALKJS_WEBHOOK_SECRET`

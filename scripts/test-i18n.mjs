@@ -45,7 +45,7 @@ function flatten(obj, prefix = "") {
 
 let failed = 0;
 
-console.log("=== EcoPet — test:i18n ===\n");
+console.log("=== EccoPet — test:i18n ===\n");
 
 const localeFiles = ["pt-BR.json", "en.json", "es.json"];
 const flats = {};

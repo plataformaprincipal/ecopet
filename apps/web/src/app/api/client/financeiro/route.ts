@@ -84,6 +84,6 @@ export async function GET() {
     disputes,
     shipments,
     subscriptionsNote:
-      "Assinaturas Mercado Pago não estão ativas no EcoPet. Nenhuma cobrança recorrente.",
+      "Assinaturas Mercado Pago não estão ativas no EccoPet. Nenhuma cobrança recorrente.",
   });
 }

@@ -14,7 +14,7 @@ Execute em **preview** ou staging antes de produção. Não substituível por CI
 1. Limpar localStorage (`ecopet.analytics.consent.*`).
 2. Abrir home — banner visível; analytics denied.
 3. Aceitar analytics — `gtag('consent','update')` + espelho GTM.
-4. Negar / só essenciais — EcoPet continua funcional; sem hits analytics.
+4. Negar / só essenciais — EccoPet continua funcional; sem hits analytics.
 5. Revogar via conta (se autenticado) e revalidar.
 
 ## 3. GA4 DebugView
@@ -25,7 +25,7 @@ Execute em **preview** ou staging antes de produção. Não substituível por CI
 4. **purchase** após pagamento aprovado — **uma vez**.
 5. Reload da página de sucesso — **sem segundo purchase**.
 
-## 4. Fluxos EcoPet
+## 4. Fluxos EccoPet
 
 | Fluxo | O que observar |
 |-------|----------------|

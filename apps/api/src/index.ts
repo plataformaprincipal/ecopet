@@ -229,36 +229,36 @@ async function startServer() {
   try {
     port = await resolveAvailablePort(preferredPort);
   } catch (err) {
-    console.error("[ECOPET API] Falha ao resolver porta:", (err as Error).message);
+    console.error("[EccoPet API] Falha ao resolver porta:", (err as Error).message);
     process.exit(1);
   }
 
   if (port !== preferredPort) {
     console.warn(
-      `[ECOPET API] Porta ${preferredPort} em uso — API iniciando em http://localhost:${port}`
+      `[EccoPet API] Porta ${preferredPort} em uso — API iniciando em http://localhost:${port}`
     );
   }
 
   httpServer.listen(port, async () => {
     writeRuntimePort(port);
-    console.log(`🐾 ECOPET API running on http://localhost:${port}`);
+    console.log(`🐾 EccoPet API running on http://localhost:${port}`);
     console.log(`   Health: http://localhost:${port}/health`);
     console.log(`   Register: POST http://localhost:${port}/api/auth/register`);
     try {
       const { ensureInternalBotsSeeded } = await import("./services/internal-bots-service.js");
       await ensureInternalBotsSeeded();
     } catch (e) {
-      console.warn("[ECOPET] Falha ao inicializar robôs internos:", (e as Error).message);
+      console.warn("[EccoPet] Falha ao inicializar robôs internos:", (e as Error).message);
     }
   });
 
   httpServer.on("error", (err: NodeJS.ErrnoException) => {
     if (err.code === "EADDRINUSE") {
       console.error(
-        `[ECOPET API] Porta ${port} ficou indisponível (EADDRINUSE). Use "npm run dev" na raiz ou defina API_PORT.`
+        `[EccoPet API] Porta ${port} ficou indisponível (EADDRINUSE). Use "npm run dev" na raiz ou defina API_PORT.`
       );
     } else {
-      console.error("[ECOPET API] Erro ao iniciar servidor:", err.message);
+      console.error("[EccoPet API] Erro ao iniciar servidor:", err.message);
     }
     process.exit(1);
   });

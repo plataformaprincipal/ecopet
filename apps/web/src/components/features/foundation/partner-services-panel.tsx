@@ -272,7 +272,7 @@ export function PartnerServicesPanel({ mode = "list", serviceId }: { mode?: "lis
               value={form.image}
               onChange={(url) => setForm({ ...form, image: url })}
               accept="image/jpeg,image/png,image/webp"
-              previewAlt={form.name ? serviceImageAlt(form.name, form.shortDescription) : "Pré-visualização do serviço no catálogo EcoPet"}
+              previewAlt={form.name ? serviceImageAlt(form.name, form.shortDescription) : "Pré-visualização do serviço no catálogo EccoPet"}
               fieldId="service-image-upload"
             />
             {error && <p className="text-sm text-red-600">{error}</p>}

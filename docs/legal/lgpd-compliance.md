@@ -1,4 +1,4 @@
-# LGPD — Conformidade operacional EcoPet
+# LGPD — Conformidade operacional EccoPet
 
 ## Bases legais
 

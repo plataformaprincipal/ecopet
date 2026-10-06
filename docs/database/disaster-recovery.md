@@ -1,4 +1,4 @@
-# Disaster Recovery — EcoPet
+# Disaster Recovery — EccoPet
 
 ## Objetivos
 

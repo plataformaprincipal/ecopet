@@ -1,4 +1,4 @@
-/** Rotas e regras de acesso público/privado — ECOPET Web */
+/** Rotas e regras de acesso público/privado — EccoPet Web */
 
 export const AUTH_ROUTES = [
   "/login",

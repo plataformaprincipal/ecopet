@@ -1,6 +1,6 @@
 {
-  "name": "ECOPET",
-  "short_name": "ECOPET",
+  "name": "EccoPet",
+  "short_name": "EccoPet",
   "description": "Ecossistema inteligente para pets, parceiros, ONGs e AgroPet.",
   "start_url": "/",
   "display": "standalone",

@@ -1,4 +1,4 @@
-# Backup e restore — EcoPet
+# Backup e restore — EccoPet
 
 ## Backup local (desenvolvimento)
 

@@ -90,7 +90,7 @@ function mapCardPayError(message: string) {
 
 /**
  * Checkout Transparente — tokenização no browser (Public Key).
- * Nunca envia PAN/CVV ao backend EcoPet; apenas cardToken.
+ * Nunca envia PAN/CVV ao backend EccoPet; apenas cardToken.
  */
 export function MercadoPagoCheckout({
   orderId: orderIdProp,

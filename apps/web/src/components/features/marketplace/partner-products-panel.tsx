@@ -354,7 +354,7 @@ export function PartnerProductsPanel({ mode = "list", productId }: { mode?: "lis
               value={form.imageUrl}
               onChange={(url) => setForm({ ...form, imageUrl: url })}
               accept="image/jpeg,image/png,image/webp"
-              previewAlt={form.name ? productImageAlt(form.name, { shortDescription: form.shortDescription }) : "Pré-visualização do item no catálogo EcoPet"}
+              previewAlt={form.name ? productImageAlt(form.name, { shortDescription: form.shortDescription }) : "Pré-visualização do item no catálogo EccoPet"}
               fieldId="product-image-upload"
             />
             {error && <p id="product-form-error" className="text-sm text-red-600" role="alert">{error}</p>}

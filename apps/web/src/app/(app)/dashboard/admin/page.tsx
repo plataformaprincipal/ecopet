@@ -17,11 +17,11 @@ export default async function AdminDashboardPage() {
         <FoundationRolePanel
           user={user}
           title="Painel Administrativo"
-          description="Área de administração da plataforma ECOPET."
+          description="Área de administração da plataforma EccoPet."
         />
         <div className="flex flex-wrap gap-3">
           <Button asChild>
-            <Link href="/dashboard/admin/gestor">Gestor EcoPet (BI)</Link>
+            <Link href="/dashboard/admin/gestor">Gestor EccoPet (BI)</Link>
           </Button>
           <Button asChild variant="outline">
             <Link href="/dashboard/admin/gestor/reports">Relatórios</Link>

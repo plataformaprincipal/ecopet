@@ -1,10 +1,10 @@
-# Relatório — Integração VLibras EcoPet (correção definitiva)
+# Relatório — Integração VLibras EccoPet (correção definitiva)
 
 ## Causa raiz (Unity travado na barra de progresso)
 
 ### Problema principal (2026-07)
 
-O loader EcoPet chamava `dispatchSpaLoadEvent()` em loop (poll a cada 500ms) e em toda navegação SPA. Isso reexecutava o `window.onload` registrado pelo plugin oficial gov.br.
+O loader EccoPet chamava `dispatchSpaLoadEvent()` em loop (poll a cada 500ms) e em toda navegação SPA. Isso reexecutava o `window.onload` registrado pelo plugin oficial gov.br.
 
 No código oficial (`vlibras-plugin.js`, módulo 9927), cada `window.onload` chama `m.load([vw-plugin-wrapper])`, que faz **`innerHTML = ...`** no wrapper — **apagando o `#gameContainer` e o canvas Unity enquanto os assets `.unityweb` ainda carregavam**.
 
@@ -92,14 +92,14 @@ Logs esperados no console (dev):
 
 | # | Passo | Como validar |
 |---|-------|--------------|
-| 1 | Abrir EcoPet | `npm run dev` |
+| 1 | Abrir EccoPet | `npm run dev` |
 | 2 | Acionar alavanca Libras | Toolbar a11y → Ativar Libras |
 | 3 | Botão oficial aparece | `[vw-access-button] .vp-access-button` no DevTools |
 | 4 | Clicar no botão | Painel VLibras abre |
 | 5 | Avatar traduz | Selecionar texto na página |
 | 6 | Trocar rota | Avatar continua visível |
 | 7 | Refresh | Widget recarrega (script cacheado) |
-| 8 | Mobile | Botão não fica atrás da FAB EcoPet |
+| 8 | Mobile | Botão não fica atrás da FAB EccoPet |
 
 ---
 
@@ -107,4 +107,4 @@ Logs esperados no console (dev):
 
 **✅ Correção aplicada** — causa raiz identificada e corrigida (reconciliação React vs DOM imperativo).
 
-Validação visual do avatar depende de rede até `vlibras.gov.br` (serviço externo gov.br). Se o gov.br estiver offline, status `unavailable` é esperado — não é bug do EcoPet.
+Validação visual do avatar depende de rede até `vlibras.gov.br` (serviço externo gov.br). Se o gov.br estiver offline, status `unavailable` é esperado — não é bug do EccoPet.

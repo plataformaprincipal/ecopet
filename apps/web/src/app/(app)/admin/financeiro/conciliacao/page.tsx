@@ -55,7 +55,7 @@ export default function AdminFinanceiroConciliacaoPage() {
     <div className="space-y-4 p-4 md:p-6">
       <AdminPageHeader
         title="Conciliação financeira"
-        description="Compara pedidos/pagamentos EcoPet com registros e detecta divergências."
+        description="Compara pedidos/pagamentos EccoPet com registros e detecta divergências."
         breadcrumbs={[
           { label: "Admin", href: "/admin" },
           { label: "Financeiro", href: "/admin/financeiro" },

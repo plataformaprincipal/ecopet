@@ -1,6 +1,6 @@
 /**
  * Templates enterprise adicionais (parceiro/ONG/pedidos/contato/suporte/admin).
- * Reutiliza layout EcoPet existente.
+ * Reutiliza layout EccoPet existente.
  */
 import type { EmailLocale } from "@/lib/email/templates/locale";
 import {
@@ -50,10 +50,10 @@ export function renderPartnerApprovedEmail(
   const url = params.dashboardUrl ?? `${params.appUrl}/parceiro`;
   const subject =
     params.locale === "en"
-      ? "Partner account approved — EcoPet"
+      ? "Partner account approved — EccoPet"
       : params.locale === "es"
-        ? "Cuenta de socio aprobada — EcoPet"
-        : "Parceiro aprovado — EcoPet";
+        ? "Cuenta de socio aprobada — EccoPet"
+        : "Parceiro aprovado — EccoPet";
   const title =
     params.locale === "en" ? "Account approved" : params.locale === "es" ? "Cuenta aprobada" : "Conta aprovada";
   const message =
@@ -84,10 +84,10 @@ export function renderPartnerRejectedEmail(
 ): EmailTemplateResult {
   const subject =
     params.locale === "en"
-      ? "Partner application update — EcoPet"
+      ? "Partner application update — EccoPet"
       : params.locale === "es"
-        ? "Actualización de solicitud — EcoPet"
-        : "Solicitação de parceiro — EcoPet";
+        ? "Actualización de solicitud — EccoPet"
+        : "Solicitação de parceiro — EccoPet";
   const title =
     params.locale === "en" ? "Application not approved" : params.locale === "es" ? "Solicitud no aprobada" : "Solicitação não aprovada";
   const message =
@@ -119,7 +119,7 @@ export function renderOngApprovedEmail(
 ): EmailTemplateResult {
   const url = params.dashboardUrl ?? `${params.appUrl}/ong`;
   const subject =
-    params.locale === "en" ? "NGO account approved — EcoPet" : params.locale === "es" ? "Cuenta ONG aprobada — EcoPet" : "ONG aprovada — EcoPet";
+    params.locale === "en" ? "NGO account approved — EccoPet" : params.locale === "es" ? "Cuenta ONG aprobada — EccoPet" : "ONG aprovada — EccoPet";
   const title =
     params.locale === "en" ? "NGO approved" : params.locale === "es" ? "ONG aprobada" : "ONG aprovada";
   const message =
@@ -149,7 +149,7 @@ export function renderOngRejectedEmail(
   params: NamedParams & { reason: string }
 ): EmailTemplateResult {
   const subject =
-    params.locale === "en" ? "NGO application update — EcoPet" : params.locale === "es" ? "Actualización ONG — EcoPet" : "Solicitação de ONG — EcoPet";
+    params.locale === "en" ? "NGO application update — EccoPet" : params.locale === "es" ? "Actualización ONG — EccoPet" : "Solicitação de ONG — EccoPet";
   const title =
     params.locale === "en" ? "Application not approved" : params.locale === "es" ? "Solicitud no aprobada" : "Solicitação não aprovada";
   const message =
@@ -182,8 +182,8 @@ export function renderOrderUpdatedEmail(
   const url = params.orderUrl ?? `${params.appUrl}/pedidos`;
   const subject =
     params.locale === "en"
-      ? `Order #${params.orderNumber} updated — EcoPet`
-      : `Pedido #${params.orderNumber} atualizado — EcoPet`;
+      ? `Order #${params.orderNumber} updated — EccoPet`
+      : `Pedido #${params.orderNumber} atualizado — EccoPet`;
   const title = params.locale === "en" ? "Order updated" : "Pedido atualizado";
   const message =
     params.locale === "en"
@@ -205,8 +205,8 @@ export function renderOrderShippedEmail(
   const url = params.orderUrl ?? `${params.appUrl}/pedidos`;
   const subject =
     params.locale === "en"
-      ? `Order #${params.orderNumber} shipped — EcoPet`
-      : `Pedido #${params.orderNumber} enviado — EcoPet`;
+      ? `Order #${params.orderNumber} shipped — EccoPet`
+      : `Pedido #${params.orderNumber} enviado — EccoPet`;
   const title = params.locale === "en" ? "Order shipped" : "Pedido enviado";
   const message =
     params.locale === "en"
@@ -232,7 +232,7 @@ export function renderQuoteAvailableEmail(
 ): EmailTemplateResult {
   const url = params.quoteUrl ?? params.appUrl;
   const subject =
-    params.locale === "en" ? "Quote available — EcoPet" : "Orçamento disponível — EcoPet";
+    params.locale === "en" ? "Quote available — EccoPet" : "Orçamento disponível — EccoPet";
   const title = params.locale === "en" ? "Quote available" : "Orçamento disponível";
   const message =
     params.locale === "en"
@@ -254,8 +254,8 @@ export function renderPurchaseConfirmationEmail(
   const url = params.orderUrl ?? `${params.appUrl}/pedidos`;
   const subject =
     params.locale === "en"
-      ? `Purchase confirmed #${params.orderNumber} — EcoPet`
-      : `Compra confirmada #${params.orderNumber} — EcoPet`;
+      ? `Purchase confirmed #${params.orderNumber} — EccoPet`
+      : `Compra confirmada #${params.orderNumber} — EccoPet`;
   const title = params.locale === "en" ? "Purchase confirmed" : "Confirmação de compra";
   const message =
     params.locale === "en"
@@ -308,15 +308,15 @@ export function renderSupportEmail(params: {
 }): EmailTemplateResult {
   const subject =
     params.locale === "en"
-      ? `Support ${params.ticketId ? `#${params.ticketId} ` : ""}— EcoPet`
-      : `Suporte ${params.ticketId ? `#${params.ticketId} ` : ""}— EcoPet`;
+      ? `Support ${params.ticketId ? `#${params.ticketId} ` : ""}— EccoPet`
+      : `Suporte ${params.ticketId ? `#${params.ticketId} ` : ""}— EccoPet`;
   const title = params.locale === "en" ? "Support update" : "Atualização de suporte";
   const body = `
     ${emailTitle(title)}
     ${emailParagraph(greet(params.locale, params.name))}
     ${params.ticketId ? emailInfoRow(params.locale === "en" ? "Ticket" : "Protocolo", escapeHtml(params.ticketId)) : ""}
     ${emailParagraph(escapeHtml(params.message))}
-    ${emailButton(params.locale === "en" ? "Open EcoPet" : "Abrir EcoPet", params.appUrl)}`;
+    ${emailButton(params.locale === "en" ? "Open EccoPet" : "Abrir EccoPet", params.appUrl)}`;
   const text = `${title}\n\n${greet(params.locale, params.name)}\n${params.ticketId ? `Ticket: ${params.ticketId}\n` : ""}${params.message}`;
   return build({ locale: params.locale, appUrl: params.appUrl, previewText: title, subject, text, body });
 }
@@ -328,7 +328,7 @@ export function renderAdminNotificationEmail(params: {
   message: string;
   actionUrl?: string;
 }): EmailTemplateResult {
-  const subject = `${params.title} — EcoPet Admin`;
+  const subject = `${params.title} — EccoPet Admin`;
   const url = params.actionUrl ?? `${params.appUrl}/admin`;
   const body = `
     ${emailTitle(escapeHtml(params.title))}
@@ -350,16 +350,16 @@ export function renderTestEmail(params: {
   appUrl: string;
   recipient: string;
 }): EmailTemplateResult {
-  const subject = "EcoPet — e-mail de teste (Resend)";
+  const subject = "EccoPet — e-mail de teste (Resend)";
   const title = "E-mail de teste";
   const message =
-    "Este é um e-mail de teste do painel administrativo EcoPet. Se você recebeu esta mensagem, a integração Resend está operacional.";
+    "Este é um e-mail de teste do painel administrativo EccoPet. Se você recebeu esta mensagem, a integração Resend está operacional.";
   const body = `
     ${emailTitle(title)}
     ${emailParagraph(message)}
     ${emailInfoRow("Destinatário", escapeHtml(params.recipient))}
     ${emailMuted("Nenhuma ação é necessária.")}
-    ${emailButton("Abrir EcoPet", params.appUrl)}`;
+    ${emailButton("Abrir EccoPet", params.appUrl)}`;
   const text = `${title}\n\n${message}\nDestinatário: ${params.recipient}`;
   return build({ locale: params.locale, appUrl: params.appUrl, previewText: title, subject, text, body });
 }

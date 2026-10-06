@@ -7,7 +7,7 @@ import type { TranslationKey } from "@/lib/i18n/types";
 
 export type RegisterRole = "CLIENT" | "PARTNER" | "ONG";
 
-export const REGISTER_ROLE_REQUIRED_MESSAGE = "Escolha como você deseja usar a EcoPet.";
+export const REGISTER_ROLE_REQUIRED_MESSAGE = "Escolha como você deseja usar a EccoPet.";
 
 const ROLE_OPTIONS: {
   value: RegisterRole;

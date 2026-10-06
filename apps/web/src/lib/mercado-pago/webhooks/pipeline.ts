@@ -265,7 +265,7 @@ export async function runMercadoPagoWebhookPipeline(params: {
     signatureValid: true,
   };
 
-  // Ambiente: rejeitar live_mode=true quando EcoPet está em test (e vice-versa soft)
+  // Ambiente: rejeitar live_mode=true quando EccoPet está em test (e vice-versa soft)
   const env = getMercadoPagoEnvironment();
   if (normalized.parsed.liveMode === true && env === "test") {
     // Aceita registro mas marca IGNORED — não altera financeiro produtivo

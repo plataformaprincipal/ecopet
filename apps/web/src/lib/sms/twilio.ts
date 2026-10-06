@@ -51,7 +51,7 @@ function logDevError(prefix: string, message: string, detail?: unknown) {
 }
 
 export function formatRecoveryOtpSmsBody(code: string): string {
-  return `Seu código EcoPet é: ${code}. Ele expira em 10 minutos.`;
+  return `Seu código EccoPet é: ${code}. Ele expira em 10 minutos.`;
 }
 
 /**

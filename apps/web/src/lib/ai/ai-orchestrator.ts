@@ -78,7 +78,7 @@ const MODULE_TO_AGENT: Partial<Record<AiModule, AiAgentId>> = {
 };
 
 /**
- * Orquestrador central EcoPet AI.
+ * Orquestrador central EccoPet AI.
  * Minimização de dados · permissões · moderação · limites · auditoria.
  */
 export async function runEcoPetAI(params: RunEcoPetAIInput): Promise<RunEcoPetAIResult> {

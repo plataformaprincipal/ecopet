@@ -1,4 +1,4 @@
-# Google Analytics 4 (EcoPet)
+# Google Analytics 4 (EccoPet)
 
 Integração enterprise via `apps/web/src/lib/analytics` + `GoogleAnalyticsProvider` no App Router.
 
@@ -47,7 +47,7 @@ track(AnalyticsEvents.LOGIN, { method: "credentials" });
 
 ## Banco
 
-Sem tabelas Prisma novas — eventos ficam no Google Analytics. EcoPet só expõe diagnóstico sanitizado.
+Sem tabelas Prisma novas — eventos ficam no Google Analytics. EccoPet só expõe diagnóstico sanitizado.
 
 ## Produção (checklist)
 

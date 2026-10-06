@@ -173,7 +173,7 @@ export async function findOrCreateEcopetSupport(userId: string) {
 
   return createConversation({
     type: "CLIENT_ECOPET",
-    title: "Suporte ECOPET",
+    title: "Suporte EccoPet",
     participantIds: supportIds,
     creatorId: userId,
   });

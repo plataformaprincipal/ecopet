@@ -136,7 +136,7 @@ async function main() {
   const ts = Date.now();
   const password = "Ecopet@Forte2026";
 
-  console.log("=== EcoPet Foundation Auth Tests ===\n");
+  console.log("=== EccoPet Foundation Auth Tests ===\n");
 
   // 1. Health
   const health = await req("/api/health");
@@ -401,12 +401,12 @@ async function main() {
       clientRegisterBody(ts + 70, {
         email: `pwd.at.${ts}@test.ecopet.local`,
         username: `pwdat${String(ts + 70).slice(-8)}`,
-        password: "EcoPet@2026",
-        confirmPassword: "EcoPet@2026",
+        password: "EccoPet@2026",
+        confirmPassword: "EccoPet@2026",
       })
     ),
   });
-  assert(pwdAtOk.status === 201, "senha EcoPet@2026 → 201");
+  assert(pwdAtOk.status === 201, "senha EccoPet@2026 → 201");
 
   const pwdNoUpper = await req("/api/auth/register", {
     method: "POST",

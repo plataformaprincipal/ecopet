@@ -26,7 +26,7 @@ export function GestorDashboard() {
 
   const cards = [
     { label: "Receita total", value: formatMpPrice(data.revenue.total), icon: TrendingUp, variant: "success" as const },
-    { label: "Saldo ECOPET", value: formatMpPrice(data.wallet?.totalBalance ?? 0), icon: TrendingUp },
+    { label: "Saldo EccoPet", value: formatMpPrice(data.wallet?.totalBalance ?? 0), icon: TrendingUp },
     { label: "Usuários", value: data.users.total, trend: `+${data.users.newThisWeek} esta semana`, icon: Users },
     { label: "Clientes ativos", value: data.users.activeClients ?? 0, icon: Users },
     { label: "Parceiros ativos", value: data.partners.active, icon: Users },
@@ -49,13 +49,13 @@ export function GestorDashboard() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <AIInsightsPanel
-          title="IA ECOPET — Insights automáticos"
+          title="IA EccoPet — Insights automáticos"
           subtitle="Análise operacional em tempo real"
           insights={data.aiInsights.map((i) => ({
             id: i.id,
             tag: i.tag,
             title: i.title,
-            description: i.description ?? "Gerado automaticamente pelo motor de inteligência ECOPET",
+            description: i.description ?? "Gerado automaticamente pelo motor de inteligência EccoPet",
             priority: i.priority as "low" | "medium" | "high",
           }))}
         />

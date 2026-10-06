@@ -1,4 +1,4 @@
-# Observabilidade EcoPet — Better Stack
+# Observabilidade EccoPet — Better Stack
 
 ## Decisão
 

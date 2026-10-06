@@ -2,7 +2,7 @@
   "name": "ecopet",
   "version": "1.0.0",
   "private": true,
-  "description": "ECOPET — Ecossistema pet inteligente: marketplace, rede social, healthtech e IA",
+  "description": "EccoPet — Ecossistema pet inteligente: marketplace, rede social, healthtech e IA",
   "workspaces": [
     "apps/*",
     "packages/*"

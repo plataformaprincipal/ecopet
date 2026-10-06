@@ -1,5 +1,5 @@
 /**
- * Módulos de domínio EcoPet.
+ * Módulos de domínio EccoPet.
  * Lógica de negócio permanece em lib/; este índice documenta os domínios ativos.
  */
 export const ECOPET_MODULES = [

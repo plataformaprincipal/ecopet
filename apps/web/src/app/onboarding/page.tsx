@@ -9,7 +9,7 @@ import { PawPrint, Sparkles, ShoppingBag } from "lucide-react";
 
 const steps = [
   { icon: PawPrint, title: "Cadastre seus pets", desc: "Prontuário, vacinas e evolução em um só lugar." },
-  { icon: Sparkles, title: "Conheça a IA ECOPET", desc: "Triagem, nutrição e lembretes inteligentes." },
+  { icon: Sparkles, title: "Conheça a IA EccoPet", desc: "Triagem, nutrição e lembretes inteligentes." },
   { icon: ShoppingBag, title: "Explore o marketplace", desc: "Produtos e serviços com entrega e avaliações." },
 ];
 

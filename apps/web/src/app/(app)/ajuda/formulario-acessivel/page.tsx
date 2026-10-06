@@ -3,7 +3,7 @@ import Image from "next/image";
 import { AccessibleFormDemo } from "@/components/shared/accessibility/accessible-form-demo";
 
 export const metadata = {
-  title: "Formulário acessível — EcoPet",
+  title: "Formulário acessível — EccoPet",
   description: "Demonstração de formulário HTML acessível e uso do atributo alt em imagens.",
 };
 
@@ -18,8 +18,7 @@ export default function FormularioAcessivelPage() {
           <code>alt</code> descritivo. Não grava dados no banco.
         </p>
         <p className="mt-2 text-sm">
-          Consulte o arquivo <code>docs/AJUDA_ECOPET.md</code> na raiz do projeto para documentação
-          completa de uso e acessibilidade.
+          Consulte a documentação de ajuda da EccoPet para uso e acessibilidade.
         </p>
       </header>
 
@@ -30,7 +29,7 @@ export default function FormularioAcessivelPage() {
         <div className="relative aspect-video max-w-md overflow-hidden rounded-lg border">
           <Image
             src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=800"
-            alt="Cachorro e gato representando o ecossistema EcoPet"
+            alt="Cachorro e gato representando o ecossistema EccoPet"
             fill
             className="object-cover"
             sizes="(max-width: 768px) 100vw, 400px"

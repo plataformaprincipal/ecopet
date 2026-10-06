@@ -7,6 +7,7 @@ import { enqueueJob } from "@/lib/jobs/job-queue";
 import { runOrchestrator } from "@/lib/ai/orchestrator";
 import { isAIProviderConfigured } from "@/lib/ai/provider";
 import type { WorkflowAction } from "./workflow-types";
+import { BRAND } from "@/lib/constants";
 
 export async function executeWorkflowAction(
   instanceId: string,
@@ -37,7 +38,7 @@ export async function executeWorkflowAction(
           await createNotification({
             userId,
             type: "SYSTEM",
-            title: String(action.config?.title ?? "Notificação EcoPet"),
+            title: String(action.config?.title ?? "Notificação EccoPet"),
             message: String(action.config?.message ?? message),
             metadata: { workflowInstanceId: instanceId, ...action.config },
           });
@@ -61,7 +62,7 @@ export async function executeWorkflowAction(
           await sendPlatformEmail({
             event: "ORDER_CONFIRMED",
             to,
-            subject: String(action.config?.subject ?? "EcoPet"),
+            subject: String(action.config?.subject ?? BRAND.name),
             text: String(action.config?.text ?? message),
             html: String(action.config?.html ?? `<p>${message}</p>`),
           }).catch(() => undefined);

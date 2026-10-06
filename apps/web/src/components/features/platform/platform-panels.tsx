@@ -28,7 +28,7 @@ export function InsightsList({ insights }: { insights: Insight[] }) {
   if (!insights?.length) return null;
   return (
     <Card className="card-premium border-ecopet-green/20">
-      <CardHeader><CardTitle className="text-base">EcoPet Intelligence</CardTitle></CardHeader>
+      <CardHeader><CardTitle className="text-base">EccoPet Intelligence</CardTitle></CardHeader>
       <CardContent className="space-y-2">
         {insights.map((i, idx) => (
           <div key={idx} className="rounded-xl border border-ecopet-gray/10 p-3 text-sm">

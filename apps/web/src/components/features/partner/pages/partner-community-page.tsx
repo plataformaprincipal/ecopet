@@ -22,7 +22,7 @@ export function PartnerCommunityPage({ partnerId, accessLevel }: PartnerCommunit
   return (
     <div className="space-y-6">
       <PartnerPageHeader
-        title="Comunidade EcoPet"
+        title="Comunidade EccoPet"
         description="Feed do ecossistema pet. Conecte-se com clientes, ONGs e parceiros — publique, comente, curta, salve e compartilhe."
         actions={
           canPublish ? (

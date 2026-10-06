@@ -4,7 +4,7 @@ import { ObservabilityPanel } from "@/components/features/platform/gestor-center
 export default function GestorObservabilityPage() {
   return (
     <>
-      <GestorPageHeader title="Observabilidade" description="Monitoramento técnico da plataforma ECOPET" />
+      <GestorPageHeader title="Observabilidade" description="Monitoramento técnico da plataforma EccoPet" />
       <ObservabilityPanel />
     </>
   );

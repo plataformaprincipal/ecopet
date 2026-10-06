@@ -8,7 +8,7 @@ export default function GestorChangePasswordPage() {
     <>
       <GestorPageHeader
         title="Primeiro Acesso — Segurança"
-        description="Defina sua nova senha para acessar o painel Gestor ECOPET"
+        description="Defina sua nova senha para acessar o painel Gestor EccoPet"
       />
       <GestorChangePasswordForm />
     </>

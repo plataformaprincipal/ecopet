@@ -1,4 +1,4 @@
-# Checklist de Produção — IA EcoPet
+# Checklist de Produção — IA EccoPet
 
 ## Evidências obrigatórias
 
@@ -16,7 +16,7 @@
 | Dashboard | `/admin/ai` + `/admin/ai/executive` |
 | Migration | `20260720020000_*` + `20260720030000_*` aplicadas |
 
-## Integrações EcoPet (não quebradas)
+## Integrações EccoPet (não quebradas)
 
 Marketplace, Meu Pet, Agenda, Parceiros, ONGs, Social, Carrinho, Pedidos, Cloudinary, Firebase, Maps, Mercado Pago, GA/GTM, TalkJS, Resend — regras de negócio intocadas.
 

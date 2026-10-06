@@ -19,7 +19,7 @@ export function SmartRecommendations({ recommendations, title = "Recomendados pe
       <div className="mb-4 flex items-center gap-2">
         <Sparkles className="h-5 w-5 text-ecopet-yellow" />
         <h2 className="font-display text-lg font-bold">{title}</h2>
-        <Badge variant="premium">IA ECOPET</Badge>
+        <Badge variant="premium">IA EccoPet</Badge>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {recommendations.map((rec) => (

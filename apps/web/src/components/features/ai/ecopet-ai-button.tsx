@@ -8,7 +8,7 @@ type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
   label?: string;
 };
 
-export function EcoPetAIButton({ loading, label = "EcoPet AI", children, className, disabled, ...rest }: Props) {
+export function EcoPetAIButton({ loading, label = "EccoPet AI", children, className, disabled, ...rest }: Props) {
   return (
     <button
       type="button"

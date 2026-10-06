@@ -3,13 +3,13 @@ import { LegalPageLayout } from "@/components/shared/legal/legal-page-layout";
 
 export const metadata: Metadata = {
   title: "Termos de Uso",
-  description: "Termos de Uso da plataforma ECOPET.",
+  description: "Termos de Uso da plataforma EccoPet.",
 };
 
 const SECTIONS = [
   {
     title: "1. Aceite",
-    paragraphs: ["Ao utilizar a ECOPET, você concorda com estes Termos e com a Política de Privacidade."],
+    paragraphs: ["Ao utilizar a EccoPet, você concorda com estes Termos e com a Política de Privacidade."],
   },
   {
     title: "2. Contas e perfis",
@@ -25,7 +25,7 @@ const SECTIONS = [
   },
   {
     title: "4. Suspensão",
-    paragraphs: ["A ECOPET pode suspender contas em caso de violação destes Termos ou risco à comunidade."],
+    paragraphs: ["A EccoPet pode suspender contas em caso de violação destes Termos ou risco à comunidade."],
   },
 ];
 

@@ -5,7 +5,7 @@ import { seedOfficialPricing } from "./seed-pricing.js";
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🌱 EcoPet seed — banco inicia sem dados fictícios de demonstração.");
+  console.log("🌱 EccoPet seed — banco inicia sem dados fictícios de demonstração.");
   await seedRbac(prisma);
   console.log("✅ RBAC estrutural aplicado (sem usuários, pets, produtos ou posts fake).");
   const pricing = await seedOfficialPricing(prisma);

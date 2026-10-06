@@ -85,7 +85,7 @@ export function GestorPermissionsPanel() {
       </Card>
 
       <section>
-        <h3 className="mb-3 font-display font-bold">Usuários internos ECOPET</h3>
+        <h3 className="mb-3 font-display font-bold">Usuários internos EccoPet</h3>
         <div className="space-y-2">
           {users.map((u) => (
             <div key={u.id} className="flex items-center justify-between rounded-xl border p-3 text-sm">

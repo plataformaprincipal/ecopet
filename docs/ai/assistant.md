@@ -1,4 +1,4 @@
-# Assistente Virtual EcoPet
+# Assistente Virtual EccoPet
 
 Produto: `/eccopet` (`EccoPetAIShell`) — **não** um segundo chat paralelo.
 

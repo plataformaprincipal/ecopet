@@ -106,7 +106,7 @@ export async function getGestorDashboardMetrics() {
       {
         id: "3",
         tag: "Oportunidade",
-        title: `Saldo ECOPET: R$ ${(walletTotal._sum.balance ?? 0).toFixed(2)}`,
+        title: `Saldo EccoPet: R$ ${(walletTotal._sum.balance ?? 0).toFixed(2)}`,
         description: "Carteira digital crescendo — considere campanhas de cashback.",
         priority: "medium",
       },

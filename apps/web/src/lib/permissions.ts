@@ -1,4 +1,4 @@
-/** Matriz de rotas e permissões por role — fundação EcoPet */
+/** Matriz de rotas e permissões por role — fundação EccoPet */
 
 export type AppRole = "CLIENT" | "PARTNER" | "ONG" | "ADMIN";
 

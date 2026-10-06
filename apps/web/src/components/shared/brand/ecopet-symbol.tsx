@@ -18,7 +18,7 @@ const variantMap: Record<EcopetSymbolVariant, EcoPetLogoVariant> = {
   accent: "full",
 };
 
-/** Compatibilidade — delega ao logotipo oficial ECOPET */
+/** Compatibilidade — delega ao logotipo oficial EccoPet */
 export function EcopetSymbol({
   variant = "light",
   size = 48,

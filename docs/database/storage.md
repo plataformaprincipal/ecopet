@@ -1,4 +1,4 @@
-# Storage — EcoPet
+# Storage — EccoPet
 
 ## Decisão arquitetural
 

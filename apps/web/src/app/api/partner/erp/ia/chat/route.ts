@@ -30,7 +30,7 @@ const ASSISTANT_AGENT: Record<string, AiAgentId> = {
 };
 
 const ASSISTANT_CONTEXT: Record<string, string> = {
-  finance: "Contexto: assistente financeiro do parceiro EcoPet.",
+  finance: "Contexto: assistente financeiro do parceiro EccoPet.",
   commercial: "Contexto: assistente comercial do parceiro — metas, CRM e vendas.",
   veterinary: "Contexto: assistente veterinário/clínica — saúde animal e agenda de serviços.",
   admin: "Contexto: assistente administrativo — processos internos do parceiro.",

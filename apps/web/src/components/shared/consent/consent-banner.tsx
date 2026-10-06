@@ -74,7 +74,7 @@ export function ConsentBanner({ excludePathPrefixes = DEFAULT_EXCLUDE }: Props) 
             Privacidade e cookies
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Usamos cookies essenciais para o funcionamento do EcoPet. Analytics e publicidade só
+            Usamos cookies essenciais para o funcionamento do EccoPet. Analytics e publicidade só
             com o seu consentimento (LGPD / Consent Mode v2).{" "}
             <Link href="/legal/cookies" className="underline underline-offset-2">
               Política de cookies

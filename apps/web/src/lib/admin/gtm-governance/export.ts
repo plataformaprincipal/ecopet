@@ -33,7 +33,7 @@ export function exportGovernanceExcel(report: GtmGovernanceReport): string {
 
 export function exportGovernancePdfText(report: GtmGovernanceReport): string {
   return [
-    "EcoPet — GTM Governance Report",
+    "EccoPet — GTM Governance Report",
     `Generated: ${report.generatedAt}`,
     `Status: ${report.overview.status}`,
     `Environment: ${report.overview.environment}`,

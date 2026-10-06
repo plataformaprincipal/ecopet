@@ -64,7 +64,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   ) {
     return apiFailure(
       "FORBIDDEN",
-      "Expedição bloqueada por alerta de segurança/fraude. Contate o suporte EcoPet.",
+      "Expedição bloqueada por alerta de segurança/fraude. Contate o suporte EccoPet.",
       403
     );
   }
@@ -162,7 +162,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       name: buyer.name,
       locale: getUserEmailLocale(buyer.preferences),
       message: `Seu pedido #${order.orderNumber} está ${nextStatus}.`,
-      title: `Pedido #${order.orderNumber} — EcoPet`,
+      title: `Pedido #${order.orderNumber} — EccoPet`,
     });
   }
 

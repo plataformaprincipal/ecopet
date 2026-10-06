@@ -154,7 +154,7 @@ export function PartnerAgendaServicesPage({ partnerId }: { partnerId: string }) 
           <PartnerEmptyState
             icon={Wrench}
             title="Nenhum serviço cadastrado"
-            description="Cadastre serviços para receber agendamentos de clientes EcoPet."
+            description="Cadastre serviços para receber agendamentos de clientes EccoPet."
             actionLabel="Novo serviço"
             actionHref="/dashboard/partner/services/new"
           />

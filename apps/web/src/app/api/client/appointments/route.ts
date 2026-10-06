@@ -246,7 +246,7 @@ export async function POST(request: Request) {
       name: partnerUser.name,
       serviceName: service.name,
       locale: getUserEmailLocale(partnerUser.preferences),
-      title: "Novo agendamento — EcoPet",
+      title: "Novo agendamento — EccoPet",
       message: `Você recebeu um novo agendamento para ${service.name}.`,
     });
   }

@@ -35,7 +35,7 @@ describe("password-reset-utils", () => {
     const body = buildPasswordResetEmailBody("https://ecopet.test/reset?token=x");
     assert.match(body, /https:\/\/ecopet\.test\/reset\?token=x/);
     assert.match(body, /30 minutos/);
-    assert.match(body, /Equipe EcoPet/);
+    assert.match(body, /Equipe EccoPet/);
   });
 
   it("FORGOT_PASSWORD_MESSAGE não revela existência do e-mail", () => {

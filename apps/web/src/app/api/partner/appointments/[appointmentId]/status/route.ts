@@ -78,7 +78,7 @@ export async function PATCH(request: Request, context: RouteContext) {
         name: client.name,
         serviceName: "Agendamento",
         locale: getUserEmailLocale(client.preferences),
-        title: `Agendamento ${parsed.data.status} — EcoPet`,
+        title: `Agendamento ${parsed.data.status} — EccoPet`,
         message: `Olá ${client.name}, seu agendamento foi atualizado para: ${parsed.data.status}.`,
       });
     }

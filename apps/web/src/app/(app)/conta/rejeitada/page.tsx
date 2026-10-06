@@ -14,7 +14,7 @@ export default async function RejectedAccountPage() {
       <Card className="max-w-lg">
         <CardHeader>
           <CardTitle>Cadastro não aprovado</CardTitle>
-          <CardDescription>Sua solicitação de acesso à ECOPET foi rejeitada.</CardDescription>
+          <CardDescription>Sua solicitação de acesso à EccoPet foi rejeitada.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 text-sm">
           {user.accountStatusReason ? (

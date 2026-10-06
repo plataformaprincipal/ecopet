@@ -1,4 +1,4 @@
-/** Redirecionamento pós-login por role — fundação EcoPet */
+/** Redirecionamento pós-login por role — fundação EccoPet */
 import type { AppRole } from "@/lib/permissions";
 
 export function dashboardPathForRole(role: string): string {

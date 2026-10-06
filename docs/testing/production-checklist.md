@@ -1,4 +1,4 @@
-# Production / Homolog Checklist — EcoPet
+# Production / Homolog Checklist — EccoPet
 
 **Regra:** este documento **não** autoriza deploy. Smoke em produção só com aprovação explícita e janela controlada.
 
@@ -27,7 +27,7 @@
 | 7 | Marketplace + carrinho | Item no cart | Pendente |
 | 8 | Checkout MP **test** | Preferência criada | Pendente |
 | 9 | TalkJS inbox | Mensagem sandbox | Pendente |
-| 10 | EcoPet IA (AI on) | Reply real | Pendente |
+| 10 | EccoPet IA (AI on) | Reply real | Pendente |
 | 11 | Social feed | Post/comentário | Pendente |
 | 12 | Admin aprovação | Gate + ação | Pendente |
 | 13 | Observability | Evento Better Stack | Pendente |

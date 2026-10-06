@@ -30,7 +30,7 @@ export const EXTERNAL_BI_INTEGRATIONS: ExternalBiIntegration[] = [
     id: "sentry",
     name: "Sentry",
     status: "NOT_CONFIGURED",
-    description: "Deprecado no EcoPet — use Better Stack (observability).",
+    description: "Deprecado no EccoPet — use Better Stack (observability).",
     requiredEnvVars: [] as string[],
     docsUrl: "https://betterstack.com/docs/logs/",
   },

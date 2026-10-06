@@ -47,7 +47,7 @@ export function PublicMeuPetPreview() {
       />
 
       <div className="rounded-[var(--radius-lg)] border border-dashed border-ecopet-green/30 bg-ecopet-green/[0.06] p-4 text-sm text-ecopet-green-800 dark:border-ecopet-green/25 dark:bg-ecopet-green/10 dark:text-ecopet-cream">
-        Para cadastrar pets e salvar dados reais, é necessário criar uma conta EcoPet. Nenhum dado
+        Para cadastrar pets e salvar dados reais, é necessário criar uma conta EccoPet. Nenhum dado
         é armazenado nesta visualização pública.
       </div>
 

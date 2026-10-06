@@ -1,4 +1,4 @@
-# CSP EcoPet — notas de hardening
+# CSP EccoPet — notas de hardening
 
 ## Estado atual
 

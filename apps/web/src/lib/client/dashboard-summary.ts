@@ -125,7 +125,7 @@ export async function buildClientDashboardSummary(
     recommendations.push({
       id: "explore-marketplace",
       title: "Explore o marketplace",
-      description: "Produtos de parceiros aprovados e curadoria EcoPet.",
+      description: "Produtos de parceiros aprovados e curadoria EccoPet.",
       href: "/cliente/marketplace",
     });
   }

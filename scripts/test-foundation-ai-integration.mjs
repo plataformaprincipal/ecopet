@@ -83,7 +83,7 @@ async function main() {
   // Chat autenticado — 200 com chave ou 503 sem chave / limite
   const chat = await reqAs("a", "/api/ai/chat", {
     method: "POST",
-    body: JSON.stringify({ message: "Olá EcoPet AI, o que você pode fazer?" }),
+    body: JSON.stringify({ message: "Olá EccoPet AI, o que você pode fazer?" }),
   });
   assert.ok([200, 429, 503].includes(chat.status), `chat status ${chat.status}`);
   if (chat.status === 200) {

@@ -1,4 +1,4 @@
-# Checklist de Rollback — EcoPet
+# Checklist de Rollback — EccoPet
 
 ## Quando rollback
 

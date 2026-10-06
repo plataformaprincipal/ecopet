@@ -39,7 +39,7 @@ function run(script) {
 }
 
 async function main() {
-  console.log("=== EcoPet Foundation ALL ===\n");
+  console.log("=== EccoPet Foundation ALL ===\n");
   for (const suite of SUITES) {
     console.log(`\n--- ${suite} ---\n`);
     await run(suite);

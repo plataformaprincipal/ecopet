@@ -1,5 +1,5 @@
 /**
- * Feature flags do EcoPet IA — rollback rápido via env.
+ * Feature flags do EccoPet IA — rollback rápido via env.
  * Prefixo: AI_FLAG_* = "false" desliga; ausente/true liga (quando AI global on).
  */
 import { AI_CONFIG } from "@/lib/ai/ai-config";

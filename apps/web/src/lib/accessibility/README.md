@@ -28,7 +28,7 @@ Toolbar global em todas as páginas via `layout.tsx` (carregamento lazy).
 
 ## Libras
 
-Widget global em `layout.tsx`. Script oficial de `vlibras.gov.br` (validado). Padrão ativo; toggle no painel EcoPet oculta/exibe. Ver [`docs/integrations/vlibras.md`](../../../../docs/integrations/vlibras.md).
+Widget global em `layout.tsx`. Script oficial de `vlibras.gov.br` (validado). Padrão ativo; toggle no painel EccoPet oculta/exibe. Ver [`docs/integrations/vlibras.md`](../../../../docs/integrations/vlibras.md).
 
 ## Segurança
 

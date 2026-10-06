@@ -7,7 +7,7 @@ import Image from "next/image";
 const SLIDES = [
   {
     img: "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=1200&q=80",
-    title: "Bem-vindo ao Pet Shop ECOPET",
+    title: "Bem-vindo ao Pet Shop EccoPet",
     text: "Cuidado premium para o seu melhor amigo — Grupo Café Platine",
     alt: "Cão feliz recebendo carinho de um profissional em ambiente de pet shop iluminado",
   },

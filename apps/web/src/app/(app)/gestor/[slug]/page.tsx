@@ -6,19 +6,19 @@ import { GestorPageHeader } from "@/components/features/gestor/gestor-shell";
 import { GestorModuleView } from "@/components/features/gestor/gestor-module-view";
 
 const DESCRIPTIONS: Record<string, string> = {
-  financeiro: "Fluxo de caixa, Saldo ECOPET, reembolsos, comissões, DRE e projeções.",
+  financeiro: "Fluxo de caixa, Saldo EccoPet, reembolsos, comissões, DRE e projeções.",
   contabil: "Obrigações fiscais, categorias contábeis e exportações.",
   marketing: "Campanhas, CRM, leads, funis e automações.",
   vendas: "Pipeline comercial, metas, conversão e propostas.",
   qualidade: "Auditorias, reclamações, SLA e ranking de parceiros.",
-  design: "Biblioteca visual, assets e identidade ECOPET.",
+  design: "Biblioteca visual, assets e identidade EccoPet.",
   projetos: "Roadmap, cronogramas e novos módulos.",
-  empresa: "Setores internos da ECOPET — financeiro, TI, RH, jurídico e mais.",
+  empresa: "Setores internos da EccoPet — financeiro, TI, RH, jurídico e mais.",
   administrativo: "Processos internos, tarefas e protocolos.",
   ti: "APIs, integrações, logs, performance e segurança.",
   inovacao: "Laboratório experimental — IA, IoT, robôs e AgroPet.",
   juridico: "Contratos, LGPD, compliance e auditoria jurídica.",
-  rh: "Equipe ECOPET, cargos, permissões e onboarding.",
+  rh: "Equipe EccoPet, cargos, permissões e onboarding.",
   marketplace: "Produtos, serviços, orçamentos e pedidos.",
   robos: "Central de robôs operacionais 24h.",
   notificacoes: "Central global — push, e-mail, WhatsApp e segmentação.",

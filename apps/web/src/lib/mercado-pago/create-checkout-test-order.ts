@@ -96,7 +96,7 @@ async function persistTestPaymentLocally(input: {
 }
 
 /**
- * Cria order na API Orders do Mercado Pago TEST para um pedido EcoPet
+ * Cria order na API Orders do Mercado Pago TEST para um pedido EccoPet
  * marcado como checkout-test. Sem split, sem credenciais LIVE.
  */
 export async function createMercadoPagoCheckoutTestOrder(input: CreateCheckoutTestOrderInput) {
@@ -214,7 +214,7 @@ export async function createMercadoPagoCheckoutTestOrder(input: CreateCheckoutTe
     processing_mode: "automatic",
     external_reference: externalReference,
     total_amount: formatAmount(amount),
-    description: `EcoPet TESTE pedido #${order.orderNumber}`,
+    description: `EccoPet TESTE pedido #${order.orderNumber}`,
     payer: {
       email: input.payerEmail,
       ...(input.payerFirstName ? { first_name: input.payerFirstName } : {}),

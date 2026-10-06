@@ -40,7 +40,7 @@ export async function suggestMessageReplyDraft(input: {
   const draft = [
     "Olá! Obrigado pela mensagem.",
     "Vou verificar os detalhes e retorno em breve com as informações corretas.",
-    "(Rascunho gerado pela EcoPet IA — revise antes de enviar.)",
+    "(Rascunho gerado pela EccoPet IA — revise antes de enviar.)",
   ].join(" ");
 
   await writeAiAuditLog({

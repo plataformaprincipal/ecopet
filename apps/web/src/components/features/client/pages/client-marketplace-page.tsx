@@ -193,7 +193,7 @@ export function ClientMarketplacePage() {
                   <h3 className="font-medium">{product.name}</h3>
                   <p className="text-lg font-semibold">{formatPrice(product.price)}</p>
                   <p className="text-xs text-zinc-500">
-                    {product.seller?.partnerProfile?.businessName ?? "Parceiro EcoPet"}
+                    {product.seller?.partnerProfile?.businessName ?? "Parceiro EccoPet"}
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     <Button asChild size="sm" variant="outline">

@@ -99,7 +99,7 @@ export function PersonaWorkflowPanel({ scope }: { scope: "CLIENT" | "PARTNER" | 
       <CardHeader><CardTitle>Automações</CardTitle></CardHeader>
       <CardContent>
         <p className="text-sm text-ecopet-gray">{labels[scope]}</p>
-        <p className="mt-2 text-xs text-ecopet-gray">Configure automações no Workflow Center do Gestor ECOPET ou acesse via integrações.</p>
+        <p className="mt-2 text-xs text-ecopet-gray">Configure automações no Workflow Center do Gestor EccoPet ou acesse via integrações.</p>
       </CardContent>
     </Card>
   );

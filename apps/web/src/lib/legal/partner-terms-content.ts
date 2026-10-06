@@ -1,26 +1,26 @@
 import type { LegalSection } from "@/components/shared/legal/legal-page-layout";
 
-export const PARTNER_TERMS_TITLE = "Termos de Uso e de Parceria do Parceiro EcoPet";
+export const PARTNER_TERMS_TITLE = "Termos de Uso e de Parceria do Parceiro EccoPet";
 
 export const PARTNER_TERMS_SECTIONS: LegalSection[] = [
   {
     title: "1. Objeto da parceria",
     paragraphs: [
-      "Estes Termos de Uso e de Parceria («Termos») regulam a relação entre você, Parceiro EcoPet, e a EcoPet Plataforma Digital, estabelecendo condições para cadastro, operação comercial, divulgação de produtos e serviços, agendamentos, pedidos e demais funcionalidades disponibilizadas exclusivamente a parceiros do ecossistema pet.",
-      "Ao aceitar estes Termos, você declara ter lido, compreendido e concordado integralmente com suas disposições, bem como com a Política de Privacidade do Parceiro EcoPet, documento autônomo e independente dos documentos destinados a clientes.",
+      "Estes Termos de Uso e de Parceria («Termos») regulam a relação entre você, Parceiro EccoPet, e a EccoPet Plataforma Digital, estabelecendo condições para cadastro, operação comercial, divulgação de produtos e serviços, agendamentos, pedidos e demais funcionalidades disponibilizadas exclusivamente a parceiros do ecossistema pet.",
+      "Ao aceitar estes Termos, você declara ter lido, compreendido e concordado integralmente com suas disposições, bem como com a Política de Privacidade do Parceiro EccoPet, documento autônomo e independente dos documentos destinados a clientes.",
     ],
   },
   {
     title: "2. Finalidade da plataforma",
     paragraphs: [
-      "A EcoPet é uma plataforma digital que conecta tutores e responsáveis por animais a prestadores de serviços, comércios, profissionais autônomos e empresas do setor pet, promovendo bem-estar animal, transparência comercial e experiências seguras.",
-      "A EcoPet atua como intermediadora tecnológica, oferecendo infraestrutura de cadastro, vitrine, agendamentos, pedidos, mensagens, avaliações e ferramentas de gestão, sem substituir a relação contratual direta entre Parceiro e Cliente quando aplicável.",
+      "A EccoPet é uma plataforma digital que conecta tutores e responsáveis por animais a prestadores de serviços, comércios, profissionais autônomos e empresas do setor pet, promovendo bem-estar animal, transparência comercial e experiências seguras.",
+      "A EccoPet atua como intermediadora tecnológica, oferecendo infraestrutura de cadastro, vitrine, agendamentos, pedidos, mensagens, avaliações e ferramentas de gestão, sem substituir a relação contratual direta entre Parceiro e Cliente quando aplicável.",
     ],
   },
   {
     title: "3. Cadastro do parceiro",
     paragraphs: [
-      "O cadastro na EcoPet é permitido a profissionais autônomos, MEIs, microempresas, empresas e prestadoras de serviço que atuem legalmente no ecossistema pet, mediante preenchimento de formulário em etapas, validação de dados e aceite eletrônico destes Termos.",
+      "O cadastro na EccoPet é permitido a profissionais autônomos, MEIs, microempresas, empresas e prestadoras de serviço que atuem legalmente no ecossistema pet, mediante preenchimento de formulário em etapas, validação de dados e aceite eletrônico destes Termos.",
       "O Parceiro deve fornecer informações completas sobre identificação, contato, área de atuação, endereço, funcionamento, preferências de recebimento e demais campos exigidos conforme o tipo de parceria escolhido (autônomo ou corporativo).",
     ],
   },
@@ -49,7 +49,7 @@ export const PARTNER_TERMS_SECTIONS: LegalSection[] = [
     title: "7. Serviços oferecidos",
     paragraphs: [
       "Serviços disponibilizados na plataforma devem refletir a real capacidade técnica, estrutura e habilitação profissional do Parceiro, com descrição clara de escopo, duração, valores, requisitos do animal e eventuais contraindicações.",
-      "O Parceiro responde integralmente pela execução dos serviços contratados pelos clientes por meio da EcoPet ou direcionados por ela.",
+      "O Parceiro responde integralmente pela execução dos serviços contratados pelos clientes por meio da EccoPet ou direcionados por ela.",
     ],
   },
   {
@@ -103,7 +103,7 @@ export const PARTNER_TERMS_SECTIONS: LegalSection[] = [
   {
     title: "15. Reputação da conta",
     paragraphs: [
-      "A EcoPet poderá exibir indicadores de reputação, histórico de pedidos, taxa de resposta, verificação de perfil e outros sinais de confiança, com o objetivo de orientar clientes na escolha de parceiros.",
+      "A EccoPet poderá exibir indicadores de reputação, histórico de pedidos, taxa de resposta, verificação de perfil e outros sinais de confiança, com o objetivo de orientar clientes na escolha de parceiros.",
       "Condutas recorrentes de insatisfação, reclamações fundadas ou descumprimento contratual poderão impactar visibilidade, destaque ou elegibilidade a programas da plataforma.",
     ],
   },
@@ -111,20 +111,20 @@ export const PARTNER_TERMS_SECTIONS: LegalSection[] = [
     title: "16. Envio de documentos",
     paragraphs: [
       "O Parceiro poderá, a seu critério, enviar documentos comprobatórios (identificação, registros profissionais, alvarás, certificados, contratos sociais, entre outros) para aumentar credibilidade e viabilizar futuras verificações.",
-      "Documentos enviados devem ser autênticos e legíveis. A EcoPet poderá solicitar documentação adicional para análises de compliance, sem que o envio inicial seja condição para cadastro imediato, salvo exigência legal específica.",
+      "Documentos enviados devem ser autênticos e legíveis. A EccoPet poderá solicitar documentação adicional para análises de compliance, sem que o envio inicial seja condição para cadastro imediato, salvo exigência legal específica.",
     ],
   },
   {
     title: "17. Verificação de perfil",
     paragraphs: [
-      "A EcoPet poderá implementar processos de verificação de identidade, CNPJ, endereço, habilitação profissional ou documentação empresarial, incluindo consultas a bases públicas e parceiros de validação.",
-      "Perfis verificados poderão receber selos ou destaques informativos. A verificação não exime o Parceiro de responsabilidades legais nem configura endosso técnico individualizado pela EcoPet sobre cada serviço prestado.",
+      "A EccoPet poderá implementar processos de verificação de identidade, CNPJ, endereço, habilitação profissional ou documentação empresarial, incluindo consultas a bases públicas e parceiros de validação.",
+      "Perfis verificados poderão receber selos ou destaques informativos. A verificação não exime o Parceiro de responsabilidades legais nem configura endosso técnico individualizado pela EccoPet sobre cada serviço prestado.",
     ],
   },
   {
     title: "18. Suspensão da conta",
     paragraphs: [
-      "A EcoPet poderá suspender temporariamente o acesso do Parceiro em caso de suspeita de fraude, violação destes Termos, risco à segurança, reclamações graves, determinação de autoridade ou necessidade de apuração interna.",
+      "A EccoPet poderá suspender temporariamente o acesso do Parceiro em caso de suspeita de fraude, violação destes Termos, risco à segurança, reclamações graves, determinação de autoridade ou necessidade de apuração interna.",
       "Durante a suspensão, o Parceiro poderá ser impedido de publicar, receber novos pedidos ou alterar dados críticos, conforme gravidade do caso.",
     ],
   },
@@ -132,14 +132,14 @@ export const PARTNER_TERMS_SECTIONS: LegalSection[] = [
     title: "19. Encerramento da conta",
     paragraphs: [
       "O Parceiro pode solicitar encerramento de sua conta pelos canais oficiais, observadas obrigações pendentes com clientes e retenções legais de registros.",
-      "A EcoPet poderá encerrar definitivamente contas que violem estes Termos, pratiquem condutas abusivas, reincidam em infrações ou representem risco à plataforma, tutores ou animais.",
+      "A EccoPet poderá encerrar definitivamente contas que violem estes Termos, pratiquem condutas abusivas, reincidam em infrações ou representem risco à plataforma, tutores ou animais.",
     ],
   },
   {
     title: "20. Combate a fraudes",
     paragraphs: [
-      "É proibida qualquer tentativa de fraude, falsificação documental, uso de identidade de terceiros, manipulação de pedidos, pagamentos irregular ou evasão de políticas comerciais da EcoPet.",
-      "A EcoPet adota medidas de prevenção, monitoramento e cooperação com autoridades para combater práticas ilícitas, podendo registrar evidências e comunicar fatos relevantes.",
+      "É proibida qualquer tentativa de fraude, falsificação documental, uso de identidade de terceiros, manipulação de pedidos, pagamentos irregular ou evasão de políticas comerciais da EccoPet.",
+      "A EccoPet adota medidas de prevenção, monitoramento e cooperação com autoridades para combater práticas ilícitas, podendo registrar evidências e comunicar fatos relevantes.",
     ],
   },
   {
@@ -152,28 +152,28 @@ export const PARTNER_TERMS_SECTIONS: LegalSection[] = [
     title: "22. Proibição de maus-tratos",
     paragraphs: [
       "É expressamente proibido promover, tolerar, ocultar ou praticar maus-tratos, abandono, negligência, exploração abusiva ou qualquer conduta cruel contra animais.",
-      "A EcoPet poderá encerrar imediatamente contas envolvidas em condutas de maus-tratos e acionar autoridades competentes.",
+      "A EccoPet poderá encerrar imediatamente contas envolvidas em condutas de maus-tratos e acionar autoridades competentes.",
     ],
   },
   {
     title: "23. Propriedade intelectual",
     paragraphs: [
-      "Marcas, logotipos, layout, software, bases de dados, conteúdos institucionais e demais ativos intelectuais da EcoPet permanecem de sua titularidade ou licenciamento.",
-      "O Parceiro recebe licença limitada, não exclusiva, intransferível e revogável para utilizar recursos da plataforma conforme estes Termos. Conteúdos originais criados pelo Parceiro permanecem de sua titularidade, concedendo à EcoPet licença para exibi-los na plataforma enquanto a parceria estiver ativa.",
+      "Marcas, logotipos, layout, software, bases de dados, conteúdos institucionais e demais ativos intelectuais da EccoPet permanecem de sua titularidade ou licenciamento.",
+      "O Parceiro recebe licença limitada, não exclusiva, intransferível e revogável para utilizar recursos da plataforma conforme estes Termos. Conteúdos originais criados pelo Parceiro permanecem de sua titularidade, concedendo à EccoPet licença para exibi-los na plataforma enquanto a parceria estiver ativa.",
     ],
   },
   {
     title: "24. Responsabilidade por conteúdo publicado",
     paragraphs: [
       "Textos, imagens, vídeos, preços, descrições, logotipos e demais conteúdos publicados pelo Parceiro são de sua exclusiva responsabilidade, inclusive quanto a direitos autorais, de imagem, publicidade e veracidade.",
-      "A EcoPet poderá remover conteúdos que violem estes Termos, a lei ou direitos de terceiros, sem prejuízo de outras medidas.",
+      "A EccoPet poderá remover conteúdos que violem estes Termos, a lei ou direitos de terceiros, sem prejuízo de outras medidas.",
     ],
   },
   {
-    title: "25. Limitações de responsabilidade da EcoPet",
+    title: "25. Limitações de responsabilidade da EccoPet",
     paragraphs: [
-      "Na extensão permitida pela legislação aplicável, a EcoPet não se responsabiliza por lucros cessantes, danos indiretos ou consequências derivadas exclusivamente da conduta do Parceiro, de clientes ou de terceiros.",
-      "A EcoPet não garante volume mínimo de pedidos, agendamentos ou visibilidade comercial, embora empregue esforços razoáveis para manter a plataforma disponível e segura.",
+      "Na extensão permitida pela legislação aplicável, a EccoPet não se responsabiliza por lucros cessantes, danos indiretos ou consequências derivadas exclusivamente da conduta do Parceiro, de clientes ou de terceiros.",
+      "A EccoPet não garante volume mínimo de pedidos, agendamentos ou visibilidade comercial, embora empregue esforços razoáveis para manter a plataforma disponível e segura.",
     ],
   },
   {
@@ -205,10 +205,10 @@ export const PARTNER_TERMS_SECTIONS: LegalSection[] = [
     title: "30. Aceite eletrônico",
     paragraphs: [
       "Ao marcar a opção de aceite no cadastro ou em atualizações posteriores, o Parceiro manifesta consentimento válido e vinculante, nos termos da legislação sobre documentos eletrônicos e contratos celebrados por meios digitais.",
-      "O registro do aceite — data, hora, versão do documento e identificação da conta — poderá ser armazenado pela EcoPet para fins de prova, auditoria e compliance.",
+      "O registro do aceite — data, hora, versão do documento e identificação da conta — poderá ser armazenado pela EccoPet para fins de prova, auditoria e compliance.",
     ],
   },
 ];
 
 export const PARTNER_TERMS_PREVIEW =
-  "Estes Termos regulam exclusivamente a parceria comercial na EcoPet: cadastro, produtos, serviços, agendamentos, entregas, tele-busca, transporte de animais, reputação, verificação documental, proteção animal e responsabilidades do Parceiro.";
+  "Estes Termos regulam exclusivamente a parceria comercial na EccoPet: cadastro, produtos, serviços, agendamentos, entregas, tele-busca, transporte de animais, reputação, verificação documental, proteção animal e responsabilidades do Parceiro.";

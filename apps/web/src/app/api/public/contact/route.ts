@@ -51,7 +51,7 @@ export async function POST(request: Request) {
     const result = await sendEmail({
       to: supportTo,
       replyTo: email,
-      subject: `[EcoPet Contato] ${subject}`,
+      subject: `[EccoPet Contato] ${subject}`,
       html: `<p><strong>Nome:</strong> ${escapeHtml(name)}</p>
 <p><strong>E-mail:</strong> ${escapeHtml(email)}</p>
 <p><strong>Assunto:</strong> ${escapeHtml(subject)}</p>

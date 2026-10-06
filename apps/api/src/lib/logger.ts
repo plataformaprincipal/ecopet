@@ -1,4 +1,4 @@
-/** Logs estruturados ECOPET API */
+/** Logs estruturados EccoPet API */
 type LogScope = "auth" | "api" | "database" | "proxy";
 
 export function logStructured(scope: LogScope, event: string, data?: Record<string, unknown>) {

@@ -43,14 +43,14 @@ export class EmailChannelProvider implements NotificationChannelProvider {
     }
 
     const action = params.actionUrl
-      ? `<p><a href="${escapeHtml(params.actionUrl)}">Abrir no EcoPet</a></p>`
+      ? `<p><a href="${escapeHtml(params.actionUrl)}">Abrir no EccoPet</a></p>`
       : "";
     const html = `
       <div style="font-family:sans-serif;line-height:1.5">
         <h2>${escapeHtml(params.title)}</h2>
         <p>${escapeHtml(params.message)}</p>
         ${action}
-        <p style="color:#666;font-size:12px">EcoPet — notificação automática</p>
+        <p style="color:#666;font-size:12px">EccoPet — notificação automática</p>
       </div>
     `;
 

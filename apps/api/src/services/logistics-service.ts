@@ -103,7 +103,7 @@ export async function calculateShipping(partnerId: string, method: DeliveryMetho
       mapLat: config.mapLat,
       mapLng: config.mapLng,
     },
-    carrier: method === "DELIVERY_PARTNER_LOGISTICS" ? (config.carrierPartners as string[] | null)?.[0] ?? "Logística ECOPET" : null,
+    carrier: method === "DELIVERY_PARTNER_LOGISTICS" ? (config.carrierPartners as string[] | null)?.[0] ?? "Logística EccoPet" : null,
   };
 }
 

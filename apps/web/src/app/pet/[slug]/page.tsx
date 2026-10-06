@@ -44,7 +44,7 @@ export default function PublicPetPage() {
       <header className="border-b bg-white px-6 py-4">
         <div className="mx-auto flex max-w-lg items-center justify-between">
           <EcoPetLogo href="/" variant="light" size="sm" showText />
-          <Badge variant="outline">ECOPET ID</Badge>
+          <Badge variant="outline">EccoPet ID</Badge>
         </div>
       </header>
 
@@ -95,7 +95,7 @@ export default function PublicPetPage() {
         </Card>
 
         <p className="text-center text-xs text-ecopet-gray">
-          Página pública ECOPET · QR Code: {slug}
+          Página pública EccoPet · QR Code: {slug}
         </p>
       </main>
     </div>

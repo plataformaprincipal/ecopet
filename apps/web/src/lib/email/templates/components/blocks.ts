@@ -9,13 +9,13 @@ export function emailHeader(appUrl: string): string {
     <td align="center" style="padding-bottom:24px;border-bottom:1px solid ${EMAIL_BRAND.border};">
       <img
         src="${logoUrl}"
-        alt="EcoPet — ecossistema pet inteligente"
+        alt="EccoPet — ecossistema pet inteligente"
         width="140"
         height="40"
         style="display:block;max-width:140px;height:auto;border:0;outline:none;text-decoration:none;"
       />
       <p style="margin:12px 0 0;font-size:20px;font-weight:700;color:${EMAIL_BRAND.primary};letter-spacing:-0.3px;font-family:Arial,Helvetica,sans-serif;">
-        EcoPet
+        EccoPet
       </p>
     </td>
   </tr>

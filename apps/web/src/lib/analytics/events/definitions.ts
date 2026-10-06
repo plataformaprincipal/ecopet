@@ -1,6 +1,6 @@
 import { isSafeEventName } from "../sanitize";
 
-/** Definição tipada de evento EcoPet → GA4. */
+/** Definição tipada de evento EccoPet → GA4. */
 export type AnalyticsEventDefinition = {
   /** Nome GA4 (snake_case, ≤40). */
   event_name: string;

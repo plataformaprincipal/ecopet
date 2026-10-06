@@ -1,4 +1,4 @@
-# Backups — EcoPet / Supabase
+# Backups — EccoPet / Supabase
 
 ## Estado atual (informado + código)
 

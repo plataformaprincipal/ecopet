@@ -1,5 +1,5 @@
 /**
- * Testes da experiência unificada do cliente (/client/*) — EcoPet
+ * Testes da experiência unificada do cliente (/client/*) — EccoPet
  *
  * Valida de forma determinística (sem servidor/DB):
  *  - estrutura de navegação (sidebar + bottom nav) aponta para /client/*
@@ -33,7 +33,7 @@ function ok(label, cond) {
   }
 }
 
-console.log("=== EcoPet — test:client-experience ===\n");
+console.log("=== EccoPet — test:client-experience ===\n");
 
 // 1. Redirect pós-login
 ok("CLIENT cai em /cliente após login", getDefaultDashboardPath("CLIENT") === "/cliente");

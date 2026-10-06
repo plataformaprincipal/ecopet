@@ -78,7 +78,7 @@ export function CreateMasterAdminForm() {
         <UserPlus className="mx-auto h-12 w-12 text-ecopet-green" />
         <CardTitle className="font-display text-xl">Criar Super Administrador Master</CardTitle>
         <p className="text-sm text-ecopet-gray">
-          Configure o administrador definitivo da ECOPET. O usuário temporário <strong>gestorveras</strong> será invalidado após esta etapa.
+          Configure o administrador definitivo da EccoPet. O usuário temporário <strong>gestorveras</strong> será invalidado após esta etapa.
         </p>
       </CardHeader>
       <CardContent>

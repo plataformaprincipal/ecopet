@@ -1,4 +1,4 @@
-# Servidor estável para testes — EcoPet
+# Servidor estável para testes — EccoPet
 
 Testes foundation, security e E2E devem rodar contra um servidor **consistente**. O `next dev` pode ficar inconsistente após `npm run build` (erros webpack em `.next`).
 

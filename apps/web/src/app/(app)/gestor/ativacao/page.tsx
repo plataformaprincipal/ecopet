@@ -7,7 +7,7 @@ export default function GestorAtivacaoPage() {
   return (
     <>
       <GestorPageHeader
-        title="Ativação do Sistema ECOPET"
+        title="Ativação do Sistema EccoPet"
         description="Etapa única de bootstrap — crie o Super Administrador Master definitivo"
       />
       <CreateMasterAdminForm />

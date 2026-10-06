@@ -43,7 +43,7 @@ export function WalletPanel() {
   useEffect(() => { load(); }, []);
 
   if (loading) {
-    return <div className="rounded-[16px] border p-8 text-center text-sm text-ecopet-gray">Carregando Saldo ECOPET...</div>;
+    return <div className="rounded-[16px] border p-8 text-center text-sm text-ecopet-gray">Carregando Saldo EccoPet...</div>;
   }
 
   if (error) {
@@ -64,7 +64,7 @@ export function WalletPanel() {
           <CardContent className="p-5">
             <div className="flex items-center gap-2 text-ecopet-green">
               <Wallet className="h-5 w-5" />
-              <span className="text-sm font-semibold">Saldo ECOPET</span>
+              <span className="text-sm font-semibold">Saldo EccoPet</span>
             </div>
             <p className="mt-2 font-display text-3xl font-extrabold text-ecopet-green">{formatMpPrice(balance)}</p>
             <p className="caption-text mt-1">Carteira digital da plataforma</p>
@@ -127,7 +127,7 @@ export function WalletPanel() {
       {insights && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-ecopet-yellow" />IA Financeira ECOPET</CardTitle>
+            <CardTitle className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-ecopet-yellow" />IA Financeira EccoPet</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-3 sm:grid-cols-2">
             {insights.insights.map((ins) => (

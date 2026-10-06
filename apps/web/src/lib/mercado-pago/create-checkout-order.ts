@@ -42,7 +42,7 @@ function formatAmount(value: number): string {
 }
 
 /**
- * Cria order na API Orders do Mercado Pago para um pedido EcoPet existente.
+ * Cria order na API Orders do Mercado Pago para um pedido EccoPet existente.
  * Recalcula total no servidor; nunca confia no valor do cliente.
  */
 export async function createMercadoPagoCheckoutOrder(input: CreateCheckoutOrderInput) {
@@ -206,7 +206,7 @@ export async function createMercadoPagoCheckoutOrder(input: CreateCheckoutOrderI
       applicationFee: snapshotMetrics.platformRevenue,
       idempotencyKey,
       externalReference,
-      description: `EcoPet pedido #${order.orderNumber}`,
+      description: `EccoPet pedido #${order.orderNumber}`,
       paymentMethodId: methodId,
       cardToken: input.cardToken,
       installments: input.installments,
@@ -301,7 +301,7 @@ export async function createMercadoPagoCheckoutOrder(input: CreateCheckoutOrderI
     processing_mode: "automatic",
     external_reference: externalReference,
     total_amount: formatAmount(amount),
-    description: `EcoPet pedido #${order.orderNumber}`,
+    description: `EccoPet pedido #${order.orderNumber}`,
     payer: {
       email: input.payerEmail,
       ...(input.payerFirstName ? { first_name: input.payerFirstName } : {}),

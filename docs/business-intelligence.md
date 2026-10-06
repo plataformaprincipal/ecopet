@@ -37,7 +37,7 @@ GA4_SERVICE_ACCOUNT_JSON='{"type":"service_account",...}'
 GA4_DATA_API_ENABLED=true
 ```
 
-A service account precisa de acesso **Viewer** à propriedade GA4. O EcoPet **não** persiste o warehouse do Google.
+A service account precisa de acesso **Viewer** à propriedade GA4. O EccoPet **não** persiste o warehouse do Google.
 
 ## Banco
 

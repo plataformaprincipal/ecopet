@@ -1,4 +1,4 @@
-# Marca EcoPet
+# Marca EccoPet
 
 ## Componentes
 
@@ -21,7 +21,7 @@
 
 ## Wordmark
 
-- Nome: **EcoPet**
+- Nome: **EccoPet**
 - Em fundo verde/escuro: `#FFFFFF` puro
 - Nunca cream/acinzentado no nome da marca
 

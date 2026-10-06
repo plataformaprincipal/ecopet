@@ -80,7 +80,7 @@ export function getGtmSanitizedStatus(source: NodeJS.ProcessEnv = process.env): 
   const environment = detectGtmEnvironment(source);
   const loadContainer = shouldLoadGtm(source);
   const antiDuplicationNote =
-    "Eventos EcoPet vão ao GA4 via gtag; GTM recebe espelho namespaced (ecopet_*). Não ative tags GA4 de page_view/event no container se o provider EcoPet já envia.";
+    "Eventos EccoPet vão ao GA4 via gtag; GTM recebe espelho namespaced (ecopet_*). Não ative tags GA4 de page_view/event no container se o provider EccoPet já envia.";
 
   if (!raw) {
     return {

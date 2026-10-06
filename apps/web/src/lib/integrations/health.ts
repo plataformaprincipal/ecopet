@@ -31,7 +31,7 @@ export async function getIntegrationHealthReport(env = process.env): Promise<Int
 
   void writeIntegrationLog({
     integrationName: "platform",
-    provider: "EcoPet",
+    provider: "EccoPet",
     action: "health_check",
     status: "OK",
     metadata: {

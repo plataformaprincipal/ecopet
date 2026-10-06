@@ -1,4 +1,4 @@
-# Matriz RBAC — EcoPet
+# Matriz RBAC — EccoPet
 
 | Rota / API | Roles | Status conta | Dados expostos | Risco |
 |------------|-------|--------------|----------------|-------|

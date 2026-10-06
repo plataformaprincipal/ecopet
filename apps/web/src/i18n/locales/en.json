@@ -626,9 +626,9 @@
     "notifications": "Notifications",
     "premium": "Premium",
     "settings": "Settings",
-    "health": "ECOPET Health",
-    "ai": "ECOPET AI",
-    "iot": "ECOPET IoT",
+    "health": "EccoPet Health",
+    "ai": "EccoPet AI",
+    "iot": "EccoPet IoT",
     "agenda": "Schedule",
     "messages": "Messages",
     "agro": "Smart Agro",
@@ -699,7 +699,7 @@
   "analytics": {
     "consent": {
       "title": "Cookies and analytics",
-      "description": "We use analytics cookies to improve ECOPET. You can accept or decline.",
+      "description": "We use analytics cookies to improve EccoPet. You can accept or decline.",
       "accept": "Accept analytics",
       "reject": "Decline",
       "manage": "Manage preferences"
@@ -807,7 +807,7 @@
       "successActive": "Account created successfully!",
       "successPending": "Registration received! Redirecting...",
       "successRedirecting": "Redirecting to your dashboard...",
-      "pendingApprovalNote": "Professional accounts remain pending approval until validated by the ECOPET team.",
+      "pendingApprovalNote": "Professional accounts remain pending approval until validated by the EccoPet team.",
       "personaSection": "Profile details: {role}",
       "fields": {
         "email": "Email",
@@ -841,7 +841,7 @@
         },
         "SELLER": {
           "label": "Partner / Store",
-          "description": "Seller on the ECOPET marketplace"
+          "description": "Seller on the EccoPet marketplace"
         },
         "SERVICE_PROVIDER": {
           "label": "Service provider",
@@ -1545,7 +1545,7 @@
     "badge": "Premium Pet Super App",
     "heroTitle": "Care, technology and trust for pet lovers",
     "heroSubtitle": "Robust marketplace, animal health, smart AI and social network — all in one premium international platform.",
-    "aiAssistant": "ECOPET AI Assistant",
+    "aiAssistant": "EccoPet AI Assistant",
     "aiReminder": "Reminder: V10 vaccine in 15 days · Triage available 24/7",
     "statsDisclaimer": "* Demo data for ecosystem presentation",
     "stats": {
@@ -1566,7 +1566,7 @@
         "desc": "Products and services from trusted partners."
       },
       "ai": {
-        "title": "ECOPET AI",
+        "title": "EccoPet AI",
         "desc": "Triage, nutrition and smart assistant."
       },
       "health": {
@@ -1603,7 +1603,7 @@
     "faqTitle": "Frequently asked questions",
     "faq": {
       "free": {
-        "q": "Do I need to pay to use ECOPET?",
+        "q": "Do I need to pay to use EccoPet?",
         "a": "No. The Free plan includes social feed, pet registration and basic AI. Premium plans expand features."
       },
       "marketplace": {
@@ -1612,7 +1612,7 @@
       },
       "ai": {
         "q": "Does AI replace the veterinarian?",
-        "a": "No. ECOPET AI is assistive and informational. Always consult a professional for diagnoses."
+        "a": "No. EccoPet AI is assistive and informational. Always consult a professional for diagnoses."
       },
       "accessibility": {
         "q": "Is the platform accessible?",
@@ -2062,7 +2062,7 @@
     }
   },
   "socialFeed": {
-    "title": "ECOPET Feed",
+    "title": "EccoPet Feed",
     "authModal": {
       "title": "Sign in or create your account",
       "description": "To interact on EccoPet, sign in or register for free.",
@@ -2421,11 +2421,11 @@
     }
   },
   "gestor": {
-    "title": "ECOPET Manager",
-    "loading": "Loading ECOPET Manager...",
+    "title": "EccoPet Manager",
+    "loading": "Loading EccoPet Manager...",
     "accessDenied": {
       "title": "Restricted access",
-      "description": "This area is exclusive to ECOPET administrators.",
+      "description": "This area is exclusive to EccoPet administrators.",
       "back": "Back to dashboard"
     }
   },

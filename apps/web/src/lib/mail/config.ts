@@ -1,3 +1,5 @@
+import { BRAND } from "@/lib/constants";
+
 export type MailProviderPreset =
   | "gmail"
   | "outlook"
@@ -67,7 +69,7 @@ export function detectProviderFromHost(host: string): string {
 
 export function resolveFromAddress(): { from: string; fromName: string; fromEmail: string } {
   const legacyFrom = env("SMTP_FROM");
-  const fromName = env("SMTP_FROM_NAME") || "EcoPet";
+  const fromName = env("SMTP_FROM_NAME") || BRAND.name;
   const fromEmail = env("SMTP_FROM_EMAIL") || env("SMTP_USER") || "";
 
   if (legacyFrom?.includes("<")) {

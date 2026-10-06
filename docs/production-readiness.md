@@ -1,4 +1,4 @@
-# Production readiness — EcoPet
+# Production readiness — EccoPet
 
 ## Banco / Supabase
 

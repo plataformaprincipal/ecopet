@@ -14,7 +14,7 @@ function asInputJson(value: Record<string, unknown>): Prisma.InputJsonValue {
   return value as Prisma.InputJsonValue;
 }
 
-/** Sessão via cookie ou Bearer JWT (mesmo token da sessão EcoPet). */
+/** Sessão via cookie ou Bearer JWT (mesmo token da sessão EccoPet). */
 export async function resolveAuthenticatedUserId(request: Request): Promise<string | null> {
   const cookieUser = await getCurrentUser();
   if (cookieUser) return cookieUser.id;

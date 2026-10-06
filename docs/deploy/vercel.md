@@ -1,4 +1,4 @@
-# Deploy Vercel — EcoPet
+# Deploy Vercel — EccoPet
 
 ## Projeto
 

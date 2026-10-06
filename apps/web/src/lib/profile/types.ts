@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 
-/** Três categorias principais do ecossistema ECOPET */
+/** Três categorias principais do ecossistema EccoPet */
 export type ProfileCategory = "CLIENT" | "PARTNER" | "NGO";
 
 /** Subtipos de parceiro (plataforma empresarial) */

@@ -7,7 +7,7 @@ import { useSocialStore } from "@/store/social-store";
 import { useNotificationsStore } from "@/store/notifications-store";
 import { analyticsService } from "@/lib/analytics/service";
 
-/** Reidrata stores por usuário quando a sessão EcoPet muda. */
+/** Reidrata stores por usuário quando a sessão EccoPet muda. */
 export function AuthTokenSync() {
   const { data: session, status } = useAuthSession();
   const lastUserId = useRef<string | null>(null);

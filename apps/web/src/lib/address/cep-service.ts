@@ -178,8 +178,8 @@ export function logCepLookup(
   fromCache: boolean
 ) {
   if (process.env.NODE_ENV !== "development" || typeof console === "undefined") return;
-  console.log("[ECOPET CEP] CEP consultado:", formatCepDisplay(cep), fromCache ? "(cache)" : "");
-  console.log("[ECOPET CEP] Endereço encontrado:", {
+  console.log("[EccoPet CEP] CEP consultado:", formatCepDisplay(cep), fromCache ? "(cache)" : "");
+  console.log("[EccoPet CEP] Endereço encontrado:", {
     street: address.street,
     district: address.district,
     city: address.city,
@@ -187,7 +187,7 @@ export function logCepLookup(
     latitude: address.latitude,
     longitude: address.longitude,
   });
-  console.log("[ECOPET CEP] Tempo da consulta:", `${durationMs}ms`);
+  console.log("[EccoPet CEP] Tempo da consulta:", `${durationMs}ms`);
 }
 
 export function mergeAddress(current: AddressByCepValue, patch: Partial<AddressByCepValue>): AddressByCepValue {

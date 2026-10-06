@@ -38,7 +38,7 @@ export function buildBusinessSystemPrompt(input: {
 
   const supportExtra =
     input.module === "support"
-      ? "Atue como suporte EcoPet: oriente caminhos da plataforma sem inventar telas ou políticas."
+      ? "Atue como suporte EccoPet: oriente caminhos da plataforma sem inventar telas ou políticas."
       : "";
 
   return [

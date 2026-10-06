@@ -3,7 +3,7 @@ import { LegalPageLayout } from "@/components/shared/legal/legal-page-layout";
 
 export const metadata: Metadata = {
   title: "Política de Cookies",
-  description: "Como a ECOPET utiliza cookies e tecnologias similares.",
+  description: "Como a EccoPet utiliza cookies e tecnologias similares.",
 };
 
 const SECTIONS = [

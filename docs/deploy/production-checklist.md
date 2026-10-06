@@ -1,4 +1,4 @@
-# Checklist de produção — EcoPet
+# Checklist de produção — EccoPet
 
 ## Antes do deploy
 

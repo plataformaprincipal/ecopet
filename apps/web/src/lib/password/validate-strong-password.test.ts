@@ -10,7 +10,7 @@ const arthurCtx = {
 
 describe("validateStrongPassword — e-mail e caractere @", () => {
   it("aceita senha com @ quando não contém dados pessoais do e-mail", () => {
-    const r = validateStrongPassword("EcoPet@2026", {
+    const r = validateStrongPassword("EccoPet@2026", {
       email: "test@test.com",
       name: "Test User",
     });
@@ -68,7 +68,7 @@ describe("validateStrongPassword — e-mail e caractere @", () => {
   });
 
   it("@ conta como caractere especial", () => {
-    const r = validateStrongPassword("EcoPet@2026", { email: "x@y.com", name: "X" });
+    const r = validateStrongPassword("EccoPet@2026", { email: "x@y.com", name: "X" });
     const special = r.requirements.find((req) => req.id === "special");
     assert.equal(special?.met, true);
   });

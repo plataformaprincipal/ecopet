@@ -118,7 +118,7 @@ export function EventCenterPanel({ scope }: { scope?: string }) {
 export function IntelligencePanel({ scope = "GESTOR" }: { scope?: string }) {
   return (
     <PlatformModulePanel
-      title="EcoPet Intelligence"
+      title="EccoPet Intelligence"
       description="Cérebro corporativo — insights, riscos e previsões"
       fetcher={() => fetchIntelligence(scope) as Promise<Record<string, unknown>>}
       renderContent={(data) => (

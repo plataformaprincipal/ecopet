@@ -1,5 +1,5 @@
 /**
- * Testes marketplace EcoPet — catálogo real, auth gate, favoritos, carrinho.
+ * Testes marketplace EccoPet — catálogo real, auth gate, favoritos, carrinho.
  */
 const WEB = process.env.WEB_URL || "http://localhost:3000";
 

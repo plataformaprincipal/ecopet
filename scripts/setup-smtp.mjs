@@ -1,5 +1,5 @@
 /**
- * Configura credenciais SMTP do EcoPet.
+ * Configura credenciais SMTP do EccoPet.
  *
  * Dev local (Mailpit — recomendado):
  *   node scripts/setup-smtp.mjs --dev
@@ -76,7 +76,7 @@ function devCredentials() {
     SMTP_SECURE: "false",
     SMTP_USER: DEV_SMTP.user,
     SMTP_PASS: pass,
-    SMTP_FROM_NAME: "EcoPet",
+    SMTP_FROM_NAME: "EccoPet",
     SMTP_FROM_EMAIL: DEV_SMTP.fromEmail,
     TEST_EMAIL: DEV_SMTP.testEmail,
   };
@@ -102,7 +102,7 @@ SMTP_PORT=1025
 SMTP_SECURE=false
 SMTP_USER=ecopet@local.dev
 SMTP_PASS=
-SMTP_FROM_NAME=EcoPet
+SMTP_FROM_NAME=EccoPet
 SMTP_FROM_EMAIL=noreply@ecopet.local
 TEST_EMAIL=dev@ecopet.local
 `,
@@ -129,7 +129,7 @@ TEST_EMAIL=dev@ecopet.local
       SMTP_SECURE: "false",
       SMTP_USER: account.user,
       SMTP_PASS: account.pass,
-      SMTP_FROM_NAME: "EcoPet",
+      SMTP_FROM_NAME: "EccoPet",
       SMTP_FROM_EMAIL: account.user,
       TEST_EMAIL: account.user,
     };
@@ -144,12 +144,12 @@ TEST_EMAIL=dev@ecopet.local
       SMTP_SECURE: "false",
       SMTP_USER: user,
       SMTP_PASS: args.pass.trim(),
-      SMTP_FROM_NAME: "EcoPet",
+      SMTP_FROM_NAME: "EccoPet",
       SMTP_FROM_EMAIL: args.from || user,
       TEST_EMAIL: args.test || user,
     };
   } else if (process.stdin.isTTY) {
-    console.log("=== EcoPet — configuração SMTP ===\n");
+    console.log("=== EccoPet — configuração SMTP ===\n");
     console.log("1) Dev local (Mailpit) — npm run setup:smtp:dev");
     console.log("2) Gmail — senha de APP: https://myaccount.google.com/apppasswords\n");
     const mode = await ask("Modo [dev/gmail] (dev): ");
@@ -170,7 +170,7 @@ TEST_EMAIL=dev@ecopet.local
         SMTP_SECURE: "false",
         SMTP_USER: user,
         SMTP_PASS: pass,
-        SMTP_FROM_NAME: "EcoPet",
+        SMTP_FROM_NAME: "EccoPet",
         SMTP_FROM_EMAIL: user,
         TEST_EMAIL: test,
       };

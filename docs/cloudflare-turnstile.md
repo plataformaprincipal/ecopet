@@ -1,4 +1,4 @@
-# Cloudflare Turnstile — EcoPet
+# Cloudflare Turnstile — EccoPet
 
 Integração anti-bot para formulários públicos e login progressivo.
 

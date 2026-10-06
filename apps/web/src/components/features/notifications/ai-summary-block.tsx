@@ -41,7 +41,7 @@ export function AiSummaryBlock({ summary }: AiSummaryBlockProps) {
           ))}
         </ul>
         <p className="border-t border-violet-500/10 px-4 py-2 text-[10px] text-ecopet-gray/70 dark:border-violet-500/20">
-          Gerado pela IA ECOPET · atualização simulada
+          Gerado pela IA EccoPet · atualização simulada
         </p>
       </CardContent>
     </Card>

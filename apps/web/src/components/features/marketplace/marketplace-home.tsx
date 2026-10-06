@@ -63,12 +63,12 @@ export function MarketplaceHome() {
       {/* Premium header */}
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-ecopet-dark via-ecopet-green to-ecopet-dark p-6 text-white lg:p-10">
         <div className="relative z-10 max-w-2xl">
-          <Badge className="mb-3 bg-ecopet-yellow text-ecopet-dark">Marketplace ECOPET</Badge>
+          <Badge className="mb-3 bg-ecopet-yellow text-ecopet-dark">Marketplace EccoPet</Badge>
           <h1 className="font-display text-2xl font-bold lg:text-4xl">
             Tudo para o seu pet, em um só lugar
           </h1>
           <p className="mt-2 text-sm text-white/80 lg:text-base">
-            Produtos, serviços, parceiros verificados e recomendações inteligentes da IA ECOPET.
+            Produtos, serviços, parceiros verificados e recomendações inteligentes da IA EccoPet.
           </p>
           <div className="mt-6 flex flex-wrap gap-2">
             <Button variant="secondary" onClick={() => setAiModalOpen(true)}>

@@ -154,7 +154,7 @@ async function activateUser(userId) {
 async function main() {
   await resetAuthRateLimit();
   const ts = Date.now();
-  console.log("=== EcoPet Foundation Social Tests ===\n");
+  console.log("=== EccoPet Foundation Social Tests ===\n");
 
   const health = await reqAs("guest", "/api/health");
   assert(health.status === 200, "1 health ok");

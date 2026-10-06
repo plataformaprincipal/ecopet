@@ -1,6 +1,6 @@
 # Google Tag Manager — Catálogo e configuração manual
 
-## Estratégia (EcoPet)
+## Estratégia (EccoPet)
 
 **Estratégia B (oficial neste repositório):**
 
@@ -9,7 +9,7 @@
 | Hits GA4 | `gtag` via `analyticsService` / dispatcher (`send_to` Measurement ID) |
 | Data Layer / tags extras | GTM — eventos **namespaced** `ecopet_*` (espelho) |
 
-**Não** publique no container tags GA4 de `page_view` / eventos nativos que já saem pelo EcoPet gtag — isso duplica conversões.
+**Não** publique no container tags GA4 de `page_view` / eventos nativos que já saem pelo EccoPet gtag — isso duplica conversões.
 
 Contrato Data Layer: `event_version: 1` (`lib/gtm/contract.ts`).
 
@@ -40,7 +40,7 @@ Contrato Data Layer: `event_version: 1` (`lib/gtm/contract.ts`).
 
 | Tag | Tipo | Trigger | Consentimento | Nota |
 |-----|------|---------|---------------|------|
-| GA4 Config | **NÃO usar** se EcoPet gtag ativo | — | — | Evita duplicação |
+| GA4 Config | **NÃO usar** se EccoPet gtag ativo | — | — | Evita duplicação |
 | Ads / Remarketing | Google Ads | CE - ecopet_* (seletivo) | ad_storage | Opcional |
 | Custom HTML | Revisar TI | CE específico | analytics_storage | Sem PII |
 
@@ -60,7 +60,7 @@ Contrato Data Layer: `event_version: 1` (`lib/gtm/contract.ts`).
 
 ## Consent Mode v2
 
-Defaults denied (analytics) antes das tags. Banner EcoPet atualiza gtag + `ecopet_consent_update`.
+Defaults denied (analytics) antes das tags. Banner EccoPet atualiza gtag + `ecopet_consent_update`.
 
 ## Preview / DebugView
 

@@ -8,7 +8,7 @@ export type AiIntegrationPoint = {
   status: "ready" | "planned";
 };
 
-/** Pontos de integração AI-First no ecossistema EcoPet. */
+/** Pontos de integração AI-First no ecossistema EccoPet. */
 export const AI_INTEGRATION_POINTS: AiIntegrationPoint[] = [
   { id: "dashboard", label: "Dashboard", route: "/cliente", defaultAgentId: "client", status: "ready" },
   { id: "marketplace", label: "Marketplace", route: "/marketplace", defaultAgentId: "marketplace", status: "ready" },

@@ -237,7 +237,7 @@ export async function POST(request: Request) {
     await sendTransactionalEmail({
       event: "REVIEW_RECEIVED",
       to: partner.email,
-      subject: "Nova avaliação recebida — EcoPet",
+      subject: "Nova avaliação recebida — EccoPet",
       text: `Você recebeu uma avaliação ${rating}/5.`,
       html: `<p>Você recebeu uma avaliação <strong>${rating}/5</strong>.</p>`,
     });

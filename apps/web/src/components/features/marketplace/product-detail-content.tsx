@@ -182,7 +182,7 @@ export function ProductDetailContent({ id }: ProductDetailContentProps) {
 
           <div className="mt-4 flex items-start gap-2 rounded-xl bg-amber-50 p-3 text-xs text-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
             <Shield className="h-4 w-4 shrink-0 mt-0.5" />
-            Compra protegida ECOPET. Verifique compatibilidade com seu pet antes de medicamentos ou suplementos.
+            Compra protegida EccoPet. Verifique compatibilidade com seu pet antes de medicamentos ou suplementos.
           </div>
         </div>
       </div>

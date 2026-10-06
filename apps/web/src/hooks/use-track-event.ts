@@ -5,7 +5,7 @@ import { analyticsService } from "@/lib/analytics/service";
 import type { TrackableEvent } from "@/lib/analytics/factory";
 import type { AnalyticsEventParams } from "@/lib/analytics/types";
 
-/** Atalho tipado para disparar eventos do catálogo EcoPet. */
+/** Atalho tipado para disparar eventos do catálogo EccoPet. */
 export function useTrackEvent() {
   return useCallback(
     (

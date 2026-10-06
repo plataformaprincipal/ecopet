@@ -46,7 +46,7 @@ function renderSample(template: EmailTemplateName, locale: ReturnType<typeof res
       return renderNotificationEmail({
         locale,
         appUrl,
-        title: "Notificação EcoPet",
+        title: "Notificação EccoPet",
         message: "Este é um e-mail de teste do template de notificações.",
       });
     default:

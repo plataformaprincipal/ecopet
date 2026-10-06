@@ -1,4 +1,4 @@
-# Automações EcoPet IA
+# Automações EccoPet IA
 
 ## Modelo
 

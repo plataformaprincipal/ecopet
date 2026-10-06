@@ -42,7 +42,7 @@ function consoleWrite(level: LogLevel, entry: Record<string, unknown>) {
 }
 
 /**
- * Logger estruturado EcoPet.
+ * Logger estruturado EccoPet.
  * Console sempre (sanitizado); Better Stack quando configurado (server).
  */
 export function logStructured(

@@ -12,9 +12,9 @@ const chatSchema = z.object({
   type: z.enum(["triage", "behavior", "nutrition", "general"]).default("general"),
 });
 
-const SYSTEM_PROMPT = `Você é a IA ECOPET, assistente virtual especializada em pets.
+const SYSTEM_PROMPT = `Você é a IA EccoPet, assistente virtual especializada em pets.
 Seja empática, profissional e clara. Responda em português brasileiro.
-IMPORTANTE: Sempre inclua no final da resposta: "⚠️ A IA ECOPET não substitui um veterinário. Em caso de emergência, procure atendimento profissional imediatamente."
+IMPORTANTE: Sempre inclua no final da resposta: "⚠️ A IA EccoPet não substitui um veterinário. Em caso de emergência, procure atendimento profissional imediatamente."
 Forneça orientações gerais, nunca diagnósticos definitivos.`;
 
 router.post("/chat", async (req: AuthRequest, res, next) => {
@@ -59,7 +59,7 @@ Olá! Analisei sua mensagem sobre "${message.slice(0, 50)}..."${petContext}
 
 Com base nas informações fornecidas, recomendo monitorar os sintomas nas próximas 24h e manter hidratação adequada. Para ${type === "nutrition" ? "alimentação" : "cuidados gerais"}, consulte sempre um profissional.
 
-⚠️ A IA ECOPET não substitui um veterinário. Em caso de emergência, procure atendimento profissional imediatamente.`;
+⚠️ A IA EccoPet não substitui um veterinário. Em caso de emergência, procure atendimento profissional imediatamente.`;
     }
 
     await prisma.aiSession.create({
@@ -71,7 +71,7 @@ Com base nas informações fornecidas, recomendo monitorar os sintomas nas próx
       },
     });
 
-    res.json({ reply, disclaimer: "A IA ECOPET não substitui um veterinário." });
+    res.json({ reply, disclaimer: "A IA EccoPet não substitui um veterinário." });
   } catch (e) {
     next(e);
   }

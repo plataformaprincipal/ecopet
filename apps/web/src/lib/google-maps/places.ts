@@ -21,7 +21,7 @@ function comp(
 
 /**
  * Converte componentes Google Places (legado PlaceResult ou novo Place)
- * em endereço estruturado EcoPet.
+ * em endereço estruturado EccoPet.
  */
 export function parseGoogleAddressComponents(
   components: AddressComponent[],

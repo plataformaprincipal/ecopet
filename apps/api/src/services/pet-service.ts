@@ -213,7 +213,7 @@ export async function createPet(params: {
     petId: pet.id,
     eventType: "registration",
     title: "Pet cadastrado",
-    description: `${pet.name} foi cadastrado na ECOPET`,
+    description: `${pet.name} foi cadastrado na EccoPet`,
     createdById: params.userId,
   });
 

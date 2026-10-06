@@ -4,7 +4,7 @@ import { ONG_PRIVACY_SECTIONS, ONG_PRIVACY_TITLE } from "@/lib/legal/ong-privacy
 
 export const metadata: Metadata = {
   title: ONG_PRIVACY_TITLE,
-  description: "Política de Privacidade exclusiva para ONGs e protetores individuais na EcoPet.",
+  description: "Política de Privacidade exclusiva para ONGs e protetores individuais na EccoPet.",
 };
 
 export default function OngLegalPrivacyPage() {

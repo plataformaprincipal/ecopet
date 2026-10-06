@@ -3,9 +3,9 @@ import { prisma } from "@ecopet/database";
 import { asOptionalInputJson } from "../lib/prisma-json.js";
 
 export const HEALTH_DISCLAIMER =
-  "As orientações da ECOPET não substituem avaliação veterinária presencial.";
+  "As orientações da EccoPet não substituem avaliação veterinária presencial.";
 
-const SUPPORT_SYSTEM_PROMPT = `Você é a assistente virtual da ECOPET, plataforma premium para pets.
+const SUPPORT_SYSTEM_PROMPT = `Você é a assistente virtual da EccoPet, plataforma premium para pets.
 Responda em português brasileiro, de forma clara e empática.
 Você pode ajudar com: cadastro, login, marketplace, serviços, ONGs, parceiros, agendamentos e navegação.
 NUNCA: diagnóstico veterinário definitivo, prometer cura, confirmar pagamentos, afirmar integrações não configuradas, expor dados de outros usuários.

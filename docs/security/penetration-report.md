@@ -1,4 +1,4 @@
-# Penetration / Security Test Report — EcoPet
+# Penetration / Security Test Report — EccoPet
 
 **Data:** 2026-07-20  
 **Tipo:** Auditoria híbrida (static + unit + tentativa dinâmica HTTP)  

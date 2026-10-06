@@ -1,6 +1,6 @@
 import type { LocaleCode } from "@/i18n/locales/registry";
 
-/** Mapeia locale ECOPET → BCP-47 para Intl. */
+/** Mapeia locale EccoPet → BCP-47 para Intl. */
 function intlLocale(locale: LocaleCode | string): string {
   switch (locale) {
     case "pt-BR":
@@ -15,7 +15,7 @@ function intlLocale(locale: LocaleCode | string): string {
 }
 
 /**
- * Moeda. O EcoPet opera em BRL; a formatação respeita o idioma:
+ * Moeda. O EccoPet opera em BRL; a formatação respeita o idioma:
  * pt-BR/es → "R$ 25,90" · en → "R$ 25.90" (símbolo BRL, separadores locais).
  */
 export function formatCurrency(

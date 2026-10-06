@@ -23,7 +23,7 @@ export function AgendaDashboard() {
 
         <div className="rounded-[var(--radius-xl)] border border-ecopet-gray/12 bg-white p-5 shadow-[var(--shadow-sm)] dark:border-white/10 dark:bg-ecopet-dark-card sm:p-6">
           <h1 className="font-display text-2xl font-bold tracking-tight text-ecopet-dark dark:text-white">
-            Agendamento ECOPET
+            Agendamento EccoPet
           </h1>
           <p className="mt-2 text-sm text-ecopet-gray dark:text-white/70">
             Banho, tosa, consultas, vacinas e mais — escolha pet, serviço, data e horário.

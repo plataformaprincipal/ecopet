@@ -121,7 +121,7 @@ function buildAlerts(input: {
       id: "duplication-risk",
       severity: "info",
       title: "Risco de duplicação GA4 no container",
-      detail: "Não publique tags GA4 page_view se o EcoPet gtag estiver ativo.",
+      detail: "Não publique tags GA4 page_view se o EccoPet gtag estiver ativo.",
     });
   }
   for (const p of input.problems) {
@@ -202,7 +202,7 @@ export async function getGtmGovernanceReport(options?: {
       id: "events",
       ok: countCatalogEvents() > 0,
       label: "Eventos",
-      detail: `${countCatalogEvents()} no catálogo EcoPet.`,
+      detail: `${countCatalogEvents()} no catálogo EccoPet.`,
     },
     {
       id: "duplication",
@@ -272,7 +272,7 @@ export async function getGtmGovernanceReport(options?: {
         .sort((a, b) => b.count - a.count),
       recentSamples: ops.recentSamples,
       discardedNote:
-        "Eventos com PII são sanitizados/descartados no client (sanitizeEventParams). Contadores de volume live ficam no GTM Preview / GA4 — EcoPet não duplica warehouse.",
+        "Eventos com PII são sanitizados/descartados no client (sanitizeEventParams). Contadores de volume live ficam no GTM Preview / GA4 — EccoPet não duplica warehouse.",
     },
     tags: getRecommendedTags(),
     triggers: getRecommendedTriggers(),
@@ -363,7 +363,7 @@ export async function getGtmGovernanceReport(options?: {
     },
     meta: {
       dataSource:
-        "EcoPet governance (catálogo + env + ops + coverage). Tags/Triggers/Variables = inventário recomendado, não sync API GTM.",
+        "EccoPet governance (catálogo + env + ops + coverage). Tags/Triggers/Variables = inventário recomendado, não sync API GTM.",
       noWarehouseDuplication: true,
     },
   };

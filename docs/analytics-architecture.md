@@ -1,4 +1,4 @@
-# Arquitetura Analytics EcoPet
+# Arquitetura Analytics EccoPet
 
 ## Camadas (não reimplementar)
 

@@ -35,18 +35,18 @@ export async function POST(request: Request) {
   // Seed mínimo de conhecimento institucional (não inventa políticas — usa texto canônico)
   const docs = [
     {
-      title: "Aviso de segurança EcoPet AI",
+      title: "Aviso de segurança EccoPet AI",
       sourceType: "policy",
       sourceId: "ai-safety-disclaimer",
       content:
-        "A IA EcoPet não substitui médicos-veterinários, zootecnistas, adestradores, especialistas ou outros profissionais qualificados. As informações fornecidas possuem caráter informativo e de apoio à tomada de decisão.",
+        "A IA EccoPet não substitui médicos-veterinários, zootecnistas, adestradores, especialistas ou outros profissionais qualificados. As informações fornecidas possuem caráter informativo e de apoio à tomada de decisão.",
     },
     {
       title: "FAQ — Conta e login",
       sourceType: "faq",
       sourceId: "account-login",
       content:
-        "Para acessar o EcoPet, use e-mail e senha cadastrados. Recuperação de senha está disponível em Esqueci minha senha. Nunca compartilhe códigos de verificação.",
+        "Para acessar o EccoPet, use e-mail e senha cadastrados. Recuperação de senha está disponível em Esqueci minha senha. Nunca compartilhe códigos de verificação.",
     },
     {
       title: "FAQ — Marketplace",

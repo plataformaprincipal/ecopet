@@ -1,5 +1,5 @@
 /**
- * ECOPET Petshop Web — JavaScript dinâmico (Fase 2)
+ * EccoPet Petshop Web — JavaScript dinâmico (Fase 2)
  * -------------------------------------------------
  * Módulos: relógio, carrossel Bootstrap, validação de formulários,
  * CEP, serviços (banho/tosa), agendamento e contadores animados.

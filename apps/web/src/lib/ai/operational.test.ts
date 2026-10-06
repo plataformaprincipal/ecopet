@@ -6,7 +6,7 @@ import { listAutomationRules, listRulesForEvent } from "./operational/automation
 import { parseMarketplaceNaturalLanguage } from "./operational/marketplace/nl-search";
 import { parseExploreIntent } from "./operational/explore/intent";
 
-describe("EcoPet IA operacional — feature flags", () => {
+describe("EccoPet IA operacional — feature flags", () => {
   it("lista flags conhecidas", () => {
     const flags = listAiFeatureFlags();
     assert.equal(typeof flags.assistant, "boolean");
@@ -23,7 +23,7 @@ describe("EcoPet IA operacional — feature flags", () => {
   });
 });
 
-describe("EcoPet IA operacional — orquestrador", () => {
+describe("EccoPet IA operacional — orquestrador", () => {
   it("roteia cliente no marketplace", () => {
     const plan = resolveEcoPetAgent({
       role: "CLIENT",
@@ -48,7 +48,7 @@ describe("EcoPet IA operacional — orquestrador", () => {
   });
 });
 
-describe("EcoPet IA operacional — automações", () => {
+describe("EccoPet IA operacional — automações", () => {
   it("registra regras com eventos", () => {
     const rules = listAutomationRules();
     assert.ok(rules.length >= 4);
@@ -57,7 +57,7 @@ describe("EcoPet IA operacional — automações", () => {
   });
 });
 
-describe("EcoPet IA operacional — marketplace NL", () => {
+describe("EccoPet IA operacional — marketplace NL", () => {
   it("extrai filtros de preço e espécie", () => {
     const plan = parseMarketplaceNaturalLanguage(
       "Quero uma ração para cachorro adulto até R$ 100"
@@ -75,7 +75,7 @@ describe("EcoPet IA operacional — marketplace NL", () => {
   });
 });
 
-describe("EcoPet IA operacional — explore NL", () => {
+describe("EccoPet IA operacional — explore NL", () => {
   it("mapeia intenções para deep links", () => {
     assert.equal(parseExploreIntent("Quero encontrar uma ONG").target, "ngos");
     assert.equal(parseExploreIntent("Quero adotar um cachorro").target, "adoptions");

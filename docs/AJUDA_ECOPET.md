@@ -1,8 +1,8 @@
-# Ajuda EcoPet — Guia do usuário e requisitos técnicos
+# Ajuda EccoPet — Guia do usuário e requisitos técnicos
 
 ## Objetivo do site
 
-O **EcoPet** é um ecossistema digital para o mercado pet: tutores (clientes), parceiros comerciais, ONGs e gestão da plataforma convivem em um único ambiente para comprar produtos, agendar serviços (banho, tosa e outros), acompanhar pedidos e gerenciar pets.
+O **EccoPet** é um ecossistema digital para o mercado pet: tutores (clientes), parceiros comerciais, ONGs e gestão da plataforma convivem em um único ambiente para comprar produtos, agendar serviços (banho, tosa e outros), acompanhar pedidos e gerenciar pets.
 
 ## Principais funcionalidades
 
@@ -37,13 +37,13 @@ Parceiros e ONGs têm acesso imediato após o cadastro (status ativo).
 
 ## Catálogo inicial (bootstrap)
 
-Para disponibilizar o catálogo operacional da EcoPet (7 produtos + 2 serviços):
+Para disponibilizar o catálogo operacional da EccoPet (7 produtos + 2 serviços):
 
 ```bash
 npm run bootstrap:catalog
 ```
 
-O script é idempotente e cria o parceiro institucional **EcoPet Oficial** sem exigir cadastro manual.
+O script é idempotente e cria o parceiro institucional **EccoPet Oficial** sem exigir cadastro manual.
 
 ## Como comprar produto (Cliente)
 
@@ -86,7 +86,7 @@ O script é idempotente e cria o parceiro institucional **EcoPet Oficial** sem e
 
 ### Exemplos de `alt`
 
-- `alt="Cachorro e gato representando o ecossistema EcoPet"`
+- `alt="Cachorro e gato representando o ecossistema EccoPet"`
 - `alt="Imagem do produto Camiseta Pet Básica Conforto"`
 - `alt="Imagem do serviço Banho Pet"`
 
@@ -164,4 +164,4 @@ ecopet/
 
 ---
 
-EcoPet — ecossistema pet inteligente. Documento de ajuda para entrega acadêmica e operação local.
+EccoPet — ecossistema pet inteligente. Documento de ajuda para entrega acadêmica e operação local.

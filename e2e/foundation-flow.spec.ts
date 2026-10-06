@@ -1,5 +1,5 @@
 /**
- * EcoPet E2E minimo — 11 cenarios de aceite (API-first).
+ * EccoPet E2E minimo — 11 cenarios de aceite (API-first).
  * Sem credenciais externas: pagamento permanece pendente.
  */
 import { test, expect, type APIRequestContext } from "@playwright/test";
@@ -31,7 +31,7 @@ async function login(request: APIRequestContext, email: string) {
   expect(res.status(), `login ${email}`).toBe(200);
 }
 
-test.describe.serial("EcoPet E2E foundation flow", () => {
+test.describe.serial("EccoPet E2E foundation flow", () => {
   let productId = "";
   let orderId = "";
   let partnerUserId = "";

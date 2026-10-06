@@ -62,7 +62,7 @@ export async function buildClientReportSummary(
 
 export function reportToCsv(summary: ClientReportSummary): string {
   const lines = [
-    "EcoPet — Relatório do Cliente",
+    "EccoPet — Relatório do Cliente",
     `Período,${summary.period}`,
     `Gerado em,${new Date(summary.generatedAt).toLocaleString("pt-BR")}`,
     "",
@@ -83,7 +83,7 @@ export function reportToCsv(summary: ClientReportSummary): string {
 /** PDF mínimo em texto (sem dependências externas). */
 export function reportToPdfBytes(summary: ClientReportSummary): Uint8Array {
   const text = [
-    "EcoPet - Relatorio do Cliente",
+    "EccoPet - Relatorio do Cliente",
     `Periodo: ${summary.period}`,
     `Gerado: ${new Date(summary.generatedAt).toLocaleString("pt-BR")}`,
     "",

@@ -29,7 +29,7 @@ export function getGoogleTagManagerAdminDiagnostics() {
     notes: [
       status.antiDuplicationNote,
       "Use GTM Preview para validar dataLayer (eventos ecopet_*).",
-      "GA4 continua via provider EcoPet (gtag) — não duplique tags GA4 no container.",
+      "GA4 continua via provider EccoPet (gtag) — não duplique tags GA4 no container.",
       "Container ID nunca é retornado completo nesta API.",
     ],
     generatedAt: new Date().toISOString(),

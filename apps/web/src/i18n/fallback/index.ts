@@ -1,7 +1,7 @@
 import type { LocaleCode } from "@/i18n/locales/registry";
 import { DEFAULT_LOCALE, STATIC_LOCALES } from "@/i18n/locales/registry";
 
-/** Variantes regionais → locale canônico ECOPET */
+/** Variantes regionais → locale canônico EccoPet */
 const VARIANT_FALLBACK: Partial<Record<LocaleCode, LocaleCode[]>> = {
   "pt-PT": ["pt-BR"],
   "zh-CN": ["zh-TW"],

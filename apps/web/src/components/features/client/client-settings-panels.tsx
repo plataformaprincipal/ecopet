@@ -29,7 +29,7 @@ export function ClientTranslationSettings() {
   return (
     <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 dark:border-white/10 dark:bg-card">
       <h3 className="font-medium text-zinc-900 dark:text-white">Idioma</h3>
-      <p className="mt-1 text-sm text-zinc-500">Escolha o idioma da interface EcoPet.</p>
+      <p className="mt-1 text-sm text-zinc-500">Escolha o idioma da interface EccoPet.</p>
       <div className="mt-4">
         <LanguageSelector />
       </div>

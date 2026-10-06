@@ -34,7 +34,7 @@ export function GestorSidebar() {
         <div className="mb-6 flex items-center gap-2">
           <EcoPetLogo variant="icon" size={32} />
           <div>
-            <p className="font-display text-sm font-extrabold text-ecopet-dark dark:text-white">Gestor ECOPET</p>
+            <p className="font-display text-sm font-extrabold text-ecopet-dark dark:text-white">Gestor EccoPet</p>
             <p className="text-[10px] text-ecopet-gray">Sistema Interno da Empresa</p>
           </div>
         </div>

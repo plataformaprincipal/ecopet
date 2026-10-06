@@ -1,4 +1,4 @@
-# Dependencies Security Report — EcoPet
+# Dependencies Security Report — EccoPet
 
 **Data:** 2026-07-20  
 **Comando:** `npm audit --omit=dev`  
@@ -26,7 +26,7 @@
 |--------|--------------|-------|-------------------|------------------|
 | `ws` | `engine.io` → `socket.io-adapter` | Memory exhaustion DoS (fragmentos) | DoS se WebSocket/socket.io exposto | Atualizar socket.io/engine.io para release com `ws` patched |
 | `form-data` | transitivo | CRLF injection em multipart field names | Integridade de uploads HTTP multipart | Atualizar cadeia que puxa `form-data` vulnerável |
-| `nodemailer` | `next-auth` | SMTP command injection via `envelope.size` | Se next-auth/nodemailer usados com envelope controlado por input | Atualizar `nodemailer` / `next-auth`; validar se path está ativo no EcoPet |
+| `nodemailer` | `next-auth` | SMTP command injection via `envelope.size` | Se next-auth/nodemailer usados com envelope controlado por input | Atualizar `nodemailer` / `next-auth`; validar se path está ativo no EccoPet |
 | (cadeia) | `engine.io` / `socket.io-adapter` | depende de `ws` High | Mesmo DoS | Bump coordenado |
 | (cadeia) | demais High reportados no audit agregados | — | — | `npm audit` detalhado + PR de bump |
 
@@ -52,7 +52,7 @@
 
 | Aspecto | Status |
 |---------|--------|
-| App proprietário EcoPet | private monorepo |
+| App proprietário EccoPet | private monorepo |
 | Scan automatizado de licenças SPDX | **Não executado nesta rodada** |
 | Risco copyleft surpresa | Baixo para stack típica MIT/Apache (Next, Prisma, etc.) |
 

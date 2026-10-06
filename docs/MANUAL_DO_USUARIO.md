@@ -1,12 +1,12 @@
-# Manual do Usuário — EcoPet
+# Manual do Usuário — EccoPet
 
-Guia completo para tutores, parceiros e visitantes da plataforma EcoPet.
+Guia completo para tutores, parceiros e visitantes da plataforma EccoPet.
 
 ---
 
-## 1. Visão geral do EcoPet
+## 1. Visão geral do EccoPet
 
-O **EcoPet** é um ecossistema digital para o mercado pet. Na mesma plataforma você pode:
+O **EccoPet** é um ecossistema digital para o mercado pet. Na mesma plataforma você pode:
 
 - Comprar produtos (ração, acessórios, higiene e mais)
 - Agendar serviços como **Banho Pet** e **Tosa Pet**
@@ -76,7 +76,7 @@ Documentação técnica complementar: [AJUDA_ECOPET.md](AJUDA_ECOPET.md)
 4. Clique em **Adicionar ao carrinho**.
 5. Continue comprando ou vá ao carrinho.
 
-**Catálogo inicial:** execute `npm run bootstrap:catalog` para disponibilizar produtos e serviços da EcoPet Oficial.
+**Catálogo inicial:** execute `npm run bootstrap:catalog` para disponibilizar produtos e serviços da EccoPet Oficial.
 
 ---
 
@@ -175,7 +175,7 @@ Leve o pet até o local no horário marcado.
 
 ## 14. Recursos de acessibilidade
 
-O EcoPet segue boas práticas de acessibilidade (WCAG 2.1 AA):
+O EccoPet segue boas práticas de acessibilidade (WCAG 2.1 AA):
 
 - **Imagens** com `alt` descritivo (sem textos genéricos como “foto” ou “produto” isolados)
 - **Formulários** com `label`, `htmlFor`, `id`, placeholders e `aria-describedby`
@@ -209,4 +209,4 @@ npm run dev
 
 ---
 
-*EcoPet — Ecossistema Pet Inteligente. Manual do usuário — Fase 11.*
+*EccoPet — Ecossistema Pet Inteligente. Manual do usuário — Fase 11.*

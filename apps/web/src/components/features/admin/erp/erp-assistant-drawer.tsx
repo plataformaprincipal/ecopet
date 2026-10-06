@@ -50,7 +50,7 @@ export function ErpAssistantDrawer() {
         <div className="fixed inset-0 z-50 flex justify-end bg-black/40">
           <div className="flex h-full w-full max-w-lg flex-col bg-white shadow-xl dark:bg-card">
             <div className="flex items-center justify-between border-b p-4">
-              <h2 className="font-semibold">Assistente Executivo EcoPet</h2>
+              <h2 className="font-semibold">Assistente Executivo EccoPet</h2>
               <button type="button" onClick={() => setOpen(false)} aria-label="Fechar">
                 <X className="h-5 w-5" />
               </button>

@@ -58,7 +58,7 @@ async function main() {
   const password = "Ecopet@Forte2026";
   const adminEmail = `admin.int.${ts}@test.ecopet.local`;
 
-  console.log("=== EcoPet Foundation Integrations Tests (9A) ===\n");
+  console.log("=== EccoPet Foundation Integrations Tests (9A) ===\n");
 
   // Unauthenticated blocked
   const anon = await req("/api/admin/integrations/health");

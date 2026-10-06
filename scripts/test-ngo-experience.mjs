@@ -1,5 +1,5 @@
 /**
- * Testes da experiência unificada da ONG (/ngo/*) — EcoPet
+ * Testes da experiência unificada da ONG (/ngo/*) — EccoPet
  *
  * Valida de forma determinística (sem servidor/DB):
  *  - navegação (sidebar + bottom nav) aponta para /ngo/*
@@ -37,7 +37,7 @@ function ok(label, cond) {
   }
 }
 
-console.log("=== EcoPet — test:ngo-experience ===\n");
+console.log("=== EccoPet — test:ngo-experience ===\n");
 
 // 1. Redirect pós-login
 ok("ONG cai em /ngo após login", getDefaultDashboardPath("ONG") === "/ngo");

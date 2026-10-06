@@ -1,4 +1,4 @@
-# QA Report — EcoPet Enterprise
+# QA Report — EccoPet Enterprise
 
 **Escopo:** Validação pós Etapa 1 (Foundation) + Etapa 2 (UI Premium)  
 **Método:** Playwright acceptance + unit suites + auditoria de env (sem secrets) + análise estática  
@@ -15,7 +15,7 @@
 | Marketplace público | Aprovado | — | — | — | visitor + client | Core |
 | Explorar | Aprovado | — | — | — | visitor.spec | Core |
 | Social público | Aprovado | — | — | — | visitor.spec | Core |
-| EcoPet IA pública | Aprovado c/ ressalvas | AI_ENABLED=false | P2 | Homolog com AI on | env + eccopet | Feature |
+| EccoPet IA pública | Aprovado c/ ressalvas | AI_ENABLED=false | P2 | Homolog com AI on | env + eccopet | Feature |
 | Cadastro CLIENT/PARTNER/NGO | Aprovado | SMTP 535 | P2 | Credenciais SMTP/App Password | mail logs | Ops |
 | Login / Logout / Sessão | Aprovado | Multi-device não E2E | P3 | Homolog | client.spec | Auth |
 | Meu Pet / IDOR | Aprovado | — | — | — | client.spec | Segurança |

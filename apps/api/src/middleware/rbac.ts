@@ -5,7 +5,7 @@ import { isGestorRole, userHasAnyPermission } from "../services/rbac-service.js"
 export function requireGestor() {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
     if (!isGestorRole(req.userRole)) {
-      return res.status(403).json({ error: "Acesso restrito ao Gestor ECOPET" });
+      return res.status(403).json({ error: "Acesso restrito ao Gestor EccoPet" });
     }
     next();
   };

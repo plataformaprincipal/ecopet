@@ -393,7 +393,7 @@ body.ecopet-vlibras-inactive [data-ecopet-vlibras-suppressed="1"] * {
   z-index: 2147483647 !important;
 }
 
-/* Garante que layout EcoPet não crie clipping em overlays fixos (VLibras, toolbar, chat) */
+/* Garante que layout EccoPet não crie clipping em overlays fixos (VLibras, toolbar, chat) */
 html,
 body {
   overflow-x: hidden;
@@ -418,7 +418,7 @@ body {
   display: block !important;
 }
 
-/* Painel EcoPet acima de tooltips/overlays VLibras quando aberto */
+/* Painel EccoPet acima de tooltips/overlays VLibras quando aberto */
 .a11y-toolbar-root {
   z-index: 2147483640 !important;
 }

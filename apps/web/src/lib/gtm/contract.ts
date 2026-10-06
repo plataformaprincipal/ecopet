@@ -1,4 +1,4 @@
-/** Contrato tipado do Data Layer EcoPet (event_version = 1). */
+/** Contrato tipado do Data Layer EccoPet (event_version = 1). */
 
 export const GTM_EVENT_VERSION = 1 as const;
 
@@ -21,7 +21,7 @@ export type GtmPipelineResult = {
 };
 
 export type GtmTelemetryPayload = {
-  /** Nome do evento GA4 ou namespaced EcoPet. */
+  /** Nome do evento GA4 ou namespaced EccoPet. */
   event: string;
   /** Nome GA4 quando event é espelho (ecopet_ga_event). */
   ga_event?: string;

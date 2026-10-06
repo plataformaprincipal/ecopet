@@ -1,5 +1,5 @@
 /**
- * Foundation tests — camada central EcoPet AI.
+ * Foundation tests — camada central EccoPet AI.
  * Sem mocks de resposta de IA; valida política, custos e contratos.
  */
 import assert from "node:assert/strict";

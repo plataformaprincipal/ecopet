@@ -1,4 +1,4 @@
-/** Identidade visual EcoPet — compatível com qualquer remetente Resend. */
+/** Identidade visual EccoPet — compatível com qualquer remetente Resend. */
 export const EMAIL_BRAND = {
   primary: "#003B16",
   secondary: "#0F5A2A",

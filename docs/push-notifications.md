@@ -1,4 +1,4 @@
-# Push Notifications — EcoPet
+# Push Notifications — EccoPet
 
 Visão operacional do canal push (FCM + Web Push legado).
 

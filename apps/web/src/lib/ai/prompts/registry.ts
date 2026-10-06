@@ -37,7 +37,7 @@ function basePrompt(agentId: AiAgentId, name: string, category: string, focus: s
     name,
     category,
     version: "1.0.0",
-    content: `Você é o assistente de IA do EcoPet para ${name}.
+    content: `Você é o assistente de IA do EccoPet para ${name}.
 Foco: ${focus}
 Regras: responda em português brasileiro; seja preciso; nunca invente dados; respeite LGPD.`,
     recommendedModel: agentId === "admin" || agentId === "analytics" ? "gpt-4o" : "gpt-4o-mini",

@@ -68,7 +68,7 @@ export function SearchPageContent() {
             <tbody>
               {["type", "price", "rating", "location", "ai"].map((field) => (
                 <tr key={field} className="border-b">
-                  <td className="p-3 font-medium capitalize">{field === "ai" ? "IA ECOPET" : field === "price" ? "Preço" : field === "rating" ? "Avaliação" : field === "location" ? "Localização" : "Tipo"}</td>
+                  <td className="p-3 font-medium capitalize">{field === "ai" ? "IA EccoPet" : field === "price" ? "Preço" : field === "rating" ? "Avaliação" : field === "location" ? "Localização" : "Tipo"}</td>
                   {rows.map((r, i) => (
                     <td key={i} className="p-3">
                       {field === "price" ? formatMpPrice(r!.price) : field === "rating" ? r!.rating : String((r as Record<string, string | number>)[field] ?? "—")}

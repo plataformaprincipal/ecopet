@@ -19,7 +19,7 @@ const priorityStyles = {
   high: "border-amber-500/30 bg-amber-500/5",
 };
 
-export function AIInsightsPanel({ insights, title = "Central IA ECOPET", subtitle }: AIInsightsPanelProps) {
+export function AIInsightsPanel({ insights, title = "Central IA EccoPet", subtitle }: AIInsightsPanelProps) {
   return (
     <section className="rounded-2xl border border-ecopet-green/20 bg-gradient-to-br from-ecopet-green/5 via-transparent to-ecopet-yellow/5 p-4 lg:p-6">
       <div className="mb-4 flex flex-wrap items-center gap-2">

@@ -6,7 +6,7 @@ import { INTEGRATION_ERROR_CODES, IntegrationNotConfiguredError } from "@/lib/in
 import { writeIntegrationLog } from "@/lib/integrations/log";
 import type { TransactionalEmailEvent } from "@/lib/mail/transactional";
 import { sendEmail } from "@/lib/email/email-service";
-import { getEmailFromRaw } from "@/lib/email/config";
+import { getEmailFromRaw, getEmailFromName } from "@/lib/email/config";
 import { sanitizeEmailErrorMessage } from "@/lib/email/errors";
 
 export type EmailSendResult = {
@@ -79,7 +79,7 @@ async function sendViaBrevo(payload: { to: string; subject: string; html: string
     method: "POST",
     headers: { "api-key": key, "Content-Type": "application/json" },
     body: JSON.stringify({
-      sender: { email: from, name: process.env.SMTP_FROM_NAME ?? "EcoPet" },
+      sender: { email: from, name: getEmailFromName() },
       to: [{ email: payload.to }],
       subject: payload.subject,
       htmlContent: payload.html,

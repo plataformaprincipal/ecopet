@@ -141,7 +141,7 @@ export function ClientRegistrationForm() {
         <div className="col-12">
           <label className="form-label d-block">Como nos conheceu?<Required /></label>
           <div className="d-flex flex-wrap gap-3">
-            {["Indicação", "Redes sociais", "Google", "ECOPET App", "Passagem na loja"].map((opt) => (
+            {["Indicação", "Redes sociais", "Google", "EccoPet App", "Passagem na loja"].map((opt) => (
               <div className="form-check" key={opt}>
                 <input
                   className="form-check-input"

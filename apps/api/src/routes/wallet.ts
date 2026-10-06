@@ -54,7 +54,7 @@ router.post("/credit", async (req: AuthRequest, res, next) => {
       userId: targetUserId,
       amount,
       type: "BONUS",
-      description: description ?? "Crédito manual ECOPET",
+      description: description ?? "Crédito manual EccoPet",
     });
     res.json(result);
   } catch (e) {

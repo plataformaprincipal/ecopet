@@ -3,8 +3,8 @@ import Script from "next/script";
 import "./petshop-web-layout.css";
 
 export const metadata: Metadata = {
-  title: "Pet Shop ECOPET — Sistema Web",
-  description: "Cadastro de clientes e pets, agendamento de tele-busca e entrega. EMPRESA ECOPET — Grupo Café Platine.",
+  title: "Pet Shop EccoPet — Sistema Web",
+  description: "Cadastro de clientes e pets, agendamento de tele-busca e entrega. EMPRESA EccoPet — Grupo Café Platine.",
 };
 
 export default function PetshopWebLayout({ children }: { children: React.ReactNode }) {

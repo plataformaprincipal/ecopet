@@ -1,4 +1,4 @@
-# IA de Negócio — Módulos EcoPet
+# IA de Negócio — Módulos EccoPet
 
 Camada aplicada em `apps/web/src/lib/ai/modules/` **sobre** a fundação OpenAI (Prompt 1) e o Assistente Virtual (Prompt 2).
 

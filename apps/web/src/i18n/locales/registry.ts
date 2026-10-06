@@ -11,7 +11,7 @@ export interface LocaleDefinition {
 }
 
 /**
- * Registro central de idiomas ECOPET — adicionar novos idiomas apenas aqui.
+ * Registro central de idiomas EccoPet — adicionar novos idiomas apenas aqui.
  * Total: 92 idiomas nativos.
  */
 export const LOCALE_REGISTRY = [

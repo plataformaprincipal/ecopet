@@ -1,4 +1,4 @@
-# EcoPet — Testing Hub
+# EccoPet — Testing Hub
 
 ## Relatórios Enterprise QA (Prompt 3)
 

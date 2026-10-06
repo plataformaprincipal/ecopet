@@ -1,4 +1,4 @@
-# Risk Matrix — EcoPet Security Audit
+# Risk Matrix — EccoPet Security Audit
 
 **Data:** 2026-07-20  
 **Severidades:** Crítica · Alta · Média · Baixa · Informativa  

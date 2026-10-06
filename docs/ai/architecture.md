@@ -1,4 +1,4 @@
-# Arquitetura IA — Fundação EcoPet
+# Arquitetura IA — Fundação EccoPet
 
 ## Princípio
 

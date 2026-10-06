@@ -1,11 +1,11 @@
-/* EcoPet — minimal Web Push service worker */
+/* EccoPet — minimal Web Push service worker */
 self.addEventListener("push", (event) => {
-  let data = { title: "EcoPet", body: "", url: "/" };
+  let data = { title: "EccoPet", body: "", url: "/" };
   try {
     if (event.data) {
       const parsed = event.data.json();
       data = {
-        title: parsed.title || "EcoPet",
+        title: parsed.title || "EccoPet",
         body: parsed.body || parsed.message || "",
         url: parsed.url || parsed.data?.url || "/",
       };

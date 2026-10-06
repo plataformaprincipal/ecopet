@@ -7,7 +7,7 @@ export function productImageAlt(
   if (options?.shortDescription?.trim()) {
     return `${productName}: ${options.shortDescription.trim()}${suffix}`;
   }
-  return `${productName} disponível no catálogo EcoPet${suffix}`;
+  return `${productName} disponível no catálogo EccoPet${suffix}`;
 }
 
 export function serviceImageAlt(serviceName: string, shortDescription?: string | null): string {
@@ -21,7 +21,7 @@ export function serviceImageAlt(serviceName: string, shortDescription?: string |
   if (lower.includes("tosa")) {
     return "Serviço de tosa pet com agendamento online";
   }
-  return `${serviceName} com agendamento online no EcoPet`;
+  return `${serviceName} com agendamento online no EccoPet`;
 }
 
 export function avatarAlt(name: string): string {

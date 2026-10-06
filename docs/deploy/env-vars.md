@@ -1,4 +1,4 @@
-# Variáveis de ambiente — EcoPet
+# Variáveis de ambiente — EccoPet
 
 > **Fonte única no código:** `apps/web/src/lib/env-registry.ts`  
 > **Validação produção:** `apps/web/src/lib/validate-production-env.ts`  

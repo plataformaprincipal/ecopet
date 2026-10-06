@@ -17,7 +17,7 @@ export const DEFAULT_AUTOMATION_TEMPLATES: AutomationTemplateSeed[] = [
     description: "E-mail, notificação, checklist e auditoria",
     triggerEvent: PLATFORM_EVENTS.PARTNER_APPROVED,
     actions: [
-      { type: "send_email", config: { subject: "Conta aprovada — EcoPet" } },
+      { type: "send_email", config: { subject: "Conta aprovada — EccoPet" } },
       { type: "send_notification", config: { title: "Conta aprovada", message: "Seu painel parceiro está liberado." } },
       { type: "create_task", config: { title: "Checklist onboarding parceiro" } },
       { type: "create_audit_log", config: { resource: "Partner", observation: "Onboarding automático" } },
@@ -28,7 +28,7 @@ export const DEFAULT_AUTOMATION_TEMPLATES: AutomationTemplateSeed[] = [
     name: "Nova ONG aprovada",
     triggerEvent: PLATFORM_EVENTS.ONG_APPROVED,
     actions: [
-      { type: "send_email", config: { subject: "ONG aprovada — EcoPet" } },
+      { type: "send_email", config: { subject: "ONG aprovada — EccoPet" } },
       { type: "send_notification", config: { title: "ONG aprovada", message: "Painel ONG liberado." } },
       { type: "create_task", config: { title: "Checklist onboarding ONG" } },
       { type: "create_audit_log", config: { resource: "ONG" } },

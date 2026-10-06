@@ -117,7 +117,7 @@ async function getFinanceData() {
   return {
     metrics: [
       { label: "Receita pedidos", value: paidOrders._sum.total ?? 0 },
-      { label: "Saldo ECOPET total", value: wallets._sum.balance ?? 0 },
+      { label: "Saldo EccoPet total", value: wallets._sum.balance ?? 0 },
       { label: "Carteiras ativas", value: wallets._count },
       { label: "Reembolsos pendentes", value: refunds },
     ],
@@ -188,7 +188,7 @@ async function getQualityData() {
 async function getDesignData() {
   return {
     metrics: [{ label: "Assets na biblioteca", value: 48 }, { label: "Solicitações abertas", value: 5 }],
-    assets: [{ name: "Logo ECOPET", type: "SVG", updated: "2026-05-01" }],
+    assets: [{ name: "Logo EccoPet", type: "SVG", updated: "2026-05-01" }],
   };
 }
 
@@ -197,7 +197,7 @@ async function getProjectsData() {
     metrics: [{ label: "Projetos ativos", value: 6 }, { label: "Ideias no backlog", value: 14 }],
     projects: [
       { name: "Assessoria Inteligente v2", status: "in_progress", priority: "high" },
-      { name: "App Mobile ECOPET", status: "planning", priority: "medium" },
+      { name: "App Mobile EccoPet", status: "planning", priority: "medium" },
     ],
   };
 }
@@ -232,7 +232,7 @@ async function getRhData() {
   const gestors = await prisma.user.count({ where: { role: "GESTOR" } });
   const departments = await prisma.department.findMany();
   return {
-    metrics: [{ label: "Colaboradores ECOPET", value: gestors }, { label: "Setores", value: departments.length }],
+    metrics: [{ label: "Colaboradores EccoPet", value: gestors }, { label: "Setores", value: departments.length }],
     departments,
     team: await prisma.user.findMany({ where: { role: "GESTOR" }, select: { id: true, name: true, email: true }, take: 20 }),
   };
@@ -424,7 +424,7 @@ export async function seedGestorInfrastructure(gestorUserId: string) {
   const tplExists = await prisma.notificationTemplate.findFirst();
   if (!tplExists) {
     await prisma.notificationTemplate.create({
-      data: { name: "Boas-vindas ECOPET", channel: "email", subject: "Bem-vindo!", body: "Olá {{name}}, bem-vindo à ECOPET!" },
+      data: { name: "Boas-vindas EccoPet", channel: "email", subject: "Bem-vindo!", body: "Olá {{name}}, bem-vindo à EccoPet!" },
     });
   }
 

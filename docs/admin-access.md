@@ -1,4 +1,4 @@
-# Acesso ao painel administrativo EcoPet
+# Acesso ao painel administrativo EccoPet
 
 ## URL do painel
 

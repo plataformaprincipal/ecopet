@@ -1,5 +1,5 @@
 /**
- * Migração arquitetural EcoPet — move arquivos e atualiza imports.
+ * Migração arquitetural EccoPet — move arquivos e atualiza imports.
  * Uso: node scripts/migrate-architecture.mjs
  */
 import fs from "fs";
@@ -141,7 +141,7 @@ function runMoves() {
   }
 }
 
-console.log("=== EcoPet Architecture Migration ===\n");
+console.log("=== EccoPet Architecture Migration ===\n");
 runMoves();
 updateImports();
 console.log("\nDone.");

@@ -28,7 +28,7 @@ const STEPS = [
 const PAYMENT_OPTIONS: { value: PaymentMethod; label: string }[] = [
   { value: "PIX", label: "PIX" },
   { value: "CARD", label: "Cartão de crédito" },
-  { value: "WALLET", label: "Saldo ECOPET" },
+  { value: "WALLET", label: "Saldo EccoPet" },
   { value: "BOLETO", label: "Boleto" },
 ];
 
@@ -354,7 +354,7 @@ export function CheckoutSteps() {
 
             {step === 6 && (
               <p className="text-sm text-ecopet-gray">
-                Revise seus dados e confirme. Reembolsos PIX/dinheiro/transferência convertem automaticamente para Saldo ECOPET.
+                Revise seus dados e confirme. Reembolsos PIX/dinheiro/transferência convertem automaticamente para Saldo EccoPet.
               </p>
             )}
 
@@ -383,7 +383,7 @@ export function CheckoutSteps() {
           <div className="flex justify-between"><span>Frete/retirada</span><span>{shippingFee === 0 ? "Grátis" : formatMpPrice(shippingFee)}</span></div>
           {discount() > 0 && <div className="flex justify-between text-ecopet-green"><span>Desconto</span><span>-{formatMpPrice(discount())}</span></div>}
           <div className="flex justify-between text-lg font-bold"><span>Total</span><span className="text-ecopet-green">{formatMpPrice(grandTotal)}</span></div>
-          <p className="pt-2 text-xs text-ecopet-gray">{cart.length} item(ns) · Checkout ECOPET</p>
+          <p className="pt-2 text-xs text-ecopet-gray">{cart.length} item(ns) · Checkout EccoPet</p>
         </CardContent>
       </Card>
     </div>

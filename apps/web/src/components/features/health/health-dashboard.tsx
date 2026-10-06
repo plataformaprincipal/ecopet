@@ -13,7 +13,7 @@ export function HealthDashboard() {
 
   return (
     <>
-      <AppHeader title="ECOPET Health" />
+      <AppHeader title="EccoPet Health" />
       <main className="relative mx-auto max-w-5xl flex-1 p-4 lg:p-6 space-y-6">
         <EcopetWatermark />
         <div className="relative">

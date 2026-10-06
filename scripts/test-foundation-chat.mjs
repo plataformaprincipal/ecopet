@@ -136,7 +136,7 @@ async function activateUser(userId) {
 
 async function main() {
   const ts = Date.now();
-  console.log("=== EcoPet Foundation Chat Tests ===\n");
+  console.log("=== EccoPet Foundation Chat Tests ===\n");
 
   const health = await reqAs("guest", "/api/health");
   assert(health.status === 200, "health ok");

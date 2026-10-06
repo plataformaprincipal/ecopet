@@ -161,7 +161,7 @@ export async function* streamAssistantChat(input: {
       yield {
         type: "error",
         code: "AI_FLAG_DISABLED",
-        message: "Assistente EcoPet IA temporariamente desativado.",
+        message: "Assistente EccoPet IA temporariamente desativado.",
       };
       return;
     }

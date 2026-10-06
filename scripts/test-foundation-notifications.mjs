@@ -1,5 +1,5 @@
 /**
- * Testes: Central de Notificações EcoPet
+ * Testes: Central de Notificações EccoPet
  */
 import bcrypt from "bcryptjs";
 import { PrismaClient, UserRole, AccountStatus } from "@prisma/client";
@@ -93,7 +93,7 @@ async function registerClient(jarName, email) {
 
 async function main() {
   const ts = Date.now();
-  console.log("=== EcoPet Foundation Notifications Tests ===\n");
+  console.log("=== EccoPet Foundation Notifications Tests ===\n");
 
   const health = await reqAs("guest", "/api/health");
   assert(health.status === 200, "1 health ok");

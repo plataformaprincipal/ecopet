@@ -1,5 +1,5 @@
 /**
- * Provedores de e-mail ECOPET
+ * Provedores de e-mail EccoPet
  *
  * Variáveis:
  * - EMAIL_PROVIDER: console | smtp | resend | sendgrid | ses
@@ -32,12 +32,12 @@ function resolveFromAddress(): string {
     process.env.EMAIL_FROM ||
     process.env.RESEND_FROM ||
     process.env.SMTP_FROM ||
-    "EcoPet <noreply@ecopet.app>"
+    "EccoPet <noreply@ecopet.app>"
   );
 }
 
 async function sendViaConsole(payload: EmailPayload, metadata?: Record<string, unknown>) {
-  console.log("[ECOPET Email — console]", JSON.stringify({ ...payload, metadata }, null, 2));
+  console.log("[EccoPet Email — console]", JSON.stringify({ ...payload, metadata }, null, 2));
   return { sent: true, provider: "console" as const, devPreview: payload.body };
 }
 
@@ -74,19 +74,19 @@ async function sendViaResend(payload: EmailPayload) {
 async function sendViaSmtp(payload: EmailPayload) {
   const host = process.env.SMTP_HOST;
   if (!host) throw new Error("SMTP_HOST não configurado");
-  console.log("[ECOPET Email — smtp pending]", { host, to: payload.to, subject: payload.subject });
+  console.log("[EccoPet Email — smtp pending]", { host, to: payload.to, subject: payload.subject });
   return { sent: false, provider: "smtp" as const, pending: true };
 }
 
 async function sendViaSendGrid(payload: EmailPayload) {
   if (!process.env.SENDGRID_API_KEY) throw new Error("SENDGRID_API_KEY não configurado");
-  console.log("[ECOPET Email — sendgrid pending]", { to: payload.to, subject: payload.subject });
+  console.log("[EccoPet Email — sendgrid pending]", { to: payload.to, subject: payload.subject });
   return { sent: false, provider: "sendgrid" as const, pending: true };
 }
 
 async function sendViaSes(payload: EmailPayload) {
   if (!process.env.AWS_SES_REGION) throw new Error("AWS_SES_REGION não configurado");
-  console.log("[ECOPET Email — ses pending]", { to: payload.to, subject: payload.subject });
+  console.log("[EccoPet Email — ses pending]", { to: payload.to, subject: payload.subject });
   return { sent: false, provider: "ses" as const, pending: true };
 }
 

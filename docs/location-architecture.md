@@ -1,4 +1,4 @@
-# Arquitetura de localização — EcoPet
+# Arquitetura de localização — EccoPet
 
 ## Fonte da verdade
 

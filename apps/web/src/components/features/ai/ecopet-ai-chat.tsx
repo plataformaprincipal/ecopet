@@ -143,7 +143,7 @@ export function EcoPetAIChat({ locale = "pt-BR", petId, conversationId, onConver
             }
           }}
           className="flex-1 rounded-xl border border-input bg-card px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
-          placeholder={unavailable ? "IA indisponível neste ambiente" : "Pergunte à EcoPet AI…"}
+          placeholder={unavailable ? "IA indisponível neste ambiente" : "Pergunte à EccoPet AI…"}
           disabled={loading || unavailable}
         />
         {loading ? (

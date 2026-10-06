@@ -11,7 +11,7 @@ function assertTestEnv(): void {
 
 export class FakeAIProvider {
   readonly name = "fake-ai";
-  constructor(private readonly reply = "Resposta de teste EcoPet AI.") {
+  constructor(private readonly reply = "Resposta de teste EccoPet AI.") {
     assertTestEnv();
   }
   async generate(input: string): Promise<{ content: string; provider: string }> {

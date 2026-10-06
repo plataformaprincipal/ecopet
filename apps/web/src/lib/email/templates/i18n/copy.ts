@@ -1,4 +1,5 @@
 import type { EmailLocale } from "@/lib/email/templates/locale";
+import { BRAND } from "@/lib/constants";
 
 export interface EmailCommonCopy {
   brandName: string;
@@ -97,18 +98,18 @@ export interface EmailCopyBundle {
 }
 
 const AI_PT =
-  "A IA EcoPet não substitui médicos-veterinários, zootecnistas, adestradores, especialistas ou outros profissionais qualificados. As informações fornecidas possuem caráter informativo e de apoio à tomada de decisão.";
+  "A IA EccoPet não substitui médicos-veterinários, zootecnistas, adestradores, especialistas ou outros profissionais qualificados. As informações fornecidas possuem caráter informativo e de apoio à tomada de decisão.";
 const AI_EN =
-  "EcoPet AI does not replace veterinarians, animal scientists, trainers, specialists, or other qualified professionals. The information provided is for informational and decision-support purposes only.";
+  "EccoPet AI does not replace veterinarians, animal scientists, trainers, specialists, or other qualified professionals. The information provided is for informational and decision-support purposes only.";
 const AI_ES =
-  "La IA de EcoPet no sustituye a veterinarios, zootecnistas, adiestradores, especialistas u otros profesionales calificados. La información proporcionada tiene carácter informativo y de apoyo a la toma de decisiones.";
+  "La IA de EccoPet no sustituye a veterinarios, zootecnistas, adiestradores, especialistas u otros profesionales calificados. La información proporcionada tiene carácter informativo y de apoyo a la toma de decisiones.";
 
 const PT_BR: EmailCopyBundle = {
   common: {
-    brandName: "EcoPet",
+    brandName: BRAND.name,
     autoEmail: "Este é um e-mail automático. Não responda diretamente.",
     footerTagline: "Ecossistema pet inteligente",
-    rights: "© EcoPet. Todos os direitos reservados.",
+    rights: "© EccoPet. Todos os direitos reservados.",
     support: "suporte@ecopet.com.br",
     aiDisclaimerPt: AI_PT,
     aiDisclaimerEn: AI_EN,
@@ -116,19 +117,19 @@ const PT_BR: EmailCopyBundle = {
     aiSectionTitle: "Aviso sobre IA",
   },
   passwordRecovery: {
-    subject: "Recuperação de Senha — EcoPet",
-    preview: (name) => `Redefina sua senha EcoPet, ${name}`,
+    subject: "Recuperação de Senha — EccoPet",
+    preview: (name) => `Redefina sua senha EccoPet, ${name}`,
     title: "Recuperação de Senha",
     greeting: (name) => `Olá, ${name}`,
-    message: "Recebemos uma solicitação para redefinir a senha da sua conta EcoPet.",
+    message: "Recebemos uma solicitação para redefinir a senha da sua conta EccoPet.",
     otpLabel: "Seu código de verificação",
     validity: "Válido por 10 minutos.",
     button: "Redefinir Senha",
     ignore: "Se você não solicitou, ignore este e-mail.",
   },
   otpCode: {
-    subject: "Código de verificação — EcoPet",
-    preview: "Seu código de verificação EcoPet",
+    subject: "Código de verificação — EccoPet",
+    preview: "Seu código de verificação EccoPet",
     title: "Código de Verificação",
     message: "Use o código abaixo para concluir sua verificação:",
     otpLabel: "Código",
@@ -136,35 +137,35 @@ const PT_BR: EmailCopyBundle = {
     ignore: "Se você não solicitou, ignore este e-mail.",
   },
   welcome: {
-    subject: "Bem-vindo(a) à EcoPet",
-    preview: (name) => `Bem-vindo(a) à EcoPet, ${name}!`,
-    title: "Bem-vindo(a) à EcoPet",
+    subject: "Bem-vindo(a) à EccoPet",
+    preview: (name) => `Bem-vindo(a) à EccoPet, ${name}!`,
+    title: "Bem-vindo(a) à EccoPet",
     greeting: (name) => `Olá, ${name}!`,
     message: "Sua conta foi criada com sucesso.",
     accountType: "Tipo de conta",
-    dashboardAccess: "Você já pode acessar seu painel e explorar o ecossistema EcoPet.",
-    button: "Acessar EcoPet",
+    dashboardAccess: "Você já pode acessar seu painel e explorar o ecossistema EccoPet.",
+    button: "Acessar EccoPet",
   },
   registrationCompleted: {
-    subject: "Cadastro concluído — EcoPet",
+    subject: "Cadastro concluído — EccoPet",
     preview: (name) => `Cadastro concluído, ${name}!`,
     title: "Cadastro Concluído",
     greeting: (name) => `Olá, ${name}!`,
     message: "Sua conta foi criada com sucesso.",
     accountType: "Tipo de conta",
     dashboardAccess: "Acesse seu painel para começar.",
-    button: "Acessar EcoPet",
+    button: "Acessar EccoPet",
   },
   passwordChanged: {
-    subject: "Senha alterada — EcoPet",
-    preview: "Sua senha EcoPet foi alterada",
+    subject: "Senha alterada — EccoPet",
+    preview: "Sua senha EccoPet foi alterada",
     title: "Senha Alterada",
-    message: "A senha da sua conta EcoPet foi alterada com sucesso.",
+    message: "A senha da sua conta EccoPet foi alterada com sucesso.",
     securityTip: "Se você não realizou esta alteração, entre em contato conosco imediatamente.",
-    button: "Acessar EcoPet",
+    button: "Acessar EccoPet",
   },
   orderPlaced: {
-    subject: (n) => `Pedido #${n} realizado — EcoPet`,
+    subject: (n) => `Pedido #${n} realizado — EccoPet`,
     preview: (n) => `Seu pedido #${n} foi registrado`,
     title: "Pedido Realizado",
     greeting: (name) => `Olá, ${name}!`,
@@ -172,7 +173,7 @@ const PT_BR: EmailCopyBundle = {
     button: "Ver Pedido",
   },
   appointmentScheduled: {
-    subject: "Agendamento realizado — EcoPet",
+    subject: "Agendamento realizado — EccoPet",
     preview: "Seu agendamento foi registrado",
     title: "Agendamento Realizado",
     greeting: (name) => `Olá, ${name}!`,
@@ -180,10 +181,10 @@ const PT_BR: EmailCopyBundle = {
     button: "Ver Agenda",
   },
   notification: {
-    subject: (title) => `${title} — EcoPet`,
+    subject: (title) => `${title} — EccoPet`,
     preview: (title) => title,
-    defaultTitle: "Notificação EcoPet",
-    button: "Abrir EcoPet",
+    defaultTitle: "Notificação EccoPet",
+    button: "Abrir EccoPet",
   },
   roles: {
     CLIENT: "Cliente",
@@ -204,10 +205,10 @@ const PT_BR: EmailCopyBundle = {
 
 const EN: EmailCopyBundle = {
   common: {
-    brandName: "EcoPet",
+    brandName: BRAND.name,
     autoEmail: "This is an automated email. Please do not reply directly.",
     footerTagline: "Intelligent pet ecosystem",
-    rights: "© EcoPet. All rights reserved.",
+    rights: "© EccoPet. All rights reserved.",
     support: "suporte@ecopet.com.br",
     aiDisclaimerPt: AI_PT,
     aiDisclaimerEn: AI_EN,
@@ -215,19 +216,19 @@ const EN: EmailCopyBundle = {
     aiSectionTitle: "AI notice",
   },
   passwordRecovery: {
-    subject: "Password Recovery — EcoPet",
-    preview: (name) => `Reset your EcoPet password, ${name}`,
+    subject: "Password Recovery — EccoPet",
+    preview: (name) => `Reset your EccoPet password, ${name}`,
     title: "Password Recovery",
     greeting: (name) => `Hello, ${name}`,
-    message: "We received a request to reset the password for your EcoPet account.",
+    message: "We received a request to reset the password for your EccoPet account.",
     otpLabel: "Your verification code",
     validity: "Valid for 10 minutes.",
     button: "Reset Password",
     ignore: "If you did not request this, please ignore this email.",
   },
   otpCode: {
-    subject: "Verification code — EcoPet",
-    preview: "Your EcoPet verification code",
+    subject: "Verification code — EccoPet",
+    preview: "Your EccoPet verification code",
     title: "Verification Code",
     message: "Use the code below to complete your verification:",
     otpLabel: "Code",
@@ -235,35 +236,35 @@ const EN: EmailCopyBundle = {
     ignore: "If you did not request this, please ignore this email.",
   },
   welcome: {
-    subject: "Welcome to EcoPet",
-    preview: (name) => `Welcome to EcoPet, ${name}!`,
-    title: "Welcome to EcoPet",
+    subject: "Welcome to EccoPet",
+    preview: (name) => `Welcome to EccoPet, ${name}!`,
+    title: "Welcome to EccoPet",
     greeting: (name) => `Hello, ${name}!`,
     message: "Your account was created successfully.",
     accountType: "Account type",
-    dashboardAccess: "You can now access your dashboard and explore the EcoPet ecosystem.",
-    button: "Access EcoPet",
+    dashboardAccess: "You can now access your dashboard and explore the EccoPet ecosystem.",
+    button: "Access EccoPet",
   },
   registrationCompleted: {
-    subject: "Registration completed — EcoPet",
+    subject: "Registration completed — EccoPet",
     preview: (name) => `Registration completed, ${name}!`,
     title: "Registration Completed",
     greeting: (name) => `Hello, ${name}!`,
     message: "Your account was created successfully.",
     accountType: "Account type",
     dashboardAccess: "Access your dashboard to get started.",
-    button: "Access EcoPet",
+    button: "Access EccoPet",
   },
   passwordChanged: {
-    subject: "Password changed — EcoPet",
-    preview: "Your EcoPet password was changed",
+    subject: "Password changed — EccoPet",
+    preview: "Your EccoPet password was changed",
     title: "Password Changed",
-    message: "Your EcoPet account password was changed successfully.",
+    message: "Your EccoPet account password was changed successfully.",
     securityTip: "If you did not make this change, contact us immediately.",
-    button: "Access EcoPet",
+    button: "Access EccoPet",
   },
   orderPlaced: {
-    subject: (n) => `Order #${n} placed — EcoPet`,
+    subject: (n) => `Order #${n} placed — EccoPet`,
     preview: (n) => `Your order #${n} was registered`,
     title: "Order Placed",
     greeting: (name) => `Hello, ${name}!`,
@@ -271,7 +272,7 @@ const EN: EmailCopyBundle = {
     button: "View Order",
   },
   appointmentScheduled: {
-    subject: "Appointment scheduled — EcoPet",
+    subject: "Appointment scheduled — EccoPet",
     preview: "Your appointment was registered",
     title: "Appointment Scheduled",
     greeting: (name) => `Hello, ${name}!`,
@@ -279,10 +280,10 @@ const EN: EmailCopyBundle = {
     button: "View Schedule",
   },
   notification: {
-    subject: (title) => `${title} — EcoPet`,
+    subject: (title) => `${title} — EccoPet`,
     preview: (title) => title,
-    defaultTitle: "EcoPet Notification",
-    button: "Open EcoPet",
+    defaultTitle: "EccoPet Notification",
+    button: "Open EccoPet",
   },
   roles: {
     CLIENT: "Client",
@@ -303,10 +304,10 @@ const EN: EmailCopyBundle = {
 
 const ES: EmailCopyBundle = {
   common: {
-    brandName: "EcoPet",
+    brandName: BRAND.name,
     autoEmail: "Este es un correo automático. No responda directamente.",
     footerTagline: "Ecosistema pet inteligente",
-    rights: "© EcoPet. Todos los derechos reservados.",
+    rights: "© EccoPet. Todos los derechos reservados.",
     support: "suporte@ecopet.com.br",
     aiDisclaimerPt: AI_PT,
     aiDisclaimerEn: AI_EN,
@@ -314,19 +315,19 @@ const ES: EmailCopyBundle = {
     aiSectionTitle: "Aviso sobre IA",
   },
   passwordRecovery: {
-    subject: "Recuperación de Contraseña — EcoPet",
-    preview: (name) => `Restablece tu contraseña EcoPet, ${name}`,
+    subject: "Recuperación de Contraseña — EccoPet",
+    preview: (name) => `Restablece tu contraseña EccoPet, ${name}`,
     title: "Recuperación de Contraseña",
     greeting: (name) => `Hola, ${name}`,
-    message: "Recibimos una solicitud para restablecer la contraseña de tu cuenta EcoPet.",
+    message: "Recibimos una solicitud para restablecer la contraseña de tu cuenta EccoPet.",
     otpLabel: "Tu código de verificación",
     validity: "Válido por 10 minutos.",
     button: "Restablecer Contraseña",
     ignore: "Si no solicitaste esto, ignora este correo.",
   },
   otpCode: {
-    subject: "Código de verificación — EcoPet",
-    preview: "Tu código de verificación EcoPet",
+    subject: "Código de verificación — EccoPet",
+    preview: "Tu código de verificación EccoPet",
     title: "Código de Verificación",
     message: "Usa el código a continuación para completar tu verificación:",
     otpLabel: "Código",
@@ -334,35 +335,35 @@ const ES: EmailCopyBundle = {
     ignore: "Si no solicitaste esto, ignora este correo.",
   },
   welcome: {
-    subject: "Bienvenido(a) a EcoPet",
-    preview: (name) => `¡Bienvenido(a) a EcoPet, ${name}!`,
-    title: "Bienvenido(a) a EcoPet",
+    subject: "Bienvenido(a) a EccoPet",
+    preview: (name) => `¡Bienvenido(a) a EccoPet, ${name}!`,
+    title: "Bienvenido(a) a EccoPet",
     greeting: (name) => `¡Hola, ${name}!`,
     message: "Tu cuenta fue creada con éxito.",
     accountType: "Tipo de cuenta",
-    dashboardAccess: "Ya puedes acceder a tu panel y explorar el ecosistema EcoPet.",
-    button: "Acceder a EcoPet",
+    dashboardAccess: "Ya puedes acceder a tu panel y explorar el ecosistema EccoPet.",
+    button: "Acceder a EccoPet",
   },
   registrationCompleted: {
-    subject: "Registro completado — EcoPet",
+    subject: "Registro completado — EccoPet",
     preview: (name) => `Registro completado, ${name}!`,
     title: "Registro Completado",
     greeting: (name) => `¡Hola, ${name}!`,
     message: "Tu cuenta fue creada con éxito.",
     accountType: "Tipo de cuenta",
     dashboardAccess: "Accede a tu panel para comenzar.",
-    button: "Acceder a EcoPet",
+    button: "Acceder a EccoPet",
   },
   passwordChanged: {
-    subject: "Contraseña cambiada — EcoPet",
-    preview: "Tu contraseña EcoPet fue cambiada",
+    subject: "Contraseña cambiada — EccoPet",
+    preview: "Tu contraseña EccoPet fue cambiada",
     title: "Contraseña Cambiada",
-    message: "La contraseña de tu cuenta EcoPet fue cambiada con éxito.",
+    message: "La contraseña de tu cuenta EccoPet fue cambiada con éxito.",
     securityTip: "Si no realizaste este cambio, contáctanos de inmediato.",
-    button: "Acceder a EcoPet",
+    button: "Acceder a EccoPet",
   },
   orderPlaced: {
-    subject: (n) => `Pedido #${n} realizado — EcoPet`,
+    subject: (n) => `Pedido #${n} realizado — EccoPet`,
     preview: (n) => `Tu pedido #${n} fue registrado`,
     title: "Pedido Realizado",
     greeting: (name) => `¡Hola, ${name}!`,
@@ -370,7 +371,7 @@ const ES: EmailCopyBundle = {
     button: "Ver Pedido",
   },
   appointmentScheduled: {
-    subject: "Cita agendada — EcoPet",
+    subject: "Cita agendada — EccoPet",
     preview: "Tu cita fue registrada",
     title: "Cita Agendada",
     greeting: (name) => `¡Hola, ${name}!`,
@@ -378,10 +379,10 @@ const ES: EmailCopyBundle = {
     button: "Ver Agenda",
   },
   notification: {
-    subject: (title) => `${title} — EcoPet`,
+    subject: (title) => `${title} — EccoPet`,
     preview: (title) => title,
-    defaultTitle: "Notificación EcoPet",
-    button: "Abrir EcoPet",
+    defaultTitle: "Notificación EccoPet",
+    button: "Abrir EccoPet",
   },
   roles: {
     CLIENT: "Cliente",

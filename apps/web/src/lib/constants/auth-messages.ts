@@ -1,4 +1,4 @@
-/** Mensagens padronizadas de autenticação — EcoPet */
+/** Mensagens padronizadas de autenticação — EccoPet */
 
 /** Mensagem única para reduzir enumeração de contas. */
 export const LOGIN_INVALID_CREDENTIALS_MESSAGE = "E-mail ou senha incorretos.";

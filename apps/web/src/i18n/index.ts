@@ -1,5 +1,5 @@
 /**
- * ECOPET i18n — ponto de entrada público.
+ * EccoPet i18n — ponto de entrada público.
  *
  * Estrutura:
  *   src/i18n/locales/       — registro de idiomas + JSON estáticos

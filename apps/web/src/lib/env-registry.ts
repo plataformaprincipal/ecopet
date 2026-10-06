@@ -1,5 +1,5 @@
 /**
- * Catálogo oficial de variáveis de ambiente do EcoPet (apps/web + monorepo).
+ * Catálogo oficial de variáveis de ambiente do EccoPet (apps/web + monorepo).
  * Fonte única para documentação, validação e scripts de deploy.
  */
 
@@ -167,7 +167,7 @@ export const ENV_REGISTRY: EnvVarDefinition[] = [
       "apps/web/src/lib/email/provider.ts",
       "apps/web/src/lib/email/email-service.ts",
     ],
-    example: "EcoPet <noreply@eccopet.com>",
+    example: "EccoPet <noreply@eccopet.com>",
   },
   {
     name: "EMAIL_PROVIDER",
@@ -343,7 +343,7 @@ export const ENV_REGISTRY: EnvVarDefinition[] = [
     environments: ["Production", "Preview", "Development"],
     purpose: "Nome exibido do remetente",
     usedIn: ["apps/web/src/lib/mail/config.ts", "apps/web/src/lib/email/provider.ts"],
-    example: "EcoPet",
+    example: "EccoPet",
   },
   {
     name: "SMTP_FROM_EMAIL",
@@ -361,7 +361,7 @@ export const ENV_REGISTRY: EnvVarDefinition[] = [
     environments: ["Development"],
     purpose: "Remetente legado (formato livre)",
     usedIn: ["apps/web/src/lib/mail/config.ts", "apps/api/src/services/email-providers.ts"],
-    example: "EcoPet <no-reply@seudominio.com>",
+    example: "EccoPet <no-reply@seudominio.com>",
     legacy: true,
   },
   {
@@ -547,7 +547,7 @@ export const ENV_REGISTRY: EnvVarDefinition[] = [
     environments: ["Development"],
     purpose: "Nome remetente SMS",
     usedIn: ["apps/web/src/lib/sms/provider.ts"],
-    example: "EcoPet",
+    example: "EccoPet",
   },
 
   // ─── TalkJS ───

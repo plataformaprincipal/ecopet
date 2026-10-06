@@ -26,13 +26,13 @@ const BENEFITS = [
   {
     icon: ShoppingBag,
     title: "Comprar produtos",
-    description: "Catálogo com itens de parceiros aprovados e curadoria da plataforma EcoPet.",
+    description: "Catálogo com itens de parceiros aprovados e curadoria da plataforma EccoPet.",
     href: "/marketplace",
   },
   {
     icon: Calendar,
     title: "Acompanhar agenda",
-    description: "Agende e gerencie compromissos do seu pet com parceiros da rede EcoPet.",
+    description: "Agende e gerencie compromissos do seu pet com parceiros da rede EccoPet.",
     href: "/cadastro",
   },
   {
@@ -60,7 +60,7 @@ const DIFFERENTIALS = [
   },
   {
     title: "Privacidade em primeiro lugar",
-    description: "Seus dados e os do seu pet protegidos conforme LGPD e políticas EcoPet.",
+    description: "Seus dados e os do seu pet protegidos conforme LGPD e políticas EccoPet.",
   },
 ];
 
@@ -70,12 +70,12 @@ export function PublicHomePage() {
       <PublicHero
         badge="Ecossistema pet"
         title="Tudo o que seu pet precisa, em um só lugar"
-        subtitle="EcoPet conecta tutores, parceiros e ONGs em uma plataforma premium para cuidar, comprar, agendar e acompanhar a rotina do seu pet."
+        subtitle="EccoPet conecta tutores, parceiros e ONGs em uma plataforma premium para cuidar, comprar, agendar e acompanhar a rotina do seu pet."
       />
 
       <section aria-labelledby="beneficios-heading">
         <h2 id="beneficios-heading" className="font-display text-xl font-semibold text-zinc-900 dark:text-white">
-          O que você encontra no EcoPet
+          O que você encontra no EccoPet
         </h2>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {BENEFITS.map(({ icon: Icon, title, description, href }) => (
@@ -98,7 +98,7 @@ export function PublicHomePage() {
 
       <section aria-labelledby="diferenciais-heading">
         <h2 id="diferenciais-heading" className="font-display text-xl font-semibold text-zinc-900 dark:text-white">
-          Por que escolher o EcoPet
+          Por que escolher o EccoPet
         </h2>
         <div className="mt-6 grid gap-4 lg:grid-cols-3">
           {DIFFERENTIALS.map((item) => (

@@ -1,7 +1,7 @@
 /**
  * Eventos namespaced para o GTM Preview / Custom Triggers.
  * NÃO usar page_view / purchase nativos aqui — isso evitará duplicar GA4
- * quando o Measurement Protocol/gtag EcoPet já envia.
+ * quando o Measurement Protocol/gtag EccoPet já envia.
  */
 export const GtmEvents = {
   PAGE_VIEW: "ecopet_page_view",

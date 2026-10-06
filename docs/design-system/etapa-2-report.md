@@ -19,7 +19,7 @@
 | Marketplace público | `public-marketplace-page-premium.tsx` + cards | Concluído |
 | Explorar | `public-explore-page-premium.tsx` | Concluído |
 | Rede Social | `social-hub.tsx` + post-card + notifications | Concluído |
-| EcoPet IA | `eccopet-ai-shell.tsx` | Concluído |
+| EccoPet IA | `eccopet-ai-shell.tsx` | Concluído |
 | Dashboard cliente | `client-dashboard-home.tsx` + `petos-card` + shell | Concluído |
 | Meu Pet / Perfil / Agenda cliente | pages + preview + agenda-dashboard | Concluído |
 | Shells Parceiro / ONG | partner-shell, ong-shell, sidebars, headers | Concluído |
@@ -38,7 +38,7 @@
 | Login | Form solto | Card glass + painel institucional, logo mobile |
 | Cadastro | Steps básicos | Progress line elegante + cards elevados |
 | Cliente | Fundo zinc | Cream/token surfaces, cards PetOS brandificados |
-| Social | Zinc chrome | Top bar glass, tabs/tokens EcoPet |
+| Social | Zinc chrome | Top bar glass, tabs/tokens EccoPet |
 | IA | Zinc panels | Top bar + chat surface tokens, enterprise feel |
 | Admin | gray-50 | Cream/dark tokens, sidebar enterprise |
 | Modais | Blur simples | Overlay brand + glass panel |

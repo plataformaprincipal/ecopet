@@ -19,7 +19,7 @@ export function errorHandler(err: Error, req: Request, res: Response, _next: Nex
 
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
     if (process.env.NODE_ENV !== "production") {
-      console.error("[ECOPET API] Prisma known error", {
+      console.error("[EccoPet API] Prisma known error", {
         name: err.name,
         message: err.message,
         code: err.code,
@@ -40,12 +40,12 @@ export function errorHandler(err: Error, req: Request, res: Response, _next: Nex
         code: `${String(target).toUpperCase()}_DUPLICATE`,
       });
     }
-    console.error("[ECOPET API] Prisma", err.code, err.message);
+    console.error("[EccoPet API] Prisma", err.code, err.message);
     return res.status(503).json({ error: USER_MESSAGES.DATABASE, code: "DATABASE" });
   }
 
   if (err instanceof Prisma.PrismaClientInitializationError) {
-    console.error("[ECOPET API] Prisma init error", {
+    console.error("[EccoPet API] Prisma init error", {
       name: err.name,
       message: err.message,
       stack: err.stack,
@@ -53,7 +53,7 @@ export function errorHandler(err: Error, req: Request, res: Response, _next: Nex
     return res.status(503).json({ error: USER_MESSAGES.DATABASE, code: "DATABASE" });
   }
 
-  console.error("[ECOPET API]", {
+  console.error("[EccoPet API]", {
     name: err.name,
     message: err.message,
     stack: err.stack,

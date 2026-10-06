@@ -1,4 +1,4 @@
-/** Cliente: leitura da sessão EcoPet via /api/auth/session (sempre JSON). */
+/** Cliente: leitura da sessão EccoPet via /api/auth/session (sempre JSON). */
 
 export type SessionStatus = "loading" | "authenticated" | "unauthenticated";
 

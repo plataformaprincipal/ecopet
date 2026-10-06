@@ -2,7 +2,7 @@
 
 ## Decisão
 
-**Modelo autoritativo da rede social EcoPet: `SocialPost`** (e tabelas relacionadas: `SocialPostMedia`, `SocialPostLike`, `SocialComment`, etc.).
+**Modelo autoritativo da rede social EccoPet: `SocialPost`** (e tabelas relacionadas: `SocialPostMedia`, `SocialPostLike`, `SocialComment`, etc.).
 
 O modelo legado `Post` permanece no schema apenas para compatibilidade histórica e **não** deve receber novas features.
 

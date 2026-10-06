@@ -1,4 +1,4 @@
-# OWASP Top 10 Report — EcoPet
+# OWASP Top 10 Report — EccoPet
 
 **Data:** 2026-07-20  
 **Referência:** OWASP Top 10:2021 (+ controles clássicos CSRF, SSRF, Clickjacking, Open Redirect, Path Traversal, Command Injection, Prompt Injection)

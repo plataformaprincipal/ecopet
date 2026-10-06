@@ -1,5 +1,5 @@
 /**
- * Testes integrais da fundação EcoPet.
+ * Testes integrais da fundação EccoPet.
  * Requer: npm run dev + DATABASE_URL + npm run db:push
  */
 const BASE = process.env.WEB_URL || "http://localhost:3000";
@@ -79,7 +79,7 @@ async function main() {
   const password = "SenhaForte@123";
   let cookie = "";
 
-  console.log("=== Fundação EcoPet — testes integrais ===\n");
+  console.log("=== Fundação EccoPet — testes integrais ===\n");
 
   // Dashboard bloqueado sem login
   const dashBlocked = await req("/dashboard");

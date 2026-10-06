@@ -90,7 +90,7 @@ export function AdminBiIntelligencePanel({ domain = "executive" }: Props) {
       >
         <p className="mb-1 px-2 text-sm font-semibold">Centro de Inteligência</p>
         <p className="mb-3 px-2 text-xs text-muted-foreground">
-          First-party EcoPet + GA4 Data API
+          First-party EccoPet + GA4 Data API
         </p>
         <ul className="space-y-0.5">
           {BI_DOMAIN_META.map((d) => {

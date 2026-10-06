@@ -34,7 +34,7 @@ export function getGoogleAnalyticsAdminDiagnostics() {
       "Envio desabilitado em development por padrão (LGPD + ruído).",
       "Consent Mode v2: defaults denied até grant explícito.",
       "Ops enterprise: /api/admin/analytics/*",
-      "Dados de eventos ficam no Google Analytics — EcoPet não duplica o warehouse.",
+      "Dados de eventos ficam no Google Analytics — EccoPet não duplica o warehouse.",
     ],
     health: {
       envOk: status.configured,

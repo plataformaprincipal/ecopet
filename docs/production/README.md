@@ -1,4 +1,4 @@
-# Produção EcoPet — Índice
+# Produção EccoPet — Índice
 
 Documentação técnica para homologação e lançamento.
 

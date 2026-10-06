@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { PublicContactForm } from "@/components/features/foundation/public-contact-form";
 
 export const metadata: Metadata = {
-  title: "Contato | EcoPet",
-  description: "Fale com o EcoPet — formulário público protegido contra spam.",
+  title: "Contato | EccoPet",
+  description: "Fale com o EccoPet — formulário público protegido contra spam.",
 };
 
 export default function ContatoPage() {

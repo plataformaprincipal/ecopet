@@ -12,7 +12,7 @@ export const REGISTRATION_ROLES: { value: RegistrationRole; label: string; descr
   { value: "VETERINARIAN", label: "Veterinário", description: "Profissional com CRMV" },
   { value: "CLINIC", label: "Clínica Veterinária", description: "Estabelecimento com equipe e serviços" },
   { value: "PETSHOP", label: "Pet Shop", description: "Loja física com produtos e/ou serviços" },
-  { value: "SELLER", label: "Parceiro / Loja", description: "Vendedor no marketplace ECOPET" },
+  { value: "SELLER", label: "Parceiro / Loja", description: "Vendedor no marketplace EccoPet" },
   { value: "SERVICE_PROVIDER", label: "Prestador de Serviço", description: "Banho, passeio, adestramento e mais" },
   { value: "ONG", label: "ONG / Protetor", description: "Adoção, resgate e campanhas" },
 ];

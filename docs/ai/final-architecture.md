@@ -1,4 +1,4 @@
-# Arquitetura Final — IA EcoPet
+# Arquitetura Final — IA EccoPet
 
 ```
 Client UI (/eccopet)

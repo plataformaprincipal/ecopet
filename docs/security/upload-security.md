@@ -1,4 +1,4 @@
-# Upload Security — EcoPet
+# Upload Security — EccoPet
 
 ## Fluxo
 

@@ -63,7 +63,7 @@ async function buildDiagnostics(persist: boolean): Promise<AnalyticsDiagnosticsR
     ],
     notes: [
       "Measurement ID / Property ID / service account nunca retornados completos.",
-      "EcoPet não duplica o data warehouse do Google Analytics.",
+      "EccoPet não duplica o data warehouse do Google Analytics.",
       "Fila usa JobQueue interno (ANALYTICS_HEALTH_CHECK).",
       "Cache em memória do processo (TTL configurável).",
     ],

@@ -115,7 +115,7 @@ async function main() {
   const password = "Ecopet@Forte2026";
   const adminEmail = `admin.${ts}@test.ecopet.local`;
 
-  console.log("=== EcoPet Foundation Profiles Tests ===\n");
+  console.log("=== EccoPet Foundation Profiles Tests ===\n");
 
   // 1. CLIENT ACTIVE
   cookieJar.clear();

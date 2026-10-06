@@ -121,7 +121,7 @@ router.post("/register", async (req, res, next) => {
       redirectTo,
       pendingApproval: user.accountStatus === "PENDING",
       message: user.accountStatus === "PENDING"
-        ? "Cadastro recebido! Sua conta será analisada pela equipe EcoPet."
+        ? "Cadastro recebido! Sua conta será analisada pela equipe EccoPet."
         : "Conta criada com sucesso!",
     }, 201);
   } catch (e) {

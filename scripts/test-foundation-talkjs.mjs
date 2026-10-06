@@ -1,5 +1,5 @@
 /**
- * Testes TalkJS — integração de mensagens EcoPet.
+ * Testes TalkJS — integração de mensagens EccoPet.
  * Fixtures alinhadas ao schema (passwordHash) e sessão cookie JWT.
  */
 import fs from "fs";
@@ -327,7 +327,7 @@ const tests = [
 ];
 
 async function main() {
-  console.log("=== EcoPet Foundation TalkJS Tests ===\n");
+  console.log("=== EccoPet Foundation TalkJS Tests ===\n");
   console.log(`WEB_URL=${WEB}`);
 
   let passed = 0;

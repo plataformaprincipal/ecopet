@@ -1,5 +1,5 @@
 /**
- * Teste técnico de SMTP — EcoPet
+ * Teste técnico de SMTP — EccoPet
  * Uso: npm run test:mail
  */
 import fs from "fs";
@@ -92,7 +92,7 @@ async function logEmailToDb(data) {
 }
 
 async function main() {
-  console.log("=== EcoPet — teste SMTP ===\n");
+  console.log("=== EccoPet — teste SMTP ===\n");
 
   spawnSync(process.execPath, [path.join(__dirname, "sync-web-env.mjs")], {
     cwd: root,
@@ -129,7 +129,7 @@ async function main() {
   const provider = process.env.MAIL_PROVIDER
     ? preset.label
     : detectSmtpProvider(host);
-  const subject = "EcoPet — teste SMTP";
+  const subject = "EccoPet — teste SMTP";
 
   console.log("Configuração detectada:");
   console.log(`  MAIL_PROVIDER=${process.env.MAIL_PROVIDER || "custom"}`);
@@ -185,8 +185,8 @@ async function main() {
       from: smtpFrom,
       to: testEmail,
       subject,
-      text: "Este é um e-mail de teste do EcoPet. Se você recebeu, o SMTP está configurado corretamente.",
-      html: `<p>Este é um e-mail de teste do <strong>EcoPet</strong>.</p><p>Se você recebeu, o SMTP está configurado corretamente.</p>`,
+      text: "Este é um e-mail de teste do EccoPet. Se você recebeu, o SMTP está configurado corretamente.",
+      html: `<p>Este é um e-mail de teste do <strong>EccoPet</strong>.</p><p>Se você recebeu, o SMTP está configurado corretamente.</p>`,
     });
     const elapsed = Date.now() - sendStart;
     const response = info.response || "";

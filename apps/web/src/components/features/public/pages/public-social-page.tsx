@@ -148,7 +148,7 @@ function GuestSocialFeed() {
         <header className="space-y-2">
           <h1 className="font-display text-3xl font-bold text-zinc-900 dark:text-white">Comunidade Pet</h1>
           <p className="text-zinc-500 dark:text-zinc-400">
-            Histórias reais, adoções e dicas — explore a rede social do EcoPet.
+            Histórias reais, adoções e dicas — explore a rede social do EccoPet.
           </p>
         </header>
 

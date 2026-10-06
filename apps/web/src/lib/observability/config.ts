@@ -1,5 +1,5 @@
 /**
- * Configuração Better Stack / observabilidade EcoPet.
+ * Configuração Better Stack / observabilidade EccoPet.
  * Token apenas no servidor — nunca NEXT_PUBLIC_*.
  */
 export type ObservabilityEnvironment = "development" | "test" | "preview" | "production";

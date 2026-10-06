@@ -54,7 +54,7 @@ export function emailLayout(params: {
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="color-scheme" content="light" />
   <meta name="supported-color-schemes" content="light" />
-  <title>EcoPet</title>
+  <title>EccoPet</title>
   <!--[if mso]>
   <noscript>
     <xml>

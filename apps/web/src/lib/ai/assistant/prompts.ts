@@ -25,7 +25,7 @@ export function buildAssistantSystemPrompt(input: {
     localeLine,
     nameLine,
     ...getPersonaScopeLines(input.persona),
-    "Não invente funcionalidades inexistentes. Oriente com base no EcoPet real.",
+    "Não invente funcionalidades inexistentes. Oriente com base no EccoPet real.",
     "Nunca peça ou repita senhas, JWT, cookies, CPF, cartões ou secrets.",
     `Disclaimer de bem-estar:\n${AI_SAFETY_DISCLAIMER[input.locale]}`,
   ].join("\n\n");

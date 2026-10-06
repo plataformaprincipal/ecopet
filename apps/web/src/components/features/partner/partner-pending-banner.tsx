@@ -28,7 +28,7 @@ export function PartnerPendingBanner({ accessLevel, className }: PartnerPendingB
           <p className="font-medium">Conta em análise</p>
           <p className="mt-0.5 text-amber-800/90 dark:text-amber-100/80">
             Enquanto aguarda aprovação, você pode completar seu perfil e acompanhar a
-            Comunidade EcoPet. Marketplace, Agenda e Atividades com IA serão liberados após
+            Comunidade EccoPet. Marketplace, Agenda e Atividades com IA serão liberados após
             aprovação.
           </p>
         </div>

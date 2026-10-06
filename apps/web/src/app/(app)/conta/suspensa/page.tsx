@@ -18,7 +18,7 @@ export default async function SuspendedAccountPage() {
         </CardHeader>
         <CardContent className="space-y-4 text-sm">
           <p>
-            Se você acredita que isso é um engano, entre em contato com o suporte ECOPET pelo canal
+            Se você acredita que isso é um engano, entre em contato com o suporte EccoPet pelo canal
             oficial de atendimento.
           </p>
           <Button asChild variant="outline">

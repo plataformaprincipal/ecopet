@@ -58,7 +58,7 @@ export function OngPendingBanner({ accessLevel, className }: OngPendingBannerPro
           <p className="font-medium">Conta em análise</p>
           <p className="mt-0.5 text-amber-800/90 dark:text-amber-100/80">
             Complete seu cadastro enquanto aguarda aprovação. Comunidade, adoções e atividades serão
-            liberadas após a análise da equipe EcoPet.
+            liberadas após a análise da equipe EccoPet.
           </p>
         </div>
       </div>

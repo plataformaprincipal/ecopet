@@ -1,5 +1,6 @@
 import type { FcmNotificationPayload, PushCategory } from "./types";
 import { sanitizeNotificationUrl } from "./safe-url";
+import { BRAND } from "@/lib/constants";
 
 const DEFAULT_ICON = "/brand/ecopet-logo.png";
 const DEFAULT_BADGE = "/brand/ecopet-logo.png";
@@ -32,12 +33,12 @@ export function buildFcmPayload(input: {
   tag?: string;
   icon?: string;
 }): FcmNotificationPayload {
-  const title = redactSensitive((input.title || "EcoPet").trim()).slice(0, 80);
+  const title = redactSensitive((input.title || BRAND.name).trim()).slice(0, 80);
   const body = redactSensitive((input.body || "").trim()).slice(0, 180);
   const url = sanitizeNotificationUrl(input.url);
 
   return {
-    title: title || "EcoPet",
+    title: title || BRAND.name,
     body: body || "Você tem uma nova atualização.",
     icon: input.icon || DEFAULT_ICON,
     badge: DEFAULT_BADGE,

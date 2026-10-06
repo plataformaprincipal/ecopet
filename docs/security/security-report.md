@@ -1,4 +1,4 @@
-# Security Report — EcoPet (Enterprise / OWASP + Hardening)
+# Security Report — EccoPet (Enterprise / OWASP + Hardening)
 
 **Data:** 2026-07-20  
 **Papéis:** Security Engineer · Pentester · DevSecOps · Cloud Security · OWASP  

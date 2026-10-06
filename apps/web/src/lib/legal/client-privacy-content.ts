@@ -4,7 +4,7 @@ export const CLIENT_PRIVACY_SECTIONS: LegalSection[] = [
   {
     title: "1. Introdução",
     paragraphs: [
-      "A EcoPet valoriza a privacidade dos Clientes (tutores e responsáveis por pets) e trata dados pessoais em conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018).",
+      "A EccoPet valoriza a privacidade dos Clientes (tutores e responsáveis por pets) e trata dados pessoais em conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018).",
       "Esta Política de Privacidade do Cliente descreve quais dados coletamos, por quais finalidades, como protegemos suas informações e quais são seus direitos como titular.",
     ],
   },
@@ -24,7 +24,7 @@ export const CLIENT_PRIVACY_SECTIONS: LegalSection[] = [
   {
     title: "3. Finalidade da coleta",
     paragraphs: [
-      "Utilizamos seus dados para criar e gerenciar sua conta, autenticar acessos, processar compras e agendamentos, personalizar recomendações, enviar notificações relevantes, prevenir fraudes, cumprir obrigações legais e melhorar continuamente a experiência EcoPet.",
+      "Utilizamos seus dados para criar e gerenciar sua conta, autenticar acessos, processar compras e agendamentos, personalizar recomendações, enviar notificações relevantes, prevenir fraudes, cumprir obrigações legais e melhorar continuamente a experiência EccoPet.",
     ],
   },
   {
@@ -37,7 +37,7 @@ export const CLIENT_PRIVACY_SECTIONS: LegalSection[] = [
   {
     title: "5. Cadastro",
     paragraphs: [
-      "Informações fornecidas no cadastro são utilizadas para identificação, comunicação, personalização e cumprimento dos Termos de Uso e de Serviço do Cliente EcoPet.",
+      "Informações fornecidas no cadastro são utilizadas para identificação, comunicação, personalização e cumprimento dos Termos de Uso e de Serviço do Cliente EccoPet.",
       "Você pode atualizar dados cadastrais nas configurações da conta, quando disponível.",
     ],
   },
@@ -136,7 +136,7 @@ export const CLIENT_PRIVACY_SECTIONS: LegalSection[] = [
   {
     title: "19. Contato do controlador",
     paragraphs: [
-      "Controlador: EcoPet Plataforma Digital.",
+      "Controlador: EccoPet Plataforma Digital.",
       "Encarregado de Proteção de Dados (DPO): privacidade@ecopet.com.br",
       "Suporte ao Cliente: suporte@ecopet.com.br",
     ],

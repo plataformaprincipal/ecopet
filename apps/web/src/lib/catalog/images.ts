@@ -1,4 +1,4 @@
-/** Catálogo institucional EcoPet Oficial — imagens estáticas e textos alt. */
+/** Catálogo institucional EccoPet Oficial — imagens estáticas e textos alt. */
 export const CATALOG_IMAGE_BASE = "/catalog/ecopet-oficial";
 
 export type CatalogImageMeta = { url: string; alt: string };
@@ -65,7 +65,7 @@ export function resolveProductAlt(
   const extra = extraDetails as { imageAlt?: string } | null;
   if (extra?.imageAlt) return extra.imageAlt;
   if (shortDescription?.trim()) return `${name}: ${shortDescription.trim()}`;
-  return `${name} disponível no catálogo EcoPet`;
+  return `${name} disponível no catálogo EccoPet`;
 }
 
 export function resolveServiceAlt(
@@ -85,7 +85,7 @@ export function resolveServiceAlt(
   const lower = name.toLowerCase();
   if (lower.includes("banho")) return "Serviço de banho pet com agendamento para cães e gatos";
   if (lower.includes("tosa")) return "Serviço de tosa pet com agendamento para cães e gatos";
-  return `${name} com agendamento online no EcoPet`;
+  return `${name} com agendamento online no EccoPet`;
 }
 
 export function firstProductImageUrl(images?: unknown): string | null {

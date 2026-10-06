@@ -425,7 +425,7 @@ export async function retryPendingDeliveries(limit = 50): Promise<SendPushSummar
 
     const result = await sendPushToUser({
       userId: row.pushDevice.userId,
-      title: "EcoPet",
+      title: "EccoPet",
       body: "Atualização pendente",
       notificationId: row.notificationId || undefined,
       onlyDeviceDbId: row.pushDeviceId,

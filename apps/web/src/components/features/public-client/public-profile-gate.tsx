@@ -23,7 +23,7 @@ const BENEFITS = [
   {
     icon: Shield,
     title: "Conta segura",
-    description: "Seus dados protegidos conforme as políticas EcoPet e LGPD.",
+    description: "Seus dados protegidos conforme as políticas EccoPet e LGPD.",
   },
 ];
 
@@ -31,7 +31,7 @@ export function PublicProfileGate() {
   return (
     <div className="space-y-10">
       <PublicPageHeader
-        title="Sua conta EcoPet"
+        title="Sua conta EccoPet"
         description="Crie uma conta gratuita para acessar Meu Pet, pedidos, agenda e personalização completa do ecossistema."
       />
 

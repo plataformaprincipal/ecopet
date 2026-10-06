@@ -34,7 +34,7 @@ const ACCENTS = /[áàâãéêíóôõúüç]/i;
 const IGNORE = /\b(t\(|className|import |from "|https?:|aria-hidden|key=|data-)/;
 
 // Componentes legados NÃO renderizados pelas rotas atuais (substituídos pela
-// experiência premium / EcoPet Social). Mantidos no repo mas fora da auditoria.
+// experiência premium / EccoPet Social). Mantidos no repo mas fora da auditoria.
 const LEGACY_EXCLUDE = new Set([
   "public-social-page.tsx",
   "public-explore-page.tsx",

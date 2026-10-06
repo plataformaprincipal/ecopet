@@ -53,7 +53,7 @@ export async function POST(request: Request) {
   }
   if (parsed.data.reportText) context = parsed.data.reportText;
 
-  const system = `Você é assistente de moderação e suporte EcoPet (admin interno). ${PROMPTS[parsed.data.mode]}`;
+  const system = `Você é assistente de moderação e suporte EccoPet (admin interno). ${PROMPTS[parsed.data.mode]}`;
 
   try {
     const result = await runOrchestrator({

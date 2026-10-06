@@ -1,5 +1,5 @@
 /**
- * Testes Etapa 12: Painel Gestor EcoPet + BI
+ * Testes Etapa 12: Painel Gestor EccoPet + BI
  */
 import bcrypt from "bcryptjs";
 import { PrismaClient, UserRole, AccountStatus } from "@prisma/client";
@@ -114,7 +114,7 @@ async function ensureAdmin(email) {
 
 async function main() {
   const ts = Date.now();
-  console.log("=== EcoPet Foundation Gestor Tests ===\n");
+  console.log("=== EccoPet Foundation Gestor Tests ===\n");
 
   const adminEmail = `admin.gestor.${ts}@test.ecopet.local`;
   const clientEmail = `client.gestor.${ts}@test.ecopet.local`;

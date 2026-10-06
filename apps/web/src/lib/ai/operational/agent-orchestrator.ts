@@ -1,5 +1,5 @@
 /**
- * Agente central EcoPet IA — orquestra por perfil/página/módulo.
+ * Agente central EccoPet IA — orquestra por perfil/página/módulo.
  * Não acessa Prisma diretamente; delega a modules/enterprise/assistant.
  */
 import "server-only";

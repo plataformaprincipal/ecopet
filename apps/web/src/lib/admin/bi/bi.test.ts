@@ -99,7 +99,7 @@ describe("bi export", () => {
     assert.ok(excel.filename.endsWith(".xls"));
     const pdf = buildBiExportPayload(sample, "pdf");
     assert.ok(pdf.contentType.includes("html"));
-    assert.ok(pdf.body.includes("EcoPet BI"));
+    assert.ok(pdf.body.includes("EccoPet BI"));
   });
 });
 

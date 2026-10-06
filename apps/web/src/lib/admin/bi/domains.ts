@@ -29,7 +29,7 @@ export const BI_DOMAIN_META: BiDomainMeta[] = [
   {
     id: "executive",
     label: "Dashboard Executivo",
-    description: "Visão consolidada da plataforma EcoPet.",
+    description: "Visão consolidada da plataforma EccoPet.",
     href: "/admin/bi",
   },
   {

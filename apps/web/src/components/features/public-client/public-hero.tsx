@@ -29,7 +29,7 @@ export function PublicHero({ title, subtitle, badge }: PublicHeroProps) {
         </Button>
         <Button asChild variant="outline" size="lg">
           <Link href="/explorar">
-            Explorar EcoPet
+            Explorar EccoPet
             <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
           </Link>
         </Button>

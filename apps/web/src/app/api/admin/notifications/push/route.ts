@@ -122,7 +122,7 @@ export async function POST(req: Request) {
 
     const summary = await sendPushToUser({
       userId: user!.id,
-      title: parsed.data.title || "EcoPet — teste",
+      title: parsed.data.title || "EccoPet — teste",
       body: parsed.data.body || "Notificação de teste do painel administrativo.",
       url: "/admin/integracoes/firebase",
       category: "admin",

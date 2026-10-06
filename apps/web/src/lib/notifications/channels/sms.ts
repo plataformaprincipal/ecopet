@@ -53,7 +53,7 @@ export class SmsChannelProvider implements NotificationChannelProvider {
       };
     }
 
-    const body = `EcoPet: ${params.title} — ${params.message}`.slice(0, 320);
+    const body = `EccoPet: ${params.title} — ${params.message}`.slice(0, 320);
     const result = await sendTwilioSms({
       to: user.phone,
       body,

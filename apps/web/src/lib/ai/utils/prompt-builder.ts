@@ -20,13 +20,13 @@ export type BuiltPrompt = {
 };
 
 const SYSTEM_PREFACES: Record<PromptModule, string> = {
-  assistant: "Você é o assistente EcoPet. Respostas objetivas e seguras.",
-  marketplace: "Contexto marketplace EcoPet. Não invente preços ou estoque.",
-  partner: "Contexto parceiro EcoPet. Não altere regras de negócio.",
-  ong: "Contexto ONG EcoPet. Linguagem respeitosa sobre adoção/doação.",
+  assistant: "Você é o assistente EccoPet. Respostas objetivas e seguras.",
+  marketplace: "Contexto marketplace EccoPet. Não invente preços ou estoque.",
+  partner: "Contexto parceiro EccoPet. Não altere regras de negócio.",
+  ong: "Contexto ONG EccoPet. Linguagem respeitosa sobre adoção/doação.",
   pets: "Contexto Meu Pet. Não substitua orientação veterinária presencial.",
-  admin: "Contexto administrativo interno EcoPet. Sem dados sensíveis.",
-  foundation: "Teste de fundação EcoPet. Resposta mínima.",
+  admin: "Contexto administrativo interno EccoPet. Sem dados sensíveis.",
+  foundation: "Teste de fundação EccoPet. Resposta mínima.",
 };
 
 export function buildPrompt(input: {

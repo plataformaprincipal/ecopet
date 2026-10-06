@@ -455,22 +455,22 @@ const ongRegisterPt = {
 
 const termsPt = {
   partner: {
-    legalHeading: "Termos do Parceiro EcoPet",
+    legalHeading: "Termos do Parceiro EccoPet",
     legalSubheading:
-      "Documentos jurídicos exclusivos para parceiros — independentes dos termos do Cliente EcoPet.",
+      "Documentos jurídicos exclusivos para parceiros — independentes dos termos do Cliente EccoPet.",
     termsPreview:
-      "Estes Termos regulam exclusivamente a parceria comercial na EcoPet: cadastro, produtos, serviços, agendamentos, entregas, tele-busca, transporte de animais, reputação, verificação documental, proteção animal e responsabilidades do Parceiro.",
+      "Estes Termos regulam exclusivamente a parceria comercial na EccoPet: cadastro, produtos, serviços, agendamentos, entregas, tele-busca, transporte de animais, reputação, verificação documental, proteção animal e responsabilidades do Parceiro.",
     privacyPreview:
-      "Esta Política descreve exclusivamente como a EcoPet trata dados de Parceiros — CPF, CNPJ, contato, endereço, financeiro, documentos, fotos, logotipo, acesso e histórico — em conformidade com a LGPD.",
+      "Esta Política descreve exclusivamente como a EccoPet trata dados de Parceiros — CPF, CNPJ, contato, endereço, financeiro, documentos, fotos, logotipo, acesso e histórico — em conformidade com a LGPD.",
   },
   ong: {
-    legalHeading: "Termos da ONG EcoPet",
+    legalHeading: "Termos da ONG EccoPet",
     legalSubheading:
-      "Documentos jurídicos exclusivos para ONGs e protetores — independentes dos termos do Cliente EcoPet.",
+      "Documentos jurídicos exclusivos para ONGs e protetores — independentes dos termos do Cliente EccoPet.",
     termsPreview:
-      "Estes Termos regulam exclusivamente a colaboração de ONGs e protetores individuais na EcoPet: resgate, adoção responsável, lares temporários, campanhas, arrecadações, feiras de adoção, divulgação de animais, uso ético da plataforma, combate a fraudes e maus-tratos, além das responsabilidades do cadastrado e limitações da EcoPet.",
+      "Estes Termos regulam exclusivamente a colaboração de ONGs e protetores individuais na EccoPet: resgate, adoção responsável, lares temporários, campanhas, arrecadações, feiras de adoção, divulgação de animais, uso ético da plataforma, combate a fraudes e maus-tratos, além das responsabilidades do cadastrado e limitações da EccoPet.",
     privacyPreview:
-      "Esta Política descreve exclusivamente como a EcoPet trata dados de ONGs e protetores individuais — CPF, CNPJ, representante legal, contato, endereço, documentos, comprovantes, fotografias, imagens de animais, autenticação, cookies e histórico — em conformidade com a LGPD.",
+      "Esta Política descreve exclusivamente como a EccoPet trata dados de ONGs e protetores individuais — CPF, CNPJ, representante legal, contato, endereço, documentos, comprovantes, fotografias, imagens de animais, autenticação, cookies e histórico — em conformidade com a LGPD.",
   },
 };
 
@@ -906,27 +906,27 @@ ongRegisterEn.options.focusAreas = {
 
 const termsEn = {
   partner: {
-    legalHeading: "EcoPet Partner Terms",
+    legalHeading: "EccoPet Partner Terms",
     legalSubheading:
-      "Legal documents exclusive to partners — separate from EcoPet Customer terms.",
+      "Legal documents exclusive to partners — separate from EccoPet Customer terms.",
     termsPreview: partnerRegisterEn.documentation
-      ? "These Terms govern EcoPet commercial partnership exclusively: registration, products, services, bookings, deliveries, pickup, animal transport, reputation, document verification, animal welfare and Partner responsibilities."
+      ? "These Terms govern EccoPet commercial partnership exclusively: registration, products, services, bookings, deliveries, pickup, animal transport, reputation, document verification, animal welfare and Partner responsibilities."
       : "",
     privacyPreview:
-      "This Policy describes exclusively how EcoPet handles Partner data — CPF, CNPJ, contact, address, financial, documents, photos, logo, access and history — in compliance with applicable privacy laws.",
+      "This Policy describes exclusively how EccoPet handles Partner data — CPF, CNPJ, contact, address, financial, documents, photos, logo, access and history — in compliance with applicable privacy laws.",
   },
   ong: {
-    legalHeading: "EcoPet NGO Terms",
+    legalHeading: "EccoPet NGO Terms",
     legalSubheading:
-      "Legal documents exclusive to NGOs and protectors — separate from EcoPet Customer terms.",
+      "Legal documents exclusive to NGOs and protectors — separate from EccoPet Customer terms.",
     termsPreview:
-      "These Terms govern NGO and individual protector collaboration on EcoPet: rescue, responsible adoption, foster homes, campaigns, fundraising, adoption fairs, animal listings, ethical platform use, fraud and abuse prevention, plus registrant responsibilities and EcoPet limitations.",
+      "These Terms govern NGO and individual protector collaboration on EccoPet: rescue, responsible adoption, foster homes, campaigns, fundraising, adoption fairs, animal listings, ethical platform use, fraud and abuse prevention, plus registrant responsibilities and EccoPet limitations.",
     privacyPreview:
-      "This Policy describes exclusively how EcoPet handles NGO and individual protector data — CPF, CNPJ, legal representative, contact, address, documents, proofs, photos, animal images, authentication, cookies and history — in compliance with applicable privacy laws.",
+      "This Policy describes exclusively how EccoPet handles NGO and individual protector data — CPF, CNPJ, legal representative, contact, address, documents, proofs, photos, animal images, authentication, cookies and history — in compliance with applicable privacy laws.",
   },
 };
 termsEn.partner.termsPreview =
-  "These Terms govern EcoPet commercial partnership exclusively: registration, products, services, bookings, deliveries, pickup, animal transport, reputation, document verification, animal welfare and Partner responsibilities.";
+  "These Terms govern EccoPet commercial partnership exclusively: registration, products, services, bookings, deliveries, pickup, animal transport, reputation, document verification, animal welfare and Partner responsibilities.";
 
 /** Spanish translations */
 const partnerRegisterEs = JSON.parse(JSON.stringify(partnerRegisterEn));
@@ -1040,22 +1040,22 @@ ongRegisterEs.documentation.title = "Documentación";
 
 const termsEs = {
   partner: {
-    legalHeading: "Términos del Socio EcoPet",
+    legalHeading: "Términos del Socio EccoPet",
     legalSubheading:
-      "Documentos jurídicos exclusivos para socios — independientes de los términos del Cliente EcoPet.",
+      "Documentos jurídicos exclusivos para socios — independientes de los términos del Cliente EccoPet.",
     termsPreview:
-      "Estos Términos regulan exclusivamente la asociación comercial en EcoPet: registro, productos, servicios, citas, entregas, recogida, transporte de animales, reputación, verificación documental, protección animal y responsabilidades del Socio.",
+      "Estos Términos regulan exclusivamente la asociación comercial en EccoPet: registro, productos, servicios, citas, entregas, recogida, transporte de animales, reputación, verificación documental, protección animal y responsabilidades del Socio.",
     privacyPreview:
-      "Esta Política describe exclusivamente cómo EcoPet trata los datos de Socios — CPF, CNPJ, contacto, dirección, financiero, documentos, fotos, logotipo, acceso e historial — conforme a la legislación aplicable.",
+      "Esta Política describe exclusivamente cómo EccoPet trata los datos de Socios — CPF, CNPJ, contacto, dirección, financiero, documentos, fotos, logotipo, acceso e historial — conforme a la legislación aplicable.",
   },
   ong: {
-    legalHeading: "Términos de la ONG EcoPet",
+    legalHeading: "Términos de la ONG EccoPet",
     legalSubheading:
-      "Documentos jurídicos exclusivos para ONGs y protectores — independientes de los términos del Cliente EcoPet.",
+      "Documentos jurídicos exclusivos para ONGs y protectores — independientes de los términos del Cliente EccoPet.",
     termsPreview:
-      "Estos Términos regulan exclusivamente la colaboración de ONGs y protectores individuales en EcoPet: rescate, adopción responsable, hogares temporales, campañas, recaudaciones, ferias de adopción, divulgación de animales, uso ético de la plataforma, combate al fraude y maltrato, además de las responsabilidades del registrado y limitaciones de EcoPet.",
+      "Estos Términos regulan exclusivamente la colaboración de ONGs y protectores individuales en EccoPet: rescate, adopción responsable, hogares temporales, campañas, recaudaciones, ferias de adopción, divulgación de animales, uso ético de la plataforma, combate al fraude y maltrato, además de las responsabilidades del registrado y limitaciones de EccoPet.",
     privacyPreview:
-      "Esta Política describe exclusivamente cómo EcoPet trata los datos de ONGs y protectores individuales — CPF, CNPJ, representante legal, contacto, dirección, documentos, comprobantes, fotografías, imágenes de animales, autenticación, cookies e historial — conforme a la legislación aplicable.",
+      "Esta Política describe exclusivamente cómo EccoPet trata los datos de ONGs y protectores individuales — CPF, CNPJ, representante legal, contacto, dirección, documentos, comprobantes, fotografías, imágenes de animales, autenticación, cookies e historial — conforme a la legislación aplicable.",
   },
 };
 

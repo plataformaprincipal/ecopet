@@ -35,7 +35,7 @@ export function detectSmtpProvider(host) {
 
 export function resolveSmtpFrom(env = process.env) {
   if (env.SMTP_FROM?.trim()) return env.SMTP_FROM.trim();
-  const name = env.SMTP_FROM_NAME?.trim() || "EcoPet";
+  const name = env.SMTP_FROM_NAME?.trim() || "EccoPet";
   const email = env.SMTP_FROM_EMAIL?.trim() || env.SMTP_USER?.trim();
   if (email) return `${name} <${email}>`;
   return null;

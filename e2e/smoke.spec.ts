@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 
 const password = "Ecopet@Forte2026";
 
-test.describe.serial("EcoPet E2E mínimo", () => {
+test.describe.serial("EccoPet E2E mínimo", () => {
   const ts = Date.now();
   const clientEmail = `e2e.client.${ts}@test.ecopet.local`;
 

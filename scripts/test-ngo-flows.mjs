@@ -1,5 +1,5 @@
 /**
- * Testes funcionais da ONG (fluxo real Prisma/Supabase) — EcoPet
+ * Testes funcionais da ONG (fluxo real Prisma/Supabase) — EccoPet
  *
  * Exercita os critérios de aceite ponta a ponta usando o banco real:
  *  3. ONG cria animal
@@ -80,7 +80,7 @@ const PUBLIC_LISTING_WHERE = (status) => ({
   ong: { accountStatus: "ACTIVE", ongProfile: { is: { verificationStatus: "APPROVED" } } },
 });
 
-console.log("=== EcoPet — test:ngo-flows (Prisma/Supabase) ===\n");
+console.log("=== EccoPet — test:ngo-flows (Prisma/Supabase) ===\n");
 
 try {
   // --- Setup: 2 ONGs aprovadas + 1 cliente ---

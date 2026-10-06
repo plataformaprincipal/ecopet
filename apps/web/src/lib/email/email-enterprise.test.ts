@@ -44,7 +44,7 @@ describe("email config", () => {
     delete process.env.RESEND_FROM;
     delete process.env.RESEND_FROM_EMAIL;
     delete process.env.SMTP_FROM_EMAIL;
-    process.env.EMAIL_FROM_NAME = "EcoPet";
+    process.env.EMAIL_FROM_NAME = "EccoPet";
     assert.match(getEmailFromAddress(), /onboarding@resend\.dev/);
   });
 });
@@ -164,7 +164,7 @@ describe("templates", () => {
       name: "Ana",
       role: "CLIENT",
     });
-    assert.match(welcome.subject, /EcoPet/i);
+    assert.match(welcome.subject, /EccoPet/i);
     assert.match(welcome.html, /Ana/);
 
     const test = renderTestEmail({

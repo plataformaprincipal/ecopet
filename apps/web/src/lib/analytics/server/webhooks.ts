@@ -14,7 +14,7 @@ export type AnalyticsWebhookEnvelope = {
 export function createAnalyticsWebhookStub() {
   return {
     enabled: false,
-    note: "Webhooks inbound GA não são necessários — EcoPet usa Data API pull + client gtag.",
+    note: "Webhooks inbound GA não são necessários — EccoPet usa Data API pull + client gtag.",
     accept(_envelope: AnalyticsWebhookEnvelope) {
       return { accepted: false, reason: "not_implemented" as const };
     },

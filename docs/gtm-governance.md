@@ -14,7 +14,7 @@ Rota: `/admin/integracoes/google-tag-manager`
 ## Fonte de dados
 
 - **Não** sincroniza a API Google Tag Manager (tags live).
-- Inventário Tags/Triggers/Variables = **governança recomendada EcoPet**.
+- Inventário Tags/Triggers/Variables = **governança recomendada EccoPet**.
 - BI estrutural = catálogo de eventos.
 - Volumes geo/device → `/admin/bi/google-analytics`.
 - Ops state reutiliza `AnalyticsOpsState` com `provider=google_tag_manager`.

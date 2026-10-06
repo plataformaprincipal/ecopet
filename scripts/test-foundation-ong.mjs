@@ -193,7 +193,7 @@ function institutionOngPayload(ts, overrides = {}) {
 
 async function main() {
   const ts = Date.now();
-  console.log("=== EcoPet ONG + Global Document Uniqueness Tests ===\n");
+  console.log("=== EccoPet ONG + Global Document Uniqueness Tests ===\n");
 
   const health = await req("/api/health");
   assert(health.status === 200, "health 200");
@@ -402,20 +402,20 @@ async function main() {
   assert(ongFormSrc.includes("OngDocumentationStep"), "etapa documentação ONG");
   assert(ongFormSrc.includes("OngLegalAcceptance"), "etapa termos ONG");
   assert(ongLegalSrc.includes("ONG_LEGAL"), "componente usa links exclusivos ONG");
-  assert(legalLinksSrc.includes("Aceito os Termos de Uso e de Colaboração da ONG EcoPet"), "checkbox termos ONG");
-  assert(legalLinksSrc.includes("Aceito a Política de Privacidade da ONG EcoPet"), "checkbox privacidade ONG");
+  assert(legalLinksSrc.includes("Aceito os Termos de Uso e de Colaboração da ONG EccoPet"), "checkbox termos ONG");
+  assert(legalLinksSrc.includes("Aceito a Política de Privacidade da ONG EccoPet"), "checkbox privacidade ONG");
   assert(legalLinksSrc.includes("/legal/ong/termos"), "href termos ONG");
   assert(legalLinksSrc.includes("/legal/ong/privacidade"), "href privacidade ONG");
   assert(ongLegalSrc.includes("ONG_LEGAL_ACCEPTANCE_MESSAGE"), "componente usa mensagem aceite ONG");
   assert(legalLinksSrc.includes("Você precisa aceitar os Termos de Uso e a Política de Privacidade para continuar."), "mensagem aceite ONG");
-  assert(legalLinksSrc.includes("Termos de Uso e de Colaboração da ONG EcoPet"), "título termos ONG em legal-links");
+  assert(legalLinksSrc.includes("Termos de Uso e de Colaboração da ONG EccoPet"), "título termos ONG em legal-links");
   assert(ongTermsSrc.includes("Adoção responsável"), "termos ONG cobrem adoção responsável");
   assert(ongTermsSrc.includes("Campanhas de arrecadação"), "termos ONG cobrem arrecadação");
   assert(ongPrivacySrc.includes("CPF"), "privacidade ONG cobre CPF");
   assert(ongPrivacySrc.includes("CNPJ"), "privacidade ONG cobre CNPJ");
   assert(ongPrivacySrc.includes("LGPD"), "privacidade ONG menciona LGPD");
   assert(!clientFormSrc.includes("Já utilizado"), "cliente não revela campo duplicado no live feedback");
-  assert(!ongLegalSrc.includes("Parceiro EcoPet"), "ONG não exibe documentos do parceiro");
+  assert(!ongLegalSrc.includes("Parceiro EccoPet"), "ONG não exibe documentos do parceiro");
   console.log("[ui] documentos legais ONG completos + integração cadastro → OK");
 
   console.log("\n✓ Todos os testes de ONG e unicidade global passaram.");

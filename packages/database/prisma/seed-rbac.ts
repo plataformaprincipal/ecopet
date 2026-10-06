@@ -62,7 +62,7 @@ const PERMISSIONS = [
 ];
 
 export async function seedRbac(prisma: PrismaClient) {
-  console.log("🔐 Seeding RBAC & Gestor ECOPET...");
+  console.log("🔐 Seeding RBAC & Gestor EccoPet...");
 
   for (const p of PERMISSIONS) {
     await prisma.permission.upsert({
@@ -213,13 +213,13 @@ export async function seedGestorData(prisma: PrismaClient, gestorUserId: string,
   });
 
   const convExists = await prisma.conversation.findFirst({
-    where: { title: "Suporte ECOPET", participants: { some: { userId: tutorUserId } } },
+    where: { title: "Suporte EccoPet", participants: { some: { userId: tutorUserId } } },
   });
   if (!convExists) {
     await prisma.conversation.create({
       data: {
         type: "CLIENT_ECOPET",
-        title: "Suporte ECOPET",
+        title: "Suporte EccoPet",
         status: "OPEN",
         participants: {
           create: [{ userId: tutorUserId }, { userId: gestorUserId }],
@@ -227,7 +227,7 @@ export async function seedGestorData(prisma: PrismaClient, gestorUserId: string,
         messages: {
           create: [
             { senderId: tutorUserId, content: "Olá, preciso de ajuda com meu pedido.", type: "TEXT" },
-            { senderId: gestorUserId, content: "Olá! Sou do suporte ECOPET. Como posso ajudar?", type: "TEXT" },
+            { senderId: gestorUserId, content: "Olá! Sou do suporte EccoPet. Como posso ajudar?", type: "TEXT" },
           ],
         },
       },
@@ -248,7 +248,7 @@ export async function seedGestorData(prisma: PrismaClient, gestorUserId: string,
   if (!finExists) {
     await prisma.financialAccount.createMany({
       data: [
-        { code: "CAIXA", name: "Caixa ECOPET", type: "ASSET", balance: 125000 },
+        { code: "CAIXA", name: "Caixa EccoPet", type: "ASSET", balance: 125000 },
         { code: "REC", name: "Contas a Receber", type: "ASSET", balance: 45000 },
       ],
     });
@@ -265,8 +265,8 @@ export async function seedGestorData(prisma: PrismaClient, gestorUserId: string,
 
   await prisma.organization.upsert({
     where: { slug: "ecopet" },
-    update: {},
-    create: { name: "ECOPET Platform", slug: "ecopet", type: "ECOPET" },
+    update: { name: "EccoPet Platform" },
+    create: { name: "EccoPet Platform", slug: "ecopet", type: "ECOPET" },
   });
 
   return { seeded: true };

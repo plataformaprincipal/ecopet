@@ -611,7 +611,7 @@ export async function getPersonaExecutiveDashboard(persona: PersonaScope, userId
       return {
         metrics: [
           { label: "Pets", value: user?.pets.length ?? 0 },
-          { label: "Saldo ECOPET", value: user?.wallet?.balance ?? 0 },
+          { label: "Saldo EccoPet", value: user?.wallet?.balance ?? 0 },
           { label: "Pedidos recentes", value: user?.orders.length ?? 0 },
         ],
         aiInsights: [{ title: "Saúde do pet", description: "Verifique vacinas próximas do vencimento.", priority: "medium" }],
@@ -650,7 +650,7 @@ export async function seedPlatformInfrastructure() {
     { key: "agropet", name: "AgroPet", enabled: true, moduleKey: "agropet" },
     { key: "iot", name: "IoT", enabled: true, moduleKey: "iot" },
     { key: "robots", name: "Robôs 24h", enabled: true, moduleKey: "robots" },
-    { key: "wallet", name: "Saldo ECOPET", enabled: true, moduleKey: "wallet" },
+    { key: "wallet", name: "Saldo EccoPet", enabled: true, moduleKey: "wallet" },
     { key: "health", name: "Saúde Pet", enabled: true, moduleKey: "health" },
   ];
   for (const f of flags) {
@@ -753,8 +753,8 @@ export async function seedPlatformInfrastructure() {
 
   const org = await prisma.organization.upsert({
     where: { slug: "ecopet" },
-    update: {},
-    create: { name: "ECOPET Platform", slug: "ecopet", type: "ECOPET" },
+    update: { name: "EccoPet Platform" },
+    create: { name: "EccoPet Platform", slug: "ecopet", type: "ECOPET" },
   });
 
   return { flags: flags.length, workflows: workflows.length, organizationId: org.id };

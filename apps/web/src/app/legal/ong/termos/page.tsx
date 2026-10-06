@@ -4,7 +4,7 @@ import { ONG_TERMS_SECTIONS, ONG_TERMS_TITLE } from "@/lib/legal/ong-terms-conte
 
 export const metadata: Metadata = {
   title: ONG_TERMS_TITLE,
-  description: "Termos de Uso e de Colaboração exclusivos para ONGs e protetores individuais na plataforma EcoPet.",
+  description: "Termos de Uso e de Colaboração exclusivos para ONGs e protetores individuais na plataforma EccoPet.",
 };
 
 export default function OngLegalTermsPage() {

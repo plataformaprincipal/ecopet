@@ -154,7 +154,7 @@ async function activateUser(userId) {
 
 async function main() {
   const ts = Date.now();
-  console.log("=== EcoPet Security Tests ===\n");
+  console.log("=== EccoPet Security Tests ===\n");
 
   await resetAuthRateLimit();
 

@@ -1,4 +1,5 @@
 import { writeIntegrationLog } from "@/lib/integrations/log";
+import { BRAND } from "@/lib/constants";
 import {
   isTwilioConfigured,
   maskPhoneForLog,
@@ -42,7 +43,7 @@ export function isSmsConfigured(): boolean {
 }
 
 function smsSender(): string {
-  return env("SMS_SENDER") ?? "EcoPet";
+  return env("SMS_SENDER") ?? BRAND.name;
 }
 
 async function sendViaZenvia(to: string, body: string): Promise<boolean> {
@@ -116,7 +117,7 @@ export async function sendPasswordResetSms(to: string, code: string): Promise<Sm
     return { sent: false, provider: "twilio", errorCode: result.errorCode ?? "SMS_SEND_FAILED" };
   }
 
-  const body = `Seu código EcoPet é: ${code}. Ele expira em 10 minutos.`;
+  const body = `Seu código EccoPet é: ${code}. Ele expira em 10 minutos.`;
 
   try {
     let ok = false;

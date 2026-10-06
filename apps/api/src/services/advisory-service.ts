@@ -185,14 +185,14 @@ export async function generateAdvisoryInsights(userId: string, role: string) {
 
 export async function getMarketplaceAdvisoryServices() {
   return [
-    { id: "adv-consultoria", name: "Consultoria Empresarial", category: "Assessoria ECOPET", price: 499 },
-    { id: "adv-social", name: "Consultoria Social", category: "Assessoria ECOPET", price: 399 },
-    { id: "adv-auditoria", name: "Auditoria Operacional", category: "Assessoria ECOPET", price: 799 },
-    { id: "adv-qualidade", name: "Qualidade & SLA", category: "Assessoria ECOPET", price: 349 },
-    { id: "adv-automacao", name: "Automação & Robôs", category: "Assessoria ECOPET", price: 599 },
-    { id: "adv-ia", name: "IA Empresarial", category: "Assessoria ECOPET", price: 449 },
-    { id: "adv-iot", name: "IoT & Monitoramento", category: "Assessoria ECOPET", price: 549 },
-    { id: "adv-agropet", name: "Assessoria AgroPet", category: "Assessoria ECOPET", price: 699 },
-    { id: "adv-inovacao", name: "Inovação & Tendências", category: "Assessoria ECOPET", price: 399 },
+    { id: "adv-consultoria", name: "Consultoria Empresarial", category: "Assessoria EccoPet", price: 499 },
+    { id: "adv-social", name: "Consultoria Social", category: "Assessoria EccoPet", price: 399 },
+    { id: "adv-auditoria", name: "Auditoria Operacional", category: "Assessoria EccoPet", price: 799 },
+    { id: "adv-qualidade", name: "Qualidade & SLA", category: "Assessoria EccoPet", price: 349 },
+    { id: "adv-automacao", name: "Automação & Robôs", category: "Assessoria EccoPet", price: 599 },
+    { id: "adv-ia", name: "IA Empresarial", category: "Assessoria EccoPet", price: 449 },
+    { id: "adv-iot", name: "IoT & Monitoramento", category: "Assessoria EccoPet", price: 549 },
+    { id: "adv-agropet", name: "Assessoria AgroPet", category: "Assessoria EccoPet", price: 699 },
+    { id: "adv-inovacao", name: "Inovação & Tendências", category: "Assessoria EccoPet", price: 399 },
   ];
 }

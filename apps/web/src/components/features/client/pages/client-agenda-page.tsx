@@ -57,7 +57,7 @@ export function ClientAgendaPage() {
   if (error) {
     return (
       <div className="space-y-4 animate-fade-in">
-        <ClientPageHeader title="Agenda" description="Seus agendamentos EcoPet." />
+        <ClientPageHeader title="Agenda" description="Seus agendamentos EccoPet." />
         <div className="rounded-[var(--radius-lg)] border border-ep-danger/25 bg-ep-danger/10 p-4 text-sm text-ep-danger" role="alert">
           {error}
           <Button variant="outline" size="sm" className="ml-3 rounded-[var(--radius-button)]" onClick={load}>Tentar novamente</Button>

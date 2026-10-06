@@ -23,7 +23,7 @@ function bootstrap() {
 
   def({
     name: "consult_products",
-    description: "Consulta produtos públicos do Marketplace EcoPet.",
+    description: "Consulta produtos públicos do Marketplace EccoPet.",
     modules: ["marketplace"],
     personas: ["CLIENT", "PARTNER", "ONG", "ADMIN"],
     roles: [...ALL],

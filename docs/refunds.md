@@ -1,4 +1,4 @@
-# Estornos EcoPet (Mercado Pago)
+# Estornos EccoPet (Mercado Pago)
 
 ## Tipos
 

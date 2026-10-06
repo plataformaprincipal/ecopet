@@ -205,13 +205,13 @@ export async function sendWelcomeEmail(to: string, userName: string): Promise<vo
 export async function sendTestEmail(to: string): Promise<void> {
   await sendMail({
     to,
-    subject: "EcoPet — teste SMTP",
-    text: "Este é um e-mail de teste do EcoPet. Se você recebeu, o SMTP está configurado corretamente.",
-    html: "<p>Este é um e-mail de teste do <strong>EcoPet</strong>.</p>",
+    subject: "EccoPet — teste SMTP",
+    text: "Este é um e-mail de teste do EccoPet. Se você recebeu, o SMTP está configurado corretamente.",
+    html: "<p>Este é um e-mail de teste do <strong>EccoPet</strong>.</p>",
   });
 }
 
 /** @deprecated use logDevFallback internamente */
 export function logDevResetLink(resetUrl: string) {
-  logDevFallback("", "Redefinição de senha — EcoPet", resetUrl);
+  logDevFallback("", "Redefinição de senha — EccoPet", resetUrl);
 }

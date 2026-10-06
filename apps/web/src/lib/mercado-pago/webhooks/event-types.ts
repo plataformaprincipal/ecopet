@@ -26,7 +26,7 @@ export type MpTopicCapability =
   | "ACTIVE" // processado com consulta API / efeito de negócio
   | "PARTIAL" // persistido + admin; efeito limitado
   | "UNSUPPORTED" // topic conhecido mas handler não consulta API (docs insuficientes / não contratado)
-  | "NOT_APPLICABLE"; // produto não usado no EcoPet
+  | "NOT_APPLICABLE"; // produto não usado no EccoPet
 
 export type MpTopicDefinition = {
   panelKey: MpPanelTopicKey;
@@ -46,7 +46,7 @@ export const MP_TOPIC_CATALOG: MpTopicDefinition[] = [
     panelLabel: "Order (Mercado Pago)",
     capability: "ACTIVE",
     resourceGetPath: "/v1/orders/{id}",
-    notes: "Checkout Transparente via API Orders — fluxo canônico EcoPet.",
+    notes: "Checkout Transparente via API Orders — fluxo canônico EccoPet.",
   },
   {
     panelKey: "payment",
@@ -68,14 +68,14 @@ export const MP_TOPIC_CATALOG: MpTopicDefinition[] = [
     typeAliases: ["topic_card_id_wh", "automatic-payments"],
     panelLabel: "Card Updater",
     capability: "NOT_APPLICABLE",
-    notes: "EcoPet não persiste cartão/recorrência MP. Apenas registro sanitizado.",
+    notes: "EccoPet não persiste cartão/recorrência MP. Apenas registro sanitizado.",
   },
   {
     panelKey: "shipment",
     typeAliases: ["shipments", "shipment", "topic_shipping"],
     panelLabel: "Envios (Mercado Pago)",
     capability: "NOT_APPLICABLE",
-    notes: "EcoPet usa logística própria do parceiro; sem produto Mercado Envios contratado.",
+    notes: "EccoPet usa logística própria do parceiro; sem produto Mercado Envios contratado.",
   },
   {
     panelKey: "application_link",
@@ -105,7 +105,7 @@ export const MP_TOPIC_CATALOG: MpTopicDefinition[] = [
     typeAliases: ["payer", "payer_profile", "topic_payer"],
     panelLabel: "Perfil de pagamento",
     capability: "NOT_APPLICABLE",
-    notes: "Sem documentação aplicável ao fluxo Orders atual do EcoPet.",
+    notes: "Sem documentação aplicável ao fluxo Orders atual do EccoPet.",
   },
   {
     panelKey: "subscription",
@@ -123,7 +123,7 @@ export const MP_TOPIC_CATALOG: MpTopicDefinition[] = [
     typeAliases: ["delivery", "proximity", "topic_delivery"],
     panelLabel: "Delivery / proximity marketplace",
     capability: "NOT_APPLICABLE",
-    notes: "Produto não integrado ao EcoPet.",
+    notes: "Produto não integrado ao EccoPet.",
   },
   {
     panelKey: "commercial_order",
@@ -138,7 +138,7 @@ export const MP_TOPIC_CATALOG: MpTopicDefinition[] = [
     typeAliases: ["point_integration_wh", "point_integration_wh"],
     panelLabel: "Integrações Point",
     capability: "NOT_APPLICABLE",
-    notes: "Sem terminais Point no EcoPet.",
+    notes: "Sem terminais Point no EccoPet.",
   },
   {
     panelKey: "wallet_connect",
@@ -152,7 +152,7 @@ export const MP_TOPIC_CATALOG: MpTopicDefinition[] = [
     typeAliases: ["self_service", "selfservice", "topic_self_service"],
     panelLabel: "Self Service",
     capability: "NOT_APPLICABLE",
-    notes: "Sem documentação de uso no EcoPet.",
+    notes: "Sem documentação de uso no EccoPet.",
   },
 ];
 

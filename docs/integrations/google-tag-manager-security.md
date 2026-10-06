@@ -12,7 +12,7 @@
 ## LGPD
 
 - Consent Mode no frontend; backend não decide cookie do browser
-- Negar analytics não bloqueia funcionalidades EcoPet
+- Negar analytics não bloqueia funcionalidades EccoPet
 - Dedup armazena apenas hashes
 - Sem conteúdo de mensagens / prompts / cartão
 

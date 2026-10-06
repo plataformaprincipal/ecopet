@@ -214,7 +214,7 @@ export const adminRegisterSchema = baseRegisterObject.extend({
   accessLevel: z.enum(["suporte", "financeiro", "comercial", "moderacao", "administrador_geral"]),
 }).superRefine(passwordConfirmRefine);
 
-/** Cadastro público — sem perfis internos ECOPET */
+/** Cadastro público — sem perfis internos EccoPet */
 export const publicRegisterSchema = z.union([
   tutorRegisterSchema,
   veterinarianRegisterSchema,
@@ -227,7 +227,7 @@ export const publicRegisterSchema = z.union([
 
 export const registerSchema = publicRegisterSchema;
 
-/** Uso exclusivo pelo painel Gestor ECOPET */
+/** Uso exclusivo pelo painel Gestor EccoPet */
 export const internalRegisterSchema = z.union([publicRegisterSchema, adminRegisterSchema]);
 
 export type RegisterInput = z.infer<typeof internalRegisterSchema>;

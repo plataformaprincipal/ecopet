@@ -1,6 +1,6 @@
 export const CATALOG_PARTNER_EMAIL = "catalogo@ecopet.local";
 export const CATALOG_PARTNER_CNPJ = "11222333000181";
-export const CATALOG_PARTNER_NAME = "EcoPet Oficial";
+export const CATALOG_PARTNER_NAME = "EccoPet Oficial";
 
 export const CATALOG_PRODUCT_SKUS = [
   "ECOPET-ACC-CAMISA",

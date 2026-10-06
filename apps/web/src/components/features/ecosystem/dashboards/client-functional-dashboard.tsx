@@ -25,7 +25,7 @@ export function ClientFunctionalDashboard() {
     { icon: Calendar, label: "Agenda", href: "/agenda", desc: "Serviços agendados" },
     { icon: Wallet, label: "Carteira", href: "/perfil?category=CLIENT", desc: "Assinaturas e cashback" },
     { icon: PawPrint, label: "Meus pets", href: "/meu-pet", desc: "Central pet" },
-    { icon: Sparkles, label: "IA pessoal", href: "/ia", desc: "Assistente ECOPET" },
+    { icon: Sparkles, label: "IA pessoal", href: "/ia", desc: "Assistente EccoPet" },
   ];
 
   return (

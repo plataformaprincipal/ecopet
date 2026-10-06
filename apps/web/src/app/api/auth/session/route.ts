@@ -8,7 +8,7 @@ import {
 } from "@/lib/auth-session";
 import { getCurrentUser, sanitizeUser } from "@/lib/auth";
 
-/** Sessão EcoPet (cookie ecopet-session) — sempre JSON, nunca HTML. */
+/** Sessão EccoPet (cookie ecopet-session) — sempre JSON, nunca HTML. */
 export async function GET() {
   try {
     const cookieStore = await cookies();

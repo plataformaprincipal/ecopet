@@ -88,7 +88,7 @@ export async function debitWalletTx(
     wallet = await tx.wallet.create({ data: { userId: params.userId, balance: 0 } });
   }
   if (wallet.balance < params.amount) {
-    throw new Error("Saldo ECOPET insuficiente");
+    throw new Error("Saldo EccoPet insuficiente");
   }
   const newBalance = wallet.balance - params.amount;
 
@@ -99,7 +99,7 @@ export async function debitWalletTx(
       type: "DEBIT",
       amount: -params.amount,
       balanceAfter: newBalance,
-      description: params.description ?? "Pagamento com Saldo ECOPET",
+      description: params.description ?? "Pagamento com Saldo EccoPet",
       orderId: params.orderId,
     },
   });
@@ -205,7 +205,7 @@ export async function generateWalletAiInsights(userId: string) {
       id: "forecast",
       title: "Previsão de consumo",
       description: avgSpend > 0
-        ? `Com base no histórico, estimamos R$ ${(avgSpend * 4).toFixed(2)}/mês em compras ECOPET.`
+        ? `Com base no histórico, estimamos R$ ${(avgSpend * 4).toFixed(2)}/mês em compras EccoPet.`
         : "Sem histórico suficiente para previsão.",
       type: "forecast",
     },
@@ -223,7 +223,7 @@ export async function generateWalletAiInsights(userId: string) {
       id: "savings",
       title: "Economia sugerida",
       description: credits.filter((t) => t.type === "CASHBACK").length
-        ? "Você já recebeu cashback! Continue comprando de parceiros ECOPET para acumular mais."
+        ? "Você já recebeu cashback! Continue comprando de parceiros EccoPet para acumular mais."
         : "Ative cashback em parceiros selecionados e economize até 5% nas próximas compras.",
       type: "suggestion",
     },

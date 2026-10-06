@@ -30,7 +30,7 @@ export function TrendsPageContent() {
           <CardContent className="flex items-center gap-3 p-4">
             <TrendingUp className="h-8 w-8 text-ecopet-green" />
             <div>
-              <p className="font-display font-bold text-ecopet-dark dark:text-white">Tendências ECOPET</p>
+              <p className="font-display font-bold text-ecopet-dark dark:text-white">Tendências EccoPet</p>
               <p className="text-sm text-ecopet-gray">Hashtags e temas em alta na comunidade pet</p>
             </div>
           </CardContent>

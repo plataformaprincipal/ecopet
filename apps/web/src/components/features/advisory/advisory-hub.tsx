@@ -137,7 +137,7 @@ export function AdvisoryHub({ variant }: AdvisoryHubProps) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Marketplace — Assessoria ECOPET</CardTitle>
+          <CardTitle>Marketplace — Assessoria EccoPet</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

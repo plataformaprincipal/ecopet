@@ -1,4 +1,4 @@
-# Restore — EcoPet / Supabase
+# Restore — EccoPet / Supabase
 
 ## Regra de ouro
 

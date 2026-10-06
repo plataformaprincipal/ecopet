@@ -1,6 +1,6 @@
-# Arquitetura EcoPet
+# Arquitetura EccoPet
 
-Documentação técnica da fundação do monorepo EcoPet.
+Documentação técnica da fundação do monorepo EccoPet.
 
 ## Visão geral
 

@@ -14,7 +14,7 @@ Controles principais:
 
 ## OWASP (foco dados)
 
-| Risco | Mitigação EcoPet | Pendência |
+| Risco | Mitigação EccoPet | Pendência |
 |-------|------------------|-----------|
 | Broken Access Control | Guards + RBAC | Revisar rotas novas |
 | Injection | Prisma | Evitar `$queryRaw` com concat |

@@ -3,6 +3,8 @@
  * Nunca hardcodear chaves ou expor segredos.
  */
 
+import { BRAND } from "@/lib/constants";
+
 function env(key: string, source: NodeJS.ProcessEnv = process.env): string | undefined {
   const value = source[key]?.trim();
   return value || undefined;
@@ -37,7 +39,7 @@ export function getResendApiKey(source: NodeJS.ProcessEnv = process.env): string
 }
 
 export function getEmailFromName(source: NodeJS.ProcessEnv = process.env): string {
-  return env("EMAIL_FROM_NAME", source) || env("SMTP_FROM_NAME", source) || "EcoPet";
+  return env("EMAIL_FROM_NAME", source) || env("SMTP_FROM_NAME", source) || BRAND.name;
 }
 
 /**

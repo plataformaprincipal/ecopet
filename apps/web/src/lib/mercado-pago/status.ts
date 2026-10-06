@@ -1,5 +1,5 @@
 /**
- * Mapeamento centralizado: status API Orders → status interno EcoPet.
+ * Mapeamento centralizado: status API Orders → status interno EccoPet.
  */
 
 export type InternalPaymentStatus =

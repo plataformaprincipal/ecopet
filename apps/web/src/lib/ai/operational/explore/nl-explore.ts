@@ -82,7 +82,7 @@ export async function runExploreByMessage(message: string) {
       type: "deep_link",
       id: plan.target,
       title: `Abrir ${plan.target}`,
-      subtitle: "Resultados na página oficial do EcoPet",
+      subtitle: "Resultados na página oficial do EccoPet",
       href: plan.deepLink,
     });
   }

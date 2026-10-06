@@ -11,7 +11,7 @@ import { writeAuditLog } from "@/lib/audit-log";
 const PENDING = new Set(["CREATED", "PENDING", "PROCESSING", "ACTION_REQUIRED"]);
 
 /**
- * Cancela cobrança pendente no MP (Payments API) + atualiza EcoPet.
+ * Cancela cobrança pendente no MP (Payments API) + atualiza EccoPet.
  * Pagamento APPROVED deve usar estorno, não cancelamento.
  */
 export async function cancelPendingMercadoPagoPayment(input: {

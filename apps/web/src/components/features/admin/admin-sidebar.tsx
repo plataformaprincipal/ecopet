@@ -33,7 +33,7 @@ export function AdminSidebar({ open = true, onClose }: Props) {
         <div className="flex items-center justify-between border-b border-sidebar-border p-4">
           <div>
             <Link href="/admin" className="font-display text-lg font-bold text-ecopet-green" onClick={onClose}>
-              EcoPet Admin
+              EccoPet Admin
             </Link>
             <p className="text-xs text-muted-foreground">Painel empresarial</p>
           </div>

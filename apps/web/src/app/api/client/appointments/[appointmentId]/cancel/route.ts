@@ -43,7 +43,7 @@ export async function PATCH(_req: Request, context: RouteContext) {
         name: partner.name,
         serviceName: "Agendamento",
         locale: getUserEmailLocale(partner.preferences),
-        title: "Agendamento cancelado — EcoPet",
+        title: "Agendamento cancelado — EccoPet",
         message: "Um cliente cancelou um agendamento.",
       });
     }
@@ -58,7 +58,7 @@ export async function PATCH(_req: Request, context: RouteContext) {
       name: client.name,
       serviceName: "Agendamento",
       locale: getUserEmailLocale(client.preferences),
-      title: "Agendamento cancelado — EcoPet",
+      title: "Agendamento cancelado — EccoPet",
       message: "Seu agendamento foi cancelado com sucesso.",
     });
   }

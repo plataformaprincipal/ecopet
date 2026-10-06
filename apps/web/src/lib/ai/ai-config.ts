@@ -5,7 +5,7 @@ export type { AiLocale };
 export { AI_SAFETY_DISCLAIMER, normalizeLocale };
 
 /**
- * Configuração central da IA EcoPet — somente server-side.
+ * Configuração central da IA EccoPet — somente server-side.
  * Nunca expor estes valores ao frontend.
  */
 

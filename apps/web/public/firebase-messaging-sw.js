@@ -1,4 +1,4 @@
-/* EcoPet — Firebase Cloud Messaging service worker
+/* EccoPet — Firebase Cloud Messaging service worker
  *
  * Config pública carregada em runtime via /api/firebase/messaging-config
  * (apenas NEXT_PUBLIC_*). Sem Service Account. Sem segredos.
@@ -43,7 +43,7 @@ function sanitizeUrl(raw) {
 
 function showEcoPetNotification(title, options) {
   const tag = options.tag || "ecopet";
-  return self.registration.showNotification(title || "EcoPet", {
+  return self.registration.showNotification(title || "EccoPet", {
     body: options.body || "",
     icon: options.icon || DEFAULT_ICON,
     badge: options.badge || DEFAULT_BADGE,
@@ -75,7 +75,7 @@ function initFirebaseMessaging() {
       messaging.onBackgroundMessage(function (payload) {
         var n = payload.notification || {};
         var d = payload.data || {};
-        var title = n.title || d.title || "EcoPet";
+        var title = n.title || d.title || "EccoPet";
         var body = n.body || d.body || "";
         var url = d.url || (n.click_action || "/notifications");
         var tag = d.tag || d.notificationId || "ecopet-fcm";

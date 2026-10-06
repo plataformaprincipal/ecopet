@@ -9,12 +9,17 @@ export async function ensureEcopetAiUser() {
     user = await prisma.user.create({
       data: {
         email,
-        name: "Assistente ECOPET",
+        name: "Assistente EccoPet",
         username: `ecopet-ai-${randomUUID().slice(0, 8)}`,
         passwordHash: await bcrypt.hash(randomUUID(), 10),
         role: "GESTOR",
         accountStatus: "ACTIVE",
       },
+    });
+  } else if (user.name === "Assistente ECOPET") {
+    user = await prisma.user.update({
+      where: { id: user.id },
+      data: { name: "Assistente EccoPet" },
     });
   }
   return user;

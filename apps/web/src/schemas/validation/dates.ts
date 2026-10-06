@@ -1,4 +1,4 @@
-/** Validação compartilhada de datas de nascimento — ECOPET */
+/** Validação compartilhada de datas de nascimento — EccoPet */
 
 export const BIRTH_DATE_FUTURE_MESSAGE =
   "A data de nascimento não pode ser futura. Informe uma data igual ou anterior à data de hoje.";

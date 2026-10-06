@@ -33,7 +33,7 @@ export function RoleDashboard({ title, description, actions = [] }: RoleDashboar
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm text-ecopet-gray">
-                  Olá, <strong>{user?.name}</strong> — painel configurado para sua persona na ECOPET.
+                  Olá, <strong>{user?.name}</strong> — painel configurado para sua persona na EccoPet.
                 </p>
                 {actions.length > 0 && (
                   <div className="flex flex-wrap gap-3">

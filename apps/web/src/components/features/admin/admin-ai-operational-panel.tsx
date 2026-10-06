@@ -68,7 +68,7 @@ export function AdminAiOperationalPanel() {
         body: JSON.stringify({
           action: "run_rule",
           ruleId,
-          title: "Teste operacional EcoPet IA",
+          title: "Teste operacional EccoPet IA",
           message: "Execução manual de automação (admin).",
           dedupeKey: `admin-test:${ruleId}:${Date.now()}`,
         }),

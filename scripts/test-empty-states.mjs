@@ -1,5 +1,5 @@
 /**
- * EcoPet — test:empty-states
+ * EccoPet — test:empty-states
  * Valida que módulos de dados retornam vazio (sem conteúdo fictício).
  */
 import { getQuotesForClient } from "../apps/web/src/lib/ecosystem/quotes-api.ts";
@@ -24,7 +24,7 @@ function ok(label, cond) {
   }
 }
 
-console.log("=== EcoPet — test:empty-states ===\n");
+console.log("=== EccoPet — test:empty-states ===\n");
 
 ok("getQuotesForClient → []", getQuotesForClient().length === 0);
 ok("CLIENT_PETS vazio", CLIENT_PETS.length === 0);

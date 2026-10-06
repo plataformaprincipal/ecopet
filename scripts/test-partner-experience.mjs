@@ -1,5 +1,5 @@
 /**
- * Testes da experiência unificada do parceiro (/partner/*) — EcoPet
+ * Testes da experiência unificada do parceiro (/partner/*) — EccoPet
  *
  * Valida de forma determinística (sem servidor/DB):
  *  - estrutura de navegação (sidebar + bottom nav) aponta para /partner/*
@@ -40,7 +40,7 @@ function ok(label, cond) {
   }
 }
 
-console.log("=== EcoPet — test:partner-experience ===\n");
+console.log("=== EccoPet — test:partner-experience ===\n");
 
 // 1. Redirect pós-login
 ok("PARTNER cai em /partner após login", getDefaultDashboardPath("PARTNER") === "/partner");

@@ -43,7 +43,7 @@ Checkout: Public Key no browser → `POST /api/checkout/mercado-pago/order` → 
 
 **ACTIVE** = validação + consulta API (quando há endpoint) + persistência + efeitos + UI + testes.  
 **PARTIAL** = processado com limitações (compat / sem OAuth completo).  
-**NOT_APPLICABLE** = produto não usado no EcoPet; evento persistido sem efeito financeiro inventado.
+**NOT_APPLICABLE** = produto não usado no EccoPet; evento persistido sem efeito financeiro inventado.
 
 ## Modelos Prisma (principais)
 

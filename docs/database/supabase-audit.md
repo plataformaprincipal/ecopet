@@ -1,4 +1,4 @@
-# Auditoria Supabase — EcoPet
+# Auditoria Supabase — EccoPet
 
 **Data da auditoria (código):** 2026-07-20  
 **Plano informado pelo time:** Supabase **Pro** · backups diários **ativos** · **PITR não habilitado**
@@ -27,7 +27,7 @@
 - Histórico de restores
 - Extensões instaladas só no cluster (uuid-ossp, etc.)
 
-## Papel do Supabase no EcoPet
+## Papel do Supabase no EccoPet
 
 **Supabase = PostgreSQL gerenciado** para a aplicação Next.js (Vercel) via Prisma.
 

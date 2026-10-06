@@ -38,7 +38,7 @@ export async function dispatchEmail(
 }
 
 /**
- * Envia e-mail transacional (templates premium EcoPet) através do dispatcher
+ * Envia e-mail transacional (templates premium EccoPet) através do dispatcher
  * `sendPlatformEmail` (Resend em Production; SMTP só se Resend não estiver configurado).
  * Não interrompe o fluxo principal (requireDelivery=false).
  */

@@ -1,4 +1,4 @@
-# Acceptance Report — EcoPet Enterprise QA
+# Acceptance Report — EccoPet Enterprise QA
 
 **Data:** 2026-07-20  
 **Commit base:** `a87e0ba` (+ UI Etapas 1–2 em working tree)  
@@ -49,7 +49,7 @@ Com ressalvas documentadas (integrações Live, SMTP, cross-browser Safari/iOS, 
 | Marketplace público | visitor + client cart | ✅ |
 | Explorar | visitor | ✅ |
 | Social público | visitor | ✅ |
-| EcoPet IA pública | visitor shell | ✅ (AI_ENABLED=false — UI abre) |
+| EccoPet IA pública | visitor shell | ✅ (AI_ENABLED=false — UI abre) |
 | Mobile 375 overflow | visitor viewport | ✅ |
 | Health / headers | visitor API | ✅ |
 | SEO | metadata layout (estático) | ⚠ Manual / Homolog |

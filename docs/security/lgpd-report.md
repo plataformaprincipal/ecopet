@@ -1,4 +1,4 @@
-# LGPD Report — EcoPet
+# LGPD Report — EccoPet
 
 **Data:** 2026-07-20  
 **Escopo:** dados pessoais no produto implementado (código + checklist operacional)  

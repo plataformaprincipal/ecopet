@@ -12,9 +12,9 @@ const NAV = [
 ];
 
 const INTEGRATIONS = [
-  { href: "/marketplace", label: "Marketplace ECOPET", external: false },
+  { href: "/marketplace", label: "Marketplace EccoPet", external: false },
   { href: "/feed", label: "Rede Social", external: false },
-  { href: "/health", label: "ECOPET Health", external: false },
+  { href: "/health", label: "EccoPet Health", external: false },
   { href: "/dashboard/petshop", label: "Painel Pet Shop", external: false },
 ];
 
@@ -24,7 +24,7 @@ export function PetshopHeader() {
   return (
     <>
       <div className="petshop-promo-bar">
-        <span>🐾 Tele-busca e entrega domiciliar disponíveis · Agende online · ECOPET — Grupo Café Platine</span>
+        <span>🐾 Tele-busca e entrega domiciliar disponíveis · Agende online · EccoPet — Grupo Café Platine</span>
       </div>
 
       <nav className="navbar navbar-expand-lg navbar-dark petshop-navbar sticky-top">
@@ -32,7 +32,7 @@ export function PetshopHeader() {
           <Link href="/petshop-web" className="navbar-brand d-flex align-items-center gap-2">
             <span className="fs-4">🐾</span>
             <div>
-              <span className="d-block lh-1">Pet Shop ECOPET</span>
+              <span className="d-block lh-1">Pet Shop EccoPet</span>
               <small className="opacity-75 fw-normal" style={{ fontSize: "0.65rem" }}>Grupo Café Platine</small>
             </div>
           </Link>
@@ -63,7 +63,7 @@ export function PetshopHeader() {
               ))}
               <li className="nav-item dropdown">
                 <a className="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                  Integrações ECOPET
+                  Integrações EccoPet
                 </a>
                 <ul className="dropdown-menu">
                   {INTEGRATIONS.map((item) => (

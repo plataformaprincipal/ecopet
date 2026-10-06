@@ -320,7 +320,7 @@ export function FeedPostCard({ post, showCommentsDefault = false }: FeedPostCard
 
         {shareOpen && (
           <div className="flex gap-2 border-t px-4 py-3">
-            {["WhatsApp", "Instagram", "Copiar link", "Chat ECOPET"].map((l) => (
+            {["WhatsApp", "Instagram", "Copiar link", "Chat EccoPet"].map((l) => (
               <button key={l} type="button" className="rounded-full bg-ecopet-gray/10 px-3 py-1 text-xs font-medium hover:bg-ecopet-green/10">
                 {l}
               </button>

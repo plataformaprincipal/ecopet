@@ -57,7 +57,7 @@ export function GestorModuleView({ moduleId, title, description }: GestorModuleV
             description: i.description,
             priority: (i.priority as "high" | "medium" | "low") ?? "medium",
           }))}
-          title="Insights IA ECOPET"
+          title="Insights IA EccoPet"
         />
       )}
 
@@ -107,7 +107,7 @@ function renderModuleContent(moduleId: string, data: Record<string, unknown>) {
   return (
     <Card>
       <CardContent className="p-6 text-sm text-ecopet-gray">
-        Módulo operacional conectado ao backend ECOPET. Dados persistidos em banco de dados com auditoria e permissões RBAC.
+        Módulo operacional conectado ao backend EccoPet. Dados persistidos em banco de dados com auditoria e permissões RBAC.
       </CardContent>
     </Card>
   );

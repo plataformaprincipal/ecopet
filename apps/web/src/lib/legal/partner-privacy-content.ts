@@ -1,14 +1,14 @@
 import type { LegalSection } from "@/components/shared/legal/legal-page-layout";
 
-export const PARTNER_PRIVACY_TITLE = "Política de Privacidade do Parceiro EcoPet";
+export const PARTNER_PRIVACY_TITLE = "Política de Privacidade do Parceiro EccoPet";
 
 export const PARTNER_PRIVACY_SECTIONS: LegalSection[] = [
   {
     title: "1. Introdução e controlador",
     paragraphs: [
-      "Esta Política de Privacidade do Parceiro EcoPet («Política») descreve como a EcoPet trata dados pessoais e empresariais de Parceiros cadastrados na plataforma, em conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018).",
-      "Esta Política é exclusiva para Parceiros e não se confunde com a Política de Privacidade do Cliente EcoPet, aplicável apenas a tutores e responsáveis por pets.",
-      "Para fins da LGPD, a EcoPet atua como controladora dos dados tratados no contexto da parceria, salvo quando indicado tratamento por operadores ou parceiros tecnológicos contratados.",
+      "Esta Política de Privacidade do Parceiro EccoPet («Política») descreve como a EccoPet trata dados pessoais e empresariais de Parceiros cadastrados na plataforma, em conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018).",
+      "Esta Política é exclusiva para Parceiros e não se confunde com a Política de Privacidade do Cliente EccoPet, aplicável apenas a tutores e responsáveis por pets.",
+      "Para fins da LGPD, a EccoPet atua como controladora dos dados tratados no contexto da parceria, salvo quando indicado tratamento por operadores ou parceiros tecnológicos contratados.",
     ],
   },
   {
@@ -87,7 +87,7 @@ export const PARTNER_PRIVACY_SECTIONS: LegalSection[] = [
   {
     title: "12. Cookies e tecnologias similares",
     paragraphs: [
-      "Utilizamos cookies e tecnologias similares para manter sessões autenticadas, preferências, segurança e métricas de desempenho. Detalhes adicionais podem constar na Política de Cookies da EcoPet, quando aplicável ao acesso do Parceiro.",
+      "Utilizamos cookies e tecnologias similares para manter sessões autenticadas, preferências, segurança e métricas de desempenho. Detalhes adicionais podem constar na Política de Cookies da EccoPet, quando aplicável ao acesso do Parceiro.",
     ],
   },
   {
@@ -112,7 +112,7 @@ export const PARTNER_PRIVACY_SECTIONS: LegalSection[] = [
   {
     title: "15. Parceiros tecnológicos",
     paragraphs: [
-      "Podemos utilizar serviços de terceiros — como provedores de nuvem, CDN, armazenamento de arquivos, consulta de CEP/CNPJ, mensageria e ferramentas antifraude — que tratam dados enquanto operadores, conforme instruções da EcoPet e contratos de proteção de dados.",
+      "Podemos utilizar serviços de terceiros — como provedores de nuvem, CDN, armazenamento de arquivos, consulta de CEP/CNPJ, mensageria e ferramentas antifraude — que tratam dados enquanto operadores, conforme instruções da EccoPet e contratos de proteção de dados.",
     ],
   },
   {
@@ -164,7 +164,7 @@ export const PARTNER_PRIVACY_SECTIONS: LegalSection[] = [
   {
     title: "22. Contato para privacidade",
     paragraphs: [
-      "Dúvidas, solicitações e exercício de direitos relacionados a esta Política podem ser encaminhados ao Encarregado de Proteção de Dados (DPO) da EcoPet pelos canais oficiais indicados na plataforma ou pelo e-mail de privacidade disponibilizado no painel do Parceiro.",
+      "Dúvidas, solicitações e exercício de direitos relacionados a esta Política podem ser encaminhados ao Encarregado de Proteção de Dados (DPO) da EccoPet pelos canais oficiais indicados na plataforma ou pelo e-mail de privacidade disponibilizado no painel do Parceiro.",
     ],
   },
   {
@@ -176,4 +176,4 @@ export const PARTNER_PRIVACY_SECTIONS: LegalSection[] = [
 ];
 
 export const PARTNER_PRIVACY_PREVIEW =
-  "Esta Política descreve exclusivamente como a EcoPet trata dados de Parceiros — CPF, CNPJ, contato, endereço, financeiro, documentos, fotos, logotipo, acesso e histórico — em conformidade com a LGPD.";
+  "Esta Política descreve exclusivamente como a EccoPet trata dados de Parceiros — CPF, CNPJ, contato, endereço, financeiro, documentos, fotos, logotipo, acesso e histórico — em conformidade com a LGPD.";

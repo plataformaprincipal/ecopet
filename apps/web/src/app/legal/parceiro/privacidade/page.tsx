@@ -4,7 +4,7 @@ import { PARTNER_PRIVACY_SECTIONS, PARTNER_PRIVACY_TITLE } from "@/lib/legal/par
 
 export const metadata: Metadata = {
   title: PARTNER_PRIVACY_TITLE,
-  description: "Política de Privacidade exclusiva para Parceiros da plataforma EcoPet — independente da política do Cliente.",
+  description: "Política de Privacidade exclusiva para Parceiros da plataforma EccoPet — independente da política do Cliente.",
 };
 
 export default function PartnerLegalPrivacyPage() {

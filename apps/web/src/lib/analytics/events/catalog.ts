@@ -22,7 +22,7 @@ import { SharedEvents } from "./shared";
 import type { AnalyticsEventDefinition } from "./definitions";
 import { catalogValues } from "./definitions";
 
-/** Catálogo unificado EcoPet (todos os módulos). */
+/** Catálogo unificado EccoPet (todos os módulos). */
 export const EcoPetEventCatalog = {
   auth: AuthEvents,
   marketplace: MarketplaceEvents,
@@ -47,7 +47,7 @@ export const EcoPetEventCatalog = {
   shared: SharedEvents,
 } as const;
 
-/** Alias GA4 recomendados + EcoPet (compat Prompt 1). */
+/** Alias GA4 recomendados + EccoPet (compat Prompt 1). */
 export const AnalyticsEvents = {
   SIGN_UP: AuthEvents.SIGN_UP.event_name,
   LOGIN: AuthEvents.LOGIN.event_name,

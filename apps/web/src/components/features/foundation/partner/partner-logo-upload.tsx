@@ -94,7 +94,7 @@ export function PartnerLogoUpload({ value, onChange, businessName, fieldId = "pa
 
   const defaultAlt = businessName?.trim()
     ? `Logotipo de ${businessName.trim()}`
-    : "Logotipo do parceiro EcoPet";
+    : "Logotipo do parceiro EccoPet";
 
   const preview = value.previewUrl ?? ASSETS.logo;
   const hasCustomLogo = Boolean(value.previewUrl);
@@ -205,7 +205,7 @@ export function PartnerLogoUpload({ value, onChange, businessName, fieldId = "pa
         <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-xl border bg-white shadow-sm">
           <Image
             src={preview}
-            alt={hasCustomLogo ? altText : "Avatar padrão EcoPet — nenhum logotipo enviado"}
+            alt={hasCustomLogo ? altText : "Avatar padrão EccoPet — nenhum logotipo enviado"}
             fill
             className="object-cover"
             unoptimized={hasCustomLogo}

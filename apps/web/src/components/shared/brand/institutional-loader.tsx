@@ -10,7 +10,7 @@ export interface InstitutionalLoaderProps {
 }
 
 /**
- * Loading institucional EcoPet — símbolo + animação discreta, sem texto cru.
+ * Loading institucional EccoPet — símbolo + animação discreta, sem texto cru.
  */
 export function InstitutionalLoader({
   className,

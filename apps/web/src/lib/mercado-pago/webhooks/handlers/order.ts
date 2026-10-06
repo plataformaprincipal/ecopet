@@ -54,7 +54,7 @@ export const handleOrderWebhook: MpWebhookHandler = async ({ event, normalized }
       data: {
         issueType: "PAYMENT_NOT_FOUND",
         severity: "high",
-        message: `Order MP ${mp.id} sem Payment EcoPet`,
+        message: `Order MP ${mp.id} sem Payment EccoPet`,
         resourceId: mp.id,
         details: { external_reference: mp.external_reference ?? null },
       },

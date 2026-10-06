@@ -1,5 +1,5 @@
 /**
- * Testes de permissões por role — EcoPet (unitários + HTTP opcional)
+ * Testes de permissões por role — EccoPet (unitários + HTTP opcional)
  */
 import {
   canAccessRoute,
@@ -21,7 +21,7 @@ function ok(label, cond) {
   }
 }
 
-console.log("=== EcoPet — test:permissions ===\n");
+console.log("=== EccoPet — test:permissions ===\n");
 console.log("--- Testes unitários ---\n");
 
 ok("CLIENT acessa /dashboard", canAccessRoute("CLIENT", "/dashboard"));

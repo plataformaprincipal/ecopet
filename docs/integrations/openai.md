@@ -1,4 +1,4 @@
-# OpenAI / EcoPet AI
+# OpenAI / EccoPet AI
 
 ## Finalidade
 Chat, resumos, geração de texto, embeddings e moderação assistiva.

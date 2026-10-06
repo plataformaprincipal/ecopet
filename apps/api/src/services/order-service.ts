@@ -124,7 +124,7 @@ export async function createOrder(payload: CheckoutPayload) {
         data: {
           orderId: created.id,
           status: "PAID",
-          note: "Pago com Saldo ECOPET | source=wallet",
+          note: "Pago com Saldo EccoPet | source=wallet",
         },
       });
     } else if (payload.paymentMethod !== "BOLETO") {
@@ -192,7 +192,7 @@ export async function createOrder(payload: CheckoutPayload) {
         orderId: order.id,
         amount: cashbackAmount,
         percentage: 2,
-        description: "Cashback ECOPET 2%",
+        description: "Cashback EccoPet 2%",
       },
     });
   }

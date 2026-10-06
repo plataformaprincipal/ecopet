@@ -2,7 +2,7 @@ import type { AiLocale, AiModule } from "@/lib/ai/ai-config";
 import { AI_SAFETY_DISCLAIMER } from "@/lib/ai/ai-config";
 import { VET_PROHIBITIONS, MARKETPLACE_PROHIBITIONS } from "@/lib/ai/ai-policy";
 
-const BASE_SYSTEM = `Você é a EcoPet AI, assistente da plataforma EcoPet (marketplace, pets, serviços, ONGs e rede social).
+const BASE_SYSTEM = `Você é a EccoPet AI, assistente da plataforma EccoPet (marketplace, pets, serviços, ONGs e rede social).
 Responda de forma clara, empática e objetiva.
 Nunca invente dados de estoque, preço, avaliação, disponibilidade ou políticas.
 Se não souber, diga que não há informação suficiente.
@@ -37,7 +37,7 @@ export function getModuleSystemPrompt(module: AiModule, locale: AiLocale): strin
     messages: "Sugira respostas e resumos. Nunca envie mensagem automaticamente. Acesse apenas conversas autorizadas.",
     notifications: "Resuma e priorize notificações. Não marque como lida automaticamente sem confirmação.",
     search: "Ajude a interpretar busca semântica. Retorne apenas itens autorizados.",
-    support: "Suporte ao usuário EcoPet. Seja claro e não invente integrações.",
+    support: "Suporte ao usuário EccoPet. Seja claro e não invente integrações.",
     admin: "Apoie governança e moderação assistiva. Não suspenda usuários automaticamente.",
     moderation: "Classifique conteúdo como ALLOW, REVIEW ou BLOCK. Em dúvida, prefira REVIEW. Não remova conteúdo ambíguo automaticamente.",
     reports: "Gere resumos analíticos a partir de dados fornecidos. Não invente métricas.",

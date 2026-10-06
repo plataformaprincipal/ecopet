@@ -11,7 +11,7 @@ type Props = {
 
 export function AIEmptyState({
   title = "Nenhuma conversa ainda",
-  description = "Inicie uma conversa com o assistente EcoPet quando o provedor de IA estiver configurado.",
+  description = "Inicie uma conversa com o assistente EccoPet quando o provedor de IA estiver configurado.",
   className,
 }: Props) {
   return (

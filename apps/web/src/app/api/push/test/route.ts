@@ -44,7 +44,7 @@ export async function POST(req: Request) {
     const outcome = await sendWebPush(
       { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
       {
-        title: "EcoPet — teste de push",
+        title: "EccoPet — teste de push",
         body: "Notificação de teste (admin).",
         url: "/notifications",
       }

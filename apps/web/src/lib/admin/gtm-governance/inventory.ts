@@ -2,24 +2,24 @@ import { GtmEvents } from "@/lib/gtm/events";
 import type { GtmInventoryItem } from "./types";
 
 /**
- * Inventário de governança EcoPet (esperado no container).
+ * Inventário de governança EccoPet (esperado no container).
  * NÃO é sync live da API GTM — evita duplicar o warehouse/config do Google.
  */
 export function getRecommendedTags(): GtmInventoryItem[] {
   return [
     {
       id: "tag-consent-init",
-      name: "Consent Initialization — EcoPet defaults",
+      name: "Consent Initialization — EccoPet defaults",
       type: "Consent Mode",
       status: "RECOMMENDED",
-      detail: "Respeitar Consent Mode v2 (defaults denied via EcoPet).",
+      detail: "Respeitar Consent Mode v2 (defaults denied via EccoPet).",
     },
     {
       id: "tag-ga4-disabled-note",
-      name: "GA4 Config (DESATIVAR se gtag EcoPet ativo)",
+      name: "GA4 Config (DESATIVAR se gtag EccoPet ativo)",
       type: "GA4 Configuration",
       status: "WARN",
-      detail: "Não publicar GA4 Config/page_view no GTM se o provider EcoPet já envia.",
+      detail: "Não publicar GA4 Config/page_view no GTM se o provider EccoPet já envia.",
     },
     {
       id: "tag-ads-optional",
@@ -71,7 +71,7 @@ export function getRecommendedTriggers(): GtmInventoryItem[] {
     },
     {
       id: "tr-all-pages-warn",
-      name: "All Pages (GA4) — evitar se EcoPet gtag ativo",
+      name: "All Pages (GA4) — evitar se EccoPet gtag ativo",
       type: "Page View",
       status: "WARN",
       detail: "Risco de page_view duplicado.",
@@ -100,7 +100,7 @@ export function getRecommendedVariables(): GtmInventoryItem[] {
       name: "DLV — module",
       type: "Data Layer Variable",
       status: "RECOMMENDED",
-      detail: "Módulo EcoPet (marketplace, social, …).",
+      detail: "Módulo EccoPet (marketplace, social, …).",
     },
     {
       id: "var-consent-analytics",
@@ -114,7 +114,7 @@ export function getRecommendedVariables(): GtmInventoryItem[] {
       name: "Container ID (constante GTM)",
       type: "Constant",
       status: "ACTIVE",
-      detail: "Nativo do GTM — nunca expor completo no Admin EcoPet.",
+      detail: "Nativo do GTM — nunca expor completo no Admin EccoPet.",
     },
   ];
 }

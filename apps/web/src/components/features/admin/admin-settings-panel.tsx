@@ -86,7 +86,7 @@ export function AdminSettingsPanel() {
     <>
       <AdminPageHeader
         title="Configurações da Plataforma"
-        description="Preferências gerais da plataforma EcoPet. Alterações geram AuditLog."
+        description="Preferências gerais da plataforma EccoPet. Alterações geram AuditLog."
         breadcrumbs={[{ label: "Admin", href: "/admin" }, { label: "Configurações" }]}
       />
       <div className="max-w-2xl space-y-6 p-6">

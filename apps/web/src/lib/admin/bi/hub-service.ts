@@ -148,7 +148,7 @@ export async function getBiDomainReport(query: BiHubQuery): Promise<ErpModuleRes
         },
         disclaimer:
           ga.status === "READY"
-            ? "Dados lidos sob demanda da GA4 Data API — não armazenados no EcoPet."
+            ? "Dados lidos sob demanda da GA4 Data API — não armazenados no EccoPet."
             : `${ga.sanitizedMessage} KPIs first-party continuam disponíveis nos outros módulos BI.`,
       };
     }
@@ -463,7 +463,7 @@ export async function getBiDomainReport(query: BiHubQuery): Promise<ErpModuleRes
       period: range.label,
       domains: BI_DOMAIN_META,
       disclaimer:
-        "Sessões/bounce/UTM vindos do Google exigem GA4 Data API. Métricas EcoPet são first-party (PostgreSQL).",
+        "Sessões/bounce/UTM vindos do Google exigem GA4 Data API. Métricas EccoPet são first-party (PostgreSQL).",
     };
   });
 }

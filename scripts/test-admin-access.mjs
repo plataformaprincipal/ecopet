@@ -1,5 +1,5 @@
 /**
- * EcoPet — testes de acesso ao painel /admin
+ * EccoPet — testes de acesso ao painel /admin
  * Requer DATABASE_URL. Testes HTTP opcionais (WEB_URL + servidor).
  */
 import bcrypt from "bcryptjs";
@@ -71,7 +71,7 @@ async function approvePartnerViaDb(partnerId, adminId) {
 }
 
 async function main() {
-  console.log("=== EcoPet — test:admin-access ===\n");
+  console.log("=== EccoPet — test:admin-access ===\n");
 
   ok("CLIENT não acessa /admin", !canAccessRoute("CLIENT", "/admin"));
   ok("PARTNER não acessa /admin", !canAccessRoute("PARTNER", "/admin"));

@@ -1,4 +1,4 @@
-# Vercel Deployment — EcoPet
+# Vercel Deployment — EccoPet
 
 ## Estado nesta auditoria
 

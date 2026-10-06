@@ -1,14 +1,14 @@
-# Resend (e-mail transacional) — EcoPet
+# Resend (e-mail transacional) — EccoPet
 
-Infraestrutura enterprise de e-mail do EcoPet. O envio usa **exclusivamente** `process.env.RESEND_API_KEY` (nunca hardcode, nunca em logs/HTTP).
+Infraestrutura enterprise de e-mail do EccoPet. O envio usa **exclusivamente** `process.env.RESEND_API_KEY` (nunca hardcode, nunca em logs/HTTP).
 
 ## Variáveis
 
 ```bash
 EMAIL_PROVIDER=resend
 RESEND_API_KEY=re_xxxxxxxx          # obrigatória para envio
-EMAIL_FROM=EcoPet <noreply@eccopet.com>
-EMAIL_FROM_NAME=EcoPet
+EMAIL_FROM=EccoPet <noreply@eccopet.com>
+EMAIL_FROM_NAME=EccoPet
 EMAIL_REPLY_TO=suporte@eccopet.com
 EMAIL_SUPPORT=suporte@eccopet.com
 # Após DNS do domínio verificado no painel Resend:
@@ -38,14 +38,14 @@ lib/email/email-service.ts   → sendEmail() (cc/bcc/replyTo/tags/…)
 lib/email/errors.ts          → erros sanitizados (401/403/422/429/5xx/DNS/domínio)
 lib/email/resend-status.ts   → status operacional admin
 lib/email/provider.ts        → multi-provedor + EmailLog Prisma (Resend via sendEmail)
-lib/email/templates/*        → HTML responsivo EcoPet
+lib/email/templates/*        → HTML responsivo EccoPet
 lib/mail/event-dispatch.ts   → fluxos (auth, pedidos, parceiro/ONG, admin)
 ```
 
 ## Como trocar o remetente
 
 1. Verifique o domínio no [Resend Domains](https://resend.com/domains)
-2. Atualize `EMAIL_FROM` (ex.: `EcoPet <noreply@eccopet.com>`)
+2. Atualize `EMAIL_FROM` (ex.: `EccoPet <noreply@eccopet.com>`)
 3. Defina `EMAIL_REPLY_TO` / `EMAIL_SUPPORT`
 4. Após DNS ok: `EMAIL_DOMAIN_VERIFIED=true`
 5. Redeploy na Vercel
@@ -92,7 +92,7 @@ Smoke config (sem envio): `POST /api/admin/integrations/resend/test`
 2. Publique os registros SPF / DKIM / (opcional) DMARC no DNS
 3. Aguarde propagação (pode levar minutos a 48h)
 4. Status do domínio = **Verified** no Resend
-5. `EMAIL_FROM=EcoPet <noreply@eccopet.com>` (ou outro mailbox do domínio)
+5. `EMAIL_FROM=EccoPet <noreply@eccopet.com>` (ou outro mailbox do domínio)
 6. `EMAIL_DOMAIN_VERIFIED=true` no `.env` / Vercel
 7. Envie teste pelo admin → status deve ir para `ACTIVE`
 8. Valide forgot-password com e-mail real

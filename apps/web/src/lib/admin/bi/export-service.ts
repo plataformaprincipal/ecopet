@@ -98,7 +98,7 @@ ${
         .join("")}</tbody></table>`
     : ""
 }
-<p style="margin-top:24px;font-size:12px;color:#666">EcoPet BI — export sanitizado (sem PII / secrets).</p>
+<p style="margin-top:24px;font-size:12px;color:#666">EccoPet BI — export sanitizado (sem PII / secrets).</p>
 </body></html>`;
     return {
       body: html,

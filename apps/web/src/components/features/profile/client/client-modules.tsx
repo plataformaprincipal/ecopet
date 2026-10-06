@@ -164,7 +164,7 @@ export function ClientIntelligentModule() {
         <SmartWidgets widgets={CLIENT_INTELLIGENT_WIDGETS} columns={3} />
       </ProfileSection>
       <AnalyticsChartMock title="Gastos mensais (R$)" data={CLIENT_CHART_DATA} valuePrefix="R$ " />
-      <AIInsightsPanel insights={CLIENT_AI_INSIGHTS} title="IA ECOPET — Recomendações personalizadas" />
+      <AIInsightsPanel insights={CLIENT_AI_INSIGHTS} title="IA EccoPet — Recomendações personalizadas" />
     </div>
   );
 }

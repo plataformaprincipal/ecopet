@@ -72,7 +72,7 @@ const REQUIRED_AUTH_KEYS = [
 ];
 
 function main() {
-  console.log("=== EcoPet Auth i18n Tests ===\n");
+  console.log("=== EccoPet Auth i18n Tests ===\n");
 
   for (const file of AUTH_UI_FILES) {
     const src = readSrc(file);
@@ -112,7 +112,7 @@ function main() {
   }
 
   const loginForm = readSrc("components/features/foundation/login-form.tsx");
-  assert(!loginForm.includes("Entrar no EcoPet"), "login-form sem título hardcoded PT");
+  assert(!loginForm.includes("Entrar no EccoPet"), "login-form sem título hardcoded PT");
   assert(loginForm.includes('t("auth.login.pageTitle")'), "login-form usa chave i18n");
 
   const registerForm = readSrc("components/features/foundation/register-form.tsx");

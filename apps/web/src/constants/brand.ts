@@ -1,4 +1,4 @@
-/** Paleta e tokens visuais EcoPet — Manual da Marca */
+/** Paleta e tokens visuais EccoPet — Manual da Marca */
 export const ECOPET_BRAND = {
   colors: {
     primary: "#003B16",

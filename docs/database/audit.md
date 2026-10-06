@@ -1,4 +1,4 @@
-# Auditoria Prisma / Banco — EcoPet
+# Auditoria Prisma / Banco — EccoPet
 
 ## Modelos canônicos (Etapa 13)
 

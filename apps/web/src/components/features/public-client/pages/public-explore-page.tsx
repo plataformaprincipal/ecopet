@@ -124,7 +124,7 @@ export function PublicExplorePage() {
         value={query}
         onChange={setQuery}
         placeholder="Buscar produtos, serviços, lojas..."
-        aria-label="Buscar no ecossistema EcoPet"
+        aria-label="Buscar no ecossistema EccoPet"
       />
 
       <PublicCategoryGrid

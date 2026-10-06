@@ -1,5 +1,5 @@
 /**
- * ECOPET Design System — TypeScript token reference (Etapa 1).
+ * EccoPet Design System — TypeScript token reference (Etapa 1).
  * Source of truth for runtime CSS: apps/web/src/styles/tokens.css
  */
 

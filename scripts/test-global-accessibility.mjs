@@ -29,7 +29,7 @@ function walkLayouts(dir, acc = []) {
 }
 
 function main() {
-  console.log("=== EcoPet Global Accessibility Tests ===\n");
+  console.log("=== EccoPet Global Accessibility Tests ===\n");
 
   const rootLayout = readSrc("app/layout.tsx");
   assert(rootLayout.includes("AccessibilityProvider"), "layout raiz deve ter AccessibilityProvider");

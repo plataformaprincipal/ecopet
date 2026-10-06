@@ -108,7 +108,7 @@ export async function getPartnerJuridicoModule(prisma: PrismaClient, partnerId: 
   const contracts = [
     ...store.contracts,
     ...(profile
-      ? [{ id: "partner-contract", titulo: "Contrato comercial EcoPet", parte: profile.legalName, status: "ativo" }]
+      ? [{ id: "partner-contract", titulo: "Contrato comercial EccoPet", parte: profile.legalName, status: "ativo" }]
       : []),
   ];
 

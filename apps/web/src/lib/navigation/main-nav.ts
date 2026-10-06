@@ -9,7 +9,7 @@ export interface MainNavItem {
   match: string[];
 }
 
-/** Navegação principal do super app ECOPET (5 abas) */
+/** Navegação principal do super app EccoPet (5 abas) */
 export const MAIN_NAV: MainNavItem[] = [
   {
     href: "/feed",
@@ -43,7 +43,7 @@ export const MAIN_NAV: MainNavItem[] = [
   },
 ];
 
-/** Links estratégicos ECOPET Health + ECOPET AI + módulos */
+/** Links estratégicos EccoPet Health + EccoPet AI + módulos */
 export const SECONDARY_NAV: { href: string; labelKey: TranslationKey; icon: string }[] = [
   { href: "/health", labelKey: "nav.health", icon: "Heart" },
   { href: "/ia", labelKey: "nav.ai", icon: "Sparkles" },

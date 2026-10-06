@@ -20,7 +20,7 @@ export const ADMIN_MODULES: Record<string, AdminModuleConfig> = {
   empresa: {
     id: "empresa",
     title: "Empresa",
-    description: "Visão corporativa EcoPet — unidades de negócio e indicadores globais.",
+    description: "Visão corporativa EccoPet — unidades de negócio e indicadores globais.",
     apiEndpoint: "empresa",
     erpModuleId: "empresa",
   },
@@ -35,7 +35,7 @@ export const ADMIN_MODULES: Record<string, AdminModuleConfig> = {
     id: "bi",
     title: "Business Intelligence",
     description:
-      "Centro de Inteligência — KPIs EcoPet, GA4 Data API, marketplace, social, parceiros e alertas.",
+      "Centro de Inteligência — KPIs EccoPet, GA4 Data API, marketplace, social, parceiros e alertas.",
     apiEndpoint: "bi",
     erpModuleId: "bi",
   },

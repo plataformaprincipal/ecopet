@@ -6,7 +6,7 @@ export default function GestorHomePage() {
     <>
       <GestorPageHeader
         title="Dashboard Executivo"
-        description="Visão geral da plataforma ECOPET — dados reais do banco de dados"
+        description="Visão geral da plataforma EccoPet — dados reais do banco de dados"
       />
       <GestorDashboard />
     </>

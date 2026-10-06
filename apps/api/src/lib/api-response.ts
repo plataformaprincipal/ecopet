@@ -1,4 +1,4 @@
-/** Resposta JSON padronizada da API EcoPet */
+/** Resposta JSON padronizada da API EccoPet */
 export type ApiErrorBody = {
   success: false;
   error: { code: string; message: string };

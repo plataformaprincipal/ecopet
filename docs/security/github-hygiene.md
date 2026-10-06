@@ -1,4 +1,4 @@
-# Higiene do repositório GitHub — EcoPet
+# Higiene do repositório GitHub — EccoPet
 
 ## Checklist
 

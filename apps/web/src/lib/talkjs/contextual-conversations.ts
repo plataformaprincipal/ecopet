@@ -143,7 +143,7 @@ export async function openSupportConversation(input: {
     participantUserId: adminId,
     contextType: "SUPPORT",
     contextId: `support_${input.creatorId}`,
-    title: input.subject ?? "Suporte EcoPet",
+    title: input.subject ?? "Suporte EccoPet",
   });
 }
 

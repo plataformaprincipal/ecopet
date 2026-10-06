@@ -1,13 +1,13 @@
-# Mensagens EcoPet + TalkJS
+# Mensagens EccoPet + TalkJS
 
 ## Fonte de verdade
 
 | Dado | Onde |
 |---|---|
 | Conteúdo das mensagens | **TalkJS** |
-| Vínculo conversa ↔ entidade EcoPet | PostgreSQL `Conversation.talkjsConversationId` + `contextType`/`contextId` |
+| Vínculo conversa ↔ entidade EccoPet | PostgreSQL `Conversation.talkjsConversationId` + `contextType`/`contextId` |
 | Participantes / mute / archive | `ConversationParticipant` |
-| Notificações | EcoPet `Notification` (webhook + create conversation) |
+| Notificações | EccoPet `Notification` (webhook + create conversation) |
 | Eventos webhook | `WebhookEvent` (provider=`talkjs`, idempotência) |
 
 Não duplicamos o histórico completo de mensagens no Postgres.

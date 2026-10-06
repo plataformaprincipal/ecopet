@@ -1,4 +1,4 @@
-# Relatório Final de Auditoria — EcoPet Etapa 5
+# Relatório Final de Auditoria — EccoPet Etapa 5
 
 ## 1. Resumo executivo
 

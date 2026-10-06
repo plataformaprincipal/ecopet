@@ -1,4 +1,4 @@
-/** Reexports de conveniência (padrão EcoPet). */
+/** Reexports de conveniência (padrão EccoPet). */
 export {
   getGaMeasurementId,
   isGaConfigured,

@@ -139,7 +139,7 @@ export function getTalkJsHealthSnapshot() {
 }
 
 /**
- * ID TalkJS estável = ID EcoPet (cuid).
+ * ID TalkJS estável = ID EccoPet (cuid).
  * Não usar e-mail/CPF/telefone. Prefixo documentado opcional evitado
  * para não quebrar usuários já sincronizados em Test Mode.
  */

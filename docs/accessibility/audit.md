@@ -9,7 +9,7 @@
 - `alt` em avatares sociais (Etapa 11)
 - Labels em forms de login/cadastro
 - Landmarks: `header`, `main`, `nav` no gestor
-- Contraste: tema EcoPet green/dark
+- Contraste: tema EccoPet green/dark
 
 ## Pendências críticas
 

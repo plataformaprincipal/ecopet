@@ -1,4 +1,4 @@
-# Security Headers Report — EcoPet
+# Security Headers Report — EccoPet
 
 **Data:** 2026-07-20  
 **Fonte de verdade:** `apps/web/src/lib/security/headers.ts` + `next.config.ts`  

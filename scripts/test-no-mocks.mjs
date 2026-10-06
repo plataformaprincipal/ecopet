@@ -1,5 +1,5 @@
 /**
- * EcoPet — test:no-mocks
+ * EccoPet — test:no-mocks
  * Garante que o runtime da app não importa mocks, demos ou fixtures fictícias.
  */
 import fs from "fs";
@@ -60,7 +60,7 @@ function fail(msg) {
   failed++;
 }
 
-console.log("=== EcoPet — test:no-mocks ===\n");
+console.log("=== EccoPet — test:no-mocks ===\n");
 
 const appFiles = walk(APP_SRC);
 

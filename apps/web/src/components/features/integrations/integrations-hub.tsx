@@ -29,7 +29,7 @@ export function IntegrationsHub({ profileCategory }: IntegrationsHubProps) {
     <div className="space-y-6">
       <div>
         <h2 className="heading-2">Integrações</h2>
-        <p className="secondary-text">Conecte sistemas externos e módulos internos da ECOPET</p>
+        <p className="secondary-text">Conecte sistemas externos e módulos internos da EccoPet</p>
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>

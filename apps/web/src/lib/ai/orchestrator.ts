@@ -109,7 +109,7 @@ export async function runOrchestrator(request: OrchestratorRequest): Promise<Orc
     agentType: agentId,
   });
 
-  const systemPrompt = promptDef?.content ?? "Você é o assistente EcoPet.";
+  const systemPrompt = promptDef?.content ?? "Você é o assistente EccoPet.";
   const fullPrompt = buildContext(systemPrompt, memory, request.message);
   const availableTools = listToolsForAgent(agentId, request.role);
 

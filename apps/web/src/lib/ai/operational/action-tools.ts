@@ -170,7 +170,7 @@ async function runAction(
         title: `Lembrete (rascunho IA): ${p.title}`,
         message: p.dueAt
           ? `Lembrete sugerido para ${p.dueAt}. Confirme na agenda.`
-          : "Lembrete sugerido pela EcoPet IA. Confirme na agenda.",
+          : "Lembrete sugerido pela EccoPet IA. Confirme na agenda.",
         metadata: { source: "ai_action_tool", draft: true, dueAt: p.dueAt ?? null },
         actionUrl: "/client/agenda",
       });

@@ -98,7 +98,7 @@ function mapApiConversation(conv: ApiConversation, userId: string): Conversation
     id: conv.id,
     participant: {
       id: other?.id ?? "system",
-      name: conv.title ?? other?.name ?? "Suporte ECOPET",
+      name: conv.title ?? other?.name ?? "Suporte EccoPet",
       avatar: other?.avatar ?? "",
       isVerified: true,
       type: other?.role === "GESTOR" ? "provider" : "tutor",

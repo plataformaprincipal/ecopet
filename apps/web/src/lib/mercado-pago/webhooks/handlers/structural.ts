@@ -22,7 +22,7 @@ export const handleCardUpdaterWebhook: MpWebhookHandler = async ({ event, normal
         customer_id: data.customer_id ?? null,
         new_card_id: data.new_card_id ?? null,
         old_card_id: data.old_card_id ?? null,
-        note: "EcoPet não armazena cartão; Card Updater não altera cobranças.",
+        note: "EccoPet não armazena cartão; Card Updater não altera cobranças.",
       }),
     },
   });
@@ -38,7 +38,7 @@ export const handleShipmentWebhook: MpWebhookHandler = async ({ event, normalize
       status: "NOT_APPLICABLE",
       webhookEventId: event.id,
       metadata: asJson({
-        note: "Mercado Envios não contratado; evento registrado sem efeito logístico EcoPet.",
+        note: "Mercado Envios não contratado; evento registrado sem efeito logístico EccoPet.",
         payload: normalized.sanitizedPayload,
       }),
     },

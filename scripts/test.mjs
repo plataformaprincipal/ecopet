@@ -1,5 +1,5 @@
 /**
- * EcoPet — suite de testes (sem mocks em produção)
+ * EccoPet — suite de testes (sem mocks em produção)
  */
 import { spawnSync } from "child_process";
 import path from "path";
@@ -94,7 +94,7 @@ const steps = [
 
 let failed = 0;
 
-console.log("=== EcoPet — npm run test ===\n");
+console.log("=== EccoPet — npm run test ===\n");
 
 for (const step of steps) {
   console.log(`→ ${step.name}`);

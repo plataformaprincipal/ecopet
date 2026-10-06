@@ -1,7 +1,7 @@
 # Relatório Final — ETAPA 1 UI FOUNDATION
 
 **Data:** 2026-07-20  
-**Escopo:** Fundação visual EcoPet (sem Etapa 2 / sem redesign de módulos)
+**Escopo:** Fundação visual EccoPet (sem Etapa 2 / sem redesign de módulos)
 
 ---
 
@@ -93,7 +93,7 @@ CSS-first; sem nova lib de animação; SVG leve; blur moderado no header.
 
 ## 30. Pendências Etapa 2
 
-Redesign Marketplace, Social, Explorar, EcoPet IA, Perfil, Cadastro, Admin; limpeza residual de amarelo; drawers/toasts/bottom-nav deep polish.
+Redesign Marketplace, Social, Explorar, EccoPet IA, Perfil, Cadastro, Admin; limpeza residual de amarelo; drawers/toasts/bottom-nav deep polish.
 
 ---
 

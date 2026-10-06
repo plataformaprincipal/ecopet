@@ -1,4 +1,4 @@
-# Operações — IA EcoPet
+# Operações — IA EccoPet
 
 ## Painéis
 

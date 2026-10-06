@@ -144,7 +144,7 @@ export function AdminGoogleTagManagerPanel() {
     <div className="space-y-6 p-4 md:p-6">
       <AdminPageHeader
         title="Google Tag Manager — Centro de Governança"
-        description="Tags, Data Layer, consentimento, health e inventário EcoPet — sem duplicar o warehouse do GTM."
+        description="Tags, Data Layer, consentimento, health e inventário EccoPet — sem duplicar o warehouse do GTM."
         breadcrumbs={[
           { label: "Admin", href: "/admin" },
           { label: "Integrações", href: "/admin/integracoes" },
@@ -456,7 +456,7 @@ export function AdminGoogleTagManagerPanel() {
           {section === "modules" ? (
             <Card>
               <CardHeader>
-                <CardTitle>Módulos EcoPet</CardTitle>
+                <CardTitle>Módulos EccoPet</CardTitle>
                 <CardDescription>
                   <input
                     className="mt-2 w-full max-w-sm rounded-md border px-3 py-1.5 text-sm"
@@ -663,7 +663,7 @@ function InventoryCard({
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>
-          Inventário de governança EcoPet (recomendado) — não é sync live da API GTM.
+          Inventário de governança EccoPet (recomendado) — não é sync live da API GTM.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">

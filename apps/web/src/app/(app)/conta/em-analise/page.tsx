@@ -14,7 +14,7 @@ export default async function PendingReviewPage() {
         <CardHeader>
           <CardTitle>Conta em análise</CardTitle>
           <CardDescription>
-            Olá, {user.name}. Sua conta ({user.role}) está aguardando aprovação da equipe ECOPET.
+            Olá, {user.name}. Sua conta ({user.role}) está aguardando aprovação da equipe EccoPet.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 text-sm">

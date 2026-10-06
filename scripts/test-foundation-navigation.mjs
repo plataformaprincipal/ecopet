@@ -53,7 +53,7 @@ function extractRoleBlock(source, roleConst) {
 }
 
 async function main() {
-  console.log("=== EcoPet Foundation Navigation Tests ===\n");
+  console.log("=== EccoPet Foundation Navigation Tests ===\n");
 
   // --- Verificações estáticas de código ---
   const hookSrc = readSrc("hooks/use-foundation-session.ts");
@@ -194,9 +194,9 @@ async function main() {
   assert(legalLinksSrc.includes("PARTNER_LEGAL"), "estrutura termos parceiro preparada");
   assert(legalLinksSrc.includes("ONG_LEGAL"), "estrutura termos ONG preparada");
   const clientTermsPageSrc = readSrc("app/legal/cliente/termos/page.tsx");
-  assert(clientTermsPageSrc.includes("Termos de Uso e de Serviço do Cliente EcoPet"), "página termos cliente");
+  assert(clientTermsPageSrc.includes("Termos de Uso e de Serviço do Cliente EccoPet"), "página termos cliente");
   const clientPrivacyPageSrc = readSrc("app/legal/cliente/privacidade/page.tsx");
-  assert(clientPrivacyPageSrc.includes("Política de Privacidade do Cliente EcoPet"), "página privacidade cliente");
+  assert(clientPrivacyPageSrc.includes("Política de Privacidade do Cliente EccoPet"), "página privacidade cliente");
 
   const birthDateSrc = readSrc("lib/validation/birth-date.ts");
   assert(birthDateSrc.includes("getMaxBirthDateString"), "utilitário data máxima nascimento");

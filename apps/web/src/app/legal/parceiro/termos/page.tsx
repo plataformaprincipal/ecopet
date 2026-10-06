@@ -4,7 +4,7 @@ import { PARTNER_TERMS_SECTIONS, PARTNER_TERMS_TITLE } from "@/lib/legal/partner
 
 export const metadata: Metadata = {
   title: PARTNER_TERMS_TITLE,
-  description: "Termos exclusivos para Parceiros da plataforma EcoPet — independentes dos documentos do Cliente.",
+  description: "Termos exclusivos para Parceiros da plataforma EccoPet — independentes dos documentos do Cliente.",
 };
 
 export default function PartnerLegalTermsPage() {

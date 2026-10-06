@@ -1,5 +1,5 @@
 /**
- * Testes — Bootstrap do catálogo institucional EcoPet
+ * Testes — Bootstrap do catálogo institucional EccoPet
  */
 import { execSync } from "child_process";
 import path from "path";
@@ -49,7 +49,7 @@ async function main() {
     where: { email: CATALOG_EMAIL },
     include: { partnerProfile: true },
   });
-  assert(partner, "bootstrap cria EcoPet Oficial");
+  assert(partner, "bootstrap cria EccoPet Oficial");
   assert(partner.role === "PARTNER", "parceiro institucional é PARTNER");
   assert(partner.accountStatus === "ACTIVE", "parceiro ACTIVE");
   assert(partner.isBootstrapUser, "marcado isBootstrapUser");

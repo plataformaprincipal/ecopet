@@ -5,7 +5,7 @@ import {
   LOCALE_CODES,
 } from "@/i18n/locales/registry";
 
-/** Mapeamento BCP-47 / alias → locale ECOPET */
+/** Mapeamento BCP-47 / alias → locale EccoPet */
 const NORMALIZE_MAP: Record<string, LocaleCode> = {
   pt: "pt-BR",
   "pt-BR": "pt-BR",

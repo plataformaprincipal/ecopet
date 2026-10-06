@@ -1,5 +1,5 @@
 /**
- * Validação Gmail real — EcoPet
+ * Validação Gmail real — EccoPet
  * Pré-requisito:
  *   npm run setup:smtp -- --user=SEU@gmail.com --pass="SENHA_APP" --test=SEU@gmail.com
  */
@@ -83,7 +83,7 @@ async function testForgotPassword(email) {
 }
 
 async function main() {
-  console.log("=== EcoPet — validação Gmail SMTP ===\n");
+  console.log("=== EccoPet — validação Gmail SMTP ===\n");
 
   spawnSync(process.execPath, [path.join(__dirname, "sync-web-env.mjs")], {
     cwd: root,

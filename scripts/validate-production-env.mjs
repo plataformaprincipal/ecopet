@@ -59,7 +59,7 @@ if (!hasCloudinary) {
   recommended.push("CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET");
 }
 
-console.log("=== EcoPet — Validação de ambiente de produção ===\n");
+console.log("=== EccoPet — Validação de ambiente de produção ===\n");
 
 if (critical.length) {
   console.log("❌ OBRIGATÓRIAS ausentes:");

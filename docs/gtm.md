@@ -1,4 +1,4 @@
-# Google Tag Manager — EcoPet
+# Google Tag Manager — EccoPet
 
 Complementa o GA4 existente. **Não** substitui o `GoogleAnalyticsProvider`.
 
@@ -23,7 +23,7 @@ Complementa o GA4 existente. **Não** substitui o `GoogleAnalyticsProvider`.
 
 1. GA4 continua enviando via **gtag** (`send_to` Measurement ID).
 2. GTM recebe espelho **namespaced**: `ecopet_ga_event`, `ecopet_page_view`, etc.
-3. No container GTM: **não** ative tags GA4 de `page_view` / eventos nativos se o EcoPet já envia.
+3. No container GTM: **não** ative tags GA4 de `page_view` / eventos nativos se o EccoPet já envia.
 
 ## Data Layer (Prompt 3)
 

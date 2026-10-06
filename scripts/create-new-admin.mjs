@@ -12,7 +12,7 @@ const prisma = new PrismaClient();
 
 const NEW_ADMIN_EMAIL = "assessoriaplatine@gmail.com";
 const NEW_ADMIN_PASSWORD = "ECOcabo@2020";
-const NEW_ADMIN_NAME = "Administrador EcoPet";
+const NEW_ADMIN_NAME = "Administrador EccoPet";
 
 const PREVIOUS_ADMIN_EMAIL = "arthuralves2307@gmail.com";
 
@@ -130,7 +130,7 @@ async function main() {
   const { user, created } = result.newAdmin;
   const profile = await prisma.adminProfile.findUnique({ where: { userId: user.id } });
 
-  console.log("=== EcoPet — admin:create-new ===\n");
+  console.log("=== EccoPet — admin:create-new ===\n");
   console.log(created ? "✓ Novo administrador criado" : "✓ Administrador existente atualizado");
   console.log(`  E-mail: ${user.email}`);
   console.log(`  Role: ${user.role}`);

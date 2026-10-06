@@ -1,4 +1,4 @@
-# Google Maps Platform — EcoPet
+# Google Maps Platform — EccoPet
 
 Integração Maps JavaScript + Places Autocomplete + Geocoding/Directions REST, sem substituir o ViaCEP.
 

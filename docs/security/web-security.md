@@ -1,4 +1,4 @@
-# Segurança Web — EcoPet
+# Segurança Web — EccoPet
 
 ## Headers (Next.js)
 
